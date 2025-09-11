@@ -338,20 +338,13 @@ export function useChat({
         const { message: latestQueuedMessage, imageMap } = queuedMessageData;
         logger.debug("processing queued message", { latestQueuedMessage });
 
-        // Clear all queued messages from display since we're processing them all together
+        // Clear queued messages from display since they're about to be processed
+        // Note: messageQueue.getLatestMessage() already cleared the actual queue
         setQueuedMessages([]);
-
-        // Add the queued message to chat history so it shows in the GUI
-        const formattedQueuedMessage = await formatMessageWithFiles(
-          latestQueuedMessage,
-          [], // No attached files for queued messages
-          imageMap,
-        );
-        setChatHistory((prev) => [...prev, formattedQueuedMessage]);
 
         await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
 
-        // Process the queued message using the internal processing logic without re-adding to history
+        // Process the queued message - it will handle adding to history and compaction display
         await processQueuedMessage(latestQueuedMessage, imageMap);
       }
     }
@@ -495,12 +488,27 @@ export function useChat({
 
     // For non-queued messages, format and add to chat history
     if (isQueuedMessage) {
-      // For queued messages, chat history is already updated
+      // For queued messages, we need to format and add to history after compaction
+      // First, format the message
+      const formattedQueuedMessage = await formatMessageWithFiles(
+        message,
+        [], // No attached files for queued messages
+        imageMap,
+      );
+
       // Check if auto-compacting is needed with current history
       const compactionController = new AbortController();
       setCompactionAbortController(compactionController);
       setIsCompacting(true);
       setCompactionStartTime(Date.now());
+
+      // Add the queued message to queue display during compaction
+      const queuedMessageForDisplay: QueuedMessage = {
+        message,
+        imageMap,
+        timestamp: Date.now(),
+      };
+      setQueuedMessages((prev) => [...prev, queuedMessageForDisplay]);
 
       let currentChatHistory, currentCompactionIndex;
       try {
@@ -515,15 +523,30 @@ export function useChat({
         });
         currentChatHistory = result.currentChatHistory;
         currentCompactionIndex = result.currentCompactionIndex;
+      } catch (error) {
+        // If compaction fails, remove the queued message from display
+        setQueuedMessages((prev) =>
+          prev.filter((msg) => msg !== queuedMessageForDisplay)
+        );
+        throw error; // Re-throw to maintain error handling
       } finally {
         setIsCompacting(false);
         setCompactionStartTime(null);
         setCompactionAbortController(null);
       }
 
-      // Execute the streaming response with the current history (which already includes the queued message)
+      // Add the formatted queued message to history after compaction completes
+      const newHistory = [...currentChatHistory, formattedQueuedMessage];
+      setChatHistory(newHistory);
+
+      // Remove the queued message from display since it's now in chat history
+      setQueuedMessages((prev) =>
+        prev.filter((msg) => msg !== queuedMessageForDisplay)
+      );
+
+      // Execute the streaming response with the updated history
       await executeStreamingResponse(
-        currentChatHistory,
+        newHistory,
         currentCompactionIndex,
       );
     } else {
@@ -549,6 +572,14 @@ export function useChat({
       setIsCompacting(true);
       setCompactionStartTime(Date.now());
 
+      // Add the triggering message to queue display during compaction
+      const compactionQueuedMessage: QueuedMessage = {
+        message,
+        imageMap,
+        timestamp: Date.now(),
+      };
+      setQueuedMessages((prev) => [...prev, compactionQueuedMessage]);
+
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
@@ -562,6 +593,12 @@ export function useChat({
         });
         currentChatHistory = result.currentChatHistory;
         currentCompactionIndex = result.currentCompactionIndex;
+      } catch (error) {
+        // If compaction fails, remove the triggering message from queue display
+        setQueuedMessages((prev) =>
+          prev.filter((msg) => msg !== compactionQueuedMessage)
+        );
+        throw error; // Re-throw to maintain error handling
       } finally {
         setIsCompacting(false);
         setCompactionStartTime(null);
@@ -571,6 +608,11 @@ export function useChat({
       // Add the formatted user message to history
       const newHistory = [...currentChatHistory, newUserMessage];
       setChatHistory(newHistory);
+
+      // Remove the triggering message from queue display since it's now in chat history
+      setQueuedMessages((prev) =>
+        prev.filter((msg) => msg !== compactionQueuedMessage)
+      );
 
       // Execute the streaming response
       await executeStreamingResponse(newHistory, currentCompactionIndex);
@@ -629,6 +671,8 @@ export function useChat({
       setCompactionStartTime(null);
       setCompactionAbortController(null);
       setInputMode(true);
+      // Clear any queued messages (including the triggering message) when compaction is interrupted
+      setQueuedMessages([]);
       return;
     }
 

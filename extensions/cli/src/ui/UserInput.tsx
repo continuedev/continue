@@ -526,8 +526,8 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        if (isWaitingForResponse) {
-          // Process message later when LLM has responded
+        if (isWaitingForResponse || isCompacting) {
+          // Process message later when LLM has responded or compaction is complete
           void messageQueue.enqueueMessage(
             submittedText,
             imageMap,
