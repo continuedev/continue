@@ -60,6 +60,10 @@ try {
         __dirname,
         "../../packages/config-types/dist/index.js",
       ),
+      "@continuedev/errors": resolve(
+        __dirname,
+        "../../packages/errors/dist/index.js",
+      ),
       core: resolve(__dirname, "../../core"),
       "@continuedev/fetch": resolve(
         __dirname,
