@@ -269,6 +269,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
     return this.modelMap[this.model] ?? this.model;
   }
 
+  get contextLength() {
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 4096; // https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
+  }
+
   private _getModelFileParams(
     options: CompletionOptions,
   ): OllamaModelFileParams {
@@ -278,8 +283,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       top_k: options.topK,
       num_predict: options.maxTokens,
       stop: options.stop,
-      // Ollama detects the context length from model's modelfile (or uses 2048/4096 length) when not specified. We do not want to specify a DEFAULT_CONTEXT_LENGTH to avoid memory issues.
-      num_ctx: this._contextLength,
+      num_ctx: this.contextLength,
       mirostat: options.mirostat,
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
