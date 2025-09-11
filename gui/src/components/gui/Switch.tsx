@@ -1,5 +1,7 @@
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode } from "react";
 import { vscButtonBackground } from "..";
+import { ToolTip } from "./Tooltip";
 
 type ToggleSwitchProps = {
   isToggled: boolean;
@@ -8,6 +10,7 @@ type ToggleSwitchProps = {
   size?: number;
   showIfToggled?: ReactNode;
   disabled?: boolean;
+  tooltip?: string;
 };
 
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
@@ -17,16 +20,24 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   size = 16,
   showIfToggled,
   disabled = false,
+  tooltip,
 }) => {
   return (
     <div
       className={`flex select-none items-center justify-between gap-3 ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
     >
-      <span className="truncate-right">{text}</span>
+      <span className="truncate-right flex items-center gap-x-1">
+        {text}{" "}
+        {tooltip && (
+          <ToolTip content={tooltip}>
+            <InformationCircleIcon className="h-3 w-3" />
+          </ToolTip>
+        )}
+      </span>
       <div className="flex flex-row items-center gap-1">
         {isToggled && !!showIfToggled && showIfToggled}
         <div
-          className={`border-vsc-input-border bg-vsc-input-background relative flex items-center rounded-full border border-solid`}
+          className={`border-command-border bg-vsc-input-background relative flex items-center rounded-full border border-solid`}
           onClick={disabled ? undefined : onToggle}
           style={{
             height: size,

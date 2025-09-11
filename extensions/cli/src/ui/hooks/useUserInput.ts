@@ -32,9 +32,14 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
     onTextBufferUpdate,
   } = options;
 
-  // Handle Ctrl+C to clear input
-  if (key.ctrl && input === "c" && clearInput) {
-    clearInput();
+  // Handle Ctrl+C with two-stage exit, Ctrl+D immediately exits
+  if (key.ctrl && input === "c") {
+    // Clear input box if clearInput function is provided
+    if (clearInput) {
+      clearInput();
+    }
+    // Let the main process SIGINT handler handle Ctrl+C logic
+    process.kill(process.pid, "SIGINT");
     return true;
   }
 
@@ -71,7 +76,7 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
   // Handle Ctrl+D to exit
   if (key.ctrl && input === "d") {
     exit();
-    return true;
+    process.exit(0);
   }
 
   // Handle Ctrl+L to refresh screen (clear terminal artifacts)
@@ -99,6 +104,7 @@ interface TextBufferStateOptions {
   setCursorPosition: (pos: number) => void;
   updateSlashCommandState: (text: string, cursor: number) => void;
   updateFileSearchState: (text: string, cursor: number) => void;
+  updateBashModeState: (text: string) => void;
   inputHistory: any;
 }
 
@@ -110,6 +116,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition,
     updateSlashCommandState,
     updateFileSearchState,
+    updateBashModeState,
     inputHistory,
   } = options;
 
@@ -121,6 +128,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition(newCursor);
     updateSlashCommandState(newText, newCursor);
     updateFileSearchState(newText, newCursor);
+    updateBashModeState(newText);
     inputHistory.resetNavigation();
   }
 }

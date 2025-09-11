@@ -217,7 +217,7 @@ describe("slashCommands", () => {
       expect(result).toBeDefined();
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain("test@example.com");
-      expect(result?.output).toContain("(no org)");
+      expect(result?.output).toContain("test-org-id");
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/custom/config.yaml");
       expect(result?.exit).toBe(false);

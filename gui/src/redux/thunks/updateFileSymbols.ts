@@ -84,7 +84,7 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
 
     const uniqueUris = new Set(
       contextItems
-        .filter((item) => item.uri?.type === "file" && item?.uri?.value)
+        .filter((item) => item?.uri?.type === "file" && item?.uri?.value)
         .map((item) => item.uri!.value),
     );
 

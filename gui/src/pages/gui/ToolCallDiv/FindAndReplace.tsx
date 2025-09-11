@@ -14,6 +14,7 @@ import {
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
 import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
+import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
@@ -23,6 +24,48 @@ interface FindAndReplaceDisplayProps {
   edits: EditOperation[];
   toolCallId: string;
   historyIndex: number;
+}
+
+const MAX_SAME_LINES = 2;
+
+function EllipsisLine() {
+  return (
+    <div className="text-description-muted px-3 py-1 text-center font-mono">
+      ⋯
+    </div>
+  );
+}
+
+function DiffLines({
+  lines,
+  className = "",
+  diffChar = " ",
+  diffCharClass = "text-description-muted",
+}: {
+  lines: string[];
+  diffChar?: string;
+  diffCharClass?: string;
+  className?: string;
+}) {
+  return (
+    <>
+      {lines.map((line, lineIndex) => {
+        const isLastPartLine = lineIndex === lines.length - 1;
+        if (line === "" && isLastPartLine) return null;
+        return (
+          <div
+            key={lineIndex}
+            className={cn("text-foreground px-3 py-px font-mono", className)}
+          >
+            <span className={cn("mr-2 select-none", diffCharClass)}>
+              {diffChar}
+            </span>
+            {line}
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 export function FindAndReplaceDisplay({
@@ -198,72 +241,54 @@ export function FindAndReplaceDisplay({
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
     >
       <pre
-        className={`bg-editor m-0 w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
+        className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
-        {diffResult.diff.map((part, index) => {
+        {diffResult.diff?.map((part, index) => {
           if (part.removed) {
             return (
-              <div
+              <DiffLines
                 key={index}
-                className="text-foreground border-l-4 border-red-900 bg-red-900/30"
-              >
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div key={lineIndex} className="px-3 py-px font-mono">
-                      <span className="mr-2 select-none text-red-600">-</span>
-                      {line}
-                    </div>
-                  );
-                })}
-              </div>
+                lines={part.value.split("\n")}
+                className="border-l-4 border-red-900 bg-red-900/30"
+                diffCharClass="text-red-600"
+                diffChar="-"
+              />
             );
           } else if (part.added) {
             return (
-              <div
+              <DiffLines
                 key={index}
-                className="text-foreground border-l-4 border-green-600 bg-green-600/20"
-              >
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div key={lineIndex} className="px-3 py-px font-mono">
-                      <span className="mr-2 select-none text-green-600">+</span>
-                      {line}
-                    </div>
-                  );
-                })}
-              </div>
+                lines={part.value.split("\n")}
+                diffCharClass="text-green-600"
+                className="border-l-4 border-green-600 bg-green-600/20"
+                diffChar="+"
+              />
             );
           } else {
+            const isFirst = index === 0;
+            const isLast = index === diffResult.diff.length - 1;
+            const lines = part.value.split("\n");
+            const showStartEllipsis = isFirst && lines.length > MAX_SAME_LINES;
+            const showEndEllipsis = isLast && lines.length > MAX_SAME_LINES;
+            const showMiddleEllipses =
+              !isFirst && !isLast && lines.length > MAX_SAME_LINES * 2 + 1;
+
+            const startLines = showStartEllipsis
+              ? lines.slice(-MAX_SAME_LINES)
+              : showMiddleEllipses || showEndEllipsis
+                ? lines.slice(0, MAX_SAME_LINES)
+                : lines;
+            const endLines = showMiddleEllipses
+              ? lines.slice(-MAX_SAME_LINES)
+              : [];
+
             return (
               <div key={index}>
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div
-                      key={lineIndex}
-                      className="text-foreground px-3 py-px font-mono"
-                    >
-                      <span className="text-description-muted mr-2 select-none">
-                        {" "}
-                      </span>
-                      {line}
-                    </div>
-                  );
-                })}
+                {showStartEllipsis && <EllipsisLine />}
+                <DiffLines lines={startLines} />
+                {showMiddleEllipses && <EllipsisLine />}
+                <DiffLines lines={endLines} />
+                {showEndEllipsis && <EllipsisLine />}
               </div>
             );
           }

@@ -15,6 +15,7 @@ import {
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 
 import { useNavigation } from "./context/NavigationContext.js";
+import { defaultBoxStyles } from "./styles.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
@@ -130,6 +131,18 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const hasOrganizations = organizations && organizations.length > 0;
 
   useInput((input, key) => {
+    // Allow Escape to cancel immediately, but Ctrl+C uses two-stage exit
+    if (key.escape) {
+      closeCurrentScreen();
+      return;
+    }
+
+    // Handle Ctrl+C with two-stage exit (delegates to main process)
+    if (key.ctrl && input === "c") {
+      process.kill(process.pid, "SIGINT");
+      return;
+    }
+
     if (currentStep === "choice") {
       handleChoiceInput({
         input,
@@ -215,39 +228,38 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   };
 
   if (currentStep === "choice") {
+    const options = [
+      { num: 1, text: "💳 Sign up for models add-on (recommended)" },
+      { num: 2, text: "🔑 Enter your Anthropic API key" },
+      { num: 3, text: "⚙️ Switch to a different configuration" },
+    ];
+
+    if (hasOrganizations) {
+      options.push({
+        num: 4,
+        text: "🏢 Switch to organization configuration",
+      });
+    }
+
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="yellow"
-      >
+      <Box {...defaultBoxStyles("yellow")}>
         <Text bold color="yellow">
           🚀 Free trial limit reached!
         </Text>
         <Text>Choose how you'd like to continue:</Text>
         <Text></Text>
-        <Text color={selectedOption === 1 ? "cyan" : "white"}>
-          {selectedOption === 1 ? "▶ " : "  "}1. 💳 Sign up for models add-on
-          (recommended)
-        </Text>
-        <Text color={selectedOption === 2 ? "cyan" : "white"}>
-          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API
-          key
-        </Text>
-        <Text color={selectedOption === 3 ? "cyan" : "white"}>
-          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different
-          configuration
-        </Text>
-        {hasOrganizations && (
-          <Text color={selectedOption === 4 ? "cyan" : "white"}>
-            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization
-            configuration
+        {options.map((option) => (
+          <Text
+            key={option.num}
+            color={selectedOption === option.num ? "cyan" : "white"}
+          >
+            {selectedOption === option.num ? "➤ " : "  "}
+            {option.num}. {option.text}
           </Text>
-        )}
+        ))}
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select,
+          ↑/↓ to navigate or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select,
           Enter to confirm
         </Text>
       </Box>
@@ -256,12 +268,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
   if (currentStep === "enterApiKey") {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="yellow"
-      >
+      <Box {...defaultBoxStyles("yellow")}>
         <Text bold color="yellow">
           Enter your Anthropic API key
         </Text>
@@ -278,12 +285,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
   if (currentStep === "processing") {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="blue"
-      >
+      <Box {...defaultBoxStyles("blue")}>
         <Text bold color="blue">
           Processing...
         </Text>
@@ -294,12 +296,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
   if (currentStep === "success") {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="green"
-      >
+      <Box {...defaultBoxStyles("green")}>
         <Text bold color="green">
           Success!
         </Text>
@@ -316,12 +313,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
   if (currentStep === "error") {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="red"
-      >
+      <Box {...defaultBoxStyles("red")}>
         <Text bold color="red">
           Error
         </Text>

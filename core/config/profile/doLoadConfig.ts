@@ -11,7 +11,6 @@ import {
 import {
   ContinueConfig,
   IDE,
-  IdeSettings,
   ILLMLogger,
   RuleWithSource,
   SerializedContinueConfig,
@@ -70,7 +69,6 @@ async function loadRules(ide: IDE) {
 }
 export default async function doLoadConfig(options: {
   ide: IDE;
-  ideSettingsPromise: Promise<IdeSettings>;
   controlPlaneClient: ControlPlaneClient;
   llmLogger: ILLMLogger;
   overrideConfigJson?: SerializedContinueConfig;
@@ -82,7 +80,6 @@ export default async function doLoadConfig(options: {
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
-    ideSettingsPromise,
     controlPlaneClient,
     llmLogger,
     overrideConfigJson,
@@ -95,7 +92,7 @@ export default async function doLoadConfig(options: {
 
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
-  const ideSettings = await ideSettingsPromise;
+  const ideSettings = await ide.getIdeSettings();
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
   const isSignedIn = await controlPlaneClient.isSignedIn();
 
@@ -332,11 +329,13 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  if (
-    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
-    false
-  ) {
+  // Org policies
+  const policy = PolicySingleton.getInstance().policy?.policy;
+  if (policy?.allowAnonymousTelemetry === false) {
     newConfig.allowAnonymousTelemetry = false;
+  }
+  if (policy?.allowCodebaseIndexing === false) {
+    newConfig.disableIndexing = true;
   }
 
   // Setup telemetry only after (and if) we know it is enabled
@@ -372,7 +371,7 @@ export default async function doLoadConfig(options: {
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
 
-  const env = await getControlPlaneEnv(ideSettingsPromise);
+  const env = await getControlPlaneEnv(Promise.resolve(ideSettings));
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
     : env.DEFAULT_CONTROL_PLANE_PROXY_URL;

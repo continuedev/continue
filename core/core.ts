@@ -138,7 +138,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-      const sessionInfoPromise = messenger.request(
+      const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
           silent: true,
@@ -148,9 +148,8 @@ export class Core {
 
       this.configHandler = new ConfigHandler(
         this.ide,
-        ideSettingsPromise,
         this.llmLogger,
-        sessionInfoPromise,
+        initialSessionInfoPromise,
       );
 
       this.docsService = DocsService.createSingleton(
@@ -175,6 +174,13 @@ export class Core {
         }
       };
 
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
+
       this.configHandler.onConfigUpdate((result) => {
         void (async () => {
           const serializedResult =
@@ -187,6 +193,12 @@ export class Core {
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
 
+          if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
+            await this.codeBaseIndexer.refreshCodebaseIndex(
+              await this.ide.getWorkspaceDirs(),
+            );
+          }
+
           // update additional submenu context providers registered via VSCode API
           const additionalProviders =
             this.configHandler.getAdditionalSubmenuContextProviders();
@@ -197,13 +209,6 @@ export class Core {
           }
         })();
       });
-
-      this.codeBaseIndexer = new CodebaseIndexer(
-        this.configHandler,
-        this.ide,
-        this.messenger,
-        this.globalContext.get("indexingPaused"),
-      );
 
       // Dev Data Logger
       const dataLogger = DataLogger.getInstance();
@@ -1007,6 +1012,37 @@ export class Core {
 
     on("tools/call", async ({ data: { toolCall } }) =>
       this.handleToolCall(toolCall),
+    );
+
+    on(
+      "tools/evaluatePolicy",
+      async ({ data: { toolName, basePolicy, args } }) => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          throw new Error("Config not loaded");
+        }
+
+        const tool = config.tools.find((t) => t.function.name === toolName);
+        if (!tool) {
+          // Tool not found, return base policy
+          return { policy: basePolicy };
+        }
+
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
+        // If tool has evaluateToolCallPolicy function, use it
+        if (tool.evaluateToolCallPolicy) {
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          return { policy: evaluatedPolicy, displayValue };
+        }
+
+        // Otherwise return base policy unchanged
+        return { policy: basePolicy, displayValue };
+      },
     );
 
     on("isItemTooBig", async ({ data: { item } }) => {
