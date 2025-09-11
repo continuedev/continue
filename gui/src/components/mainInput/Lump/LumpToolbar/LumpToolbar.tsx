@@ -1,13 +1,15 @@
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { useContext, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
   selectFirstPendingToolCall,
   selectPendingToolCalls,
+  selectToolCallsByStatus,
 } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
+import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { logToolUsage } from "../../../../redux/util";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
@@ -35,6 +37,14 @@ const isCancelToolCallShortcut = (
   return modifierKey && event.key === "Backspace";
 };
 
+// Check if a tool call is a terminal command
+const isTerminalCommand = (toolCallState: any) => {
+  return (
+    toolCallState?.toolCall?.function?.name ===
+    BuiltInToolNames.RunTerminalCommand
+  );
+};
+
 export function LumpToolbar() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -55,13 +65,67 @@ export function LumpToolbar() {
   );
   const isApplying = applyStates.some((state) => state.status === "streaming");
 
+  // Get ALL running terminal commands
+  const runningToolCalls = useAppSelector((state) =>
+    selectToolCallsByStatus(state, "calling"),
+  );
+  const runningTerminalCalls = runningToolCalls.filter(isTerminalCommand);
+  const hasRunningTerminalCommand = runningTerminalCalls.length > 0;
+
+  // Simple handler: stop ALL running terminal commands
+  const handleStopAllTerminalCommands = async () => {
+    if (runningTerminalCalls.length === 0) {
+      return;
+    }
+
+    // Stop all terminal commands concurrently
+    const stopPromises = runningTerminalCalls.map(async (terminalCall) => {
+      try {
+        // Cancel the process on the backend
+        await ideMessenger.request("process/killTerminalProcess", {
+          toolCallId: terminalCall.toolCallId,
+        });
+
+        // Cancel the tool call in the UI
+        dispatch(
+          cancelToolCall({
+            toolCallId: terminalCall.toolCallId,
+          }),
+        );
+
+        logToolUsage(terminalCall, false, true, ideMessenger);
+      } catch (error) {
+        console.error(
+          `Failed to cancel terminal command ${terminalCall.toolCallId}:`,
+          error,
+        );
+      }
+    });
+
+    // Wait for all cancellations to complete
+    await Promise.all(stopPromises);
+  };
+
+  // Combined stop handler
+  const handleStopAction = async () => {
+    // Stop all terminal commands if any are running
+    if (hasRunningTerminalCommand) {
+      await handleStopAllTerminalCommands();
+    }
+
+    // Also stop regular streaming if it's happening
+    if (isStreaming) {
+      dispatch(cancelStream());
+    }
+  };
+
   useEffect(() => {
-    if (!firstPendingToolCall) {
+    if (!firstPendingToolCall && !hasRunningTerminalCommand) {
       return;
     }
 
     const handleToolCallKeyboardShortcuts = (event: KeyboardEvent) => {
-      if (isExecuteToolCallShortcut(event)) {
+      if (isExecuteToolCallShortcut(event) && firstPendingToolCall) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -71,13 +135,19 @@ export function LumpToolbar() {
       } else if (isCancelToolCallShortcut(event, jetbrains)) {
         event.preventDefault();
         event.stopPropagation();
-        void dispatch(
-          cancelToolCall({
-            toolCallId: firstPendingToolCall.toolCallId,
-          }),
-        );
 
-        logToolUsage(firstPendingToolCall, false, true, ideMessenger);
+        if (hasRunningTerminalCommand) {
+          // Stop running terminal commands
+          void handleStopAction();
+        } else if (firstPendingToolCall) {
+          // Cancel pending tool call
+          void dispatch(
+            cancelToolCall({
+              toolCallId: firstPendingToolCall.toolCallId,
+            }),
+          );
+          logToolUsage(firstPendingToolCall, false, true, ideMessenger);
+        }
       }
     };
 
@@ -85,7 +155,7 @@ export function LumpToolbar() {
     return () => {
       document.removeEventListener("keydown", handleToolCallKeyboardShortcuts);
     };
-  }, [firstPendingToolCall]);
+  }, [firstPendingToolCall, hasRunningTerminalCommand, runningTerminalCalls]);
 
   if (isApplying) {
     return <IsApplyingToolbar />;
@@ -103,8 +173,18 @@ export function LumpToolbar() {
     return <TtsActiveToolbar />;
   }
 
+  // Only show terminal streaming for actual terminal commands
+  if (hasRunningTerminalCommand) {
+    const count = runningTerminalCalls.length;
+    const stopText = `Stop Terminal${count > 1 ? ` (${count})` : ""}`;
+    return (
+      <StreamingToolbar onStop={handleStopAction} displayText={stopText} />
+    );
+  }
+
+  // Regular streaming (non-terminal)
   if (isStreaming) {
-    return <StreamingToolbar />;
+    return <StreamingToolbar onStop={() => dispatch(cancelStream())} />;
   }
 
   if (pendingToolCalls.length > 0) {

@@ -5,6 +5,7 @@ import node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
+import { isHeadlessMode } from "../util/cli.js";
 import { isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
@@ -36,14 +37,6 @@ export class PosthogService {
 
     await refetchConnection();
     return this._hasInternetConnection;
-  }
-
-  /**
-   * Check if running in headless mode (-p/--print flags)
-   */
-  private isHeadlessMode(): boolean {
-    const args = process.argv.slice(2);
-    return args.includes("-p") || args.includes("--print");
   }
 
   get isEnabled() {
@@ -100,7 +93,7 @@ export class PosthogService {
         extensionVersion: getVersion(),
         ideName: "cn",
         ideType: "cli",
-        isHeadless: this.isHeadlessMode(),
+        isHeadless: isHeadlessMode(),
         isGitHubCI: isGitHubActions(),
       };
       const payload = {

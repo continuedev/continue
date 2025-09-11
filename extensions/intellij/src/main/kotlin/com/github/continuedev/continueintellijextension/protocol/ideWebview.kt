@@ -9,7 +9,7 @@ data class ApplyToFileParams(
     val streamId: String,
     val filepath: String?,
     val toolCallId: String?,
-    val isSearchReplace: Boolean? = null
+    val isSearchAndReplace: Boolean? = null
 )
 
 data class InsertAtCursorParams(

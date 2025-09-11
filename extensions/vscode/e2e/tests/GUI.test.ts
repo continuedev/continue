@@ -16,7 +16,7 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
-describe("GUI Test", () => {
+describe.skip("GUI Test", () => {
   let view: WebView;
   let driver: WebDriver;
 

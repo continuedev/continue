@@ -46,7 +46,7 @@ class ApplyToFileHandler(
         }
 
         // Handle search/replace mode
-        if (params.isSearchReplace == true) {
+        if (params.isSearchAndReplace == true) {
             handleSearchReplace(editorUtils)
             return
         }
