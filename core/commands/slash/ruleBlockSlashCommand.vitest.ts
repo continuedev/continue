@@ -33,8 +33,21 @@ describe("convertRuleBlockToSlashCommand", () => {
 
     const result = convertRuleBlockToSlashCommand(rule);
 
-    expect(result.name).toBe("Unnamed Rule");
+    expect(result.name).toBe("Review this code");
     expect(result.prompt).toBe("Review this code");
+  });
+
+  it("should truncate long rule text when used as name", () => {
+    const rule: RuleWithSource = {
+      rule: "This is a very long rule text that should be truncated",
+      source: "rules-block",
+      invokable: true,
+    };
+
+    const result = convertRuleBlockToSlashCommand(rule);
+
+    expect(result.name).toBe("This is a very long ...");
+    expect(result.prompt).toBe("This is a very long rule text that should be truncated");
   });
 
   it("should handle a rule without description", () => {
