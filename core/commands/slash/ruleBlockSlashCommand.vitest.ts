@@ -47,7 +47,9 @@ describe("convertRuleBlockToSlashCommand", () => {
     const result = convertRuleBlockToSlashCommand(rule);
 
     expect(result.name).toBe("This is a very long ...");
-    expect(result.prompt).toBe("This is a very long rule text that should be truncated");
+    expect(result.prompt).toBe(
+      "This is a very long rule text that should be truncated",
+    );
   });
 
   it("should handle a rule without description", () => {
