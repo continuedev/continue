@@ -577,7 +577,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "High-performance local LLM inference with AMD hardware optimization",
     longDescription:
-      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. To get started:\n1. Install Lemonade: `pip install lemonade-sdk`\n2. Start the server: `lemonade-server run [model-name]`\n3. The server will be available at http://localhost:8000/api/v1\n4. Once the server is running, you can begin using Continue with your local models.",
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the server is running at http://localhost:8000/api/v1, you can begin using Continue with your local models.",
     icon: "lemonade.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {

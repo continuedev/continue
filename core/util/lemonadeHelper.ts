@@ -33,11 +33,10 @@ export async function startLocalLemonade(ide: IDE): Promise<any> {
 
   switch (process.platform) {
     case "linux": // Linux
-      // On Linux, users run Lemonade manually - no auto-start
       return;
 
     case "win32": // Windows
-      startCommand = "lemonade-server run\n";
+      startCommand = "lemonade-server serve\n";
       break;
 
     default:
