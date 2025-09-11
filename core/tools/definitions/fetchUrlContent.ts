@@ -6,7 +6,7 @@ export const fetchUrlContentTool: Tool = {
   displayTitle: "Read URL",
   wouldLikeTo: "fetch {{{ url }}}",
   isCurrently: "fetching {{{ url }}}",
-  hasAlready: "viewed {{{ url }}}",
+  hasAlready: "fetched {{{ url }}}",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
