@@ -105,7 +105,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
-      return openAICompatible("http://*********:5000/v1/", config);
+      return openAICompatible("http://127.0.0.1:5000/v1/", config);
     case "openrouter":
       return openAICompatible("https://openrouter.ai/api/v1/", config);
     case "cerebras":
