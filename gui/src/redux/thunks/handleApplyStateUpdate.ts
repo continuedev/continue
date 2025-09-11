@@ -89,6 +89,33 @@ export const handleApplyStateUpdate = createAsyncThunk<
                     toolCallId: applyState.toolCallId,
                   }),
                 );
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        name: "Edit Success",
+                        content: `Successfully edited ${applyState.filepath}`,
+                        description: "",
+                        hidden: true,
+                      },
+                    ],
+                  }),
+                );
+              } else {
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        name: "Edit Failed",
+                        content: `Failed to edit ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
+                        description: "",
+                        hidden: true,
+                      },
+                    ],
+                  }),
+                );
               }
 
               void dispatch(

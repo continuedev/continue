@@ -58,6 +58,13 @@ export function isGitHubActions(): boolean {
 }
 
 /**
+ * Check if running in Continue remote agents
+ */
+export function isContinueRemoteAgent(): boolean {
+  return process.env.CONTINUE_REMOTE === "true";
+}
+
+/**
  * Get repository URL from GitHub Actions environment variables
  * @returns GitHub repository URL or null if not available
  */

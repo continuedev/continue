@@ -36,22 +36,38 @@ export function getRangeInFileWithContents(
       };
     }
 
-    if (selection.isEmpty && !allowEmpty) {
+    if ((selection.isEmpty && !allowEmpty) || isEmptyFile(editor.document)) {
       return null;
     }
 
-    let selectionRange = new vscode.Range(selection.start, selection.end);
-    const document = editor.document;
-    // Select the context from the beginning of the selection start line to the selection start position
-    const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
-    const textBeforeSelectionStart = document.getText(
-      new vscode.Range(beginningOfSelectionStartLine, selection.start),
-    );
-    // If there are only whitespace before the start of the selection, include the indentation
-    if (textBeforeSelectionStart.trim().length === 0) {
-      selectionRange = selectionRange.with({
-        start: beginningOfSelectionStartLine,
-      });
+    let selectionRange: vscode.Range | undefined;
+    // if the selection is empty and document is not empty, select the whole document
+    if (selection.isEmpty) {
+      selectionRange = new vscode.Range(
+        new vscode.Position(0, 0),
+        new vscode.Position(
+          editor.document.lineCount - 1,
+          editor.document.lineAt(
+            editor.document.lineCount - 1,
+          ).range.end.character,
+        ),
+      );
+    }
+
+    if (!selectionRange) {
+      selectionRange = new vscode.Range(selection.start, selection.end);
+      const document = editor.document;
+      // Select the context from the beginning of the selection start line to the selection start position
+      const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
+      const textBeforeSelectionStart = document.getText(
+        new vscode.Range(beginningOfSelectionStartLine, selection.start),
+      );
+      // If there are only whitespace before the start of the selection, include the indentation
+      if (textBeforeSelectionStart.trim().length === 0) {
+        selectionRange = selectionRange.with({
+          start: beginningOfSelectionStartLine,
+        });
+      }
     }
 
     const contents = editor.document.getText(selectionRange);
@@ -61,12 +77,12 @@ export function getRangeInFileWithContents(
       contents,
       range: {
         start: {
-          line: selection.start.line,
-          character: selection.start.character,
+          line: selectionRange.start.line,
+          character: selectionRange.start.character,
         },
         end: {
-          line: selection.end.line,
-          character: selection.end.character,
+          line: selectionRange.end.line,
+          character: selectionRange.end.character,
         },
       },
     };
@@ -78,7 +94,7 @@ export function getRangeInFileWithContents(
 export async function addHighlightedCodeToContext(
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
-  const rangeInFileWithContents = getRangeInFileWithContents();
+  const rangeInFileWithContents = getRangeInFileWithContents(true);
   if (rangeInFileWithContents) {
     webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
@@ -127,6 +143,10 @@ export async function addEntireFileToContext(
   webviewProtocol?.request("highlightedCode", {
     rangeInFileWithContents,
   });
+}
+
+export function isEmptyFile(document: vscode.TextDocument) {
+  return document.lineCount === 1 && document.lineAt(0).range.isEmpty;
 }
 
 export function addCodeToContextFromRange(
