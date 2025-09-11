@@ -29,11 +29,16 @@ export async function isLemonadeInstalled(): Promise<boolean> {
 }
 
 export async function startLocalLemonade(ide: IDE): Promise<any> {
+  
   let startCommand: string | undefined;
 
   switch (process.platform) {
     case "linux": // Linux
-      return;
+      // On Linux, direct users to start Lemonade manually
+      return ide.showToast(
+        "info",
+        "Please start Lemonade manually. Visit https://lemonade-server.ai for instructions.",
+      );
 
     case "win32": // Windows
       startCommand = "lemonade-server serve\n";
