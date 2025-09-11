@@ -95,6 +95,7 @@ const FileSearchMaybe: React.FC<{
 interface UserInputProps {
   onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
+  isCompacting?: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
@@ -110,6 +111,7 @@ interface UserInputProps {
 const UserInput: React.FC<UserInputProps> = ({
   onSubmit,
   isWaitingForResponse,
+  isCompacting = false,
   inputMode,
   onInterrupt,
   assistant,
@@ -524,8 +526,8 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        if (isWaitingForResponse) {
-          // Process message later when LLM has responded
+        if (isWaitingForResponse || isCompacting) {
+          // Process message later when LLM has responded or compaction is complete
           void messageQueue.enqueueMessage(
             submittedText,
             imageMap,
@@ -573,6 +575,12 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText("");
       setCursorPosition(0);
       setShowBashMode(false);
+      return true;
+    }
+
+    // Handle escape key to interrupt compaction (higher priority)
+    if (isCompacting && onInterrupt) {
+      onInterrupt();
       return true;
     }
 
