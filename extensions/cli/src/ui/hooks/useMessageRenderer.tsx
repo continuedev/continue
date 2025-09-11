@@ -3,10 +3,13 @@ import React, { useCallback } from "react";
 import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { MemoizedMessage } from "../components/MemoizedMessage.js";
 
+import { type ChatHistoryItemWithSplit } from "./useChat.splitMessage.helpers.js";
+
 export function useMessageRenderer() {
   const renderMessage = useCallback((item: ChatHistoryItem, index: number) => {
-    // Generate a unique key by combining message role, content hash, and timestamp
-    // This provides a stable identifier that won't change during re-renders
+    const itemWithSplit = item as ChatHistoryItemWithSplit;
+
+    // Generate a unique key by combining message role, content hash, and metadata
     const messageContent =
       typeof item.message.content === "string"
         ? item.message.content
@@ -16,9 +19,19 @@ export function useMessageRenderer() {
       ? item.toolCallStates.map((tc) => tc.toolCallId).join("-")
       : "";
 
-    const uniqueKey = `${item.message.role}-${messageContent.slice(0, 50)}-${toolCallsKey}-${index}`;
+    const toolResultKey = itemWithSplit.toolResultRow
+      ? `tool-${itemWithSplit.toolResultRow.toolCallId}-${itemWithSplit.toolResultRow.rowData.type}`
+      : "";
 
-    return <MemoizedMessage key={uniqueKey} item={item} index={index} />;
+    const splitKey = itemWithSplit.splitMessage
+      ? `split-${itemWithSplit.splitMessage.rowIndex}-${itemWithSplit.splitMessage.totalRows}`
+      : "";
+
+    const uniqueKey = `${item.message.role}-${messageContent.slice(0, 50)}-${toolCallsKey}-${toolResultKey}-${splitKey}-${index}`;
+
+    return (
+      <MemoizedMessage key={uniqueKey} item={itemWithSplit} index={index} />
+    );
   }, []);
 
   return { renderMessage };

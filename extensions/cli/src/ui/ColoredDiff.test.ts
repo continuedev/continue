@@ -1,7 +1,7 @@
 import { render } from "ink-testing-library";
 import React from "react";
 
-import { ColoredDiff } from "./ColoredDiff.js";
+import { ColoredDiff } from "./ColoredDiff.deprecated.js";
 
 describe("ColoredDiff", () => {
   it("renders simple line additions", () => {

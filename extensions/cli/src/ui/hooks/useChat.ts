@@ -26,6 +26,7 @@ import {
   formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
+  processHistoryForTerminalDisplay,
   processSlashCommandResult,
   trackUserMessage,
 } from "./useChat.helpers.js";
@@ -61,6 +62,7 @@ export function useChat({
   onClear,
   isRemoteMode = false,
   remoteUrl,
+  terminalWidth,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -119,9 +121,17 @@ export function useChat({
     svc
       .initialize(currentSession, isRemoteMode)
       .then(() => {
-        setChatHistoryView(svc.getHistory());
+        const processedHistory = processHistoryForTerminalDisplay(
+          svc.getHistory(),
+          terminalWidth,
+        );
+        setChatHistoryView(processedHistory);
         const listener = () => {
-          setChatHistoryView(svc.getHistory());
+          const processedHistory = processHistoryForTerminalDisplay(
+            svc.getHistory(),
+            terminalWidth,
+          );
+          setChatHistoryView(processedHistory);
         };
         svc.on("stateChanged", listener);
         serviceListenerCleanupRef.current = () =>
@@ -220,7 +230,11 @@ export function useChat({
     const initializeHistory = async () => {
       // Only add system message if we don't have any messages yet
       if (chatHistory.length === 0) {
-        const history = await initChatHistory(resume, initialRules);
+        const history = await initChatHistory(
+          terminalWidth,
+          resume,
+          initialRules,
+        );
         setChatHistory(history);
       }
       setIsChatHistoryInitialized(true);
@@ -287,6 +301,7 @@ export function useChat({
         setActivePermissionRequest,
         llmApi,
         model,
+        terminalWidth,
       });
 
       // Execute streaming chat response
@@ -491,9 +506,10 @@ export function useChat({
     if (isQueuedMessage) {
       // For queued messages, we need to format and add to history after compaction
       // First, format the message
-      const formattedQueuedMessage = await formatMessageWithFiles(
+      const formattedQueuedMessages = await formatMessageWithFiles(
         message,
         [], // No attached files for queued messages
+        terminalWidth,
         imageMap,
       );
 
@@ -536,8 +552,8 @@ export function useChat({
         setCompactionAbortController(null);
       }
 
-      // Add the formatted queued message to history after compaction completes
-      const newHistory = [...currentChatHistory, formattedQueuedMessage];
+      // Add the formatted queued messages to history after compaction completes
+      const newHistory = [...currentChatHistory, ...formattedQueuedMessages];
       setChatHistory(newHistory);
 
       // Remove the queued message from display since it's now in chat history
@@ -553,9 +569,10 @@ export function useChat({
         hasImages: !!(imageMap && imageMap.size > 0),
         imageCount: imageMap?.size || 0,
       });
-      const newUserMessage = await formatMessageWithFiles(
+      const newUserMessages = await formatMessageWithFiles(
         message,
         attachedFiles,
+        terminalWidth,
         imageMap,
       );
       logger.debug("Message formatted successfully");
@@ -603,8 +620,8 @@ export function useChat({
         setCompactionAbortController(null);
       }
 
-      // Add the formatted user message to history
-      const newHistory = [...currentChatHistory, newUserMessage];
+      // Add the formatted user messages to history
+      const newHistory = [...currentChatHistory, ...newUserMessages];
       setChatHistory(newHistory);
 
       // Remove the triggering message from queue display since it's now in chat history
@@ -703,6 +720,7 @@ export function useChat({
 
   const resetChatHistory = async () => {
     const newHistory = await initChatHistory(
+      terminalWidth,
       false, // Don't resume when resetting
       additionalRules,
     );

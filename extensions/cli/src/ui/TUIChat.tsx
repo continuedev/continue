@@ -26,6 +26,7 @@ import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
+import { useTerminalSize } from "./hooks/useTerminalSize.js";
 import {
   useCurrentMode,
   useIntroMessage,
@@ -173,6 +174,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // State to trigger static content refresh for /clear command
   const [staticRefreshTrigger, setStaticRefreshTrigger] = useState(0);
 
+  // Get terminal size
+  const { columns } = useTerminalSize();
+
   // Use chat handlers hook
   const { handleClear, handleReload, resetChatHistoryRef } = useChatHandlers(
     setShowIntroMessage,
@@ -214,6 +218,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    terminalWidth: columns,
   });
 
   // Update ref after useChat returns

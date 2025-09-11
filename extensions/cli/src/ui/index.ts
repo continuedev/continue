@@ -8,8 +8,6 @@ import { ServiceContainerProvider } from "../services/ServiceContainerContext.js
 
 import { AppRoot } from "./AppRoot.js";
 
-export { MarkdownRenderer } from "./MarkdownRenderer.js";
-
 interface StartTUIChatOptions {
   initialPrompt?: string;
   resume?: boolean;

@@ -44,11 +44,27 @@ export function SessionSelector({
 
   // Calculate how many sessions we can display based on terminal height
   const displaySessions = useMemo(() => {
-    // Reserve 5 lines for header and instructions, each session takes 3 lines (2 content + 1 spacer)
-    const availableHeight = Math.max(1, terminalHeight - 5);
-    const maxDisplayableSessions = Math.floor(availableHeight / 3);
+    // Reserve lines for UI components:
+    // - 3 lines for header (title + instructions + spacer)
+    // - 2 lines for box borders (top + bottom)
+    // - 2 lines for padding/margins
+    // - 2 lines for status bar (when used with /resume command)
+    // - Each session takes 3 lines (title + timestamp + spacer)
+    const reservedLines = 9; // Account for status bar too
+    const linesPerSession = 3;
+    const availableHeight = Math.max(0, terminalHeight - reservedLines);
+    const maxDisplayableSessions = Math.max(
+      1,
+      Math.floor(availableHeight / linesPerSession),
+    );
 
-    return sessions.slice(0, maxDisplayableSessions);
+    // Further limit to ensure we never exceed screen bounds
+    const safeLimitedSessions = Math.min(
+      maxDisplayableSessions,
+      sessions.length,
+    );
+
+    return sessions.slice(0, safeLimitedSessions);
   }, [sessions, terminalHeight]);
 
   useInput((input, key) => {
@@ -64,7 +80,11 @@ export function SessionSelector({
       if (displaySessions[selectedIndex]) {
         onSelect(displaySessions[selectedIndex].sessionId);
       }
-    } else if (key.escape || (key.ctrl && input === "d")) {
+    } else if (
+      key.escape ||
+      (key.ctrl && input === "d") ||
+      (key.ctrl && input === "c")
+    ) {
       onExit();
     }
   });

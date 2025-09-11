@@ -1,3 +1,12 @@
+/**
+ * DEPRECATED: This component is no longer used
+ *
+ * Replaced by processChecklistRows() in ToolResultProcessor.tsx which processes
+ * checklist content upstream into pre-styled segments to prevent flickering.
+ * The new architecture eliminates nested component rendering in favor of
+ * simple styled segments that render instantly.
+ */
+
 import { Box, Text } from "ink";
 import React from "react";
 

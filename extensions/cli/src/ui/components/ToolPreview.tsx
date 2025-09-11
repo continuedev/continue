@@ -3,9 +3,9 @@ import React from "react";
 
 import { getToolDisplayName } from "../../tools/index.js";
 import { ToolCallPreview } from "../../tools/types.js";
-import { ColoredDiff } from "../ColoredDiff.js";
+import { ColoredDiff } from "../ColoredDiff.deprecated.js";
 
-import { ChecklistDisplay } from "./ChecklistDisplay.js";
+import { ChecklistDisplay } from "./ChecklistDisplay.deprecated.js";
 
 interface ToolPreviewProps {
   toolCallPreview?: ToolCallPreview[];

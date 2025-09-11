@@ -1,7 +1,7 @@
 import { render } from "ink-testing-library";
 import React from "react";
 
-import { MarkdownRenderer } from "./MarkdownRenderer.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.deprecated.js";
 
 describe("MarkdownRenderer - thinking tags", () => {
   it("handles multiple thinking tags", () => {

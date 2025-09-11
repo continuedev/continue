@@ -1,3 +1,12 @@
+/**
+ * DEPRECATED: This component is no longer used
+ *
+ * Replaced by MarkdownProcessor.tsx which processes markdown content upstream
+ * into pre-styled segments. The new architecture eliminates markdown rendering
+ * inside MemoizedMessage components, preventing flickering during terminal resizing.
+ * Text is now processed once and split into styled segments that render instantly.
+ */
+
 import { Text } from "ink";
 import React from "react";
 

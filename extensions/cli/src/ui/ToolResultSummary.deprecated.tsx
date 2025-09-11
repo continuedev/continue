@@ -1,3 +1,12 @@
+/**
+ * DEPRECATED: This component is no longer used
+ *
+ * Replaced by processToolResultIntoRows() in ToolResultProcessor.tsx which processes
+ * all tool results upstream into pre-styled segments. This eliminates the complex
+ * nested component rendering (ChecklistDisplay, ColoredDiff, etc.) that caused
+ * flickering and replaces it with simple styled segments that render instantly.
+ */
+
 import path from "path";
 
 import { Box, Text } from "ink";
@@ -5,8 +14,8 @@ import React from "react";
 
 import { getToolDisplayName } from "src/tools/index.js";
 
-import { ColoredDiff } from "./ColoredDiff.js";
-import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
+import { ColoredDiff } from "./ColoredDiff.deprecated.js";
+import { ChecklistDisplay } from "./components/ChecklistDisplay.deprecated.js";
 
 const MAX_BASH_OUTPUT_LINES = 4;
 

@@ -1,7 +1,7 @@
 import { Text } from "ink";
 import React from "react";
 
-import { MarkdownRenderer } from "./MarkdownRenderer.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.deprecated.js";
 
 describe("MarkdownRenderer", () => {
   // Helper function to simulate calling the component function directly

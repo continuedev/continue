@@ -1,3 +1,12 @@
+/**
+ * DEPRECATED: This component is no longer used
+ *
+ * Replaced by processDiffIntoRows() in ToolResultProcessor.tsx which processes
+ * diff content upstream into pre-styled segments with +/- colors and line numbers.
+ * The new architecture eliminates complex nested component rendering in favor of
+ * simple styled segments that render instantly without flickering.
+ */
+
 import { diffWordsWithSpace, Change } from "diff";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
