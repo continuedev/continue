@@ -74,7 +74,7 @@ export class VsCodeIdeUtils {
     return this._workspaceDirectories;
   }
 
-  public setWokspaceDirectories(dirs: vscode.Uri[] | undefined): void {
+  setWokspaceDirectories(dirs: vscode.Uri[] | undefined): void {
     this._workspaceDirectories = dirs;
   }
 
