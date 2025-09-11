@@ -16,6 +16,7 @@ import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
+import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { useMainEditor } from "./mainInput/TipTapEditor";
@@ -26,7 +27,6 @@ import {
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
-import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -280,7 +280,8 @@ const Layout = () => {
               <GridDiv>
                 <PostHogPageView />
                 <Outlet />
-                <FatalErrorIndicator />
+                {/* The fatal error for chat is shown below input */}
+                {location.pathname !== "/" && <FatalErrorIndicator />}
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
