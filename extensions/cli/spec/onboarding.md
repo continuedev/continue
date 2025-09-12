@@ -7,10 +7,11 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
 **The onboarding flow runs when the user hasn't completed onboarding before, regardless of whether they have a valid config.yaml file.**
 
 1. If the --config flag is provided, load this config
-2. Otherwise, we will present the user with two options:
-
+2. Otherwise, check if AWS credentials are available through the standard AWS credential chain
+3. Present the user with available options:
    - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
    - Enter your Anthropic API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
+   - Use AWS credentials: (only shown if AWS credentials are available) automatically create a config using AWS Bedrock Claude and skip further onboarding
 
    ```yaml
    name: Local Config
@@ -21,6 +22,19 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
      - uses: anthropic/claude-4-sonnet
        with:
          ANTHROPIC_API_KEY: <THEIR_ANTHROPIC_API_KEY>
+   ```
+
+   For the AWS option, it will create/update the config with:
+
+   ```yaml
+   name: Local Config
+   version: 1.0.0
+   schema: v1
+
+   models:
+     - uses: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+       with:
+         region: us-east-1
    ```
 
 When something in the onboarding flow is done automatically, we should tell the user what happened.
