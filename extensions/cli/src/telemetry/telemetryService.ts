@@ -10,13 +10,17 @@ import {
 } from "@opentelemetry/sdk-metrics";
 import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+  SEMRESATTRS_HOST_NAME,
   SEMRESATTRS_OS_TYPE,
   SEMRESATTRS_PROCESS_PID,
+  SEMRESATTRS_SERVICE_INSTANCE_ID,
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
 
+import { isHeadlessMode } from "../util/cli.js";
+import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
@@ -52,6 +56,7 @@ class TelemetryService {
   private mcpConnectionsGauge: any = null;
   private startupTimeHistogram: any = null;
   private responseTimeHistogram: any = null;
+  private slashCommandCounter: any = null;
 
   constructor() {
     this.config = this.loadConfig();
@@ -88,6 +93,8 @@ class TelemetryService {
       const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: "continue-cli",
         [SEMRESATTRS_SERVICE_VERSION]: getVersion(),
+        [SEMRESATTRS_SERVICE_INSTANCE_ID]: uuidv4(),
+        [SEMRESATTRS_HOST_NAME]: os.hostname(),
         [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
           process.env.NODE_ENV || "development",
         [SEMRESATTRS_OS_TYPE]: os.type(),
@@ -281,6 +288,14 @@ class TelemetryService {
         unit: "ms",
       },
     );
+
+    this.slashCommandCounter = this.meter.createCounter(
+      "continue_cli_slash_command_usage",
+      {
+        description: "Count of slash commands used",
+        unit: "count",
+      },
+    );
   }
 
   // Check if telemetry is enabled - this is the single point of checking
@@ -337,7 +352,16 @@ class TelemetryService {
     if (!this.isEnabled()) return;
 
     logger.debug("Recording session start with telemetry");
-    this.sessionCounter.add(1, this.getStandardAttributes());
+
+    // Add extra metadata for session breakdown
+    const isGitHubActionsEnv = isGitHubActions();
+    const sessionAttributes = this.getStandardAttributes({
+      is_headless: isHeadlessMode().toString(),
+      is_github_actions: isGitHubActionsEnv.toString(),
+      is_continue_remote_agent: isContinueRemoteAgent().toString(),
+    });
+
+    this.sessionCounter.add(1, sessionAttributes);
     this.recordStartupTime(Date.now() - this.startTime);
   }
 
@@ -565,6 +589,15 @@ class TelemetryService {
 
   public getSessionId(): string {
     return this.config.sessionId;
+  }
+
+  public recordSlashCommand(commandName: string) {
+    if (!this.isEnabled()) return;
+
+    this.slashCommandCounter.add(
+      1,
+      this.getStandardAttributes({ command: commandName }),
+    );
   }
 
   /**

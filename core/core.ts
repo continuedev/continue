@@ -29,8 +29,9 @@ import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
   isProcessBackgrounded,
+  killTerminalProcess,
   markProcessAsBackgrounded,
-} from "./util/processTerminalBackgroundStates";
+} from "./util/processTerminalStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -138,7 +139,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-      const sessionInfoPromise = messenger.request(
+      const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
           silent: true,
@@ -148,9 +149,8 @@ export class Core {
 
       this.configHandler = new ConfigHandler(
         this.ide,
-        ideSettingsPromise,
         this.llmLogger,
-        sessionInfoPromise,
+        initialSessionInfoPromise,
       );
 
       this.docsService = DocsService.createSingleton(
@@ -175,6 +175,13 @@ export class Core {
         }
       };
 
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
+
       this.configHandler.onConfigUpdate((result) => {
         void (async () => {
           const serializedResult =
@@ -187,6 +194,12 @@ export class Core {
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
 
+          if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
+            await this.codeBaseIndexer.refreshCodebaseIndex(
+              await this.ide.getWorkspaceDirs(),
+            );
+          }
+
           // update additional submenu context providers registered via VSCode API
           const additionalProviders =
             this.configHandler.getAdditionalSubmenuContextProviders();
@@ -197,13 +210,6 @@ export class Core {
           }
         })();
       });
-
-      this.codeBaseIndexer = new CodebaseIndexer(
-        this.configHandler,
-        this.ide,
-        this.messenger,
-        this.globalContext.get("indexingPaused"),
-      );
 
       // Dev Data Logger
       const dataLogger = DataLogger.getInstance();
@@ -1056,6 +1062,10 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("process/killTerminalProcess", async ({ data: { toolCallId } }) => {
+      await killTerminalProcess(toolCallId);
+    });
 
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
