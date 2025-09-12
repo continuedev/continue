@@ -7,6 +7,7 @@ import type {
   ChatHistoryItem,
 } from "../../../../../core/index.js";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
+import type { ChatHistoryItemWithSplit } from "../hooks/useChat.splitMessage.helpers.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
   beforeEach(() => {
@@ -303,6 +304,9 @@ describe("TUIChat - Tool Permission Tests", () => {
     const { MemoizedMessage } = await import(
       "../components/MemoizedMessage.js"
     );
+    const { processHistoryForTerminalDisplay } = await import(
+      "../hooks/useChat.helpers.js"
+    );
 
     // Test the ToolResultSummary component directly
     const { lastFrame: summaryFrame } = render(
@@ -353,8 +357,23 @@ describe("TUIChat - Tool Permission Tests", () => {
       toolCallStates: [toolCallState],
     };
 
+    // Process the history item through the proper pipeline to create tool result rows
+    const processedHistory = processHistoryForTerminalDisplay(
+      [historyItem],
+      80,
+    );
+
+    // The processed history should contain multiple items (header + output rows)
+    expect(processedHistory.length).toBeGreaterThan(0);
+
+    // Find the tool header row (should contain the tool name)
+    const toolHeaderRow = processedHistory.find(
+      (item) => (item as ChatHistoryItemWithSplit).toolResultRow?.rowData.type === "header",
+    );
+    expect(toolHeaderRow).toBeDefined();
+
     const { lastFrame: messageFrame } = render(
-      <MemoizedMessage item={historyItem} index={0} />,
+      <MemoizedMessage item={toolHeaderRow!} index={0} />,
     );
 
     await vi.advanceTimersByTimeAsync(100);
