@@ -303,9 +303,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
     // Give a moment for the response to be sent
     setTimeout(() => {
-      server.close(() => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
-        process.exit(0);
+        const { gracefulExit } = await import("../util/exit.js");
+        await gracefulExit(0);
       });
     }, 100);
   });
@@ -433,9 +434,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         ),
       );
       state.serverRunning = false;
-      server.close(() => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
-        process.exit(0);
+        const { gracefulExit } = await import("../util/exit.js");
+        await gracefulExit(0);
       });
       if (inactivityChecker) {
         clearInterval(inactivityChecker);
@@ -452,9 +454,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;
     }
-    server.close(() => {
+    server.close(async () => {
       telemetryService.stopActiveTime();
-      process.exit(0);
+      const { gracefulExit } = await import("../util/exit.js");
+      await gracefulExit(0);
     });
   });
 }

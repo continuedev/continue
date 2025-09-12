@@ -19,6 +19,7 @@ import {
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
+import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
@@ -62,8 +63,7 @@ export function enableSigintHandler() {
       if (tuiUnmount) {
         tuiUnmount();
       }
-      await sentryService.flush();
-      process.exit(0);
+      await gracefulExit(0);
     } else {
       // First Ctrl+C or too much time elapsed - show exit message
       lastCtrlCTime = now;
@@ -217,7 +217,7 @@ addCommonOptions(program)
       safeStderr('  cn -p "please review my current git diff"\n');
       safeStderr('  echo "hello" | cn -p\n');
       safeStderr('  cn -p "analyze the code in src/"\n');
-      process.exit(1);
+      await gracefulExit(1);
     }
 
     // Map --print to headless mode
@@ -318,7 +318,7 @@ program
 program.on("command:*", () => {
   console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
   program.outputHelp();
-  process.exit(1);
+  void gracefulExit(1);
 });
 
 // Parse arguments and handle errors
@@ -329,10 +329,9 @@ try {
   sentryService.captureException(
     error instanceof Error ? error : new Error(String(error)),
   );
-  process.exit(1);
+  void gracefulExit(1);
 }
 
 process.on("SIGTERM", async () => {
-  await sentryService.flush();
-  process.exit(0);
+  await gracefulExit(0);
 });

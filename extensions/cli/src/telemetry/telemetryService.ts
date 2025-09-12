@@ -23,6 +23,8 @@ import { isHeadlessMode } from "../util/cli.js";
 import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
+ 
+import { detectTerminalType, parseOtelHeaders } from "./headerUtils.js";
 
 export interface TelemetryConfig {
   enabled: boolean;
@@ -113,11 +115,20 @@ class TelemetryService {
             readers.push(
               new PeriodicExportingMetricReader({
                 exporter: new OTLPMetricExporter({
-                  url:
-                    process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ||
-                    `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics` ||
-                    "http://localhost:4318/v1/metrics",
-                  headers: this.parseHeaders(
+                  url: (() => {
+                    const metricsEndpoint =
+                      process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT;
+                    if (metricsEndpoint && metricsEndpoint.trim().length > 0) {
+                      return metricsEndpoint;
+                    }
+                    const base = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+                    if (base && base.trim().length > 0) {
+                      const normalized = base.replace(/\/$/, "");
+                      return `${normalized}/v1/metrics`;
+                    }
+                    return "http://localhost:4318/v1/metrics";
+                  })(),
+                  headers: parseOtelHeaders(
                     process.env.OTEL_EXPORTER_OTLP_HEADERS || "",
                   ),
                 }),
@@ -181,20 +192,6 @@ class TelemetryService {
     process.once("SIGTERM", shutdownHandler);
 
     this.shutdownHandlersRegistered = true;
-  }
-
-  private parseHeaders(headersStr: string): Record<string, string> {
-    const headers: Record<string, string> = {};
-    if (!headersStr) return headers;
-
-    headersStr.split(",").forEach((header) => {
-      const [key, value] = header.split("=");
-      if (key && value) {
-        headers[key.trim()] = value.trim();
-      }
-    });
-
-    return headers;
   }
 
   private initializeMetrics() {
@@ -325,7 +322,7 @@ class TelemetryService {
     }
 
     // Detect terminal type
-    const terminalType = this.detectTerminalType();
+    const terminalType = detectTerminalType();
     if (terminalType) {
       attributes["terminal.type"] = terminalType;
     }
@@ -333,18 +330,7 @@ class TelemetryService {
     return attributes;
   }
 
-  private detectTerminalType(): string | undefined {
-    if (process.env.TERM_PROGRAM) {
-      return process.env.TERM_PROGRAM;
-    }
-    if (process.env.VSCODE_PID) {
-      return "vscode";
-    }
-    if (process.env.TMUX) {
-      return "tmux";
-    }
-    return undefined;
-  }
+  
 
   // Public methods for tracking metrics
 
@@ -435,13 +421,12 @@ class TelemetryService {
     if (!this.isEnabled()) return;
 
     if (this.activeStartTime !== null) {
-      this.totalActiveTime += Date.now() - this.activeStartTime;
+      const deltaMs = Date.now() - this.activeStartTime;
+      this.totalActiveTime += deltaMs;
       this.activeStartTime = null;
 
-      this.activeTimeCounter.add(
-        this.totalActiveTime / 1000,
-        this.getStandardAttributes(),
-      );
+      // Record only the delta for this active window (in seconds)
+      this.activeTimeCounter.add(deltaMs / 1000, this.getStandardAttributes());
     }
   }
 

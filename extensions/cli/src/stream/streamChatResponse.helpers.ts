@@ -64,7 +64,11 @@ export function handleHeadlessPermission(
     `If you don't want the tool to be included, use --exclude ${toolName}.`,
   );
 
-  process.exit(1);
+  // Use graceful exit to flush telemetry even in headless denial
+  // Note: We purposely trigger an async exit without awaiting in this sync path
+  import("../util/exit.js").then(({ gracefulExit }) => gracefulExit(1));
+  // Throw to satisfy the never return type; process will exit shortly
+  throw new Error("Exiting due to headless permission requirement");
 }
 
 // Helper function to request user permission
