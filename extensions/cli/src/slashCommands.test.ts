@@ -284,11 +284,16 @@ describe("slashCommands", () => {
     it("should handle /title command with valid title", async () => {
       const { updateSessionTitle } = await import("./session.js");
 
-      const result = await handleSlashCommands("/title My New Session Title", mockAssistant);
+      const result = await handleSlashCommands(
+        "/title My New Session Title",
+        mockAssistant,
+      );
 
       expect(updateSessionTitle).toHaveBeenCalledWith("My New Session Title");
       expect(result).toBeDefined();
-      expect(result?.output).toContain('Session title updated to: "My New Session Title"');
+      expect(result?.output).toContain(
+        'Session title updated to: "My New Session Title"',
+      );
       expect(result?.exit).toBe(false);
     });
 
@@ -296,7 +301,9 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/title", mockAssistant);
 
       expect(result).toBeDefined();
-      expect(result?.output).toContain("Please provide a title. Usage: /title <your title>");
+      expect(result?.output).toContain(
+        "Please provide a title. Usage: /title <your title>",
+      );
       expect(result?.exit).toBe(false);
     });
 
@@ -304,7 +311,9 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/title   ", mockAssistant);
 
       expect(result).toBeDefined();
-      expect(result?.output).toContain("Please provide a title. Usage: /title <your title>");
+      expect(result?.output).toContain(
+        "Please provide a title. Usage: /title <your title>",
+      );
       expect(result?.exit).toBe(false);
     });
 
@@ -315,10 +324,15 @@ describe("slashCommands", () => {
         throw new Error("Failed to save session");
       });
 
-      const result = await handleSlashCommands("/title Test Title", mockAssistant);
+      const result = await handleSlashCommands(
+        "/title Test Title",
+        mockAssistant,
+      );
 
       expect(result).toBeDefined();
-      expect(result?.output).toContain("Failed to update title: Failed to save session");
+      expect(result?.output).toContain(
+        "Failed to update title: Failed to save session",
+      );
       expect(result?.exit).toBe(false);
     });
   });

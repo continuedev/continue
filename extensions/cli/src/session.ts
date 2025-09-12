@@ -6,7 +6,11 @@ import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
-import { getAccessToken, isAuthenticatedConfig, loadAuthConfig } from "./auth/workos.js";
+import {
+  getAccessToken,
+  isAuthenticatedConfig,
+  loadAuthConfig,
+} from "./auth/workos.js";
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
@@ -300,8 +304,12 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
   try {
     const authConfig = loadAuthConfig();
     const accessToken = getAccessToken(authConfig);
-      
-    if (!accessToken || !isAuthenticatedConfig(authConfig) || !authConfig.userEmail.endsWith("@continue.dev")) {
+
+    if (
+      !accessToken ||
+      !isAuthenticatedConfig(authConfig) ||
+      !authConfig.userEmail.endsWith("@continue.dev")
+    ) {
       return [];
     }
 
@@ -319,7 +327,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
     }
 
     const agents = await response.json();
-    
+
     return agents.map((agent: any) => ({
       sessionId: `remote-${agent.id}`,
       title: agent.name || "Remote Agent",
@@ -327,7 +335,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
       workspaceDirectory: "",
       isRemote: true,
       remoteId: agent.id,
-      firstUserMessage: "Remote agent session"
+      firstUserMessage: "Remote agent session",
     }));
   } catch (error) {
     logger.error("Error fetching remote sessions:", error);
@@ -373,10 +381,13 @@ export async function listSessions(
 
     // Get remote sessions
     const remoteSessions = await getRemoteSessions();
-    
+
     // Combine and sort by date (most recent first)
     const allSessions = [...localSessionsWithPreview, ...remoteSessions]
-      .sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      )
       .slice(0, limit);
 
     return allSessions;

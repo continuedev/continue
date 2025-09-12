@@ -146,12 +146,14 @@ async function handleFork() {
 
 function handleTitle(args: string[]) {
   posthogService.capture("useSlashCommand", { name: "title" });
-  
+
   const title = args.join(" ").trim();
   if (!title) {
     return {
       exit: false,
-      output: chalk.yellow("Please provide a title. Usage: /title <your title>"),
+      output: chalk.yellow(
+        "Please provide a title. Usage: /title <your title>",
+      ),
     };
   }
 

@@ -46,7 +46,7 @@ export function SessionSelector({
   const { displaySessions, scrollOffset } = useMemo(() => {
     // Account for:
     // - Box border (top + bottom): 2 lines
-    // - Box padding (top + bottom): 2 lines  
+    // - Box padding (top + bottom): 2 lines
     // - Header "Recent Sessions": 1 line
     // - Instructions line: 1 line
     // - Empty line after instructions: 1 line
@@ -54,7 +54,7 @@ export function SessionSelector({
     // Total overhead: ~9 lines
     const availableHeight = Math.max(1, terminalHeight - 9);
     const maxDisplayableSessions = Math.floor(availableHeight / 3);
-    
+
     // If we can display all sessions, no need to scroll
     if (sessions.length <= maxDisplayableSessions) {
       return { displaySessions: sessions, scrollOffset: 0 };
@@ -65,23 +65,22 @@ export function SessionSelector({
     if (selectedIndex >= maxDisplayableSessions) {
       scrollOffset = Math.min(
         selectedIndex - maxDisplayableSessions + 1,
-        sessions.length - maxDisplayableSessions
+        sessions.length - maxDisplayableSessions,
       );
     }
 
-    const displaySessions = sessions.slice(scrollOffset, scrollOffset + maxDisplayableSessions);
+    const displaySessions = sessions.slice(
+      scrollOffset,
+      scrollOffset + maxDisplayableSessions,
+    );
     return { displaySessions, scrollOffset };
   }, [sessions, terminalHeight, selectedIndex]);
 
   useInput((input, key) => {
     if (key.upArrow || input === "k") {
-      setSelectedIndex((prev) =>
-        prev > 0 ? prev - 1 : sessions.length - 1,
-      );
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : sessions.length - 1));
     } else if (key.downArrow || input === "j") {
-      setSelectedIndex((prev) =>
-        prev < sessions.length - 1 ? prev + 1 : 0,
-      );
+      setSelectedIndex((prev) => (prev < sessions.length - 1 ? prev + 1 : 0));
     } else if (key.return) {
       if (sessions[selectedIndex]) {
         onSelect(sessions[selectedIndex].sessionId);
@@ -107,11 +106,13 @@ export function SessionSelector({
   return (
     <Box {...defaultBoxStyles("blue")}>
       <Text color="blue" bold>
-        Recent Sessions {sessions.length > displaySessions.length && `(${selectedIndex + 1}/${sessions.length})`}
+        Recent Sessions{" "}
+        {sessions.length > displaySessions.length &&
+          `(${selectedIndex + 1}/${sessions.length})`}
       </Text>
       <Text color="gray">↑/↓ to navigate, Enter to select, Esc to exit</Text>
       <Text> </Text>
-      
+
       {hasMoreAbove && (
         <Text color="gray" italic>
           ⬆ {scrollOffset} more sessions above...
@@ -144,10 +145,11 @@ export function SessionSelector({
           </Box>
         );
       })}
-      
+
       {hasMoreBelow && (
         <Text color="gray" italic>
-          ⬇ {sessions.length - scrollOffset - displaySessions.length} more sessions below...
+          ⬇ {sessions.length - scrollOffset - displaySessions.length} more
+          sessions below...
         </Text>
       )}
     </Box>

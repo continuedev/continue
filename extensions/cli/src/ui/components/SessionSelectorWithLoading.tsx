@@ -9,10 +9,9 @@ interface SessionSelectorWithLoadingProps {
   onExit: () => void;
 }
 
-export const SessionSelectorWithLoading: React.FC<SessionSelectorWithLoadingProps> = ({ 
-  onSelect, 
-  onExit 
-}) => {
+export const SessionSelectorWithLoading: React.FC<
+  SessionSelectorWithLoadingProps
+> = ({ onSelect, onExit }) => {
   const [sessions, setSessions] = React.useState<ExtendedSessionMetadata[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -42,10 +41,6 @@ export const SessionSelectorWithLoading: React.FC<SessionSelectorWithLoadingProp
   }
 
   return (
-    <SessionSelector
-      sessions={sessions}
-      onSelect={onSelect}
-      onExit={onExit}
-    />
+    <SessionSelector sessions={sessions} onSelect={onSelect} onExit={onExit} />
   );
 };

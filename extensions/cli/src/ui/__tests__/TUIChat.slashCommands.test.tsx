@@ -106,63 +106,69 @@ describe("TUIChat - Slash Commands Tests", () => {
     }
   });
 
-  testBothModes("hides slash command dropdown when typing complete command with arguments", async (mode) => {
-    const { lastFrame, stdin } = renderInMode(mode);
+  testBothModes(
+    "hides slash command dropdown when typing complete command with arguments",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
 
-    // Type a complete command name first
-    stdin.write("/title");
+      // Type a complete command name first
+      stdin.write("/title");
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const frameAfterCommand = lastFrame();
-    expect(frameAfterCommand).toContain("/title");
+      const frameAfterCommand = lastFrame();
+      expect(frameAfterCommand).toContain("/title");
 
-    // Now add a space and arguments
-    stdin.write(" My Session Title");
+      // Now add a space and arguments
+      stdin.write(" My Session Title");
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const frameAfterArgs = lastFrame();
-    
-    // Should show the full command with arguments
-    expect(frameAfterArgs).toContain("/title");
-    expect(frameAfterArgs).toContain("My Session Title");
-    
-    // Mode-specific checks
-    if (mode === "remote") {
-      expect(frameAfterArgs).toContain("Remote Mode");
-    } else {
-      expect(frameAfterArgs).toContain("Continue CLI");
-    }
-  });
+      const frameAfterArgs = lastFrame();
 
-  testBothModes("allows Enter key to execute command when dropdown is hidden", async (mode) => {
-    const { lastFrame, stdin } = renderInMode(mode);
+      // Should show the full command with arguments
+      expect(frameAfterArgs).toContain("/title");
+      expect(frameAfterArgs).toContain("My Session Title");
 
-    // Type a complete command with arguments
-    stdin.write("/title Test Session");
+      // Mode-specific checks
+      if (mode === "remote") {
+        expect(frameAfterArgs).toContain("Remote Mode");
+      } else {
+        expect(frameAfterArgs).toContain("Continue CLI");
+      }
+    },
+  );
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+  testBothModes(
+    "allows Enter key to execute command when dropdown is hidden",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
 
-    const frameBeforeEnter = lastFrame();
-    expect(frameBeforeEnter).toContain("/title");
-    expect(frameBeforeEnter).toContain("Test Session");
+      // Type a complete command with arguments
+      stdin.write("/title Test Session");
 
-    // Press Enter - this should execute the command, not try to autocomplete
-    stdin.write("\r");
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+      const frameBeforeEnter = lastFrame();
+      expect(frameBeforeEnter).toContain("/title");
+      expect(frameBeforeEnter).toContain("Test Session");
 
-    const frameAfterEnter = lastFrame();
-    
-    // Should not crash and should clear the input (or show command execution)
-    expect(frameAfterEnter).toBeDefined();
-    
-    // Mode-specific checks
-    if (mode === "remote") {
-      expect(frameAfterEnter).toContain("Remote Mode");
-    } else {
-      expect(frameAfterEnter).toContain("Continue CLI");
-    }
-  });
+      // Press Enter - this should execute the command, not try to autocomplete
+      stdin.write("\r");
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const frameAfterEnter = lastFrame();
+
+      // Should not crash and should clear the input (or show command execution)
+      expect(frameAfterEnter).toBeDefined();
+
+      // Mode-specific checks
+      if (mode === "remote") {
+        expect(frameAfterEnter).toContain("Remote Mode");
+      } else {
+        expect(frameAfterEnter).toContain("Continue CLI");
+      }
+    },
+  );
 });

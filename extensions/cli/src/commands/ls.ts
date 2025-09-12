@@ -71,8 +71,8 @@ export async function listSessionsCommand(
         app.unmount();
 
         // Find the selected session to check if it's remote
-        const selectedSession = sessions.find(s => s.sessionId === sessionId);
-        
+        const selectedSession = sessions.find((s) => s.sessionId === sessionId);
+
         if (selectedSession?.isRemote && selectedSession.remoteId) {
           // Handle remote session - use the remote command with the agent URL
           logger.info(`Opening remote session: ${selectedSession.remoteId}`);
