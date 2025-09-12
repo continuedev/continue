@@ -1,5 +1,5 @@
 import { OnboardingModes } from "core/protocol/core";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
@@ -54,12 +54,9 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-  const isHome = useMemo(() => {
-    return (
-      location.pathname === ROUTES.HOME ||
-      location.pathname === ROUTES.HOME_INDEX
-    );
-  }, [location]);
+  const isHome =
+    location.pathname === ROUTES.HOME ||
+    location.pathname === ROUTES.HOME_INDEX;
 
   useEffect(() => {
     (async () => {
