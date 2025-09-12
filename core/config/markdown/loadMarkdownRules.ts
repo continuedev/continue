@@ -3,11 +3,12 @@ import {
   markdownToRule,
 } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
-import { findUriInDirs } from "../../util/uri";
+import { findUriInDirs, joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 /**
  * Loads rules from markdown files in the .continue/rules directory
+ * and agent files (AGENTS.md, AGENT.md, CLAUDE.md) at workspace root
  */
 export async function loadMarkdownRules(ide: IDE): Promise<{
   rules: RuleWithSource[];
@@ -15,6 +16,39 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
 }> {
   const errors: ConfigValidationError[] = [];
   const rules: RuleWithSource[] = [];
+
+  // First, try to load agent files from workspace root
+  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
+  const workspaceDirs = await ide.getWorkspaceDirs();
+
+  for (const workspaceDir of workspaceDirs) {
+    let agentFileFound = false;
+    for (const fileName of agentFiles) {
+      try {
+        const agentFilePath = joinPathsToUri(workspaceDir, fileName);
+        const agentContent = await ide.readFile(agentFilePath);
+
+        const rule = markdownToRule(agentContent, {
+          uriType: "file",
+          fileUri: agentFilePath,
+        });
+        rules.push({
+          ...rule,
+          source: "agent-file",
+          ruleFile: agentFilePath,
+          alwaysApply: true,
+        });
+        agentFileFound = true;
+        break; // Use the first found agent file in this workspace
+      } catch (e) {
+        // File doesn't exist or can't be read, continue to next file
+      }
+    }
+
+    if (agentFileFound) {
+      break; // Use agent file from first workspace that has one
+    }
+  }
 
   try {
     // Get all .md files from .continue/rules

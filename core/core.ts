@@ -1201,6 +1201,9 @@ export class Core {
         if (
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
+          uri.endsWith("AGENTS.md") ||
+          uri.endsWith("AGENT.md") ||
+          uri.endsWith("CLAUDE.md") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") &&
             (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
