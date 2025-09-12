@@ -957,26 +957,35 @@ describe("constructMessages", () => {
     });
 
     test("should use NO_TOOL_CALL_OUTPUT_MESSAGE when toolCallState is undefined", () => {
+      const toolCall: ToolCall = {
+        id: "search-call-1",
+        type: "function",
+        function: {
+          name: "search",
+          arguments: '{"query": "test"}',
+        },
+      };
       const assistantWithToolCall: AssistantChatMessage = {
         role: "assistant",
         content: "I'll search for that",
-        toolCalls: [
-          {
-            id: "search-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
-            },
-          },
-        ],
+        toolCalls: [toolCall],
       };
 
       mockHistory = [
         {
           message: assistantWithToolCall,
           contextItems: [],
-          // No toolCallStates array
+          toolCallStates: [
+            {
+              toolCall,
+              parsedArgs: {
+                query: "test",
+              },
+              status: "generated",
+              toolCallId: toolCall.id,
+              // no output defined
+            },
+          ],
         },
       ];
 
