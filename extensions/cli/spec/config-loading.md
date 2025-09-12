@@ -23,11 +23,13 @@ This document specifies the behavior of the CLI's configuration loading system, 
 **When CLI is invoked, config source is determined in this order:**
 
 1. **CLI `--config` Flag** (highest priority)
+
    - File path (starts with `.`, `/`, `~`): Loads local YAML file
    - Assistant slug (`owner/package`): Fetches from Continue platform
    - Overrides any saved preferences
 
 2. **Saved Config URI** (if no `--config` flag)
+
    - Retrieved from authentication config
    - Converts `file://` URIs back to file paths
    - Converts `slug://` URIs back to assistant slugs
