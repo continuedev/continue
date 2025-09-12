@@ -9,6 +9,7 @@ import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
+import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
@@ -104,6 +105,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   if (isScreenActive("mcp")) {
     return <MCPSelector onCancel={closeCurrentScreen} />;
+  }
+
+  if (isScreenActive("update")) {
+    return <UpdateSelector onCancel={closeCurrentScreen} />;
   }
 
   // Model selector

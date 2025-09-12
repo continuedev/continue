@@ -55,6 +55,7 @@ export function useChat({
   additionalPrompts,
   onShowConfigSelector,
   onShowModelSelector,
+  onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
   onLoginPrompt: _onLoginPrompt,
@@ -419,6 +420,7 @@ export function useChat({
       onShowModelSelector,
       onShowMCPSelector,
       onShowSessionSelector,
+      onShowUpdateSelector,
       onClear,
     });
 
