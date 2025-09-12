@@ -6,11 +6,11 @@ import {
   CubeIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { AddModelForm } from "../../forms/AddModelForm";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
@@ -97,13 +97,14 @@ function ModelOption({
 }
 
 function ModelSelect() {
+  const [listboxOpen, setListboxOpen] = useState(false);
+  const listboxOptionsRef = useRef<HTMLUListElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
   const isConfigLoading = useAppSelector((state) => state.config.loading);
-  const ideMessenger = useContext(IdeMessengerContext);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -217,6 +218,8 @@ function ModelSelect() {
 
   const hasNoModels = allModels?.length === 0;
 
+  useClickOutside(listboxOptionsRef, () => setListboxOpen(false));
+
   return (
     <Listbox
       onChange={async (val: string) => {
@@ -235,6 +238,7 @@ function ModelSelect() {
           data-testid="model-select-button"
           ref={buttonRef}
           className="text-description h-[18px] gap-1 border-none"
+          onClick={() => setListboxOpen(true)}
         >
           <span className="line-clamp-1 break-all hover:brightness-110">
             {modelSelectTitle(selectedModel) || "Select model"}
@@ -244,7 +248,11 @@ function ModelSelect() {
             aria-hidden="true"
           />
         </ListboxButton>
-        <ListboxOptions className="min-w-[160px]">
+        <ListboxOptions
+          className="min-w-[160px]"
+          ref={listboxOptionsRef}
+          static={listboxOpen}
+        >
           <div className="flex items-center justify-between gap-1 px-2 py-1">
             <span className="text-description font-semibold">Models</span>
           </div>
