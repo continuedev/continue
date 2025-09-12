@@ -1,6 +1,7 @@
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
+import org.gradle.kotlin.dsl.intellijPlatform
 
 fun environment(key: String) = providers.environmentVariable(key)
 
@@ -11,7 +12,7 @@ val pluginVersion: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.0.0"
     id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
@@ -30,15 +31,16 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create("IC", platformVersion)
-        plugins(listOf("org.jetbrains.plugins.terminal:241.14494.150"))
+        intellijIdeaCommunity("2024.2")
+        plugins(listOf("org.jetbrains.plugins.terminal:241.14494.150")) // todo bump?
+        testFramework(TestFrameworkType.Starter)
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
-    testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    testImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
     testImplementation("io.mockk:mockk:1.14.2") {
         // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
         // otherwise e2e tests (runIdeForUiTests) will have linkage errors
@@ -56,7 +58,7 @@ kotlin {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "241"
+            sinceBuild = "242"
         }
     }
     publishing {
@@ -88,36 +90,6 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-intellijPlatformTesting {
-    runIde {
-        register("runIdeForUiTests") {
-            task {
-                environment(
-                    "CONTINUE_GLOBAL_DIR",
-                    "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue"
-                )
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        "-Dide.mac.file.chooser.native=false",
-                        "-DjbScreenMenuBar.enabled=false",
-                        "-Dapple.laf.useScreenMenuBar=false",
-                        "-Didea.trust.all.projects=true",
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.sandbox.enable=false"
-                    )
-                }
-            }
-            plugins {
-                robotServerPlugin()
-            }
-        }
-    }
-}
-
 tasks {
     withType<PrepareSandboxTask> {
         from("../../binary/bin") {
@@ -142,6 +114,8 @@ tasks {
 
     test {
         useJUnitPlatform()
+        systemProperty("path.to.build.plugin", prepareSandbox.get().pluginDirectory.get().asFile)
+        environment("CONTINUE_GLOBAL_DIR", "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue")
         jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
 }
