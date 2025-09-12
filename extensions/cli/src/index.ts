@@ -19,6 +19,7 @@ import {
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
+import { posthogService } from "./telemetry/posthogService.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -131,6 +132,8 @@ addCommonOptions(program)
   .option("--resume", "Resume from last session")
   .option("--fork <sessionId>", "Fork from an existing session ID")
   .action(async (prompt, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "cn" });
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -231,6 +234,8 @@ program
   .command("login")
   .description("Authenticate with Continue")
   .action(async () => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "login" });
     await login();
   });
 
@@ -239,6 +244,8 @@ program
   .command("logout")
   .description("Log out from Continue")
   .action(async () => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "logout" });
     await logout();
   });
 
@@ -248,6 +255,8 @@ program
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "ls" });
     await listSessionsCommand({
       format: options.json ? "json" : undefined,
     });
@@ -280,6 +289,8 @@ addCommonOptions(
     "Specify the repository URL to use in the remote environment",
   )
   .action(async (prompt: string | undefined, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "remote" });
     await remote(prompt, options);
   });
 
@@ -294,6 +305,8 @@ program
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .action(async (prompt, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "serve" });
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
 
@@ -311,6 +324,8 @@ program
   .description("Test remote TUI mode with a local server")
   .option("--url <url>", "Server URL (default: http://localhost:8000)")
   .action(async (prompt: string | undefined, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "remote-test" });
     await remoteTest(prompt, options.url);
   });
 
