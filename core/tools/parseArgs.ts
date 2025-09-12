@@ -79,3 +79,22 @@ export function getBooleanArg(args: any, argName: string, required = false) {
   }
   return args[argName];
 }
+
+export function getOptionalStringArrayArg(
+  args: any,
+  argName: string,
+): string[] | undefined {
+  if (typeof args?.[argName] === "undefined") {
+    return undefined;
+  }
+  const val = args[argName];
+  if (Array.isArray(val)) {
+    return val.filter((v) => typeof v === "string");
+  }
+  if (typeof val === "string") {
+    return val.split(" ").filter((v) => v.length > 0);
+  }
+  throw new Error(
+    `Argument \`${argName}\` must be a string or array of strings`,
+  );
+}

@@ -22,7 +22,7 @@ typealias OpenUrlParam = String
 
 typealias getTagsParams = String
 
-data class GetSearchResultsParams(val query: String, val maxResults: Int?)
+data class GetSearchResultsParams(val rgArgs: List<String>, val maxResults: Int?)
 
 data class GetFileResultsParams(val pattern: String, val maxResults: Int?)
 

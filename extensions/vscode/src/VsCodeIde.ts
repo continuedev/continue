@@ -561,44 +561,28 @@ class VsCodeIde implements IDE {
     }
   }
 
-  async getSearchResults(query: string, maxResults?: number): Promise<string> {
+  async getSearchResults(
+    rgArgs: string[],
+    maxResults?: number,
+  ): Promise<string> {
     if (vscode.env.remoteName) {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
-      const dirResults = await this.runRipgrepQuery(dir, [
-        "-i", // Case-insensitive search
-        "--ignore-file",
-        ".continueignore",
-        "--ignore-file",
-        ".gitignore",
-        "-C",
-        "2", // Show 2 lines of context
-        "--heading", // Only show filepath once per result
-        ...(maxResults ? ["-m", maxResults.toString()] : []),
-        "-e",
-        query, // Pattern to search for
-        ".", // Directory to search in
-      ]);
-
+      const dirResults = await this.runRipgrepQuery(dir, rgArgs);
       results.push(dirResults);
     }
 
     const allResults = results.join("\n");
     if (maxResults) {
       // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
-      // Will prioritize first workspace results, fine for now
-      // Results are separated by either ./ or --
       const matches = Array.from(allResults.matchAll(/(\n--|\n\.\/)/g));
       if (matches.length > maxResults) {
         return allResults.substring(0, matches[maxResults].index);
-      } else {
-        return allResults;
       }
-    } else {
-      return allResults;
     }
+    return allResults;
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
