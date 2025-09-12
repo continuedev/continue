@@ -30,8 +30,8 @@ import {
 } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { preprocessToolCalls } from "./enhanceParsedArgs";
 import { evaluateToolPolicies } from "./evaluateToolPolicies";
+import { preprocessToolCalls } from "./preprocessToolCallArgs";
 
 /**
  * Builds completion options with reasoning configuration based on session state and model capabilities.
@@ -245,7 +245,8 @@ export const streamNormalInput = createAsyncThunk<
     // 2. Pre-process args to catch invalid args before checking policies
     const state2 = getState();
     const generatedCalls2 = selectPendingToolCalls(state2);
-    await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
+
+    unwrapResult(await dispatch(preprocessToolCalls(generatedCalls2)));
 
     // 3. Security check: evaluate updated policies based on args
     const state3 = getState();
