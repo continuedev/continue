@@ -692,6 +692,8 @@ declare global {
   
     openUrl(url: string): Promise<void>;
   
+    getExternalUri?(uri: string): Promise<string>;
+  
     runCommand(command: string): Promise<void>;
   
     saveFile(filepath: string): Promise<void>;
