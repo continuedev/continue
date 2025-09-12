@@ -29,7 +29,7 @@ jobs:
 
       - name: Add eyes reaction to comment
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -49,7 +49,7 @@ jobs:
       - name: Get PR information
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: pr-info
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -69,7 +69,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -91,7 +91,7 @@ jobs:
           Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch."
 
           # Start remote session and capture JSON output
-          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --branch ${{ steps.pr-info.outputs.head_ref }})
+          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --config continuedev/address-code-review --branch ${{ steps.pr-info.outputs.head_ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
@@ -107,7 +107,7 @@ jobs:
 
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
@@ -144,7 +144,7 @@ jobs:
 
       - name: Add eyes reaction to comment
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.reactions.createForPullRequestReviewComment({
@@ -164,7 +164,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -172,21 +172,59 @@ jobs:
         if: steps.check-mention.outputs.contains_mention == 'true'
         run: npm i -g @continuedev/cli
 
+      - name: Get review context
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        id: review-context
+        uses: actions/github-script@v8
+        with:
+          script: |
+            let reviewContext = '';
+
+            // Check if this comment is a reply to another review comment
+            if (context.payload.comment.in_reply_to_id) {
+              try {
+                const { data: originalComment } = await github.rest.pulls.getReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: context.payload.comment.in_reply_to_id
+                });
+                
+                reviewContext = `**Original review comment by @${originalComment.user.login}:**
+            ${originalComment.body}
+
+            **Reply by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+              } catch (error) {
+                console.log('Could not fetch original comment, using current comment only');
+                reviewContext = `**Review comment by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+              }
+            } else {
+              reviewContext = `**Review comment by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+            }
+
+            core.setOutput('context', reviewContext);
+
       - name: Start remote session
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: remote-session
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
+          # Debug: Echo the branch we're starting the session on
+          echo "Starting remote session on branch: ${{ github.event.pull_request.head.ref }}"
+
           # Create a temporary file for the prompt to handle special characters and newlines properly
           cat > /tmp/prompt.txt << 'PROMPT_EOF'
-          Please help with the following code review comment from @${{ github.event.comment.user.login }} on PR #${{ github.event.pull_request.number }}:
+          Please help with the following code review discussion from PR #${{ github.event.pull_request.number }}:
 
           **File:** ${{ github.event.comment.path }}
           **Line:** ${{ github.event.comment.line || github.event.comment.original_line || 'N/A' }}
-          **Comment:** ${{ github.event.comment.body }}
 
-          Please analyze the specific file and line mentioned, understand the review feedback, implement the necessary changes, and commit them to this branch.
+          ${{ steps.review-context.outputs.context }}
+
+          Please analyze the specific file and line mentioned, understand the review feedback and any discussion context, implement the necessary changes, and commit them to this branch.
           PROMPT_EOF
 
           # Debug output
@@ -195,7 +233,7 @@ jobs:
 
           # Start remote session and capture JSON output
           echo "Starting cn with prompt..."
-          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --branch ${{ github.event.pull_request.head.ref }})
+          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --branch ${{ github.event.pull_request.head.ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
@@ -211,7 +249,7 @@ jobs:
 
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:

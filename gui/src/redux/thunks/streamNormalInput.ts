@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { ChatMessage, LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -32,6 +32,38 @@ import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import { preprocessToolCalls } from "./enhanceParsedArgs";
 import { evaluateToolPolicies } from "./evaluateToolPolicies";
+
+/**
+ * Builds completion options with reasoning configuration based on session state and model capabilities.
+ *
+ * @param baseOptions - Base completion options to extend
+ * @param hasReasoningEnabled - Whether reasoning is enabled in the session
+ * @param model - The selected model with provider and completion options
+ * @returns Completion options with reasoning configuration
+ */
+function buildReasoningCompletionOptions(
+  baseOptions: LLMFullCompletionOptions,
+  hasReasoningEnabled: boolean | undefined,
+  model: ModelDescription,
+): LLMFullCompletionOptions {
+  if (hasReasoningEnabled === undefined) {
+    return baseOptions;
+  }
+
+  const reasoningOptions: LLMFullCompletionOptions = {
+    ...baseOptions,
+    reasoning: !!hasReasoningEnabled,
+  };
+
+  // Add reasoning budget tokens if reasoning is enabled and provider supports it
+  if (hasReasoningEnabled && model.underlyingProviderName !== "ollama") {
+    // Ollama doesn't support limiting reasoning tokens at this point
+    reasoningOptions.reasoningBudgetTokens =
+      model.completionOptions?.reasoningBudgetTokens ?? 2048;
+  }
+
+  return reasoningOptions;
+}
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -69,14 +101,11 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    if (state.session.hasReasoningEnabled) {
-      completionOptions = {
-        ...completionOptions,
-        reasoning: true,
-        reasoningBudgetTokens:
-          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
-      };
-    }
+    completionOptions = buildReasoningCompletionOptions(
+      completionOptions,
+      state.session.hasReasoningEnabled,
+      selectedChatModel,
+    );
 
     // Construct messages (excluding system message)
     const baseSystemMessage = getBaseSystemMessage(

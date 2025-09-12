@@ -76,7 +76,7 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
   // Handle Ctrl+D to exit
   if (key.ctrl && input === "d") {
     exit();
-    return true;
+    process.exit(0);
   }
 
   // Handle Ctrl+L to refresh screen (clear terminal artifacts)
@@ -104,6 +104,7 @@ interface TextBufferStateOptions {
   setCursorPosition: (pos: number) => void;
   updateSlashCommandState: (text: string, cursor: number) => void;
   updateFileSearchState: (text: string, cursor: number) => void;
+  updateBashModeState: (text: string) => void;
   inputHistory: any;
 }
 
@@ -115,6 +116,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition,
     updateSlashCommandState,
     updateFileSearchState,
+    updateBashModeState,
     inputHistory,
   } = options;
 
@@ -126,6 +128,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition(newCursor);
     updateSlashCommandState(newText, newCursor);
     updateFileSearchState(newText, newCursor);
+    updateBashModeState(newText);
     inputHistory.resetNavigation();
   }
 }

@@ -10,6 +10,7 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   ERRORED_TOOL_CALL_OUTPUT_MESSAGE,
@@ -21,8 +22,13 @@ import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
+  renderContextItemsWithStatus,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
+
+// Helper function to render context items and append status information
+// Helper function to render context items and append status information
+
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -128,8 +134,16 @@ export function constructMessages(
 
           if (toolCallState.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (toolCallState.output) {
-            content = renderContextItems(toolCallState.output);
+          } else if (toolCallState?.output) {
+            if (
+              toolCallState.toolCall.function.name ===
+              BuiltInToolNames.RunTerminalCommand
+            ) {
+              // Add status for tools containing detailed status outcomes per context item
+              content = renderContextItemsWithStatus(toolCallState.output);
+            } else {
+              content = renderContextItems(toolCallState.output);
+            }
           } else if (toolCallState.status === "errored") {
             content = ERRORED_TOOL_CALL_OUTPUT_MESSAGE;
           }

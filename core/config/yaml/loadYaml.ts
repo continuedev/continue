@@ -24,6 +24,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
@@ -208,7 +209,21 @@ async function configYamlToContinueConfig(options: {
   }
 
   for (const rule of config.rules ?? []) {
-    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+    const convertedRule = convertYamlRuleToContinueRule(rule);
+    continueConfig.rules.push(convertedRule);
+
+    // Convert invokable rules to slash commands
+    if (convertedRule.invokable) {
+      try {
+        const slashCommand = convertRuleBlockToSlashCommand(convertedRule);
+        continueConfig.slashCommands?.push(slashCommand);
+      } catch (e) {
+        localErrors.push({
+          message: `Error converting invokable rule ${convertedRule.name} to slash command: ${e instanceof Error ? e.message : e}`,
+          fatal: false,
+        });
+      }
+    }
   }
 
   continueConfig.data = config.data;

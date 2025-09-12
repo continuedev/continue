@@ -12,13 +12,11 @@ export const ideSettingsPromise = testIde.getIdeSettings();
 
 export const testControlPlaneClient = new ControlPlaneClient(
   Promise.resolve(undefined),
-  ideSettingsPromise,
-  testIde.getIdeInfo(),
+  testIde,
 );
 
 export const testConfigHandler = new ConfigHandler(
   testIde,
-  ideSettingsPromise,
   new LLMLogger(),
   Promise.resolve(undefined),
 );
