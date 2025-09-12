@@ -51,7 +51,7 @@ export class VerticalDiffManager {
       this.fileUriToHandler.get(fileUri)?.clear(false);
       this.fileUriToHandler.delete(fileUri);
     }
-    const editor = vscode.window.activeTextEditor; // TODO might cause issues if user switches files
+    const editor = vscode.window.activeTextEditor;
     if (editor && URI.equal(editor.document.uri.toString(), fileUri)) {
       const handler = new VerticalDiffHandler(
         startLine,
