@@ -368,7 +368,9 @@ describe("TUIChat - Tool Permission Tests", () => {
 
     // Find the tool header row (should contain the tool name)
     const toolHeaderRow = processedHistory.find(
-      (item) => (item as ChatHistoryItemWithSplit).toolResultRow?.rowData.type === "header",
+      (item) =>
+        (item as ChatHistoryItemWithSplit).toolResultRow?.rowData.type ===
+        "header",
     );
     expect(toolHeaderRow).toBeDefined();
 
