@@ -14,6 +14,9 @@ interface HandleCompactCommandOptions {
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
   currentSession: Session;
   setCurrentSession: React.Dispatch<React.SetStateAction<Session>>;
+  setIsCompacting: (value: boolean) => void;
+  setCompactionStartTime: (time: number | null) => void;
+  setCompactionAbortController: (controller: AbortController | null) => void;
 }
 
 /**
@@ -27,22 +30,32 @@ export async function handleCompactCommand({
   setCompactionIndex,
   currentSession,
   setCurrentSession,
+  setIsCompacting,
+  setCompactionStartTime,
+  setCompactionAbortController,
 }: HandleCompactCommandOptions): Promise<void> {
-  // Add compacting message
-  setChatHistory((prev) => [
-    ...prev,
-    {
-      message: {
-        role: "system",
-        content: "Compacting chat history...",
-      },
-      contextItems: [],
-    },
-  ]);
+  // Create abort controller for cancellation support
+  const compactionController = new AbortController();
+  setCompactionAbortController(compactionController);
+
+  // Start compaction status display
+  setIsCompacting(true);
+  setCompactionStartTime(Date.now());
 
   try {
-    // Compact the chat history directly (already in unified format)
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    // Compact the chat history directly (already in unified format) with abort controller
+    const result = await compactChatHistory(
+      chatHistory,
+      model,
+      llmApi,
+      undefined,
+      compactionController,
+    );
+
+    // Check if operation was aborted before proceeding with success actions
+    if (compactionController.signal.aborted) {
+      return;
+    }
 
     // Replace chat history with compacted version
     setChatHistory(result.compactedHistory);
@@ -56,6 +69,7 @@ export async function handleCompactCommand({
     updateSessionHistory(result.compactedHistory);
     setCurrentSession(updatedSession);
 
+    // Add success message to chat
     setChatHistory((prev) => [
       ...prev,
       {
@@ -67,17 +81,37 @@ export async function handleCompactCommand({
       },
     ]);
   } catch (error) {
-    logger.error("Compaction failed:", error);
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Compaction failed: ${formatError(error)}`,
+    // Check if the error was due to abortion
+    if (compactionController.signal.aborted) {
+      logger.info("Manual compaction was cancelled by user");
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: {
+            role: "system",
+            content: "Compaction cancelled.",
+          },
+          contextItems: [],
         },
-        contextItems: [],
-      },
-    ]);
+      ]);
+    } else {
+      logger.error("Compaction failed:", error);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: {
+            role: "system",
+            content: `Compaction failed: ${formatError(error)}`,
+          },
+          contextItems: [],
+        },
+      ]);
+    }
+  } finally {
+    // Stop compaction status display
+    setIsCompacting(false);
+    setCompactionStartTime(null);
+    setCompactionAbortController(null);
   }
 }
 
@@ -88,6 +122,7 @@ interface HandleAutoCompactionOptions {
   compactionIndex: number | null;
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  abortController?: AbortController;
 }
 
 /**
@@ -100,6 +135,7 @@ export async function handleAutoCompaction({
   compactionIndex: _compactionIndex,
   setChatHistory,
   setCompactionIndex,
+  abortController,
 }: HandleAutoCompactionOptions): Promise<{
   currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
@@ -116,20 +152,14 @@ export async function handleAutoCompaction({
 
     logger.info("Auto-compaction triggered for TUI mode");
 
-    // Add compacting message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Auto-compacting chat history...",
-        },
-        contextItems: [],
-      },
-    ]);
-
     // Compact the unified history
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    const result = await compactChatHistory(
+      chatHistory,
+      model,
+      llmApi,
+      undefined,
+      abortController,
+    );
 
     // Keep the system message and append the compaction summary
     // This replaces the old messages with a summary to reduce context size
@@ -151,23 +181,22 @@ export async function handleAutoCompaction({
       ? [systemMessage, compactedMessage]
       : [compactedMessage];
 
-    setChatHistory(updatedHistory);
+    // Add success message to the history that will be returned
+    const successMessage: ChatHistoryItem = {
+      message: {
+        role: "system",
+        content: "Chat history auto-compacted successfully.",
+      },
+      contextItems: [],
+    };
+
+    const finalHistory = [...updatedHistory, successMessage];
+
+    setChatHistory(finalHistory);
     setCompactionIndex(updatedHistory.length - 1);
 
-    // Add success message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "✓ Chat history auto-compacted successfully.",
-        },
-        contextItems: [],
-      },
-    ]);
-
     return {
-      currentChatHistory: updatedHistory,
+      currentChatHistory: finalHistory,
       currentCompactionIndex: updatedHistory.length - 1,
     };
   } catch (error) {
