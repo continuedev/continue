@@ -6,6 +6,7 @@ import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest } from "../permissions/types.js";
 import { services } from "../services/index.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { calculateTokenCost } from "../telemetry/utils.js";
 import {
@@ -289,6 +290,17 @@ export function recordStreamTelemetry(options: {
     outputTokens,
     costUsd: cost,
   });
+
+  // Mirror core metrics to PostHog for product analytics
+  try {
+    posthogService.capture("apiRequest", {
+      model: model.model,
+      durationMs: totalDuration,
+      inputTokens,
+      outputTokens,
+      costUsd: cost,
+    });
+  } catch {}
 
   return cost;
 }
