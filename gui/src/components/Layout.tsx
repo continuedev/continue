@@ -59,7 +59,7 @@ const Layout = () => {
       location.pathname === ROUTES.HOME ||
       location.pathname === ROUTES.HOME_INDEX
     );
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     (async () => {
