@@ -12,8 +12,6 @@ import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
   SEMRESATTRS_HOST_NAME,
   SEMRESATTRS_OS_TYPE,
-  SEMRESATTRS_PROCESS_PID,
-  SEMRESATTRS_SERVICE_INSTANCE_ID,
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
@@ -23,7 +21,7 @@ import { isHeadlessMode } from "../util/cli.js";
 import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
- 
+
 import { detectTerminalType, parseOtelHeaders } from "./headerUtils.js";
 
 export interface TelemetryConfig {
@@ -31,7 +29,6 @@ export interface TelemetryConfig {
   sessionId: string;
   organizationId?: string;
   accountUuid?: string;
-  includeSessionId: boolean;
   includeVersion: boolean;
   includeAccountUuid: boolean;
 }
@@ -82,7 +79,6 @@ class TelemetryService {
       sessionId,
       organizationId: process.env.ORGANIZATION_ID,
       accountUuid: process.env.ACCOUNT_UUID,
-      includeSessionId: process.env.OTEL_METRICS_INCLUDE_SESSION_ID !== "false",
       includeVersion: process.env.OTEL_METRICS_INCLUDE_VERSION === "true",
       includeAccountUuid:
         process.env.OTEL_METRICS_INCLUDE_ACCOUNT_UUID !== "false",
@@ -95,12 +91,10 @@ class TelemetryService {
       const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: "continue-cli",
         [SEMRESATTRS_SERVICE_VERSION]: getVersion(),
-        [SEMRESATTRS_SERVICE_INSTANCE_ID]: uuidv4(),
         [SEMRESATTRS_HOST_NAME]: os.hostname(),
         [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
           process.env.NODE_ENV || "development",
         [SEMRESATTRS_OS_TYPE]: os.type(),
-        [SEMRESATTRS_PROCESS_PID]: process.pid.toString(),
       });
 
       // Configure exporters
@@ -305,10 +299,6 @@ class TelemetryService {
   ) {
     const attributes: Record<string, string> = { ...additionalAttributes };
 
-    if (this.config.includeSessionId) {
-      attributes["session.id"] = this.config.sessionId;
-    }
-
     if (this.config.includeVersion) {
       attributes["app.version"] = getVersion();
     }
@@ -329,8 +319,6 @@ class TelemetryService {
 
     return attributes;
   }
-
-  
 
   // Public methods for tracking metrics
 
