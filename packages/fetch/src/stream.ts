@@ -1,3 +1,5 @@
+import { ContinueError, ErrorCodes } from "@continuedev/errors";
+
 export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
@@ -15,11 +17,28 @@ export async function* streamResponse(
   }
 
   if (response.status !== 200) {
-    throw new Error(await response.text());
+    // Get request ID from headers
+    const requestId = response.headers.get("x-request-id") || undefined;
+    const responseText = await response.text();
+    
+    throw ContinueError.fromHttpResponse(
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      },
+      responseText || `HTTP ${response.status}: ${response.statusText}`,
+      {
+        code: 'HTTP_ERROR',
+        originalError: new Error(responseText),
+      }
+    );
   }
 
   if (!response.body) {
-    throw new Error("No response body returned.");
+    throw new ContinueError("No response body returned.", {
+      code: ErrorCodes.STREAM_ERROR,
+    });
   }
 
   // Get the major version of Node.js
@@ -58,12 +77,20 @@ export async function* streamResponse(
         // - Long delays from the server during streaming
         // - 'Keep alive' header being used in combination with an http agent and a set, low number of maxSockets
         if (chunks === 0) {
-          throw new Error(
+          throw new ContinueError(
             "Stream was closed before any data was received. Try again. (Premature Close)",
+            {
+              code: ErrorCodes.STREAM_ERROR,
+              originalError: e,
+            }
           );
         } else {
-          throw new Error(
+          throw new ContinueError(
             "The response was cancelled mid-stream. Try again. (Premature Close).",
+            {
+              code: ErrorCodes.STREAM_ERROR,
+              originalError: e,
+            }
           );
         }
       }
@@ -87,10 +114,15 @@ export function parseDataLine(line: string): any {
         "message" in data.error
       ) {
         console.error("Error in streamed response:", data.error);
-        throw new Error(`Error streaming response: ${data.error.message}`);
+        throw new ContinueError(`Error streaming response: ${data.error.message}`, {
+          code: ErrorCodes.STREAM_ERROR,
+        });
       }
-      throw new Error(
+      throw new ContinueError(
         `Error streaming response: ${JSON.stringify(data.error)}`,
+        {
+          code: ErrorCodes.STREAM_ERROR,
+        }
       );
     }
 
@@ -104,7 +136,10 @@ export function parseDataLine(line: string): any {
       throw e;
     }
     // Otherwise it's a JSON parsing error
-    throw new Error(`Malformed JSON sent from server: ${json}`);
+    throw new ContinueError(`Malformed JSON sent from server: ${json}`, {
+      code: ErrorCodes.STREAM_ERROR,
+      originalError: e,
+    });
   }
 }
 
@@ -161,7 +196,10 @@ export async function* streamJSON(response: Response): AsyncGenerator<any> {
         const data = JSON.parse(line);
         yield data;
       } catch (e) {
-        throw new Error(`Malformed JSON sent from server: ${line}`);
+        throw new ContinueError(`Malformed JSON sent from server: ${line}`, {
+          code: ErrorCodes.STREAM_ERROR,
+          originalError: e,
+        });
       }
       buffer = buffer.slice(position + 1);
     }

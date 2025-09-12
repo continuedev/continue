@@ -5,7 +5,7 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
+import { DISCORD_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
@@ -42,7 +42,51 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     modelTitle,
     providerName,
     apiKeyUrl,
+    requestId,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
+
+  const githubIssueUrl = useMemo(() => {
+    const baseUrl = "https://github.com/continuedev/continue/issues/new";
+    const params = new URLSearchParams();
+
+    params.set(
+      "title",
+      `Model Response Error: ${statusCode ? `HTTP ${statusCode}` : "Unknown Error"}`,
+    );
+    params.set("labels", "bug");
+    params.set(
+      "body",
+      `**Bug Description:**
+An error occurred while handling the model response.
+
+**Environment Info:**
+- Status Code: ${statusCode || "N/A"}
+- Request ID: ${requestId || "N/A"}
+- Model: ${selectedModel?.title || "Unknown"}
+- Provider: ${selectedModel?.provider || "Unknown"}
+- Model ID: ${selectedModel?.model || "Unknown"}
+- Continue Version: getLocalStorage("extensionVersion");
+- IDE: getLocalStorage("ide");
+- OS: <!-- Windows, macOS, Linux -->
+
+**Error Details:**
+\`\`\`
+${parsedError}
+\`\`\`
+
+**To Reproduce:**
+<!-- Please describe what you were doing when this error occurred -->
+1.
+2.
+3.
+4. See error
+
+**Additional Context:**
+<!-- Add any other context about the problem here -->`,
+    );
+
+    return `${baseUrl}?${params.toString()}`;
+  }, [parsedError, statusCode, selectedModel, requestId]);
 
   const handleRefreshProfiles = () => {
     void refreshProfiles("Clicked reload config from stream error dialog");
@@ -52,6 +96,12 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
 
   const copyErrorToClipboard = () => {
     void navigator.clipboard.writeText(parsedError);
+  };
+
+  const copyRequestIdToClipboard = () => {
+    if (requestId) {
+      void ideMessenger.post("copyText", { text: requestId });
+    }
   };
 
   const history = useAppSelector((store) => store.session.history);
@@ -256,6 +306,29 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         <div className="mb-2">
           <ToggleDiv title="View error output" testId="error-output-toggle">
             <div className="flex flex-col gap-0 rounded-sm">
+              {/* Request ID section */}
+              {requestId && (
+                <div className="border-b bg-gray-50 p-3 dark:bg-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Request ID
+                      </span>
+                      <code className="font-mono text-xs text-gray-900 dark:text-gray-100">
+                        {requestId}
+                      </code>
+                    </div>
+                    <GhostButton
+                      onClick={copyRequestIdToClipboard}
+                      className="flex items-center"
+                    >
+                      <ClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
+                      <span className="text-xs">Copy ID</span>
+                    </GhostButton>
+                  </div>
+                </div>
+              )}
+
               <code className="text-editor-foreground block max-h-48 overflow-y-auto p-3 font-mono text-xs">
                 {parsedError}
               </code>
@@ -290,10 +363,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: GITHUB_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", githubIssueUrl);
             }}
           >
             <GithubIcon className="h-5 w-5" />
@@ -302,10 +372,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: DISCORD_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", DISCORD_LINK);
             }}
           >
             <DiscordIcon className="h-5 w-5" />
