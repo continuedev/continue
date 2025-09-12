@@ -25,8 +25,8 @@ import { interceptSystemToolCalls } from "core/tools/systemMessageTools/intercep
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { renderContextItems } from "core/util/messageContent";
 import {
-  selectCurrentGeneratedToolCalls,
   selectCurrentToolCalls,
+  selectPendingToolCalls,
 } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
@@ -244,12 +244,12 @@ export const streamNormalInput = createAsyncThunk<
 
     // 2. Pre-process args to catch invalid args before checking policies
     const state2 = getState();
-    const generatedCalls2 = selectCurrentGeneratedToolCalls(state2);
+    const generatedCalls2 = selectPendingToolCalls(state2);
     await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
 
     // 3. Security check: evaluate updated policies based on args
     const state3 = getState();
-    const generatedCalls3 = selectCurrentGeneratedToolCalls(state3);
+    const generatedCalls3 = selectPendingToolCalls(state3);
     const toolPolicies = state3.ui.toolSettings;
     const policies = await evaluateToolPolicies(
       dispatch,
@@ -269,7 +269,7 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(setInactive());
     } else {
       const state4 = getState();
-      const generatedCalls4 = selectCurrentGeneratedToolCalls(state4);
+      const generatedCalls4 = selectPendingToolCalls(state4);
       if (generatedCalls4.length > 0) {
         // All that didn't fail are auto approved - call them
         await Promise.all(

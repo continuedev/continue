@@ -477,7 +477,7 @@ describe("constructMessages", () => {
             toolCallId: toolCall2.id,
             toolCall: toolCall2,
             status: "done",
-            parsedArgs: { query: "test" },
+            parsedArgs: { location: "New York" },
           },
         ],
       },
