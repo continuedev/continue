@@ -88,8 +88,11 @@ const require = createRequire(import.meta.url);`,
   // Write metafile for analysis
   writeFileSync("dist/meta.json", JSON.stringify(result.metafile, null, 2));
 
-  // Create wrapper script with shebang
-  writeFileSync("dist/cn.js", "#!/usr/bin/env node\nimport('./index.js');");
+  // Create wrapper script with shebang that explicitly runs the CLI
+  writeFileSync(
+    "dist/cn.js",
+    "#!/usr/bin/env node\nimport { runCli } from './index.js';\nawait runCli();\n",
+  );
 
   // Make the wrapper script executable
   chmodSync("dist/cn.js", 0o755);
