@@ -266,11 +266,12 @@ export async function handleRemoteApply(remoteUrl: string): Promise<void> {
     }
 
     // Apply the diff using git apply
-    const { execSync } = await import("child_process");
+    const { execFileSync } = await import("child_process");
 
     try {
-      execSync(`echo ${JSON.stringify(diffContent)} | git apply`, {
-        stdio: ["pipe", "pipe", "pipe"],
+      execFileSync('git', ['apply'], {
+        input: diffContent,
+        stdio: ['pipe', 'pipe', 'pipe'],
       });
 
       try {
