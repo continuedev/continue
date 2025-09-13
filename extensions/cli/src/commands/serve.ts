@@ -22,6 +22,7 @@ import {
 import { createSession } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
+import { gracefulExit } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
@@ -302,13 +303,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Give a moment for the response to be sent
-    setTimeout(() => {
-      server.close(async () => {
+    const handleExitResponse = () => {
+      server.close(() => {
         telemetryService.stopActiveTime();
-        const { gracefulExit } = await import("../util/exit.js");
-        await gracefulExit(0);
+        gracefulExit(0).catch((err) => {
+          logger.error(`Graceful exit failed: ${formatError(err)}`);
+          process.exit(1);
+        });
       });
-    }, 100);
+    };
+    setTimeout(handleExitResponse, 100);
   });
 
   const server = app.listen(port, () => {
@@ -434,10 +438,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         ),
       );
       state.serverRunning = false;
-      server.close(async () => {
+      server.close(() => {
         telemetryService.stopActiveTime();
-        const { gracefulExit } = await import("../util/exit.js");
-        await gracefulExit(0);
+        gracefulExit(0).catch((err) => {
+          logger.error(`Graceful exit failed: ${formatError(err)}`);
+          process.exit(1);
+        });
       });
       if (inactivityChecker) {
         clearInterval(inactivityChecker);
@@ -454,10 +460,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;
     }
-    server.close(async () => {
+    server.close(() => {
       telemetryService.stopActiveTime();
-      const { gracefulExit } = await import("../util/exit.js");
-      await gracefulExit(0);
+      gracefulExit(0).catch((err) => {
+        logger.error(`Graceful exit failed: ${formatError(err)}`);
+        process.exit(1);
+      });
     });
   });
 }
