@@ -3,6 +3,7 @@ import React from "react";
 
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
+import { DiffViewer } from "../DiffViewer.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
@@ -38,6 +39,7 @@ interface ScreenContentProps {
   wasInterrupted?: boolean;
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  diffContent?: string;
 }
 
 export const ScreenContent: React.FC<ScreenContentProps> = ({
@@ -61,6 +63,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   wasInterrupted = false,
   isRemoteMode,
   onImageInClipboardChange,
+  diffContent,
 }) => {
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
@@ -126,6 +129,16 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   // Free trial transition UI
   if (isScreenActive("free-trial")) {
     return <FreeTrialTransitionUI onReload={handleReload} />;
+  }
+
+  // Diff viewer overlay
+  if (isScreenActive("diff")) {
+    return (
+      <DiffViewer
+        diffContent={diffContent || ""}
+        onClose={closeCurrentScreen}
+      />
+    );
   }
 
   // Chat screen with input area

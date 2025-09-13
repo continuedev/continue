@@ -58,6 +58,7 @@ export function useChat({
   onClear,
   isRemoteMode = false,
   remoteUrl,
+  onShowDiff,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -423,6 +424,7 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
+      onShowDiff,
     });
 
     if (handled) return;

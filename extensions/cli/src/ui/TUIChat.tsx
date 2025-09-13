@@ -180,6 +180,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setStaticRefreshTrigger,
   );
 
+  // State for diff content overlay
+  const [diffContent, setDiffContent] = useState<string>("");
+
+  // Handler to show diff overlay
+  const handleShowDiff = useCallback((content: string) => {
+    setDiffContent(content);
+    navigateTo("diff");
+  }, [navigateTo]);
+
   const {
     chatHistory,
     setChatHistory,
@@ -212,6 +221,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    onShowDiff: handleShowDiff,
   });
 
   // Update ref after useChat returns
@@ -325,6 +335,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
           onImageInClipboardChange={setHasImageInClipboard}
+          diffContent={diffContent}
         />
 
         {/* Resource debug bar - only in verbose mode */}

@@ -231,6 +231,7 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
+  onShowDiff?: (diffContent: string) => void;
 }
 
 /**
@@ -242,6 +243,7 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
+  onShowDiff,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -258,14 +260,31 @@ export async function handleSpecialCommands({
     return true;
   }
 
-  // Handle /diff command in remote mode
+  // Handle /diff command in remote mode - show overlay instead of adding to history
   if (
     isRemoteMode &&
     remoteUrl &&
     (trimmedMessage === "/diff" || trimmedMessage.startsWith("/diff "))
   ) {
-    const { handleRemoteDiff } = await import("./useChat.remote.helpers.js");
-    await handleRemoteDiff(remoteUrl);
+    try {
+      const response = await fetch(`${remoteUrl}/diff`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch diff: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      const diffContent = responseData.diff || "";
+
+      if (onShowDiff) {
+        onShowDiff(diffContent);
+      }
+    } catch (error: any) {
+      logger.error("Failed to fetch diff from remote server:", error);
+      // Could show an error overlay instead of adding to history
+      if (onShowDiff) {
+        onShowDiff(`Error: Failed to fetch diff - ${error.message}`);
+      }
+    }
     return true;
   }
 

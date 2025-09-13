@@ -23,6 +23,7 @@ export interface UseChatProps {
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
+  onShowDiff?: (diffContent: string) => void;
 }
 
 export interface AttachedFile {
