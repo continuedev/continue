@@ -286,10 +286,11 @@ async function handleRemoteApplyCommand(
     }
 
     // Apply the diff using git apply
-    const { execSync } = await import("child_process");
+    const { execFileSync } = await import("child_process");
 
     try {
-      execSync(`echo ${JSON.stringify(diffContent)} | git apply`, {
+      execFileSync("git", ["apply"], {
+        input: diffContent,
         stdio: ["pipe", "pipe", "pipe"],
       });
 
