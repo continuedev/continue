@@ -1,8 +1,20 @@
 import {
   AssistantUnrolledNonNullable,
+  PackageIdentifier,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { describe, expect, it } from "vitest";
+import path from "path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { LLMLogger } from "../../llm/logger";
+import { testControlPlaneClient, testIde } from "../../test/fixtures";
+import {
+  addToTestDir,
+  setUpTestDir,
+  tearDownTestDir,
+  TEST_DIR_PATH,
+} from "../../test/testDir";
+import { localPathToUri } from "../../util/pathToUri";
+import { loadContinueConfigFromYaml } from "./loadYaml";
 
 describe("MCP Server cwd configuration", () => {
   describe("YAML schema validation", () => {
@@ -116,6 +128,7 @@ describe("MCP Server cwd configuration", () => {
       configs.forEach(({ name, server }) => {
         const config: AssistantUnrolledNonNullable = {
           name: "test-agent",
+
           version: "1.0.0",
           mcpServers: [server],
         };
@@ -124,5 +137,61 @@ describe("MCP Server cwd configuration", () => {
         expect(errors).toHaveLength(0);
       });
     });
+  });
+});
+
+describe("loadContinueConfigFromYaml local file block uses", () => {
+  beforeEach(() => {
+    setUpTestDir();
+  });
+
+  afterEach(() => {
+    tearDownTestDir();
+  });
+
+  it("resolves file:// path uses in rules", async () => {
+    addToTestDir([
+      "config.yaml",
+      [
+        "blocks/rules.yaml",
+        "name: Rules\n" +
+          "version: 0.0.1\n" +
+          "schema: v1\n" +
+          "\n" +
+          "rules:\n" +
+          "  - Be humble\n",
+      ],
+    ]);
+
+    const absBlockPath = path.join(TEST_DIR_PATH, "blocks", "rules.yaml");
+
+    const overrideConfigYaml: any = {
+      name: "Test Assistant",
+      version: "0.0.1",
+      rules: [{ uses: localPathToUri(absBlockPath) }],
+    };
+
+    const pkg: PackageIdentifier = {
+      uriType: "file",
+      fileUri: localPathToUri(path.join(TEST_DIR_PATH, "config.yaml")),
+    };
+
+    const result = await loadContinueConfigFromYaml({
+      ide: testIde,
+      ideSettings: await testIde.getIdeSettings(),
+      ideInfo: await testIde.getIdeInfo(),
+      uniqueId: await testIde.getUniqueId(),
+      llmLogger: new LLMLogger(),
+      workOsAccessToken: await testControlPlaneClient.getAccessToken(),
+      overrideConfigYaml,
+      controlPlaneClient: testControlPlaneClient,
+      orgScopeId: null,
+      packageIdentifier: pkg,
+    });
+
+    expect(result.configLoadInterrupted).toBe(false);
+    expect(result.config).toBeTruthy();
+    const rules = result.config!.rules.map((r) => r.rule);
+    expect(rules).toContain("Be humble");
   });
 });
