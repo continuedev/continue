@@ -5,6 +5,10 @@ import { chmodSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const noMinify = args.includes("--no-minify");
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // List of packages to mark as external (ONLY native modules that cannot be bundled)
@@ -38,7 +42,7 @@ try {
     outfile: "dist/index.js",
     external,
     sourcemap: true,
-    minify: true, // Minify for smaller bundle size
+    minify: !noMinify, // Use --no-minify flag to control minification
     metafile: true,
     plugins: [optionalDevtoolsPlugin],
 
