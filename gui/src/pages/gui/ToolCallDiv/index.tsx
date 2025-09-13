@@ -1,4 +1,7 @@
-import { ArrowRightIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowRightIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
@@ -7,7 +10,7 @@ import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
-import { getStatusIcon, toolCallIcons } from "./utils";
+import { getIconByName, getStatusIcon } from "./utils";
 
 interface ToolCallDivProps {
   toolCallStates: ToolCallState[];
@@ -37,7 +40,10 @@ export function ToolCallDiv({
       (tool) => toolCallState.toolCall.function?.name === tool.function.name,
     );
     const functionName = toolCallState.toolCall.function?.name;
-    const icon = functionName && toolCallIcons[functionName];
+    const icon =
+      functionName && tool?.toolCallIcon
+        ? getIconByName(tool.toolCallIcon)
+        : undefined;
 
     if (icon) {
       return (

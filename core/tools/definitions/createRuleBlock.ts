@@ -84,4 +84,5 @@ For example:`,
       ["alwaysApply", "false"],
     ],
   },
+  toolCallIcon: "PencilIcon",
 };

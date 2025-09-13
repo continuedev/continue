@@ -31,4 +31,5 @@ export const readFileTool: Tool = {
     exampleArgs: [["filepath", "path/to/the_file.txt"]],
   },
   defaultToolPolicy: "allowedWithoutPermission",
+  toolCallIcon: "DocumentIcon",
 };
