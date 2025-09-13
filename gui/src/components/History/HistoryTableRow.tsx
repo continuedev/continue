@@ -11,6 +11,7 @@ import { exitEdit } from "../../redux/thunks/edit";
 import {
   deleteSession,
   getSession,
+  loadRemoteSession,
   loadSession,
   updateSession,
 } from "../../redux/thunks/session";
@@ -75,12 +76,17 @@ export function HistoryTableRow({
       data-testid={`history-row-${index}`}
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
-        // Handle remote sessions differently - open control plane URL
+        // Handle remote sessions - load remote session data
         if ("isRemote" in sessionMetadata && sessionMetadata.isRemote) {
           const remoteSession = sessionMetadata as RemoteSessionMetadata;
-          await ideMessenger.request("controlPlane/openUrl", {
-            path: `/agents/${remoteSession.remoteId}`,
-          });
+          await dispatch(exitEdit({}));
+          await dispatch(
+            loadRemoteSession({
+              remoteId: remoteSession.remoteId,
+              saveCurrentSession: true,
+            }),
+          );
+          navigate("/");
           return;
         }
 

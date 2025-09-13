@@ -344,6 +344,12 @@ export class Core {
       return historyManager.load(msg.data.id);
     });
 
+    on("history/loadRemote", async (msg) => {
+      return this.configHandler.controlPlaneClient.loadRemoteSession(
+        msg.data.remoteId,
+      );
+    });
+
     on("history/save", (msg) => {
       historyManager.save(msg.data);
     });

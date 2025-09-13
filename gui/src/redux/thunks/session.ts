@@ -30,6 +30,17 @@ export async function getSession(
   return result.content;
 }
 
+export async function getRemoteSession(
+  ideMessenger: IIdeMessenger,
+  remoteId: string,
+): Promise<Session> {
+  const result = await ideMessenger.request("history/loadRemote", { remoteId });
+  if (result.status === "error") {
+    throw new Error(result.error);
+  }
+  return result.content;
+}
+
 export const refreshSessionMetadata = createAsyncThunk<
   RemoteSessionMetadata[] | SessionMetadata[],
   {
@@ -107,6 +118,30 @@ export const loadSession = createAsyncThunk<
       unwrapResult(result);
     }
     const session = await getSession(extra.ideMessenger, sessionId);
+    dispatch(newSession(session));
+  },
+);
+
+export const loadRemoteSession = createAsyncThunk<
+  void,
+  {
+    remoteId: string;
+    saveCurrentSession: boolean;
+  },
+  ThunkApiType
+>(
+  "session/loadRemote",
+  async ({ remoteId, saveCurrentSession: save }, { extra, dispatch }) => {
+    if (save) {
+      const result = await dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+          generateTitle: true,
+        }),
+      );
+      unwrapResult(result);
+    }
+    const session = await getRemoteSession(extra.ideMessenger, remoteId);
     dispatch(newSession(session));
   },
 );

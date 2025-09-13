@@ -11,7 +11,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IDE, ModelDescription, SessionMetadata } from "../index.js";
+import { IDE, ModelDescription, Session, SessionMetadata } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
 import {
@@ -383,6 +383,50 @@ export class ControlPlaneClient {
         context: "control_plane_list_remote_sessions",
       });
       return [];
+    }
+  }
+
+  public async loadRemoteSession(remoteId: string): Promise<Session> {
+    if (!(await this.isSignedIn())) {
+      throw new Error("Not signed in to load remote session");
+    }
+
+    try {
+      // First get the tunnel URL for the remote agent
+      const tunnelResp = await this.requestAndHandleError(
+        `agents/devboxes/${remoteId}/tunnel`,
+        {
+          method: "POST",
+        }
+      );
+
+      const tunnelData = await tunnelResp.json() as { url?: string };
+      const tunnelUrl = tunnelData.url;
+
+      if (!tunnelUrl) {
+        throw new Error(`Failed to get tunnel URL for agent ${remoteId}`);
+      }
+
+      // Now fetch the session state from the remote agent's /state endpoint
+      const stateResponse = await fetch(`${tunnelUrl}/state`);
+      if (!stateResponse.ok) {
+        throw new Error(`Failed to fetch state from remote agent: ${stateResponse.statusText}`);
+      }
+
+      const remoteState = await stateResponse.json() as { session?: Session };
+      
+      // The remote state contains a session property with the full session data
+      if (!remoteState.session) {
+        throw new Error("Remote agent returned invalid state - no session found");
+      }
+
+      return remoteState.session;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_load_remote_session",
+        remoteId,
+      });
+      throw new Error(`Failed to load remote session: ${e instanceof Error ? e.message : "Unknown error"}`);
     }
   }
 }
