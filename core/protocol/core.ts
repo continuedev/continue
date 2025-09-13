@@ -49,7 +49,10 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import { FreeTrialStatus, RemoteSessionMetadata } from "../control-plane/client";
+import {
+  FreeTrialStatus,
+  RemoteSessionMetadata,
+} from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 
@@ -71,7 +74,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, (SessionMetadata | RemoteSessionMetadata)[]];
+  "history/list": [
+    ListHistoryOptions,
+    (SessionMetadata | RemoteSessionMetadata)[],
+  ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];

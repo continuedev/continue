@@ -315,15 +315,16 @@ export class Core {
     // History
     on("history/list", async (msg) => {
       const localSessions = historyManager.list(msg.data);
-      
+
       // Check if remote sessions should be enabled based on feature flags
-      const shouldFetchRemote = await this.configHandler.controlPlaneClient.shouldEnableRemoteSessions();
-      
+      const shouldFetchRemote =
+        await this.configHandler.controlPlaneClient.shouldEnableRemoteSessions();
+
       // Get remote sessions from control plane if feature is enabled
-      const remoteSessions = shouldFetchRemote 
+      const remoteSessions = shouldFetchRemote
         ? await this.configHandler.controlPlaneClient.listRemoteSessions()
         : [];
-      
+
       // Combine and sort by date (most recent first)
       const allSessions = [...localSessions, ...remoteSessions].sort(
         (a, b) =>

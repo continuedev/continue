@@ -19,6 +19,7 @@ type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
   remoteUrl?: string,
+  options?: { isRemoteMode?: boolean },
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -240,7 +241,7 @@ export async function handleSlashCommands(
 
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant, options?.remoteUrl);
+    return await handler(args, assistant, options?.remoteUrl, options);
   }
 
   // Check for custom assistant prompts

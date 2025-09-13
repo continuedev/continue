@@ -2,9 +2,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { handleSlashCommands } from "./slashCommands.js";
 
-// Mock fetch globally
-global.fetch = vi.fn();
-
 describe("Remote mode slash commands", () => {
   const mockAssistant = {
     name: "test",
@@ -16,105 +13,39 @@ describe("Remote mode slash commands", () => {
     vi.clearAllMocks();
   });
 
-  describe("/diff command", () => {
-    it("should return error when not in remote mode", async () => {
-      const result = await handleSlashCommands("/diff", mockAssistant);
+  describe("/diff and /apply commands", () => {
+    it("should not be handled by handleSlashCommands - these are handled by TUI layer", async () => {
+      // /diff and /apply are handled by handleSpecialCommands in useChat.helpers.ts,
+      // not by the general slash command system. These commands are intercepted
+      // at the TUI layer before reaching handleSlashCommands, so handleSlashCommands
+      // should return null (no match) for these commands.
 
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("only available in remote mode"),
-      });
+      const diffResult = await handleSlashCommands("/diff", mockAssistant);
+      expect(diffResult).toBe(null);
+
+      const applyResult = await handleSlashCommands("/apply", mockAssistant);
+      expect(applyResult).toBe(null);
     });
 
-    it("should fetch diff content from remote URL", async () => {
-      const mockDiff = "diff --git a/file.txt b/file.txt\n+added line";
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(mockDiff),
-      });
+    it("should return unknown command for remote commands when called directly", async () => {
+      // When called directly (bypassing handleSpecialCommands), /diff and /apply
+      // should return "Unknown command" because they're listed in REMOTE_MODE_SLASH_COMMANDS
+      // for UI display but not implemented as handlers.
 
-      const result = await handleSlashCommands("/diff", mockAssistant, {
+      const diffResult = await handleSlashCommands("/diff", mockAssistant, {
         remoteUrl: "http://localhost:3000",
         isRemoteMode: true,
       });
-
-      expect(fetch).toHaveBeenCalledWith("http://localhost:3000/diff");
-      expect(result).toEqual({
-        exit: false,
-        diffContent: mockDiff,
-      });
-    });
-
-    it("should handle empty diff response", async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(""),
+      expect(diffResult).toEqual({
+        output: "Unknown command: diff",
       });
 
-      const result = await handleSlashCommands("/diff", mockAssistant, {
+      const applyResult = await handleSlashCommands("/apply", mockAssistant, {
         remoteUrl: "http://localhost:3000",
         isRemoteMode: true,
       });
-
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("No changes to display"),
-      });
-    });
-
-    it("should handle fetch errors", async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
-
-      const result = await handleSlashCommands("/diff", mockAssistant, {
-        remoteUrl: "http://localhost:3000",
-        isRemoteMode: true,
-      });
-
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("Failed to fetch diff"),
-      });
-    });
-  });
-
-  describe("/apply command", () => {
-    it("should return error when not in remote mode", async () => {
-      const result = await handleSlashCommands("/apply", mockAssistant);
-
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("only available in remote mode"),
-      });
-    });
-
-    it("should handle empty diff response", async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(""),
-      });
-
-      const result = await handleSlashCommands("/apply", mockAssistant, {
-        remoteUrl: "http://localhost:3000",
-        isRemoteMode: true,
-      });
-
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("No changes to apply"),
-      });
-    });
-
-    it("should handle fetch errors", async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
-
-      const result = await handleSlashCommands("/apply", mockAssistant, {
-        remoteUrl: "http://localhost:3000",
-        isRemoteMode: true,
-      });
-
-      expect(result).toEqual({
-        exit: false,
-        output: expect.stringContaining("Failed to fetch diff"),
+      expect(applyResult).toEqual({
+        output: "Unknown command: apply",
       });
     });
   });

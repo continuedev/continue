@@ -269,9 +269,9 @@ export async function handleRemoteApply(remoteUrl: string): Promise<void> {
     const { execFileSync } = await import("child_process");
 
     try {
-      execFileSync('git', ['apply'], {
+      execFileSync("git", ["apply"], {
         input: diffContent,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: ["pipe", "pipe", "pipe"],
       });
 
       try {

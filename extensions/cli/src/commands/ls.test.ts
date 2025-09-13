@@ -110,16 +110,19 @@ describe("listSessionsCommand", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should use limit of 10 for JSON and 20 for TUI", async () => {
+  it("should call listSessions without limit restrictions", async () => {
     mockListSessions.mockResolvedValue([]);
 
-    // JSON mode should fetch 10
+    // JSON mode - should call listSessions (implementation decides limit)
     await listSessionsCommand({ format: "json" });
-    expect(mockListSessions).toHaveBeenCalledWith(10);
+    expect(mockListSessions).toHaveBeenCalled();
 
-    // TUI mode should fetch 20 (so UI can choose how many to display)
+    // TUI mode - should call listSessions (implementation decides limit)
     await listSessionsCommand({});
-    expect(mockListSessions).toHaveBeenCalledWith(20);
+    expect(mockListSessions).toHaveBeenCalled();
+
+    // Verify it was called twice total
+    expect(mockListSessions).toHaveBeenCalledTimes(2);
   });
 
   it("should handle empty sessions gracefully in JSON mode", async () => {

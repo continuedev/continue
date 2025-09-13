@@ -42,7 +42,7 @@ export function HistoryTableRow({
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
         // Don't allow editing remote sessions
-        if ('isRemote' in sessionMetadata && sessionMetadata.isRemote) {
+        if ("isRemote" in sessionMetadata && sessionMetadata.isRemote) {
           setSessionTitleEditValue(sessionMetadata.title);
           setEditing(false);
           return;
@@ -76,7 +76,7 @@ export function HistoryTableRow({
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
         // Handle remote sessions differently - open control plane URL
-        if ('isRemote' in sessionMetadata && sessionMetadata.isRemote) {
+        if ("isRemote" in sessionMetadata && sessionMetadata.isRemote) {
           const remoteSession = sessionMetadata as RemoteSessionMetadata;
           await ideMessenger.request("controlPlane/openUrl", {
             path: `/agents/${remoteSession.remoteId}`,
@@ -115,7 +115,7 @@ export function HistoryTableRow({
             <span className="line-clamp-1 break-all text-sm font-semibold">
               {sessionMetadata.title}
             </span>
-            {'isRemote' in sessionMetadata && sessionMetadata.isRemote && (
+            {"isRemote" in sessionMetadata && sessionMetadata.isRemote && (
               <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                 Remote
               </span>
@@ -141,28 +141,30 @@ export function HistoryTableRow({
         </div>
       </td>
 
-      {hovered && !editing && !('isRemote' in sessionMetadata && sessionMetadata.isRemote) && (
-        <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
-          <HeaderButtonWithToolTip
-            text="Edit"
-            onClick={async (e) => {
-              e.stopPropagation();
-              setEditing(true);
-            }}
-          >
-            <PencilSquareIcon width="1em" height="1em" />
-          </HeaderButtonWithToolTip>
-          <HeaderButtonWithToolTip
-            text="Delete"
-            onClick={async (e) => {
-              e.stopPropagation();
-              await dispatch(deleteSession(sessionMetadata.sessionId));
-            }}
-          >
-            <TrashIcon width="1em" height="1em" />
-          </HeaderButtonWithToolTip>
-        </td>
-      )}
+      {hovered &&
+        !editing &&
+        !("isRemote" in sessionMetadata && sessionMetadata.isRemote) && (
+          <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+            <HeaderButtonWithToolTip
+              text="Edit"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setEditing(true);
+              }}
+            >
+              <PencilSquareIcon width="1em" height="1em" />
+            </HeaderButtonWithToolTip>
+            <HeaderButtonWithToolTip
+              text="Delete"
+              onClick={async (e) => {
+                e.stopPropagation();
+                await dispatch(deleteSession(sessionMetadata.sessionId));
+              }}
+            >
+              <TrashIcon width="1em" height="1em" />
+            </HeaderButtonWithToolTip>
+          </td>
+        )}
     </tr>
   );
 }
