@@ -1,6 +1,8 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import { logger } from "src/util/logger.js";
+
 import { listSessions, type ExtendedSessionMetadata } from "../../session.js";
 import { SessionSelector } from "../SessionSelector.js";
 
@@ -22,7 +24,7 @@ export const SessionSelectorWithLoading: React.FC<
         const sessionList = await listSessions();
         setSessions(sessionList);
       } catch (error) {
-        console.error("Error loading sessions:", error);
+        logger.error("Error loading sessions:", error);
         setSessions([]);
       } finally {
         setIsLoading(false);

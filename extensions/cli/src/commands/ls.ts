@@ -81,7 +81,7 @@ export async function listSessionsCommand(
 
   // Handle empty sessions case
   if (sessions.length === 0) {
-    console.log(
+    logger.info(
       "No previous sessions found. Start a new conversation with: cn",
     );
     return;
@@ -107,7 +107,7 @@ export async function listSessionsCommand(
           // Handle local session
           const sessionHistory = loadSessionById(sessionId);
           if (!sessionHistory) {
-            console.error(`Session ${sessionId} could not be loaded.`);
+            logger.error(`Session ${sessionId} could not be loaded.`);
             resolve();
             return;
           }
