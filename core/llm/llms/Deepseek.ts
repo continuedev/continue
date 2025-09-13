@@ -15,6 +15,7 @@ class Deepseek extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
   maxStopWords: number | undefined = 16;
+  forceStreamChat = true;
 
   supportsFim(): boolean {
     return true;
