@@ -1,6 +1,9 @@
 import { render } from "ink";
 import React from "react";
 
+import { getAccessToken, loadAuthConfig } from "src/auth/workos.js";
+import { env } from "src/env.js";
+
 import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
 import { logger } from "../util/logger.js";
@@ -22,6 +25,26 @@ function setSessionId(sessionId: string): void {
     "continue-cli-",
     "",
   );
+}
+
+export async function getTunnelForAgent(agentId: string): Promise<string> {
+  const authConfig = loadAuthConfig();
+  const accessToken = getAccessToken(authConfig);
+
+  const resp = await fetch(`${env.apiBase}agents/devboxes/${agentId}/tunnel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error(
+      `Failed to get tunnel for agent ${agentId}: ${await resp.text()}`,
+    );
+  }
+  const data = await resp.json();
+  return data.url;
 }
 
 /**
@@ -76,8 +99,10 @@ export async function listSessionsCommand(
         if (selectedSession?.isRemote && selectedSession.remoteId) {
           // Handle remote session - use the remote command with the agent URL
           logger.info(`Opening remote session: ${selectedSession.remoteId}`);
-          const agentUrl = `https://hub.continue.dev/agents/${selectedSession.remoteId}`;
-          await remote(undefined, { url: agentUrl });
+
+          const tunnelUrl = await getTunnelForAgent(selectedSession.remoteId);
+
+          await remote(undefined, { url: tunnelUrl });
         } else {
           // Handle local session
           const sessionHistory = loadSessionById(sessionId);
