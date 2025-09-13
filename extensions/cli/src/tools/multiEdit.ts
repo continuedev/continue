@@ -182,6 +182,25 @@ WARNINGS:
       required: true,
       items: {
         type: "object",
+        properties: {
+          old_string: {
+            type: "string",
+            description:
+              "The text to replace (must match the file contents exactly, including all whitespace/indentation)",
+            required: true,
+          },
+          new_string: {
+            type: "string",
+            description: "The edited text to replace the old_string",
+            required: true,
+          },
+          replace_all: {
+            type: "boolean",
+            description:
+              "Replace all occurrences of old_string. Defaults to false",
+            required: false,
+          },
+        },
       },
     },
   },
