@@ -183,11 +183,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // State for diff content overlay
   const [diffContent, setDiffContent] = useState<string>("");
 
+  // State for temporary status message
+  const [statusMessage, setStatusMessage] = useState<string>("");
+
   // Handler to show diff overlay
-  const handleShowDiff = useCallback((content: string) => {
-    setDiffContent(content);
-    navigateTo("diff");
-  }, [navigateTo]);
+  const handleShowDiff = useCallback(
+    (content: string) => {
+      setDiffContent(content);
+      navigateTo("diff");
+    },
+    [navigateTo],
+  );
+
+  // Handler to show temporary status message
+  const handleShowStatusMessage = useCallback((message: string) => {
+    setStatusMessage(message);
+    // Clear after 3 seconds
+    setTimeout(() => {
+      setStatusMessage("");
+    }, 3000);
+  }, []);
 
   const {
     chatHistory,
@@ -222,6 +237,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isRemoteMode,
     remoteUrl,
     onShowDiff: handleShowDiff,
+    onShowStatusMessage: handleShowStatusMessage,
   });
 
   // Update ref after useChat returns
@@ -310,6 +326,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
             <Text key="loading-end" color="gray">
               • esc to interrupt )
             </Text>
+          </Box>
+        )}
+
+        {/* Temporary status message */}
+        {statusMessage && (
+          <Box paddingX={1} paddingY={0}>
+            <Text color="green">{statusMessage}</Text>
           </Box>
         )}
 

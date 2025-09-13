@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+
 import { handleSlashCommands } from "./slashCommands.js";
 
 // Mock fetch globally
@@ -7,6 +8,7 @@ global.fetch = vi.fn();
 describe("Remote mode slash commands", () => {
   const mockAssistant = {
     name: "test",
+    version: "1.0.0",
     prompts: [],
   };
 

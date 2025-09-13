@@ -24,6 +24,7 @@ export interface UseChatProps {
   isRemoteMode?: boolean;
   remoteUrl?: string;
   onShowDiff?: (diffContent: string) => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 export interface AttachedFile {

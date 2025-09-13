@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
 import { Box, Text, useInput } from "ink";
+import React, { useEffect } from "react";
 
 import { ColoredDiff } from "./ColoredDiff.js";
 

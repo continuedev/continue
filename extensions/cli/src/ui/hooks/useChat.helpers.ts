@@ -232,6 +232,83 @@ interface HandleSpecialCommandsOptions {
   onShowConfigSelector: () => void;
   exit: () => void;
   onShowDiff?: (diffContent: string) => void;
+  onShowStatusMessage?: (message: string) => void;
+}
+
+/**
+ * Handle /diff command in remote mode
+ */
+async function handleRemoteDiffCommand(
+  remoteUrl: string,
+  onShowDiff?: (diffContent: string) => void,
+): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (onShowDiff) {
+      onShowDiff(diffContent);
+    }
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    if (onShowDiff) {
+      onShowDiff(`Error: Failed to fetch diff - ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Handle /apply command in remote mode
+ */
+async function handleRemoteApplyCommand(
+  remoteUrl: string,
+  onShowStatusMessage?: (message: string) => void,
+): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (!diffContent || diffContent.trim() === "") {
+      if (onShowStatusMessage) {
+        onShowStatusMessage("No changes to apply");
+      }
+      return;
+    }
+
+    // Apply the diff using git apply
+    const { execSync } = await import("child_process");
+
+    try {
+      execSync(`echo ${JSON.stringify(diffContent)} | git apply`, {
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      if (onShowStatusMessage) {
+        onShowStatusMessage(
+          "✓ Successfully applied diff to local working tree",
+        );
+      }
+    } catch (gitError: any) {
+      if (onShowStatusMessage) {
+        onShowStatusMessage(`✗ Failed to apply diff: ${gitError.message}`);
+      }
+    }
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    if (onShowStatusMessage) {
+      onShowStatusMessage(`✗ Failed to fetch diff: ${error.message}`);
+    }
+  }
 }
 
 /**
@@ -244,6 +321,7 @@ export async function handleSpecialCommands({
   onShowConfigSelector,
   exit,
   onShowDiff,
+  onShowStatusMessage,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -266,36 +344,17 @@ export async function handleSpecialCommands({
     remoteUrl &&
     (trimmedMessage === "/diff" || trimmedMessage.startsWith("/diff "))
   ) {
-    try {
-      const response = await fetch(`${remoteUrl}/diff`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch diff: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
-      const diffContent = responseData.diff || "";
-
-      if (onShowDiff) {
-        onShowDiff(diffContent);
-      }
-    } catch (error: any) {
-      logger.error("Failed to fetch diff from remote server:", error);
-      // Could show an error overlay instead of adding to history
-      if (onShowDiff) {
-        onShowDiff(`Error: Failed to fetch diff - ${error.message}`);
-      }
-    }
+    await handleRemoteDiffCommand(remoteUrl, onShowDiff);
     return true;
   }
 
-  // Handle /apply command in remote mode
+  // Handle /apply command in remote mode - show temporary status message
   if (
     isRemoteMode &&
     remoteUrl &&
     (trimmedMessage === "/apply" || trimmedMessage.startsWith("/apply "))
   ) {
-    const { handleRemoteApply } = await import("./useChat.remote.helpers.js");
-    await handleRemoteApply(remoteUrl);
+    await handleRemoteApplyCommand(remoteUrl, onShowStatusMessage);
     return true;
   }
 

@@ -59,6 +59,7 @@ export function useChat({
   isRemoteMode = false,
   remoteUrl,
   onShowDiff,
+  onShowStatusMessage,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -425,6 +426,7 @@ export function useChat({
       onShowConfigSelector,
       exit,
       onShowDiff,
+      onShowStatusMessage,
     });
 
     if (handled) return;
