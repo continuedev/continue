@@ -24,4 +24,3 @@ export function detectTerminalType(): string | undefined {
   }
   return undefined;
 }
-
