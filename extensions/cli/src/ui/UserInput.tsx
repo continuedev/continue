@@ -257,7 +257,7 @@ const UserInput: React.FC<UserInputProps> = ({
       const textAfterCommand = trimmedText.slice(commandWithSlash.length);
 
       // If there's any content after the command name (space + args), hide dropdown
-      if (textAfterCommand.length > 0) {
+      if (textAfterCommand.trim().length > 0 && beforeCursor.length >= commandWithSlash.length) {
         setShowSlashCommands(false);
         return;
       }
