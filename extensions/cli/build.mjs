@@ -90,6 +90,7 @@ const require = createRequire(import.meta.url);`,
   writeFileSync("dist/meta.json", JSON.stringify(result.metafile, null, 2));
 
   // Create wrapper script with shebang that explicitly runs the CLI
+  // Note: We must call runCli(); a plain dynamic import will not execute the CLI.
   writeFileSync(
     "dist/cn.js",
     "#!/usr/bin/env node\nimport { runCli } from './index.js';\nawait runCli();\n",
@@ -106,9 +107,6 @@ const require = createRequire(import.meta.url);`,
   } catch (error) {
     console.warn("Warning: Could not copy xhr-sync-worker.js:", error.message);
   }
-
-  // Create wrapper script with shebang
-  writeFileSync("dist/cn.js", "#!/usr/bin/env node\nimport('./index.js');");
 
   // Make the wrapper script executable
   chmodSync("dist/cn.js", 0o755);
