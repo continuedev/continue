@@ -1,4 +1,8 @@
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpRightIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { getUriPathBasename } from "core/util/uri";
@@ -39,11 +43,13 @@ export function HistoryTableRow({
     setSessionTitleEditValue(sessionMetadata.title);
   }, [sessionMetadata]);
 
+  const isRemote = "isRemote" in sessionMetadata && sessionMetadata.isRemote;
+
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
         // Don't allow editing remote sessions
-        if ("isRemote" in sessionMetadata && sessionMetadata.isRemote) {
+        if (isRemote) {
           setSessionTitleEditValue(sessionMetadata.title);
           setEditing(false);
           return;
@@ -77,7 +83,7 @@ export function HistoryTableRow({
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
         // Handle remote sessions - load remote session data
-        if ("isRemote" in sessionMetadata && sessionMetadata.isRemote) {
+        if (isRemote) {
           const remoteSession = sessionMetadata as RemoteSessionMetadata;
           await dispatch(exitEdit({}));
           await dispatch(
@@ -121,7 +127,7 @@ export function HistoryTableRow({
             <span className="line-clamp-1 break-all text-sm font-semibold">
               {sessionMetadata.title}
             </span>
-            {"isRemote" in sessionMetadata && sessionMetadata.isRemote && (
+            {isRemote && (
               <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                 Remote
               </span>
@@ -147,30 +153,44 @@ export function HistoryTableRow({
         </div>
       </td>
 
-      {hovered &&
-        !editing &&
-        !("isRemote" in sessionMetadata && sessionMetadata.isRemote) && (
-          <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+      {hovered && !editing && (
+        <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+          {isRemote ? (
             <HeaderButtonWithToolTip
-              text="Edit"
+              text="Open in browser"
               onClick={async (e) => {
                 e.stopPropagation();
-                setEditing(true);
+                await ideMessenger.request("controlPlane/openUrl", {
+                  path: `/agents/${sessionMetadata.remoteId}`,
+                });
               }}
             >
-              <PencilSquareIcon width="1em" height="1em" />
+              <ArrowUpRightIcon width="1em" height="1em" />
             </HeaderButtonWithToolTip>
-            <HeaderButtonWithToolTip
-              text="Delete"
-              onClick={async (e) => {
-                e.stopPropagation();
-                await dispatch(deleteSession(sessionMetadata.sessionId));
-              }}
-            >
-              <TrashIcon width="1em" height="1em" />
-            </HeaderButtonWithToolTip>
-          </td>
-        )}
+          ) : (
+            <>
+              <HeaderButtonWithToolTip
+                text="Edit"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setEditing(true);
+                }}
+              >
+                <PencilSquareIcon width="1em" height="1em" />
+              </HeaderButtonWithToolTip>
+              <HeaderButtonWithToolTip
+                text="Delete"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await dispatch(deleteSession(sessionMetadata.sessionId));
+                }}
+              >
+                <TrashIcon width="1em" height="1em" />
+              </HeaderButtonWithToolTip>
+            </>
+          )}
+        </td>
+      )}
     </tr>
   );
 }
