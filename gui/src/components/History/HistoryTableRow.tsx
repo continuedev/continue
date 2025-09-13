@@ -75,11 +75,16 @@ export function HistoryTableRow({
       data-testid={`history-row-${index}`}
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
-        // Don't allow loading remote sessions yet
+        // Handle remote sessions differently - open control plane URL
         if ('isRemote' in sessionMetadata && sessionMetadata.isRemote) {
+          const remoteSession = sessionMetadata as RemoteSessionMetadata;
+          await ideMessenger.request("controlPlane/openUrl", {
+            path: `/agents/${remoteSession.remoteId}`,
+          });
           return;
         }
 
+        // Handle local sessions - load and navigate as before
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
           await dispatch(
