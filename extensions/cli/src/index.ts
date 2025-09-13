@@ -113,7 +113,7 @@ program
   .description(
     "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
-  .version(getVersion());
+  .version(getVersion(), "-v, --version", "Display version number");
 
 // Root command - chat functionality (default)
 // Add common options to the root command
@@ -254,9 +254,11 @@ program
   });
 
 // Remote subcommand
-program
-  .command("remote [prompt]", { hidden: true })
-  .description("Launch a remote instance of the cn agent")
+addCommonOptions(
+  program
+    .command("remote [prompt]", { hidden: true })
+    .description("Launch a remote instance of the cn agent"),
+)
   .option(
     "--url <url>",
     "Connect directly to the specified URL instead of creating a new remote environment",

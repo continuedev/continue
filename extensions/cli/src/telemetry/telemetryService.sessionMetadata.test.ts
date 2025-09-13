@@ -126,7 +126,7 @@ describe("TelemetryService - Session Metadata", () => {
         1,
         expect.objectContaining({
           is_github_actions: "false",
-          ci_environment: "none",
+          is_continue_remote_agent: "false",
         }),
       );
     });
@@ -151,7 +151,7 @@ describe("TelemetryService - Session Metadata", () => {
         1,
         expect.objectContaining({
           is_github_actions: "true",
-          ci_environment: "github_actions",
+          is_continue_remote_agent: "false",
         }),
       );
     });
@@ -178,7 +178,59 @@ describe("TelemetryService - Session Metadata", () => {
         expect.objectContaining({
           is_headless: "true",
           is_github_actions: "true",
-          ci_environment: "github_actions",
+          is_continue_remote_agent: "false",
+        }),
+      );
+    });
+
+    it("should include is_continue_remote_agent=true when in remote agent mode", () => {
+      // Set Continue remote agent environment
+      process.env.CONTINUE_REMOTE = "true";
+
+      const mockAdd = vi.fn();
+      const mockRecord = vi.fn();
+      const service = telemetryService as any;
+
+      // Mock the session counter and startup time histogram
+      service.sessionCounter = { add: mockAdd };
+      service.startupTimeHistogram = { record: mockRecord };
+      service.config = { enabled: true };
+      service.meter = {};
+
+      service.recordSessionStart();
+
+      expect(mockAdd).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          is_continue_remote_agent: "true",
+        }),
+      );
+    });
+
+    it("should include all environment flags when all are true", () => {
+      // Set all environments
+      process.argv = ["node", "cli.js", "-p", "What is the weather?"];
+      process.env.GITHUB_ACTIONS = "true";
+      process.env.CONTINUE_REMOTE = "true";
+
+      const mockAdd = vi.fn();
+      const mockRecord = vi.fn();
+      const service = telemetryService as any;
+
+      // Mock the session counter and startup time histogram
+      service.sessionCounter = { add: mockAdd };
+      service.startupTimeHistogram = { record: mockRecord };
+      service.config = { enabled: true };
+      service.meter = {};
+
+      service.recordSessionStart();
+
+      expect(mockAdd).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          is_headless: "true",
+          is_github_actions: "true",
+          is_continue_remote_agent: "true",
         }),
       );
     });

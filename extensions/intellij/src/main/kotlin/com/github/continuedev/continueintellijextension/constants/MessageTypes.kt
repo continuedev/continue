@@ -146,6 +146,7 @@ class MessageTypes {
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

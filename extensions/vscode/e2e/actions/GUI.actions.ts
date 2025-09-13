@@ -136,10 +136,22 @@ export class GUIActions {
     toolName: string,
     desiredState: number | string,
   ) {
-    const toolButton = await TestUtils.waitForSuccess(() =>
-      GUISelectors.getToolButton(view),
+    // Navigate to config page
+
+    const settingsButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getSettingsNavButton(view),
     );
-    await toolButton.click();
+    await settingsButton.click();
+    await TestUtils.waitForTimeout(500);
+
+    // Click on tools tab
+    const toolsTab = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getToolsTab(view),
+    );
+    await toolsTab.click();
+    await TestUtils.waitForTimeout(500);
+
+    // Find and click the tool policy button
     const toolPolicyButton = await TestUtils.waitForSuccess(() =>
       GUISelectors.getToolPolicyButton(view, toolName),
     );
@@ -181,5 +193,12 @@ export class GUIActions {
         `Failed to set tool policy to ${targetStates.join(" or ")} after 5 attempts`,
       );
     }
+
+    // Navigate back to chat
+    const backButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getBackButton(view),
+    );
+    await backButton.click();
+    await TestUtils.waitForTimeout(500);
   }
 }

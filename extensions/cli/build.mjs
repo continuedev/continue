@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as esbuild from "esbuild";
-import { chmodSync, writeFileSync } from "fs";
+import { chmodSync, copyFileSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -17,6 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const external = [
   "@sentry/profiling-node", // Contains native profiler bindings (optional)
   "fsevents", // macOS native file watcher (optional dependency)
+  "./xhr-sync-worker.js", // JSDOM worker file that needs to be copied separately
 ];
 
 console.log("Building CLI with esbuild...");
@@ -93,6 +94,21 @@ const require = createRequire(import.meta.url);`,
     "dist/cn.js",
     "#!/usr/bin/env node\nimport { runCli } from './index.js';\nawait runCli();\n",
   );
+  // Copy worker files needed by JSDOM
+  const workerSource = resolve(
+    __dirname,
+    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+  );
+  const workerDest = resolve(__dirname, "dist/xhr-sync-worker.js");
+  try {
+    copyFileSync(workerSource, workerDest);
+    console.log("✓ Copied xhr-sync-worker.js");
+  } catch (error) {
+    console.warn("Warning: Could not copy xhr-sync-worker.js:", error.message);
+  }
+
+  // Create wrapper script with shebang
+  writeFileSync("dist/cn.js", "#!/usr/bin/env node\nimport('./index.js');");
 
   // Make the wrapper script executable
   chmodSync("dist/cn.js", 0o755);

@@ -4,7 +4,7 @@ import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
 import { diffLines } from "diff";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { ApplyActions } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ApplyActions";
 import { FileInfo } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/FileInfo";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -77,8 +77,6 @@ export function FindAndReplaceDisplay({
   historyIndex,
 }: FindAndReplaceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
-  const [diffWidth, setDiffWidth] = useState<number | undefined>(undefined);
-  const diffDivRef = useRef<HTMLDivElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
   const applyState: ApplyState | undefined = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, toolCallId),
@@ -238,22 +236,12 @@ export function FindAndReplaceDisplay({
     );
   }
 
-  useEffect(() => {
-    if (!diffDivRef.current) return;
-    const newWidth =
-      diffDivRef.current?.scrollWidth ??
-      diffDivRef.current?.getBoundingClientRect().width;
-    setDiffWidth(newWidth ? Math.ceil(newWidth) : undefined);
-  }, [isExpanded]);
-
   return renderContainer(
     <div
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
-      ref={diffDivRef}
     >
       <pre
-        className={`bg-editor m-0 text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
-        style={{ width: diffWidth ? `${diffWidth}px` : "100%" }}
+        className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
         {diffResult.diff?.map((part, index) => {
           if (part.removed) {
