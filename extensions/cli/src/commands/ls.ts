@@ -1,9 +1,8 @@
 import { render } from "ink";
 import React from "react";
 
-import { getAccessToken, loadAuthConfig } from "src/auth/workos.js";
-import { env } from "src/env.js";
-
+import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
+import { env } from "../env.js";
 import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
 import { logger } from "../util/logger.js";

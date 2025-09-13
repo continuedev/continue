@@ -14,11 +14,11 @@ if (!globalThis.fetch) {
 }
 
 // Config file path - define as a function to avoid initialization order issues
-const getAuthConfigPath = () => {
+function getAuthConfigPath() {
   const continueHome =
     process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
   return path.join(continueHome, "auth.json");
-};
+}
 
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
