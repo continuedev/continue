@@ -86,7 +86,10 @@ const require = createRequire(import.meta.url);`,
   writeFileSync("dist/meta.json", JSON.stringify(result.metafile, null, 2));
 
   // Copy worker files needed by JSDOM
-  const workerSource = resolve(__dirname, "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js");
+  const workerSource = resolve(
+    __dirname,
+    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+  );
   const workerDest = resolve(__dirname, "dist/xhr-sync-worker.js");
   try {
     copyFileSync(workerSource, workerDest);

@@ -7,12 +7,14 @@ import { services } from "../../services/index.js";
 import { getCurrentSession, updateSessionTitle } from "../../session.js";
 
 import { generateSessionTitle } from "./useChat.helpers.js";
+import { splitMessageContent } from "./useChat.splitMessage.helpers.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setActivePermissionRequest: React.Dispatch<React.SetStateAction<any>>;
   llmApi?: any;
   model?: any;
+  terminalWidth: number;
 }
 
 /**
@@ -21,7 +23,13 @@ interface CreateStreamCallbacksOptions {
 export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
 ): any {
-  const { setChatHistory, setActivePermissionRequest, llmApi, model } = options;
+  const {
+    setChatHistory,
+    setActivePermissionRequest,
+    llmApi,
+    model,
+    terminalWidth,
+  } = options;
 
   return {
     onContent: (_: string) => {},
@@ -33,17 +41,15 @@ export function createStreamCallbacks(
         const svc = services.chatHistory;
         const useService = typeof svc?.isReady === "function" && svc.isReady();
         if (!useService && content) {
-          setChatHistory((prev) => [
-            ...prev,
-            {
-              contextItems: [],
-              message: {
-                role: "assistant",
-                content: content,
-                isStreaming: false,
-              },
-            },
-          ]);
+          // Split the assistant message content based on terminal width
+          const splitMessages = splitMessageContent(
+            content,
+            "assistant",
+            [],
+            terminalWidth,
+          );
+
+          setChatHistory((prev) => [...prev, ...splitMessages]);
         }
       } catch (error) {
         logger.error("Failed to update chat history", { error });

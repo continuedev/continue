@@ -1,7 +1,7 @@
 import { render } from "ink";
 import React from "react";
 
-import { loadSessionById, listSessions } from "../session.js";
+import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
 import { logger } from "../util/logger.js";
 

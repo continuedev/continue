@@ -7,6 +7,7 @@ import type {
   ChatHistoryItem,
 } from "../../../../../core/index.js";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
+import type { ChatHistoryItemWithSplit } from "../hooks/useChat.splitMessage.helpers.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
   beforeEach(() => {
@@ -297,18 +298,18 @@ describe("TUIChat - Tool Permission Tests", () => {
 
   it("shows tool result with red dot and 'Cancelled by user' message", async () => {
     // Import the components we need for this test
-    const { ToolResultSummary } = await import("../ToolResultSummary.js");
+    const { processToolResultIntoRows } = await import(
+      "../processors/toolResultProcessor.js"
+    );
     const { MemoizedMessage } = await import(
       "../components/MemoizedMessage.js"
     );
-
-    // Test the ToolResultSummary component directly
-    const { lastFrame: summaryFrame } = render(
-      <ToolResultSummary toolName="Edit" content="Permission denied by user" />,
+    const { processHistoryForTerminalDisplay } = await import(
+      "../hooks/useChat.helpers.js"
     );
 
-    const summary = summaryFrame();
-    expect(summary).toContain("Cancelled by user");
+    // Test processing tool result directly with the new architecture
+    // This will be updated when we implement the new MessageRow architecture
 
     // Test the MemoizedMessage component with a proper tool result in ChatHistoryItem
     const toolCallState: ToolCallState = {
@@ -351,8 +352,25 @@ describe("TUIChat - Tool Permission Tests", () => {
       toolCallStates: [toolCallState],
     };
 
+    // Process the history item through the proper pipeline to create tool result rows
+    const processedHistory = processHistoryForTerminalDisplay(
+      [historyItem],
+      80,
+    );
+
+    // The processed history should contain multiple items (header + output rows)
+    expect(processedHistory.length).toBeGreaterThan(0);
+
+    // Find the tool header row (should contain the tool name)
+    const toolHeaderRow = processedHistory.find(
+      (item) =>
+        (item as ChatHistoryItemWithSplit).toolResultRow?.rowData.type ===
+        "header",
+    );
+    expect(toolHeaderRow).toBeDefined();
+
     const { lastFrame: messageFrame } = render(
-      <MemoizedMessage item={historyItem} index={0} />,
+      <MemoizedMessage item={toolHeaderRow!} index={0} />,
     );
 
     await vi.advanceTimersByTimeAsync(100);
