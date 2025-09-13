@@ -2,7 +2,7 @@
 /* eslint-disable max-statements   */
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
@@ -26,7 +26,6 @@ import {
   formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
-  processHistoryForTerminalDisplay,
   processSlashCommandResult,
   trackUserMessage,
 } from "./useChat.helpers.js";
@@ -99,13 +98,14 @@ export function useChat({
     return createSession([]);
   });
 
-  // Local view of history driven solely by ChatHistoryService
+  // Local view of history driven solely by ChatHistoryService - keeping original ChatHistoryItem format
   const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
     services.chatHistory?.isReady()
       ? services.chatHistory.getHistory()
       : currentSession.history,
   );
   // Proxy setter: apply changes to ChatHistoryService (single source of truth)
+  // Accepts ChatHistoryItem[] but converts to MessageRow[] for UI display
   const setChatHistory: React.Dispatch<
     React.SetStateAction<ChatHistoryItem[]>
   > = (value) => {
@@ -121,17 +121,11 @@ export function useChat({
     svc
       .initialize(currentSession, isRemoteMode)
       .then(() => {
-        const processedHistory = processHistoryForTerminalDisplay(
-          svc.getHistory(),
-          terminalWidth,
-        );
-        setChatHistoryView(processedHistory);
+        const rawHistory = svc.getHistory();
+        setChatHistoryView(rawHistory);
         const listener = () => {
-          const processedHistory = processHistoryForTerminalDisplay(
-            svc.getHistory(),
-            terminalWidth,
-          );
-          setChatHistoryView(processedHistory);
+          const rawHistory = svc.getHistory();
+          setChatHistoryView(rawHistory);
         };
         svc.on("stateChanged", listener);
         serviceListenerCleanupRef.current = () =>
@@ -796,7 +790,7 @@ export function useChat({
   };
 
   return {
-    chatHistory,
+    chatHistory, // Return ChatHistoryItem[] for original architecture
     setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,

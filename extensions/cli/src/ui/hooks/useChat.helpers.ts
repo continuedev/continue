@@ -279,7 +279,6 @@ function processAssistantMessageContent(
     item.contextItems || [],
     terminalWidth,
   );
-
   return splitMessages.map((splitMsg) => ({
     ...item,
     ...splitMsg,
