@@ -25,6 +25,7 @@ describe("serve command", () => {
       ensureOrganization: vi.fn(),
       getOrganizationId: vi.fn(),
       isAuthenticated: vi.fn(() => false),
+      isAuthenticatedConfig: vi.fn(() => false),
     }));
 
     vi.mock("../onboarding.js", () => ({
