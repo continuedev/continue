@@ -1,5 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, Session, SessionMetadata } from "core";
+import { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
@@ -30,7 +31,7 @@ export async function getSession(
 }
 
 export const refreshSessionMetadata = createAsyncThunk<
-  SessionMetadata[],
+  RemoteSessionMetadata[] | SessionMetadata[],
   {
     offset?: number;
     limit?: number;

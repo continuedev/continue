@@ -51,6 +51,14 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       dateCreated: new Date().toString(),
       workspaceDirectory: "/tmp",
     },
+    {
+      title: "Remote Agent",
+      sessionId: "remote-agent-123",
+      dateCreated: new Date().toString(),
+      workspaceDirectory: "",
+      isRemote: true,
+      remoteId: "agent-123",
+    },
   ],
   "history/save": undefined,
   getControlPlaneSessionInfo: {

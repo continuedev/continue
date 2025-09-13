@@ -313,8 +313,26 @@ export class Core {
     });
 
     // History
-    on("history/list", (msg) => {
-      return historyManager.list(msg.data);
+    on("history/list", async (msg) => {
+      const localSessions = historyManager.list(msg.data);
+      
+      // Check if remote sessions should be enabled based on feature flags
+      const shouldFetchRemote = await this.configHandler.controlPlaneClient.shouldEnableRemoteSessions();
+      
+      // Get remote sessions from control plane if feature is enabled
+      const remoteSessions = shouldFetchRemote 
+        ? await this.configHandler.controlPlaneClient.listRemoteSessions()
+        : [];
+      
+      // Combine and sort by date (most recent first)
+      const allSessions = [...localSessions, ...remoteSessions].sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      );
+
+      // Apply limit if specified
+      const limit = msg.data?.limit ?? 100;
+      return allSessions.slice(0, limit);
     });
 
     on("history/delete", (msg) => {

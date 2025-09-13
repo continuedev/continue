@@ -1,5 +1,6 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { getUriPathBasename } from "core/util/uri";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +20,7 @@ export function HistoryTableRow({
   sessionMetadata,
   index,
 }: {
-  sessionMetadata: SessionMetadata;
+  sessionMetadata: SessionMetadata | RemoteSessionMetadata;
   index: number;
 }) {
   const dispatch = useAppDispatch();
@@ -40,6 +41,13 @@ export function HistoryTableRow({
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
+        // Don't allow editing remote sessions
+        if ('isRemote' in sessionMetadata && sessionMetadata.isRemote) {
+          setSessionTitleEditValue(sessionMetadata.title);
+          setEditing(false);
+          return;
+        }
+
         // imperfect solution of loading session just to update it
         // but fine for now, pretty low latency
         const currentSession = await getSession(
@@ -67,6 +75,11 @@ export function HistoryTableRow({
       data-testid={`history-row-${index}`}
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
+        // Don't allow loading remote sessions yet
+        if ('isRemote' in sessionMetadata && sessionMetadata.isRemote) {
+          return;
+        }
+
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
           await dispatch(
@@ -93,9 +106,16 @@ export function HistoryTableRow({
             />
           </div>
         ) : (
-          <span className="line-clamp-1 break-all text-sm font-semibold">
-            {sessionMetadata.title}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="line-clamp-1 break-all text-sm font-semibold">
+              {sessionMetadata.title}
+            </span>
+            {'isRemote' in sessionMetadata && sessionMetadata.isRemote && (
+              <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                Remote
+              </span>
+            )}
+          </div>
         )}
 
         <div className="text-description-muted flex">
@@ -116,7 +136,7 @@ export function HistoryTableRow({
         </div>
       </td>
 
-      {hovered && !editing && (
+      {hovered && !editing && !('isRemote' in sessionMetadata && sessionMetadata.isRemote) && (
         <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
           <HeaderButtonWithToolTip
             text="Edit"

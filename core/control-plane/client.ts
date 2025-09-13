@@ -11,10 +11,14 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IDE, ModelDescription } from "../index.js";
+import { IDE, ModelDescription, SessionMetadata } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
-import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
+import {
+  ControlPlaneSessionInfo,
+  HubSessionInfo,
+  isOnPremSession,
+} from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
 
 export interface PolicyResponse {
@@ -40,6 +44,11 @@ export interface FreeTrialStatus {
 
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+
+export interface RemoteSessionMetadata extends SessionMetadata {
+  isRemote: true;
+  remoteId: string;
+}
 
 export class ControlPlaneClient {
   constructor(
@@ -301,6 +310,79 @@ export class ControlPlaneClient {
         vsCodeUriScheme,
       });
       return null;
+    }
+  }
+
+  /**
+   * Check if remote sessions should be enabled based on feature flags
+   * Requires: PostHog feature flag AND @continue.dev email
+   */
+  public async shouldEnableRemoteSessions(): Promise<boolean> {
+    // Check if user is signed in
+    if (!(await this.isSignedIn())) {
+      return false;
+    }
+
+    // Check if user has @continue.dev email
+    try {
+      const sessionInfo = await this.sessionInfoPromise;
+      if (isOnPremSession(sessionInfo) || !sessionInfo) {
+        return false;
+      }
+
+      const hubSession = sessionInfo as HubSessionInfo;
+      const email = hubSession.account?.id;
+
+      return email ? email.includes("@continue.dev") : false;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_check_remote_sessions_enabled",
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get current user's session info
+   */
+  public async getSessionInfo(): Promise<ControlPlaneSessionInfo | undefined> {
+    return await this.sessionInfoPromise;
+  }
+
+  /**
+   * Fetch remote agents/sessions from the control plane
+   * Currently restricted to @continue.dev emails for internal use
+   */
+  public async listRemoteSessions(): Promise<RemoteSessionMetadata[]> {
+    if (!(await this.isSignedIn())) {
+      return [];
+    }
+
+    try {
+      // Note: This endpoint is currently restricted to internal @continue.dev users
+      // In the future, this may be expanded to support broader remote session access
+      const resp = await this.requestAndHandleError("agents/devboxes", {
+        method: "GET",
+      });
+
+      const agents = (await resp.json()) as any[];
+
+      return agents.map(
+        (agent: any): RemoteSessionMetadata => ({
+          sessionId: `remote-${agent.id}`,
+          title: agent.name || "Remote Agent",
+          dateCreated: new Date(agent.create_time_ms).toISOString(),
+          workspaceDirectory: "",
+          isRemote: true,
+          remoteId: agent.id,
+        }),
+      );
+    } catch (e) {
+      // Log error but don't throw - remote sessions are optional
+      Logger.error(e, {
+        context: "control_plane_list_remote_sessions",
+      });
+      return [];
     }
   }
 }
