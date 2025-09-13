@@ -211,3 +211,87 @@ export async function handleRemoteMessage({
     } catch {}
   }
 }
+
+/**
+ * Handle /diff command in remote mode
+ */
+export async function handleRemoteDiff(remoteUrl: string): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (!diffContent || diffContent.trim() === "") {
+      try {
+        services.chatHistory.addSystemMessage("No changes to display");
+      } catch {}
+      return;
+    }
+
+    try {
+      services.chatHistory.addSystemMessage(`Diff:\n${diffContent}`);
+    } catch {}
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    try {
+      services.chatHistory.addSystemMessage(
+        `Failed to fetch diff: ${error.message}`,
+      );
+    } catch {}
+  }
+}
+
+/**
+ * Handle /apply command in remote mode
+ */
+export async function handleRemoteApply(remoteUrl: string): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (!diffContent || diffContent.trim() === "") {
+      try {
+        services.chatHistory.addSystemMessage("No changes to apply");
+      } catch {}
+      return;
+    }
+
+    // Apply the diff using git apply
+    const { execFileSync } = await import("child_process");
+
+    try {
+      execFileSync("git", ["apply"], {
+        input: diffContent,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      try {
+        services.chatHistory.addSystemMessage(
+          "Successfully applied diff to local working tree",
+        );
+      } catch {}
+    } catch (gitError: any) {
+      try {
+        services.chatHistory.addSystemMessage(
+          `Failed to apply diff: ${gitError.message}`,
+        );
+      } catch {}
+    }
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    try {
+      services.chatHistory.addSystemMessage(
+        `Failed to fetch diff: ${error.message}`,
+      );
+    } catch {}
+  }
+}

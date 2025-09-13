@@ -294,7 +294,7 @@ export function Chat() {
             }
             isLastUserInput={isLastUserInput(index)}
             isMainInput={false}
-            editorState={editorState}
+            editorState={editorState ?? item.message.content}
             contextItems={contextItems}
             appliedRules={appliedRules}
             inputId={message.id}
@@ -393,24 +393,26 @@ export function Chat() {
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
-        {history.map((item, index: number) => (
-          <div
-            key={item.message.id}
-            style={{
-              minHeight: index === history.length - 1 ? "200px" : 0,
-            }}
-          >
-            <ErrorBoundary
-              FallbackComponent={fallbackRender}
-              onReset={() => {
-                dispatch(newSession());
+        {history
+          .filter((item) => item.message.role !== "system")
+          .map((item, index: number) => (
+            <div
+              key={item.message.id}
+              style={{
+                minHeight: index === history.length - 1 ? "200px" : 0,
               }}
             >
-              {renderChatHistoryItem(item, index)}
-            </ErrorBoundary>
-            {index === history.length - 1 && <InlineErrorMessage />}
-          </div>
-        ))}
+              <ErrorBoundary
+                FallbackComponent={fallbackRender}
+                onReset={() => {
+                  dispatch(newSession());
+                }}
+              >
+                {renderChatHistoryItem(item, index)}
+              </ErrorBoundary>
+              {index === history.length - 1 && <InlineErrorMessage />}
+            </div>
+          ))}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox

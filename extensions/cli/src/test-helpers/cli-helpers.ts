@@ -30,7 +30,8 @@ export interface CLIRunResult {
  * Creates a test context with isolated test directory
  */
 export async function createTestContext(): Promise<CLITestContext> {
-  const cliPath = path.resolve("dist/index.js");
+  // Use the wrapper script that invokes runCli(), not the raw bundle entry
+  const cliPath = path.resolve("dist/cn.js");
   const testDir = await fs.mkdtemp(path.join(os.tmpdir(), "cn-test-"));
 
   // Ensure the CLI file exists before returning the context
@@ -38,7 +39,7 @@ export async function createTestContext(): Promise<CLITestContext> {
     await fs.access(cliPath);
   } catch {
     throw new Error(
-      `CLI file not found at ${cliPath}. Please run 'npm run build' first.`,
+      `CLI wrapper not found at ${cliPath}. Please run 'npm run build' first.`,
     );
   }
 
@@ -97,6 +98,7 @@ export async function runCLI(
   };
 
   try {
+    // Run the wrapper via Node for cross-platform consistency
     const result = await execaNode(context.cliPath, args, execOptions);
 
     return {

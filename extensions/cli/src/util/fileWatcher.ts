@@ -16,6 +16,7 @@ export class FileWatcher {
   private options: Required<FileWatcherOptions>;
   private watchedDirs: Set<string> = new Set();
   private isInitializing: boolean = false;
+  private lastErrorCode: string | null = null;
 
   constructor(options: FileWatcherOptions = {}) {
     this.options = {
@@ -112,19 +113,26 @@ export class FileWatcher {
   }
 
   private setupWatcher(dirPath: string, depth: number): void {
-    const watcher = fs.watch(
-      dirPath,
-      { persistent: false },
-      (eventType, filename) => {
-        this.handleFileChange(eventType, filename, dirPath, depth);
-      },
-    );
+    try {
+      const watcher = fs.watch(
+        dirPath,
+        { persistent: false },
+        (eventType, filename) => {
+          this.handleFileChange(eventType, filename, dirPath, depth);
+        },
+      );
 
-    watcher.on("error", (error) => {
-      console.error(`File watcher error for ${dirPath}:`, error);
-    });
+      watcher.on("error", (error: any) => {
+        this.lastErrorCode = error?.code || null;
+        console.error(`File watcher error for ${dirPath}:`, error);
+      });
 
-    this.watchers.push(watcher);
+      this.watchers.push(watcher);
+    } catch (error: any) {
+      // Gracefully handle environments that restrict fs.watch (e.g., low descriptor limits)
+      this.lastErrorCode = error?.code || null;
+      console.error(`Failed to create watcher for ${dirPath}:`, error);
+    }
   }
 
   private watchSubdirectories(dirPath: string, depth: number): void {
@@ -216,6 +224,15 @@ export class FileWatcher {
   public destroy(): void {
     this.stopWatching();
     this.callbacks.clear();
+  }
+
+  // Expose watcher health for tests and diagnostics
+  public isActive(): boolean {
+    return this.watchers.length > 0;
+  }
+
+  public getLastErrorCode(): string | null {
+    return this.lastErrorCode;
   }
 }
 

@@ -1,4 +1,5 @@
 import { SessionMetadata } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import MiniSearch from "minisearch";
 import React, {
   Fragment,
@@ -66,54 +67,55 @@ export function History() {
 
   const platform = useMemo(() => getPlatform(), []);
 
-  const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
-    // 1. Exact phrase matching
-    const exactResults = minisearch.search(searchTerm, {
-      fuzzy: false,
-    });
+  const filteredAndSortedSessions: (SessionMetadata | RemoteSessionMetadata)[] =
+    useMemo(() => {
+      // 1. Exact phrase matching
+      const exactResults = minisearch.search(searchTerm, {
+        fuzzy: false,
+      });
 
-    // 2. Fuzzy matching with higher tolerance
-    const fuzzyResults = minisearch.search(searchTerm, {
-      fuzzy: 0.3,
-    });
+      // 2. Fuzzy matching with higher tolerance
+      const fuzzyResults = minisearch.search(searchTerm, {
+        fuzzy: 0.3,
+      });
 
-    // 3. Prefix matching for partial words
-    const prefixResults = minisearch.search(searchTerm, {
-      prefix: true,
-      fuzzy: 0.2,
-    });
+      // 3. Prefix matching for partial words
+      const prefixResults = minisearch.search(searchTerm, {
+        prefix: true,
+        fuzzy: 0.2,
+      });
 
-    // Combine results, with exact matches having higher priority
-    const allResults = [
-      ...exactResults.map((r) => ({ ...r, priority: 3 })),
-      ...fuzzyResults.map((r) => ({ ...r, priority: 2 })),
-      ...prefixResults.map((r) => ({ ...r, priority: 1 })),
-    ];
+      // Combine results, with exact matches having higher priority
+      const allResults = [
+        ...exactResults.map((r) => ({ ...r, priority: 3 })),
+        ...fuzzyResults.map((r) => ({ ...r, priority: 2 })),
+        ...prefixResults.map((r) => ({ ...r, priority: 1 })),
+      ];
 
-    // Remove duplicates while preserving highest priority
-    const uniqueResultsMap = new Map<string, any>();
-    allResults.forEach((result) => {
-      const existing = uniqueResultsMap.get(result.id);
-      if (!existing || existing.priority < result.priority) {
-        uniqueResultsMap.set(result.id, result);
-      }
-    });
-    const uniqueResults = Array.from(uniqueResultsMap.values());
+      // Remove duplicates while preserving highest priority
+      const uniqueResultsMap = new Map<string, any>();
+      allResults.forEach((result) => {
+        const existing = uniqueResultsMap.get(result.id);
+        if (!existing || existing.priority < result.priority) {
+          uniqueResultsMap.set(result.id, result);
+        }
+      });
+      const uniqueResults = Array.from(uniqueResultsMap.values());
 
-    const sessionIds = uniqueResults
-      .sort((a, b) => b.priority - a.priority || b.score - a.score)
-      .map((result) => result.id);
+      const sessionIds = uniqueResults
+        .sort((a, b) => b.priority - a.priority || b.score - a.score)
+        .map((result) => result.id);
 
-    return allSessionMetadata
-      .filter((session) => {
-        return searchTerm === "" || sessionIds.includes(session.sessionId);
-      })
-      .sort(
-        (a, b) =>
-          parseDate(b.dateCreated).getTime() -
-          parseDate(a.dateCreated).getTime(),
-      );
-  }, [allSessionMetadata, searchTerm, minisearch]);
+      return allSessionMetadata
+        .filter((session) => {
+          return searchTerm === "" || sessionIds.includes(session.sessionId);
+        })
+        .sort(
+          (a, b) =>
+            parseDate(b.dateCreated).getTime() -
+            parseDate(a.dateCreated).getTime(),
+        );
+    }, [allSessionMetadata, searchTerm, minisearch]);
 
   const sessionGroups = useMemo(() => {
     return groupSessionsByDate(filteredAndSortedSessions);

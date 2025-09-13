@@ -24,6 +24,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -205,7 +206,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
-  allSessionMetadata: SessionMetadata[];
+  allSessionMetadata: (SessionMetadata | RemoteSessionMetadata)[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -686,7 +687,7 @@ export const sessionSlice = createSlice({
     },
     setAllSessionMetadata: (
       state,
-      { payload }: PayloadAction<SessionMetadata[]>,
+      { payload }: PayloadAction<(SessionMetadata | RemoteSessionMetadata)[]>,
     ) => {
       state.allSessionMetadata = payload;
     },

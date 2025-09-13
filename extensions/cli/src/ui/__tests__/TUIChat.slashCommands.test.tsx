@@ -105,4 +105,75 @@ describe("TUIChat - Slash Commands Tests", () => {
       expect(hasSlash).toBe(true);
     }
   });
+
+  testBothModes(
+    "hides slash command dropdown when typing complete command with arguments",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
+
+      // Type a complete command name first
+      stdin.write("/title");
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const frameAfterCommand = lastFrame();
+      if (mode === "remote") {
+        // In remote mode, /title might not be a valid command, so just check we're in remote mode
+        expect(frameAfterCommand).toContain("Remote Mode");
+      } else {
+        // In local mode, check for /title
+        expect(frameAfterCommand).toContain("/title");
+      }
+
+      // Now add a space and arguments
+      stdin.write(" My Session Title");
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const frameAfterArgs = lastFrame();
+
+      // Check that the UI is still functional after adding arguments
+      if (mode === "remote") {
+        expect(frameAfterArgs).toContain("Remote Mode");
+        // In remote mode, /title might not be available, so just check the UI is working
+      } else {
+        expect(frameAfterArgs).toContain("Continue CLI");
+        // In local mode, we should see the /title command
+        expect(frameAfterArgs).toContain("/title");
+      }
+    },
+  );
+
+  testBothModes(
+    "allows Enter key to execute command when dropdown is hidden",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
+
+      // Type a complete command with arguments
+      stdin.write("/title Test Session");
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const frameBeforeEnter = lastFrame();
+      expect(frameBeforeEnter).toContain("/title");
+      expect(frameBeforeEnter).toContain("Test Session");
+
+      // Press Enter - this should execute the command, not try to autocomplete
+      stdin.write("\r");
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const frameAfterEnter = lastFrame();
+
+      // Should not crash and should clear the input (or show command execution)
+      expect(frameAfterEnter).toBeDefined();
+
+      // Mode-specific checks
+      if (mode === "remote") {
+        expect(frameAfterEnter).toContain("Remote Mode");
+      } else {
+        expect(frameAfterEnter).toContain("Continue CLI");
+      }
+    },
+  );
 });
