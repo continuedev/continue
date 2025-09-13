@@ -100,6 +100,16 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
     description: "Exit the remote environment",
     category: "system",
   },
+  {
+    name: "diff",
+    description: "Show the current diff from the remote environment",
+    category: "system",
+  },
+  {
+    name: "apply",
+    description: "Apply the current diff to the local working tree",
+    category: "system",
+  },
 ];
 
 /**

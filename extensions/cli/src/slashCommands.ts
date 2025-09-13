@@ -17,6 +17,7 @@ import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
+  remoteUrl?: string,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -209,6 +210,7 @@ const commandHandlers: Record<string, CommandHandler> = {
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
+  options?: { remoteUrl?: string; isRemoteMode?: boolean },
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -219,6 +221,7 @@ export async function handleSlashCommands(
   openMCPSelector?: boolean;
   openSessionSelector?: boolean;
   compact?: boolean;
+  diffContent?: string;
 } | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
@@ -232,7 +235,7 @@ export async function handleSlashCommands(
 
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant);
+    return await handler(args, assistant, options?.remoteUrl);
   }
 
   // Check for custom assistant prompts
@@ -245,7 +248,9 @@ export async function handleSlashCommands(
   }
 
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant);
+  const allCommands = getAllSlashCommands(assistant, {
+    isRemoteMode: options?.isRemoteMode,
+  });
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );

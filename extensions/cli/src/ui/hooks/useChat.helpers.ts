@@ -120,7 +120,19 @@ export function processSlashCommandResult({
     return null;
   }
 
-  if (result.output) {
+  if (result.diffContent) {
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        message: {
+          role: "system",
+          content: `Diff:\n${result.diffContent}`,
+        },
+        contextItems: [],
+      },
+    ]);
+    return null;
+  } else if (result.output) {
     setChatHistory((prev) => [
       ...prev,
       {
@@ -131,6 +143,7 @@ export function processSlashCommandResult({
         contextItems: [],
       },
     ]);
+    return null;
   }
 
   return result.newInput || null;
@@ -242,6 +255,28 @@ export async function handleSpecialCommands({
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
     await handleRemoteExit(remoteUrl, exit);
+    return true;
+  }
+
+  // Handle /diff command in remote mode
+  if (
+    isRemoteMode &&
+    remoteUrl &&
+    (trimmedMessage === "/diff" || trimmedMessage.startsWith("/diff "))
+  ) {
+    const { handleRemoteDiff } = await import("./useChat.remote.helpers.js");
+    await handleRemoteDiff(remoteUrl);
+    return true;
+  }
+
+  // Handle /apply command in remote mode
+  if (
+    isRemoteMode &&
+    remoteUrl &&
+    (trimmedMessage === "/apply" || trimmedMessage.startsWith("/apply "))
+  ) {
+    const { handleRemoteApply } = await import("./useChat.remote.helpers.js");
+    await handleRemoteApply(remoteUrl);
     return true;
   }
 

@@ -59,4 +59,5 @@ export interface SlashCommandResult {
   openMcpSelector?: boolean;
   openSessionSelector?: boolean;
   compact?: boolean;
+  diffContent?: string;
 }
