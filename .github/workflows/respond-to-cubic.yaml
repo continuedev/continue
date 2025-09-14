@@ -21,7 +21,12 @@ jobs:
       - name: Check if comment contains @continuedev
         id: check-mention
         run: |
-          if echo "${{ github.event.comment.body }}" | grep -q "@continuedev"; then
+          # Create a temporary file to safely handle comment body with special characters
+          cat > /tmp/comment.txt << 'COMMENT_EOF'
+          ${{ github.event.comment.body }}
+          COMMENT_EOF
+
+          if grep -q "@continuedev" /tmp/comment.txt; then
             echo "contains_mention=true" >> $GITHUB_OUTPUT
           else
             echo "contains_mention=false" >> $GITHUB_OUTPUT
@@ -83,15 +88,22 @@ jobs:
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          # Create the prompt for remote session
-          PROMPT="Please help with the following request from @${{ github.event.comment.user.login }} on PR #${{ github.event.issue.number }}:
+          # Create a temporary file for the prompt to handle special characters and newlines properly
+          cat > /tmp/prompt.txt << 'PROMPT_EOF'
+          Please help with the following request from @${{ github.event.comment.user.login }} on PR #${{ github.event.issue.number }}:
 
           ${{ github.event.comment.body }}
 
-          Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch."
+          Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch.
+          PROMPT_EOF
+
+          # Debug output
+          echo "PROMPT content:"
+          cat /tmp/prompt.txt
 
           # Start remote session and capture JSON output
-          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --config continuedev/address-code-review --branch ${{ steps.pr-info.outputs.head_ref }})
+          echo "Starting cn with prompt..."
+          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --branch ${{ steps.pr-info.outputs.head_ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
@@ -108,10 +120,13 @@ jobs:
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
         uses: actions/github-script@v8
+        env:
+          ORIGINAL_COMMENT: ${{ github.event.comment.body }}
         with:
           script: |
-            const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
-            > ${{ github.event.comment.body }}`;
+            const sessionUrl = '${{ steps.remote-session.outputs.session_url }}';
+            const originalComment = process.env.ORIGINAL_COMMENT;
+            const commentBody = "I've started [a remote session](" + sessionUrl + ") to help with your request:\n> " + originalComment;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -125,7 +140,8 @@ jobs:
         run: |
           echo "✅ Successfully started remote session for comment from ${{ github.event.comment.user.login }} on PR #${{ github.event.issue.number }}"
           echo "Session URL: ${{ steps.remote-session.outputs.session_url }}"
-          echo "Original comment: ${{ github.event.comment.body }}"
+          echo "Original comment:"
+          cat /tmp/comment.txt
 
   respond-to-review-comment:
     # Only run on pull request review comments
@@ -136,7 +152,12 @@ jobs:
       - name: Check if comment contains @continuedev
         id: check-mention
         run: |
-          if echo "${{ github.event.comment.body }}" | grep -q "@continuedev"; then
+          # Create a temporary file to safely handle comment body with special characters
+          cat > /tmp/review_comment.txt << 'COMMENT_EOF'
+          ${{ github.event.comment.body }}
+          COMMENT_EOF
+
+          if grep -q "@continuedev" /tmp/review_comment.txt; then
             echo "contains_mention=true" >> $GITHUB_OUTPUT
           else
             echo "contains_mention=false" >> $GITHUB_OUTPUT
@@ -250,10 +271,13 @@ jobs:
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
         uses: actions/github-script@v8
+        env:
+          ORIGINAL_COMMENT: ${{ github.event.comment.body }}
         with:
           script: |
-            const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
-            > ${{ github.event.comment.body }}`;
+            const sessionUrl = '${{ steps.remote-session.outputs.session_url }}';
+            const originalComment = process.env.ORIGINAL_COMMENT;
+            const commentBody = "I've started [a remote session](" + sessionUrl + ") to help with your request:\n> " + originalComment;
 
             const commentParams = {
               owner: context.repo.owner,
@@ -274,4 +298,5 @@ jobs:
           echo "Session URL: ${{ steps.remote-session.outputs.session_url }}"
           echo "File: ${{ github.event.comment.path }}"
           echo "Line: ${{ github.event.comment.line }}"
-          echo "Original comment: ${{ github.event.comment.body }}"
+          echo "Original comment:"
+          cat /tmp/review_comment.txt
