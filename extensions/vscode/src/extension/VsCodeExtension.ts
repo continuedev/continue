@@ -503,6 +503,21 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+      const dirs = vscode.workspace.workspaceFolders?.map(
+        (folder) => folder.uri,
+      );
+
+      this.ideUtils.setWokspaceDirectories(dirs);
+
+      this.core.invoke("index/forceReIndex", {
+        dirs: [
+          ...event.added.map((folder) => folder.uri.toString()),
+          ...event.removed.map((folder) => folder.uri.toString()),
+        ],
+      });
+    });
+
     vscode.workspace.onDidOpenTextDocument(async (event) => {
       console.log("onDidOpenTextDocument");
       const ast = await getAst(event.fileName, event.getText());

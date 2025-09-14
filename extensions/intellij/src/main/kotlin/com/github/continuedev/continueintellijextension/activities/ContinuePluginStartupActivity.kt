@@ -193,6 +193,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 }
             })
 
+            // TODO add listeners for ModuleListener.TOPIC events
 
             connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
                 override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
