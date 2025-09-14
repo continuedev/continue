@@ -614,7 +614,10 @@ async function resolveOrgScopeForApiKey(
 
     const data: any = await resp.json().catch(() => ({}));
     const orgId =
-      data?.organizationId ?? data?.orgScopeId ?? data?.organization?.id ?? null;
+      data?.organizationId ??
+      data?.orgScopeId ??
+      data?.organization?.id ??
+      null;
 
     if (orgId && typeof orgId === "string") {
       return {
