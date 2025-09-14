@@ -66,7 +66,8 @@ export function findToolCallById(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,
 ): ToolCallState | undefined {
-  for (const item of chatHistory) {
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const item = chatHistory[i];
     if (item.toolCallStates) {
       const toolCallState = item.toolCallStates.find(
         (state) => state.toolCallId === toolCallId,
@@ -84,7 +85,7 @@ export function findChatHistoryItemByToolCallId(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,
 ): ChatHistoryItemWithMessageId | undefined {
-  return chatHistory.find(
+  return chatHistory.findLast(
     (item) =>
       item.message.role === "tool" && item.message.toolCallId === toolCallId,
   );
