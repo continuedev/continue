@@ -3,7 +3,6 @@ import { ContextItem } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
-import { selectPendingToolCalls } from "../selectors/selectToolCalls";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
@@ -155,10 +154,8 @@ export const callToolById = createAsyncThunk<
       );
       unwrapResult(wrapped);
     } else {
-      const pendingCalls = selectPendingToolCalls(getState());
-      if (pendingCalls.length === 0) {
-        dispatch(setInactive());
-      }
+      // TODO - only set inactive if last toolcall
+      dispatch(setInactive());
     }
   },
 );
