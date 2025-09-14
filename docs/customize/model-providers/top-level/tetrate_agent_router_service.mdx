@@ -4,80 +4,246 @@ sidebarTitle: "Tetrate Agent Router Service"
 slug: ../tetrate-agent-router-service
 ---
 
-The **Tetrate Agent Router Service** provides a unified Gateway for accessing various AI models with fast inference capabilities as well as embedding services.
+The **Tetrate Agent Router Service** provides a unified gateway for accessing various AI models with fast inference capabilities and embedding services. This intelligent router distributes requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
 
-This gateway acts as an intelligent router that can distribute requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
+<Tip>
+Familiar with **Continue**? Sign up for [Tetrate Agent Router Service](https://router.tetrate.ai/) to get your API key and check out [Tetrate on the Continue Hub](https://hub.continue.dev/tetrate) to get started quickly. 
+</Tip>
 
-## Getting Started
+## Setup
 
-1. Obtain an API key from the [Agent Router Service portal](https://api.router.tetrate.ai/)
-2. Configure Continue to use Agent Router Service as your model provider
+<Steps>
+<Step title="Login or Sign Up to Tetrate Agent Router Service">
+Visit the [Agent Router Service portal](https://router.tetrate.ai/) and sign up for an account to obtain your API key
+<img src="../assets/tetrate-sign-in.png" alt="Tetrate sign in page" style={{width: '300px', maxWidth: '100%'}} />
+</Step>
 
-## Configuring Models
+<Step title="Get your API Key">
+Get your API key from the [Agent Router Service portal](https://router.tetrate.ai/api-keys)
+</Step>
 
-You can also quickly use models from Tetrate on the Cotninue Hub by visiting Tetrate on the Continue Hub [here](https://hub.continue.dev/tetrate). The easiest way if you don't see the model you want to use is to remix one of the models on the Tetrate page and change the model to the one you want to use.
+<Step title="Configure your Continue Environment">
+Choose one of the configuration methods below based on your setup.
+</Step>
+
+</Steps>
+
+
+### Quickstart with Continue Hub
+
+The fastest way to get started is using pre-configured models from Continue Hub:
+
+<Steps>
+<Step title="Browse Available Models">
+Visit [Tetrate models on Continue Hub](https://hub.continue.dev/tetrate) and browse available model configurations, for example check out [Claude Sonnet 4](https://hub.continue.dev/tetrate/claude-sonnet-4)
+</Step>
+
+<Step title="Use or Remix a Model">
+Click "Use Model" or consider "Remix" and update the model ID if needed
+</Step>
+
+<Step title="Add your API Key">
+Add your API key to your Continue setup. Learn more about [adding secrets in Continue Hub](/hub/secrets/secret-types) and using secrets locally [in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
+<Tip>
+Add your API key as a secret named `TETRATE_API_KEY` in Continue Hub for secure usage across projects.
+</Tip>
+</Step>
+</Steps>
 
 ![Remix a model from Tetrate on Continue Hub](../assets/tetrate-remix.png)
 
-### Available Models
+<Info>
+If you don't see your desired model, remix a similar one and update the `model` field to match your target model ID.
+</Info>
 
-Agent Router Service supports routing to various models.
-Go to the [Agent Router Service model catalog](https://router.tetrate.ai/models) for a full list of supported models.
+### Configuration Methods
 
-## Configuration Options
+<CardGroup cols={1}>
+  <Card title="Local Model Block" icon="folder" vertical>
+    Create reusable model configurations that can be shared across projects
+  </Card>
+  <Card title="Continue Hub Model Block" icon="cloud" vertical>
+    Use existing or create your own model configurations through Continue Hub
+  </Card>
+  <Card title="In Agent Configuration" icon="file-lines" vertical>
+    Add Tetrate models directly to your Continue Agent configuration file, either on the Hub or locally
+  </Card>
+</CardGroup>
 
-As Agent Router Service is an OpenAI API compatible provider, you can configure it like any other OpenAI API compatible provider. Therefore you will be setting `provider: openai` and `apiBase: https://api.router.tetrate.ai/v1`.
 
-Update your Continue configuration file (`~/.continue/config.yaml`) with your Agent Router Service API key:
+### Configuration Examples
+<Info>
+**Click the tabs below** to see examples for each configuration method.
+</Info>
+<Tabs>
+<Tab title="In Local Agent Configuration">
 
-### On your local machine
+**When to use**: Best for simple setups for VSCode plugin use locally where you don't need advanced reuse across agents or publishing and sharing configurations.
 
-#### In your config.yaml
+Leverage the Tetrate model configuration from the Hub in your local agent configuration:
 
-```yaml title="config.yaml"
+```yaml title="~/.continue/config.yaml"
+name: Local Agent
+version: 1.0.0
+schema: v1
 models:
-  - name: <MODEL_NAME>
-    provider: openai
-    model: <MODEL_ID>
-    apiKey: <TETRATE_API_KEY>
-    apiBase: https://api.router.tetrate.ai/v1
+  - uses: tetrate/claude-sonnet-4
+    with:
+      TETRATE_API_KEY: ${{ secrets.TETRATE_API_KEY }}
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
+  - provider: problems
+  - provider: folder
+  - provider: codebase
 ```
 
-#### As a local model block
+Alternatively, define the Tetrate model directly yourself:
 
-Review the configuration reference for [model blocks](/reference#models) and using [local blocks](/reference#local-blocks). Ensure you look at the roles and capabilities section and review the [model capabilities guide](/customize/deep-dives/model-capabilities).
+```yaml title="~/.continue/config.yaml"
+name: Local Agent
+version: 1.0.0
+schema: v1
+models:
+  - name: Claude Sonnet 4
+    provider: tars
+    model: claude-4-sonnet-20250514
+    apiKey: ${{ secrets.TETRATE_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
+  - provider: problems
+  - provider: folder
+  - provider: codebase
+```
+</Tab>
+<Tab title="Continue Hub">
+**When to use**: Perfect for sharing configurations across teams or contributing to the community.
 
-```yaml title="model_name.yaml"
-    name: <MODEL_NAME>
-    models:
-      - name: <MODEL_NAME>
-        provider: openai
-        model: <MODEL_ID>
-        apiKey: ${{ inputs.TETRATE_API_KEY }}
-        apiBase: https://api.router.tetrate.ai/v1
-        roles:
-          - chat
-          - edit
-          - apply
-        capabilities:
-          - tool_use
+**The Model Block:**
+
+```yaml title="tetrate/claude-sonnet-4"
+name: Claude Sonnet 4
+version: 1.0.14
+schema: v1
+models:
+  - name: Claude Sonnet 4 - Tetrate
+    provider: tars
+    model: claude-4-sonnet-20250514
+    apiKey: ${{ inputs.TETRATE_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+```
+View the model block `tetrate/claude-sonnet-4` on the [Continue Hub](https://hub.continue.dev/tetrate/claude-sonnet-4).
+
+**Use the model by referencing it in your Agent configuration:**
+
+```yaml title="my-agent"
+name: My Agent
+version: 1.0.0
+schema: v1
+models:
+  - uses: tetrate/claude-sonnet-4
+    with:
+      TETRATE_API_KEY: ${{ secrets.TETRATE_API_KEY }}
+context:
+  - uses: continuedev/diff-context
+  - uses: continuedev/terminal-context
+  - uses: continuedev/file-context
+```
+<Tip>
+To customize your setup see the [model block creation guide](/hub/blocks/create-a-block) for further instructions.
+</Tip>
+
+</Tab>
+
+<Tab title="Using Local Model Blocks">
+**When to use**: Ideal for environments where you want to reuse model configurations across agents and prefer keeping it local or in GitHub rather than on the Continue Hub.
+
+**The Local Model Block:**
+<Info>
+Note that file name of the local model block is `my-claude-4-model.yaml` as that informs how we reference it in the Agent.
+</Info>
+
+```yaml title="~/.continue/models/my-claude-4-model.yaml"
+name: Claude Sonnet 4
+version: 1.0.1
+schema: v1
+models:
+  - name: Claude Sonnet 4
+    provider: tars
+    model: claude-4-sonnet-20250514
+    apiKey: ${{ inputs.TETRATE_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+```
+Use the model by referencing it as `my-claude-4-model` in your Agent configuration:
+
+```yaml title="~/.continue/agents/simple-agent.yaml"
+name: Simple Agent
+version: 1.0.0
+schema: v1
+models:
+  - uses: my-claude-4-model
+    with:
+      TETRATE_API_KEY: ${{ secrets.TETRATE_API_KEY }}
+context:
+  - uses: continuedev/diff-context
+  - uses: continuedev/terminal-context
+  - uses: continuedev/file-context
 ```
 
-### On Model Block on Continue Hub
-Learn how to use model blocks on Continue Hub [here](/hub/blocks/create-a-block).
+<Tip>
+To continue your setup learn more about [model blocks](/reference#models) and [local blocks](/reference#local-blocks).
+</Tip>
 
-```yaml title="model_name.yaml"
-    name: <MODEL_NAME>
-    models:
-      - name: <MODEL_NAME>
-        provider: openai
-        model: <MODEL_ID>
-        apiKey: ${{ inputs.TETRATE_API_KEY }}
-        apiBase: https://api.router.tetrate.ai/v1
-        roles:
-          - chat
-          - edit
-          - apply
-        capabilities:
-          - tool_use
-```
+</Tab>
+</Tabs>
+
+---
+
+## Troubleshooting Common Issues
+
+<CardGroup cols={2}>
+  <Card title="Invalid API key Error" icon="key" vertical>
+    Verify your API key is active. Ensure no extra spaces or characters in the key value.
+  </Card>
+  <Card title="Model not found Error" icon="ban" href="https://router.tetrate.ai/models" vertical>
+    Confirm the model ID matches the ID in the Tetrate catalog.
+  </Card>
+  <Card title="Slow response times" icon="code" vertical>
+    Check your internet connection or try a different model that might be less loaded. Contact Tetrate support if issues persist.
+  </Card>
+  <Card title="Configuration not loading" icon="file-lines" vertical>
+    Validate your YAML syntax, review Continue for specific error messages. If using hub, ensure the block is published.
+  </Card>
+</CardGroup>
+
+---
+
+## Join the Community
+Connect with Tetrate and other builders using Tetrate Agent Router Service and get help from the community.
+
+<CardGroup cols={1}>
+  <Card title="Join the Tetrate Community" icon="slack" href="https://join.slack.com/t/tetrate-agent-router/shared_invite/zt-399tv7hjm-6YMXztGywTOQrMIolvEBNg">
+    Join the Tetrate community on Slack for help and discussions
+  </Card>
+</CardGroup>
