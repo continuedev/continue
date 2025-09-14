@@ -290,7 +290,10 @@ addCommonOptions(
   )
   .action(async (prompt: string | undefined, options) => {
     // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "remote" });
+    await posthogService.capture("cliCommand", {
+      command: "remote",
+      flagS: options.start,
+    });
     await remote(prompt, options);
   });
 
