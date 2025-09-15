@@ -1,5 +1,6 @@
 import * as YAML from "yaml";
 import { ZodError } from "zod";
+import { mergeConfigYamlRequestOptions, RequestOptions } from "../browser.js";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -203,6 +204,7 @@ export interface BaseUnrollAssistantOptions {
   injectBlocks?: PackageIdentifier[];
   allowlistedBlocks?: PackageSlug[];
   blocklistedBlocks?: PackageSlug[];
+  requestOptions?: RequestOptions;
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -302,14 +304,21 @@ export async function unrollAssistantFromContent(
   const renderedYaml = renderTemplateData(templatedYaml, { secrets });
 
   // Parse again and replace models with proxy versions where secrets weren't rendered
-  const finalConfig = useProxyForUnrenderedSecrets(
+  const renderedConfig = useProxyForUnrenderedSecrets(
     parseAssistantUnrolled(renderedYaml),
     id,
     options.orgScopeId,
     options.onPremProxyUrl,
   );
 
-  return { config: finalConfig, errors, configLoadInterrupted };
+  if (options.requestOptions) {
+    renderedConfig.requestOptions = mergeConfigYamlRequestOptions(
+      renderedConfig.requestOptions,
+      options.requestOptions,
+    );
+  }
+
+  return { config: renderedConfig, errors, configLoadInterrupted };
 }
 
 function isPackageAllowed(
