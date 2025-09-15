@@ -40,6 +40,7 @@ import {
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
+  "lemonade",
   "openai",
   "nvidia",
   "ollama",
@@ -62,6 +63,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
+  "lemonade",
   "cohere",
   "gemini",
   "msty",
