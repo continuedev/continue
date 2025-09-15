@@ -577,7 +577,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "High-performance local LLM inference with AMD hardware optimization",
     longDescription:
-      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the server is running at http://localhost:8000/api/v1, you can begin using Continue with your local models.",
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the Lemonade server is running, you can begin using Continue with your local models.",
     icon: "lemonade.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {
@@ -593,7 +593,10 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       ...openSourceModels,
     ],
-    collectInputFor: [...completionParamsInputsConfigs],
+    collectInputFor: [
+      ...completionParamsInputsConfigs,
+      { ...apiBaseInput, defaultValue: "http://localhost:8000/api/v1/", required: true },
+    ],
     downloadUrl: "http://lemonade-server.ai",
   },
   lmstudio: {
