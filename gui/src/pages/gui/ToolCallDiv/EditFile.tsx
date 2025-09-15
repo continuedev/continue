@@ -29,7 +29,7 @@ export function EditFile(props: EditToolCallProps) {
       toolCallId={props.toolCallId}
       itemIndex={props.historyIndex}
       collapsible={true}
-      removePadding={true}
+      padding={false}
     />
   );
 }

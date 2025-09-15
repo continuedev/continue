@@ -136,7 +136,7 @@ interface StyledMarkdownPreviewProps {
   toolCallId?: string;
   expandCodeblocks?: boolean;
   collapsible?: boolean;
-  removePadding?: boolean;
+  padding?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -368,7 +368,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}
-      padding={props.removePadding ? 0 : 8}
+      padding={(props.padding ?? true) ? 8 : 0}
     >
       {reactContent}
     </StyledMarkdown>

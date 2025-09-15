@@ -20,7 +20,7 @@ export function CreateFile(props: CreateFileToolCallProps) {
       disableManualApply
       source={src}
       itemIndex={props.historyIndex}
-      removePadding={true}
+      padding={false}
     />
   ) : null;
 }
