@@ -6,8 +6,10 @@ import {
   serviceContainer,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import type { ModelServiceState } from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
+import { isModelCapable } from "../utils/index.js";
 
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
@@ -66,9 +68,53 @@ function getDynamicTools(): Tool[] {
   return dynamicTools;
 }
 
-// Get all builtin tools including dynamic ones
+// Check if the current model is capable and should exclude Edit tool
+function shouldExcludeEditTool(): boolean {
+  try {
+    const modelServiceResult = getServiceSync<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    );
+
+    if (
+      modelServiceResult.state === "ready" &&
+      modelServiceResult.value?.model
+    ) {
+      const { name, provider } = modelServiceResult.value.model;
+
+      // Check if model is capable
+      const isCapable = isModelCapable(provider, name, provider);
+
+      logger.debug("Capability-based tool filtering", {
+        provider,
+        name,
+        isCapable,
+        willExcludeEdit: isCapable,
+      });
+
+      return isCapable;
+    }
+  } catch (error) {
+    logger.debug("Error checking model capability for tool filtering", {
+      error,
+    });
+  }
+  return false;
+}
+
+// Get all builtin tools including dynamic ones, with capability-based filtering
 export function getAllBuiltinTools(): Tool[] {
-  return [...BUILTIN_TOOLS, ...getDynamicTools()];
+  let builtinTools = [...BUILTIN_TOOLS];
+
+  // Apply capability-based filtering for edit tools
+  // If model is capable, exclude editTool in favor of multiEditTool
+  if (shouldExcludeEditTool()) {
+    builtinTools = builtinTools.filter((tool) => tool.name !== editTool.name);
+    logger.debug(
+      "Excluded Edit tool for capable model - MultiEdit will be used instead",
+    );
+  }
+
+  return [...builtinTools, ...getDynamicTools()];
 }
 
 export function getToolDisplayName(toolName: string): string {
