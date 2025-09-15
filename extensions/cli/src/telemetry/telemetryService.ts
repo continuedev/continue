@@ -10,22 +10,25 @@ import {
 } from "@opentelemetry/sdk-metrics";
 import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+  SEMRESATTRS_HOST_NAME,
   SEMRESATTRS_OS_TYPE,
-  SEMRESATTRS_PROCESS_PID,
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
 
+import { isHeadlessMode } from "../util/cli.js";
+import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
+
+import { detectTerminalType, parseOtelHeaders } from "./headerUtils.js";
 
 export interface TelemetryConfig {
   enabled: boolean;
   sessionId: string;
   organizationId?: string;
   accountUuid?: string;
-  includeSessionId: boolean;
   includeVersion: boolean;
   includeAccountUuid: boolean;
 }
@@ -52,6 +55,7 @@ class TelemetryService {
   private mcpConnectionsGauge: any = null;
   private startupTimeHistogram: any = null;
   private responseTimeHistogram: any = null;
+  private slashCommandCounter: any = null;
 
   constructor() {
     this.config = this.loadConfig();
@@ -75,7 +79,6 @@ class TelemetryService {
       sessionId,
       organizationId: process.env.ORGANIZATION_ID,
       accountUuid: process.env.ACCOUNT_UUID,
-      includeSessionId: process.env.OTEL_METRICS_INCLUDE_SESSION_ID !== "false",
       includeVersion: process.env.OTEL_METRICS_INCLUDE_VERSION === "true",
       includeAccountUuid:
         process.env.OTEL_METRICS_INCLUDE_ACCOUNT_UUID !== "false",
@@ -88,10 +91,10 @@ class TelemetryService {
       const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: "continue-cli",
         [SEMRESATTRS_SERVICE_VERSION]: getVersion(),
+        [SEMRESATTRS_HOST_NAME]: os.hostname(),
         [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
           process.env.NODE_ENV || "development",
         [SEMRESATTRS_OS_TYPE]: os.type(),
-        [SEMRESATTRS_PROCESS_PID]: process.pid.toString(),
       });
 
       // Configure exporters
@@ -106,11 +109,20 @@ class TelemetryService {
             readers.push(
               new PeriodicExportingMetricReader({
                 exporter: new OTLPMetricExporter({
-                  url:
-                    process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ||
-                    `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics` ||
-                    "http://localhost:4318/v1/metrics",
-                  headers: this.parseHeaders(
+                  url: (() => {
+                    const metricsEndpoint =
+                      process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT;
+                    if (metricsEndpoint && metricsEndpoint.trim().length > 0) {
+                      return metricsEndpoint;
+                    }
+                    const base = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+                    if (base && base.trim().length > 0) {
+                      const normalized = base.replace(/\/$/, "");
+                      return `${normalized}/v1/metrics`;
+                    }
+                    return "http://localhost:4318/v1/metrics";
+                  })(),
+                  headers: parseOtelHeaders(
                     process.env.OTEL_EXPORTER_OTLP_HEADERS || "",
                   ),
                 }),
@@ -174,20 +186,6 @@ class TelemetryService {
     process.once("SIGTERM", shutdownHandler);
 
     this.shutdownHandlersRegistered = true;
-  }
-
-  private parseHeaders(headersStr: string): Record<string, string> {
-    const headers: Record<string, string> = {};
-    if (!headersStr) return headers;
-
-    headersStr.split(",").forEach((header) => {
-      const [key, value] = header.split("=");
-      if (key && value) {
-        headers[key.trim()] = value.trim();
-      }
-    });
-
-    return headers;
   }
 
   private initializeMetrics() {
@@ -281,6 +279,14 @@ class TelemetryService {
         unit: "ms",
       },
     );
+
+    this.slashCommandCounter = this.meter.createCounter(
+      "continue_cli_slash_command_usage",
+      {
+        description: "Count of slash commands used",
+        unit: "count",
+      },
+    );
   }
 
   // Check if telemetry is enabled - this is the single point of checking
@@ -292,10 +298,6 @@ class TelemetryService {
     additionalAttributes: Record<string, string> = {},
   ) {
     const attributes: Record<string, string> = { ...additionalAttributes };
-
-    if (this.config.includeSessionId) {
-      attributes["session.id"] = this.config.sessionId;
-    }
 
     if (this.config.includeVersion) {
       attributes["app.version"] = getVersion();
@@ -310,25 +312,12 @@ class TelemetryService {
     }
 
     // Detect terminal type
-    const terminalType = this.detectTerminalType();
+    const terminalType = detectTerminalType();
     if (terminalType) {
       attributes["terminal.type"] = terminalType;
     }
 
     return attributes;
-  }
-
-  private detectTerminalType(): string | undefined {
-    if (process.env.TERM_PROGRAM) {
-      return process.env.TERM_PROGRAM;
-    }
-    if (process.env.VSCODE_PID) {
-      return "vscode";
-    }
-    if (process.env.TMUX) {
-      return "tmux";
-    }
-    return undefined;
   }
 
   // Public methods for tracking metrics
@@ -337,7 +326,16 @@ class TelemetryService {
     if (!this.isEnabled()) return;
 
     logger.debug("Recording session start with telemetry");
-    this.sessionCounter.add(1, this.getStandardAttributes());
+
+    // Add extra metadata for session breakdown
+    const isGitHubActionsEnv = isGitHubActions();
+    const sessionAttributes = this.getStandardAttributes({
+      is_headless: isHeadlessMode().toString(),
+      is_github_actions: isGitHubActionsEnv.toString(),
+      is_continue_remote_agent: isContinueRemoteAgent().toString(),
+    });
+
+    this.sessionCounter.add(1, sessionAttributes);
     this.recordStartupTime(Date.now() - this.startTime);
   }
 
@@ -411,13 +409,12 @@ class TelemetryService {
     if (!this.isEnabled()) return;
 
     if (this.activeStartTime !== null) {
-      this.totalActiveTime += Date.now() - this.activeStartTime;
+      const deltaMs = Date.now() - this.activeStartTime;
+      this.totalActiveTime += deltaMs;
       this.activeStartTime = null;
 
-      this.activeTimeCounter.add(
-        this.totalActiveTime / 1000,
-        this.getStandardAttributes(),
-      );
+      // Record only the delta for this active window (in seconds)
+      this.activeTimeCounter.add(deltaMs / 1000, this.getStandardAttributes());
     }
   }
 
@@ -565,6 +562,15 @@ class TelemetryService {
 
   public getSessionId(): string {
     return this.config.sessionId;
+  }
+
+  public recordSlashCommand(commandName: string) {
+    if (!this.isEnabled()) return;
+
+    this.slashCommandCounter.add(
+      1,
+      this.getStandardAttributes({ command: commandName }),
+    );
   }
 
   /**

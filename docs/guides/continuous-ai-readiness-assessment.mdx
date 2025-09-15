@@ -1,0 +1,309 @@
+---
+title: Assessing Your Team's Readiness for Continuous AI
+description: Complete framework to evaluate team readiness for Continuous AI adoption with maturity levels, assessment criteria, and implementation roadmap.
+sidebarTitle: Continuous AI Readiness Assessment
+---
+
+<Info>
+  **TL;DR:** Use this assessment framework to determine if your team is ready to
+  move from individual AI tool usage to automated Continuous AI workflows.
+  Covers technical infrastructure, processes, culture, and organizational
+  support.
+</Info>
+
+## Assessing Continuous AI Readiness
+
+Continuous AI can dramatically improve development velocity and code quality, but successful implementation requires careful evaluation across four key dimensions.
+
+<Warning>
+  Rushing into Continuous AI without proper foundations leads to frustration and
+  failed initiatives. Use this framework to identify gaps before scaling.
+</Warning>
+
+### 1. Identify Your Current Maturity Level
+
+Determine where your team falls on the Continuous AI maturity spectrum:
+
+<CardGroup cols={1}>
+  <Card title="Level 1: Manual AI Assistance" icon="user">
+    Developers use AI tools inconsistently with highly variable results.
+
+    **Characteristics:**
+      - High rejection rates of AI-generated code (>50%)
+      - No shared standards or prompting rules
+      - AI tools lack context about your codebase
+      - Ad-hoc usage without team coordination
+
+  </Card>
+
+<Card title="Level 2: Workflow Automation" icon="gear">
+  AI is systematically integrated into team workflows and CI/CD pipelines.
+
+**Characteristics:**
+
+- Consistent adoption across 80%+ of team members
+- AI integrated into code reviews and deployment processes
+- Documented standards for prompts and tool usage
+- Basic metrics tracking AI impact
+
+</Card>
+
+  <Card title="Level 3: Zero-Intervention Workflows" icon="robot">
+    Certain development processes run autonomously with minimal human oversight.
+
+    **Characteristics:**
+    - Human intervention rates below 15%
+    - Robust monitoring and automated rollback systems
+    - Measurable ROI from automation initiatives
+    - Advanced context awareness and learning loops
+
+  </Card>
+</CardGroup>
+
+### 2. Evaluate Readiness Across Four Key Dimensions
+
+Assess your team's strengths and potential risks across these critical areas:
+
+<AccordionGroup>
+  <Accordion title="Technical Infrastructure Assessment">
+    **Key Questions:** 
+    - Do our development tools integrate reliably? 
+    - Can we measure AI effectiveness and impact? 
+    - Are security policies compatible with AI workflows?
+
+    **🟢 Green Flags:**
+    - Stable tool integrations with >99.5% uptime
+    - Comprehensive monitoring and observability
+    - Security policies that support AI tool usage
+    - Automated testing and deployment pipelines
+
+    **🔴 Red Flags:**
+    - Frequent integration breakdowns
+    - No performance tracking or metrics
+    - Restrictive security policies blocking AI tools
+    - Manual deployment processes
+
+  </Accordion>
+
+<Accordion title="Process Maturity Assessment">
+  **Key Questions:** 
+  - Are our development workflows consistent and documented?
+  - Do we have quality gates and review processes? 
+  - Can we reproduce builds and deployments reliably? 
+ 
+ **🟢 Green Flags:** 
+  - Clear coding standards and style guides
+  - Automated CI/CD with quality gates
+  - Documented, repeatable processes
+  - Consistent code review practices
+  
+  **🔴 Red Flags:** 
+  - Inconsistent code reviews
+  - Ad-hoc deployment processes
+  - "Works on my machine" culture
+  - Undocumented tribal knowledge
+
+</Accordion>
+
+<Accordion title="Team Culture & Skills Assessment">
+  **Key Questions:** 
+  - Are developers open to adopting new AI-powered workflows?
+  - How does the team handle experimentation and failure?
+  - Do team members collaborate effectively on new initiatives?
+  
+  **🟢 Green Flags:** 
+  - High curiosity and willingness to experiment
+  - Collaborative problem-solving culture
+  - Constructive feedback and learning mindset
+  - Active knowledge sharing practices
+
+**🔴 Red Flags:**
+
+- Strong resistance to workflow changes
+- Blame culture around mistakes
+- Perfectionism blocking experimentation
+- Siloed work with minimal collaboration
+
+</Accordion>
+
+  <Accordion title="Organizational Support Assessment">
+    **Key Questions:** 
+    - Does leadership provide budget and resources for AI initiatives?
+    - Is there tolerance for experimentation and learning?
+    - Are expectations realistic for ROI timelines?
+
+    **🟢 Green Flags:**
+    - Executive buy-in and strategic alignment
+    - Dedicated budget for training and tools
+    - 3-6 month ROI expectations
+    - Support for calculated risk-taking
+
+    **🔴 Red Flags:**
+    - Pressure for immediate ROI (weeks)
+    - No allocated budget for AI initiatives
+    - High risk aversion culture
+    - Lack of leadership engagement
+
+  </Accordion>
+</AccordionGroup>
+
+### 3. Critical Warning Signs
+
+<Warning>
+  **Stop and address these issues before scaling Continuous AI:**
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Technical Red Flags" icon="triangle-exclamation">
+    - Builds breaking regularly (>5% failure rate)
+    - Unstable deployments or rollback frequency >10%
+    - No monitoring or observability systems
+    - Critical security policy conflicts
+
+  </Card>
+
+<Card title="Team & Culture Red Flags" icon="users-slash">
+  - More than 30% of team opposed to AI tools
+  - No established feedback or learning culture
+  - History of failed automation initiatives
+  - Resistance to changing existing workflows
+
+</Card>
+
+<Card title="Process Red Flags" icon="exclamation-triangle">
+  - Inconsistent development workflows
+  - No quality gates or review processes
+  - Manual deployment and testing processes
+  - Lack of documentation and standards
+
+</Card>
+
+  <Card title="Organizational Red Flags" icon="building">
+    - Leadership expecting ROI in weeks vs months
+    - No allocated budget for AI initiatives
+    - High pressure, low experimentation tolerance
+    - Lack of strategic alignment on AI adoption
+    
+  </Card>
+</CardGroup>
+
+### 4. Implementation Roadmap
+
+Based on your assessment results, follow this step-by-step approach:
+
+<Steps>
+  <Step title="Establish Baseline Metrics">
+    Document current performance across key areas: 
+    
+    - Development velocity (story
+    points, cycle time) 
+    - Code quality metrics (bug rates, technical debt) 
+    - Review times and approval rates 
+    - Developer satisfaction and productivity
+    scores
+
+  </Step>
+
+<Step title="Select Initial Automation Target">
+  Choose one high-impact, low-risk workflow to automate first:
+
+    - **Code Review:** Automated analysis and suggestions
+    - **Documentation:** Auto-generated API docs and README updates
+    - **Testing:** Automated test generation and maintenance
+    - **Refactoring:** Systematic code improvement suggestions
+
+  </Step>
+
+<Step title="Standardize Team AI Usage">
+  Create and document consistent practices: 
+    - AI tool selection and configuration guidelines
+
+    - Prompting standards and best practices
+
+    - Quality gates and review processes
+
+    - Security and compliance requirements
+
+  </Step>
+
+<Step title="Pilot and Measure Impact">
+  Run controlled experiments with success criteria: 
+    - Start with 2-3 team members for 2-4 weeks
+    - Track metrics against baseline performance
+    - Gather qualitative feedback on developer experience
+    - Document lessons learned and optimization opportunities
+
+</Step>
+
+  <Step title="Scale Deliberately">
+    Expand successful pilots across the organization: 
+      - Roll out to additional team members gradually
+      - Implement monitoring and alerting systems
+      - Establish feedback loops for continuous improvement
+      - Plan next automation targets based on results
+
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card
+    title="Building Async Agents with Continue CLI"
+    icon="blog"
+    href="https://blog.continue.dev/building-async-agents-with-continue-cli/"
+  >
+    Comprehensive explanation of maturity levels and organizational readiness
+    factors
+  </Card>
+
+  <Card
+    title="Developer's Guide"
+    icon="book"
+    href="https://docs.continue.dev/guides/continuous-ai"
+  >
+    Technical implementation details and best practices for Continuous AI
+    workflows
+  </Card>
+</CardGroup>
+
+## Quick Assessment Checklist
+
+<Tip>
+  **Ready to get started?** Use this quick checklist to gauge your immediate
+  readiness:
+</Tip>
+
+**Technical Foundation (Score: \_\_\_/4)**
+
+- Stable CI/CD pipelines with \<5% failure rate
+- Monitoring and observability systems in place
+- Security policies support AI tool integration
+- Development environment standardization
+
+**Process Maturity (Score: \_\_\_/4)**
+
+- Documented coding standards and review processes
+- Consistent deployment and rollback procedures
+- Quality gates and automated testing
+- Regular retrospectives and process improvement
+
+**Team Culture (Score: \_\_\_/4)**
+
+- \<30% resistance to AI tool adoption
+- Active experimentation and learning culture
+- Collaborative problem-solving approach
+- Constructive feedback and knowledge sharing
+
+**Organizational Support (Score: \_\_\_/4)**
+
+- Leadership buy-in and strategic alignment
+- Dedicated budget for AI initiatives and training
+- 3-6 month ROI expectations (not weeks)
+- Support for calculated risk-taking
+
+---
+
+**Overall Readiness Score: \_\_\_/16**
+
+- **12-16:** Ready to begin Continuous AI implementation
+- **8-11:** Address gaps in 1-2 areas before scaling
+- **\<8:** Focus on foundational improvements first

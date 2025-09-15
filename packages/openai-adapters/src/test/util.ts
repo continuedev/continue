@@ -106,9 +106,17 @@ export function testChat(
       expect(usage).toBeDefined();
       expect(usage!.completion_tokens).toBeGreaterThan(0);
       expect(usage!.prompt_tokens).toBeGreaterThan(0);
-      expect(usage!.total_tokens).toEqual(
-        usage!.prompt_tokens + usage!.completion_tokens,
-      );
+      // Gemini 2.5 models have thinking tokens, so total_tokens >= prompt + completion
+      // Other models should have total_tokens = prompt + completion
+      if (model.includes("gemini-2.5") || model.includes("gemini-2.0")) {
+        expect(usage!.total_tokens).toBeGreaterThanOrEqual(
+          usage!.prompt_tokens + usage!.completion_tokens,
+        );
+      } else {
+        expect(usage!.total_tokens).toEqual(
+          usage!.prompt_tokens + usage!.completion_tokens,
+        );
+      }
     }
   });
 

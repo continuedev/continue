@@ -25,7 +25,7 @@ import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
-import { evaluateTerminalCommandSecurity } from "core/tools/security/terminalCommandSecurity";
+import { evaluateTerminalCommandSecurity } from "@continuedev/terminal-security";
 
 export interface StepContainerPreToolbarProps {
   showToolCallStatusIcon?: boolean;

@@ -32,6 +32,7 @@ interface ScreenContentProps {
   ) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
+  isCompacting: boolean;
   inputMode: boolean;
   handleInterrupt: () => void;
   handleFileAttached: (filePath: string, content: string) => void;
@@ -55,6 +56,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleToolPermissionResponse,
   handleUserMessage,
   isWaitingForResponse,
+  isCompacting,
   inputMode,
   handleInterrupt,
   handleFileAttached,
@@ -140,6 +142,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
           toolArgs={activePermissionRequest.toolArgs}
           requestId={activePermissionRequest.requestId}
           toolCallPreview={activePermissionRequest.toolCallPreview}
+          hasDynamicEvaluation={activePermissionRequest.hasDynamicEvaluation}
           onResponse={handleToolPermissionResponse}
         />
       );
@@ -148,6 +151,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
       <UserInput
         onSubmit={handleUserMessage}
         isWaitingForResponse={isWaitingForResponse}
+        isCompacting={isCompacting}
         inputMode={inputMode}
         onInterrupt={handleInterrupt}
         assistant={services.config?.config || undefined}

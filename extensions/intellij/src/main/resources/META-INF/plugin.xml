@@ -151,9 +151,9 @@
         <action id="continue.openConfigPage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
                 icon="AllIcons.General.GearPlain"
-                text="Continue Config"
-                description="Continue Config">
-            <override-text place="GoToAction" text="Continue Config"/>
+                text="Settings"
+                description="Settings">
+            <override-text place="GoToAction" text="Settings"/>
         </action>
 
         <action id="continue.openLogs"

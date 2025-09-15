@@ -117,6 +117,7 @@
                       "customize/model-providers/top-level/ollama",
                       "customize/model-providers/top-level/openrouter",
                       "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/tetrate_agent_router_service",
                       "customize/model-providers/top-level/vertexai"
                     ]
                   },
@@ -179,13 +180,13 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "Assistants",
+                "group": "agents",
                 "icon": "robot",
                 "pages": [
-                  "hub/assistants/intro",
-                  "hub/assistants/use-an-assistant",
-                  "hub/assistants/create-an-assistant",
-                  "hub/assistants/edit-an-assistant"
+                  "hub/agents/intro",
+                  "hub/agents/use-an-agent",
+                  "hub/agents/create-an-agent",
+                  "hub/agents/edit-an-agent"
                 ]
               },
               {
@@ -228,11 +229,15 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-assistants",
+              "guides/understanding-agents",
               "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/continuous-ai",
+<<<<<<< HEAD
               "guides/posthog-github-continuous-ai",
+=======
+              "guides/continuous-ai-readiness-assessment",
+>>>>>>> main
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/instinct",
@@ -350,16 +355,12 @@
       "destination": "/hub/secrets/secret-types"
     },
     {
-      "source": "/hub/assistants",
-      "destination": "/hub/assistants/intro"
-    },
-    {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
     },
     {
       "source": "/hub/agents/intro",
-      "destination": "/hub/assistants/intro"
+      "destination": "/hub/agents/intro"
     },
     {
       "source": "/customize",
@@ -1107,7 +1108,7 @@
     },
     {
       "source": "/troubleshooting#changes-to-assistants-not-showing-in-vs-code",
-      "destination": "/faqs#changes-to-assistants-not-showing-in-vs-code"
+      "destination": "/faqs#changes-to-agents-not-showing-in-vs-code"
     },
     {
       "source": "/troubleshooting#i-installed-continue-but-dont-see-the-sidebar-window",
@@ -1176,6 +1177,26 @@
     {
       "source": "/features/edit/next-edit",
       "destination": "/features/autocomplete/next-edit"
+    },
+    {
+      "source": "/hub/assistants/intro",
+      "destination": "/hub/agents/intro"
+    },
+    {
+      "source": "/hub/assistants/use-an-assistant",
+      "destination": "/hub/agents/use-an-agent"
+    },
+    {
+      "source": "/hub/assistants/create-an-assistant",
+      "destination": "/hub/agents/create-an-agent"
+    },
+    {
+      "source": "/hub/assistants/edit-an-assistant",
+      "destination": "/hub/agents/edit-an-agent"
+    },
+    {
+      "source": "/guides/understanding-assistants",
+      "destination": "/guides/understanding-agents"
     }
   ]
 }

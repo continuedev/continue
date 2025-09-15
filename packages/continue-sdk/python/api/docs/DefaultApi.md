@@ -4,12 +4,12 @@ All URIs are relative to *https://api.continue.dev*
 
 | Method                                                                             | HTTP request                                         | Description                                       |
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
-| [**get_assistant**](DefaultApi.md#get_assistant)                                   | **GET** /ide/get-assistant/{ownerSlug}/{packageSlug} | Get a specific assistant by slug                  |
+| [**get_assistant**](DefaultApi.md#get_assistant)                                   | **GET** /ide/get-assistant/{ownerSlug}/{packageSlug} | Get a specific agent by slug                  |
 | [**get_free_trial_status**](DefaultApi.md#get_free_trial_status)                   | **GET** /ide/free-trial-status                       | Get free trial status for user                    |
 | [**get_models_add_on_checkout_url**](DefaultApi.md#get_models_add_on_checkout_url) | **GET** /ide/get-models-add-on-checkout-url          | Get Stripe checkout URL for models add-on         |
 | [**get_policy**](DefaultApi.md#get_policy)                                         | **GET** /ide/policy                                  | Get organization policy                           |
-| [**list_assistant_full_slugs**](DefaultApi.md#list_assistant_full_slugs)           | **GET** /ide/list-assistant-full-slugs               | List assistant full slugs (currently returns 429) |
-| [**list_assistants**](DefaultApi.md#list_assistants)                               | **GET** /ide/list-assistants                         | List assistants for IDE                           |
+| [**list_assistant_full_slugs**](DefaultApi.md#list_assistant_full_slugs)           | **GET** /ide/list-assistant-full-slugs               | List agent full slugs (currently returns 429) |
+| [**list_assistants**](DefaultApi.md#list_assistants)                               | **GET** /ide/list-assistants                         | List agents for IDE                           |
 | [**list_organizations**](DefaultApi.md#list_organizations)                         | **GET** /ide/list-organizations                      | List organizations for user                       |
 | [**sync_secrets**](DefaultApi.md#sync_secrets)                                     | **POST** /ide/sync-secrets                           | Synchronize secrets for user                      |
 
@@ -17,10 +17,10 @@ All URIs are relative to *https://api.continue.dev*
 
 > GetAssistant200Response get_assistant(owner_slug, package_slug, always_use_proxy=always_use_proxy, organization_id=organization_id)
 
-Get a specific assistant by slug
+Get a specific agent by slug
 
-Returns a single assistant configuration by its owner and package slug.
-This endpoint is useful when you need to retrieve or refresh a specific assistant
+Returns a single agent configuration by its owner and package slug.
+This endpoint is useful when you need to retrieve or refresh a specific agent
 without fetching the entire list.
 
 ### Example
@@ -53,13 +53,13 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = openapi_client.DefaultApi(api_client)
-    owner_slug = 'owner_slug_example' # str | Slug of the user or organization that owns the assistant
-    package_slug = 'package_slug_example' # str | Slug of the assistant package
+    owner_slug = 'owner_slug_example' # str | Slug of the user or organization that owns the agent
+    package_slug = 'package_slug_example' # str | Slug of the agent package
     always_use_proxy = 'always_use_proxy_example' # str | Whether to always use the Continue-managed proxy for model requests (optional)
-    organization_id = 'organization_id_example' # str | ID of the organization to scope assistants to. If not provided, personal assistants are returned. (optional)
+    organization_id = 'organization_id_example' # str | ID of the organization to scope agents to. If not provided, personal agents are returned. (optional)
 
     try:
-        # Get a specific assistant by slug
+        # Get a specific agent by slug
         api_response = api_instance.get_assistant(owner_slug, package_slug, always_use_proxy=always_use_proxy, organization_id=organization_id)
         print("The response of DefaultApi->get_assistant:\n")
         pprint(api_response)
@@ -71,10 +71,10 @@ with openapi_client.ApiClient(configuration) as api_client:
 
 | Name                 | Type    | Description                                                                                       | Notes      |
 | -------------------- | ------- | ------------------------------------------------------------------------------------------------- | ---------- |
-| **owner_slug**       | **str** | Slug of the user or organization that owns the assistant                                          |
-| **package_slug**     | **str** | Slug of the assistant package                                                                     |
+| **owner_slug**       | **str** | Slug of the user or organization that owns the agent                                          |
+| **package_slug**     | **str** | Slug of the agent package                                                                     |
 | **always_use_proxy** | **str** | Whether to always use the Continue-managed proxy for model requests                               | [optional] |
-| **organization_id**  | **str** | ID of the organization to scope assistants to. If not provided, personal assistants are returned. | [optional] |
+| **organization_id**  | **str** | ID of the organization to scope agents to. If not provided, personal agents are returned. | [optional] |
 
 ### Return type
 
@@ -93,10 +93,10 @@ with openapi_client.ApiClient(configuration) as api_client:
 
 | Status code | Description                                       | Response headers |
 | ----------- | ------------------------------------------------- | ---------------- |
-| **200**     | Successfully retrieved assistant                  | -                |
+| **200**     | Successfully retrieved agent                  | -                |
 | **401**     | Unauthorized - Authentication failed              | -                |
 | **403**     | Forbidden - Assistant not allowed in organization | -                |
-| **404**     | User or assistant not found                       | -                |
+| **404**     | User or agent not found                       | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -335,10 +335,10 @@ This endpoint does not need any parameter.
 
 > list_assistant_full_slugs()
 
-List assistant full slugs (currently returns 429)
+List agent full slugs (currently returns 429)
 
 This endpoint is temporarily disabled and returns a 429 status code
-to prevent constant refreshes of the full assistant list until a
+to prevent constant refreshes of the full agent list until a
 fixed client version can be deployed.
 
 ### Example
@@ -372,7 +372,7 @@ with openapi_client.ApiClient(configuration) as api_client:
     api_instance = openapi_client.DefaultApi(api_client)
 
     try:
-        # List assistant full slugs (currently returns 429)
+        # List agent full slugs (currently returns 429)
         api_instance.list_assistant_full_slugs()
     except Exception as e:
         print("Exception when calling DefaultApi->list_assistant_full_slugs: %s\n" % e)
@@ -407,12 +407,12 @@ void (empty response body)
 
 > List[ListAssistants200ResponseInner] list_assistants(always_use_proxy=always_use_proxy, organization_id=organization_id)
 
-List assistants for IDE
+List agents for IDE
 
-Returns a complete list of assistants available to the user, with their full configurations,
+Returns a complete list of agents available to the user, with their full configurations,
 icons, and other metadata needed by the IDE to display and use them.
 
-This endpoint performs a full refresh of the list of assistants, including unrolling
+This endpoint performs a full refresh of the list of agents, including unrolling
 configurations and resolving secrets.
 
 ### Example
@@ -446,10 +446,10 @@ with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = openapi_client.DefaultApi(api_client)
     always_use_proxy = 'always_use_proxy_example' # str | Whether to always use the Continue-managed proxy for model requests (optional)
-    organization_id = 'organization_id_example' # str | ID of the organization to scope assistants to. If not provided, personal assistants are returned. (optional)
+    organization_id = 'organization_id_example' # str | ID of the organization to scope agents to. If not provided, personal agents are returned. (optional)
 
     try:
-        # List assistants for IDE
+        # List agents for IDE
         api_response = api_instance.list_assistants(always_use_proxy=always_use_proxy, organization_id=organization_id)
         print("The response of DefaultApi->list_assistants:\n")
         pprint(api_response)
@@ -462,7 +462,7 @@ with openapi_client.ApiClient(configuration) as api_client:
 | Name                 | Type    | Description                                                                                       | Notes      |
 | -------------------- | ------- | ------------------------------------------------------------------------------------------------- | ---------- |
 | **always_use_proxy** | **str** | Whether to always use the Continue-managed proxy for model requests                               | [optional] |
-| **organization_id**  | **str** | ID of the organization to scope assistants to. If not provided, personal assistants are returned. | [optional] |
+| **organization_id**  | **str** | ID of the organization to scope agents to. If not provided, personal agents are returned. | [optional] |
 
 ### Return type
 
@@ -481,7 +481,7 @@ with openapi_client.ApiClient(configuration) as api_client:
 
 | Status code | Description                          | Response headers |
 | ----------- | ------------------------------------ | ---------------- |
-| **200**     | Successfully retrieved assistants    | -                |
+| **200**     | Successfully retrieved agents    | -                |
 | **401**     | Unauthorized - Authentication failed | -                |
 | **404**     | User not found                       | -                |
 

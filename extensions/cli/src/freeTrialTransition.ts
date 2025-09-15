@@ -11,6 +11,7 @@ import {
   isValidAnthropicApiKey,
   getApiKeyValidationError,
 } from "./util/apiKeyValidation.js";
+import { gracefulExit } from "./util/exit.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
@@ -81,7 +82,7 @@ export async function handleMaxedOutFreeTrial(
 
     // Wait for user to acknowledge
     readlineSync.question(chalk.dim("\nPress Enter to exit..."));
-    process.exit(0);
+    await gracefulExit(0);
   } else if (choice === "2") {
     // Option 2: Enter Anthropic API key
     const apiKey = readlineSync.question(
@@ -93,7 +94,7 @@ export async function handleMaxedOutFreeTrial(
 
     if (!isValidAnthropicApiKey(apiKey)) {
       console.log(chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`));
-      process.exit(1);
+      await gracefulExit(1);
     }
 
     try {
@@ -108,7 +109,7 @@ export async function handleMaxedOutFreeTrial(
       }
     } catch (error) {
       console.log(chalk.red(`❌ Error saving API key: ${error}`));
-      process.exit(1);
+      await gracefulExit(1);
     }
   }
 
@@ -137,5 +138,5 @@ export async function handleMaxedOutFreeTrial(
   child.unref();
 
   // Exit the current process
-  process.exit(0);
+  await gracefulExit(0);
 }
