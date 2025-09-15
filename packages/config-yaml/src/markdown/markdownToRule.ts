@@ -12,6 +12,7 @@ export interface RuleFrontmatter {
   name?: RuleObject["name"];
   description?: RuleObject["description"];
   alwaysApply?: RuleObject["alwaysApply"];
+  invokable?: RuleObject["invokable"];
 }
 
 /**
@@ -115,6 +116,7 @@ export function markdownToRule(
     regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
+    invokable: frontmatter.invokable,
     sourceFile: id.uriType === "file" ? id.fileUri : undefined,
   };
 }

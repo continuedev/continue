@@ -1,7 +1,7 @@
 import { render, RenderOptions } from "ink";
 import React from "react";
 
-import { setTUIUnmount } from "../index.js";
+import { enableSigintHandler, setTUIUnmount } from "../index.js";
 import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
@@ -78,6 +78,9 @@ export async function startTUIChat(
 
   // Register unmount function with main process for two-stage Ctrl+C exit
   setTUIUnmount(unmount);
+
+  // Enable the two-stage SIGINT handler for TUI mode
+  enableSigintHandler();
 
   return { unmount };
 }

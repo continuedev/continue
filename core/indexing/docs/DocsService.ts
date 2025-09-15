@@ -272,7 +272,7 @@ export default class DocsService {
         id: doc.startUrl,
         isReindexing: false,
         title: doc.title,
-        debugInfo: `max depth: ${doc.maxDepth}`,
+        debugInfo: `max depth: ${doc.maxDepth ?? "unlimited"}`,
         icon: doc.faviconUrl,
         url: doc.startUrl,
       };
@@ -468,7 +468,7 @@ export default class DocsService {
       embeddingsProviderId: provider.embeddingId,
       isReindexing: forceReindex && indexExists,
       title: siteIndexingConfig.title,
-      debugInfo: `max depth: ${siteIndexingConfig.maxDepth}`,
+      debugInfo: `max depth: ${siteIndexingConfig.maxDepth ?? "unlimited"}`,
       icon: siteIndexingConfig.faviconUrl,
       url: siteIndexingConfig.startUrl,
     };
