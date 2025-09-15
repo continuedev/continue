@@ -2,18 +2,17 @@ import React, { useMemo, useState } from "react";
 
 import { useService } from "../hooks/useService.js";
 import { services } from "../services/index.js";
-import { SERVICE_NAMES } from "../services/types.js";
 import type { UpdateServiceState } from "../services/types.js";
+import { SERVICE_NAMES } from "../services/types.js";
 
 import { Selector, SelectorOption } from "./Selector.js";
-
 
 interface UpdateSelectorProps {
   onCancel: () => void;
 }
 
 interface UpdateOption extends SelectorOption {
-  action: "run" | "back";
+  action: "run" | "toggle-auto" | "back";
 }
 
 export const UpdateSelector: React.FC<UpdateSelectorProps> = ({ onCancel }) => {
@@ -49,11 +48,16 @@ export const UpdateSelector: React.FC<UpdateSelectorProps> = ({ onCancel }) => {
       ? `Run update to v${updateState.latestVersion}`
       : "Run update";
 
+    const autoUpdateLabel = updateState?.autoUpdate
+      ? "Turn off auto-updates"
+      : "Turn on auto-updates";
+
     return [
       { id: "run-update", name: runLabel, action: "run" },
+      { id: "toggle-auto", name: autoUpdateLabel, action: "toggle-auto" },
       { id: "back", name: "Back", action: "back" },
     ];
-  }, [updateState?.latestVersion]);
+  }, [updateState?.latestVersion, updateState?.autoUpdate]);
 
   const handleSelect = async (option: UpdateOption) => {
     switch (option.action) {
@@ -61,6 +65,11 @@ export const UpdateSelector: React.FC<UpdateSelectorProps> = ({ onCancel }) => {
         // Perform a manual update (not auto-update)
         await services.updateService.performUpdate(false);
         return; // Keep selector open to show status changes
+      case "toggle-auto":
+        // Toggle auto-update setting
+        const newValue = !updateState?.autoUpdate;
+        await services.updateService.setAutoUpdate(newValue);
+        return; // Keep selector open to show updated label
       case "back":
         onCancel();
         return;

@@ -14,6 +14,7 @@ import {
   ConfigServiceState,
   MCPServiceState,
   ModelServiceState,
+  UpdateServiceState,
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
@@ -93,7 +94,8 @@ function useTUIChatServices(remoteUrl?: string) {
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    update: UpdateServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient", "update"]);
 
   return { services, allServicesReady, isRemoteMode };
 }

@@ -66,6 +66,19 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isRemoteMode,
   onImageInClipboardChange,
 }) => {
+  const update = services.update;
+  if (
+    (update?.status === "checking" && update?.autoUpdate) ||
+    (update?.isAutoUpdate &&
+      (update?.status === "updating" || update?.status === "updated"))
+  ) {
+    return (
+      <Box margin={1}>
+        <Text>{`${services.update?.message}`}</Text>
+      </Box>
+    );
+  }
+
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
     return (

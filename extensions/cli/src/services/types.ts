@@ -91,6 +91,7 @@ export enum UpdateStatus {
 
 export interface UpdateServiceState {
   autoUpdate: boolean;
+  isAutoUpdate: boolean;
   status: UpdateStatus;
   message: string;
   error?: Error | null;

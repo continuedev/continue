@@ -286,7 +286,7 @@ export class ServiceContainer extends EventEmitter {
     };
     const updated = { ...current, state, lastUpdated: new Date() };
     this.services.set(serviceName, updated);
-    this.emit(`${serviceName}:${state}`);
+    this.emit(`${serviceName}:changed`, updated);
   }
 
   private setServiceValue<T>(serviceName: string, value: T): void {
