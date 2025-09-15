@@ -17,12 +17,24 @@ Before starting, ensure you have:
 - GitHub repository where you want to create issues
 - PostHog account with **[session recordings enabled and collecting data](https://posthog.com/docs/session-replay/installation)**
 - Node.js 18+ installed locally
-- Basic familiarity with [Continue CLI](/guides/cli)
+- Continue CLI account with **active credits** (required for API usage)
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash npm i -g @continuedev/cli ```
+    ```bash
+    npm i -g @continuedev/cli
+    ```
   </Step>
+  
+  <Step title="Set up Continue CLI Account & API Key">
+        1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+        2. Sign up or log in to your Continue account
+        3. Navigate to your organization settings
+        4. Click **"API Keys"** and then **"+ New API Key"** 
+        5. Copy the API key immediately (you won't see it again!)
+        6. Login to the CLI with `cn login`
+  </Step>
+
   <Step title="Install & Setup GitHub CLI">
     ```bash 
     # macOS 
@@ -39,8 +51,9 @@ Before starting, ensure you have:
   <Step title="Set up PostHog API access">
     Get your Personal API Key from PostHog settings
   </Step>
-  <Step title="Test the workflow">Run your first automated analysis</Step>
 </Steps>
+
+<Tip>Now you're ready to start building your workflow!</Tip>
 
 ## Step 1: Environment Setup
 
@@ -67,12 +80,15 @@ cd posthog-continuous-ai
 
 # Create environment file
 cat > .env << EOF
+# Continue CLI Configuration (REQUIRED)
+CONTINUE_API_KEY=your_continue_api_key_here
+
 # PostHog Configuration
 POSTHOG_API_KEY=your_personal_api_key_here
 POSTHOG_PROJECT_ID=your_project_id_here
 POSTHOG_HOST=https://us.posthog.com
 
-# GitHub Configuration
+# GitHub Configuration (auto-detected from git, or set manually)
 GITHUB_OWNER=YourUsername
 GITHUB_REPO=your-repository-name
 EOF
@@ -86,18 +102,30 @@ source .env
 cat > .gitignore << EOF
 # Environment variables - contains API keys
 .env
+.env.local
+
+# Continue CLI authentication
+.continue/
 
 # Generated data files
 *.json
 analysis-results.txt
 daily-analysis.log
+.created_issues.json
 
 # Temporary files
 *.tmp
+/tmp/
 EOF
 ```
 
 </CodeGroup>
+
+<Info>
+  **Auto-Detection**: The scripts can automatically detect your GitHub owner and
+  repo from your git remote origin URL. Manual configuration in `.env` overrides
+  auto-detection.
+</Info>
 
 <Tip>
   **Find Your Project Details**: Your Project ID is in your PostHog URL:
@@ -105,8 +133,6 @@ EOF
 </Tip>
 
 ### GitHub CLI Setup
-
-The workflow uses GitHub CLI instead of API tokens for better security and easier authentication:
 
 <Card title="Why GitHub CLI?" icon="github">
   GitHub CLI provides secure authentication without needing to manage Personal
@@ -126,24 +152,46 @@ gh auth status
 gh auth login
 ```
 
-<Tip>
-  **Authentication**: GitHub CLI handles authentication automatically once you
-  run `gh auth login`. No need to manage tokens in `.env` files!
-</Tip>
-
 ## Step 2: Session Analysis Script
 
-Create an intelligent analysis script that fetches and analyzes session recordings:
+Create the main analysis script that fetches PostHog session recordings, filters for problematic sessions, and uses Continue CLI to analyze them.
 
-```bash
+<Info>
+  **How It Works:** 
+    - **Fetches** recent session recordings from PostHog API
+    - **Filters** for problematic sessions (errors or long durations)
+    - **Authenticates** with Continue CLI using your API key
+    - **Analyzes** session data and generates exactly 3 structured GitHub issues
+
+</Info>
+
+<CodeGroup>
+
+```bash analyze-sessions.sh
 #!/bin/bash
-# analyze-sessions.sh
+# analyze-sessions.sh - Fetches PostHog sessions and analyzes them with Continue CLI
 set -e
-source .env
+
+# Load .env if it exists
+if [ -f .env ]; then
+  source .env
+fi
+
+# Check for required environment variables
+if [ -z "$POSTHOG_API_KEY" ] || [ -z "$POSTHOG_PROJECT_ID" ] || [ -z "$POSTHOG_HOST" ]; then
+  echo "❌ Missing required PostHog environment variables"
+  exit 1
+fi
+
+if [ -z "$CONTINUE_API_KEY" ]; then
+  echo "❌ Missing CONTINUE_API_KEY environment variable"
+  echo "Get your API key from: https://hub.continue.dev/settings/organizations"
+  exit 1
+fi
 
 echo "🎬 Fetching session recordings from PostHog..."
 
-# Fetch recent session recordings with potential issues
+# Fetch recent session recordings
 curl -s -H "Authorization: Bearer $POSTHOG_API_KEY" \
   "$POSTHOG_HOST/api/projects/$POSTHOG_PROJECT_ID/session_recordings/?limit=20" \
   | jq '.results[] | {
@@ -158,64 +206,130 @@ curl -s -H "Authorization: Bearer $POSTHOG_API_KEY" \
 
 echo "📊 Found $(cat sessions.json | jq -s length) sessions"
 
-# Filter for problematic sessions (errors or long durations)
+# Filter for problematic sessions
 cat sessions.json | jq -s 'map(select(.console_error_count > 0 or .recording_duration > 300))' > problem-sessions.json
 
 echo "🚨 Found $(cat problem-sessions.json | jq length) problematic sessions"
 
-# Analyze with Continue CLI
+# Verify Continue CLI authentication
+if ! cn auth status > /dev/null 2>&1; then
+  echo "🔑 Continue CLI not authenticated, attempting login..."
+  export CONTINUE_API_KEY="$CONTINUE_API_KEY"
+  if ! cn auth login --api-key "$CONTINUE_API_KEY"; then
+    echo "❌ Failed to authenticate with Continue CLI"
+    exit 1
+  fi
+fi
+
+echo "✅ Continue CLI authenticated"
+
+# Analyze with Continue CLI using structured format for easy parsing
 cat problem-sessions.json | cn -p "
-Analyze these PostHog session recordings to identify user experience issues.
+Analyze these PostHog session recordings and create exactly 3 GitHub issues for the most critical user experience problems.
 
-Each session contains:
-- duration: how long the session lasted (in seconds)
-- start_url: the page where the user started
-- click_count: total number of clicks
-- console_error_count: JavaScript errors encountered
+Session data format:
+- duration: session length in seconds
+- start_url: starting page URL
+- click_count: total clicks in session
+- console_error_count: JavaScript errors
 
-Look for patterns that suggest code issues:
+Format your response with EXACTLY 3 issues using this structure:
 
-1. **High Error Sessions**: Sessions with console_error_count > 0
-   - What pages/URLs are generating errors?
-   - Are users abandoning after errors occur?
+### 1. **Issue Title Here**
+**Problem**: One sentence describing the user problem
+**Technical Causes**: Brief technical explanation
+**Affected Pages**: List the URLs
+**Recommended Fix**:
+- Specific action item 1
+- Specific action item 2
+**Priority**: **HIGH** or **MEDIUM** or **LOW**
+**Impact**: Quantify the impact (e.g., 'Affects 80% of sessions')
 
-2. **Long Duration Sessions**: Sessions over 300 seconds (5+ minutes)
-   - Are users struggling to complete tasks?
-   - Low click count + high duration = user confusion
+### 2. **Second Issue Title**
+[Same format as above]
 
-3. **Abandonment Patterns**:
-   - Users starting on key pages but not progressing
-   - Short sessions on important conversion pages
+### 3. **Third Issue Title**
+[Same format as above]
 
-For each issue pattern you identify:
-- Describe the user behavior problem
-- Suggest likely technical causes (JS errors, slow loading, UI confusion)
-- Recommend specific code areas to investigate
-- Provide example fixes or improvements
-- Priority: High (blocks user goals), Medium (hurts UX), Low (minor issue)
+Base all issues on actual patterns in the provided session data.
+" > analysis-results.txt 2>&1
 
-Focus on actionable technical improvements that will measurably improve user experience.
-"
+echo "✅ Analysis complete!"
 
-echo "✅ Analysis complete! Check the output above for optimization opportunities."
+# Display the analysis
+echo ""
+echo "📋 Analysis Results:"
+echo "=================="
+cat analysis-results.txt
+echo "=================="
 ```
 
-<Info>
+```bash Environment Check Script
+#!/bin/bash
+# check-requirements.sh - Verify all requirements are met
+set -e
 
-**What This Script Does:**
+echo "🔍 Checking requirements..."
 
-1. **Fetches** recent session recordings from
-   PostHog API
-2. **Filters** for problematic sessions (errors or long durations)
-3. **Analyzes** with Continue CLI to identify specific UX issues
-4. **Provides** actionable technical recommendations
+# Check Continue CLI
+if ! command -v cn &> /dev/null; then
+    echo "❌ Continue CLI not found. Install with: npm i -g @continuedev/cli"
+    exit 1
+fi
+echo "✅ Continue CLI installed"
 
-</Info>
+# Check GitHub CLI
+if ! command -v gh &> /dev/null; then
+    echo "❌ GitHub CLI not found. Install from: https://cli.github.com/"
+    exit 1
+fi
+echo "✅ GitHub CLI installed"
 
-Make the script executable:
+# Check jq
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq not found. Install with: brew install jq"
+    exit 1
+fi
+echo "✅ jq installed"
+
+# Check Continue CLI auth
+if ! cn auth status &> /dev/null; then
+    echo "⚠️ Continue CLI not authenticated"
+    echo "Run: cn auth login --api-key YOUR_API_KEY"
+else
+    echo "✅ Continue CLI authenticated"
+fi
+
+# Check GitHub CLI auth
+if ! gh auth status &> /dev/null; then
+    echo "⚠️ GitHub CLI not authenticated"
+    echo "Run: gh auth login"
+else
+    echo "✅ GitHub CLI authenticated"
+fi
+
+# Check .env file
+if [ ! -f .env ]; then
+    echo "⚠️ .env file not found"
+    echo "Create .env with required environment variables"
+else
+    echo "✅ .env file exists"
+fi
+
+echo ""
+echo "🎉 Requirements check complete!"
+```
+
+</CodeGroup>
+
+Make the scripts executable:
 
 ```bash
 chmod +x analyze-sessions.sh
+chmod +x check-requirements.sh
+
+# Test your requirements
+./check-requirements.sh
 ```
 
 ## Step 3: Automated GitHub Issue Creation
@@ -225,170 +339,151 @@ Create a smart script that parses the AI analysis and automatically creates GitH
 <Card title="Intelligent Issue Creation" icon="github">
   This script automatically extracts issues from Continue CLI analysis,
   determines priority levels, assigns appropriate labels, and creates
-  well-formatted GitHub issues
+  well-formatted GitHub issues using GitHub CLI
 </Card>
 
-```bash
+```bash create-github-issues.sh
 #!/bin/bash
-# create-github-issues.sh - Creates GitHub issues from Continue CLI analysis output
+# create-github-issues.sh - Creates GitHub issues from Continue CLI analysis
 set -e
-source .env
 
-# Input file containing Continue CLI analysis output
+# Load .env if it exists
+if [ -f .env ]; then
+  source .env
+fi
+
+# Input file
 ANALYSIS_FILE="analysis-results.txt"
 
-# File to track created issues to prevent duplicates
-ISSUE_TRACKING_FILE=".created_issues.json"
+# Check requirements
+if [ -z "$GITHUB_OWNER" ] || [ -z "$GITHUB_REPO" ]; then
+  echo "❌ Missing GITHUB_OWNER or GITHUB_REPO"
+  echo "These can be auto-detected from git remote or set in .env"
+  exit 1
+fi
 
-# Check if analysis file exists
 if [ ! -f "$ANALYSIS_FILE" ]; then
   echo "❌ Analysis file not found: $ANALYSIS_FILE"
+  echo "Run analyze-sessions.sh first to generate analysis results"
   exit 1
 fi
 
-# Check if GitHub CLI is installed
-if ! command -v gh &> /dev/null; then
-  echo "❌ GitHub CLI (gh) not found. Please install it first:"
-  echo "  https://cli.github.com/manual/installation"
+# Check GitHub CLI authentication
+if ! gh auth status > /dev/null 2>&1; then
+  echo "❌ GitHub CLI not authenticated"
+  echo "Run: gh auth login"
   exit 1
 fi
 
-# Make sure gh is authenticated
-if ! gh auth status &> /dev/null; then
-  echo "❌ GitHub CLI not authenticated. Please run 'gh auth login' first."
-  exit 1
-fi
+echo "✅ GitHub CLI authenticated for $GITHUB_OWNER/$GITHUB_REPO"
 
-# Create issue tracking file if it doesn't exist
-if [ ! -f "$ISSUE_TRACKING_FILE" ]; then
-  echo "[]" > "$ISSUE_TRACKING_FILE"
-fi
-
-# Function to check if an issue with this title already exists
-issue_exists() {
-  local title="$1"
-  local issue_hash=$(echo "$title" | md5sum | cut -d' ' -f1)
-
-  # Check in our tracking file
-  if grep -q "\"$issue_hash\"" "$ISSUE_TRACKING_FILE"; then
-    return 0  # Issue exists
-  fi
-
-  # Also check actual GitHub issues to be doubly sure
-  if gh issue list --repo "$GITHUB_OWNER/$GITHUB_REPO" --search "$title in:title" --json title | grep -q "$title"; then
-    # Add to tracking file if found on GitHub but not in our tracking
-    local tracking_data=$(cat "$ISSUE_TRACKING_FILE")
-    echo "$tracking_data" | jq --arg hash "$issue_hash" '. += [$hash]' > "$ISSUE_TRACKING_FILE"
-    return 0  # Issue exists
-  fi
-
-  return 1  # Issue doesn't exist
-}
-
-# Function to record that we created an issue
-record_issue() {
-  local title="$1"
-  local issue_hash=$(echo "$title" | md5sum | cut -d' ' -f1)
-
-  local tracking_data=$(cat "$ISSUE_TRACKING_FILE")
-  echo "$tracking_data" | jq --arg hash "$issue_hash" '. += [$hash]' > "$ISSUE_TRACKING_FILE"
-}
-
-# Function to create a GitHub issue using GitHub CLI
+# Function to create GitHub issue using GitHub CLI
 create_github_issue() {
   local title="$1"
   local body="$2"
   local labels="$3"
 
-  # Check if this issue already exists
-  if issue_exists "$title"; then
-    echo "ℹ️ Issue already exists: $title"
+  echo "  Creating issue: $title"
+
+  # Check if issue with similar title already exists
+  existing_issues=$(gh issue list --repo "$GITHUB_OWNER/$GITHUB_REPO" \
+    --search "$title in:title" --json title,state --limit 5)
+
+  if echo "$existing_issues" | jq -r '.[].title' | grep -q "$title" 2>/dev/null; then
+    echo "  ℹ️ Issue with similar title already exists, skipping"
     return 0
   fi
 
-  echo "Creating issue: $title"
-
-  # Convert labels from JSON array format to comma-separated list
-  # Remove brackets, quotes, and add commas
-  labels_list=$(echo $labels | sed 's/\[//g' | sed 's/\]//g' | sed 's/"//g' | sed 's/,/,/g')
-
-  # Create issue using GitHub CLI
-  issue_url=$(gh issue create \
+  # Create the issue
+  if issue_url=$(gh issue create \
     --repo "$GITHUB_OWNER/$GITHUB_REPO" \
-    --title "$title" \
+    --title "🔍 UX Issue: $title" \
     --body "$body" \
-    --label "$labels_list" \
-    --web)
-
-  if [ $? -eq 0 ]; then
-    echo "✅ Created issue: $issue_url"
-    # Record that we created this issue
-    record_issue "$title"
+    --label "$labels"); then
+    echo "  ✅ Created: $issue_url"
+    return 0
   else
-    echo "❌ Failed to create issue"
+    echo "  ❌ Failed to create issue"
+    return 1
   fi
 }
 
-# Extract and parse issues from analysis output
+# Parse and create issues
 echo "🔍 Parsing analysis results for issues..."
 
-# Count the issues in the file by looking for ## Issue pattern
-issue_count=$(grep -c "^## Issue" "$ANALYSIS_FILE" || echo 0)
+issues_created=0
+current_title=""
+current_body=""
+current_priority=""
 
-if [ "$issue_count" -eq 0 ]; then
-  echo "ℹ️ No issues found in analysis output."
-  exit 0
-fi
+# Process the analysis file looking for structured issues
+while IFS= read -r line || [ -n "$line" ]; do
+  # Check for issue header pattern: ### N. **Title**
+  if [[ $line =~ ^###\ [0-9]+\.\ \*\*(.+)\*\* ]]; then
+    # Create previous issue if exists
+    if [ -n "$current_title" ] && [ -n "$current_body" ]; then
+      # Determine labels based on priority
+      case "$current_priority" in
+        "HIGH")
+          labels="bug,high-priority,user-experience,automated"
+          ;;
+        "MEDIUM")
+          labels="enhancement,medium-priority,user-experience,automated"
+          ;;
+        *)
+          labels="low-priority,user-experience,automated"
+          ;;
+      esac
 
-echo "📊 Found $issue_count potential issues to process"
-
-# Process each issue section
-while IFS= read -r line || [[ -n "$line" ]]; do
-  if [[ $line =~ ^## ]]; then
-    # If we have a previous issue, create it
-    if [ -n "${issue_title:-}" ] && [ -n "${issue_body:-}" ]; then
-      # Determine appropriate labels based on priority in the issue body
-      if [[ "$issue_body" =~ "High Priority" ]]; then
-        labels="[\"bug\", \"high-priority\", \"user-experience\"]"
-      elif [[ "$issue_body" =~ "Medium Priority" ]]; then
-        labels="[\"enhancement\", \"medium-priority\", \"user-experience\"]"
-      else
-        labels="[\"low-priority\", \"user-experience\"]"
+      if create_github_issue "$current_title" "$current_body" "$labels"; then
+        ((issues_created++))
       fi
-
-      # Create the issue
-      create_github_issue "$issue_title" "$issue_body" "$labels"
     fi
 
-    # Start a new issue
-    issue_title="UX Issue: ${line#\#\# Issue }"
-    issue_body=""
-  elif [ -n "${issue_title:-}" ]; then
-    # Add line to current issue body
-    if [ -n "$issue_body" ]; then
-      issue_body="$issue_body\n$line"
-    else
-      issue_body="$line"
-    fi
-  fi
-done < <(sed -n '/^## Issue/,/^## Issue\|^$/p' "$ANALYSIS_FILE")
-
-# Create the last issue if there is one
-if [ -n "${issue_title:-}" ] && [ -n "${issue_body:-}" ]; then
-  # Determine appropriate labels based on priority in the issue body
-  if [[ "$issue_body" =~ "High Priority" ]]; then
-    labels="[\"bug\", \"high-priority\", \"user-experience\"]"
-  elif [[ "$issue_body" =~ "Medium Priority" ]]; then
-    labels="[\"enhancement\", \"medium-priority\", \"user-experience\"]"
+    # Start new issue
+    current_title="${BASH_REMATCH[1]}"
+    current_body=""
+    current_priority=""
   else
-    labels="[\"low-priority\", \"user-experience\"]"
+    # Part of current issue body
+    if [ -n "$current_title" ]; then
+      # Extract priority if found
+      if [[ $line =~ \*\*Priority\*\*:\ \*\*(HIGH|MEDIUM|LOW)\*\* ]]; then
+        current_priority="${BASH_REMATCH[1]}"
+      fi
+      current_body="${current_body}${line}"$'\n'
+    fi
   fi
+done < "$ANALYSIS_FILE"
 
-  # Create the issue
-  create_github_issue "$issue_title" "$issue_body" "$labels"
+# Create last issue
+if [ -n "$current_title" ] && [ -n "$current_body" ]; then
+  case "$current_priority" in
+    "HIGH")
+      labels="bug,high-priority,user-experience,automated"
+      ;;
+    "MEDIUM")
+      labels="enhancement,medium-priority,user-experience,automated"
+      ;;
+    *)
+      labels="low-priority,user-experience,automated"
+      ;;
+  esac
+
+  if create_github_issue "$current_title" "$current_body" "$labels"; then
+    ((issues_created++))
+  fi
 fi
 
-echo "✅ GitHub issues creation process completed!"
+echo "✅ GitHub issues creation complete!"
+echo "📊 Created $issues_created issue(s)"
+
+# Show created issues
+if [ $issues_created -gt 0 ]; then
+  echo ""
+  echo "📋 Recent automated issues:"
+  gh issue list --repo "$GITHUB_OWNER/$GITHUB_REPO" --label "automated" --limit 5
+fi
 ```
 
 Make it executable:
@@ -397,38 +492,101 @@ Make it executable:
 chmod +x create-github-issues.sh
 ```
 
-<Tip>
-  **Smart Label Assignment**: The script automatically assigns labels based on
-  issue priority: 
-  - **High Priority** → `bug`, `high-priority`,
-  `user-experience` 
-  - **Medium Priority** → `enhancement`, `medium-priority`,
-  `user-experience`
-   - **Low Priority** → `low-priority`, `user-experience`
+<Warning>
+**Repository Labels Required**: The script uses these labels which must exist in your GitHub repository:
+- `bug`, `enhancement` 
+- `high-priority`, `medium-priority`, `low-priority`
+- `user-experience`, `automated`
 
-**Be sure to customize the label logic** in the script to match your
-repository's labeling conventions!
+Create missing labels in your repo at: **Settings → Labels → New label** or edit the `labels=` lines in the script to match your repository's existing label system.
 
-</Tip>
+</Warning>
 
 ## Step 4: Complete Automated Workflow
 
 Create the main orchestration script that runs the entire process:
 
-```bash
+```bash daily-analysis.sh
 #!/bin/bash
-# daily-analysis.sh
+# daily-analysis.sh - Main entry point for PostHog analysis and GitHub issue creation
 set -e
 
-echo "🔍 Starting daily PostHog session analysis..."
+# Load .env for local development
+if [ -f .env ]; then
+  echo "🔧 Loading .env file for local development..."
+  source .env
+fi
 
-# Run the session analysis
-./analyze-sessions.sh > analysis-results.txt
+# Detect environment
+if [ -n "$GITHUB_ACTIONS" ]; then
+  echo "🚀 Running in GitHub Actions"
+  export GITHUB_OWNER="${GITHUB_REPOSITORY_OWNER}"
+  export GITHUB_REPO="${GITHUB_REPOSITORY##*/}"
+else
+  echo "💻 Running locally"
 
-# Create GitHub issues based on the analysis
-./create-github-issues.sh
+  # Auto-detect from git if not set
+  if [ -z "$GITHUB_OWNER" ] || [ -z "$GITHUB_REPO" ]; then
+    if git remote get-url origin > /dev/null 2>&1; then
+      REMOTE_URL=$(git remote get-url origin)
+      if [[ $REMOTE_URL =~ github.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then
+        export GITHUB_OWNER="${BASH_REMATCH[1]}"
+        export GITHUB_REPO="${BASH_REMATCH[2]}"
+        echo "📍 Auto-detected: $GITHUB_OWNER/$GITHUB_REPO"
+      fi
+    fi
+  fi
+fi
+
+# Validate required environment variables
+MISSING_VARS=()
+[ -z "$CONTINUE_API_KEY" ] && MISSING_VARS+=("CONTINUE_API_KEY")
+[ -z "$POSTHOG_API_KEY" ] && MISSING_VARS+=("POSTHOG_API_KEY")
+[ -z "$POSTHOG_PROJECT_ID" ] && MISSING_VARS+=("POSTHOG_PROJECT_ID")
+[ -z "$POSTHOG_HOST" ] && MISSING_VARS+=("POSTHOG_HOST")
+[ -z "$GITHUB_OWNER" ] && MISSING_VARS+=("GITHUB_OWNER")
+[ -z "$GITHUB_REPO" ] && MISSING_VARS+=("GITHUB_REPO")
+
+if [ ${#MISSING_VARS[@]} -ne 0 ]; then
+  echo "❌ Missing required environment variables:"
+  for var in "${MISSING_VARS[@]}"; do
+    echo "  - $var"
+  done
+  exit 1
+fi
+
+# Check GitHub CLI authentication
+if ! gh auth status > /dev/null 2>&1; then
+  echo "❌ GitHub CLI not authenticated"
+  echo "Run: gh auth login"
+  exit 1
+fi
+
+echo "✅ GitHub CLI authenticated"
+
+# Determine script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Run the analysis
+echo "🎬 Running PostHog session analysis..."
+if ! bash "$SCRIPT_DIR/analyze-sessions.sh"; then
+  echo "❌ Analysis failed"
+  exit 1
+fi
+
+# Create GitHub issues
+echo "📝 Creating GitHub issues from analysis..."
+if ! bash "$SCRIPT_DIR/create-github-issues.sh"; then
+  echo "❌ Issue creation failed"
+  exit 1
+fi
 
 echo "✅ Daily analysis complete!"
+
+# Show created issues
+echo ""
+echo "📊 Recent issues in $GITHUB_OWNER/$GITHUB_REPO:"
+gh issue list --repo "$GITHUB_OWNER/$GITHUB_REPO" --limit 5 --label "automated"
 ```
 
 Make it executable and test:
@@ -442,7 +600,17 @@ chmod +x daily-analysis.sh
 
 <Tabs>
   <Tab title="GitHub Actions (Recommended)">
-    Perfect for teams already using GitHub workflows:
+    Perfect for teams already using GitHub workflows.
+<Info>
+    **Required GitHub Secrets:**
+
+    - `CONTINUE_API_KEY`: Your Continue API key from hub.continue.dev
+    - `POSTHOG_API_KEY`: Your PostHog Personal API Key
+    - `POSTHOG_PROJECT_ID`: Your PostHog Project ID
+
+Add these in: **Repository Settings → Secrets and variables → Actions**
+
+</Info>
 
     Create `.github/workflows/daily-analysis.yml`:
 
@@ -457,35 +625,48 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write
+
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Deploy key is REQUIRED for Continue CLI integration
+          ssh-key: ${{ secrets.CONTINUE_DEPLOY_KEY }}
 
       - name: Set up environment
         run: |
-          echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
-          echo "POSTHOG_PROJECT_ID=${{ secrets.POSTHOG_PROJECT_ID }}" >> .env
-          echo "POSTHOG_HOST=https://us.posthog.com" >> .env
-          echo "GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.GH_PAT }}" >> .env
-          echo "GITHUB_OWNER=${{ github.repository_owner }}" >> .env
-          echo "GITHUB_REPO=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> .env
+          # Export environment variables for the entire job
+          echo "CONTINUE_API_KEY=${{ secrets.CONTINUE_API_KEY }}" >> $GITHUB_ENV
+          echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> $GITHUB_ENV
+          echo "POSTHOG_PROJECT_ID=${{ secrets.POSTHOG_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST || 'https://us.posthog.com' }}" >> $GITHUB_ENV
+          echo "GH_PAT=${{ secrets.GH_PAT }}" >> $GITHUB_ENV
+          echo "GITHUB_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+          echo "GITHUB_REPO=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq curl
+          # Install Continue CLI for AI analysis
           npm install -g @continuedev/cli
+          # GitHub CLI is pre-installed on GitHub-hosted runners
 
-      - name: Run analysis
-        run: ./daily-analysis.sh
+      - name: Make scripts executable
+        run: |
+          chmod +x ./posthog-continuous-ai/daily-analysis.sh
+          chmod +x ./posthog-continuous-ai/analyze-sessions.sh
+          chmod +x ./posthog-continuous-ai/create-github-issues.sh
+
+      - name: Run analysis and create issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: ./posthog-continuous-ai/daily-analysis.sh
 ```
-
-**Required GitHub Secrets:**
-
-    - `POSTHOG_API_KEY`: Your PostHog Personal API Key
-    - `POSTHOG_PROJECT_ID`: Your PostHog Project ID
-    - `GH_PAT`: Your GitHub Personal Access Token
-
-    Add these in: Repository Settings → Secrets and variables → Actions
 
   </Tab>
   
@@ -496,11 +677,6 @@ jobs:
       # Add to crontab (run 'crontab -e')
       0 6 * * * cd /path/to/your/project && ./daily-analysis.sh >> ~/logs/analysis.log 2>&1
       ```
-
-      **Benefits:**
-      - Full control over execution environment
-      - No GitHub Actions usage limits
-      - Can run more frequently if needed
 
     </Tab>
 
@@ -524,17 +700,7 @@ jobs:
 
 ## Step 6: Testing Your Workflow
 
-<Steps>
-  <Step title="Test API Connections">
-    ```bash # Test PostHog API curl -H "Authorization: Bearer $POSTHOG_API_KEY"
-    \
-    "$POSTHOG_HOST/api/projects/$POSTHOG_PROJECT_ID/session_recordings/?limit=1"
-    # Test GitHub API curl -H "Authorization: token
-    $GITHUB_PERSONAL_ACCESS_TOKEN" \
-    "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO" 
-    ```
-  </Step>
-
+<Steps title="Testing Steps">
 <Step title="Run Session Analysis">
   ```bash ./analyze-sessions.sh ``` Expected: JSON files with session data and
   AI analysis output
@@ -571,9 +737,10 @@ After completing this guide, you have a complete **Continuous AI system** that:
 ✅ **Scales with your team** - Handles growing amounts of session data automatically
 
 <Card title="Continuous AI" icon="rocket">
-  Your system now operates at **Level 2 Continuous AI** - AI handles routine
-  analysis tasks with human oversight through GitHub issue review and
-  prioritization.
+  Your system now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine analysis tasks with human oversight through GitHub issue
+  review and prioritization.
 </Card>
 
 ## Security Best Practices
