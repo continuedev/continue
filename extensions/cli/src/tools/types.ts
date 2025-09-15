@@ -8,6 +8,15 @@ export type ToolParameters = Record<
     required: boolean;
     items?: {
       type: string;
+      properties?: Record<
+        string,
+        {
+          type: string;
+          description: string;
+          required: boolean;
+        }
+      >;
+      required?: string[];
     };
   }
 >;
