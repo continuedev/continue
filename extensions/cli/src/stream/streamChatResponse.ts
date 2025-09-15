@@ -11,6 +11,7 @@ import type {
 import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
 import { systemMessageService } from "../services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
 import {
@@ -257,6 +258,15 @@ export async function processStreamingResponse(
       success: false,
       error: error.message || String(error),
     });
+
+    try {
+      posthogService.capture("apiRequest", {
+        model: model.model,
+        durationMs: errorDuration,
+        success: false,
+        error: error.message || String(error),
+      });
+    } catch {}
 
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");

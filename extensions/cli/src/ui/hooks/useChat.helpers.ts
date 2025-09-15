@@ -69,7 +69,7 @@ export function processSlashCommandResult({
   onClear,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
-    process.exit(0);
+    import("../../util/exit.js").then(({ gracefulExit }) => gracefulExit(0));
   }
 
   if (result.openMcpSelector) {
