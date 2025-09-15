@@ -1,6 +1,8 @@
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
 
+import { GlobalContext } from "core/util/GlobalContext.js";
+
 import { logger } from "src/util/logger.js";
 
 import {
@@ -9,7 +11,6 @@ import {
   getVersion,
 } from "../version.js";
 
-import { GlobalContext } from "core/util/GlobalContext.js";
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { UpdateServiceState, UpdateStatus } from "./types.js";

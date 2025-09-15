@@ -1,6 +1,8 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import { UpdateServiceState } from "src/services/types.js";
+
 import { listSessions } from "../../session.js";
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
@@ -43,6 +45,14 @@ interface ScreenContentProps {
   onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
+function showUpdateMessage(state?: UpdateServiceState) {
+  return (
+    (state?.status === "checking" && state?.autoUpdate) ||
+    (state?.isAutoUpdate &&
+      (state?.status === "updating" || state?.status === "updated"))
+  );
+}
+
 export const ScreenContent: React.FC<ScreenContentProps> = ({
   isScreenActive,
   navState,
@@ -66,15 +76,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isRemoteMode,
   onImageInClipboardChange,
 }) => {
-  const update = services.update;
-  if (
-    (update?.status === "checking" && update?.autoUpdate) ||
-    (update?.isAutoUpdate &&
-      (update?.status === "updating" || update?.status === "updated"))
-  ) {
+  if (showUpdateMessage(services.update)) {
     return (
       <Box margin={1}>
-        <Text>{`${services.update?.message}`}</Text>
+        <Text>{`${services?.update?.message}`}</Text>
       </Box>
     );
   }

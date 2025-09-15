@@ -24,6 +24,7 @@ import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UpdateStatus } from "../services/types.js";
+
 import { UpdateNotification } from "./UpdateNotification.js";
 
 // Mock useServices hook

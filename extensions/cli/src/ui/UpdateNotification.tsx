@@ -7,6 +7,7 @@ import {
   UpdateServiceState,
   UpdateStatus,
 } from "../services/types.js";
+
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
 
 interface UpdateNotificationProps {
