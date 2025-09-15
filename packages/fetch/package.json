@@ -28,6 +28,6 @@
     "@semantic-release/github": "^11.0.3",
     "@semantic-release/npm": "^12.0.2",
     "@semantic-release/release-notes-generator": "^14.0.3",
-    "semantic-release": "^24.2.7",
+    "semantic-release": "^24.2.7"
   }
 }
