@@ -50,7 +50,11 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 function filterMultipleEditToolCalls(
   toolCalls: ToolCallDelta[],
 ): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile];
+  const editToolNames = [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
+  ];
   let hasSeenEditTool = false;
 
   return toolCalls.filter((toolCall) => {

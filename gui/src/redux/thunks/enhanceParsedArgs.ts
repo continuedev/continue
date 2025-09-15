@@ -1,52 +1,77 @@
+import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { getUriPathBasename } from "core/util/uri";
 import { IIdeMessenger } from "../../context/IdeMessenger";
-import { setToolCallArgs } from "../slices/sessionSlice";
+import { validateAndEnhanceMultiEditArgs } from "../../util/clientTools/multiEditImpl";
+import { validateAndEnhanceSingleEditArgs } from "../../util/clientTools/singleFindAndReplaceImpl";
+import {
+  errorToolCall,
+  setToolCallArgs,
+  updateToolCallOutput,
+} from "../slices/sessionSlice";
 import { AppThunkDispatch } from "../store";
 
-export async function enhanceParsedArgs(
+/*
+  This is the current extension equivalent of the CLI's preprocessing step
+  Prior to even checking the tool policy, validate that provided args are valid and add additional args for some tools
+*/
+export async function validateAndEnhanceToolCallArgs(
   ideMessenger: IIdeMessenger,
-  dispatch: AppThunkDispatch,
   toolName: string | undefined,
-  toolCallId: string,
   currentArgs: undefined | Record<string, any>,
 ) {
-  // Add file content to parsedArgs for find/replace tools
-  let enhancedArgs = { ...currentArgs };
-  if (
-    (toolName === BuiltInToolNames.SingleFindAndReplace ||
-      toolName === BuiltInToolNames.MultiEdit) &&
-    currentArgs?.filepath &&
-    !currentArgs?.editingFileContents
-  ) {
-    try {
-      const fileUri = await resolveRelativePathInDir(
-        currentArgs.filepath,
-        ideMessenger.ide,
-      );
-      if (!fileUri) {
-        throw new Error(`File ${currentArgs.filepath} not found`);
-      }
-      const baseName = getUriPathBasename(fileUri);
-      const fileContent = await ideMessenger.ide.readFile(fileUri);
-      enhancedArgs = {
-        ...currentArgs,
-        fileUri,
-        baseName,
-        editingFileContents: fileContent,
-      };
-      dispatch(
-        setToolCallArgs({
-          toolCallId,
-          newArgs: enhancedArgs,
-        }),
-      );
-    } catch (error) {
-      // If we can't read the file, let the tool handle the error
-      console.warn(
-        `Failed to enhance args: failed to read file ${currentArgs?.filepath}`,
-      );
-    }
+  const argsCopy = { ...currentArgs };
+  switch (toolName) {
+    case BuiltInToolNames.SingleFindAndReplace:
+      return await validateAndEnhanceSingleEditArgs(argsCopy, ideMessenger);
+    case BuiltInToolNames.MultiEdit:
+      return await validateAndEnhanceMultiEditArgs(argsCopy, ideMessenger);
   }
+}
+
+export async function preprocessToolCalls(
+  dispatch: AppThunkDispatch,
+  ideMessenger: IIdeMessenger,
+  generatedToolCalls: ToolCallState[],
+): Promise<void> {
+  // Tool call pre-processing
+  await Promise.all(
+    generatedToolCalls.map(async (tcState) => {
+      try {
+        const changedArgs = await validateAndEnhanceToolCallArgs(
+          ideMessenger,
+          tcState?.toolCall.function.name,
+          tcState.parsedArgs,
+        );
+        if (changedArgs) {
+          dispatch(
+            setToolCallArgs({
+              toolCallId: tcState.toolCallId,
+              newArgs: changedArgs,
+            }),
+          );
+        }
+      } catch (e) {
+        let errorMessage = e instanceof Error ? e.message : `Unknown error`;
+        dispatch(
+          errorToolCall({
+            toolCallId: tcState.toolCallId,
+          }),
+        );
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: tcState.toolCallId,
+            contextItems: [
+              {
+                icon: "problems",
+                name: "Invalid Tool Call",
+                description: "",
+                content: `${tcState.toolCall.function.name} failed because the arguments were invalid, with the following message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
+                hidden: false,
+              },
+            ],
+          }),
+        );
+      }
+    }),
+  );
 }
