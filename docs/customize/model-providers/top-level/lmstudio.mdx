@@ -1,0 +1,47 @@
+---
+title: "LM Studio"
+---
+
+<Tip>
+  **Discover LM Studio models [here](https://hub.continue.dev/lmstudio)**
+</Tip>
+
+<Info>
+  Get started with [LM Studio](https://lmstudio.ai/download)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: lmstudio
+      model: <MODEL_ID>
+      apiBase: http://<MY_ENDPOINT>/v1 # if running a remote instance of LM Studio
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "lmstudio",
+        "model": "<MODEL_ID>",
+        "apiBase": "http://<MY_ENDPOINT>/v1" // if running a remote instance of LM Studio
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Note>
+  The default `apiBase` is `http://localhost:1234/v1`
+</Note>
+
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/lmstudio/qwen-qwen3-coder-30b?view=config)**
+</Info>

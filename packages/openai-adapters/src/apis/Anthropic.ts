@@ -174,13 +174,19 @@ export class AnthropicApi implements BaseLlmApi {
               }
               return part;
             }
+            const dataUrl =
+              (part as OpenAI.Chat.Completions.ChatCompletionContentPartImage)
+                ?.image_url?.url || "";
+            // Extract media type from data URL (ex. "data:image/png;base64,..." -> "image/png")
+            const mediaTypeMatch = dataUrl.match(/^data:([^;]+);base64,/);
+            const mediaType = mediaTypeMatch ? mediaTypeMatch[1] : "image/jpeg";
+
             return {
               type: "image",
               source: {
                 type: "base64",
-                media_type: "image/jpeg",
-                // @ts-ignore
-                data: part.image_url.url.split(",")[1],
+                media_type: mediaType,
+                data: dataUrl.split(",")[1],
               },
             };
           })

@@ -1,83 +1,81 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
 
+import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
+
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
-import { DisplayMessage } from "../types.js";
+
+/**
+ * Formats message content for display, converting message parts array back to
+ * user-friendly format with placeholders like [Image #1], [Pasted Text #1], etc.
+ */
+function formatMessageContentForDisplay(
+  content: import("../../../../../core/index.js").MessageContent,
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return JSON.stringify(content);
+  }
+
+  // Convert message parts array back to display format with placeholders
+  let displayText = "";
+  let imageCounter = 0;
+
+  for (const part of content) {
+    if (part.type === "text") {
+      displayText += part.text;
+    } else if (part.type === "imageUrl") {
+      imageCounter++;
+      displayText += `[Image #${imageCounter}]`;
+    } else {
+      // Handle any other part types by converting to JSON
+      displayText += JSON.stringify(part);
+    }
+  }
+
+  return displayText;
+}
 
 interface MemoizedMessageProps {
-  message: DisplayMessage;
+  item: ChatHistoryItem;
   index: number;
 }
 
 export const MemoizedMessage = memo<MemoizedMessageProps>(
-  ({ message, index }) => {
+  ({ item, index }) => {
+    const { message, toolCallStates, conversationSummary } = item;
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
+    const isAssistant = message.role === "assistant";
 
+    // Handle system messages
     if (isSystem) {
-      switch (message.messageType) {
-        case "tool-start":
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              {/* TODO: Change back to empty circle (○) with white color once we want to differentiate in-progress vs completed tool calls */}
-              <Text color="green">
-                ●<Text color="white"> {message.content}</Text>
-              </Text>
-            </Box>
-          );
-
-        case "tool-result":
-          const isFailure =
-            message.toolResult?.startsWith("Permission denied") ||
-            message.toolResult?.startsWith("Error");
-          return (
-            <Box
-              key={index}
-              marginLeft={1}
-              marginBottom={1}
-              flexDirection="column"
-            >
-              <Box>
-                <Text color={isFailure ? "red" : "green"}>●</Text>
-                <Text> {message.content}</Text>
-              </Box>
-              <Box marginLeft={2}>
-                <ToolResultSummary
-                  toolName={message.toolName}
-                  content={message.toolResult || ""}
-                />
-              </Box>
-            </Box>
-          );
-
-        case "tool-error":
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              <Text color="red" bold>
-                ✗{" "}
-              </Text>
-              <Text color="red">Tool error: {message.content}</Text>
-            </Box>
-          );
-
-        default:
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              <Text color="gray" italic>
-                {message.content}
-              </Text>
-            </Box>
-          );
+      // TODO: Properly separate LLM system messages from UI informational messages
+      // using discriminated union types. For now, skip displaying the first system
+      // message which is typically the LLM's system prompt.
+      if (index === 0) {
+        return null;
       }
+
+      return (
+        <Box key={index} marginBottom={1}>
+          <Text color="gray" italic>
+            {message.content}
+          </Text>
+        </Box>
+      );
     }
 
-    // Special rendering for compaction messages
-    if (message.messageType === "compaction") {
+    // Handle conversation summary (compaction)
+    if (conversationSummary) {
       return (
         <Box
           key={index}
-          marginLeft={1}
           marginBottom={1}
           borderStyle="single"
           borderBottom={false}
@@ -88,31 +86,115 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       );
     }
 
+    // Handle tool calls
+    if (toolCallStates && toolCallStates.length > 0) {
+      return (
+        <Box key={index} flexDirection="column">
+          {/* Render assistant message content if any */}
+          {message.content && (
+            <Box marginBottom={1}>
+              <Text color="white">●</Text>
+              <Text> </Text>
+              <MarkdownRenderer
+                content={formatMessageContentForDisplay(message.content)}
+              />
+            </Box>
+          )}
+
+          {/* Render tool calls */}
+          {toolCallStates.map((toolState) => {
+            const toolName = toolState.toolCall.function.name;
+            const toolArgs = toolState.parsedArgs;
+            const isCompleted = toolState.status === "done";
+            const isErrored =
+              toolState.status === "errored" || toolState.status === "canceled";
+
+            return (
+              <Box
+                key={toolState.toolCallId}
+                flexDirection="column"
+                marginBottom={1}
+              >
+                <Box>
+                  <Text
+                    color={
+                      isErrored
+                        ? "red"
+                        : isCompleted
+                          ? "green"
+                          : toolState.status === "generated"
+                            ? "yellow"
+                            : "white"
+                    }
+                  >
+                    {isCompleted || isErrored ? "●" : "○"}
+                  </Text>
+                  <Text color="white">
+                    {" "}
+                    <ToolCallTitle toolName={toolName} args={toolArgs} />
+                  </Text>
+                </Box>
+
+                {isErrored ? (
+                  <Box marginLeft={2}>
+                    <Text color="red">
+                      {toolState.output?.[0].content ?? "Tool execution failed"}
+                    </Text>
+                  </Box>
+                ) : (
+                  toolState.output &&
+                  toolState.output.length > 0 && (
+                    <Box marginLeft={2}>
+                      <ToolResultSummary
+                        toolName={toolName}
+                        content={toolState.output
+                          .map((o) => o.content)
+                          .join("\n")}
+                      />
+                    </Box>
+                  )
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      );
+    }
+
+    // Handle regular messages
+    const isStreaming = isAssistant && !message.content && !toolCallStates;
+
     return (
-      <Box key={index} marginLeft={1} marginBottom={1}>
-        <Text color={isUser ? "green" : "white"}>●</Text>
+      <Box key={index} marginBottom={1}>
+        <Text color={isUser ? "blue" : "white"}>●</Text>
         <Text> </Text>
         {isUser ? (
-          <Text color="gray">{message.content}</Text>
+          <Text color="gray">
+            {formatMessageContentForDisplay(message.content)}
+          </Text>
         ) : (
-          <MarkdownRenderer content={message.content} />
+          <MarkdownRenderer
+            content={formatMessageContentForDisplay(message.content)}
+          />
         )}
-        {message.isStreaming && <Text color="gray">▋</Text>}
+        {isStreaming && <Text color="gray">▋</Text>}
       </Box>
     );
   },
   (prevProps, nextProps) => {
     // Custom comparison function for better performance
     // Only re-render if these properties change
+    const prevMessage = prevProps.item.message;
+    const nextMessage = nextProps.item.message;
+    const prevToolStates = prevProps.item.toolCallStates;
+    const nextToolStates = nextProps.item.toolCallStates;
+
     return (
-      prevProps.message.content === nextProps.message.content &&
-      prevProps.message.role === nextProps.message.role &&
-      prevProps.message.messageType === nextProps.message.messageType &&
-      prevProps.message.isStreaming === nextProps.message.isStreaming &&
-      prevProps.message.toolName === nextProps.message.toolName &&
-      prevProps.message.toolResult === nextProps.message.toolResult &&
-      prevProps.message.permissionRequestId ===
-        nextProps.message.permissionRequestId &&
+      prevMessage.content === nextMessage.content &&
+      prevMessage.role === nextMessage.role &&
+      JSON.stringify(prevToolStates) === JSON.stringify(nextToolStates) &&
+      prevProps.item.conversationSummary ===
+        nextProps.item.conversationSummary &&
       prevProps.index === nextProps.index
     );
   },

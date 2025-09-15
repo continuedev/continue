@@ -1,13 +1,13 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { describe, it, expect, vi } from "vitest";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
+import { describe, expect, it, vi } from "vitest";
 
 import { compactChatHistory } from "./compaction.js";
-import { streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the dependencies
-vi.mock("./streamChatResponse.js", () => ({
+vi.mock("./stream/streamChatResponse.js", () => ({
   streamChatResponse: vi.fn(),
 }));
 
@@ -49,9 +49,9 @@ describe("compaction infinite loop prevention", () => {
     );
 
     // History that can't be pruned further (only system message)
-    const history: ChatCompletionMessageParam[] = [
+    const history = convertToUnifiedHistory([
       { role: "system", content: "System message" },
-    ];
+    ]);
 
     // This should not hang - it should break out of the loop
     const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
@@ -81,11 +81,11 @@ describe("compaction infinite loop prevention", () => {
     );
 
     // History that ends with assistant - pruning won't change it
-    const history: ChatCompletionMessageParam[] = [
+    const history = convertToUnifiedHistory([
       { role: "system", content: "System message" },
       { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there" },
-    ];
+    ]);
 
     // This should not hang
     const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
@@ -122,12 +122,12 @@ describe("compaction infinite loop prevention", () => {
     );
 
     // History that can be successfully pruned
-    const history: ChatCompletionMessageParam[] = [
+    const history = convertToUnifiedHistory([
       { role: "system", content: "System message" },
       { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there" },
       { role: "user", content: "Another question" },
-    ];
+    ]);
 
     const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
 

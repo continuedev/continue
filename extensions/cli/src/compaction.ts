@@ -1,19 +1,17 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem } from "core/index.js";
 
-import { streamChatResponse } from "./streamChatResponse.js";
-import { StreamCallbacks } from "./streamChatResponse.types.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
+import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 import {
   countChatHistoryTokens,
   getModelContextLimit,
 } from "./util/tokenizer.js";
 
-export const COMPACTION_MARKER = "[COMPACTED HISTORY]";
-
 export interface CompactionResult {
-  compactedHistory: ChatCompletionMessageParam[];
+  compactedHistory: ChatHistoryItem[];
   compactionIndex: number;
   compactionContent: string;
 }
@@ -30,19 +28,24 @@ export interface CompactionCallbacks {
  * @param model The model configuration
  * @param llmApi The LLM API instance
  * @param callbacks Optional callbacks for streaming updates
+ * @param abortController Optional abort controller for cancellation
  * @returns The compacted history with compaction index
  */
 export async function compactChatHistory(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
   callbacks?: CompactionCallbacks,
+  abortController?: AbortController,
 ): Promise<CompactionResult> {
   // Create a prompt to summarize the conversation
-  const compactionPrompt: ChatCompletionMessageParam = {
-    role: "user",
-    content:
-      "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain.",
+  const compactionPrompt: ChatHistoryItem = {
+    message: {
+      role: "user" as const,
+      content:
+        "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.",
+    },
+    contextItems: [],
   };
 
   // Check if the history with compaction prompt is too long, prune if necessary
@@ -50,9 +53,9 @@ export async function compactChatHistory(
   let historyForCompaction = [...historyToUse, compactionPrompt];
 
   const contextLimit = getModelContextLimit(model);
-  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
+  const maxTokens = model.defaultCompletionOptions?.maxTokens;
   const reservedForOutput =
-    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
+    maxTokens === undefined ? Math.ceil(contextLimit * 0.35) : maxTokens;
   const availableForInput = contextLimit - reservedForOutput;
 
   // Check if we need to prune to fit within context
@@ -79,8 +82,8 @@ export async function compactChatHistory(
     historyForCompaction = [...historyToUse, compactionPrompt];
   }
 
-  // Stream the compaction response
-  const controller = new AbortController();
+  // Stream the compaction response (service drives updates; this collects content locally)
+  const controller = abortController || new AbortController();
 
   let compactionContent = "";
   const streamCallbacks: StreamCallbacks = {
@@ -103,28 +106,26 @@ export async function compactChatHistory(
     );
 
     // Create the compacted history with a special marker
-    const systemMessage = chatHistory.find((msg) => msg.role === "system");
-    const compactedMessage: ChatCompletionMessageParam = {
-      role: "assistant",
-      content: `${COMPACTION_MARKER}\n${compactionContent}`,
+    const systemMessage = chatHistory.find(
+      (item) => item.message.role === "system",
+    );
+    const compactionMessage: ChatHistoryItem = {
+      message: {
+        role: "assistant",
+        content: compactionContent,
+      },
+      contextItems: [],
+      conversationSummary: compactionContent,
     };
 
-    // Set new chat history with only system message and compaction
-    const compactedHistory = systemMessage
-      ? [systemMessage, compactedMessage]
-      : [compactedMessage];
-    const compactionIndex = compactedHistory.length - 1;
-
-    logger.debug("Chat history compacted", {
-      originalLength: chatHistory.length,
-      compactedLength: compactedHistory.length,
-      compactionIndex,
-    });
+    const compactedHistory: ChatHistoryItem[] = systemMessage
+      ? [systemMessage, compactionMessage]
+      : [compactionMessage];
 
     return {
       compactedHistory,
-      compactionIndex,
       compactionContent,
+      compactionIndex: systemMessage ? 1 : 0,
     };
   } catch (error) {
     logger.error("Compaction failed", error);
@@ -139,13 +140,10 @@ export async function compactChatHistory(
  * @returns The index of the compaction message, or null if not found
  */
 export function findCompactionIndex(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
 ): number | null {
   const compactedIndex = chatHistory.findIndex(
-    (msg) =>
-      msg.role === "assistant" &&
-      typeof msg.content === "string" &&
-      msg.content.startsWith(COMPACTION_MARKER),
+    (item) => item.conversationSummary !== undefined,
   );
   return compactedIndex === -1 ? null : compactedIndex;
 }
@@ -163,8 +161,8 @@ export function findCompactionIndex(
  * @returns The pruned chat history ending with assistant or tool message
  */
 export function pruneLastMessage(
-  chatHistory: ChatCompletionMessageParam[],
-): ChatCompletionMessageParam[] {
+  chatHistory: ChatHistoryItem[],
+): ChatHistoryItem[] {
   if (chatHistory.length === 0) {
     return chatHistory;
   }
@@ -175,14 +173,14 @@ export function pruneLastMessage(
   }
 
   const secondToLastIndex = chatHistory.length - 2;
-  const secondToLastMessage = chatHistory[secondToLastIndex];
+  const secondToLastItem = chatHistory[secondToLastIndex];
 
   if (
-    secondToLastMessage.role === "assistant" &&
-    secondToLastMessage.tool_calls?.length
+    secondToLastItem.message.role === "assistant" &&
+    (secondToLastItem.message as any).toolCalls?.length > 0
   ) {
     return chatHistory.slice(0, -2);
-  } else if (secondToLastMessage.role === "user") {
+  } else if (secondToLastItem.message.role === "user") {
     return chatHistory.slice(0, -2);
   }
 
@@ -190,16 +188,16 @@ export function pruneLastMessage(
 }
 
 export function getHistoryForLLM(
-  fullHistory: ChatCompletionMessageParam[],
+  fullHistory: ChatHistoryItem[],
   compactionIndex: number | null,
-): ChatCompletionMessageParam[] {
+): ChatHistoryItem[] {
   if (compactionIndex === null || compactionIndex >= fullHistory.length) {
     return fullHistory;
   }
 
   // Include system message (if at index 0) and everything from compaction index forward
   const systemMessage =
-    fullHistory[0]?.role === "system" ? fullHistory[0] : null;
+    fullHistory[0]?.message?.role === "system" ? fullHistory[0] : null;
   const messagesFromCompaction = fullHistory.slice(compactionIndex);
 
   return systemMessage && compactionIndex > 0

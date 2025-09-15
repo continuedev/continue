@@ -152,7 +152,7 @@ jobs:
 
       # # Setup Node.js
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -257,6 +257,7 @@ jobs:
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
         if: github.event_name == 'release' || (github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -267,6 +268,7 @@ jobs:
 
       - name: Publish Stable Plugin
         if: github.event_name == 'release' || (github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -368,7 +370,7 @@ jobs:
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 

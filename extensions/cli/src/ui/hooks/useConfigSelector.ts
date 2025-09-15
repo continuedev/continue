@@ -20,14 +20,14 @@ interface UseConfigSelectorProps {
     content: string;
     messageType: "system";
   }) => void;
-  onChatReset: () => void;
+  handleClear: () => void;
 }
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 export function useConfigSelector({
   onMessage,
-  onChatReset,
+  handleClear,
 }: UseConfigSelectorProps) {
   const { closeCurrentScreen } = useNavigation();
 
@@ -98,12 +98,6 @@ export function useConfigSelector({
         // Only config path is changing, no organization switch needed
         await services.config.updateConfigPath(targetConfigPath);
       } else {
-        onMessage({
-          role: "system",
-          content: `Switching to organization for ${config.name}...`,
-          messageType: "system" as const,
-        });
-
         // Switch organization first
         await services.auth.switchOrganization(config.organizationId ?? null);
 
@@ -112,11 +106,7 @@ export function useConfigSelector({
         await services.config.updateConfigPath(targetConfigPath);
       }
 
-      // Reset chat history
-      onChatReset();
-
-      // Clear the screen completely
-      process.stdout.write("\x1b[2J\x1b[H");
+      handleClear();
 
       // Show success message
       onMessage({

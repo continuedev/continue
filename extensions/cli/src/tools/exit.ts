@@ -9,6 +9,8 @@ export const exitTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   run: async (): Promise<string> => {
-    process.exit(1);
+    const { gracefulExit } = await import("../util/exit.js");
+    await gracefulExit(1);
+    return "";
   },
 };

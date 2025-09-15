@@ -1,154 +1,20 @@
-import { execSync } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
 
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
+import historyManager from "core/util/history.js";
+import { v4 as uuidv4 } from "uuid";
 
+import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
 import { logger } from "./util/logger.js";
 
-// List of known terminal process names
-const TERMINAL_PROCESSES = [
-  "Terminal",
-  "iTerm",
-  "tmux",
-  "screen",
-  "bash",
-  "zsh",
-  "fish",
-  "kitty",
-  "alacritty",
-  "wt", // Windows Terminal
-  "cmd", // Windows Command Prompt
-  "powershell",
-];
+// Re-export SessionMetadata for external consumers
+export type { SessionMetadata };
 
-// Check if a process name looks like a terminal
-function isTerminalProcess(comm: string): boolean {
-  if (!comm) return false;
-  return TERMINAL_PROCESSES.some((term) => comm.includes(term));
-}
-
-/**
- * Get the terminal process ID by walking up the process tree
- */
-function getTerminalProcessId(): string | null {
-  try {
-    // Skip on Windows - ps command doesn't exist
-    if (os.platform() === "win32") {
-      return null;
-    }
-
-    // Get parent process info by walking up the tree
-    let currentPid = process.ppid;
-
-    for (let i = 0; i < 10 && currentPid; i++) {
-      try {
-        const psOutput = execSync(`ps -o pid,ppid,comm -p ${currentPid}`, {
-          encoding: "utf8",
-          timeout: 1000,
-          stdio: ["ignore", "pipe", "ignore"], // Suppress stderr
-        }).trim();
-
-        const lines = psOutput.split("\n");
-        if (lines.length < 2) break;
-
-        const processInfo = lines[1].trim().split(/\s+/);
-        const [pid, ppid, comm] = processInfo;
-
-        // Check if this looks like a terminal process
-        if (isTerminalProcess(comm)) {
-          return pid;
-        }
-
-        const nextPid = parseInt(ppid);
-        if (isNaN(nextPid) || nextPid <= 1) break;
-        currentPid = nextPid;
-      } catch {
-        // Continue to next iteration if this process lookup fails
-        break;
-      }
-    }
-  } catch {
-    // Silently fail - this is a fallback mechanism
-  }
-
-  return null;
-}
-
-/**
- * Get the TTY device path for unique terminal identification
- */
-function getTtyPath(): string | null {
-  try {
-    // Skip on Windows - tty command doesn't exist
-    if (os.platform() === "win32") {
-      return null;
-    }
-
-    if (process.stdin.isTTY) {
-      // Get the TTY device path
-      const ttyPath = execSync("tty", {
-        encoding: "utf8",
-        timeout: 1000,
-        stdio: ["ignore", "pipe", "ignore"], // Suppress stderr
-      }).trim();
-
-      if (
-        ttyPath &&
-        ttyPath !== "not a tty" &&
-        !ttyPath.includes("not found")
-      ) {
-        // Convert /dev/ttys002 to ttys002 for cleaner ID
-        return ttyPath.replace("/dev/", "");
-      }
-    }
-  } catch {
-    // Silently fail - this is a fallback mechanism
-  }
-
-  return null;
-}
-
-/**
- * Get a unique session identifier for the current terminal session
- * Uses environment variables to ensure each terminal window has its own session
- */
-function getSessionId(): string {
-  // For tests, use a specific session ID if provided
-  if (process.env.CONTINUE_CLI_TEST_SESSION_ID) {
-    return `continue-cli-${process.env.CONTINUE_CLI_TEST_SESSION_ID}`;
-  }
-
-  // Try environment variables first (most reliable)
-  const envSession =
-    process.env.TMUX_PANE ||
-    process.env.TERM_SESSION_ID ||
-    process.env.SSH_TTY ||
-    process.env.TMUX ||
-    process.env.STY;
-
-  if (envSession) {
-    const cleanSessionId = envSession.replace(/[^a-zA-Z0-9-_]/g, "-");
-    return `continue-cli-${cleanSessionId}`;
-  }
-
-  // Fallback 1: Try to get TTY device path (unique per terminal window)
-  const ttyPath = getTtyPath();
-  if (ttyPath) {
-    const cleanTtyId = ttyPath.replace(/[^a-zA-Z0-9-_]/g, "-");
-    return `continue-cli-tty-${cleanTtyId}`;
-  }
-
-  // Fallback 2: Try to get terminal process ID (unique per terminal process)
-  const terminalPid = getTerminalProcessId();
-  if (terminalPid) {
-    return `continue-cli-term-${terminalPid}`;
-  }
-
-  // Final fallback: Use process PID (least reliable but always available)
-  return `continue-cli-pid-${process.pid}`;
-}
+// Note: We now use UUID-based session IDs instead of terminal-based IDs.
+// Each new chat session gets a unique UUID.
+// The --resume flag loads the most recent session.
 
 /**
  * Get the session storage directory
@@ -156,7 +22,7 @@ function getSessionId(): string {
 function getSessionDir(): string {
   // For tests, use the test directory if we're in test mode
   if (process.env.CONTINUE_CLI_TEST && process.env.HOME) {
-    const sessionDir = path.join(process.env.HOME, ".continue", "cli-sessions");
+    const sessionDir = path.join(process.env.HOME, ".continue", "sessions");
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(sessionDir)) {
@@ -166,8 +32,10 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, ".continue", "cli-sessions");
+  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
@@ -181,41 +49,140 @@ function getSessionDir(): string {
  * Get the session file path for the current session
  */
 export function getSessionFilePath(): string {
-  const sessionId = getSessionId();
+  const sessionId = getCurrentSessionId();
   const sessionDir = getSessionDir();
   return path.join(sessionDir, `${sessionId}.json`);
 }
 
-/**
- * Save chat history to session file
- */
-export function saveSession(chatHistory: ChatCompletionMessageParam[]): void {
-  try {
-    const sessionFilePath = getSessionFilePath();
-    const sessionData = {
-      timestamp: new Date().toISOString(),
-      chatHistory,
-    };
+// Singleton for current session management
+class SessionManager {
+  private static instance: SessionManager;
+  private currentSession: Session | null = null;
 
-    fs.writeFileSync(sessionFilePath, JSON.stringify(sessionData, null, 2));
+  private constructor() {}
+
+  static getInstance(): SessionManager {
+    if (!SessionManager.instance) {
+      SessionManager.instance = new SessionManager();
+    }
+    return SessionManager.instance;
+  }
+
+  getCurrentSession(): Session {
+    if (!this.currentSession) {
+      // Use test session ID for testing consistency
+      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID
+        ? process.env.CONTINUE_CLI_TEST_SESSION_ID
+        : uuidv4();
+
+      this.currentSession = {
+        sessionId,
+        title: DEFAULT_SESSION_TITLE,
+        workspaceDirectory: process.cwd(),
+        history: [],
+      };
+    }
+    return this.currentSession;
+  }
+
+  setSession(session: Session): void {
+    this.currentSession = session;
+  }
+
+  updateHistory(history: ChatHistoryItem[]): void {
+    const session = this.getCurrentSession();
+    session.history = history;
+    saveSession();
+  }
+
+  updateTitle(title: string): void {
+    const session = this.getCurrentSession();
+    session.title = title;
+    saveSession();
+  }
+
+  clear(): void {
+    this.currentSession = null;
+  }
+
+  hasSession(): boolean {
+    return this.currentSession !== null;
+  }
+
+  getSessionId(): string {
+    return this.getCurrentSession().sessionId;
+  }
+}
+
+function getCurrentSessionId(): string {
+  return SessionManager.getInstance().getSessionId();
+}
+
+function modifySessionBeforeSave(session: Session): Session {
+  const filteredHistory = session.history.filter((item) => {
+    return item.message.role !== "system";
+  });
+
+  const modifiedHistory = filteredHistory.map((item) => {
+    if (item.message.role === "user") {
+      return {
+        ...item,
+        editorState: item.message.content,
+      };
+    }
+
+    return item;
+  });
+
+  return {
+    ...session,
+    history: modifiedHistory,
+  };
+}
+
+/**
+ * Save the current session to file
+ */
+export function saveSession(): void {
+  try {
+    const session = SessionManager.getInstance().getCurrentSession();
+    const sessionToSave = modifySessionBeforeSave(session);
+    historyManager.save(sessionToSave);
   } catch (error) {
     logger.error("Error saving session:", error);
   }
 }
 
 /**
- * Load chat history from session file
+ * Load session from current terminal's session file
  */
-export function loadSession(): ChatCompletionMessageParam[] | null {
+export function loadSession(): Session | null {
   try {
-    const sessionFilePath = getSessionFilePath();
-
-    if (!fs.existsSync(sessionFilePath)) {
+    // For resume, we need to find the most recent session
+    const sessionDir = getSessionDir();
+    if (!fs.existsSync(sessionDir)) {
       return null;
     }
 
-    const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
-    return sessionData.chatHistory || null;
+    const files = fs
+      .readdirSync(sessionDir)
+      .filter((f) => f.endsWith(".json") && f !== "sessions.json")
+      .map((f) => ({
+        name: f,
+        path: path.join(sessionDir, f),
+        mtime: fs.statSync(path.join(sessionDir, f)).mtime,
+      }))
+      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+    if (files.length === 0) {
+      return null;
+    }
+
+    // Load the most recent session
+    const session: Session = JSON.parse(fs.readFileSync(files[0].path, "utf8"));
+    // Set this as the current session for future saves
+    SessionManager.getInstance().setSession(session);
+    return session;
   } catch (error) {
     logger.error("Error loading session:", error);
     return null;
@@ -223,13 +190,34 @@ export function loadSession(): ChatCompletionMessageParam[] | null {
 }
 
 /**
+ * Create a new session
+ */
+export function createSession(history: ChatHistoryItem[] = []): Session {
+  const session: Session = {
+    sessionId: uuidv4(),
+    title: DEFAULT_SESSION_TITLE,
+    workspaceDirectory: process.cwd(),
+    history,
+  };
+  SessionManager.getInstance().setSession(session);
+  return session;
+}
+
+/**
  * Clear the current session
  */
 export function clearSession(): void {
   try {
-    const sessionFilePath = getSessionFilePath();
-    if (fs.existsSync(sessionFilePath)) {
-      fs.unlinkSync(sessionFilePath);
+    const manager = SessionManager.getInstance();
+    if (manager.hasSession()) {
+      const sessionFilePath = path.join(
+        getSessionDir(),
+        `${manager.getSessionId()}.json`,
+      );
+      if (fs.existsSync(sessionFilePath)) {
+        fs.unlinkSync(sessionFilePath);
+      }
+      manager.clear();
     }
   } catch (error) {
     logger.error("Error clearing session:", error);
@@ -240,45 +228,42 @@ export function clearSession(): void {
  * Check if a session exists for the current terminal
  */
 export function hasSession(): boolean {
-  const sessionFilePath = getSessionFilePath();
+  const manager = SessionManager.getInstance();
+  if (!manager.hasSession()) {
+    return false;
+  }
+  const sessionFilePath = path.join(
+    getSessionDir(),
+    `${manager.getSessionId()}.json`,
+  );
   return fs.existsSync(sessionFilePath);
 }
 
 /**
- * Session metadata for listing sessions
+ * Get metadata from a session file with first user message preview
  */
-export interface SessionMetadata {
-  id: string; // Session ID from filename
-  path: string; // Full file path
-  timestamp: Date; // Last modified or session timestamp
-  messageCount: number; // Total messages in session
-  firstUserMessage?: string; // Preview of first user input
-}
-
-/**
- * Get metadata from a session file
- */
-function getSessionMetadata(filePath: string): SessionMetadata | null {
+function getSessionMetadataWithPreview(
+  filePath: string,
+): (SessionMetadata & { firstUserMessage?: string }) | null {
   try {
-    const fileName = path.basename(filePath, ".json");
+    const sessionData: Session = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const stats = fs.statSync(filePath);
-    const sessionData = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-    const chatHistory = sessionData.chatHistory || [];
-    const messageCount = chatHistory.length;
-
-    // Find the first user message
+    // Find the first user message for preview
     let firstUserMessage: string | undefined;
-    for (let i = 0; i < chatHistory.length; i++) {
-      if (chatHistory[i].role === "user") {
-        const content = chatHistory[i].content;
+    for (const item of sessionData.history || []) {
+      if (item.message.role === "user") {
+        const content = item.message.content;
         // Handle both string and array content types
         if (typeof content === "string") {
           firstUserMessage = content;
         } else if (Array.isArray(content)) {
           // For array content, find the first text part
           const textPart = content.find((part) => part.type === "text");
-          firstUserMessage = textPart?.text || "(multimodal message)";
+          firstUserMessage =
+            textPart && "text" in textPart
+              ? textPart.text
+              : "(multimodal message)";
         } else {
           firstUserMessage = "(unknown content type)";
         }
@@ -286,16 +271,11 @@ function getSessionMetadata(filePath: string): SessionMetadata | null {
       }
     }
 
-    // Use session timestamp if available, otherwise file modification time
-    const timestamp = sessionData.timestamp
-      ? new Date(sessionData.timestamp)
-      : stats.mtime;
-
     return {
-      id: fileName,
-      path: filePath,
-      timestamp,
-      messageCount,
+      sessionId: sessionData.sessionId,
+      title: sessionData.title || DEFAULT_SESSION_TITLE,
+      dateCreated: stats.birthtime.toISOString(),
+      workspaceDirectory: sessionData.workspaceDirectory || "",
       firstUserMessage,
     };
   } catch (error) {
@@ -307,32 +287,35 @@ function getSessionMetadata(filePath: string): SessionMetadata | null {
 /**
  * List all available sessions with metadata
  */
-export function listSessions(limit: number = 10): SessionMetadata[] {
+export function listSessions(
+  limit: number = 10,
+): (SessionMetadata & { firstUserMessage?: string })[] {
   try {
-    const sessionDir = getSessionDir();
+    const sessions = historyManager.list({ limit });
 
-    if (!fs.existsSync(sessionDir)) {
-      return [];
-    }
+    // Add first user message preview to each session
+    const sessionsWithPreview: (SessionMetadata & {
+      firstUserMessage?: string;
+    })[] = [];
 
-    const files = fs
-      .readdirSync(sessionDir)
-      .filter((file) => file.endsWith(".json"))
-      .map((file) => path.join(sessionDir, file));
+    for (const sessionMeta of sessions) {
+      const sessionFilePath = path.join(
+        getSessionDir(),
+        `${sessionMeta.sessionId}.json`,
+      );
 
-    const sessions: SessionMetadata[] = [];
-
-    for (const filePath of files) {
-      const metadata = getSessionMetadata(filePath);
-      if (metadata) {
-        sessions.push(metadata);
+      if (fs.existsSync(sessionFilePath)) {
+        const metadata = getSessionMetadataWithPreview(sessionFilePath);
+        if (metadata) {
+          sessionsWithPreview.push(metadata);
+        }
+      } else {
+        // Fall back to basic metadata if file doesn't exist
+        sessionsWithPreview.push(sessionMeta);
       }
     }
 
-    // Sort by timestamp (most recent first) and limit results
-    return sessions
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+    return sessionsWithPreview;
   } catch (error) {
     logger.error("Error listing sessions:", error);
     return [];
@@ -340,23 +323,56 @@ export function listSessions(limit: number = 10): SessionMetadata[] {
 }
 
 /**
- * Load chat history from a specific session file
+ * Load session by ID
  */
-export function loadSessionById(
-  sessionId: string,
-): ChatCompletionMessageParam[] | null {
+export function loadSessionById(sessionId: string): Session | null {
   try {
-    const sessionDir = getSessionDir();
-    const sessionFilePath = path.join(sessionDir, `${sessionId}.json`);
-
-    if (!fs.existsSync(sessionFilePath)) {
-      return null;
-    }
-
-    const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
-    return sessionData.chatHistory || null;
+    const session = historyManager.load(sessionId);
+    return session;
   } catch (error) {
     logger.error("Error loading session by ID:", error);
     return null;
   }
+}
+
+/**
+ * Update the current session's history
+ */
+export function updateSessionHistory(history: ChatHistoryItem[]): void {
+  SessionManager.getInstance().updateHistory(history);
+}
+
+/**
+ * Update the current session's title
+ */
+export function updateSessionTitle(title: string): void {
+  SessionManager.getInstance().updateTitle(title);
+}
+
+/**
+ * Get the current session
+ */
+export function getCurrentSession(): Session {
+  return SessionManager.getInstance().getCurrentSession();
+}
+
+/**
+ * Start a new session with a new sessionId
+ */
+export function startNewSession(history: ChatHistoryItem[] = []): Session {
+  const manager = SessionManager.getInstance();
+
+  // Clear the current session from memory (don't delete the file)
+  manager.clear();
+
+  // Create a new session with a new sessionId
+  const newSession: Session = {
+    sessionId: uuidv4(),
+    title: DEFAULT_SESSION_TITLE,
+    workspaceDirectory: process.cwd(),
+    history,
+  };
+
+  manager.setSession(newSession);
+  return newSession;
 }

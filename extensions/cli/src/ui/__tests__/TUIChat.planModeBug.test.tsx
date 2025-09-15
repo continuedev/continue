@@ -2,9 +2,10 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { getAllTools } from "src/stream/handleToolCalls.js";
+
 import { SERVICE_NAMES, serviceContainer } from "../../services/index.js";
 import { modeService } from "../../services/ModeService.js";
-import { getAllTools } from "../../streamChatResponse.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
 
@@ -42,7 +43,7 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       frame = lastFrame();
 
       // c) Make sure the string "[plan]" is on the screen
-      expect(frame!).toContain("[plan]");
+      expect(frame!).toContain("plan]");
 
       // d) Successfully send a message without error
       const testMessage = "Can you help me analyze this code?";
@@ -59,7 +60,7 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       expect(frame!.length).toBeGreaterThan(0);
 
       // Should still be in plan mode after sending message
-      expect(frame!).toContain("[plan]");
+      expect(frame!).toContain("plan]");
 
       // Should still show the input prompt
       expect(frame!).toContain("Ask anything");
@@ -74,31 +75,31 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     try {
       // Start in normal mode
       let frame = lastFrame();
-      expect(frame!).not.toContain("[plan]");
-      expect(frame!).not.toContain("[auto]");
+      expect(frame!).not.toContain("plan]");
+      expect(frame!).not.toContain("auto]");
 
       // Switch to plan mode
       stdin.write("\x1b[Z");
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       frame = lastFrame();
-      expect(frame!).toContain("[plan]");
+      expect(frame!).toContain("plan]");
 
       // Switch to auto mode
       stdin.write("\x1b[Z");
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       frame = lastFrame();
-      expect(frame!).toContain("[auto]");
-      expect(frame!).not.toContain("[plan]");
+      expect(frame!).toContain("auto]");
+      expect(frame!).not.toContain("plan]");
 
       // Switch back to normal mode
       stdin.write("\x1b[Z");
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       frame = lastFrame();
-      expect(frame!).not.toContain("[plan]");
-      expect(frame!).not.toContain("[auto]");
+      expect(frame!).not.toContain("plan]");
+      expect(frame!).not.toContain("auto]");
     } finally {
       unmount();
     }
@@ -113,7 +114,7 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       let frame = lastFrame();
-      expect(frame!).toContain("[plan]");
+      expect(frame!).toContain("plan]");
 
       // Send a message while in plan mode
       stdin.write("Test message");
@@ -129,8 +130,8 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       frame = lastFrame();
 
       // This should work - if it fails, we've reproduced the "can't switch back" bug
-      expect(frame!).toContain("[auto]");
-      expect(frame!).not.toContain("[plan]");
+      expect(frame!).toContain("auto]");
+      expect(frame!).not.toContain("plan]");
     } finally {
       unmount();
     }

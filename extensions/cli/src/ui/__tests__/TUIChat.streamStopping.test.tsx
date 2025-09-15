@@ -149,13 +149,17 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     const rejectedToolCall = mockMultipleToolCalls[0];
 
     // First tool call gets denied
-    mockCallbacks.onToolResult(deniedMessage, rejectedToolCall.name);
+    mockCallbacks.onToolResult(deniedMessage, rejectedToolCall.name, "errored");
 
     // Remaining tool calls should be cancelled
     for (let i = 1; i < mockMultipleToolCalls.length; i++) {
       const remainingToolCall = mockMultipleToolCalls[i];
       const cancelledMessage = "Cancelled due to previous tool rejection";
-      mockCallbacks.onToolResult(cancelledMessage, remainingToolCall.name);
+      mockCallbacks.onToolResult(
+        cancelledMessage,
+        remainingToolCall.name,
+        "canceled",
+      );
     }
 
     // Verify all tool calls got results
@@ -164,16 +168,19 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
       1,
       "Permission denied by user",
       "Edit",
+      "errored",
     );
     expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(
       2,
       "Cancelled due to previous tool rejection",
       "Write",
+      "canceled",
     );
     expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(
       3,
       "Cancelled due to previous tool rejection",
       "Read",
+      "canceled",
     );
   });
 

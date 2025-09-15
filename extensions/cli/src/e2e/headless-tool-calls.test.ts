@@ -48,15 +48,15 @@ describe("E2E: Headless Mode with Tool Calls", () => {
 
             // Send only tool call (no text content)
             res.write(
-              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_123","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`
+              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_123","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`,
             );
             res.write(
-              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"createTestContext\\"}"}}]},"index":0}]}\n\n`
+              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"createTestContext\\"}"}}]},"index":0}]}\n\n`,
             );
 
             // Send usage data
             res.write(
-              `data: {"usage":{"prompt_tokens":10,"completion_tokens":20}}\n\n`
+              `data: {"usage":{"prompt_tokens":10,"completion_tokens":20}}\n\n`,
             );
 
             // End the stream

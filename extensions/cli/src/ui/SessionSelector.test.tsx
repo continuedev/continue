@@ -17,47 +17,42 @@ describe("SessionSelector", () => {
 
   it("formats timestamps correctly for different time periods", () => {
     const now = new Date();
-    const today = addHours(startOfDay(now), 14); // 2 PM today
-    const yesterday = subDays(today, 1);
-    const thisWeek = subDays(today, 3); // 3 days ago (this week)
-    const thisYear = subMonths(today, 2); // 2 months ago (this year)
-    const lastYear = subYears(today, 1); // 1 year ago
+    const today = addHours(startOfDay(now), 14).toISOString(); // 2 PM today
+    const yesterday = subDays(new Date(today), 1).toISOString();
+    const thisWeek = subDays(new Date(today), 3).toISOString(); // 3 days ago (this week)
+    const thisYear = subMonths(new Date(today), 2).toISOString(); // 2 months ago (this year)
+    const lastYear = subYears(new Date(today), 1).toISOString(); // 1 year ago
 
     const sessions: SessionMetadata[] = [
       {
-        id: "session-1",
-        path: "/test/session-1.json",
-        timestamp: today,
-        messageCount: 10,
-        firstUserMessage: "Today's session",
+        sessionId: "session-1",
+        title: "Today's session",
+        dateCreated: today,
+        workspaceDirectory: "/test",
       },
       {
-        id: "session-2",
-        path: "/test/session-2.json",
-        timestamp: yesterday,
-        messageCount: 5,
-        firstUserMessage: "Yesterday's session",
+        sessionId: "session-2",
+        workspaceDirectory: "/test",
+        dateCreated: yesterday,
+        title: "Yesterday's session",
       },
       {
-        id: "session-3",
-        path: "/test/session-3.json",
-        timestamp: thisWeek,
-        messageCount: 8,
-        firstUserMessage: "This week's session",
+        sessionId: "session-3",
+        workspaceDirectory: "/test",
+        dateCreated: thisWeek,
+        title: "This week's session",
       },
       {
-        id: "session-4",
-        path: "/test/session-4.json",
-        timestamp: thisYear,
-        messageCount: 12,
-        firstUserMessage: "This year's session",
+        sessionId: "session-4",
+        workspaceDirectory: "/test",
+        dateCreated: thisYear,
+        title: "This year's session",
       },
       {
-        id: "session-5",
-        path: "/test/session-5.json",
-        timestamp: lastYear,
-        messageCount: 3,
-        firstUserMessage: "Last year's session",
+        sessionId: "session-5",
+        workspaceDirectory: "/test",
+        dateCreated: lastYear,
+        title: "Last year's session",
       },
     ];
 
@@ -100,11 +95,10 @@ describe("SessionSelector", () => {
   it("handles sessions without first user message", () => {
     const sessions: SessionMetadata[] = [
       {
-        id: "session-1",
-        path: "/test/session-1.json",
-        timestamp: new Date(),
-        messageCount: 0,
-        firstUserMessage: undefined,
+        sessionId: "session-1",
+        workspaceDirectory: "/test",
+        dateCreated: new Date().toISOString(),
+        title: "Empty session",
       },
     ];
 
@@ -116,6 +110,6 @@ describe("SessionSelector", () => {
       />,
     );
 
-    expect(lastFrame()).toContain("(no messages)");
+    expect(lastFrame()).toContain("Empty session");
   });
 });

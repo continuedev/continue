@@ -54,7 +54,10 @@ export function ToolCallDiv({
     // Obviously missing the truncate and args buttons
     // All the info from args is displayed here
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
-    if (functionName === BuiltInToolNames.SearchAndReplaceInFile) {
+    if (
+      functionName === BuiltInToolNames.SingleFindAndReplace ||
+      functionName === BuiltInToolNames.MultiEdit
+    ) {
       return (
         <div className="flex flex-col px-1">
           <FunctionSpecificToolCallDiv

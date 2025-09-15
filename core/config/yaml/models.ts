@@ -35,12 +35,14 @@ async function modelConfigToBaseLLM({
   ideSettings,
   llmLogger,
   config,
+  isFromAutoDetect,
 }: {
   model: ModelConfig;
   uniqueId: string;
   ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
   config: ContinueConfig;
+  isFromAutoDetect?: boolean;
 }): Promise<BaseLLM | undefined> {
   const cls = getModelClass(model);
 
@@ -74,6 +76,7 @@ async function modelConfigToBaseLLM({
       nextEdit: model.capabilities?.includes("next_edit"),
     },
     autocompleteOptions: model.autocompleteOptions,
+    isFromAutoDetect,
   };
 
   // Model capabilities - need to be undefined if not found
@@ -176,7 +179,6 @@ async function autodetectModels({
         if (modelName === AUTODETECT) {
           return undefined;
         }
-
         return await modelConfigToBaseLLM({
           model: {
             ...model,
@@ -187,6 +189,7 @@ async function autodetectModels({
           ideSettings,
           llmLogger,
           config,
+          isFromAutoDetect: true,
         });
       }),
     );

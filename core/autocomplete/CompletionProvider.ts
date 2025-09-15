@@ -215,12 +215,6 @@ export class CompletionProvider {
         const multiline =
           !helper.options.transform || shouldCompleteMultiline(helper);
 
-        const rawGeneration = await llm.complete(
-          prompt,
-          token,
-          completionOptions,
-        );
-
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(
             token,

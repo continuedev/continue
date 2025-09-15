@@ -1,6 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
+import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import { logger } from "./logger.js";
 
@@ -23,15 +23,17 @@ export function getModelContextLimit(model: ModelConfig): number {
 }
 
 /**
- * Estimate the token count for a single message
- * @param message The message to count tokens for
+ * Estimate the token count for a single ChatHistoryItem
+ * @param historyItem The ChatHistoryItem to count tokens for
  * @returns The estimated token count
  */
-export function countMessageTokens(
-  message: ChatCompletionMessageParam,
+export function countChatHistoryItemTokens(
+  historyItem: ChatHistoryItem,
 ): number {
   try {
     let tokenCount = 0;
+
+    const message = historyItem.message;
 
     // Count tokens in content
     if (typeof message.content === "string") {
@@ -44,7 +46,7 @@ export function countMessageTokens(
         }
         // Images and other content types have their own token costs
         // but we'll use a rough estimate for now
-        if (part.type === "image_url") {
+        if (part.type === "imageUrl") {
           tokenCount += 85; // Rough estimate for image tokens
         }
       }
@@ -54,12 +56,15 @@ export function countMessageTokens(
     tokenCount += 2;
 
     // Add tokens for tool calls if present
-    if ("tool_calls" in message && message.tool_calls) {
-      for (const toolCall of message.tool_calls) {
+    if ("toolCalls" in message && message.toolCalls) {
+      for (const toolCall of message.toolCalls) {
+        if (!toolCall.function) {
+          continue;
+        }
         // Function name and structure overhead
-        tokenCount += encode(toolCall.function.name).length + 10;
+        tokenCount += encode(toolCall.function.name ?? "").length + 10;
         // Arguments
-        tokenCount += encode(toolCall.function.arguments).length;
+        tokenCount += encode(toolCall.function.arguments ?? "").length;
       }
     }
 
@@ -68,16 +73,38 @@ export function countMessageTokens(
       tokenCount += 5; // Tool message structure overhead
     }
 
+    // Add tokens for context items
+    for (const contextItem of historyItem.contextItems) {
+      tokenCount += encode(contextItem.content).length;
+      tokenCount += encode(contextItem.name).length;
+      tokenCount += 5; // Context item structure overhead
+    }
+
     return tokenCount;
   } catch (error) {
-    logger.error("Error counting tokens for message", error);
+    logger.error("Error counting tokens for history item", error);
     // Return a rough estimate based on character count
+    const message = historyItem.message;
     const content =
       typeof message.content === "string"
         ? message.content
         : JSON.stringify(message.content);
-    return Math.ceil(content.length / 4); // Rough estimate: 4 chars per token
+    // Add rough estimate for context items
+    const contextContent = historyItem.contextItems
+      .map((item) => item.content + item.name)
+      .join("");
+    return Math.ceil((content.length + contextContent.length) / 4); // Rough estimate: 4 chars per token
   }
+}
+
+/**
+ * Estimate the token count for a single message (legacy compatibility)
+ * @param message The message to count tokens for
+ * @returns The estimated token count
+ * @deprecated Use countChatHistoryItemTokens instead
+ */
+export function countMessageTokens(message: ChatHistoryItem): number {
+  return countChatHistoryItemTokens(message);
 }
 
 /**
@@ -85,13 +112,11 @@ export function countMessageTokens(
  * @param chatHistory The chat history to count tokens for
  * @returns The estimated total token count
  */
-export function countChatHistoryTokens(
-  chatHistory: ChatCompletionMessageParam[],
-): number {
+export function countChatHistoryTokens(chatHistory: ChatHistoryItem[]): number {
   let totalTokens = 0;
 
-  for (const message of chatHistory) {
-    totalTokens += countMessageTokens(message);
+  for (const historyItem of chatHistory) {
+    totalTokens += countChatHistoryItemTokens(historyItem);
   }
 
   // Add some overhead for message structure (roughly 3 tokens per message)
@@ -121,7 +146,7 @@ export function calculateContextUsagePercentage(
  * @returns Whether auto-compacting should be triggered
  */
 export function shouldAutoCompact(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
 ): boolean {
   const inputTokens = countChatHistoryTokens(chatHistory);

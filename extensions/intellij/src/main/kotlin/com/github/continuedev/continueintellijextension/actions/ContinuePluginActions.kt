@@ -1,16 +1,22 @@
 package com.github.continuedev.continueintellijextension.actions
 
+import com.github.continuedev.continueintellijextension.HighlightedCodePayload
+import com.github.continuedev.continueintellijextension.RangeInFileWithContents
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
+import com.github.continuedev.continueintellijextension.editor.EditorUtils
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
+import java.io.File
 
 class RestartContinueProcess : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val pluginService = getContinuePluginService(e.project) ?: return
-        pluginService.coreMessengerManager?.coreMessenger?.restart()
+        e.project?.service<ContinuePluginService>()?.coreMessenger?.restart()
     }
 }
 
@@ -21,7 +27,7 @@ class AcceptDiffAction : AnAction() {
     }
 
     private fun acceptHorizontalDiff(e: AnActionEvent) {
-        val continuePluginService = getPluginService(e.project) ?: return
+        val continuePluginService = e.project?.service<ContinuePluginService>() ?: return
         continuePluginService.diffManager?.acceptDiff(null)
     }
 
@@ -41,8 +47,7 @@ class RejectDiffAction : AnAction() {
     }
 
     private fun rejectHorizontalDiff(e: AnActionEvent) {
-        val continuePluginService = getPluginService(e.project) ?: return
-        continuePluginService.diffManager?.rejectDiff(null)
+        e.project?.service<ContinuePluginService>()?.diffManager?.rejectDiff(null)
     }
 
     private fun rejectVerticalDiff(e: AnActionEvent) {
@@ -54,54 +59,53 @@ class RejectDiffAction : AnAction() {
     }
 }
 
+class FocusContinueInputWithoutClearAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) {
+        project.getBrowser()?.sendToWebview("focusContinueInputWithoutClear")
+        project.getBrowser()?.focusOnInput()
+    }
+}
 
-class FocusContinueInputWithoutClearAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project
+class FocusContinueInputAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) =
         focusContinueInput(project)
+
+    companion object {
+        fun focusContinueInput(project: Project?) {
+            val browser = project?.getBrowser()
+                ?: return
+            browser.sendToWebview("focusContinueInputWithNewSession")
+            browser.focusOnInput()
+            val rif = EditorUtils.getEditor(project)?.getHighlightedRIF()
+                ?: return
+            val code = HighlightedCodePayload(RangeInFileWithContents(rif.filepath, rif.range, rif.contents))
+            browser.sendToWebview("highlightedCode", code)
+        }
     }
 }
 
-class FocusContinueInputAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
-
-        continuePluginService.ideProtocolClient?.sendHighlightedCode()
+class NewContinueSessionAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) {
+        project.getBrowser()?.sendToWebview("focusContinueInputWithNewSession")
     }
 }
 
-class NewContinueSessionAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
+class ViewHistoryAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) {
+        project.getBrowser()?.sendToWebview("navigateTo", mapOf("path" to "/history", "toggle" to true))
     }
 }
 
-class ViewHistoryAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        val params = mapOf("path" to "/history", "toggle" to true)
-        continuePluginService.sendToWebview("navigateTo", params)
-    }
-}
-
-class OpenConfigAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        val params = mapOf("path" to "/config", "toggle" to true)
-        continuePluginService.sendToWebview("navigateTo", params)
+class OpenConfigAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project)  {
+        project.getBrowser()?.sendToWebview("navigateTo", mapOf("path" to "/config", "toggle" to true))
     }
 }
 
 class OpenLogsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val logFile = java.io.File(System.getProperty("user.home") + "/.continue/logs/core.log")
+        val logFile = File(System.getProperty("user.home") + "/.continue/logs/core.log")
         if (logFile.exists()) {
             val virtualFile = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByIoFile(logFile)
             if (virtualFile != null) {

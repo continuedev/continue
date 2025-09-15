@@ -1,4 +1,4 @@
-import { ToolPolicy } from "core";
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { clearToolPolicy, setToolPolicy } from "../redux/slices/uiSlice";
 import { AppDispatch } from "../redux/store";
@@ -12,9 +12,6 @@ function migrateToolPolicies(dispatch: AppDispatch) {
   const toFromMap: Record<string, string[]> = {
     [BuiltInToolNames.ReadFile]: ["builtin_read_file"],
     [BuiltInToolNames.EditExistingFile]: ["builtin_edit_existing_file"],
-    [BuiltInToolNames.SearchAndReplaceInFile]: [
-      "builtin_search_and_replace_in_file",
-    ],
     [BuiltInToolNames.ReadCurrentlyOpenFile]: [
       "builtin_read_currently_open_file",
     ],

@@ -1,10 +1,10 @@
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
 import { CopyIconButton } from "../components/gui/CopyIconButton";
+import { PageHeader } from "../components/PageHeader";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 
@@ -65,17 +65,7 @@ function Stats() {
         backgroundColor: vscBackground,
       }}
     >
-      <div
-        onClick={() => navigate(-1)}
-        className="sticky top-0 m-0 flex cursor-pointer items-center p-0"
-        style={{
-          borderBottom: `0.5px solid ${lightGray}`,
-          backgroundColor: vscBackground,
-        }}
-      >
-        <ArrowLeftIcon className="ml-4 inline-block h-3 w-3 cursor-pointer" />
-        <span className="m-2 inline-block text-base font-bold">More</span>
-      </div>
+      <PageHeader title="More" onTitleClick={() => navigate(-1)} showBorder />
 
       <div className="p-2">
         <div className="flex items-center gap-2">

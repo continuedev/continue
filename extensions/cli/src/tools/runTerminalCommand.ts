@@ -1,5 +1,10 @@
 import { spawn } from "child_process";
 
+import {
+  evaluateTerminalCommandSecurity,
+  type ToolPolicy,
+} from "@continuedev/terminal-security";
+
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -8,10 +13,28 @@ import {
 
 import { Tool } from "./types.js";
 
+// Helper function to use login shell on Unix/macOS and PowerShell on Windows
+function getShellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === "win32") {
+    // Windows: Use PowerShell
+    return {
+      shell: "powershell.exe",
+      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+    };
+  } else {
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    const userShell = process.env.SHELL || "/bin/bash";
+    return { shell: userShell, args: ["-l", "-c", command] };
+  }
+}
+
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
-  description: "Executes a terminal command and returns the output",
+  description: `Executes a terminal command and returns the output
+
+Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
+`,
   parameters: {
     command: {
       type: "string",
@@ -21,6 +44,15 @@ export const runTerminalCommandTool: Tool = {
   },
   readonly: false,
   isBuiltIn: true,
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
   preprocess: async (args) => {
     const command = args.command;
     if (!command || typeof command !== "string") {
@@ -40,7 +72,9 @@ export const runTerminalCommandTool: Tool = {
   },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const child = spawn("sh", ["-c", command]);
+      // Use same shell logic as core implementation
+      const { shell, args } = getShellCommand(command);
+      const child = spawn(shell, args);
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
@@ -59,11 +93,21 @@ export const runTerminalCommandTool: Tool = {
           if (isResolved) return;
           isResolved = true;
           child.kill();
-          const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
-          resolve(
-            output +
-              `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`,
-          );
+          let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
+          output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
+
+          // Truncate output if it has too many lines
+          const lines = output.split("\n");
+          if (lines.length > 5000) {
+            const truncatedOutput = lines.slice(0, 5000).join("\n");
+            resolve(
+              truncatedOutput +
+                `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
+            );
+            return;
+          }
+
+          resolve(output);
         }, TIMEOUT_MS);
       };
 
@@ -103,11 +147,23 @@ export const runTerminalCommandTool: Tool = {
           }
         }
 
+        let output = stdout;
         if (stderr) {
-          resolve(stdout + `\nStderr: ${stderr}`);
+          output = stdout + `\nStderr: ${stderr}`;
+        }
+
+        // Truncate output if it has too many lines
+        const lines = output.split("\n");
+        if (lines.length > 5000) {
+          const truncatedOutput = lines.slice(0, 5000).join("\n");
+          resolve(
+            truncatedOutput +
+              `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
+          );
           return;
         }
-        resolve(stdout);
+
+        resolve(output);
       });
 
       child.on("error", (error) => {

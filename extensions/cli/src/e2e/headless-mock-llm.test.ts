@@ -46,13 +46,20 @@ describe("E2E: Headless Mode with Mock Server", () => {
     expect(result.exitCode).toBe(0);
     expect(mockServer.requests).toHaveLength(1);
     // Find the user message (system message is first)
-    const userMessage = mockServer.requests[0].body.messages.find((m: any) => m.role === "user");
+    const userMessage = mockServer.requests[0].body.messages.find(
+      (m: any) => m.role === "user",
+    );
     expect(userMessage.content).toBe("Say hello");
   }, 20000);
 
   it("should work with longer prompts", async () => {
     const result = await runCLI(context, {
-      args: ["-p", "--config", context.configPath, "Please respond with exactly 'Hello World!' and nothing else"],
+      args: [
+        "-p",
+        "--config",
+        context.configPath,
+        "Please respond with exactly 'Hello World!' and nothing else",
+      ],
       timeout: 15000,
     });
 
@@ -60,7 +67,11 @@ describe("E2E: Headless Mode with Mock Server", () => {
     expect(result.exitCode).toBe(0);
     expect(mockServer.requests).toHaveLength(1);
     // Find the user message (system message is first)
-    const userMessage = mockServer.requests[0].body.messages.find((m: any) => m.role === "user");
-    expect(userMessage.content).toBe("Please respond with exactly 'Hello World!' and nothing else");
+    const userMessage = mockServer.requests[0].body.messages.find(
+      (m: any) => m.role === "user",
+    );
+    expect(userMessage.content).toBe(
+      "Please respond with exactly 'Hello World!' and nothing else",
+    );
   }, 20000);
 });

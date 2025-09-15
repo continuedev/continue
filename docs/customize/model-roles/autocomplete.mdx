@@ -6,15 +6,16 @@ keywords: [autocomplete, model, role]
 sidebar_position: 2
 ---
 
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+
 An "autocomplete model" is an LLM that is trained on a special format called fill-in-the-middle (FIM). This format is designed to be given the prefix and suffix of a code file and predict what goes between. This task is very specific, which on one hand means that the models can be smaller (even a 3B parameter model can perform well). On the other hand, this means that Chat models, though larger, will often perform poorly even with extensive prompting.
 
 In Continue, autocomplete models are used to display inline [Autocomplete](../../features/autocomplete/quick-start) suggestions as you type. Autocomplete models are designated by adding the `autocomplete` to the model's `roles` in `config.yaml`.
 
 ## Recommended Autocomplete models
 
-<Info>
-  See our [comprehensive model recommendations](/customization/models#recommended-models) for the best autocomplete models, including both open and closed options.
-</Info>
+<ModelRecommendations role="autocomplete" />
 
 Visit the [Autocomplete Deep Dive](../deep-dives/autocomplete) for detailed setup instructions and configuration options.
 

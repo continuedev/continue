@@ -1,8 +1,8 @@
 import { updateModelName } from "../../auth/workos.js";
 import {
-  services,
-  serviceContainer,
   SERVICE_NAMES,
+  serviceContainer,
+  services,
 } from "../../services/index.js";
 import { ModelServiceState } from "../../services/types.js";
 import { useNavigation } from "../context/NavigationContext.js";
@@ -50,7 +50,7 @@ export function useModelSelector({
 
       onMessage({
         role: "system",
-        content: `Switched to model: ${modelInfo?.provider}/${modelInfo?.name}`,
+        content: `Switched to model: ${modelInfo?.name}`,
         messageType: "system",
       });
 

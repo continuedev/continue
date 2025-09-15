@@ -25,8 +25,10 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { getToolsForIde } from "../../tools";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
+import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
@@ -166,7 +168,7 @@ export async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: await getToolsForIde(ide),
+    tools: getBaseToolDefinitions(),
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {
@@ -206,7 +208,21 @@ export async function configYamlToContinueConfig(options: {
   }
 
   for (const rule of config.rules ?? []) {
-    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+    const convertedRule = convertYamlRuleToContinueRule(rule);
+    continueConfig.rules.push(convertedRule);
+
+    // Convert invokable rules to slash commands
+    if (convertedRule.invokable) {
+      try {
+        const slashCommand = convertRuleBlockToSlashCommand(convertedRule);
+        continueConfig.slashCommands?.push(slashCommand);
+      } catch (e) {
+        localErrors.push({
+          message: `Error converting invokable rule ${convertedRule.name} to slash command: ${e instanceof Error ? e.message : e}`,
+          fatal: false,
+        });
+      }
+    }
   }
 
   continueConfig.data = config.data?.map((d) => ({
@@ -377,25 +393,31 @@ export async function configYamlToContinueConfig(options: {
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => ({
-      id: server.name,
-      name: server.name,
-      sourceFile: server.sourceFile,
-      transport: {
-        type: "stdio",
-        args: [],
-        requestOptions: mergeConfigYamlRequestOptions(
-          server.requestOptions,
-          config.requestOptions,
-        ),
-        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-      },
-      timeout: server.connectionTimeout,
-    })),
-    false,
-    { ide },
-  );
+
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    mcpManager.setConnections(
+      (config.mcpServers ?? []).map((server) => ({
+        id: server.name,
+        name: server.name,
+        sourceFile: server.sourceFile,
+        transport: {
+          type: "stdio",
+          args: [],
+          requestOptions: mergeConfigYamlRequestOptions(
+            server.requestOptions,
+            config.requestOptions,
+          ),
+          ...(server as any), // TODO: fix the types on mcpServers in config-yaml
+        },
+        timeout: server.connectionTimeout,
+      })),
+      false,
+      { ide },
+    );
+  }
 
   return { config: continueConfig, errors: localErrors };
 }

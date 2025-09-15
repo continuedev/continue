@@ -1,10 +1,9 @@
 import { exec } from "child_process";
-import path from "path";
 import { promisify } from "util";
 
 import chalk from "chalk";
+import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
@@ -13,24 +12,26 @@ import {
   getService,
   initializeServices,
   SERVICE_NAMES,
+  services,
 } from "../services/index.js";
 import {
   AuthServiceState,
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { saveSession } from "../session.js";
-import { streamChatResponse } from "../streamChatResponse.js";
-import { StreamCallbacks } from "../streamChatResponse.types.js";
+import { createSession } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../tools/index.js";
-import { DisplayMessage } from "../ui/types.js";
+import { gracefulExit } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import {
+  streamChatResponseWithInterruption,
+  type ServerState,
+} from "./serve.helpers.js";
 
 const execAsync = promisify(exec);
 
@@ -39,27 +40,7 @@ interface ServeOptions extends ExtendedCommandOptions {
   port?: string;
 }
 
-interface PendingPermission {
-  toolName: string;
-  toolArgs: any;
-  requestId: string;
-  timestamp: number;
-}
-
-interface ServerState {
-  chatHistory: ChatCompletionMessageParam[];
-  displayMessages: DisplayMessage[]; // Messages formatted for display with tool info
-  config: any;
-  model: any;
-  isProcessing: boolean;
-  lastActivity: number;
-  messageQueue: string[];
-  currentAbortController: AbortController | null;
-  shouldInterrupt: boolean;
-  serverRunning: boolean;
-  pendingPermission: PendingPermission | null;
-}
-
+// eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
@@ -127,21 +108,33 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim(`  Config file: ${options.config}`));
   }
 
-  // Initialize chat history
-  const chatHistory: ChatCompletionMessageParam[] = [];
+  // Initialize session with system message
   const systemMessage = await constructSystemMessage(
     options.rule,
     undefined,
     true,
   );
+
+  const initialHistory: ChatHistoryItem[] = [];
   if (systemMessage) {
-    chatHistory.push({ role: "system", content: systemMessage });
+    initialHistory.push({
+      message: { role: "system" as const, content: systemMessage },
+      contextItems: [],
+    });
+  }
+
+  const session = createSession(initialHistory);
+
+  // Align ChatHistoryService with server session and enable remote mode
+  try {
+    await services.chatHistory.initialize(session, false);
+  } catch {
+    // Fallback: continue even if service init fails; stream will still work with arrays
   }
 
   // Initialize server state
   const state: ServerState = {
-    chatHistory,
-    displayMessages: [], // Initialize empty display messages
+    session,
     config,
     model,
     isProcessing: false,
@@ -163,8 +156,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
+    // Ensure session history reflects ChatHistoryService state
+    try {
+      state.session.history = services.chatHistory.getHistory();
+    } catch (e) {
+      logger.debug(
+        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
+      );
+    }
     res.json({
-      chatHistory: state.displayMessages, // Send display messages with proper formatting
+      session: state.session, // Return session directly instead of converting
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
       pendingPermission: state.pendingPermission,
@@ -214,11 +215,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       return res.status(400).json({ error: "Invalid request ID" });
     }
 
-    // Remove the permission request message
-    const lastMsg = state.displayMessages[state.displayMessages.length - 1];
-    if (lastMsg && lastMsg.messageType === "tool-permission-request") {
-      state.displayMessages.pop();
-    }
+    // Remove the permission request message if it exists
+    // Permission requests are handled separately in unified format
 
     // Send the permission response to the toolPermissionManager
     if (approved) {
@@ -305,12 +303,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Give a moment for the response to be sent
-    setTimeout(() => {
+    const handleExitResponse = () => {
       server.close(() => {
         telemetryService.stopActiveTime();
-        process.exit(0);
+        gracefulExit(0).catch((err) => {
+          logger.error(`Graceful exit failed: ${formatError(err)}`);
+          process.exit(1);
+        });
       });
-    }, 100);
+    };
+    setTimeout(handleExitResponse, 100);
   });
 
   const server = app.listen(port, () => {
@@ -348,6 +350,27 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Process messages from the queue
+  function removePartialAssistantMessage(state: ServerState) {
+    try {
+      const svcHistory = services.chatHistory.getHistory();
+      const last = svcHistory[svcHistory.length - 1];
+      if (last && last.message.role === "assistant" && !last.message.content) {
+        const trimmed = svcHistory.slice(0, -1);
+        services.chatHistory.setHistory(trimmed);
+      }
+    } catch {
+      const lastMessage =
+        state.session.history[state.session.history.length - 1];
+      if (
+        lastMessage &&
+        lastMessage.message.role === "assistant" &&
+        !lastMessage.message.content
+      ) {
+        state.session.history.pop();
+      }
+    }
+  }
+
   async function processMessages(state: ServerState, llmApi: any) {
     while (state.messageQueue.length > 0 && state.serverRunning) {
       const userMessage = state.messageQueue.shift()!;
@@ -355,9 +378,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.shouldInterrupt = false;
       state.lastActivity = Date.now();
 
-      // Add user message to history
-      state.chatHistory.push({ role: "user", content: userMessage });
-      state.displayMessages.push({ role: "user", content: userMessage });
+      // Add user message via ChatHistoryService (single source of truth)
+      try {
+        services.chatHistory.addUserMessage(userMessage);
+      } catch {
+        // Fallback to local array if service unavailable
+        state.session.history.push({
+          message: { role: "user", content: userMessage },
+          contextItems: [],
+        });
+      }
 
       try {
         // Create new abort controller for this response
@@ -371,40 +401,26 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           () => state.shouldInterrupt,
         );
 
-        // Save session after successful response
-        saveSession(state.chatHistory);
+        // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
         state.lastActivity = Date.now();
       } catch (e: any) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
-          // Remove the partial assistant message if it exists
-          const lastMessage = state.chatHistory[state.chatHistory.length - 1];
-          if (lastMessage.role === "assistant" && !lastMessage.content) {
-            state.chatHistory.pop();
-          }
-          // Also remove partial display messages
-          const lastDisplayMessage =
-            state.displayMessages[state.displayMessages.length - 1];
-          if (
-            lastDisplayMessage &&
-            lastDisplayMessage.role === "assistant" &&
-            lastDisplayMessage.isStreaming
-          ) {
-            state.displayMessages.pop();
-          }
+          // Remove any partial assistant message
+          removePartialAssistantMessage(state);
         } else {
           logger.error(`Error: ${formatError(e)}`);
-          // Add error message to chat history and display messages
+          // Add error message via ChatHistoryService
           const errorMessage = `Error: ${formatError(e)}`;
-          state.chatHistory.push({
-            role: "assistant",
-            content: errorMessage,
-          });
-          state.displayMessages.push({
-            role: "assistant",
-            content: errorMessage,
-          });
+          try {
+            services.chatHistory.addAssistantMessage(errorMessage);
+          } catch {
+            state.session.history.push({
+              message: { role: "assistant", content: errorMessage },
+              contextItems: [],
+            });
+          }
         }
       } finally {
         state.currentAbortController = null;
@@ -424,7 +440,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.serverRunning = false;
       server.close(() => {
         telemetryService.stopActiveTime();
-        process.exit(0);
+        gracefulExit(0).catch((err) => {
+          logger.error(`Graceful exit failed: ${formatError(err)}`);
+          process.exit(1);
+        });
       });
       if (inactivityChecker) {
         clearInterval(inactivityChecker);
@@ -443,168 +462,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
     server.close(() => {
       telemetryService.stopActiveTime();
-      process.exit(0);
+      gracefulExit(0).catch((err) => {
+        logger.error(`Graceful exit failed: ${formatError(err)}`);
+        process.exit(1);
+      });
     });
   });
 }
 
-// Modified version of streamChatResponse that supports interruption
-async function streamChatResponseWithInterruption(
-  state: ServerState,
-  llmApi: any,
-  abortController: AbortController,
-  shouldInterrupt: () => boolean,
-): Promise<string> {
-  // Import the original streamChatResponse logic but add interruption checks
-  // Create a wrapper that checks for interruption
-  const originalSignal = abortController.signal;
-  const checkInterruption = () => {
-    if (shouldInterrupt() && !originalSignal.aborted) {
-      abortController.abort();
-    }
-  };
-
-  // Set up periodic interruption checks
-  const interruptionChecker = setInterval(checkInterruption, 100);
-
-  let currentStreamingMessage: DisplayMessage | null = null;
-
-  // Create callbacks to capture tool events
-  const callbacks: StreamCallbacks = {
-    onContent: (content: string) => {
-      if (!currentStreamingMessage) {
-        currentStreamingMessage = {
-          role: "assistant",
-          content: "",
-          isStreaming: true,
-        };
-        state.displayMessages.push(currentStreamingMessage);
-      }
-      currentStreamingMessage.content += content;
-    },
-    onContentComplete: (content: string) => {
-      if (currentStreamingMessage) {
-        currentStreamingMessage.content = content;
-        currentStreamingMessage.isStreaming = false;
-        currentStreamingMessage = null;
-      } else {
-        // Add complete assistant message
-        state.displayMessages.push({
-          role: "assistant",
-          content: content,
-          isStreaming: false,
-        });
-      }
-    },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      // Format tool call similar to local mode
-      const formatToolCall = (name: string, args: any) => {
-        const displayName = getToolDisplayName(name);
-        if (!args) return displayName;
-
-        const firstValue = Object.values(args)[0];
-        const formatPath = (value: any) => {
-          if (typeof value === "string" && path.isAbsolute(value)) {
-            const workspaceRoot = process.cwd();
-            const relativePath = path.relative(workspaceRoot, value);
-            return relativePath || value;
-          }
-          return value;
-        };
-
-        return `${displayName}(${formatPath(firstValue) || ""})`;
-      };
-
-      // If there was streaming content, finalize it first
-      if (currentStreamingMessage && currentStreamingMessage.content) {
-        currentStreamingMessage.isStreaming = false;
-        currentStreamingMessage = null;
-      }
-
-      state.displayMessages.push({
-        role: "system",
-        content: `○ ${formatToolCall(toolName, toolArgs)}`,
-        messageType: "tool-start",
-        toolName,
-      });
-    },
-    onToolResult: (result: string, toolName: string) => {
-      // Replace the tool-start message with tool-result
-      const displayName = getToolDisplayName(toolName);
-
-      // Find and replace the corresponding tool-start message
-      for (let i = state.displayMessages.length - 1; i >= 0; i--) {
-        if (
-          state.displayMessages[i].messageType === "tool-start" &&
-          state.displayMessages[i].toolName === toolName
-        ) {
-          state.displayMessages[i] = {
-            ...state.displayMessages[i],
-            content: `● ${displayName}`,
-            messageType: "tool-result",
-            toolResult: result,
-          };
-          return;
-        }
-      }
-
-      // If no tool-start found, add as new message (fallback)
-      state.displayMessages.push({
-        role: "system",
-        content: `● ${displayName}`,
-        messageType: "tool-result",
-        toolName,
-        toolResult: result,
-      });
-    },
-    onToolError: (error: string, toolName?: string) => {
-      state.displayMessages.push({
-        role: "system",
-        content: `✗ Tool error: ${error}`,
-        messageType: "tool-error",
-        toolName,
-      });
-    },
-    onToolPermissionRequest: (
-      toolName: string,
-      toolArgs: any,
-      requestId: string,
-    ) => {
-      // Set pending permission state
-      state.pendingPermission = {
-        toolName,
-        toolArgs,
-        requestId,
-        timestamp: Date.now(),
-      };
-
-      // Add a display message indicating permission is needed
-      state.displayMessages.push({
-        role: "system",
-        content: `⚠️ Tool ${toolName} requires permission`,
-        messageType: "tool-permission-request" as any,
-        toolName,
-      });
-
-      // Don't wait here - the streamChatResponse will handle waiting
-    },
-  };
-
-  try {
-    const response = await streamChatResponse(
-      state.chatHistory,
-      state.model,
-      llmApi,
-      abortController,
-      callbacks,
-    );
-    return response || "";
-  } finally {
-    clearInterval(interruptionChecker);
-    // Ensure any streaming message is finalized
-    if (currentStreamingMessage !== null) {
-      // TypeScript is having issues with this line - the message will be finalized anyway
-      // currentStreamingMessage.isStreaming = false;
-    }
-  }
-}
+// Function moved to serve.helpers.ts - remove implementation
+// async function streamChatResponseWithInterruption - moved to helpers {
+// Implementation moved to serve.helpers.ts

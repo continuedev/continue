@@ -18,6 +18,8 @@ vi.mock("./args.js", () => ({
     .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));
 
+const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
     const rules = ["These are the rules for the assistant."];
@@ -167,7 +169,7 @@ Rule 3: Third rule`;
     );
 
     expect(result).toContain("You are an agent in the Continue CLI");
-    expect(result).toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
@@ -187,7 +189,7 @@ Rule 3: Third rule`;
     );
 
     expect(result).toContain("You are an agent in the Continue CLI");
-    expect(result).not.toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).not.toContain(PLAN_MODE_STRING);
     expect(result).not.toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
@@ -197,7 +199,7 @@ Rule 3: Third rule`;
     const result = await constructSystemMessage();
 
     expect(result).toContain("You are an agent in the Continue CLI");
-    expect(result).not.toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).not.toContain(PLAN_MODE_STRING);
     expect(result).not.toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
@@ -211,7 +213,7 @@ Rule 3: Third rule`;
       "plan",
     );
 
-    expect(result).toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain("read-only tools");
     expect(result).toContain("write / delete / create files");
   });
@@ -225,7 +227,7 @@ Rule 3: Third rule`;
     );
 
     expect(result).toContain("IMPORTANT: You are running in headless mode");
-    expect(result).toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
@@ -242,7 +244,7 @@ Rule 3: Third rule`;
     expect(result).toContain(
       "IMPORTANT: You are operating in JSON output mode",
     );
-    expect(result).toContain("PLAN MODE: You are operating in plan mode");
+    expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );

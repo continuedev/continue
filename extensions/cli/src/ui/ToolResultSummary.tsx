@@ -3,10 +3,12 @@ import path from "path";
 import { Box, Text } from "ink";
 import React from "react";
 
-import { getToolDisplayName } from "../tools/index.js";
+import { getToolDisplayName } from "src/tools/index.js";
 
 import { ColoredDiff } from "./ColoredDiff.js";
 import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
+
+const MAX_BASH_OUTPUT_LINES = 4;
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -74,8 +76,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     const actualOutput = isStderr ? content.slice(7).trim() : content;
     const outputLines = actualOutput.split("\n");
 
-    if (outputLines.length <= 16) {
-      // Show actual output for 16 lines or fewer
+    if (outputLines.length <= MAX_BASH_OUTPUT_LINES) {
+      // Show actual output for MAX_BASH_OUTPUT_LINES lines or fewer
       return (
         <Box flexDirection="column">
           <Box>
@@ -83,13 +85,15 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="gray"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>{actualOutput}</Text>
+            <Text color={isStderr ? "red" : "white"}>
+              {actualOutput.trimEnd()}
+            </Text>
           </Box>
         </Box>
       );
     } else {
-      // Show first 16 lines with ellipsis for more than 16 lines
-      const first16Lines = outputLines.slice(0, 16).join("\n");
+      // Show first MAX_BASH_OUTPUT_LINES lines with ellipsis for more lines
+      const firstLines = outputLines.slice(0, MAX_BASH_OUTPUT_LINES).join("\n");
       return (
         <Box flexDirection="column">
           <Box>
@@ -97,10 +101,14 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="gray"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>{first16Lines}</Text>
+            <Text color={isStderr ? "red" : "white"}>
+              {firstLines.trimEnd()}
+            </Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color="gray">...</Text>
+            <Text color="gray">
+              ... +{outputLines.length - MAX_BASH_OUTPUT_LINES} lines
+            </Text>
           </Box>
         </Box>
       );

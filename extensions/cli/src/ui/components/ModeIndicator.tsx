@@ -43,9 +43,9 @@ const ModeIndicator: React.FC<ModeIndicatorProps> = ({ mode }) => {
   const getModeDisplay = (mode: PermissionMode) => {
     switch (mode) {
       case "plan":
-        return { text: "plan", color: "blue" };
+        return { text: "⏸ plan", color: "blue" };
       case "auto":
-        return { text: "auto", color: "green" };
+        return { text: "⏵⏵ auto", color: "green" };
       default:
         return { text: mode, color: "dim" };
     }

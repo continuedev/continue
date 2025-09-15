@@ -59,13 +59,24 @@ intellijPlatform {
             sinceBuild = "241"
         }
     }
+    publishing {
+        token = environment("PUBLISH_TOKEN")
+        hidden = true
+        val channel = if (isEap) "eap" else "default"
+        channels = listOf(channel)
+    }
+    signing {
+        certificateChain = environment("CERTIFICATE_CHAIN")
+        privateKey = environment("PRIVATE_KEY")
+        password = environment("PRIVATE_KEY_PASSWORD")
+    }
     pluginVerification {
         ides {
-            ide("IC", "2025.2")
-            ide("IC", "2025.1")
-            ide("IC", "2024.3")
-            ide("IC", "2024.2")
-            ide("IC", "2024.1")
+            create("IC", "2025.2")
+            create("IC", "2025.1")
+            create("IC", "2024.3")
+            create("IC", "2024.2")
+            create("IC", "2024.1")
         }
     }
 }
@@ -79,6 +90,10 @@ qodana {
 
 intellijPlatformTesting {
     runIde {
+        // This task might not work locally because the binary tends to ignore CONTINUE_GLOBAL_DIR when a
+        // local Continue config is present. If you want to run the e2e tests locally, the most effective
+        // way is to temporarily disconnect from the network and run the tests again.
+        // todo: fix it properly
         register("runIdeForUiTests") {
             task {
                 environment(
@@ -96,8 +111,7 @@ intellijPlatformTesting {
                         "-Dapple.laf.useScreenMenuBar=false",
                         "-Didea.trust.all.projects=true",
                         "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.jsQueryPoolSize=10000",
-                        "-Dide.browser.jcef.contextMenu.devTools.enabled=true"
+                        "-Dide.browser.jcef.sandbox.enable=false"
                     )
                 }
             }
@@ -123,19 +137,6 @@ tasks {
         check(pluginDescription.get().isNotEmpty()) { "Plugin description section not found in README.md" }
     }
 
-    signPlugin {
-        certificateChain = environment("CERTIFICATE_CHAIN")
-        privateKey = environment("PRIVATE_KEY")
-        password = environment("PRIVATE_KEY_PASSWORD")
-    }
-
-    publishPlugin {
-        token = environment("PUBLISH_TOKEN")
-
-        val channel = if (isEap) "eap" else "default"
-        channels = listOf(channel)
-    }
-
     runIde {
         val openProject = "$projectDir/../../manual-testing-sandbox"
         argumentProviders += CommandLineArgumentProvider {
@@ -145,5 +146,6 @@ tasks {
 
     test {
         useJUnitPlatform()
+        jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
 }

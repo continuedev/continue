@@ -44,17 +44,17 @@ describe("listSessionsCommand", () => {
   it("should output JSON format when format is json", async () => {
     const mockSessions = [
       {
-        id: "session-1",
-        path: "/path/to/session1.json",
-        timestamp: new Date("2023-01-01T10:00:00Z"),
-        messageCount: 5,
+        sessionId: "session-1",
+        title: "Session 1",
+        dateCreated: "2023-01-01T10:00:00.000Z",
+        workspaceDirectory: "/workspace",
         firstUserMessage: "Hello world",
       },
       {
-        id: "session-2",
-        path: "/path/to/session2.json",
-        timestamp: new Date("2023-01-01T09:00:00Z"),
-        messageCount: 3,
+        sessionId: "session-2",
+        title: "Session 2",
+        dateCreated: "2023-01-01T09:00:00.000Z",
+        workspaceDirectory: "/workspace",
         firstUserMessage: "Test message",
       },
     ];
@@ -72,13 +72,15 @@ describe("listSessionsCommand", () => {
             {
               id: "session-1",
               timestamp: "2023-01-01T10:00:00.000Z",
-              messageCount: 5,
+              workspaceDirectory: "/workspace",
+              title: "Session 1",
               firstUserMessage: "Hello world",
             },
             {
               id: "session-2",
               timestamp: "2023-01-01T09:00:00.000Z",
-              messageCount: 3,
+              workspaceDirectory: "/workspace",
+              title: "Session 2",
               firstUserMessage: "Test message",
             },
           ],

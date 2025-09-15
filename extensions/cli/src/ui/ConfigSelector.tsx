@@ -5,13 +5,14 @@ import React, { useEffect, useState } from "react";
 
 import {
   getAccessToken,
-  getOrganizationId,
-  loadAuthConfig,
   getAssistantSlug,
+  getOrganizationId,
   listUserOrganizations,
+  loadAuthConfig,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
 import { env } from "../env.js";
+import { services } from "../services/index.js";
 
 import { Selector, SelectorOption } from "./Selector.js";
 
@@ -79,7 +80,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
                 });
 
                 return assistants.map((assistant) => {
-                  const displayName = `[${org.name}] ${assistant.ownerSlug}/${assistant.packageSlug}`;
+                  const name =
+                    (assistant.configResult.config as any)?.name ??
+                    `${assistant.ownerSlug}/${assistant.packageSlug}`;
+                  const displayName = `[${org.name}] ${name}`;
                   // Create unique ID that includes org info to avoid conflicts
                   const uniqueId = `${org.id || "personal"}-${assistant.packageSlug}`;
                   return {
@@ -115,8 +119,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
           displaySuffix: " (opens web)",
         });
 
-        // Determine current config by checking auth config
+        // Determine current config by checking both auth config and service state
         const assistantSlug = getAssistantSlug(authConfig);
+        const currentConfigState = services.config.getState();
+
         if (assistantSlug) {
           // Find the matching config by slug and organization
           const matchingConfig = options.find(
@@ -126,8 +132,12 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
               opt.organizationId === currentOrganizationId,
           );
           currentId = matchingConfig?.id || null;
-        } else if (fs.existsSync(CONFIG_PATH)) {
-          // No assistant slug means local config is current
+        } else if (
+          currentConfigState.configPath === CONFIG_PATH &&
+          fs.existsSync(CONFIG_PATH)
+        ) {
+          // Only mark local config as current if it's actually the active config path in the service
+          // This ensures we don't show a green checkmark for first-time users just because the file exists
           currentId = "local";
         }
 

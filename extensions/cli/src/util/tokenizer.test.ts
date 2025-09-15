@@ -1,11 +1,12 @@
 import { ModelConfig } from "@continuedev/config-yaml";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { logger } from "./logger.js";
 import {
   AUTO_COMPACT_THRESHOLD,
   calculateContextUsagePercentage,
+  countChatHistoryItemTokens,
   countChatHistoryTokens,
   countMessageTokens,
   getModelContextLimit,
@@ -56,49 +57,79 @@ describe("tokenizer", () => {
     });
   });
 
-  describe("countMessageTokens", () => {
+  describe("countChatHistoryItemTokens", () => {
     it("should count tokens for string content", () => {
-      const message: ChatCompletionMessageParam = {
-        role: "user",
-        content: "Hello world", // 11 chars -> ~3 tokens + 2 for role = 5
+      const historyItem: ChatHistoryItem = {
+        message: {
+          role: "user",
+          content: "Hello world", // 11 chars -> ~3 tokens + 2 for role = 5
+        },
+        contextItems: [],
       };
 
-      const tokenCount = countMessageTokens(message);
+      const tokenCount = countChatHistoryItemTokens(historyItem);
       expect(tokenCount).toBeGreaterThan(0);
       expect(tokenCount).toBe(5); // 3 content tokens + 2 role tokens
     });
 
     it("should count tokens for array content", () => {
-      const message: ChatCompletionMessageParam = {
-        role: "user",
-        content: [
-          { type: "text", text: "Hello" }, // 5 chars -> ~2 tokens
-          { type: "image_url", image_url: { url: "test.jpg" } }, // +85 tokens
-        ],
+      const historyItem: ChatHistoryItem = {
+        message: {
+          role: "user",
+          content: [
+            { type: "text", text: "Hello" }, // 5 chars -> ~2 tokens
+            { type: "imageUrl", imageUrl: { url: "test.jpg" } }, // +85 tokens
+          ],
+        },
+        contextItems: [],
       };
 
-      const tokenCount = countMessageTokens(message);
+      const tokenCount = countChatHistoryItemTokens(historyItem);
       expect(tokenCount).toBe(89); // 2 + 85 + 2 role tokens
     });
 
     it("should count tokens for tool calls", () => {
-      const message: ChatCompletionMessageParam = {
-        role: "assistant",
-        content: "I'll help you",
-        tool_calls: [
-          {
-            id: "call_1",
-            type: "function",
-            function: {
-              name: "test_function", // ~3 tokens + 10 overhead
-              arguments: '{"param": "value"}', // ~5 tokens
+      const historyItem: ChatHistoryItem = {
+        message: {
+          role: "assistant",
+          content: "I'll help you",
+          toolCalls: [
+            {
+              id: "call_1",
+              type: "function",
+              function: {
+                name: "test_function", // ~3 tokens + 10 overhead
+                arguments: '{"param": "value"}', // ~5 tokens
+              },
             },
+          ],
+        },
+        contextItems: [],
+      };
+
+      const tokenCount = countChatHistoryItemTokens(historyItem);
+      expect(tokenCount).toBeGreaterThan(20);
+    });
+
+    it("should count tokens for context items", () => {
+      const historyItem: ChatHistoryItem = {
+        message: {
+          role: "user",
+          content: "Hello", // 5 chars -> ~2 tokens
+        },
+        contextItems: [
+          {
+            id: { providerTitle: "test", itemId: "1" },
+            content: "Context content", // 15 chars -> ~4 tokens
+            name: "Test context", // 12 chars -> ~3 tokens
+            description: "Test description",
           },
         ],
       };
 
-      const tokenCount = countMessageTokens(message);
-      expect(tokenCount).toBeGreaterThan(20);
+      const tokenCount = countChatHistoryItemTokens(historyItem);
+      // 2 (content) + 2 (role) + 4 (context content) + 3 (context name) + 5 (context overhead) = 16
+      expect(tokenCount).toBe(16);
     });
 
     it("should handle errors gracefully", () => {
@@ -108,12 +139,36 @@ describe("tokenizer", () => {
     });
   });
 
+  describe("countMessageTokens (legacy)", () => {
+    it("should call countChatHistoryItemTokens", () => {
+      const historyItem: ChatHistoryItem = {
+        message: {
+          role: "user",
+          content: "Hello world",
+        },
+        contextItems: [],
+      };
+
+      const tokenCount = countMessageTokens(historyItem);
+      expect(tokenCount).toBe(5); // Same as countChatHistoryItemTokens
+    });
+  });
+
   describe("countChatHistoryTokens", () => {
     it("should count tokens for multiple messages", () => {
-      const chatHistory: ChatCompletionMessageParam[] = [
-        { role: "system", content: "You are helpful" },
-        { role: "user", content: "Hello" },
-        { role: "assistant", content: "Hi there" },
+      const chatHistory: ChatHistoryItem[] = [
+        {
+          message: { role: "system", content: "You are helpful" },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "Hello" },
+          contextItems: [],
+        },
+        {
+          message: { role: "assistant", content: "Hi there" },
+          contextItems: [],
+        },
       ];
 
       const tokenCount = countChatHistoryTokens(chatHistory);
@@ -159,12 +214,15 @@ describe("tokenizer", () => {
       },
     });
 
-    const createChatHistory = (
-      tokenCount: number,
-    ): ChatCompletionMessageParam[] => {
+    const createChatHistory = (tokenCount: number): ChatHistoryItem[] => {
       // Create a message that will result in approximately the desired token count
       const content = "x".repeat(tokenCount * 4); // 4 chars per token
-      return [{ role: "user", content }];
+      return [
+        {
+          message: { role: "user", content },
+          contextItems: [],
+        },
+      ];
     };
 
     it("should compact when input tokens exceed threshold with maxTokens", () => {

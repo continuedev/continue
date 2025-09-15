@@ -25,8 +25,18 @@
 
         <projectService serviceInterface="com.github.continuedev.continueintellijextension.autocomplete.CompletionService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueCompletionService"/>
-        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        <projectService
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.ContinueNextEditService"/>
 
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
+
+        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
         <actionPromoter order="last"
@@ -141,9 +151,9 @@
         <action id="continue.openConfigPage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
                 icon="AllIcons.General.GearPlain"
-                text="Continue Config"
-                description="Continue Config">
-            <override-text place="GoToAction" text="Continue Config"/>
+                text="Settings"
+                description="Settings">
+            <override-text place="GoToAction" text="Settings"/>
         </action>
 
         <action id="continue.openLogs"

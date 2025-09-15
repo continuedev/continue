@@ -6,8 +6,12 @@ import {
   decodeFQSN,
   decodePackageIdentifier,
   encodeFQSN,
+  encodePackageIdentifier,
+  encodePackageSlug,
   FQSN,
   PackageIdentifier,
+  PackageSlug,
+  packageSlugsEqual,
 } from "../interfaces/slugs.js";
 import { markdownToRule } from "../markdown/index.js";
 import {
@@ -197,6 +201,8 @@ async function extractRenderedSecretsMap(
 export interface BaseUnrollAssistantOptions {
   renderSecrets: boolean;
   injectBlocks?: PackageIdentifier[];
+  allowlistedBlocks?: PackageSlug[];
+  blocklistedBlocks?: PackageSlug[];
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -262,7 +268,13 @@ export async function unrollAssistantFromContent(
     config: unrolledAssistant,
     configLoadInterrupted,
     errors,
-  } = await unrollBlocks(parsedYaml, registry, options.injectBlocks);
+  } = await unrollBlocks(
+    parsedYaml,
+    registry,
+    options.injectBlocks,
+    options.allowlistedBlocks,
+    options.blocklistedBlocks,
+  );
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -300,10 +312,44 @@ export async function unrollAssistantFromContent(
   return { config: finalConfig, errors, configLoadInterrupted };
 }
 
+function isPackageAllowed(
+  pkgId: PackageIdentifier,
+  allowlistedBlocks?: PackageSlug[],
+  blocklistedBlocks?: PackageSlug[],
+): boolean {
+  // Only "slug" type blocks can be allow/block listed
+  if (pkgId.uriType !== "slug") {
+    return true;
+  }
+
+  const packageSlug = {
+    ownerSlug: pkgId.fullSlug.ownerSlug,
+    packageSlug: pkgId.fullSlug.packageSlug,
+  };
+
+  if (
+    allowlistedBlocks &&
+    !allowlistedBlocks.some((block) => packageSlugsEqual(block, packageSlug))
+  ) {
+    return false;
+  }
+
+  if (
+    blocklistedBlocks &&
+    blocklistedBlocks.some((block) => packageSlugsEqual(block, packageSlug))
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
+  allowlistedBlocks?: PackageSlug[],
+  blocklistedBlocks?: PackageSlug[],
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
@@ -342,8 +388,29 @@ export async function unrollBlocks(
         // "uses/with" block
         if ("uses" in unrolledBlock) {
           try {
+            const blockIdentifier = decodePackageIdentifier(unrolledBlock.uses);
+
+            if (
+              !isPackageAllowed(
+                blockIdentifier,
+                allowlistedBlocks,
+                blocklistedBlocks,
+              )
+            ) {
+              throw new Error(
+                `${
+                  blockIdentifier.uriType === "slug"
+                    ? encodePackageSlug({
+                        ownerSlug: blockIdentifier.fullSlug.ownerSlug,
+                        packageSlug: blockIdentifier.fullSlug.packageSlug,
+                      })
+                    : encodePackageIdentifier(blockIdentifier)
+                } is block listed and can not be used.`,
+              );
+            }
+
             const blockConfigYaml = await resolveBlock(
-              decodePackageIdentifier(unrolledBlock.uses),
+              blockIdentifier,
               unrolledBlock.with,
               registry,
             );

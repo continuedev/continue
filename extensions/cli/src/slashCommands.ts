@@ -7,9 +7,12 @@ import {
   loadAuthConfig,
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
+import { handleInit } from "./commands/init.js";
+import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getSessionFilePath } from "./session.js";
+import { getCurrentSession } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
 type CommandHandler = (
@@ -17,16 +20,33 @@ type CommandHandler = (
   assistant: AssistantConfig,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
-async function handleHelp(args: string[], assistant: AssistantConfig) {
-  const allCommands = getAllSlashCommands(assistant);
+async function handleHelp(_args: string[], _assistant: AssistantConfig) {
   const helpMessage = [
-    "Slash commands:",
-    ...allCommands
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map(
-        (cmd) =>
-          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
-      ),
+    chalk.bold("Keyboard Shortcuts:"),
+    "",
+    chalk.white("Navigation:"),
+    `  ${chalk.cyan("↑/↓")}        Navigate command/file suggestions or history`,
+    `  ${chalk.cyan("Tab")}        Complete command or file selection`,
+    `  ${chalk.cyan("Enter")}      Submit message`,
+    `  ${chalk.cyan("Shift+Enter")} New line`,
+    `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
+    `  ${chalk.cyan("!")}          Shell mode - run shell commands`,
+    "",
+    chalk.white("Controls:"),
+    `  ${chalk.cyan("Ctrl+C")}     Clear input`,
+    `  ${chalk.cyan("Ctrl+D")}     Exit application`,
+    `  ${chalk.cyan("Ctrl+L")}     Clear screen`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto)`,
+    `  ${chalk.cyan("Esc")}        Cancel streaming or close suggestions`,
+    "",
+    chalk.white("Special Characters:"),
+    `  ${chalk.cyan("@")}          Search and attach files for context`,
+    `  ${chalk.cyan("/")}          Access slash commands`,
+    `  ${chalk.cyan("!")}          Execute bash commands directly`,
+    "",
+    chalk.white("Available Commands:"),
+    `  Type ${chalk.cyan("/")} to see available slash commands`,
+    `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
@@ -97,61 +117,32 @@ function handleWhoami() {
   }
 }
 
-async function handleInfo() {
-  posthogService.capture("useSlashCommand", { name: "info" });
+async function handleFork() {
+  posthogService.capture("useSlashCommand", { name: "fork" });
 
-  const infoLines = [];
-
-  // Auth info
-  if (isAuthenticated()) {
-    const config = loadAuthConfig();
-    if (config && isAuthenticatedConfig(config)) {
-      const email = config.userEmail || config.userId;
-      const org = "(no org)"; // Organization info not available in AuthenticatedConfig
-      infoLines.push(chalk.white("Authentication:"));
-      infoLines.push(`  Email: ${chalk.green(email)}`);
-      infoLines.push(`  Organization: ${chalk.cyan(org)}`);
-    } else {
-      infoLines.push(chalk.white("Authentication:"));
-      infoLines.push(
-        `  ${chalk.yellow("Authenticated via environment variable")}`,
-      );
-    }
-  } else {
-    infoLines.push(chalk.white("Authentication:"));
-    infoLines.push(`  ${chalk.red("Not logged in")}`);
-  }
-
-  // Config info
   try {
-    const configState = services.config.getState();
-    infoLines.push("");
-    infoLines.push(chalk.white("Configuration:"));
-    if (configState.config) {
-      infoLines.push(`  ${chalk.gray(`Using ${configState.config?.name}`)}`);
-    } else {
-      infoLines.push(`  ${chalk.red(`Config not found`)}`);
+    const currentSession = getCurrentSession();
+    const forkCommand = `cn --fork ${currentSession.sessionId}`;
+    // Try to copy to clipboard dynamically to avoid hard dependency in tests
+    try {
+      const clipboardy = await import("clipboardy");
+      await clipboardy.default.write(forkCommand);
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand} (copied to clipboard)`),
+      };
+    } catch {
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand}`),
+      };
     }
-    if (configState.configPath) {
-      infoLines.push(`  Path: ${chalk.blue(configState.configPath)}`);
-    }
-  } catch {
-    infoLines.push("");
-    infoLines.push(chalk.white("Configuration:"));
-    infoLines.push(`  ${chalk.red("Configuration service not available")}`);
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to create fork command: ${error.message}`),
+    };
   }
-
-  // Session history path
-  infoLines.push("");
-  infoLines.push(chalk.white("Session History:"));
-  const sessionFilePath = getSessionFilePath();
-
-  infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
-
-  return {
-    exit: false,
-    output: infoLines.join("\n"),
-  };
 }
 
 const commandHandlers: Record<string, CommandHandler> = {
@@ -171,7 +162,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   login: handleLogin,
   logout: handleLogout,
   whoami: handleWhoami,
-  info: handleInfo,
+  info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
     posthogService.capture("useSlashCommand", { name: "compact" });
@@ -184,6 +175,11 @@ const commandHandlers: Record<string, CommandHandler> = {
   resume: () => {
     posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
+  },
+  fork: handleFork,
+  init: (args, assistant) => {
+    posthogService.capture("useSlashCommand", { name: "init" });
+    return handleInit(args, assistant);
   },
 };
 
@@ -207,6 +203,9 @@ export async function handleSlashCommands(
   }
 
   const [command, ...args] = input.slice(1).split(" ");
+
+  telemetryService.recordSlashCommand(command);
+  posthogService.capture("useSlashCommand", { name: command });
 
   const handler = commandHandlers[command];
   if (handler) {

@@ -25,7 +25,7 @@ describe("E2E: Headless Mode (Minimal)", () => {
       configPath,
       `name: Test Assistant
 model: gpt-4
-provider: openai`
+provider: openai`,
     );
 
     // For now, just test that it tries to load the config

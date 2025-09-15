@@ -4,6 +4,7 @@ import { logger } from "../util/logger.js";
 
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
+import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
@@ -11,6 +12,7 @@ import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { systemMessageService } from "./SystemMessageService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -28,6 +30,7 @@ const apiClientService = new ApiClientService();
 const mcpService = new MCPService();
 const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
+const chatHistoryService = new ChatHistoryService();
 
 /**
  * Initialize all services and register them with the service container
@@ -109,6 +112,18 @@ export async function initializeServices(
   serviceContainer.registerValue(
     SERVICE_NAMES.TOOL_PERMISSIONS,
     toolPermissionState,
+  );
+
+  // Initialize SystemMessageService with command options
+  serviceContainer.register(
+    SERVICE_NAMES.SYSTEM_MESSAGE,
+    () =>
+      systemMessageService.initialize({
+        additionalRules: commandOptions.rule,
+        format: (commandOptions as any).format, // format option from CLI
+        headless: initOptions.headless,
+      }),
+    [], // No dependencies
   );
 
   serviceContainer.register(
@@ -228,6 +243,12 @@ export async function initializeServices(
     [],
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.CHAT_HISTORY,
+    () => chatHistoryService.initialize(undefined, initOptions.headless),
+    [], // No dependencies for now, but could depend on SESSION in future
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -271,6 +292,7 @@ export function areServicesReady(): boolean {
     SERVICE_NAMES.MCP,
     SERVICE_NAMES.FILE_INDEX,
     SERVICE_NAMES.RESOURCE_MONITORING,
+    SERVICE_NAMES.CHAT_HISTORY,
   ].every((name) => serviceContainer.isReady(name));
 }
 
@@ -293,6 +315,8 @@ export const services = {
   fileIndex: fileIndexService,
   mode: modeService,
   resourceMonitoring: resourceMonitoringService,
+  systemMessage: systemMessageService,
+  chatHistory: chatHistoryService,
 } as const;
 
 // Export the service container for advanced usage
