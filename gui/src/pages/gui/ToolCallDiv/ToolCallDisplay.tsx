@@ -23,7 +23,7 @@ export function ToolCallDisplay({
 
   const args: [string, any][] = useMemo(() => {
     return Object.entries(toolCallState.parsedArgs);
-  }, [toolCallState.parsedArgs, tool?.skipToolArgsDisplay]);
+  }, [toolCallState.parsedArgs, tool?.displayToolArgs]);
 
   return (
     <div className="flex flex-col justify-center px-4">
@@ -42,7 +42,7 @@ export function ToolCallDisplay({
             {!!toolCallState.output && (
               <ToolTruncateHistoryIcon historyIndex={historyIndex} />
             )}
-            {!!args.length && !tool?.skipToolArgsDisplay ? (
+            {!!args.length && (tool?.displayToolArgs ?? true) ? (
               <ArgsToggleIcon
                 isShowing={argsExpanded}
                 setIsShowing={setArgsExpanded}

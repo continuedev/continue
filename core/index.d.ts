@@ -1103,7 +1103,7 @@ export interface Tool {
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
   ) => ToolPolicy;
-  skipToolArgsDisplay?: boolean;
+  displayToolArgs?: boolean;
 }
 
 interface ToolChoice {

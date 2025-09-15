@@ -56,5 +56,5 @@ For example:`,
       ],
     ],
   },
-  skipToolArgsDisplay: true,
+  displayToolArgs: false,
 };
