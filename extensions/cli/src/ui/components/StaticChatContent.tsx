@@ -92,7 +92,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    const PENDING_ITEMS_COUNT = 2;
+    const PENDING_ITEMS_COUNT = 1;
     const stableCount = Math.max(
       0,
       filteredChatHistory.length - PENDING_ITEMS_COUNT,
