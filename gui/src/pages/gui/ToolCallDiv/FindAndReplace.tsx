@@ -277,7 +277,9 @@ export function FindAndReplaceDisplay({
   }
 
   return renderContainer(
-    <div className="thin-scrollbar max-h-72 overflow-auto">
+    <div
+      className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
+    >
       <pre
         className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
