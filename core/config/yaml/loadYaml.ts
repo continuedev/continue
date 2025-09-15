@@ -156,13 +156,12 @@ async function loadConfigYaml(options: {
 export async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
-  ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
   workOsAccessToken: string | undefined;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  let { config, ide, ideSettings, ideInfo, uniqueId, llmLogger } = options;
+  let { config, ide, ideInfo, uniqueId, llmLogger } = options;
 
   const localErrors: ConfigValidationError[] = [];
 
@@ -466,7 +465,6 @@ export async function loadContinueConfigFromYaml(options: {
     await configYamlToContinueConfig({
       config: configYamlResult.config,
       ide,
-      ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,

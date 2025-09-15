@@ -204,7 +204,7 @@ export interface BaseUnrollAssistantOptions {
   injectBlocks?: PackageIdentifier[];
   allowlistedBlocks?: PackageSlug[];
   blocklistedBlocks?: PackageSlug[];
-  requestOptions?: RequestOptions;
+  injectRequestOptions?: RequestOptions;
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -276,6 +276,7 @@ export async function unrollAssistantFromContent(
     options.injectBlocks,
     options.allowlistedBlocks,
     options.blocklistedBlocks,
+    options.injectRequestOptions,
   );
 
   // Back to a string so we can fill in template variables
@@ -310,13 +311,6 @@ export async function unrollAssistantFromContent(
     options.orgScopeId,
     options.onPremProxyUrl,
   );
-
-  if (options.requestOptions) {
-    renderedConfig.requestOptions = mergeConfigYamlRequestOptions(
-      renderedConfig.requestOptions,
-      options.requestOptions,
-    );
-  }
 
   return { config: renderedConfig, errors, configLoadInterrupted };
 }
@@ -359,6 +353,7 @@ export async function unrollBlocks(
   injectBlocks: PackageIdentifier[] | undefined,
   allowlistedBlocks?: PackageSlug[],
   blocklistedBlocks?: PackageSlug[],
+  injectRequestOptions?: RequestOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
@@ -372,7 +367,17 @@ export async function unrollBlocks(
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
+    requestOptions: assistant.requestOptions,
   };
+
+  if (injectRequestOptions) {
+    unrolledAssistant.requestOptions = mergeConfigYamlRequestOptions(
+      assistant.requestOptions,
+      injectRequestOptions,
+    );
+  } else {
+    unrolledAssistant.requestOptions = assistant.requestOptions;
+  }
 
   const sections: (keyof Omit<
     ConfigYaml,
