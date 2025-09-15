@@ -21,6 +21,13 @@
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "semantic-release": "^24.2.7",
   }
 }
