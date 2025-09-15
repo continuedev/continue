@@ -79,10 +79,10 @@ function shouldExcludeEditTool(): boolean {
       modelServiceResult.state === "ready" &&
       modelServiceResult.value?.model
     ) {
-      const { name, provider } = modelServiceResult.value.model;
+      const { name, provider, model } = modelServiceResult.value.model;
 
       // Check if model is capable
-      const isCapable = isModelCapable(provider, name, provider);
+      const isCapable = isModelCapable(provider, name, model);
 
       logger.debug("Capability-based tool filtering", {
         provider,
