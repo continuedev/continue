@@ -551,16 +551,16 @@ async function intermediateToFinalConfig({
     await mcpManager.shutdown();
   } else {
     mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map(
-      (server, index) => ({
-        id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server`,
-        ...server,
-        requestOptions: config.requestOptions,
-      }),
-    ),
-    false,
-  );
+      (config.experimental?.modelContextProtocolServers ?? []).map(
+        (server, index) => ({
+          id: `continue-mcp-server-${index + 1}`,
+          name: `MCP Server`,
+          ...server,
+          requestOptions: config.requestOptions,
+        }),
+      ),
+      false,
+    );
   }
 
   // Handle experimental modelRole config values for apply and edit
