@@ -306,9 +306,7 @@ export async function configYamlToContinueConfig(options: {
     try {
       const llms = await llmsFromModelConfig({
         model,
-        ide,
         uniqueId,
-        ideSettings,
         llmLogger,
         config: continueConfig,
       });

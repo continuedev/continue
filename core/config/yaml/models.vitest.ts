@@ -1,7 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../..";
+import { ContinueConfig, ILLMLogger } from "../..";
 import { llmsFromModelConfig } from "./models";
 
 // Mock the LLM classes
@@ -43,14 +43,10 @@ vi.mock("../../llm/llms", () => ({
 }));
 
 describe("llmsFromModelConfig requestOptions merging", () => {
-  let mockIde: IDE;
-  let mockIdeSettings: IdeSettings;
   let mockLLMLogger: ILLMLogger;
   let mockConfig: ContinueConfig;
 
   beforeEach(() => {
-    mockIde = {} as IDE;
-    mockIdeSettings = {} as IdeSettings;
     mockLLMLogger = { log: vi.fn() } as any;
     mockConfig = {
       requestOptions: {
@@ -104,9 +100,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: mockConfig,
     });
@@ -135,9 +129,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: mockConfig,
     });
@@ -167,9 +159,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: configWithoutOptions,
     });
@@ -202,9 +192,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: configWithEmptyHeaders,
     });
@@ -235,9 +223,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: mockConfig,
     });
@@ -270,9 +256,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: mockConfig,
     });
@@ -299,9 +283,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: mockConfig,
     });
@@ -354,9 +336,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
 
     const result = await llmsFromModelConfig({
       model,
-      ide: mockIde,
       uniqueId: "test-id",
-      ideSettings: mockIdeSettings,
       llmLogger: mockLLMLogger,
       config: configWithMoreHeaders,
     });
