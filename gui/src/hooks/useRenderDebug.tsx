@@ -7,13 +7,13 @@ import { CSSProperties, useEffect, useRef } from "react";
  *
  * - Returns a `ref` to attach to a container element and a `count` that
  *   increments on every render of the component using this hook.
- * - On each render, it briefly adds a CSS class (default: `toolbar-rerender-flash`)
+ * - On each render, it briefly adds a CSS class (default: `rerender-flash`)
  *   to the element for a quick visual flash.
  * - Use together with <RenderCountBadge /> to show the render count inline.
  *
  * Options:
  * - enabled: boolean to toggle the effect (default true)
- * - flashClassName: class added on each render (default `toolbar-rerender-flash`)
+ * - flashClassName: class added on each render (default `rerender-flash`)
  * - flashDurationMs: duration of the flash animation in ms (default 180)
  */
 
@@ -24,7 +24,7 @@ export function useRenderDebug(options?: {
 }) {
   const {
     enabled = true,
-    flashClassName = "toolbar-rerender-flash",
+    flashClassName = "rerender-flash",
     flashDurationMs = 180,
   } = options || {};
 
@@ -56,7 +56,7 @@ export function RenderCountBadge(props: {
   const { count, title = `Renders: ${count}`, style, className } = props;
   return (
     <span
-      className={`toolbar-render-count ${className || ""}`}
+      className={`render-count ${className || ""}`}
       title={title}
       style={style}
     >
