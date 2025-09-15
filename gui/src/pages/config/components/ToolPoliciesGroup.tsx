@@ -57,12 +57,7 @@ export function ToolPoliciesGroup({
                   : `Enable all tools in ${groupName} group`
             }
           >
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                dispatch(toggleToolGroupSetting(groupName));
-              }}
-            >
+            <div>
               <ToggleSwitch
                 isToggled={isGroupEnabled}
                 onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
