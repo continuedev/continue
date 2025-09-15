@@ -102,6 +102,7 @@ const MODEL_SUPPORTS_IMAGES: RegExp[] = [
   /llama-?4/, // might use something like /llama-?(?:[4-9](?:\.\d+)?|\d{2,}(?:\.\d+)?)/ for forward compat, if needed
   /\bgemma-?3(?!n)/, // gemma3 supports vision, but gemma3n doesn't!
   /\b(pali|med)gemma/,
+  /qwen(.*)vl/,
 ];
 
 function modelSupportsImages(

@@ -110,6 +110,9 @@ describe("BaseLLM", () => {
 
       baseLLM.model = "foo/medgemma_4b_it_16Q";
       expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "qwen2.5vl";
+      expect(baseLLM.supportsImages()).toBe(true);
     });
 
     test("should return false when modelSupportsImages returns false", () => {
