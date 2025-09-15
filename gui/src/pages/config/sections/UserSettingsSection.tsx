@@ -62,7 +62,7 @@ export function UserSettingsSection() {
   const continueAfterToolRejection =
     config.ui?.continueAfterToolRejection ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
-
+  const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
@@ -129,7 +129,15 @@ export function UserSettingsSection() {
                   value={codeWrap}
                   onChange={(value) => handleUpdate({ codeWrap: value })}
                 />
-
+                <UserSetting
+                  type="toggle"
+                  title="Show Chat Scrollbar"
+                  description="Enables a scrollbar in the chat window."
+                  value={showChatScrollbar}
+                  onChange={(value) =>
+                    handleUpdate({ showChatScrollbar: value })
+                  }
+                />
                 <UserSetting
                   type="toggle"
                   title="Text-to-Speech Output"
