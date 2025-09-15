@@ -535,7 +535,9 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
@@ -1217,13 +1219,17 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
     expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
@@ -1877,13 +1883,17 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
     expect(mockIdeMessengerManual.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
