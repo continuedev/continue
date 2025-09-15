@@ -233,11 +233,8 @@
               "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/continuous-ai",
-<<<<<<< HEAD
               "guides/posthog-github-continuous-ai",
-=======
               "guides/continuous-ai-readiness-assessment",
->>>>>>> main
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/instinct",
