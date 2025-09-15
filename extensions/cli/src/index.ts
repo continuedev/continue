@@ -107,6 +107,11 @@ process.on("uncaughtException", (error) => {
   // Don't exit the process, just log the error
 });
 
+// keyboard interruption handler for non-TUI flows
+process.on("SIGINT", async () => {
+  await gracefulExit(130);
+});
+
 const program = new Command();
 
 program
