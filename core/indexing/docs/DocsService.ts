@@ -26,17 +26,13 @@ import {
   getLanceDbPath,
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
+import DocsCrawler from "./crawlers/DocsCrawler";
 
-import {
-  ArticleWithChunks,
-  htmlPageToArticleWithChunks,
-  markdownPageToArticleWithChunks,
-} from "./article";
-import DocsCrawler, { DocsCrawlerType, PageData } from "./crawlers/DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 
 import type * as LanceType from "vectordb";
 import { LLMError } from "../../llm";
+import { EmbeddingManager } from "./EmbeddingManager";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -177,6 +173,7 @@ export default class DocsService {
 
   private docsIndexingQueue = new Set<string>();
   private lanceTableNamesSet = new Set<string>();
+  private embeddingManager = new EmbeddingManager();
 
   private config!: ContinueConfig;
   private sqliteDb?: Database;
@@ -530,19 +527,22 @@ export default class DocsService {
 
       this.addToConfig(siteIndexingConfig);
 
-      this.handleStatusUpdate({
-        ...fixedStatus,
-        status: "indexing",
-        description: "Finding subpages",
-        progress: 0,
-      });
+      const statusUpdateCallback = (
+        status: IndexingStatus["status"],
+        description: IndexingStatus["description"],
+        progress: IndexingStatus["progress"],
+      ) => {
+        this.handleStatusUpdate({
+          ...fixedStatus,
+          status,
+          description,
+          progress,
+        });
+      };
 
-      // Crawl pages to get page data
-      const pages: PageData[] = [];
-      let processedPages = 0;
-      let estimatedProgress = 0;
-      let done = false;
-      let usedCrawler: DocsCrawlerType | undefined = undefined;
+      const shouldCancelCallback = () => {
+        return this.shouldCancel(startUrl, startedWithEmbedder);
+      };
 
       const docsCrawler = new DocsCrawler(
         this.ide,
@@ -552,95 +552,28 @@ export default class DocsService {
         useLocalCrawling,
         this.githubToken,
       );
-      const crawlerGen = docsCrawler.crawl(new URL(startUrl));
 
-      while (!done) {
-        const result = await crawlerGen.next();
-        if (result.done) {
-          done = true;
-          usedCrawler = result.value;
-        } else {
-          const page = result.value;
-          estimatedProgress += 1 / 2 ** (processedPages + 1);
-
-          // NOTE - during "indexing" phase, check if aborted before each status update
-          if (this.shouldCancel(startUrl, startedWithEmbedder)) {
-            return;
-          }
-          this.handleStatusUpdate({
-            ...fixedStatus,
-            description: `Finding subpages (${page.path})`,
-            status: "indexing",
-            progress:
-              0.15 * estimatedProgress +
-              Math.min(0.35, (0.35 * processedPages) / 500),
-            // For the first 50%, 15% is sum of series 1/(2^n) and the other 35% is based on number of files/ 500 max
-          });
-
-          pages.push(page);
-
-          processedPages++;
-
-          // Locks down GUI if no sleeping
-          // Wait proportional to how many docs are indexing
-          const toWait = 100 * this.docsIndexingQueue.size + 50;
-          await new Promise((resolve) => setTimeout(resolve, toWait));
-        }
-      }
-
-      void Telemetry.capture("docs_pages_crawled", {
-        count: processedPages,
+      const resultPromise = this.embeddingManager.enqueue({
+        siteIndexingConfig,
+        statusUpdateCallback,
+        docsCrawler,
+        shouldCancelCallback,
+        embeddingProvider: provider,
       });
 
-      // Chunk pages based on which crawler was used
-      const articles: ArticleWithChunks[] = [];
-      const chunks: Chunk[] = [];
-      const articleChunker =
-        usedCrawler === "github"
-          ? markdownPageToArticleWithChunks
-          : htmlPageToArticleWithChunks;
-      for (const page of pages) {
-        const articleWithChunks = await articleChunker(
-          page,
-          provider.maxEmbeddingChunkSize,
-        );
-        if (articleWithChunks) {
-          articles.push(articleWithChunks);
-        }
-        const toWait = 20 * this.docsIndexingQueue.size + 10;
-        await new Promise((resolve) => setTimeout(resolve, toWait));
+      // This happens when we try to index a documentation which is already in the indexing processes
+      if (!resultPromise) {
+        return;
       }
 
-      // const chunks: Chunk[] = [];
-      const embeddings: number[][] = [];
+      const embeddingResult = await resultPromise;
 
-      // Create embeddings of retrieved articles
-      for (let i = 0; i < articles.length; i++) {
-        const article = articles[i];
-
-        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
-          return;
-        }
-        this.handleStatusUpdate({
-          ...fixedStatus,
-          status: "indexing",
-          description: `Creating Embeddings: ${article.article.subpath}`,
-          progress: 0.5 + 0.3 * (i / articles.length), // 50% -> 80%
-        });
-
-        try {
-          const subpathEmbeddings =
-            article.chunks.length > 0
-              ? await provider.embed(article.chunks.map((c) => c.content))
-              : [];
-          chunks.push(...article.chunks);
-          embeddings.push(...subpathEmbeddings);
-          const toWait = 100 * this.docsIndexingQueue.size + 50;
-          await new Promise((resolve) => setTimeout(resolve, toWait));
-        } catch (e) {
-          console.warn("Error embedding article chunks: ", e);
-        }
+      // This happens when users abort the indexing
+      if (!embeddingResult) {
+        return;
       }
+
+      const { embeddings, chunks } = embeddingResult;
 
       if (embeddings.length === 0) {
         console.error(
