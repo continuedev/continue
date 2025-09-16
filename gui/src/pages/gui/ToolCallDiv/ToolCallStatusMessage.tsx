@@ -5,11 +5,13 @@ import { getStatusIntro } from "./utils";
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
   toolCallState: ToolCallState;
+  onClick?: () => void;
 }
 
 export function ToolCallStatusMessage({
   tool,
   toolCallState,
+  onClick,
 }: ToolCallStatusMessageProps) {
   if (!tool) return "Agent tool use";
 
@@ -51,10 +53,16 @@ export function ToolCallStatusMessage({
     }
   }
 
+  const isClickable = onClick && toolCallState.output && 
+    (toolCallState.status === "done" || toolCallState.status === "canceled" || toolCallState.status === "errored");
+
   return (
     <div
-      className="text-description line-clamp-4 min-w-0 break-all"
+      className={`text-description line-clamp-4 min-w-0 break-all transition-colors duration-200 ease-in-out ${
+        isClickable ? "cursor-pointer hover:brightness-125" : ""
+      }`}
       data-testid="tool-call-title"
+      onClick={isClickable ? onClick : undefined}
     >
       {`Continue ${intro} ${message}`}
     </div>
