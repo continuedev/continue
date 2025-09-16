@@ -184,7 +184,7 @@ export function FindAndReplaceDisplay({
       if (status === "canceled" || status === "errored" || status === "done") {
         return (
           <div
-            className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+            className={`mr-1 grid h-4 w-4 flex-shrink-0 place-items-center ${toolCallState.output ? "cursor-pointer" : ""}`}
             onClick={(e) => {
               if (toolCallState.output) {
                 e.stopPropagation();
