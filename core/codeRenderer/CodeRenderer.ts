@@ -236,13 +236,13 @@ export class CodeRenderer {
       currLineOffsetFromTop,
       newDiffLines,
     );
-    // console.log(highlightedCodeHtml);
 
     const { guts, lineBackgrounds } = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
       options,
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
+    const borderColor = "#6b6b6b";
 
     const lines = code.split("\n");
     const actualHeight = lines.length * options.lineHeight;
@@ -256,12 +256,11 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="2" ry="2" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="2" ry="2" width="${options.dimensions.width}" height="${actualHeight}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${strokeWidth}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
   </svg>`;
-    // console.log(svg);
 
     return Buffer.from(svg, "utf8");
   }
