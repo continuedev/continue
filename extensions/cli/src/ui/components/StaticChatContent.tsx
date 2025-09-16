@@ -1,6 +1,12 @@
 import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Static, Text, useStdout } from "ink";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type { ChatHistoryItem } from "../../../../../core/index.js";
 import type { MCPService } from "../../services/MCPService.js";
@@ -8,7 +14,10 @@ import type { QueuedMessage } from "../../stream/messageQueue.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { useLineBasedMessageRenderer } from "../hooks/useLineBasedMessageRenderer.js";
 import { IntroMessage } from "../IntroMessage.js";
-import { splitChatHistoryIntoLines, ChatHistoryLine } from "../utils/chatHistoryLineSplitter.js";
+import {
+  splitChatHistoryIntoLines,
+  ChatHistoryLine,
+} from "../utils/chatHistoryLineSplitter.js";
 
 interface StaticChatContentProps {
   showIntroMessage: boolean;
@@ -50,7 +59,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   // Convert chat history to line-based format
   useEffect(() => {
     let isCancelled = false;
-    
+
     const convertToLines = async () => {
       try {
         // Filter out system messages without content
@@ -64,13 +73,16 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
           return;
         }
 
-        const lines = await splitChatHistoryIntoLines(filteredChatHistory, columns);
-        
+        const lines = await splitChatHistoryIntoLines(
+          filteredChatHistory,
+          columns,
+        );
+
         if (!isCancelled) {
           setLineChatHistory(lines);
         }
       } catch (error) {
-        console.error('Failed to convert chat history to lines:', error);
+        console.error("Failed to convert chat history to lines:", error);
         if (!isCancelled) {
           setLineChatHistory([]);
         }
@@ -112,7 +124,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   // Split into stable and pending items
   const { staticItems, pendingItems } = useMemo(() => {
     const staticItems: React.ReactElement[] = [];
-    
+
     // Add intro message if it should be shown
     if (showIntroMessage) {
       staticItems.push(
@@ -136,8 +148,11 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     // }
 
     const PENDING_ITEMS_COUNT = 1;
-    const stableCount = Math.max(0, lineChatHistory.length - PENDING_ITEMS_COUNT);
-    
+    const stableCount = Math.max(
+      0,
+      lineChatHistory.length - PENDING_ITEMS_COUNT,
+    );
+
     // Add stable messages to static items
     const stableHistory = lineChatHistory.slice(0, stableCount);
     stableHistory.forEach((item, index) => {

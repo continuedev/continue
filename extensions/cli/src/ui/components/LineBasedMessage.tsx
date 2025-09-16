@@ -40,19 +40,15 @@ export const LineBasedMessage = memo<LineBasedMessageProps>(
         {/* {index % 2 === 1 && <Text color="red">X </Text>} */}
 
         {/* Render content with styling if available - all formatting comes from ANSI stream */}
-        {message.content === '' ? (
+        {message.content === "" ? (
           // Render blank lines as empty space (blank lines now have empty segments)
           <Text> </Text>
         ) : styledSegments && styledSegments.length > 0 ? (
           // Use ANSI-parsed styling information
-          <Box>
-            {createStyledTextFromSegments(styledSegments)}
-          </Box>
+          <Box>{createStyledTextFromSegments(styledSegments)}</Box>
         ) : (
           // Fallback to simple text rendering
-          <Text color={isUser ? "gray" : "white"}>
-            {message.content}
-          </Text>
+          <Text color={isUser ? "gray" : "white"}>{message.content}</Text>
         )}
       </Box>
     );
@@ -69,5 +65,5 @@ export const LineBasedMessage = memo<LineBasedMessageProps>(
       prevProps.item.lineIndex === nextProps.item.lineIndex &&
       prevProps.index === nextProps.index
     );
-  }
+  },
 );
