@@ -11,10 +11,10 @@ import {
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 
 export const callToolById = createAsyncThunk<
   void,
@@ -43,13 +43,14 @@ export const callToolById = createAsyncThunk<
     DEFAULT_TOOL_SETTING;
   const isAutoApproved = toolPolicy === "allowedWithoutPermission";
 
+  const selectedChatModel = selectSelectedChatModel(state);
+
   posthog.capture("gui_tool_call_decision", {
+    model: selectedChatModel,
     decision: isAutoApproved ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
     toolCallId: toolCallId,
   });
-
-  const selectedChatModel = selectSelectedChatModel(state);
 
   if (!selectedChatModel) {
     throw new Error("No model selected");
@@ -129,6 +130,7 @@ export const callToolById = createAsyncThunk<
   // Capture telemetry for tool call execution outcome with duration
   const duration_ms = Date.now() - startTime;
   posthog.capture("gui_tool_call_outcome", {
+    model: selectedChatModel,
     succeeded: errorMessage === undefined,
     toolName: toolCallState.toolCall.function.name,
     errorMessage: errorMessage,

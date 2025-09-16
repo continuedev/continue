@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Run Detailed PR Review
-        uses: continuedev/continue/actions/detailed-review@5dc7a050db441934c26eb910b8433291f627db7f
+        uses: continuedev/continue/actions/detailed-review@8373ac24010df1110cd00512f925b63813362da1
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: continuedev
