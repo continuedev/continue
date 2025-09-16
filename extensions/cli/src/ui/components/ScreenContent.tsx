@@ -45,7 +45,7 @@ interface ScreenContentProps {
   onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
-function showUpdateMessage(state?: UpdateServiceState) {
+function hideScreenContent(state?: UpdateServiceState) {
   return (
     (state?.status === "checking" && state?.autoUpdate) ||
     (state?.isAutoUpdate &&
@@ -76,12 +76,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isRemoteMode,
   onImageInClipboardChange,
 }) => {
-  if (showUpdateMessage(services.update)) {
-    return (
-      <Box margin={1}>
-        <Text>{`${services?.update?.message}`}</Text>
-      </Box>
-    );
+  if (hideScreenContent(services.update)) {
+    return null;
   }
 
   // Login prompt

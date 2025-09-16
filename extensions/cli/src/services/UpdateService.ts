@@ -5,11 +5,7 @@ import { GlobalContext } from "core/util/GlobalContext.js";
 
 import { logger } from "src/util/logger.js";
 
-import {
-  compareVersions,
-  getLatestVersionFromRegistry,
-  getVersion,
-} from "../version.js";
+import { compareVersions, getLatestVersion, getVersion } from "../version.js";
 
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
@@ -60,7 +56,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
         message: "Checking for updates",
       });
 
-      const latestVersion = await getLatestVersionFromRegistry();
+      const latestVersion = await getLatestVersion();
       this.setState({
         latestVersion,
       });
