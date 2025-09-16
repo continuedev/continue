@@ -30,7 +30,7 @@ const MAX_SAME_LINES = 2;
 
 function EllipsisLine() {
   return (
-    <div className="text-description-muted px-3 py-1 text-center font-mono">
+    <div className="text-description-muted px-3 py-1 text-left font-mono">
       ⋯
     </div>
   );
@@ -65,6 +65,19 @@ function DiffLines({
         );
       })}
     </>
+  );
+}
+
+function DiffStats({ added, removed }: { added: number; removed: number }) {
+  if (added === 0 && removed === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-1 font-mono text-xs">
+      {added > 0 && <span className="text-success">+{added}</span>}
+      {removed > 0 && <span className="text-error">-{removed}</span>}
+    </div>
   );
 }
 
@@ -141,6 +154,30 @@ export function FindAndReplaceDisplay({
     }
   }, [currentFileContent, edits]);
 
+  const diffStats = useMemo(() => {
+    if (!diffResult?.diff) {
+      return { added: 0, removed: 0 };
+    }
+
+    let added = 0;
+    let removed = 0;
+
+    diffResult.diff.forEach((part) => {
+      const lines = part.value.split("\n");
+      // Exclude empty line at the end (similar to DiffLines component logic)
+      const lineCount =
+        lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
+
+      if (part.added) {
+        added += lineCount;
+      } else if (part.removed) {
+        removed += lineCount;
+      }
+    });
+
+    return { added, removed };
+  }, [diffResult?.diff]);
+
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;
     if (status) {
@@ -174,24 +211,27 @@ export function FindAndReplaceDisplay({
           setIsExpanded(!showContent);
         }}
       >
-        <div className="flex max-w-[50%] flex-row items-center text-xs">
-          {statusIcon}
-          <ChevronDownIcon
-            data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
-              showContent ? "rotate-0" : "-rotate-90"
-            }`}
-          />
-          <FileInfo
-            filepath={displayName || "..."}
-            onClick={(e) => {
-              if (!fileUri) {
-                return;
-              }
-              e.stopPropagation();
-              ideMessenger.post("openFile", { path: fileUri });
-            }}
-          />
+        <div className="flex min-w-0 flex-1 flex-row items-center gap-2 text-xs">
+          <div className="flex min-w-0 flex-row items-center">
+            {statusIcon}
+            <ChevronDownIcon
+              data-testid="toggle-find-and-replace-diff"
+              className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
+                showContent ? "rotate-0" : "-rotate-90"
+              }`}
+            />
+            <FileInfo
+              filepath={displayName || "..."}
+              onClick={(e) => {
+                if (!fileUri) {
+                  return;
+                }
+                e.stopPropagation();
+                ideMessenger.post("openFile", { path: fileUri });
+              }}
+            />
+          </div>
+          <DiffStats added={diffStats.added} removed={diffStats.removed} />
         </div>
 
         {applyState && (
@@ -218,10 +258,10 @@ export function FindAndReplaceDisplay({
   );
 
   if (diffResult?.error) {
-    return renderContainer(
-      <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong>
-      </div>,
+    return (
+      <div className="text-description mt-2 px-3">
+        The searched string was not found in the file
+      </div>
     );
   }
 
