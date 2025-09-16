@@ -135,7 +135,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [isStreaming, props.isMainInput, editor]);
+  }, [isStreaming, props.isMainInput]);
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
