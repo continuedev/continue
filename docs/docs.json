@@ -26,12 +26,7 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": [
-              "cli/overview",
-              "cli/install",
-              "cli/quick-start",
-              "cli/configuration"
-            ]
+            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
           },
           {
             "group": "Features",
