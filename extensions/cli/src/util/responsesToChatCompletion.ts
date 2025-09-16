@@ -222,5 +222,9 @@ export async function* responsesToChatCompletion(
     ],
   };
 
+  // for (const item of outputItems) {
+  //   console.log(item);
+  // }
+
   yield chunk;
 }
