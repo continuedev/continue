@@ -84,7 +84,7 @@ export function OrganizationOption({
           <Button
             variant="ghost"
             size="sm"
-            className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 transition-opacity group-hover:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
               navigate(CONFIG_ROUTES.ORGANIZATIONS);

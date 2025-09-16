@@ -1,9 +1,17 @@
-import { CubeIcon, ExclamationTriangleIcon, PencilIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
+import {
+  CubeIcon,
+  ExclamationTriangleIcon,
+  PencilIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { selectPendingToolCalls, selectToolCallsByStatus } from "../../../../redux/selectors/selectToolCalls";
+import {
+  selectPendingToolCalls,
+  selectToolCallsByStatus,
+} from "../../../../redux/selectors/selectToolCalls";
 import { setSelectedProfile } from "../../../../redux/slices/profilesSlice";
 import FreeTrialButton from "../../../FreeTrialButton";
 import { ToolTip } from "../../../gui/Tooltip";
@@ -11,10 +19,10 @@ import HoverItem from "../../InputToolbar/HoverItem";
 
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
+import { useAuth } from "../../../../context/Auth";
 import { getLocalStorage } from "../../../../util/localStorage";
 import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
-import { useAuth } from "../../../../context/Auth";
 
 export function BlockSettingsTopToolbar() {
   const navigate = useNavigate();
@@ -24,10 +32,13 @@ export function BlockSettingsTopToolbar() {
   const configError = useAppSelector((store) => store.config.configError);
   const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
-  
+
   const pendingToolCalls = useAppSelector(selectPendingToolCalls);
-  const callingToolCalls = useAppSelector((state) => selectToolCallsByStatus(state, "calling"));
-  const hasActiveContent = pendingToolCalls.length > 0 || callingToolCalls.length > 0;
+  const callingToolCalls = useAppSelector((state) =>
+    selectToolCallsByStatus(state, "calling"),
+  );
+  const hasActiveContent =
+    pendingToolCalls.length > 0 || callingToolCalls.length > 0;
 
   const [freeTrialStatus, setFreeTrialStatus] =
     useState<FreeTrialStatus | null>(null);
@@ -118,7 +129,7 @@ export function BlockSettingsTopToolbar() {
             </div>
           </ToolTip>
         )}
-        
+
         {!hasActiveContent && (
           <div className="flex items-center gap-1.5">
             <ToolTip content="Configure rules">
@@ -126,13 +137,13 @@ export function BlockSettingsTopToolbar() {
                 <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
               </HoverItem>
             </ToolTip>
-            
+
             <ToolTip content="Configure tools">
               <HoverItem onClick={handleToolsClick} px={2}>
                 <WrenchScrewdriverIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
               </HoverItem>
             </ToolTip>
-            
+
             <ToolTip content="Configure models">
               <HoverItem onClick={handleModelsClick} px={2}>
                 <CubeIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
@@ -141,7 +152,7 @@ export function BlockSettingsTopToolbar() {
           </div>
         )}
       </div>
-      
+
       <ToolTip
         place="top"
         content={isUsingFreeTrial ? "View free trial usage" : "Select Agent"}

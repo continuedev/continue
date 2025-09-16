@@ -1,4 +1,7 @@
-import { Cog6ToothIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -42,8 +45,6 @@ export function AssistantOption({
     onClick();
   }
 
-
-
   return (
     <ListboxOption
       value={profile.id}
@@ -64,14 +65,15 @@ export function AssistantOption({
           </span>
         </div>
         <div className="flex flex-row items-center gap-1.5">
-
           <Button
             variant="ghost"
             size="sm"
-            className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 transition-opacity group-hover:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
-              ideMessenger.post("config/openProfile", { profileId: profile.id });
+              ideMessenger.post("config/openProfile", {
+                profileId: profile.id,
+              });
               onClick(); // Close the listbox
             }}
           >
