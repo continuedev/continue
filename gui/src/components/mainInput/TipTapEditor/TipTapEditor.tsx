@@ -1,7 +1,14 @@
 import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
@@ -38,7 +45,7 @@ export interface TipTapEditorProps {
 
 export const TIPPY_DIV_ID = "tippy-js-div";
 
-export function TipTapEditor(props: TipTapEditorProps) {
+function TipTapEditorInner(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
   const mainEditorContext = useMainEditor();
 
@@ -72,12 +79,13 @@ export function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
     const placeholder = getPlaceholderText(props.placeholder, historyLength);
-
-    editor.extensionManager.extensions.filter(
-      (extension) => extension.name === "placeholder",
-    )[0].options["placeholder"] = placeholder;
-
-    editor.view.dispatch(editor.state.tr);
+    const placeholderExt = editor.extensionManager.extensions.find(
+      (e) => e.name === "placeholder",
+    ) as any;
+    if (placeholderExt) {
+      placeholderExt.options["placeholder"] = placeholder;
+      editor.view.dispatch(editor.state.tr);
+    }
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
@@ -279,5 +287,39 @@ export function TipTapEditor(props: TipTapEditorProps) {
         )}
       <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
+  );
+}
+
+function toolbarOptionsEqual(a?: ToolbarOptions, b?: ToolbarOptions) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.hideAddContext === b.hideAddContext &&
+    a.hideImageUpload === b.hideImageUpload &&
+    a.hideUseCodebase === b.hideUseCodebase &&
+    a.hideSelectModel === b.hideSelectModel &&
+    a.enterText === b.enterText
+  );
+}
+
+const MemoInner = memo(
+  TipTapEditorInner,
+  (prev, next) =>
+    prev.isMainInput === next.isMainInput &&
+    prev.placeholder === next.placeholder &&
+    prev.historyKey === next.historyKey &&
+    prev.inputId === next.inputId &&
+    toolbarOptionsEqual(prev.toolbarOptions, next.toolbarOptions) &&
+    (prev.availableContextProviders?.length || 0) ===
+      (next.availableContextProviders?.length || 0) &&
+    (prev.availableSlashCommands?.length || 0) ===
+      (next.availableSlashCommands?.length || 0),
+);
+
+export function TipTapEditor(props: TipTapEditorProps) {
+  return (
+    <div className="relative w-full">
+      <MemoInner {...props} />
+    </div>
   );
 }
