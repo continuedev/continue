@@ -10,20 +10,23 @@ export async function handleLLMError(error: unknown): Promise<boolean> {
   if (!error || !(error instanceof Error) || !error.message) {
     return false;
   }
-  
+
   // Handle Lemonade errors
   if (error.message.toLowerCase().includes("lemonade")) {
     let message: string = error.message;
     let options: string[] | undefined;
-    
+
     // For Windows, offer to start Lemonade if it's installed but not running
-    if (process.platform === "win32" && message.includes("Lemonade server may not be running")) {
+    if (
+      process.platform === "win32" &&
+      message.includes("Lemonade server may not be running")
+    ) {
       options = ["Start Lemonade", "Setup Instructions"];
     } else {
       // For all other cases (Linux, not installed, etc.), direct to setup instructions
       options = ["Setup Instructions"];
     }
-    
+
     vscode.window.showErrorMessage(message, ...options).then((val) => {
       if (val === "Setup Instructions") {
         vscode.env.openExternal(vscode.Uri.parse("https://lemonade-server.ai"));
@@ -33,7 +36,7 @@ export async function handleLLMError(error: unknown): Promise<boolean> {
     });
     return true;
   }
-  
+
   // Handle Ollama errors
   if (!error.message.toLowerCase().includes("ollama")) {
     return false;

@@ -512,7 +512,8 @@ export abstract class BaseLLM implements ILLM {
             let message: string;
             if (process.platform === "linux") {
               // On Linux, isLemonadeInstalled checks if it's running (via health endpoint)
-              message = "Unable to connect to local Lemonade instance. Please ensure Lemonade is running. Visit http://lemonade-server.ai for setup instructions.";
+              message =
+                "Unable to connect to local Lemonade instance. Please ensure Lemonade is running. Visit http://lemonade-server.ai for setup instructions.";
             } else {
               // On Windows, we can check if it's installed
               message = isInstalled
