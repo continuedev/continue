@@ -1,6 +1,6 @@
 ---
 title: "Migrating Config to YAML"
-description: "Continue's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Continue products. Below is a brief guide for migration from config.yml to config.yaml."
+description: "Continue's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Continue products. Below is a brief guide for migration from config.json to config.yaml."
 ---
 
 See also
@@ -10,7 +10,7 @@ See also
 
 ## Create YAML file
 
-Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current config.yml file. If a `config.yaml` file is present, it will be loaded instead of config.yml.
+Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current config.json file. If a `config.yaml` file is present, it will be loaded instead of config.json.
 
 Give your configuration a `name` and a `version`:
 
@@ -42,7 +42,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 models:
@@ -140,7 +140,7 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 contextProviders:
@@ -173,7 +173,7 @@ The `systemMessage` property has been replaced with a `rules` property that take
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 systemMessage: Always give concise responses
@@ -194,7 +194,7 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 customCommands:
@@ -237,7 +237,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 docs:
@@ -271,7 +271,7 @@ docs:
 
 **Before**
 
-config.yml
+config.json
 
 ```yaml
 experimental:
@@ -307,9 +307,9 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated config.yml settings are no longer stored in config and have been moved to be editable through the user settings (Gear Icon). If found in config.yml, they will be auto-migrated to User Settings and removed from config.yml.
+Some deprecated config.json settings are no longer stored in config and have been moved to be editable through the user settings (Gear Icon). If found in config.json, they will be auto-migrated to User Settings and removed from config.json.
 
-The following top-level fields from config.yml have been deprecated and don't have a config.yaml equivalent:
+The following top-level fields from config.json have been deprecated and don't have a config.yaml equivalent:
 
 - Slash commands (`slashCommands`)
 
@@ -329,7 +329,7 @@ The following top-level fields from config.yml have been deprecated and don't ha
 
 - `analytics`
 
-The following top-level fields from config.yml have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+The following top-level fields from config.json have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
 
 - `customCommands`
 - `experimental`
