@@ -118,7 +118,7 @@ async function package(target, os, arch, exe) {
   );
   // *** esbuild ***
   // await installNodeModuleInTempDirAndCopyToCurrent(
-  //   "esbuild@0.17.19",
+  //   "esbuild@0.24.2",
   //   "@esbuild",
   // );
   await downloadEsbuildBinary(target);
