@@ -43,7 +43,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
     // Should include write tools in normal mode
     expect(toolNames).toContain("Write");
-    expect(toolNames).toContain("Edit");
+    expect(toolNames).toContain("MultiEdit");
 
     // Switch to plan mode (simulating Shift+Tab during streaming)
     modeService.switchMode("plan");
@@ -91,7 +91,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     // getAllTools should immediately reflect auto mode (all tools allowed)
     tools = await getAllTools();
     expect(tools.map((t) => t.function.name)).toContain("Write");
-    expect(tools.map((t) => t.function.name)).toContain("Edit");
+    expect(tools.map((t) => t.function.name)).toContain("MultiEdit");
     expect(tools.map((t) => t.function.name)).toContain("Read");
   });
 

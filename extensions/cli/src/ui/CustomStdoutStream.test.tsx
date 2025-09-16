@@ -197,7 +197,9 @@ class AnsiParsingStream extends Writable {
             this.currentStyle.backgroundColor = this.getColorName(num - 40);
           } else if (num >= 100 && num <= 107) {
             // Bright background colors (100-107)
-            this.currentStyle.backgroundColor = this.getBrightColorName(num - 100);
+            this.currentStyle.backgroundColor = this.getBrightColorName(
+              num - 100,
+            );
           } else if (num === 38) {
             // Extended foreground color
             const colorInfo = this.parseExtendedColor(codes, i);
@@ -224,16 +226,16 @@ class AnsiParsingStream extends Writable {
 
   parseExtendedColor(codes: number[], currentIndex: number) {
     if (currentIndex + 1 >= codes.length) return null;
-    
+
     const colorType = codes[currentIndex + 1];
-    
+
     if (colorType === 5) {
       // 256-color mode
       if (currentIndex + 2 >= codes.length) return null;
       const colorIndex = codes[currentIndex + 2];
       return {
         color: `ansi256-${colorIndex}`,
-        nextIndex: currentIndex + 2
+        nextIndex: currentIndex + 2,
       };
     } else if (colorType === 2) {
       // RGB mode
@@ -243,20 +245,26 @@ class AnsiParsingStream extends Writable {
       const b = codes[currentIndex + 4];
       return {
         color: `rgb(${r},${g},${b})`,
-        nextIndex: currentIndex + 4
+        nextIndex: currentIndex + 4,
       };
     }
-    
+
     return null;
   }
 
   getBrightColorName(colorIndex: number): string {
     const brightColors = [
-      'blackBright', 'redBright', 'greenBright', 'yellowBright',
-      'blueBright', 'magentaBright', 'cyanBright', 'whiteBright'
+      "blackBright",
+      "redBright",
+      "greenBright",
+      "yellowBright",
+      "blueBright",
+      "magentaBright",
+      "cyanBright",
+      "whiteBright",
     ];
     // For gray (bright black), use 'gray' which Ink recognizes
-    if (colorIndex === 0) return 'gray';
+    if (colorIndex === 0) return "gray";
     return brightColors[colorIndex] || `brightColor-${colorIndex}`;
   }
 
@@ -289,15 +297,24 @@ class AnsiParsingStream extends Writable {
       segments.sort((a, b) => a.position.col - b.position.col);
     });
 
-    const result: Array<{
+    const result: {
       line: number;
-      segments: Array<{
+      segments: {
         text: string;
         startCol: number;
         endCol: number;
-        style: typeof this.currentStyle;
-      }>;
-    }> = [];
+        style: {
+          color: string | null;
+          backgroundColor: string | null;
+          bold: boolean;
+          italic: boolean;
+          underline: boolean;
+          strikethrough: boolean;
+          dim: boolean;
+          inverse: boolean;
+        };
+      }[];
+    }[] = [];
 
     const sortedLines = Array.from(lines.entries()).sort(([a], [b]) => a - b);
 
@@ -428,92 +445,87 @@ describe("AnsiParsingStream", () => {
     expect(redBgSegment?.text).toBe("Red BG");
   });
 
-  test('should preserve blank lines and newlines correctly', () => {
+  test("should preserve blank lines and newlines correctly", () => {
     const ansiStream = new AnsiParsingStream();
-    
+
     // Write text with blank lines
-    const testData = 'First line\n\nSecond line after blank\n\n\nThird line after two blanks';
+    const testData =
+      "First line\n\nSecond line after blank\n\n\nThird line after two blanks";
     ansiStream.write(testData);
-    
+
     const lines = ansiStream.getFormattedLines();
-    
-    console.log('Blank line test - formatted lines:', lines);
-    console.log('Raw test data:', JSON.stringify(testData));
-    
+
     // Should capture all lines including blank ones
     expect(lines.length).toBe(6); // 3 content lines + 3 blank lines
-    
+
     // Check line contents
-    expect(lines[0].segments[0].text).toBe('First line');
+    expect(lines[0].segments[0].text).toBe("First line");
     expect(lines[1].segments.length).toBe(1); // Blank line has empty segment
-    expect(lines[1].segments[0].text).toBe(''); // Empty segment
-    expect(lines[2].segments[0].text).toBe('Second line after blank');
+    expect(lines[1].segments[0].text).toBe(""); // Empty segment
+    expect(lines[2].segments[0].text).toBe("Second line after blank");
     expect(lines[3].segments.length).toBe(1); // Blank line has empty segment
-    expect(lines[3].segments[0].text).toBe(''); // Empty segment
-    expect(lines[4].segments.length).toBe(1); // Blank line has empty segment  
-    expect(lines[4].segments[0].text).toBe(''); // Empty segment
-    expect(lines[5].segments[0].text).toBe('Third line after two blanks');
+    expect(lines[3].segments[0].text).toBe(""); // Empty segment
+    expect(lines[4].segments.length).toBe(1); // Blank line has empty segment
+    expect(lines[4].segments[0].text).toBe(""); // Empty segment
+    expect(lines[5].segments[0].text).toBe("Third line after two blanks");
   });
 
-  test('should parse RGB colors correctly', () => {
+  test("should parse RGB colors correctly", () => {
     const ansiStream = new AnsiParsingStream();
-    
+
     // Write RGB ANSI codes like we see in the diff output
-    const testData = '\x1b[48;2;113;47;55m\x1b[38;2;167;94;109mRed BG Text\x1b[49m\x1b[39m \x1b[48;2;50;91;48m\x1b[38;2;89;164;103mGreen BG Text\x1b[49m\x1b[39m';
+    const testData =
+      "\x1b[48;2;113;47;55m\x1b[38;2;167;94;109mRed BG Text\x1b[49m\x1b[39m \x1b[48;2;50;91;48m\x1b[38;2;89;164;103mGreen BG Text\x1b[49m\x1b[39m";
     ansiStream.write(testData);
-    
+
     const lines = ansiStream.getFormattedLines();
-    
-    console.log('RGB test segments:', lines[0].segments.map(s => ({
-      text: s.text,
-      color: s.style.color,
-      backgroundColor: s.style.backgroundColor
-    })));
-    
+
     expect(lines.length).toBe(1);
     const segments = lines[0].segments;
-    
+
     // Should have segments with RGB colors
     expect(segments.length).toBeGreaterThan(1);
-    
+
     // Check for RGB background colors
-    const redBgSegment = segments.find(s => s.style.backgroundColor?.includes('113,47,55'));
-    const greenBgSegment = segments.find(s => s.style.backgroundColor?.includes('50,91,48'));
-    
+    const redBgSegment = segments.find((s) =>
+      s.style.backgroundColor?.includes("113,47,55"),
+    );
+    const greenBgSegment = segments.find((s) =>
+      s.style.backgroundColor?.includes("50,91,48"),
+    );
+
     expect(redBgSegment).toBeDefined();
     expect(greenBgSegment).toBeDefined();
   });
 
-  test('should parse bright colors like gray correctly', () => {
+  test("should parse bright colors like gray correctly", () => {
     const ansiStream = new AnsiParsingStream();
-    
+
     // Test bright colors including gray (90)
-    const testData = '\x1b[34m●\x1b[39m \x1b[90mGray text\x1b[39m \x1b[91mBright red\x1b[39m';
+    const testData =
+      "\x1b[34m●\x1b[39m \x1b[90mGray text\x1b[39m \x1b[91mBright red\x1b[39m";
     ansiStream.write(testData);
-    
+
     const lines = ansiStream.getFormattedLines();
-    
-    console.log('Bright color test segments:', lines[0].segments.map(s => ({
-      text: s.text,
-      color: s.style.color
-    })));
-    
+
     expect(lines.length).toBe(1);
     const segments = lines[0].segments;
-    
+
     // Check for blue bullet
-    const blueSegment = segments.find(s => s.style.color === 'blue');
+    const blueSegment = segments.find((s) => s.style.color === "blue");
     expect(blueSegment).toBeDefined();
-    expect(blueSegment?.text).toBe('●');
-    
+    expect(blueSegment?.text).toBe("●");
+
     // Check for gray text
-    const graySegment = segments.find(s => s.style.color === 'gray');
+    const graySegment = segments.find((s) => s.style.color === "gray");
     expect(graySegment).toBeDefined();
-    expect(graySegment?.text).toBe('Gray text');
-    
+    expect(graySegment?.text).toBe("Gray text");
+
     // Check for bright red
-    const brightRedSegment = segments.find(s => s.style.color === 'redBright');
+    const brightRedSegment = segments.find(
+      (s) => s.style.color === "redBright",
+    );
     expect(brightRedSegment).toBeDefined();
-    expect(brightRedSegment?.text).toBe('Bright red');
+    expect(brightRedSegment?.text).toBe("Bright red");
   });
 });
