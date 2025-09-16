@@ -7,7 +7,7 @@ import Alert from "../../../components/gui/Alert";
 import { Card, Divider } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { updateConfig } from "../../../redux/slices/configSlice";
+import { EMPTY_CONFIG, updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { UserSetting } from "../components/UserSetting";
@@ -79,6 +79,7 @@ function EnableIndexingSetting() {
 
 export function IndexingSettingsSection() {
   const config = useAppSelector((state) => state.config.config);
+  const configLoading = JSON.stringify(config) === JSON.stringify(EMPTY_CONFIG);
   const disableIndexing = config.disableIndexing ?? false;
 
   return (
@@ -103,12 +104,16 @@ export function IndexingSettingsSection() {
               </a>
             </div>
           </div>
-          <Divider className="border-inherit" />
-          <EnableIndexingSetting />
+          {!configLoading && (
+            <>
+              <Divider className="border-inherit" />
+              <EnableIndexingSetting />
+            </>
+          )}
         </div>
       </Alert>
 
-      {!disableIndexing && (
+      {!configLoading && !disableIndexing && (
         <div className="space-y-8">
           <CodebaseSubSection />
           <DocsSection />
