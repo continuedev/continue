@@ -32,6 +32,10 @@ on:
         required: false
       VOYAGE_API_KEY:
         required: false
+      RELACE_API_KEY:
+        required: false
+      INCEPTION_API_KEY:
+        required: false
 
 permissions:
   contents: write
