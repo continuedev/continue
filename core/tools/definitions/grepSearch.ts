@@ -13,7 +13,7 @@ export const grepSearchTool: Tool = {
   function: {
     name: BuiltInToolNames.GrepSearch,
     description:
-      "Perform a search over the repository using ripgrep. Output may be truncated, so use targeted queries",
+      "Perform a search over the repository using ripgrep. Will not include results for many build, cache, secrets dirs/files. Output may be truncated, so use targeted queries",
     parameters: {
       type: "object",
       required: ["query"],
