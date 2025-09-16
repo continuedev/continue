@@ -3,7 +3,7 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { DEFAULT_IGNORES } from "core/indexing/ignore";
+import { DEFAULT_IGNORES, defaultIgnoresGlob } from "core/indexing/ignore";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -545,7 +545,7 @@ class VsCodeIde implements IDE {
       return results.map((result) => vscode.workspace.asRelativePath(result));
     } else {
       const results: string[] = [];
-      const defaultIgnoresGlob = `!(${DEFAULT_IGNORES.join("|")})`;
+      // Create a single combined ignore pattern using glob brace expansion
       for (const dir of await this.getWorkspaceDirs()) {
         const dirResults = await this.runRipgrepQuery(dir, [
           "--files",
@@ -555,7 +555,6 @@ class VsCodeIde implements IDE {
           ".continueignore",
           "--ignore-file",
           ".gitignore",
-          // Use a single glob with all default ignores
           "--glob",
           defaultIgnoresGlob,
           ...(maxResults ? ["--max-count", String(maxResults)] : []),
@@ -580,6 +579,7 @@ class VsCodeIde implements IDE {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
     const results: string[] = [];
+
     for (const dir of await this.getWorkspaceDirs()) {
       const dirResults = await this.runRipgrepQuery(dir, [
         "-i", // Case-insensitive search
@@ -592,7 +592,7 @@ class VsCodeIde implements IDE {
         "--heading", // Only show filepath once per result
         // Use a single glob with all default ignores
         "--glob",
-        `!(${DEFAULT_IGNORES.join("|")})`,
+        defaultIgnoresGlob,
         ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",
         query, // Pattern to search for
