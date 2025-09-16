@@ -13,7 +13,10 @@ import {
   selectApplyStateByToolCallId,
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
-import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
+import {
+  performFindAndReplace,
+  removeEmptyLines,
+} from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
@@ -313,14 +316,16 @@ export function FindAndReplaceDisplay({
             const showMiddleEllipses =
               !isFirst && !isLast && lines.length > MAX_SAME_LINES * 2 + 1;
 
-            const startLines = showStartEllipsis
+            let startLines = showStartEllipsis
               ? lines.slice(-MAX_SAME_LINES)
               : showMiddleEllipses || showEndEllipsis
                 ? lines.slice(0, MAX_SAME_LINES)
                 : lines;
-            const endLines = showMiddleEllipses
+            startLines = removeEmptyLines.fromStart(startLines);
+            let endLines = showMiddleEllipses
               ? lines.slice(-MAX_SAME_LINES)
               : [];
+            endLines = removeEmptyLines.fromEnd(endLines);
 
             return (
               <div key={index}>
