@@ -590,7 +590,11 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     collectInputFor: [
       ...completionParamsInputsConfigs,
-      { ...apiBaseInput, defaultValue: "http://localhost:8000/api/v1/", required: true },
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000/api/v1/",
+        required: true,
+      },
     ],
     downloadUrl: "http://lemonade-server.ai",
   },
