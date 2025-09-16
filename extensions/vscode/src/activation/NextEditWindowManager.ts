@@ -945,7 +945,6 @@ export class NextEditWindowManager {
 
     const deleteDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: "rgba(255, 0, 0, 0.5)",
-      textDecoration: "line-through",
     });
 
     editor.setDecorations(deleteDecorationType, charsToDelete);
