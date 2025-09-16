@@ -41,6 +41,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "update",
+    description: "Update the Continue CLI",
+    category: "system",
+  },
+  {
     name: "whoami",
     description: "Check who you're currently logged in as",
     category: "system",
