@@ -12,6 +12,7 @@ dotenv.config();
 export interface TestConfigOptions {
   skipTools: boolean;
   expectUsage?: boolean;
+  skipSystemMessage?: boolean;
 }
 
 function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
@@ -98,9 +99,9 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   },
   {
     provider: "mistral",
-    model: "codestral",
+    model: "codestral-latest",
     apiKey: process.env.MISTRAL_API_KEY!,
-    roles: ["chat"],
+    roles: ["chat", "autocomplete"],
     options: {
       skipTools: false,
       expectUsage: true,
@@ -150,6 +151,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     options: {
       skipTools: true,
       expectUsage: true,
+      skipSystemMessage: true,
     },
   },
   {
