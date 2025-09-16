@@ -143,13 +143,7 @@ class Anthropic extends BaseLLM {
     if (typeof message.content === "string") {
       var chatMessage = {
         role: message.role,
-        content: [
-          {
-            type: "text",
-            text: message.content,
-            ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
-          },
-        ],
+        content: [this.buildTextPart(message.content, addCaching)],
       };
       return chatMessage;
     }
@@ -158,14 +152,8 @@ class Anthropic extends BaseLLM {
       role: message.role,
       content: message.content.map((part, contentIdx) => {
         if (part.type === "text") {
-          const newpart = {
-            ...part,
-            // If multiple text parts, only add cache_control to the last one
-            ...(addCaching && contentIdx === message.content.length - 1
-              ? { cache_control: { type: "ephemeral" } }
-              : {}),
-          };
-          return newpart;
+          const cache = addCaching && contentIdx === message.content.length - 1;
+          return this.buildTextPart(part.text, cache);
         }
         return {
           type: "image",
