@@ -57,10 +57,13 @@ function TipTapEditorInner(props: TipTapEditorProps) {
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
   const { editor, onEnterRef } = createEditorConfig({
     props,
     ideMessenger,
     dispatch,
+    setShowDragOverMsg,
   });
 
   // Register the main editor with the provider
@@ -119,8 +122,6 @@ function TipTapEditorInner(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
-
-  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
@@ -204,40 +205,23 @@ function TipTapEditorInner(props: TipTapEditorProps) {
           if (e.shiftKey) {
             setShowDragOverMsg(false);
           } else {
-            setTimeout(() => setShowDragOverMsg(false), 2000);
+            setTimeout(() => {
+              setShowDragOverMsg(false);
+            }, 2000);
           }
         }
+        setShowDragOverMsg(false);
       }}
       onDragEnter={() => {
         setShowDragOverMsg(true);
       }}
-      onDrop={(event) => {
+      onDragEnd={() => {
         setShowDragOverMsg(false);
-        if (
-          !defaultModel ||
-          !modelSupportsImages(
-            defaultModel.provider,
-            defaultModel.model,
-            defaultModel.title,
-            defaultModel.capabilities,
-          )
-        ) {
-          return;
-        }
-        let file = event.dataTransfer.files[0];
-        void handleImageFile(ideMessenger, file).then((result) => {
-          if (!editor) {
-            return;
-          }
-          if (result) {
-            const [_, dataUrl] = result;
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const tr = editor.state.tr.insert(0, node);
-            editor.view.dispatch(tr);
-          }
-        });
-        event.preventDefault();
+      }}
+      onDrop={(event) => {
+        // Just hide the drag overlay - ProseMirror handles the actual drop
+        setShowDragOverMsg(false);
+        // Let the event bubble to ProseMirror by not preventing default
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
@@ -282,9 +266,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
           defaultModel?.model || "",
           defaultModel?.title,
           defaultModel?.capabilities,
-        ) && (
-          <DragOverlay show={showDragOverMsg} setShow={setShowDragOverMsg} />
-        )}
+        ) && <DragOverlay show={showDragOverMsg} />}
       <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
   );
