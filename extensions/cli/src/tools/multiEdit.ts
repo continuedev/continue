@@ -9,7 +9,6 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { editTool } from "./edit.js";
 import { readFilesSet, readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
@@ -133,8 +132,8 @@ export const multiEditTool: Tool = {
   displayName: "MultiEdit",
   readonly: false,
   isBuiltIn: true,
-  description: `This is a tool for making multiple edits to a single file in one operation. It is built on top of the ${editTool.name} tool and allows you to perform multiple find-and-replace operations efficiently.
-Prefer this tool over the ${editTool.name} tool when you need to make multiple edits to the same file.
+  description: `This is a tool for making multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently.
+This tool is ideal when you need to make multiple edits to the same file.
 
 To make multiple edits to a file, provide the following:
 1. file_path: The absolute path to the file to modify (must be absolute, not relative)
