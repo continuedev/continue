@@ -40,7 +40,11 @@ export function useRenderDebug(options?: {
       () => el.classList.remove(flashClassName),
       flashDurationMs,
     );
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      // Ensure we don't leave the flash class applied on cleanup
+      el.classList.remove(flashClassName);
+    };
   });
 
   return { ref, count: countRef.current, countRef } as const;
