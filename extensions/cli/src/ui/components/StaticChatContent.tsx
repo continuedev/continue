@@ -11,13 +11,16 @@ import React, {
 import type { ChatHistoryItem } from "../../../../../core/index.js";
 import type { MCPService } from "../../services/MCPService.js";
 import type { QueuedMessage } from "../../stream/messageQueue.js";
-import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { useLineBasedMessageRenderer } from "../hooks/useLineBasedMessageRenderer.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
 import {
-  splitChatHistoryIntoLines,
   ChatHistoryLine,
+  splitChatHistoryIntoLines,
 } from "../utils/chatHistoryLineSplitter.js";
+
+// Toggle line-based rendering (comment out to disable)
+const USE_LINE_BASED_RENDERING = true;
 
 interface StaticChatContentProps {
   showIntroMessage: boolean;
@@ -26,7 +29,7 @@ interface StaticChatContentProps {
   mcpService?: MCPService;
   chatHistory: ChatHistoryItem[];
   queuedMessages?: QueuedMessage[];
-  renderMessage: (item: ChatHistoryItem, index: number) => React.ReactElement; // Keep for compatibility but won't use
+  renderMessage: (item: ChatHistoryItem, index: number) => React.ReactElement;
   refreshTrigger?: number;
 }
 
@@ -37,7 +40,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   mcpService,
   chatHistory,
   queuedMessages = [],
-  renderMessage, // Keep for compatibility but won't use
+  renderMessage,
   refreshTrigger,
 }) => {
   const { columns, rows } = useTerminalSize();
@@ -56,8 +59,13 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     stdout.write("\x1b[3J");
   }, [stdout]);
 
-  // Convert chat history to line-based format
+  // Convert chat history to line-based format (if enabled)
   useEffect(() => {
+    if (!USE_LINE_BASED_RENDERING) {
+      setLineChatHistory([]);
+      return;
+    }
+
     let isCancelled = false;
 
     const convertToLines = async () => {
@@ -121,6 +129,13 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     }
   }, [refreshTrigger, refreshStatic]);
 
+  // Filter out system messages without content (for original rendering)
+  const filteredChatHistory = useMemo(() => {
+    return chatHistory.filter(
+      (item) => item.message.role !== "system" || item.message.content,
+    );
+  }, [chatHistory]);
+
   // Split into stable and pending items
   const { staticItems, pendingItems } = useMemo(() => {
     const staticItems: React.ReactElement[] = [];
@@ -137,41 +152,57 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    // Remove processing indicator to prevent screen clearing
-    // if (isProcessingLines) {
-    //   staticItems.push(
-    //     <Box key="processing" paddingLeft={2}>
-    //       <Text color="gray" italic>Processing chat history...</Text>
-    //     </Box>
-    //   );
-    //   return { staticItems, pendingItems: [] };
-    // }
+    if (USE_LINE_BASED_RENDERING) {
+      // Use line-based rendering
+      const PENDING_ITEMS_COUNT = 1;
+      const stableCount = Math.max(
+        0,
+        lineChatHistory.length - PENDING_ITEMS_COUNT,
+      );
 
-    const PENDING_ITEMS_COUNT = 1;
-    const stableCount = Math.max(
-      0,
-      lineChatHistory.length - PENDING_ITEMS_COUNT,
-    );
+      // Add stable messages to static items
+      const stableHistory = lineChatHistory.slice(0, stableCount);
+      stableHistory.forEach((item, index) => {
+        staticItems.push(renderLineBasedMessage(item, index));
+      });
 
-    // Add stable messages to static items
-    const stableHistory = lineChatHistory.slice(0, stableCount);
-    stableHistory.forEach((item, index) => {
-      staticItems.push(renderLineBasedMessage(item, index));
-    });
+      const pendingHistory = lineChatHistory.slice(stableCount);
+      const pendingItems = pendingHistory.map((item, index) =>
+        renderLineBasedMessage(item, stableCount + index),
+      );
 
-    const pendingHistory = lineChatHistory.slice(stableCount);
-    const pendingItems = pendingHistory.map((item, index) =>
-      renderLineBasedMessage(item, stableCount + index),
-    );
+      return { staticItems, pendingItems };
+    } else {
+      // Use original rendering
+      const PENDING_ITEMS_COUNT = 1;
+      const stableCount = Math.max(
+        0,
+        filteredChatHistory.length - PENDING_ITEMS_COUNT,
+      );
+      const stableHistory = filteredChatHistory.slice(0, stableCount);
+      const pendingHistory = filteredChatHistory.slice(stableCount);
 
-    return { staticItems, pendingItems };
+      // Add stable messages to static items
+      stableHistory.forEach((item, index) => {
+        staticItems.push(renderMessage(item, index));
+      });
+
+      // Pending items will be rendered dynamically outside Static
+      const pendingItems = pendingHistory.map((item, index) =>
+        renderMessage(item, stableCount + index),
+      );
+
+      return { staticItems, pendingItems };
+    }
   }, [
     showIntroMessage,
     config,
     model,
     mcpService,
     lineChatHistory,
+    filteredChatHistory,
     renderLineBasedMessage,
+    renderMessage,
   ]);
 
   return (
