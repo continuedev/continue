@@ -1,0 +1,89 @@
+---
+title: "Install Continue CLI"
+description: "Get Continue CLI installed and configured for command-line AI coding assistance and automation"
+sidebarTitle: "Install"
+---
+
+<Info>
+  Make sure you have [Node.js 18 or higher
+  installed](https://nodejs.org/en/download/).
+</Info>
+
+## Installation
+
+Install Continue CLI globally using npm:
+
+```bash
+npm i -g @continuedev/cli
+```
+
+Verify installation:
+
+```bash
+cn --version
+```
+
+## Initial Setup
+
+Get started is by logging in to Continue Hub for cloud-managed configurations:
+
+<Steps>
+<Step title="Login to Continue CLI">
+```bash
+cn login
+```
+This will open your browser to authenticate with Continue Hub.
+</Step>
+
+<Step title="Get API Key for Automation">
+
+    For automation workflows, get an API key:
+      1. Visit [Continue Hub API
+      Keys](https://hub.continue.dev/settings/api-keys)
+      2. Click **"+ New API Key"**
+      3. Copy the API key immediately (you won't see it again!)
+      4. Login using your Continue account.
+      4. Use it in headless mode: `cn -p "your prompt"`
+
+</Step>
+
+<Step title="Add Secrets (Optional)">
+Store secure credentials for CLI workflows:
+1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+2. Add your API keys and sensitive data
+3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
+</Step>
+</Steps>
+
+## First Test Run
+
+Try Continue CLI in interactive mode:
+
+```bash
+cn "Tell me about the CLI"
+```
+
+Or test headless mode:
+
+```bash
+cn -p "Generate a conventional commit message for the current git changes"
+```
+
+## What's Next?
+
+<CardGroup cols={2}>
+<Card title="Quick Start Guide" icon="rocket" href="/cli/quick-start">
+  Learn basic usage with practical examples
+</Card>
+
+<Card title="Create your first workflow" icon="gear" href="/guides/posthog-github-continuous-ai">
+  Customize models, rules, and tools
+</Card>
+</CardGroup>
+
+### Getting Help
+
+If you encounter issues:
+
+- Ask for help in [our discussions](https://github.com/continuedev/continue/discussions)
+- Report bugs on [GitHub](https://github.com/continuedev/continue)

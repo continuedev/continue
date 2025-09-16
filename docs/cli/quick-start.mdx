@@ -1,0 +1,76 @@
+---
+title: "Continue CLI Quick Start"
+description: "Get hands-on experience with Continue CLI through practical examples and common use cases"
+sidebarTitle: "Quick Start"
+---
+
+Get hands-on experience with Continue CLI through common development scenarios.
+
+<Tabs>
+  <Tab title="Interactive Mode">
+    Interactive mode (`cn` command) lets you have a back-and-forth conversation
+    with Continue about your codebase. You can ask questions, get explanations,
+    and request code changes.
+  </Tab>
+  <Tab title="Headless Mode">
+    Headless mode (`-p` flag) is designed for automation and scripting. It
+    allows you to run commands without user interaction, making it suitable for
+    CI/CD pipelines and other automated workflows.
+  </Tab>
+</Tabs>
+
+## Get Started
+
+Make sure you have [Continue CLI installed](/cli/install) and are in a project directory.
+
+```bash
+# Navigate to your project directory
+cd your-awesome-project
+
+# Start Continue CLI in interactive mode
+cn
+```
+
+This will launch an interactive chat session. You can also run commands directly in headless mode:
+
+```bash
+# Run a command in headless mode
+cn -p "Fix lint issues in the src/ directory"
+```
+
+### Available Slash Commands
+
+Common slash commands available in CLI:
+
+- `/clear` - Clear the chat history
+- `/compact` - Summarize chat history into a compact form
+- `/config` - Switch configuration or organization
+- `/exit` - Exit the chat
+- `/fork` - Start a forked chat session from the current history
+- `/help` - Show help message
+- `/info` - Show session information
+- `/init` - Create an AGENTS.md file
+- `/login` - Authenticate with your account
+- `/logout` - Sign out of your current session
+- `/mcp` - Manage MCP server connections
+- `/model` - Switch between available chat models
+- `/resume` - Resume a previous chat session
+- `/whoami` - Check who you're currently logged in as
+
+<Info>Use `/help` to see all available commands.</Info>
+
+## Guides to Continuous AI with CLI
+
+<CardGroup cols={3}>
+  <Card title="Create Your First Workflow" href="/guides/posthog-github-continuous-ai">
+    Automate issue creation and labeling with PostHog data
+  </Card>
+
+<Card title="How to Use the CLI" href="/guides/cli">
+  Learn more about Continue CLI features and capabilities
+</Card>
+
+  <Card title="Continous AI: a Developer's Guide" href="/guides/continuous-ai">
+    Build custom tools and integrations using `cn`
+  </Card>
+</CardGroup>

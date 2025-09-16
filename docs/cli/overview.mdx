@@ -1,0 +1,183 @@
+---
+title: "Continue CLI (cn) Overview"
+description: "Command-line interface for automated coding tasks, scripting, and headless development workflows with Continue's AI coding capabilities"
+sidebarTitle: "Overview"
+---
+
+<Frame>
+  <img src="/images/cn-demo.gif" />
+</Frame>
+
+**Continue enables developers to ship faster with Continuous AI.**
+
+<Tip>
+  Build features from descriptions. Debug and fix issues. Navigate any codebase.
+  Automate tedious tasks.
+</Tip>
+
+## Get started in 30 seconds
+
+Prerequisites:
+
+- [Node.js 18 or newer](https://nodejs.org/en/download/)
+- A [Continue Hub](https://hub.continue.dev) account (recommended) or local configuration
+
+```bash npm
+# Install Continue CLI
+npm install -g @continuedev/cli
+
+# Navigate to your project
+
+cd your-awesome-project
+
+# Start coding with Continue
+
+cn
+
+# You'll be prompted to set up on first use
+
+```
+
+That's it! You're ready to start automating with Continue CLI.
+
+[Continue with CLI Quickstart →](/cli/quick-start)
+
+## Why developers love Continue CLI
+
+- **Works in your terminal**: Not another chat window. Not another IDE. Continue CLI meets you where you already work, with the tools you already love.
+- **Takes action**: Continue CLI can directly edit files, run commands, and create commits. Need more? Check out our [MCPs](/integrations/mcp).
+- **Automate tasks**: Create issues from PostHog data, automatically assign labels to issues, and more. Do all this in a single command from your developer machines, or automatically in CI.
+- **Flexible interfaces**: Use interactive mode for back-and-forth conversations, or headless mode for automation and scripting.
+
+## Key Capabilities
+
+### Context Engineering
+
+- Use `@` to reference files and provide context
+- Use `/` to run slash commands for specific tasks
+- Access the same context providers as IDE extensions
+
+### Tool Integration
+
+- File editing and creation
+- Terminal command execution
+- Codebase understanding and analysis
+- Git integration
+- Web search and documentation access
+
+### Model Flexibility
+
+- Switch between models with `/model` command
+- Use any model configured in your `config.yaml`
+- Access Continue Hub models and configurations
+
+## Continue Hub Integration
+
+Continue CLI integrates seamlessly with [Continue Hub](https://hub.continue.dev) for:
+
+### API Access
+
+Get an API key for automation workflows:
+
+1. Visit [Continue Hub API Keys](https://hub.continue.dev/settings/api-keys)
+2. Create a new API key
+3. Use with `cn login` or in your automation scripts
+
+### Secrets Management
+
+Store secure credentials for CLI workflows:
+
+1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+2. Add your API keys and sensitive data
+3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
+
+### Configuration Sync
+
+- Cloud-managed configurations automatically sync
+- Share configurations across team members
+- Version control for your AI workflows
+
+## Common Use Cases
+
+### Development Automation
+
+<CodeGroup>
+```bash Generate Commit Messages
+# Generate commit messages
+cn -p "Generate a conventional commit message for the current changes"
+```
+
+```bash Code Review
+# Code review automation
+cn -p "Review the current git changes for bugs and suggest improvements"
+```
+
+```bash Test Generation
+# Test generation
+cn "@src/utils.js Generate comprehensive unit tests for this file"
+```
+
+</CodeGroup>
+
+### CI/CD Integration
+
+<CodeGroup>
+```bash Pipeline Scripts
+# In your pipeline scripts
+cn -p "Analyze test failures and suggest fixes" 
+```
+
+```bash Documentation Updates
+# Automated documentation updates
+cn "@README.md Update this documentation based on recent changes"
+```
+
+</CodeGroup>
+
+### Codebase Analysis
+
+<CodeGroup>
+```bash Interactive Exploration
+# Interactive exploration
+cn
+> @src/components Find all unused React components. How does authentication work in this codebase?
+```
+
+```bash Security Audits
+# Security audits
+cn -p "Scan the codebase for potential security vulnerabilities"
+```
+
+</CodeGroup>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="CLI Quickstart" href="/cli/quick-start">
+    Learn basic commands and common workflows
+  </Card>
+
+<Card title="Installation Guide" href="/cli/install">
+  Install Continue CLI and set up your environment
+</Card>
+
+  <Card title="CLI Workflows" href="/guides/overview#continuous-ai">
+    Task-specific tutorials and examples
+  </Card>
+</CardGroup>
+
+## Additional resources
+
+<CardGroup cols={3}>
+  <Card title="🔧 Configuration" icon="cog" href="/configuration">
+    Customize Continue CLI to fit your workflow
+  </Card>
+
+<Card title="🌐 Continue Hub" icon="hub" href="https://hub.continue.dev/">
+  Discover models, tools, and community configurations
+</Card>
+
+  <Card title="🤝 Community" icon="users" href="https://discord.com/invite/EfJEfdFnDQ">
+    Join our Discord community for support and discussions
+  </Card>
+</CardGroup>
