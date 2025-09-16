@@ -414,6 +414,8 @@ export class NextEditWindowManager {
       );
     }
 
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
     // Create and apply decoration with the text.
     if (newEditRangeSlice !== "") {
       try {
@@ -424,6 +426,7 @@ export class NextEditWindowManager {
           newEditRangeSlice,
           this.editableRegionStartLine,
           diffLines,
+          diffChars,
         );
       } catch (error) {
         console.error("Failed to render window:", error);
@@ -432,8 +435,6 @@ export class NextEditWindowManager {
         return;
       }
     }
-
-    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
     this.renderDeletions(editor, diffChars);
 
@@ -687,6 +688,7 @@ export class NextEditWindowManager {
     text: string,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -711,6 +713,7 @@ export class NextEditWindowManager {
         },
         currLineOffsetFromTop,
         newDiffLines,
+        diffChars,
       );
 
       return {
@@ -734,12 +737,14 @@ export class NextEditWindowManager {
     position: vscode.Position,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
       predictedCode,
       currLineOffsetFromTop,
       newDiffLines,
+      diffChars,
     );
     if (!uriAndDimensions) {
       return undefined;
@@ -858,6 +863,7 @@ export class NextEditWindowManager {
     predictedCode: string,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ) {
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
@@ -869,6 +875,7 @@ export class NextEditWindowManager {
       position,
       editableRegionStartLine,
       newDiffLines,
+      diffChars,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
