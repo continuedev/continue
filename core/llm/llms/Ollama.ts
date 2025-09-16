@@ -270,7 +270,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   }
 
   get contextLength() {
-    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 4096; // https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // twice of https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
     return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
   }
 
