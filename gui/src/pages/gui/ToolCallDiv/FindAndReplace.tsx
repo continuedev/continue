@@ -213,7 +213,6 @@ export function FindAndReplaceDisplay({
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2 text-xs">
           <div className="flex min-w-0 flex-row items-center">
-            {statusIcon}
             <ChevronDownIcon
               data-testid="toggle-find-and-replace-diff"
               className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
@@ -234,6 +233,7 @@ export function FindAndReplaceDisplay({
           <DiffStats added={diffStats.added} removed={diffStats.removed} />
         </div>
 
+        {statusIcon}
         {applyState && (
           <ApplyActions
             onClickAccept={() => {
