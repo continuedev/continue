@@ -64,8 +64,11 @@ export function ToolCallStatusMessage({
     }
   }
 
-  const isClickable = toolCallState.output && 
-    (toolCallState.status === "done" || toolCallState.status === "canceled" || toolCallState.status === "errored");
+  const isClickable =
+    toolCallState.output &&
+    (toolCallState.status === "done" ||
+      toolCallState.status === "canceled" ||
+      toolCallState.status === "errored");
 
   return (
     <div

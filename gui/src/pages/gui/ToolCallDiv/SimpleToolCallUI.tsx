@@ -72,10 +72,7 @@ export function SimpleToolCallUI({
             onClick={isToggleable ? handleToggleClick : handleIconClick}
             isClickable={isSingleItem}
           />
-          <ToolCallStatusMessage 
-            tool={tool} 
-            toolCallState={toolCallState} 
-          />
+          <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
       </div>
 

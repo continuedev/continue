@@ -27,10 +27,7 @@ export function ToolCallDisplay({
             {tool?.faviconUrl && (
               <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
             )}
-            <ToolCallStatusMessage 
-              tool={tool} 
-              toolCallState={toolCallState} 
-            />
+            <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>
         </div>
       </div>
