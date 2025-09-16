@@ -256,7 +256,7 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="2" ry="2" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
@@ -322,7 +322,7 @@ export class CodeRenderer {
         const isFirst = index === 0;
         const isLast = index === lines.length - 1;
         const isSingleLine = isFirst && isLast;
-        const radius = 10;
+        const radius = 2;
 
         // Handle single line case (both first and last)
         if (isSingleLine) {
@@ -357,7 +357,7 @@ export class CodeRenderer {
          L ${0} ${y + options.lineHeight - radius}
          Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
          L ${options.dimensions.width - radius} ${y + options.lineHeight}
-         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
+         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - radius}
          L ${options.dimensions.width} ${y}
          Z"
       fill="${bgColor}" />`
