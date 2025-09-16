@@ -1,7 +1,4 @@
 import { Tool, ToolCallState } from "core";
-import { renderContextItems } from "core/util/messageContent";
-import { useContext } from "react";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
 interface ToolCallDisplayProps {
@@ -19,16 +16,6 @@ export function ToolCallDisplay({
   icon,
   historyIndex,
 }: ToolCallDisplayProps) {
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  function handleToolCallTextClick() {
-    if (toolCallState.output) {
-      ideMessenger.post("showVirtualFile", {
-        name: "Tool Output",
-        content: renderContextItems(toolCallState.output),
-      });
-    }
-  }
   return (
     <div className="flex flex-col justify-center px-4">
       <div className="mb-2 flex flex-col">
@@ -43,7 +30,6 @@ export function ToolCallDisplay({
             <ToolCallStatusMessage 
               tool={tool} 
               toolCallState={toolCallState} 
-              onClick={handleToolCallTextClick}
             />
           </div>
         </div>

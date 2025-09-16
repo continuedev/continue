@@ -1,5 +1,4 @@
 import { Tool, ToolCallState } from "core";
-import { renderContextItems } from "core/util/messageContent";
 import { ComponentType, useContext, useMemo, useState } from "react";
 import {
   ContextItemsPeekItem,
@@ -56,15 +55,6 @@ export function SimpleToolCallUI({
     }
   }
 
-  function handleToolCallTextClick() {
-    if (toolCallState.output) {
-      ideMessenger.post("showVirtualFile", {
-        name: "Tool Output",
-        content: renderContextItems(toolCallState.output),
-      });
-    }
-  }
-
   return (
     <div className="mt-1 flex flex-col px-4">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
@@ -85,7 +75,6 @@ export function SimpleToolCallUI({
           <ToolCallStatusMessage 
             tool={tool} 
             toolCallState={toolCallState} 
-            onClick={handleToolCallTextClick}
           />
         </div>
       </div>
