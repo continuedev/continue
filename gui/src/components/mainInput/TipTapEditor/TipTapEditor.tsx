@@ -120,6 +120,23 @@ function TipTapEditorInner(props: TipTapEditorProps) {
     }
   }, [props.isMainInput, isStreaming, editor]);
 
+  // Recovery mechanism: ensure historical inputs regain editability when streaming ends
+  useEffect(() => {
+    if (!isStreaming && !props.isMainInput && editor) {
+      // Small delay to ensure editor state has settled after streaming transition
+      const timeoutId = setTimeout(() => {
+        if (editor && !editor.isDestroyed) {
+          // Force re-enable the editor
+          editor.setOptions({ editable: true });
+          // Trigger view update to refresh editor state
+          editor.view.dispatch(editor.state.tr);
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isStreaming, props.isMainInput, editor]);
+
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
