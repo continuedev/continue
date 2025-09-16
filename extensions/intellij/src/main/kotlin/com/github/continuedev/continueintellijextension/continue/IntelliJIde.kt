@@ -446,7 +446,7 @@ class IntelliJIDE(
         if (ideInfo.remoteName == "local") {
             try {
                 // Create a single combined ignore pattern for ripgrep
-                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString("|") { it }
+                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
                 
                 val commandArgs = mutableListOf(
                     ripgrep,
