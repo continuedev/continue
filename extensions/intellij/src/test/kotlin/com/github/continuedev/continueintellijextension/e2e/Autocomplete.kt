@@ -1,75 +1,48 @@
 package com.github.continuedev.continueintellijextension.e2e
 
 import com.automation.remarks.junit5.Video
-import com.github.continuedev.continueintellijextension.fixtures.dialog
-import com.github.continuedev.continueintellijextension.fixtures.idea
-import com.github.continuedev.continueintellijextension.fixtures.welcomeFrame
-import com.github.continuedev.continueintellijextension.utils.RemoteRobotExtension
-import com.github.continuedev.continueintellijextension.utils.StepsLogger
-import com.intellij.remoterobot.RemoteRobot
-import com.intellij.remoterobot.fixtures.ComponentFixture
-import com.intellij.remoterobot.search.locators.byXpath
-import com.intellij.remoterobot.steps.CommonSteps
-import com.intellij.remoterobot.utils.keyboard
-import com.intellij.remoterobot.utils.waitFor
-import com.intellij.remoterobot.utils.waitForIgnoringError
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import java.time.Duration.ofMinutes
-import java.time.Duration.ofSeconds
+import com.intellij.driver.sdk.ui.components.*
+import com.intellij.driver.sdk.wait
+import com.intellij.ide.starter.driver.engine.runIdeWithDriver
+import com.intellij.ide.starter.ide.IdeProductProvider
+import com.intellij.ide.starter.models.TestCase
+import com.intellij.ide.starter.plugins.PluginConfigurator
+import com.intellij.ide.starter.project.NoProject
+import com.intellij.ide.starter.runner.Starter
+import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertTrue
+import java.io.File
+import kotlin.time.Duration.Companion.seconds
 
-@ExtendWith(RemoteRobotExtension::class)
 class Autocomplete {
-    init {
-        StepsLogger.init()
-    }
 
-    @BeforeEach
-    fun waitForIde(remoteRobot: RemoteRobot) {
-        waitForIgnoringError(ofMinutes(3)) { remoteRobot.callJs("true") }
-    }
-
-    @AfterEach
-    fun closeProject(remoteRobot: RemoteRobot) {
-        CommonSteps(remoteRobot).closeProject()
-    }
-
-    @Test
     @Video
-    fun displayCompletion(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
-        welcomeFrame {
-            createNewProjectLink.click()
-            dialog("New Project") {
-                findText("Java").click()
-                checkBox("Add sample code").select()
+    @Test
+    fun `test autocomplete`() {
+        val starter = Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.3"))
+        PluginConfigurator(starter).installPluginFromFolder(File(System.getProperty("CONTINUE_PLUGIN_DIR")))
+        starter.runIdeWithDriver().useDriverAndCloseIde {
+            welcomeScreen {
+                createNewProjectButton.click()
                 button("Create").click()
             }
-        }
-
-        // Wait for the default "Main.java" tab to load
-        // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
-        waitFor(ofSeconds(20)) {
-            findAll<ComponentFixture>(
-                byXpath("//div[@visible_text='Main.java']")
-            ).isNotEmpty()
-        }
-
-        idea {
-            with(textEditor()) {
-                val userMsg = "TEST_USER_MESSAGE_0"
-                editor.insertTextAtLine(0, 0, userMsg)
-                editor.clickOnOffset(userMsg.length)
-
-                keyboard {
-                    enterText(" ")
+            ideFrame {
+                editorTabs {
+                    clickTab("Main.java")
                 }
-
-                waitFor(ofSeconds(20)) {
-                    editor.hasText("TEST_LLM_RESPONSE_0")
+                codeEditor {
+                    keyboard {
+                        enterText("TEST_USER_MESSAGE_0")
+                        space()
+                    }
+                    wait(2.seconds)
+                    keyboard {
+                        tab()
+                    }
+                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
                 }
             }
         }
     }
+
 }

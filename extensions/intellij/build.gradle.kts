@@ -1,10 +1,10 @@
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
+import org.gradle.kotlin.dsl.intellijPlatform
 
 fun environment(key: String) = providers.environmentVariable(key)
 
-val remoteRobotVersion = "0.11.23"
 val platformVersion: String by project
 val pluginGroup: String by project
 val pluginVersion: String by project
@@ -30,15 +30,16 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create("IC", platformVersion)
+        intellijIdeaCommunity(platformVersion)
         plugins(listOf("org.jetbrains.plugins.terminal:241.14494.150"))
+        testFramework(TestFrameworkType.Starter, "243.21565.193")
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
-    testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    testImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
     testImplementation("io.mockk:mockk:1.14.2") {
         // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
         // otherwise e2e tests (runIdeForUiTests) will have linkage errors
@@ -88,40 +89,6 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-intellijPlatformTesting {
-    runIde {
-        // This task might not work locally because the binary tends to ignore CONTINUE_GLOBAL_DIR when a
-        // local Continue config is present. If you want to run the e2e tests locally, the most effective
-        // way is to temporarily disconnect from the network and run the tests again.
-        // todo: fix it properly
-        register("runIdeForUiTests") {
-            task {
-                environment(
-                    "CONTINUE_GLOBAL_DIR",
-                    "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue"
-                )
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        "-Dide.mac.file.chooser.native=false",
-                        "-DjbScreenMenuBar.enabled=false",
-                        "-Dapple.laf.useScreenMenuBar=false",
-                        "-Didea.trust.all.projects=true",
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.sandbox.enable=false"
-                    )
-                }
-            }
-            plugins {
-                robotServerPlugin()
-            }
-        }
-    }
-}
-
 tasks {
     withType<PrepareSandboxTask> {
         from("../../binary/bin") {
@@ -146,6 +113,9 @@ tasks {
 
     test {
         useJUnitPlatform()
+        systemProperty("CONTINUE_PLUGIN_DIR", prepareSandbox.get().pluginDirectory.get().asFile)
+        environment("CONTINUE_GLOBAL_DIR", "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue")
         jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
+        dependsOn(prepareSandbox)
     }
 }

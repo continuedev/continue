@@ -183,51 +183,35 @@ This will generate a .zip file in `./build/distributions` with the version defin
 
 #### Overview
 
-The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`). The
-README for this project has a lot of helpful info on how to use the library.
-
-Note that these tests fully take control of your mouse while executing.
+The e2e tests are written using [intellij-ide-starter](https://github.com/JetBrains/intellij-ide-starter).
+The first run of the e2e tests may take a while because the required IDE needs to be downloaded. Note that these tests 
+fully take control of your mouse while executing.
 
 #### Setup
 
 If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
-Open _System Settings_ and select `Privacy & Security` -> `Accessibility` and toggle the switch for IntelliJ.
+Open `System Settings > Privacy & Security > Accessibility` and toggle the switch for IntelliJ.
 
 #### Running the tests
 
-Instantiate the test IDE as a background task:
-
-```sh
-./gradlew clean runIdeForUiTests &
-```
-
-Once the IDE has loaded, you can run the tests. Note that you need to have the test IDE focused in order for the tests
-to run.
+To run all tests:
 
 ```sh
 ./gradlew test
 ```
 
-Run a single test
+Run a single test (example):
 
 ```sh
-./gradlew test --tests "com.github.continuedev.continueintellijextension.e2e.TESTNAME"
+./gradlew test --tests "com.github.continuedev.continueintellijextension.e2e.Autocomplete"
 ```
 
-#### Identifying selectors
+#### Working with Intellij IDE Starter
 
-While the `runIdeForUiTests` task is running, you can visit the following URL
-to view the UI hierarchy of the running IDE:
+The testing platform provides a rich DSL for most UI components in IntelliJ. However, if you want to interact with a 
+custom element, you can define your own XPath selector.
 
-<http://127.0.0.1:8082/>
-
-#### Rebuilding the extension
-
-To rebuild the extension with the latest source code, run the following:
-
-```sh
-./gradlew buildPlugin
-```
-
-This will update the contents of the extension that is loaded into the test IDE from
-`build/idea-sandbox/plugins-uiTest/continue-intellij-extension`
+To do this, run an e2e test and visit [localhost:63343/api/remote-driver/](http://localhost:63343/api/remote-driver/) to 
+view an HTML representation of the IDE's Swing component tree. 
+See [Integration Tests](https://plugins.jetbrains.com/docs/intellij/integration-tests-ui.html#searching-components) for 
+more details about this workflow.
