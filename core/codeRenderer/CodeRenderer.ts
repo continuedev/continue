@@ -314,7 +314,7 @@ export class CodeRenderer {
         const bgColor = classes.includes("highlighted")
           ? this.editorLineHighlight
           : classes.includes("diff add")
-            ? "rgba(255, 255, 0, 0.2)"
+            ? "rgba(0, 255, 0, 0.0)"
             : this.editorBackground;
 
         const y = index * options.lineHeight;
