@@ -364,6 +364,22 @@ export class ContinueCompletionProvider
           }
         }
       } else if (chainExists) {
+        if (
+          this.usingFullFileDiff &&
+          this.prefetchQueue.processedCount === 0 &&
+          this.prefetchQueue.unprocessedCount === 0
+        ) {
+          // Skipping jump logic due to empty queues while using full file diff
+          // Without this we would get alternating non-responses
+          this.nextEditProvider.deleteChain();
+          return this.provideInlineCompletionItems(
+            document,
+            position,
+            context,
+            token,
+          );
+        }
+
         // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
         console.log("trigger reason: accepting");
 
