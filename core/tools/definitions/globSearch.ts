@@ -30,4 +30,5 @@ export const globSearchTool: Tool = {
     prefix: `To return a list of files based on a glob search pattern, use the ${BuiltInToolNames.FileGlobSearch} tool`,
     exampleArgs: [["pattern", "*.py"]],
   },
+  toolCallIcon: "MagnifyingGlassIcon",
 };
