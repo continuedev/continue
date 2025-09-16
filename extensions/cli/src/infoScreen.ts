@@ -9,13 +9,10 @@ import {
 } from "./auth/workos.js";
 import { services } from "./services/index.js";
 import { getCurrentSession, getSessionFilePath } from "./session.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import { logger } from "./util/logger.js";
 import { getVersion } from "./version.js";
 
 export async function handleInfoSlashCommand() {
-  posthogService.capture("useSlashCommand", { name: "info" });
-
   const infoLines = [];
 
   // Version and working directory info
