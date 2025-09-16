@@ -182,7 +182,7 @@ export function Chat() {
         }
       });
       const model = isCurrentlyInEdit
-        ? selectedModelByRole.edit ?? selectedModelByRole.chat
+        ? (selectedModelByRole.edit ?? selectedModelByRole.chat)
         : selectedModelByRole.chat;
 
       if (!model) {
