@@ -32,7 +32,7 @@ export function useEditorEventHandlers(options: {
       return;
     }
 
-    if (!editorFocusedRef?.current || isMetaEquivalentKeyPressed(e)) return;
+    if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
 
     // Only set activeKey for Meta/Control/Alt to drive toolbar highlighting
     if (e.key === "Meta" || e.key === "Control" || e.key === "Alt") {
