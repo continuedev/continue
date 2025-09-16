@@ -1,55 +1,154 @@
 ---
-title: "Introduction"
+title: "Welcome to Continue"
 icon: book-open
-description: "Continue is an open source platform for building AI-powered coding assistants with customizable components for chat, autocomplete, edit, and agent workflows in VS Code and JetBrains IDEs"
+description: "The open-source AI coding assistant platform for VS Code, JetBrains IDEs, terminal, and CI/CD workflows"
 ---
 
 <Frame>
   <img src="/images/intro-0c302b9c15b890c251b1ad04586c880f.png" />
 </Frame>
 
-**Continue enables developers to ship faster with Continuous AI.**
+<Info>
+  **Continue enables developers to ship faster with Continuous AI assistance
+  across their entire development workflow.**
+</Info>
 
-**You can use Continue to build and run custom agents across your IDE, terminal, and CI.**
+Continue is the open-source platform for building AI-powered coding assistants that work seamlessly across your IDE, terminal, and CI/CD pipelines. Whether you're coding interactively or automating development tasks, Continue adapts to your workflow.
 
-1. Get started with Continue in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions
+## 🚀 Quick Start
 
-2. Try out [Continue CLI (cn)](https://docs.continue.dev/guides/cli) and give us feedback
+Get up and running with Continue in minutes:
 
-3. Discover models, rules, and MCP tools on [Continue Hub](https://hub.continue.dev/)
+<Steps>
+  <Step title="Try Continue CLI">
+      For automation and headless environments:
+      <CodeBlock>npm install -g @continuedev/cli</CodeBlock> 
+      <Card title="CLI Documentation" icon="terminal" href="/guides/cli">
+        Learn more about Continue CLI features
+      </Card>
+    </Step>
+  <Step title="Install IDE Extension">
+    Choose your preferred development environment:
+   
+    <CardGroup cols={2}>
+      <Card
+        title="VS Code"
+        icon="code"
+        href="https://marketplace.visualstudio.com/items?itemName=Continue.continue"
+      >
+        Install from VS Code Marketplace
+      </Card>
+      <Card
+        title="JetBrains"
+        icon="jet-fighter"
+        href="https://plugins.jetbrains.com/plugin/22707-continue-extension"
+      >
+        Install from JetBrains Plugin Repository
+      </Card>
+    </CardGroup>
+  </Step>
+
+  <Step title="Explore Continue Hub">
+    Discover pre-built models, rules, and MCP tools:
+    <Card title="Continue Hub" icon="hub" href="https://hub.continue.dev/">
+      Browse community resources and integrations
+    </Card>
+  </Step>
+</Steps>
+
+## 🤔 CLI vs IDE Extensions
+
+<Tip>
+  Choose the right interface for your workflow. You can use both together for
+  maximum flexibility.
+</Tip>
+
+<Tabs>
+  <Tab title="🖥️ Use CLI When">
+    <AccordionGroup>
+      <Accordion title="Automation & CI/CD" icon="gear">
+        - Script repetitive development workflows
+        - Embed AI assistance in build processes
+        - Integrate with CI/CD pipelines
+        - Set up pre-commit hooks and automated fixes
+
+      </Accordion>
+
+      <Accordion title="Headless Environments" icon="server">
+          - Server deployments and containers
+          - Terminal-centric development
+          - Batch processing and bulk operations
+          - Remote development workflows
+      </Accordion>
+    </AccordionGroup>
+
+  </Tab>
+
+  <Tab title="💻 Use IDE Extensions When">
+    <AccordionGroup>
+      <Accordion title="Interactive Development" icon="code">
+          - Real-time coding sessions
+          - Visual code editing with rich context
+          - Multi-file editing and complex refactoring
+          - Immediate feedback and assistance
+
+      </Accordion>
+
+      <Accordion title="Rich IDE Features" icon="puzzle-piece">
+          - Autocomplete and inline suggestions
+          - Debugger and test runner integration
+          - Syntax highlighting and error detection
+          - Project-wide navigation and search
+
+      </Accordion>
+    </AccordionGroup>
+
+  </Tab>
+</Tabs>
+
+## ✨ Core Features
+
+Explore Continue's powerful AI-assisted development capabilities:
 
 <CardGroup cols={2}>
-  <Card
-    title="Agent"
-    icon="robot"
-    href="/features/agent/quick-start"
-    horizontal
-  >
-    to work on development tasks together with AI
-  </Card>
-  <Card
-    title="Chat"
-    icon="messages"
-    href="/features/chat/quick-start"
-    horizontal
-  >
-    to ask general questions and clarify code sections
-  </Card>
-  <Card
-    title="Edit"
-    icon="pen-to-square"
-    href="/features/edit/quick-start"
-    horizontal
-  >
-    to modify a code section without leaving your current file
-  </Card>
-  <Card
-    title="Autocomplete"
-    icon="sparkles"
-    href="/features/autocomplete/quick-start"
-    horizontal
-  >
-    to receive inline code suggestions as you type
+  <Card title="🤖 Agent" icon="robot" href="/features/agent/quick-start">
+    Collaborate with AI on complex development tasks and multi-step workflows
   </Card>
 
+<Card title="💬 Chat" icon="messages" href="/features/chat/quick-start">
+  Ask questions, get explanations, and clarify code sections interactively
+</Card>
+
+<Card title="✏️ Edit" icon="pen-to-square" href="/features/edit/quick-start">
+  Modify code sections with AI assistance without leaving your current file
+</Card>
+
+  <Card
+    title="⚡ Autocomplete"
+    icon="sparkles"
+    href="/features/autocomplete/quick-start"
+  >
+    Receive intelligent inline code suggestions as you type
+  </Card>
 </CardGroup>
+
+## 🎯 What's Next?
+
+<CardGroup cols={3}>
+  <Card title="📚 Tutorials" icon="graduation-cap" href="/tutorials">
+    Step-by-step guides for common workflows
+  </Card>
+
+<Card title="🔧 Configuration" icon="cog" href="/configuration">
+  Customize Continue to fit your development style
+</Card>
+
+  <Card title="🌐 Community" icon="users" href="https://discord.gg/pF2h9m3QKE">
+    Join our community and contribute to Continue
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Need Help?** If you encounter any issues or have questions, add to our
+  [discussions](https://github.com/continuedev/continue/discussions).
+</Warning>
