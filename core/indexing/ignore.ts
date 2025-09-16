@@ -203,6 +203,11 @@ export const DEFAULT_IGNORE_DIRS = [
   ...ADDITIONAL_INDEXING_IGNORE_DIRS,
 ];
 
+export const DEFAULT_IGNORES = [
+  ...DEFAULT_IGNORE_FILETYPES,
+  ...DEFAULT_IGNORE_DIRS,
+];
+
 // Create ignore instances
 export const defaultSecurityIgnoreFile = ignore().add(
   DEFAULT_SECURITY_IGNORE_FILETYPES,
