@@ -57,6 +57,18 @@ Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Con
 
 ![autocomplete](docs/images/autocomplete.gif)
 
+## Command Line Interface
+
+[CLI](https://docs.continue.dev/guides/cli) for terminal-based development workflows and CI/CD automation
+
+The Continue CLI (`cn`) brings AI assistance directly to your terminal with both interactive and headless modes:
+
+- **TUI Mode**: Interactive chat sessions with session management and history
+- **Headless Mode**: One-shot AI assistance for scripts and automation
+- **Session Management**: Resume conversations and maintain context across terminal sessions
+
+Perfect for developers who prefer command-line workflows and teams building AI-powered CI/CD pipelines.
+
 </div>
 
 ## Contributing
