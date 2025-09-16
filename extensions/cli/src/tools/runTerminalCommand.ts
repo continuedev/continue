@@ -13,16 +13,6 @@ import {
 
 import { Tool } from "./types.js";
 
-// Add color-supporting environment variables
-const getColorEnv = () => ({
-  ...process.env,
-  FORCE_COLOR: "1",
-  COLORTERM: "truecolor",
-  TERM: "xterm-256color",
-  CLICOLOR: "1",
-  CLICOLOR_FORCE: "1",
-});
-
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
@@ -84,9 +74,7 @@ Commands are automatically executed from the current working directory (${proces
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
-      const child = spawn(shell, args, {
-        env: getColorEnv(), // Inherit environment variables with color support
-      });
+      const child = spawn(shell, args);
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
