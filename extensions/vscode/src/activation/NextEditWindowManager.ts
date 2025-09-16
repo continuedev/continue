@@ -41,10 +41,11 @@ const SVG_CONFIG = {
   // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
   //       drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
   //       drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
-  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
-        drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
-        drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
-        drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+  //       drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
+  //       drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
+  //       drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  filter: "none",
   radius: 3,
   leftMargin: 40,
   defaultText: "",
