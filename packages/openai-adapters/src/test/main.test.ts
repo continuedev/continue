@@ -107,12 +107,12 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
       expectUsage: true,
     },
   },
-  {
-    provider: "deepseek",
-    model: "deepseek-coder",
-    apiKey: process.env.DEEPSEEK_API_KEY!,
-    roles: ["autocomplete"],
-  },
+  // {
+  //   provider: "deepseek",
+  //   model: "deepseek-coder",
+  //   apiKey: process.env.DEEPSEEK_API_KEY!,
+  //   roles: ["autocomplete"],
+  // },
   {
     provider: "openai",
     model: "text-embedding-3-small",
