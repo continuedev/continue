@@ -6,6 +6,23 @@ const esbuild = require("esbuild");
 
 const flags = process.argv.slice(2);
 
+// Tiny plugin: turn any 'onnxruntime-web' (and subpaths) import into an empty module.
+function nullOrtWeb() {
+  return {
+    name: "null-ort-web",
+    setup(build) {
+      build.onResolve({ filter: /^onnxruntime-web(?:\/.*)?$/ }, (args) => ({
+        path: args.path,
+        namespace: "null-ort",
+      }));
+      build.onLoad({ filter: /.*/, namespace: "null-ort" }, () => ({
+        contents: "export {};",
+        loader: "js",
+      }));
+    },
+  };
+}
+
 const esbuildConfig = {
   entryPoints: ["src/extension.ts"],
   bundle: true,
@@ -13,6 +30,9 @@ const esbuildConfig = {
   external: ["vscode", "esbuild", "./xhr-sync-worker.js"],
   format: "cjs",
   platform: "node",
+  // Prefer Node resolution paths; do NOT include "browser" here
+  conditions: ["node", "default"],
+  mainFields: ["module", "main"],
   sourcemap: flags.includes("--sourcemap"),
   loader: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -22,10 +42,17 @@ const esbuildConfig = {
   // To allow import.meta.path for transformers.js
   // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
   inject: ["./scripts/importMetaUrl.js"],
-  define: { "import.meta.url": "importMetaUrl" },
+  define: {
+    "import.meta.url": "importMetaUrl",
+    // Guard any browser-path checks to keep Node backend selected
+    "process.browser": "false",
+    window: "undefined",
+  },
   supported: { "dynamic-import": false },
   metafile: true,
   plugins: [
+    // Belt-and-suspenders: make web backend impossible to pull in
+    nullOrtWeb(),
     {
       name: "on-end-plugin",
       setup(build) {
