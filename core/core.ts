@@ -1352,6 +1352,8 @@ export class Core {
         selectedCode,
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
+          // Important note: context providers fetch uses global request options not LLM request options
+          // Because LLM calls are handled separately
           fetchwithRequestOptions(url, init, config.requestOptions),
         isInAgentMode: msg.data.isInAgentMode,
       });
