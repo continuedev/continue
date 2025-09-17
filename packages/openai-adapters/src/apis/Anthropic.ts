@@ -140,9 +140,25 @@ export class AnthropicApi implements BaseLlmApi {
           ],
         };
       } else if (message.role === "assistant" && message.tool_calls) {
-        return {
-          role: "assistant",
-          content: message.tool_calls.map((toolCall) => {
+        const parts: any[] = [];
+        if (message.content) {
+          if (typeof message.content === "string") {
+            parts.push({
+              type: "text",
+              text: message.content,
+            });
+          } else if (message.content.length > 0) {
+            parts.push(
+              message.content.map((c) => ({
+                type: "text",
+                text: c.type === "text" ? c.text : c.refusal,
+              })),
+            );
+          }
+        }
+
+        parts.push(
+          ...message.tool_calls.map((toolCall) => {
             // Type guard for function tool calls
             if (toolCall.type === "function" && "function" in toolCall) {
               return {
@@ -158,6 +174,10 @@ export class AnthropicApi implements BaseLlmApi {
               throw new Error(`Unsupported tool call type: ${toolCall.type}`);
             }
           }),
+        );
+        return {
+          role: "assistant",
+          content: parts,
         };
       }
 
