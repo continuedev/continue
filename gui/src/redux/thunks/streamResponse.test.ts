@@ -435,12 +435,16 @@ describe("streamResponseThunk", () => {
           ],
         },
       ],
-      options: {},
+      options: {
+        reasoning: false,
+      },
     });
 
     expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
@@ -918,7 +922,9 @@ describe("streamResponseThunk", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
@@ -1527,13 +1533,17 @@ describe("streamResponseThunk", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
     expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [

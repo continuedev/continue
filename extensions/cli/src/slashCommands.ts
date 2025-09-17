@@ -7,6 +7,7 @@ import {
   loadAuthConfig,
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
+import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession } from "./session.js";
@@ -176,6 +177,10 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openSessionSelector: true };
   },
   fork: handleFork,
+  init: (args, assistant) => {
+    posthogService.capture("useSlashCommand", { name: "init" });
+    return handleInit(args, assistant);
+  },
 };
 
 export async function handleSlashCommands(

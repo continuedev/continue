@@ -1387,6 +1387,7 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  autoFormattingDiff?: string;
 }
 
 export interface StreamDiffLinesPayload {
@@ -1807,6 +1808,7 @@ export interface RuleWithSource {
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
+  invokable?: boolean;
 }
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;

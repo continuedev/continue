@@ -29,8 +29,9 @@ import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
   isProcessBackgrounded,
+  killTerminalProcess,
   markProcessAsBackgrounded,
-} from "./util/processTerminalBackgroundStates";
+} from "./util/processTerminalStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -1061,6 +1062,10 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("process/killTerminalProcess", async ({ data: { toolCallId } }) => {
+      await killTerminalProcess(toolCallId);
+    });
 
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);

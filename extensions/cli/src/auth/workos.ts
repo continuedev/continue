@@ -540,8 +540,10 @@ export async function ensureOrganization(
       );
     }
   } else if (isEnvironmentAuthConfig(authConfig)) {
-    // No CLI organization slug (or "personal" was specified) - return as-is
-    return authConfig;
+    // No CLI organization slug (or "personal" was specified)
+    // If using API key auth, attempt to resolve its organization scope once
+    const resolved = await resolveOrgScopeForApiKey(authConfig);
+    return resolved;
   }
 
   // If not authenticated, return as-is
@@ -575,6 +577,59 @@ export async function ensureOrganization(
 
   // Need to select organization
   return autoSelectOrganization(authenticatedConfig);
+}
+
+/**
+ * Attempts to resolve the organization scope for API key auth (environment-based auth).
+ * Calls a lightweight backend endpoint to determine if the API key is an org-scoped key.
+ * If successful, returns a new EnvironmentAuthConfig with organizationId set; otherwise returns the original config.
+ */
+async function resolveOrgScopeForApiKey(
+  envConfig: EnvironmentAuthConfig,
+): Promise<EnvironmentAuthConfig> {
+  // If already set (including explicit null), return as-is
+  if (envConfig.organizationId !== null) {
+    return envConfig;
+  }
+
+  const accessToken = envConfig.accessToken;
+  if (!accessToken) return envConfig;
+
+  try {
+    // Prefer a dedicated endpoint for scope discovery. This should return JSON like:
+    // { organizationId: string | null } (aka orgScopeId)
+    const url = new URL("auth/scope", env.apiBase);
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      // Gracefully ignore if the endpoint isn't available yet (e.g., 404) or other non-2xx errors
+      return envConfig;
+    }
+
+    const data: any = await resp.json().catch(() => ({}));
+    const orgId =
+      data?.organizationId ??
+      data?.orgScopeId ??
+      data?.organization?.id ??
+      null;
+
+    if (orgId && typeof orgId === "string") {
+      return {
+        ...envConfig,
+        organizationId: orgId,
+      };
+    }
+  } catch {
+    // Network or parsing issues: leave config unchanged
+  }
+
+  return envConfig;
 }
 
 /**

@@ -1,13 +1,14 @@
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import {
-  ContextItem,
   LLMFullCompletionOptions,
+  ModelDescription,
   Tool,
   ToolCallState,
 } from "core";
-import { ToolPolicy } from "@continuedev/terminal-security";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -25,7 +26,6 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
-import { IIdeMessenger } from "../../context/IdeMessenger";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
@@ -192,6 +192,38 @@ async function handleToolCallExecution(
   return allAutoApproved;
 }
 
+/**
+ * Builds completion options with reasoning configuration based on session state and model capabilities.
+ *
+ * @param baseOptions - Base completion options to extend
+ * @param hasReasoningEnabled - Whether reasoning is enabled in the session
+ * @param model - The selected model with provider and completion options
+ * @returns Completion options with reasoning configuration
+ */
+function buildReasoningCompletionOptions(
+  baseOptions: LLMFullCompletionOptions,
+  hasReasoningEnabled: boolean | undefined,
+  model: ModelDescription,
+): LLMFullCompletionOptions {
+  if (hasReasoningEnabled === undefined) {
+    return baseOptions;
+  }
+
+  const reasoningOptions: LLMFullCompletionOptions = {
+    ...baseOptions,
+    reasoning: !!hasReasoningEnabled,
+  };
+
+  // Add reasoning budget tokens if reasoning is enabled and provider supports it
+  if (hasReasoningEnabled && model.underlyingProviderName !== "ollama") {
+    // Ollama doesn't support limiting reasoning tokens at this point
+    reasoningOptions.reasoningBudgetTokens =
+      model.completionOptions?.reasoningBudgetTokens ?? 2048;
+  }
+
+  return reasoningOptions;
+}
+
 export const streamNormalInput = createAsyncThunk<
   void,
   {
@@ -228,14 +260,11 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    if (state.session.hasReasoningEnabled) {
-      completionOptions = {
-        ...completionOptions,
-        reasoning: true,
-        reasoningBudgetTokens:
-          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
-      };
-    }
+    completionOptions = buildReasoningCompletionOptions(
+      completionOptions,
+      state.session.hasReasoningEnabled,
+      selectedChatModel,
+    );
 
     // Construct messages (excluding system message)
     const baseSystemMessage = getBaseSystemMessage(
