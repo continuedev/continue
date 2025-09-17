@@ -309,4 +309,25 @@ describe("Configuration", () => {
     );
     expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
   });
+
+  it('should have correct default API base for "ollama"', () => {
+    const ollama = constructLlmApi({
+      provider: "ollama",
+    });
+
+    expect((ollama as OpenAIApi).openai.baseURL).toBe(
+      "http://localhost:11434/v1/",
+    );
+  });
+
+  it('should append /v1 to apiBase for "ollama"', () => {
+    const ollama = constructLlmApi({
+      provider: "ollama",
+      apiBase: "http://localhost:123",
+    });
+
+    expect((ollama as OpenAIApi).openai.baseURL).toBe(
+      "http://localhost:123/v1/",
+    );
+  });
 });
