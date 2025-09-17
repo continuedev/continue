@@ -260,7 +260,9 @@ function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
   // Check if it's an object
   if (typeof configYaml === "object" && configYaml !== null) {
     configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml), { mode: 0o600 });
+    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml), {
+      mode: 0o600,
+    });
   } else {
     console.warn("config.yaml is not a valid object");
   }
