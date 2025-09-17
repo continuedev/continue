@@ -236,10 +236,11 @@ describe("FindAndReplaceDisplay", () => {
 
       render(<FindAndReplaceDisplay {...defaultProps} />);
 
-      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
-      fireEvent.click(toggleButton);
-
-      expect(screen.getByText("Error generating diff")).toBeInTheDocument();
+      // When diff generation errors, component shows a friendly message
+      // without rendering the expand/collapse container
+      expect(
+        screen.getByText("The searched string was not found in the file"),
+      ).toBeInTheDocument();
     });
 
     it("should show 'No changes to display' when diff is empty", () => {

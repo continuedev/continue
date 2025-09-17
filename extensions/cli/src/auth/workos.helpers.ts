@@ -2,6 +2,7 @@ import chalk from "chalk";
 
 import { getApiClient } from "../config.js";
 import { safeStderr } from "../init.js";
+import { gracefulExit } from "../util/exit.js";
 
 import type {
   AuthConfig,
@@ -76,7 +77,7 @@ export async function handleCliOrgForEnvironmentAuth(
         "The --org flag is only supported in headless mode (with -p/--print flag)\n",
       ),
     );
-    process.exit(1);
+    await gracefulExit(1);
   }
 
   const apiClient = getApiClient(authConfig.accessToken);
@@ -107,7 +108,7 @@ export async function handleCliOrgForAuthenticatedConfig(
         "The --org flag is only supported in headless mode (with -p/--print flag)\n",
       ),
     );
-    process.exit(1);
+    await gracefulExit(1);
   }
 
   const apiClient = getApiClient(authenticatedConfig.accessToken);

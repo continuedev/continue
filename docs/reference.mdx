@@ -219,7 +219,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `topP`: The cumulative probability for nucleus sampling.
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
-  - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
+  - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 
 - `requestOptions`: HTTP request options specific to the model.
@@ -251,6 +251,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `modelTimeout`: Model timeout for autocomplete requests in milliseconds.
   - `maxSuffixPercentage`: Maximum percentage of prompt allocated for suffix.
   - `prefixPercentage`: Percentage of input allocated for prefix.
+  - `transform`: If `false`, disables trimming of multiline completions. Defaults to `true`. Useful for models that generate better multiline completions without transformations.
   - `template`: Custom template for autocomplete using Mustache syntax. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
   - `onlyMyCode`: Only includes code within the repository for context.
   - `useCache`: If `true`, enables caching for completions.
