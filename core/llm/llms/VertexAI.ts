@@ -223,6 +223,10 @@ class VertexAI extends BaseLLM {
     const shouldCacheSystemMessage = !!(
       this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
+    const shouldCachePrompt = !!(
+      this.cacheBehavior?.cacheConversation ??
+      this.completionOptions.promptCaching
+    );
 
     //  <code>/v1/publishers/anthropic/models/claude-3-5-sonnet-20240620:streamRawPredict
 
@@ -234,13 +238,16 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       headers: {
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+        ...(shouldCacheSystemMessage || shouldCachePrompt
           ? { "anthropic-beta": "prompt-caching-2024-07-31" }
           : {}),
       },
       body: JSON.stringify({
         ...this._anthropicConvertArgs(options),
-        messages: this.anthropicInstance.convertMessages(messages),
+        messages: this.anthropicInstance.convertMessages(
+          messages,
+          shouldCachePrompt,
+        ),
         system: shouldCacheSystemMessage
           ? [
               {
