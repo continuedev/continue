@@ -29,7 +29,8 @@ repositories {
 }
 
 sourceSets {
-    create("testIntegration") {
+    val testIntegration = create("testIntegration")
+    testIntegration.apply {
         compileClasspath += sourceSets.main.get().output
         runtimeClasspath += sourceSets.main.get().output
     }
