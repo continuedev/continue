@@ -14,6 +14,11 @@ import {
   HandlerPriority,
   SelectionChangeManager,
 } from "./SelectionChangeManager";
+import {
+  NextEditPlacementResult,
+  NextEditPlacementStrategy,
+  ViewportAwarePlacementStrategy,
+} from "./NextEditPlacementStrategy";
 
 export interface TextApplier {
   applyText(
@@ -144,6 +149,8 @@ export class NextEditWindowManager {
 
   private context: vscode.ExtensionContext | null = null;
 
+  private placementStrategy: NextEditPlacementStrategy;
+
   public static getInstance(): NextEditWindowManager {
     if (!NextEditWindowManager.instance) {
       NextEditWindowManager.instance = new NextEditWindowManager();
@@ -160,6 +167,13 @@ export class NextEditWindowManager {
       NextEditWindowManager.instance.dispose();
       NextEditWindowManager.instance = undefined;
     }
+  }
+
+  /**
+   * Override the placement behaviour with a custom strategy implementation.
+   */
+  public setPlacementStrategy(strategy: NextEditPlacementStrategy): void {
+    this.placementStrategy = strategy;
   }
 
   private constructor() {
@@ -179,6 +193,8 @@ export class NextEditWindowManager {
     this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
 
     this.loggingService = NextEditLoggingService.getInstance();
+
+    this.placementStrategy = new ViewportAwarePlacementStrategy();
   }
 
   // This is an implementation of last-action-wins.
@@ -738,6 +754,7 @@ export class NextEditWindowManager {
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
     diffChars: DiffChar[],
+    placement: NextEditPlacementResult,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
@@ -755,10 +772,10 @@ export class NextEditWindowManager {
     const tipHeight = dimensions.height;
 
     const offsetFromTop =
-      (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
+      (placement.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
 
-    // Position the decoration with minimal left margin since it's already at line end
-    const marginLeft = SVG_CONFIG.paddingX; // Use consistent padding instead of complex calculation
+    // Use placement padding to control the horizontal gap from the anchor line.
+    const marginLeft = this.getMarginLeftForPadding(placement.padding);
 
     return vscode.window.createTextEditorDecorationType({
       before: {
@@ -842,15 +859,87 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Calculate a position to the right of the cursor with the specified offset.
+   * Calculate the end-of-line position for the requested anchor line.
    */
   private getDecorationOffsetPosition(
     editor: vscode.TextEditor,
-    position: vscode.Position,
+    line: number,
   ): vscode.Position {
-    // Place decoration at the end of the current line
-    const line = editor.document.lineAt(position.line);
-    return new vscode.Position(position.line, line.text.length);
+    const safeLine = Math.min(
+      Math.max(line, 0),
+      Math.max(editor.document.lineCount - 1, 0),
+    );
+    const targetLine = editor.document.lineAt(safeLine);
+    return new vscode.Position(safeLine, targetLine.text.length);
+  }
+
+  /**
+   * Ask the active placement strategy where the tooltip should be anchored.
+   */
+  private determinePlacement(
+    editor: vscode.TextEditor,
+    cursorPosition: vscode.Position,
+    originalCode: string,
+    predictedCode: string,
+    editableRegionStartLine: number,
+    diffLines: DiffLine[],
+  ): NextEditPlacementResult {
+    const context = {
+      editor,
+      cursorPosition,
+      editableRegionStartLine,
+      editableRegionEndLine: this.editableRegionEndLine,
+      originalCode,
+      predictedCode,
+      diffLines,
+    };
+
+    let placement: NextEditPlacementResult;
+    try {
+      placement = this.placementStrategy.getPlacement(context);
+    } catch (error) {
+      console.error("Error determining next edit placement", error);
+      placement = { line: cursorPosition.line, padding: 0 };
+    }
+
+    return this.normalizePlacement(editor, placement, cursorPosition.line);
+  }
+
+  /**
+   * Clamp the strategy output to sane defaults so decorating never throws.
+   */
+  private normalizePlacement(
+    editor: vscode.TextEditor,
+    placement: NextEditPlacementResult,
+    fallbackLine: number,
+  ): NextEditPlacementResult {
+    const lineCount = Math.max(editor.document.lineCount, 1);
+    const fallback = Math.min(Math.max(fallbackLine, 0), lineCount - 1);
+
+    const rawLine =
+      typeof placement.line === "number" && Number.isFinite(placement.line)
+        ? placement.line
+        : fallback;
+    const safeLine = Math.min(
+      Math.max(Math.round(rawLine), 0),
+      lineCount - 1,
+    );
+
+    const rawPadding =
+      typeof placement.padding === "number" &&
+      Number.isFinite(placement.padding)
+        ? placement.padding
+        : 0;
+    const safePadding = Math.max(0, rawPadding);
+
+    return { line: safeLine, padding: safePadding };
+  }
+
+  /**
+   * Convert padding expressed in characters into a left margin in pixels.
+   */
+  private getMarginLeftForPadding(padding: number): number {
+    return SVG_CONFIG.paddingX + padding * SVG_CONFIG.paddingX;
   }
 
   /**
@@ -865,6 +954,15 @@ export class NextEditWindowManager {
     newDiffLines: DiffLine[],
     diffChars: DiffChar[],
   ) {
+    const placement = this.determinePlacement(
+      editor,
+      position,
+      originalCode,
+      predictedCode,
+      editableRegionStartLine,
+      newDiffLines,
+    );
+
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
 
@@ -876,6 +974,7 @@ export class NextEditWindowManager {
       editableRegionStartLine,
       newDiffLines,
       diffChars,
+      placement,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
@@ -896,7 +995,7 @@ export class NextEditWindowManager {
     // Calculate how far off to the right of the cursor the decoration should be.
     const decorationOffsetPosition = this.getDecorationOffsetPosition(
       editor,
-      position,
+      placement.line,
     );
     const range = new vscode.Range(
       decorationOffsetPosition,
