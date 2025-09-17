@@ -141,6 +141,15 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
     case "ollama":
+      // for openai compaitability, we need to add /v1 to the end of the url
+      // this is required for cli (for core, endpoints are overriden by core/llm/llms/Ollama.ts)
+      if (config.apiBase && !config.apiBase.endsWith("v1")) {
+        if (config.apiBase.endsWith("/")) {
+          config.apiBase += "v1/";
+        } else {
+          config.apiBase += "/v1/";
+        }
+      }
       return openAICompatible("http://localhost:11434/v1/", config);
     case "mock":
       return new MockApi();
