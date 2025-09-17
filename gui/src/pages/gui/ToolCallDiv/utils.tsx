@@ -34,7 +34,7 @@ export function getStatusIntro(
 
   switch (status) {
     case "generating":
-      return "is generating output to";
+      return "will";
     case "generated":
       return "wants to";
     case "calling":

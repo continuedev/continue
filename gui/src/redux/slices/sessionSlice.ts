@@ -545,7 +545,7 @@ export const sessionSlice = createSlice({
 
           // OpenAI-compatible models in agent mode sometimes send
           // all of their data in one message, so we handle that case early.
-          if (messageContent) {
+          if (messageContent && message.role !== "tool") {
             const thinkMatches = messageContent.match(
               /<think>([\s\S]*)<\/think>([\s\S]*)/,
             );
@@ -605,7 +605,7 @@ export const sessionSlice = createSlice({
 
           // Add to the existing message
           if (messageContent) {
-            if (messageContent.includes("<think>")) {
+            if (messageContent.includes("<think>") && message.role !== "tool") {
               lastItem.reasoning = {
                 startAt: Date.now(),
                 active: true,
