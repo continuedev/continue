@@ -179,12 +179,16 @@ This will generate a .zip file in `./build/distributions` with the version defin
 
 ## Testing
 
-### e2e testing
+Test commands:
 
-#### Overview
+- `./gradlew test` - to run **unit tests**
+- `./gradlew testIntegration` - to run **e2e tests**
+
+### About e2e tests
 
 The e2e tests are written using [intellij-ide-starter](https://github.com/JetBrains/intellij-ide-starter).
-The first run of the e2e tests may take a while because the required IDE needs to be downloaded. Note that these tests 
+The first run of the e2e tests may take a while because the required IDE needs
+to be downloaded. Note that these tests
 fully take control of your mouse while executing.
 
 #### Setup
@@ -192,26 +196,12 @@ fully take control of your mouse while executing.
 If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
 Open `System Settings > Privacy & Security > Accessibility` and toggle the switch for IntelliJ.
 
-#### Running the tests
-
-To run all tests:
-
-```sh
-./gradlew test
-```
-
-Run a single test (example):
-
-```sh
-./gradlew test --tests "com.github.continuedev.continueintellijextension.e2e.Autocomplete"
-```
-
 #### Working with Intellij IDE Starter
 
-The testing platform provides a rich DSL for most UI components in IntelliJ. However, if you want to interact with a 
+The testing platform provides a rich DSL for most UI components in IntelliJ. However, if you want to interact with a
 custom element, you can define your own XPath selector.
 
-To do this, run an e2e test and visit [localhost:63343/api/remote-driver/](http://localhost:63343/api/remote-driver/) to 
-view an HTML representation of the IDE's Swing component tree. 
-See [Integration Tests](https://plugins.jetbrains.com/docs/intellij/integration-tests-ui.html#searching-components) for 
+To do this, run an e2e test and visit [localhost:63343/api/remote-driver/](http://localhost:63343/api/remote-driver/) to
+view an HTML representation of the IDE's Swing component tree.
+See [Integration Tests](https://plugins.jetbrains.com/docs/intellij/integration-tests-ui.html#searching-components) for
 more details about this workflow.

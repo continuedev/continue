@@ -115,7 +115,7 @@ runs:
         Xvfb -ac :99 -screen 0 1920x1080x24 &
         sleep 10
         mkdir -p build/reports
-        ./gradlew test
+        ./gradlew test testIntegration
 
     - name: Move video
       if: ${{ failure() }}
