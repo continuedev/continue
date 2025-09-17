@@ -564,12 +564,17 @@ export async function ensureOrganization(
     );
   }
 
-  // Only auto-select if user hasn't explicitly chosen a specific config/assistant
-  if (!authenticatedConfig.configUri) {
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
     return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // User already has a specific config selected - return it as-is
+  // User already has made a selection (org or config) - respect their choice
   return authenticatedConfig;
 }
 

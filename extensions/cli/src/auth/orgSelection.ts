@@ -100,6 +100,11 @@ export async function autoSelectOrganizationAndConfig(
           configUri,
         );
         saveAuthConfig(updatedConfig);
+        console.log(
+          chalk.green(
+            `✓ Automatically selected assistant from ${org.name} organization`,
+          ),
+        );
         return updatedConfig;
       }
     }
@@ -120,6 +125,7 @@ export async function autoSelectOrganizationAndConfig(
           configUri,
         );
         saveAuthConfig(updatedConfig);
+        console.log(chalk.green("✓ Automatically selected personal assistant"));
         return updatedConfig;
       }
     } catch {
@@ -134,6 +140,7 @@ export async function autoSelectOrganizationAndConfig(
         `file://${path.join(env.continueHome, "config.yaml")}`,
       );
       saveAuthConfig(updatedConfig);
+      console.log(chalk.green("✓ Using local config.yaml"));
       return updatedConfig;
     }
 
