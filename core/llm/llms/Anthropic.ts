@@ -245,8 +245,8 @@ class Anthropic extends BaseLLM {
       return; // Aborted by user
     }
 
-    const json = await response.json();
     if (!response.ok) {
+      const json = await response.json();
       if (json.type === "error") {
         throw new Error(getAnthropicErrorMessage(json));
       }
@@ -256,6 +256,7 @@ class Anthropic extends BaseLLM {
     }
 
     if (stream === false) {
+      const json = await response.json();
       const cost = json.usage
         ? {
             inputTokens: json.usage.input_tokens,
