@@ -16,7 +16,9 @@ function nullOrtWeb() {
         namespace: "null-ort",
       }));
       build.onLoad({ filter: /.*/, namespace: "null-ort" }, () => ({
-        contents: "export {};",
+        // Provide a default export so code like `ONNX_WEB.default ?? ONNX_WEB`
+        // doesn't warn. We intentionally *don't* implement any APIs.
+        contents: "export default {};",
         loader: "js",
       }));
     },
