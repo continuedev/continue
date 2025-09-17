@@ -3,11 +3,16 @@ import * as fs from "fs";
 import * as util from "util";
 
 import { Tool } from "./types.js";
+import { smartTruncate, formatTruncationMessage } from "./truncation.js";
 
 const execPromise = util.promisify(child_process.exec);
 
-// Default maximum number of results to display
-const DEFAULT_MAX_RESULTS = 100;
+// Default truncation limits
+const DEFAULT_TRUNCATION_OPTIONS = {
+  maxLines: 100,
+  maxChars: 50000, // 50KB
+  maxLineLength: 1000, // Handle very long lines like base64
+};
 
 export const searchCodeTool: Tool = {
   name: "Search",
@@ -78,19 +83,14 @@ export const searchCodeTool: Tool = {
           }.`;
         }
 
-        // Split the results into lines and limit the number of results
-        const lines = stdout.split("\n");
-        const truncated = lines.length > DEFAULT_MAX_RESULTS;
-        const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
-        const resultText = limitedLines.join("\n");
-
-        const truncationMessage = truncated
-          ? `\n\n[Results truncated: showing ${DEFAULT_MAX_RESULTS} of ${lines.length} matches]`
-          : "";
+        // Apply smart truncation to handle both line count and character limits
+        const truncationResult = smartTruncate(stdout.trim(), DEFAULT_TRUNCATION_OPTIONS);
+        const truncationMessage = formatTruncationMessage(truncationResult);
+        const truncationSuffix = truncationMessage ? `\n\n${truncationMessage}` : "";
 
         return `Search results for pattern "${args.pattern}"${
           args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
-        }:\n\n${resultText}${truncationMessage}`;
+        }:\n\n${truncationResult.content}${truncationSuffix}`;
       } catch (error: any) {
         if (error.code === 1) {
           return `No matches found for pattern "${args.pattern}"${
