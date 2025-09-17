@@ -113,9 +113,9 @@ export function getConfigYamlPath(ideType?: IdeType): string {
       // https://github.com/continuedev/continue/pull/7224
       // This was here because we had different context provider support between jetbrains and vs code
       // Leaving so we could differentiate later but for now configs are the same between IDEs
-      fs.writeFileSync(p, YAML.stringify(defaultConfig));
+      fs.writeFileSync(p, YAML.stringify(defaultConfig), { mode: 0o600 });
     } else {
-      fs.writeFileSync(p, YAML.stringify(defaultConfig));
+      fs.writeFileSync(p, YAML.stringify(defaultConfig), { mode: 0o600 });
     }
   }
   return p;
@@ -260,7 +260,7 @@ function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
   // Check if it's an object
   if (typeof configYaml === "object" && configYaml !== null) {
     configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml));
+    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml), { mode: 0o600 });
   } else {
     console.warn("config.yaml is not a valid object");
   }

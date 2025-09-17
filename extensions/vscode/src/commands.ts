@@ -649,7 +649,7 @@ const getCommandsMap: (
       const configYaml = convertJsonToYamlConfig(parsed);
 
       const configYamlPath = getConfigYamlPath();
-      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml), { mode: 0o600 });
 
       // Open config.yaml
       await openEditorAndRevealRange(
