@@ -103,7 +103,7 @@ jobs:
 
           # Start remote session and capture JSON output
           echo "Starting cn with prompt..."
-          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --branch ${{ steps.pr-info.outputs.head_ref }})
+          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --idempotency-key ${{ steps.pr-info.outputs.head_ref }} --branch ${{ steps.pr-info.outputs.head_ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
@@ -254,7 +254,7 @@ jobs:
 
           # Start remote session and capture JSON output
           echo "Starting cn with prompt..."
-          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --branch ${{ github.event.pull_request.head.ref }})
+          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --idempotency-key ${{ github.event.pull_request.head.ref }} --branch ${{ github.event.pull_request.head.ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output

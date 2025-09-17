@@ -156,6 +156,180 @@ describe("ContinueCompletionProvider triggering logic", () => {
       mockNextEditProvider.provideInlineCompletionItems,
     ).not.toHaveBeenCalled();
   });
+
+  it("chains jump suggestions for subsequent method comments", async () => {
+    const snippet = `class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  // Subtract a number from the curren<HERE>
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}
+`;
+
+    const { text, cursor } = parseTextWithCursorMarker(snippet);
+
+    const document = createDocument(text);
+    const context = createContext();
+    const token = createToken();
+
+    setActiveEditor(document, createPosition(cursor.line, cursor.character));
+
+    const provider = buildProvider();
+
+    const subtractComment =
+      "  // Subtract a number from the current result";
+    const subtractOutcome = createNextEditOutcomeForTest(
+      subtractComment,
+      cursor.line,
+    );
+
+    mockNextEditProvider.provideInlineCompletionItems.mockResolvedValueOnce(
+      subtractOutcome,
+    );
+
+    const initialResult = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(cursor.line, cursor.character),
+      context,
+      token,
+    );
+
+    expect(Array.isArray(initialResult)).toBe(true);
+    expect((initialResult as vscode.InlineCompletionItem[])[0].insertText).toBe(
+      subtractComment,
+    );
+
+    // Subsequent calls operate on an existing chain.
+    mockNextEditProvider.chainExists.mockReturnValue(true);
+
+    const jumpSequence = [
+      {
+        completion: "  // Multiply the current result by a number",
+        line: 15,
+      },
+      {
+        completion: "  // Divide the current result by a number",
+        line: 20,
+      },
+      {
+        completion: "  // Get the final result",
+        line: 28,
+      },
+      {
+        completion: "  // Reset the calculator to start fresh",
+        line: 32,
+      },
+    ];
+
+    mockPrefetchQueue.__setProcessed(
+      jumpSequence.map(({ completion, line }) => ({
+        location: {
+          range: {
+            start: { line, character: 2 },
+            end: { line, character: 2 },
+          },
+        },
+        outcome: createNextEditOutcomeForTest(completion, line),
+      })),
+    );
+
+    mockJumpManager.suggestJump.mockImplementation(async () => true);
+
+    // Position cursor at the start of the accepted subtract comment.
+    setActiveEditor(document, createPosition(cursor.line, 2));
+
+    let currentLine = cursor.line;
+
+    for (const [index, { completion, line }] of jumpSequence.entries()) {
+      const acceptancePosition = createPosition(currentLine, 2);
+      const acceptanceResult = await provider.provideInlineCompletionItems(
+        document,
+        acceptancePosition,
+        context,
+        token,
+      );
+
+      expect(acceptanceResult).toBeUndefined();
+      expect(mockPrefetchQueue.dequeueProcessed).toHaveBeenCalledTimes(
+        index + 1,
+      );
+
+      const callIndex =
+        mockJumpManager.setCompletionAfterJump.mock.calls.length - 1;
+      const setCall = mockJumpManager.setCompletionAfterJump.mock.calls[callIndex][0];
+      expect(setCall.outcome.completion).toBe(completion);
+      expect(setCall.currentPosition.line).toBe(line);
+
+      // Simulate the user pressing tab to jump to the next location.
+      mockJumpManager.setJumpInProgress(true);
+      setActiveEditor(document, createPosition(line, 2));
+
+      const jumpResult = await provider.provideInlineCompletionItems(
+        document,
+        createPosition(line, 2),
+        context,
+        token,
+      );
+
+      expect(Array.isArray(jumpResult)).toBe(true);
+      const lastShown =
+        (provider as any)._lastShownCompletion as
+          | { completion: string }
+          | undefined;
+      // The final jump falls back to our minimal mock outcome, so only
+      // intermediate jumps assert on the actual rendered completion text.
+      if (index < jumpSequence.length - 1) {
+        expect(lastShown?.completion).toBe(completion);
+      }
+
+      currentLine = line;
+    }
+
+    expect(
+      mockJumpManager.setCompletionAfterJump.mock.calls.map(
+        (call) => call[0].outcome.completion,
+      ),
+    ).toEqual(jumpSequence.map((step) => step.completion));
+
+    expect(mockPrefetchQueue.dequeueProcessed).toHaveBeenCalledTimes(
+      jumpSequence.length,
+    );
+    expect(mockJumpManager.suggestJump).toHaveBeenCalledTimes(
+      jumpSequence.length,
+    );
+  });
 });
 
 function buildProvider(options: { usingFullFileDiff?: boolean } = {}) {
@@ -247,6 +421,34 @@ function setActiveEditor(document: any, cursor = createPosition()) {
   };
 }
 
+function parseTextWithCursorMarker(textWithMarker: string) {
+  const marker = "<HERE>";
+  const index = textWithMarker.indexOf(marker);
+  if (index === -1) {
+    throw new Error("Marker <HERE> not found in snippet");
+  }
+
+  const beforeMarker = textWithMarker.slice(0, index);
+  const line = beforeMarker.split("\n").length - 1;
+  const character = beforeMarker.split("\n").pop()?.length ?? 0;
+  const text = beforeMarker + textWithMarker.slice(index + marker.length);
+
+  return { text, cursor: { line, character } };
+}
+
+function createNextEditOutcomeForTest(
+  completion: string,
+  startLine: number,
+  endLine = startLine,
+) {
+  return {
+    completion,
+    diffLines: [{ type: "new", line: completion }],
+    editableRegionStartLine: startLine,
+    editableRegionEndLine: endLine,
+  } as any;
+}
+
 function createMockNextEditProvider() {
   return {
     chainExists: vi.fn(() => false),
@@ -291,12 +493,23 @@ function createMockPrefetchQueue() {
 }
 
 function createMockJumpManager() {
+  let jumpInProgress = false;
+  let storedCompletion: any = null;
+
   return {
-    isJumpInProgress: vi.fn(() => false),
-    setJumpInProgress: vi.fn(),
-    completionAfterJump: undefined,
-    clearCompletionAfterJump: vi.fn(),
-    setCompletionAfterJump: vi.fn(),
+    isJumpInProgress: vi.fn(() => jumpInProgress),
+    setJumpInProgress: vi.fn((value: boolean) => {
+      jumpInProgress = value;
+    }),
+    get completionAfterJump() {
+      return storedCompletion;
+    },
+    clearCompletionAfterJump: vi.fn(() => {
+      storedCompletion = null;
+    }),
+    setCompletionAfterJump: vi.fn((value: any) => {
+      storedCompletion = value;
+    }),
     suggestJump: vi.fn(async () => false),
     wasJumpJustAccepted: vi.fn(() => false),
   };
@@ -480,7 +693,7 @@ vi.mock("core/nextEdit/NextEditLoggingService", () => {
 });
 
 vi.mock("core/nextEdit/diff/diff", () => ({
-  checkFim: vi.fn(() => ({ isFim: true, fimText: "ghost" })),
+  checkFim: vi.fn((_, newText: string) => ({ isFim: true, fimText: newText })),
 }));
 
 vi.mock("../util/errorHandling", () => ({
