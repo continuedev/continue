@@ -7,21 +7,15 @@ import { useAppDispatch } from "../../redux/hooks";
 import { setSelectedProfile } from "../../redux/slices/profilesSlice";
 import { CONFIG_ROUTES } from "../../util/navigation";
 import { ToolTip } from "../gui/Tooltip";
-import { Button, ListboxOption, useFontSize } from "../ui";
+import { Button, ListboxOption } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
 
 interface AssistantOptionProps {
   profile: ProfileDescription;
   selected: boolean;
-  onClick: () => void;
 }
 
-export function AssistantOption({
-  profile,
-  selected,
-  onClick,
-}: AssistantOptionProps) {
-  const tinyFont = useFontSize(-4);
+export function AssistantOption({ profile, selected }: AssistantOptionProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -38,8 +32,6 @@ export function AssistantOption({
     ideMessenger.post("didChangeSelectedProfile", {
       id: profile.id,
     });
-
-    onClick();
   }
 
   return (

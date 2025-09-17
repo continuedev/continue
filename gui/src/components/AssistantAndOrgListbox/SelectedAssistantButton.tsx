@@ -10,11 +10,13 @@ import { AssistantIcon } from "./AssistantIcon";
 interface SelectedAssistantButtonProps {
   selectedProfile: ProfileDescription | null;
   variant?: "lump" | "sidebar";
+  setOptionsOpen: (open: boolean) => void;
 }
 
 export function SelectedAssistantButton({
   selectedProfile,
   variant,
+  setOptionsOpen,
 }: SelectedAssistantButtonProps) {
   const configLoading = useAppSelector((store) => store.config.loading);
 
@@ -28,6 +30,7 @@ export function SelectedAssistantButton({
       data-testid="assistant-select-button"
       className={`text-description overflow-hidden border-none bg-transparent hover:brightness-110 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
       style={buttonStyle}
+      onClick={() => setOptionsOpen(true)}
     >
       <div
         className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
