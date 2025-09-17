@@ -187,7 +187,6 @@ export default async function doLoadConfig(options: {
   const mcpManager = MCPManagerSingleton.getInstance();
   const mcpServerStatuses = mcpManager.getStatuses();
 
-  // Slightly hacky just need connection's client to make slash command for now
   const serializableStatuses = mcpServerStatuses.map((server) => {
     const { client, ...rest } = server;
     return rest;

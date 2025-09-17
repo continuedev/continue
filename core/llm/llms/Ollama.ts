@@ -269,6 +269,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
     return this.modelMap[this.model] ?? this.model;
   }
 
+  get contextLength() {
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // twice of https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
+  }
+
   private _getModelFileParams(
     options: CompletionOptions,
   ): OllamaModelFileParams {

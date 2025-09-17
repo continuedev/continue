@@ -43,18 +43,6 @@ export function SimpleToolCallUI({
     }
   }
 
-  function handleToggleClick() {
-    if (isToggleable) {
-      setOpen((prev) => !prev);
-    }
-  }
-
-  function handleIconClick() {
-    if (isSingleItem) {
-      openContextItem(shownContextItems[0], ideMessenger);
-    }
-  }
-
   return (
     <div className="mt-1 flex flex-col px-4">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
@@ -69,7 +57,6 @@ export function SimpleToolCallUI({
             icon={Icon}
             isToggleable={isToggleable}
             open={shouldShowContent}
-            onClick={isToggleable ? handleToggleClick : handleIconClick}
             isClickable={isSingleItem}
           />
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />

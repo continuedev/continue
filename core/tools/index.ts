@@ -5,7 +5,6 @@ import * as toolDefinitions from "./definitions";
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 export const getBaseToolDefinitions = () => [
   toolDefinitions.readFileTool,
-
   toolDefinitions.createNewFileTool,
   toolDefinitions.runTerminalCommandTool,
   toolDefinitions.globSearchTool,
@@ -14,7 +13,6 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
-  toolDefinitions.singleFindAndReplaceTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
@@ -43,6 +41,7 @@ export const getConfigDependentToolDefinitions = (
     tools.push(toolDefinitions.multiEditTool);
   } else {
     tools.push(toolDefinitions.editFileTool);
+    tools.push(toolDefinitions.singleFindAndReplaceTool);
   }
 
   // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269

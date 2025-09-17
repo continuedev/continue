@@ -19,9 +19,16 @@ vi.mock("../../../components/ui", () => ({
   useFontSize: () => 14,
 }));
 
-vi.mock("../../../util/clientTools/findAndReplaceUtils", () => ({
-  performFindAndReplace: vi.fn(),
-}));
+vi.mock("../../../util/clientTools/findAndReplaceUtils", async () => {
+  const actual = await vi.importActual(
+    "../../../util/clientTools/findAndReplaceUtils",
+  );
+
+  return {
+    performFindAndReplace: vi.fn(),
+    trimEmptyLines: actual.trimEmptyLines,
+  };
+});
 
 vi.mock("./utils", () => ({
   getStatusIcon: vi.fn(() => <div data-testid="status-icon">✓</div>),

@@ -215,8 +215,8 @@ function applyRequestOptionsToModels(
   // Prepare models
   for (const model of models) {
     model.requestOptions = {
-      ...model.requestOptions,
       ...config.requestOptions,
+      ...model.requestOptions,
     };
     if (roles !== undefined) {
       model.roles = model.roles ?? roles;
@@ -545,6 +545,7 @@ async function intermediateToFinalConfig({
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
+
   const orgPolicy = PolicySingleton.getInstance().policy;
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
@@ -555,6 +556,7 @@ async function intermediateToFinalConfig({
           id: `continue-mcp-server-${index + 1}`,
           name: `MCP Server`,
           ...server,
+          requestOptions: config.requestOptions,
         }),
       ),
       false,

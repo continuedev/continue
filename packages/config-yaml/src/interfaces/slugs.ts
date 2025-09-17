@@ -1,3 +1,5 @@
+import os from "node:os";
+
 export interface PackageSlug {
   ownerSlug: string;
   packageSlug: string;
@@ -61,13 +63,18 @@ export function decodePackageIdentifier(identifier: string): PackageIdentifier {
       fileUri: identifier.substring(7),
     };
   }
-  // Otherwise, it's a slug
-  else {
+  // support ~ by replacing with home directory
+  else if (identifier.startsWith("~")) {
     return {
-      uriType: "slug",
-      fullSlug: decodeFullSlug(identifier),
+      uriType: "file",
+      fileUri: identifier.replace("~", os.homedir()),
     };
   }
+  // Otherwise, it's a slug
+  return {
+    uriType: "slug",
+    fullSlug: decodeFullSlug(identifier),
+  };
 }
 
 export enum VirtualTags {
