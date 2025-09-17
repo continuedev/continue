@@ -26,7 +26,7 @@ vi.mock("../../../util/clientTools/findAndReplaceUtils", async () => {
 
   return {
     performFindAndReplace: vi.fn(),
-    removeEmptyLines: actual.removeEmptyLines,
+    trimEmptyLines: actual.trimEmptyLines,
   };
 });
 

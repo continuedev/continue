@@ -15,7 +15,7 @@ import {
 } from "../../../redux/selectors/selectToolCalls";
 import {
   performFindAndReplace,
-  removeEmptyLines,
+  trimEmptyLines,
 } from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
@@ -321,11 +321,11 @@ export function FindAndReplaceDisplay({
               : showMiddleEllipses || showEndEllipsis
                 ? lines.slice(0, MAX_SAME_LINES)
                 : lines;
-            startLines = removeEmptyLines.fromStart(startLines);
+            startLines = trimEmptyLines({ lines: startLines, fromEnd: false });
             let endLines = showMiddleEllipses
               ? lines.slice(-MAX_SAME_LINES)
               : [];
-            endLines = removeEmptyLines.fromEnd(endLines);
+            endLines = trimEmptyLines({ lines: endLines, fromEnd: true });
 
             return (
               <div key={index}>

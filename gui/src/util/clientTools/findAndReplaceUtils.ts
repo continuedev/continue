@@ -96,24 +96,21 @@ export function validateCreatingForMultiEdit(edits: EditOperation[]) {
   return isCreating;
 }
 
-/**remove all empty lines from the start/end in an array of lines */
-export const removeEmptyLines = {
-  _remove: (lines: string[]) => {
-    const newLines = [];
-    let index = 0,
-      shouldContinueRemoving = true;
-    while (index < lines.length) {
-      if (shouldContinueRemoving && lines[index].trim() === "") {
-        index++;
-        continue;
-      }
-      shouldContinueRemoving = false;
-      newLines.push(lines[index]);
-      index++;
-    }
-    return newLines;
-  },
-  fromStart: (lines: string[]) => removeEmptyLines._remove(lines),
-  fromEnd: (lines: string[]) =>
-    removeEmptyLines._remove(lines.toReversed()).toReversed(),
-};
+export function trimEmptyLines({
+  lines,
+  fromEnd,
+}: {
+  lines: string[];
+  fromEnd: boolean;
+}): string[] {
+  lines = fromEnd ? lines.toReversed() : lines.slice();
+  const newLines: string[] = [];
+  let shouldContinueRemoving = true;
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (shouldContinueRemoving && line.trim() === "") continue;
+    shouldContinueRemoving = false;
+    newLines.push(line);
+  }
+  return fromEnd ? newLines.reverse() : newLines;
+}
