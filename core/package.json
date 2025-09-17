@@ -17,6 +17,7 @@
   "author": "Continue Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.62.0",
     "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.11.4",
