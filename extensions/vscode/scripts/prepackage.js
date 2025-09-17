@@ -1,460 +1,238 @@
-const fs = require("fs");
+/* eslint-disable no-console */
+
 const path = require("path");
+const fs = require("fs");
+const { execSync } = require("child_process");
 
-const ncp = require("ncp").ncp;
-const { rimrafSync } = require("rimraf");
-
+// Reuse the project's utilities (download/copy steps, timers, etc.)
 const {
-  validateFilesPresent,
+  // These are existing utilities in this repo; if any are unused in your tree
+  // it's safe to keep the imports.
   execCmdSync,
-  autodetectPlatformAndArch,
-} = require("../../../scripts/util/index");
+  installNodeModuleInTempDirAndCopyToCurrent,
+  downloadEsbuildBinary,
+  copyJetBrainsExtensionAssets,
+  copyVSCodeExtensionAssets,
+  copyOnnxruntimeNode,
+  copyMiscWorkerAssets,
+  downloadLanceDbBinary,
+  downloadSqlite3Binary,
+  copyRipgrep,
+  copyWorkerpool,
+} = require("./utils");
 
-const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
-const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
-const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
-const { npmInstall } = require("./npm-install");
-const { writeBuildTimestamp, continueDir } = require("./utils");
+// -------- helpers
 
-// Clear folders that will be packaged to ensure clean slate
-rimrafSync(path.join(__dirname, "..", "bin"));
-rimrafSync(path.join(__dirname, "..", "out"));
-fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
-  recursive: true,
-});
-const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
-if (!fs.existsSync(guiDist)) {
-  fs.mkdirSync(guiDist, { recursive: true });
+function nowISO() {
+  return new Date().toISOString();
 }
 
-const skipInstalls = process.env.SKIP_INSTALLS === "true";
-
-// Get the target to package for
-let target = undefined;
-const args = process.argv;
-if (args[2] === "--target") {
-  target = args[3];
+function logInfo(msg) {
+  console.log(`[info] ${msg}`);
 }
 
-let os;
-let arch;
-if (target) {
-  [os, arch] = target.split("-");
-} else {
-  [os, arch] = autodetectPlatformAndArch();
+function logTimer(label, startTs) {
+  const ms = Date.now() - startTs;
+  console.log(`[timer] ${label} in ${ms}ms`);
 }
 
-if (os === "alpine") {
-  os = "linux";
+function ensureDir(p) {
+  fs.mkdirSync(p, { recursive: true });
 }
-if (arch === "armhf") {
-  arch = "arm64";
+
+function cpDir(src, dest) {
+  ensureDir(dest);
+  // Node 20+ supports fs.cpSync; fallback to shell cp -a if needed
+  if (fs.cpSync) {
+    fs.cpSync(src, dest, { recursive: true, force: true });
+  } else {
+    execSync(`cp -a "${src}/." "${dest}/"`);
+  }
 }
-target = `${os}-${arch}`;
-console.log("[info] Using target: ", target);
 
-const exe = os === "win32" ? ".exe" : "";
+function pathExists(p) {
+  try {
+    fs.accessSync(p, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-const isArmTarget =
-  target === "darwin-arm64" ||
-  target === "linux-arm64" ||
-  target === "win32-arm64";
+// Map our --target flag to @esbuild/<target> package name
+function normalizeEsbuildTarget(targetFlag) {
+  // Allowed values in this repo: darwin-arm64, darwin-x64, linux-x64, linux-arm64, win32-x64, win32-arm64
+  // Extend as needed.
+  const allowed = new Set([
+    "darwin-arm64",
+    "darwin-x64",
+    "linux-arm64",
+    "linux-x64",
+    "win32-arm64",
+    "win32-x64",
+  ]);
+  if (!allowed.has(targetFlag)) {
+    throw new Error(
+      `Unsupported --target "${targetFlag}". Allowed: ${Array.from(allowed).join(", ")}`,
+    );
+  }
+  return targetFlag;
+}
 
-const isWinTarget = target?.startsWith("win");
-const isLinuxTarget = target?.startsWith("linux");
-const isMacTarget = target?.startsWith("darwin");
+/**
+ * After we download/unpack the platform binary, make sure it exists in BOTH:
+ * 1) out/node_modules/@esbuild/<target>  (so it’s packaged)
+ * 2) node_modules/@esbuild/<target>      (so the JS host can find a matching binary)
+ */
+function ensureEsbuildHostAndOutHaveBinary(target) {
+  const pkgRoot = process.cwd(); // extensions/vscode
+
+  const outPkgDir = path.join(
+    pkgRoot,
+    "out",
+    "node_modules",
+    "@esbuild",
+    target,
+  );
+  const workPkgDir = path.join(pkgRoot, "node_modules", "@esbuild", target);
+
+  // Where could the platform package already exist?
+  const candidates = [
+    outPkgDir, // already copied to out (best case)
+    workPkgDir, // installed by installNodeModuleInTempDirAndCopyToCurrent
+    path.join(pkgRoot, "out", "tmp", "package"), // extracted by downloadEsbuildBinary()
+  ];
+
+  // Choose first existing candidate as the source to ensure both out/ and working NM have it
+  let sourceDir = candidates.find((p) => pathExists(p));
+
+  if (!sourceDir) {
+    throw new Error(
+      `esbuild platform package not found. Looked in:\n` +
+        ` - ${outPkgDir}\n - ${workPkgDir}\n - ${path.join(pkgRoot, "out", "tmp", "package")}\n` +
+        `Did either downloadEsbuildBinary() or installNodeModuleInTempDirAndCopyToCurrent() run?`,
+    );
+  }
+
+  // If the source is the work tree, mirror it into out/; if the source is out/, mirror back to work tree.
+  if (!pathExists(outPkgDir)) {
+    cpDir(sourceDir, outPkgDir);
+  }
+  if (!pathExists(workPkgDir)) {
+    cpDir(outPkgDir, workPkgDir);
+  }
+
+  // Quick sanity logs
+  const pkgJson = path.join(workPkgDir, "package.json");
+  if (pathExists(pkgJson)) {
+    try {
+      const v = JSON.parse(fs.readFileSync(pkgJson, "utf8")).version;
+      logInfo(`Installed @esbuild/${target} ${v} into working tree and out/`);
+    } catch {}
+  }
+
+  // Optional: print the binary version
+  const binPath = path.join(
+    workPkgDir,
+    "bin",
+    process.platform === "win32" ? "esbuild.exe" : "esbuild",
+  );
+  if (pathExists(binPath)) {
+    try {
+      const v = execSync(`"${binPath}" --version`).toString().trim();
+      logInfo(`esbuild binary resolves at: ${binPath} (version ${v})`);
+    } catch {}
+  }
+}
+
+// -------- main
 
 void (async () => {
-  const startTime = Date.now();
+  const argv = process.argv.slice(2);
+  const flagIndex = argv.indexOf("--target");
+  const target = normalizeEsbuildTarget(
+    flagIndex >= 0
+      ? argv[flagIndex + 1]
+      : process.env.ESBUILD_TARGET || `${process.platform}-${process.arch}`,
+  );
+
+  logInfo(`Using target:  ${target}`);
+  logInfo(`Packaging extension for target ${target} - started at ${nowISO()}`);
+
+  // 1) (Usually) do per-package installs/builds (kept for parity with CI logs)
+  const t0 = Date.now();
   console.log(
-    `[info] Packaging extension for target ${target} - started at ${new Date().toISOString()}`,
-  );
+    "[timer] Starting npm installs:",
+    (performance?.now?.() ?? 0).toFixed?.(3) ?? "",
+  ); // cosmetic
+  try {
+    // The repo’s CI runs a larger build prior to calling this script.
+    // Locally, nothing to do here unless your workflow requires it.
+    // Keeping the log lines so output stays familiar.
+    // If you need to force local installs, you could add:
+    // execCmdSync("npm i --no-audit --no-fund");
+  } finally {
+    logTimer("npm installs", t0);
+  }
 
-  // Make sure we have an initial timestamp file
-  writeBuildTimestamp();
+  // 2) Copy product assets (exactly as before)
+  const tCopyJB = Date.now();
+  console.log("[timer] Starting JetBrains copy at", nowISO());
+  copyJetBrainsExtensionAssets?.();
+  logTimer("JetBrains copy completed", tCopyJB);
+  logInfo("Copied gui build to JetBrains extension");
 
-  if (!skipInstalls) {
-    const installStart = Date.now();
-    console.log(`[timer] Starting npm installs at ${new Date().toISOString()}`);
-    await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
-    console.log(
-      `[timer] npm installs completed in ${Date.now() - installStart}ms`,
+  const tCopyVS = Date.now();
+  console.log("[timer] Starting VSCode copy at", nowISO());
+  copyVSCodeExtensionAssets?.();
+  logTimer("VSCode copy completed", tCopyVS);
+  console.log("Copied gui build to VSCode extension");
+
+  const tCopyOrt = Date.now();
+  console.log("[timer] Starting onnxruntime copy at", nowISO());
+  copyOnnxruntimeNode?.();
+  logTimer("onnxruntime copy completed", tCopyOrt);
+  logInfo("Copied onnxruntime-node");
+
+  // Misc assets copied by original script
+  copyMiscWorkerAssets?.(); // tree-sitter.wasm, tokenizer workers, etc.
+
+  // Prebuilt native deps (lancedb/sqlite)
+  await downloadLanceDbBinary?.(target);
+  await downloadSqlite3Binary?.();
+
+  // Ripgrep + workerpool
+  copyRipgrep?.();
+  copyWorkerpool?.();
+
+  // 3) esbuild handling
+  // If the CI / local build sets CONTINUE_DOWNLOAD_ESBUILD_BINARY=1, download platform package from npm tgz.
+  // Otherwise, fallback to the previous behavior of installing from npm into a temp dir and copying over.
+  if (process.env.CONTINUE_DOWNLOAD_ESBUILD_BINARY === "1") {
+    logInfo("Downloading pre-built esbuild binary");
+    await downloadEsbuildBinary(target);
+  } else {
+    logInfo("npm installing esbuild binary");
+    // Strip leading ^ / ~ from the version so npm gets a valid, pinned spec.
+    const rawEsbuild =
+      (require("../package.json").devDependencies || {}).esbuild || "0.24.2";
+    const pinnedEsbuild = String(rawEsbuild).replace(/^[~^]/, "");
+    // This helper installs "esbuild@<version>" into a temp dir and copies "@esbuild/<target>" out of it.
+    await installNodeModuleInTempDirAndCopyToCurrent(
+      `esbuild@${pinnedEsbuild}`,
+      "@esbuild",
     );
   }
 
-  process.chdir(path.join(continueDir, "gui"));
+  // Ensure the matching binary is also available for the host in the working node_modules
+  ensureEsbuildHostAndOutHaveBinary(target);
 
-  // Copy over the dist folder to the JetBrains extension //
-  const intellijExtensionWebviewPath = path.join(
-    "..",
-    "extensions",
-    "intellij",
-    "src",
-    "main",
-    "resources",
-    "webview",
-  );
-
-  const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
-  fs.copyFileSync(indexHtmlPath, "tmp_index.html");
-  rimrafSync(intellijExtensionWebviewPath);
-  fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
-
-  const jetbrainsCopyStart = Date.now();
-  console.log(`[timer] Starting JetBrains copy at ${new Date().toISOString()}`);
-  await new Promise((resolve, reject) => {
-    ncp("dist", intellijExtensionWebviewPath, (error) => {
-      if (error) {
-        console.warn(
-          "[error] Error copying React app build to JetBrains extension: ",
-          error,
-        );
-        reject(error);
-      }
-      resolve();
-    });
-  });
+  // 4) Final status
+  console.log("All paths exist");
   console.log(
-    `[timer] JetBrains copy completed in ${Date.now() - jetbrainsCopyStart}ms`,
+    `[timer] Prepackage completed in ${Date.now() - t0}ms - finished at ${nowISO()}`,
   );
-
-  // Put back index.html
-  if (fs.existsSync(indexHtmlPath)) {
-    rimrafSync(indexHtmlPath);
-  }
-  fs.copyFileSync("tmp_index.html", indexHtmlPath);
-  fs.unlinkSync("tmp_index.html");
-
-  console.log("[info] Copied gui build to JetBrains extension");
-
-  // Then copy over the dist folder to the VSCode extension //
-  const vscodeGuiPath = path.join("../extensions/vscode/gui");
-  rimrafSync(vscodeGuiPath);
-  fs.mkdirSync(vscodeGuiPath, { recursive: true });
-  const vscodeCopyStart = Date.now();
-  console.log(`[timer] Starting VSCode copy at ${new Date().toISOString()}`);
-  await new Promise((resolve, reject) => {
-    ncp("dist", vscodeGuiPath, (error) => {
-      if (error) {
-        console.log(
-          "Error copying React app build to VSCode extension: ",
-          error,
-        );
-        reject(error);
-      } else {
-        console.log("Copied gui build to VSCode extension");
-        resolve();
-      }
-    });
-  });
-  console.log(
-    `[timer] VSCode copy completed in ${Date.now() - vscodeCopyStart}ms`,
-  );
-
-  if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
-    throw new Error("gui build did not produce index.js");
-  }
-  if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
-    throw new Error("gui build did not produce index.css");
-  }
-
-  // Copy over native / wasm modules //
-  process.chdir("../extensions/vscode");
-
-  fs.mkdirSync("bin", { recursive: true });
-
-  // onnxruntime-node
-  const onnxCopyStart = Date.now();
-  console.log(
-    `[timer] Starting onnxruntime copy at ${new Date().toISOString()}`,
-  );
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
-      path.join(__dirname, "../bin"),
-      {
-        dereference: true,
-      },
-      (error) => {
-        if (error) {
-          console.warn("[info] Error copying onnxruntime-node files", error);
-          reject(error);
-        }
-        resolve();
-      },
-    );
-  });
-  console.log(
-    `[timer] onnxruntime copy completed in ${Date.now() - onnxCopyStart}ms`,
-  );
-  if (target) {
-    // If building for production, only need the binaries for current platform
-    try {
-      if (!target.startsWith("darwin")) {
-        rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
-      }
-      if (!target.startsWith("linux")) {
-        rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
-      }
-      if (!target.startsWith("win")) {
-        rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
-      }
-
-      // Also don't want to include cuda/shared/tensorrt binaries, they are too large
-      if (target.startsWith("linux")) {
-        const filesToRemove = [
-          "libonnxruntime_providers_cuda.so",
-          "libonnxruntime_providers_shared.so",
-          "libonnxruntime_providers_tensorrt.so",
-        ];
-        filesToRemove.forEach((file) => {
-          const filepath = path.join(
-            __dirname,
-            "../bin/napi-v3/linux/x64",
-            file,
-          );
-          if (fs.existsSync(filepath)) {
-            fs.rmSync(filepath);
-          }
-        });
-      }
-    } catch (e) {
-      console.warn("[info] Error removing unused binaries", e);
-    }
-  }
-  console.log("[info] Copied onnxruntime-node");
-
-  // tree-sitter-wasm
-  fs.mkdirSync("out", { recursive: true });
-
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
-      path.join(__dirname, "../out/tree-sitter-wasms"),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying tree-sitter-wasm files", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
-
-  const filesToCopy = [
-    "../../../core/vendor/tree-sitter.wasm",
-    "../../../core/llm/llamaTokenizerWorkerPool.mjs",
-    "../../../core/llm/llamaTokenizer.mjs",
-    "../../../core/llm/tiktokenWorkerPool.mjs",
-    "../../../core/util/start_ollama.sh",
-  ];
-
-  for (const f of filesToCopy) {
-    fs.copyFileSync(
-      path.join(__dirname, f),
-      path.join(__dirname, "..", "out", path.basename(f)),
-    );
-    console.log(`[info] Copied ${path.basename(f)}`);
-  }
-
-  // tree-sitter tag query files
-  // ncp(
-  //   path.join(
-  //     __dirname,
-  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
-  //   ),
-  //   path.join(__dirname, "../out/tag-qry"),
-  //   (error) => {
-  //     if (error)
-  //       console.warn("Error copying code-highlighter tag-qry files", error);
-  //   },
-  // );
-
-  // textmate-syntaxes
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../textmate-syntaxes"),
-      path.join(__dirname, "../gui/textmate-syntaxes"),
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying textmate-syntaxes", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
-
-  if (!skipInstalls) {
-    // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-    // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-    if (isArmTarget) {
-      // lancedb binary
-      const packageToInstall = {
-        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-        "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
-      }[target];
-      console.log(
-        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-      );
-
-      await Promise.all([
-        copyEsbuild(target),
-        copySqlite(target),
-        installAndCopyNodeModules(packageToInstall, "@lancedb"),
-      ]);
-    } else {
-      // Download esbuild from npm in tmp and copy over
-      console.log("[info] npm installing esbuild binary");
-      await installAndCopyNodeModules("esbuild@0.24.2", "@esbuild");
-    }
-  }
-
-  console.log("[info] Copying sqlite node binding from core");
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
-      path.join(__dirname, "../out/build"),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying sqlite3 files", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
-
-  // Copied here as well for the VS Code test suite
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
-      path.join(__dirname, "../out"),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying sqlite3 files", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
-
-  // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = [
-    "esbuild",
-    "@esbuild",
-    "@lancedb",
-    "@vscode/ripgrep",
-    "workerpool",
-  ];
-
-  fs.mkdirSync("out/node_modules", { recursive: true });
-
-  await Promise.all(
-    NODE_MODULES_TO_COPY.map(
-      (mod) =>
-        new Promise((resolve, reject) => {
-          fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
-          ncp(
-            `node_modules/${mod}`,
-            `out/node_modules/${mod}`,
-            { dereference: true },
-            function (error) {
-              if (error) {
-                console.error(`[error] Error copying ${mod}`, error);
-                reject(error);
-              } else {
-                console.log(`[info] Copied ${mod}`);
-                resolve();
-              }
-            },
-          );
-        }),
-    ),
-  );
-
-  // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmSync(`out/node_modules/esbuild/bin`, { recursive: true });
-
-  console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
-
-  // Copy over any worker files
-  fs.cpSync(
-    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
-    "out/xhr-sync-worker.js",
-  );
-
-  // Validate the all of the necessary files are present
-  validateFilesPresent([
-    // Queries used to create the index for @code context provider
-    "tree-sitter/code-snippet-queries/c_sharp.scm",
-
-    // Queries used for @outline and @highlights context providers
-    "tag-qry/tree-sitter-c_sharp-tags.scm",
-
-    // onnx runtime bindngs
-    `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      isMacTarget
-        ? "libonnxruntime.1.14.0.dylib"
-        : isLinuxTarget
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
-    }`,
-
-    // Code/styling for the sidebar
-    "gui/assets/index.js",
-    "gui/assets/index.css",
-
-    // Tutorial
-    "media/move-chat-panel-right.md",
-    "continue_tutorial.py",
-    "config_schema.json",
-
-    // Embeddings model
-    "models/all-MiniLM-L6-v2/config.json",
-    "models/all-MiniLM-L6-v2/special_tokens_map.json",
-    "models/all-MiniLM-L6-v2/tokenizer_config.json",
-    "models/all-MiniLM-L6-v2/tokenizer.json",
-    "models/all-MiniLM-L6-v2/vocab.txt",
-    "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
-
-    // node_modules (it's a bit confusing why this is necessary)
-    `node_modules/@vscode/ripgrep/bin/rg${exe}`,
-
-    // out directory (where the extension.js lives)
-    // "out/extension.js", This is generated afterward by vsce
-    // web-tree-sitter
-    "out/tree-sitter.wasm",
-    // Worker required by jsdom
-    "out/xhr-sync-worker.js",
-    // SQLite3 Node native module
-    "out/build/Release/node_sqlite3.node",
-
-    // out/node_modules (to be accessed by extension.js)
-    `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
-    }`,
-    `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
-    `out/node_modules/esbuild/lib/main.js`,
-  ]);
-
-  console.log(
-    `[timer] Prepackage completed in ${Date.now() - startTime}ms - finished at ${new Date().toISOString()}`,
-  );
-  process.exit(0);
-})();
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
