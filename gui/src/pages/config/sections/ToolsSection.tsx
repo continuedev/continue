@@ -5,11 +5,10 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   GlobeAltIcon,
-  PlusIcon,
   UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { MCPServerStatus } from "core";
+import { MCPConnectionStatus, MCPServerStatus } from "core";
 import { useContext, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
@@ -27,6 +26,22 @@ interface MCPServerStatusProps {
   server: MCPServerStatus;
   serverFromYaml?: NonNullable<ConfigYaml["mcpServers"]>[number];
 }
+
+const ServerStatusTooltip: Record<MCPConnectionStatus, string> = {
+  connected: "Active",
+  connecting: "Connecting",
+  "not-connected": "Inactive",
+  authenticating: "Authenticating",
+  error: "Error",
+};
+
+const ServerStatusColor: Record<MCPConnectionStatus, string> = {
+  connected: "bg-success",
+  connecting: "bg-warning",
+  "not-connected": "bg-description-muted",
+  authenticating: "bg-warning",
+  error: "bg-error",
+};
 
 function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const [expandedSections, setExpandedSections] = useState<{
@@ -147,17 +162,11 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h3 className="my-0 text-sm font-medium">{server.name}</h3>
-              <div
-                className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                  server.status === "connected"
-                    ? "bg-success"
-                    : server.status === "connecting"
-                      ? "bg-warning"
-                      : server.status === "not-connected"
-                        ? "bg-description-muted"
-                        : "bg-error"
-                }`}
-              />
+              <ToolTip content={ServerStatusTooltip[server.status] ?? "Error"}>
+                <div
+                  className={`h-2 w-2 flex-shrink-0 rounded-full ${ServerStatusColor[server.status] ?? "bg-error"}`}
+                />
+              </ToolTip>
             </div>
           </div>
         </div>
@@ -297,7 +306,7 @@ function McpSubsection() {
         .map((server) => [server.name, server]) ?? [],
     );
 
-    return (servers ?? []).map((doc) => ({
+    return (servers ?? []).map((doc: MCPServerStatus) => ({
       block: doc,
       blockFromYaml: yamlServersByName.get(doc.name),
     }));
