@@ -16,6 +16,7 @@ import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
 import { IsApplyingToolbar } from "./IsApplyingToolbar";
+import { IsCompactingToolbar } from "./IsCompactingToolbar";
 import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
@@ -64,6 +65,10 @@ export function LumpToolbar() {
     (state) => state.status === "done",
   );
   const isApplying = applyStates.some((state) => state.status === "streaming");
+  const compactionLoading = useAppSelector(
+    (state) => state.session.compactionLoading,
+  );
+  const isCompacting = Object.keys(compactionLoading).length > 0;
 
   // Get ALL running terminal commands
   const runningToolCalls = useAppSelector((state) =>
@@ -159,6 +164,10 @@ export function LumpToolbar() {
 
   if (isApplying) {
     return <IsApplyingToolbar />;
+  }
+
+  if (isCompacting) {
+    return <IsCompactingToolbar />;
   }
 
   if (isInEdit) {
