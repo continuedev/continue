@@ -23,9 +23,41 @@ Verify installation:
 cn --version
 ```
 
-## Initial Setup
+## Two Ways to Use Continue CLI
 
-Get started is by logging in to Continue Hub for cloud-managed configurations:
+<Tabs>
+<Tab title="REPL Mode">
+**Interactive development sessions**
+
+Start a conversation with AI in your terminal:
+
+```bash
+cn
+> @src/app.js Generate unit tests for this component
+```
+
+Perfect for exploration, debugging, and iterative development.
+
+</Tab>
+
+<Tab title="Continuous AI Mode">
+**Automation and scripting**
+
+Single commands that return results:
+
+```bash
+cn -p "Generate a commit message for current changes"
+cn -p "Review the last 5 commits for issues"
+```
+
+Perfect for CI/CD, git hooks, and automated workflows.
+
+</Tab>
+</Tabs>
+
+## Setup for CLI (REPL Mode)
+
+For interactive development and exploration:
 
 <Steps>
 <Step title="Login to Continue CLI">
@@ -35,39 +67,48 @@ cn login
 This will open your browser to authenticate with Continue Hub.
 </Step>
 
-<Step title="Get API Key for Automation">
+<Step title="Test Interactive Mode">
+Start an interactive session:
+```bash
+cn
+```
 
-    For automation workflows, get an API key:
-      1. Visit [Continue Hub API
-      Keys](https://hub.continue.dev/settings/api-keys)
-      2. Click **"+ New API Key"**
-      3. Copy the API key immediately (you won't see it again!)
-      4. Login using your Continue account.
-      4. Use it in headless mode: `cn -p "your prompt"`
+Try asking a question:
+
+```
+> Tell me about the CLI
+```
 
 </Step>
+</Steps>
 
-<Step title="Add Secrets (Optional)">
+## Setup for CLI (Continuous AI Mode)
+
+For automation workflows and scripting:
+
+<Steps>
+<Step title="Get API Key for Automation">
+For automation workflows, get an API key:
+1. Visit [Continue Hub API Keys](https://hub.continue.dev/settings/api-keys)
+2. Click **"+ New API Key"**
+3. Copy the API key immediately (you won't see it again!)
+4. Login using your Continue account
+</Step>
+
+<Step title="Add Secrets for Workflows">
 Store secure credentials for CLI workflows:
 1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
 2. Add your API keys and sensitive data
 3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
 </Step>
-</Steps>
 
-## First Test Run
-
-Try Continue CLI in interactive mode:
-
-```bash
-cn "Tell me about the CLI"
-```
-
-Or test headless mode:
-
+<Step title="Test Async Mode">
+Try async mode for automation:
 ```bash
 cn -p "Generate a conventional commit message for the current git changes"
 ```
+</Step>
+</Steps>
 
 ## What's Next?
 
@@ -77,11 +118,11 @@ cn -p "Generate a conventional commit message for the current git changes"
 </Card>
 
 <Card title="Create your first workflow" icon="gear" href="/guides/posthog-github-continuous-ai">
-  Customize models, rules, and tools
+  Build automated workflows with Continue CLI
 </Card>
 </CardGroup>
 
-### Getting Help
+## Getting Help
 
 If you encounter issues:
 
