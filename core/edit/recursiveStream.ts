@@ -2,6 +2,7 @@ import { ChatMessage, ILLM, Prediction, PromptLog } from "..";
 import { DEFAULT_MAX_TOKENS } from "../llm/constants";
 import { countTokens } from "../llm/countTokens";
 import { renderChatMessage } from "../util/messageContent";
+import { APPLY_UNIQUE_TOKEN } from "./constants.js";
 
 const INFINITE_STREAM_SAFETY = 0.9;
 
@@ -62,7 +63,11 @@ export async function* recursiveStream(
       }
     }
   } else {
-    const generator = llm.streamChat(prompt, abortController.signal, {
+    const promptMessages = shouldInjectApplyToken(llm)
+      ? appendTokenToLastMessage(prompt, APPLY_UNIQUE_TOKEN)
+      : prompt;
+
+    const generator = llm.streamChat(promptMessages, abortController.signal, {
       raw: true,
       prediction: undefined,
       reasoning: false,
@@ -103,4 +108,35 @@ export async function* recursiveStream(
       }
     }
   }
+}
+
+function shouldInjectApplyToken(llm: ILLM): boolean {
+  const model = llm.model?.toLowerCase() ?? "";
+  return llm.providerName === "inception" && model.includes("mercury-coder");
+}
+
+function appendTokenToLastMessage(
+  messages: ChatMessage[],
+  token: string,
+): ChatMessage[] {
+  if (messages.length === 0) {
+    return messages;
+  }
+
+  const lastMessage = messages[messages.length - 1];
+  if (typeof lastMessage.content !== "string") {
+    return messages;
+  }
+
+  if (lastMessage.content.endsWith(token)) {
+    return messages;
+  }
+
+  const updatedMessages = [...messages];
+  updatedMessages[updatedMessages.length - 1] = {
+    ...lastMessage,
+    content: lastMessage.content + token,
+  };
+
+  return updatedMessages;
 }
