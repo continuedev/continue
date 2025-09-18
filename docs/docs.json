@@ -361,10 +361,6 @@
       "destination": "/hub/blocks/intro"
     },
     {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/agents/intro"
-    },
-    {
       "source": "/customize",
       "destination": "/customization/overview"
     },

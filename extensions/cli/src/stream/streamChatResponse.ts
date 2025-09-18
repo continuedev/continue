@@ -16,9 +16,11 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
+  isContextLengthError,
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
+import { validateContextLength } from "../util/tokenizer.js";
 
 import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
@@ -147,6 +149,12 @@ export async function processStreamingResponse(
     isHeadless,
     tools,
   } = options;
+
+  // Validate context length before making the request
+  const validation = validateContextLength(chatHistory, model);
+  if (!validation.isValid) {
+    throw new Error(`Context length validation failed: ${validation.error}`);
+  }
 
   // Get fresh system message and inject it
   const systemMessage = await systemMessageService.getSystemMessage();
@@ -277,6 +285,13 @@ export async function processStreamingResponse(
         shouldContinue: false,
       };
     }
+
+    // Handle context length errors with helpful message
+    if (isContextLengthError(error)) {
+      logger.debug(`Context length exceeded: ${error}`);
+      throw new Error(`Context length exceeded: ${error}`);
+    }
+
     throw error;
   }
 
