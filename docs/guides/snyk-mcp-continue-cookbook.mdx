@@ -1,0 +1,78 @@
+# Snyk + Continue Hub Agent Cookbook (MCP)
+
+Goal
+- Integrate Snyk’s MCP with a Continue Hub agent to scan code (SAST), dependencies (SCA), IaC, and containers from natural language prompts. Keep it simple and reliable.
+
+References (ground truth)
+- Snyk MCP on Continue Hub: https://hub.continue.dev/snyk/snyk-mcp
+- Snyk "Secure at inception" rules (Hub): https://hub.continue.dev/snyk/secure-at-inception
+- Snyk MCP quickstart (Cline, concepts apply): https://docs.snyk.io/integrations/developer-guardrails-for-agentic-workflows/quickstart-guides-for-mcp/cline-guide
+
+Prerequisites
+- Continue account (with Hub access)
+- Node.js 18+
+- Snyk account
+- A local project to scan
+
+Step 1 — Connect Snyk MCP via Continue Hub
+- Open https://hub.continue.dev/snyk/snyk-mcp and install to your Continue Hub account.
+- Use the Hub listing (do not manually wire endpoints). The listing provides the MCP command:
+  - `npx -y snyk@latest mcp -t stdio`
+- When first used, the MCP will request trust/auth as needed (handled by the agent flow).
+
+Step 2 — Add Secure-at-Inception rules
+- Open https://hub.continue.dev/snyk/secure-at-inception and install/add the rules to your agent.
+- These align the agent to:
+  - Run Snyk Code (SAST) for newly generated/modified first‑party code
+  - Run Snyk Open Source (SCA) when adding/updating dependencies
+  - If issues are found, attempt fixes using Snyk results, then rescan until clean
+
+Step 3 — Authenticate Snyk via the agent
+- Prompt your agent: "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
+- The MCP may open a browser to complete login and ask to trust the project folder (as per Snyk docs). Approve when prompted.
+
+Step 4 — Core recipes (prompts)
+Use short prompts; the agent will call Snyk MCP tools.
+
+1) SAST (Snyk Code)
+- Prompt: "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify."
+
+2) Dependencies (Snyk Open Source)
+- Prompt: "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)."
+
+3) IaC
+- Prompt: "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm."
+
+4) Container image
+- Prompt: "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)."
+
+5) Changed files only
+- Prompt: "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas."
+
+6) Snyk Learn
+- Prompt: "Open Snyk Learn lessons related to the top CWE(s) from this scan."
+
+Step 5 — Make it continuous (CI outline)
+- Run the agent via Continue CLI in CI (GitHub Actions, etc.). Example outline:
+  - checkout
+  - setup Node 18
+  - `npm i -g @continuedev/cli`
+  - `cn auth login --api-key $CONTINUE_API_KEY`
+  - `cn -p "Run Snyk Code scan with severity high on this repo. Fail if any high issues are present."`
+  - `cn -p "Run Snyk Open Source on this repo. Fail on fixable high issues."`
+- Manage secrets in your CI (e.g., CONTINUE_API_KEY). The Snyk MCP connection/auth is initiated via the Hub listing and handled by the agent; do not hardcode tokens here.
+
+Step 6 — Guardrails with rules
+- Ensure the Secure-at-Inception rules are enabled.
+- Optionally add project rules, e.g.:
+  - "Always run Snyk Code before committing newly generated code; refuse to proceed if high issues remain."
+  - "When adding/updating a dependency, run Snyk Open Source, choose the lowest-risk upgrade, and re-test."
+
+Troubleshooting
+- Prompt: "Check Snyk auth status and current org. If not authenticated, help me authenticate. Then run a quick Code scan on ./ with severity medium and print one example issue."
+- If fixes don’t validate: "Propose minimal diffs only in affected files, then rerun the same Snyk scan to confirm resolution."
+
+Notes
+- Always connect Snyk MCP via the Continue Hub listing: https://hub.continue.dev/snyk/snyk-mcp
+- Use the Snyk Secure-at-Inception rules pack from the Hub: https://hub.continue.dev/snyk/secure-at-inception
+- Keep prompts explicit about scan type, target (path/image), and severity.
