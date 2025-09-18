@@ -9,6 +9,7 @@ import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
 import { startLocalOllama } from "core/util/ollamaHelper";
+import { startLocalLemonade } from "core/util/lemonadeHelper";
 import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -619,6 +620,9 @@ const getCommandsMap: (
     },
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
+    },
+    "continue.startLocalLemonade": () => {
+      startLocalLemonade(ide);
     },
     "continue.installModel": async (
       modelName: string,
