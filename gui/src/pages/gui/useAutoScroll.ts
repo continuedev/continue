@@ -43,18 +43,46 @@ export const useAutoScroll = (
       elem.scrollTop = elem.scrollHeight;
     });
 
+    // MutationObserver to watch for dynamically added components
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            // Observe the newly added element and all its descendants
+            const elementsToObserve = [node, ...node.querySelectorAll('*')];
+            elementsToObserve.forEach((el) => {
+              resizeObserver.observe(el);
+            });
+          }
+        });
+      });
+    });
+
+    const observeAllElements = (container: Element) => {
+      // Observe the container itself
+      resizeObserver.observe(container);
+      
+      // Observe all existing descendants (not just direct children)
+      const allElements = container.querySelectorAll('*');
+      allElements.forEach((element) => {
+        resizeObserver.observe(element);
+      });
+    };
+
     ref.current.addEventListener("scroll", handleScroll);
-
-    // Observe the container
-    resizeObserver.observe(ref.current);
-
-    // Observe all immediate children
-    Array.from(ref.current.children).forEach((child) => {
-      resizeObserver.observe(child);
+    
+    // Observe all existing elements
+    observeAllElements(ref.current);
+    
+    // Start watching for new elements
+    mutationObserver.observe(ref.current, {
+      childList: true,
+      subtree: true, // Watch all descendants, not just direct children
     });
 
     return () => {
       resizeObserver.disconnect();
+      mutationObserver.disconnect();
       ref.current?.removeEventListener("scroll", handleScroll);
     };
   }, [ref, history.length, userHasScrolled]);
