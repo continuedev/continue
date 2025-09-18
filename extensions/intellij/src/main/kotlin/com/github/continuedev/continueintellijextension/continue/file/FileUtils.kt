@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.FileStats
 import com.github.continuedev.continueintellijextension.FileType
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -24,10 +25,11 @@ class FileUtils(
     fun writeFile(fileUri: String, content: String) {
         val path = VfsUtilCore.urlToPath(fileUri)
         val pathDirectory = VfsUtil.getParentDir(path)
-            ?: return
+            ?: return LOG.warn("Parent directory is null for $path")
         val vfsDirectory = VfsUtil.createDirectories(pathDirectory)
+            ?: return LOG.warn("Could not create directories for $path")
         val pathFilename = VfsUtil.extractFileName(path)
-            ?: return
+            ?: return LOG.warn("Could not get filename for $path")
         runWriteAction {
             val newFile = vfsDirectory.createChildData(this, pathFilename)
             VfsUtil.saveText(newFile, content)
@@ -106,5 +108,9 @@ class FileUtils(
             return "$noAuthorityPrefix$path"
         }
         return fileUri
+    }
+
+    private companion object {
+        private val LOG = Logger.getInstance(FileUtils::class.java)
     }
 }
