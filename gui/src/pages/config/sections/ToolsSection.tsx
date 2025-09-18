@@ -99,7 +99,11 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     sectionKey,
   }: {
     title: string;
-    items: any[];
+    items:
+      | MCPServerStatus["tools"]
+      | MCPServerStatus["prompts"]
+      | MCPServerStatus["resources"]
+      | MCPServerStatus["resourceTemplates"];
     icon: React.ReactNode;
     sectionKey: string;
   }) => {
