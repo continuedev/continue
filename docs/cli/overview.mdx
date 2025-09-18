@@ -42,12 +42,60 @@ That's it! You're ready to start automating with Continue CLI.
 
 [Continue with CLI Quickstart →](/cli/quick-start)
 
+## Two Ways to Use Continue CLI
+
+Continue CLI offers two distinct modes designed for different workflows:
+
+### REPL Mode: Interactive Development
+
+**Perfect for exploration, debugging, and iterating on AI workflows**
+
+```bash
+cn
+> @src/components/UserProfile.js Review this component for security issues
+> Generate comprehensive unit tests
+> Suggest performance improvements
+```
+
+- **Interactive conversations** with your codebase
+- **Iterate and refine** prompts and approaches
+- **Explore and understand** complex codebases
+- **Perfect for experimentation** and learning
+
+### Continuous AI Mode: Production Automation
+
+**Perfect for CI/CD, automation, and reliable workflows**
+
+```bash
+cn -p "Generate a conventional commit message for staged changes"
+cn -p "Review pull request changes for security vulnerabilities"
+cn -p "Update documentation based on recent code changes"
+```
+
+- **Single-command execution** for automation
+- **Reliable, repeatable results** for production use
+- **CI/CD and pipeline integration**
+- **Git hooks and automated workflows**
+
+### Development Workflow: REPL → Continuous AI
+
+<Tip>
+  **Pro Tip**: Start in REPL mode to iterate on your AI agent and prompts. Once
+  you have a workflow that works reliably, deploy it as a Continuous AI
+  automation.
+</Tip>
+
+1. **Experiment in REPL mode** to perfect your prompts and agent configuration
+2. **Test different approaches** interactively until you get consistent results
+3. **Convert successful workflows** to automated Continuous AI commands
+4. **Deploy in production** with confidence in your proven approach
+
 ## Why developers love Continue CLI
 
 - **Works in your terminal**: Not another chat window. Not another IDE. Continue CLI meets you where you already work, with the tools you already love.
-- **Takes action**: Continue CLI can directly edit files, run commands, and create commits. Need more? Check out our [MCPs](/customization/mcp-tools).
+- **Takes action**: Continue CLI can directly edit files, run commands, and create commits. Need more? Check out our [MCPs](/customize/deep-dives/mcp).
 - **Automate tasks**: Create issues from PostHog data, automatically assign labels to issues, and more. Do all this in a single command from your developer machines, or automatically in CI.
-- **Flexible interfaces**: Use interactive mode for back-and-forth conversations, or headless mode for automation and scripting.
+- **Flexible development flow**: Start interactive, then automate proven workflows.
 
 ## Key Capabilities
 
@@ -99,52 +147,65 @@ Store secure credentials for CLI workflows:
 
 ## Common Use Cases
 
-### Development Automation
+### REPL Mode Examples
+
+**Interactive development and exploration:**
 
 <CodeGroup>
-```bash Generate Commit Messages
+```bash Codebase Exploration
+# Start interactive session
+cn
+> @src/components Find all unused React components
+> /explain How does authentication work in this codebase?
+> @auth/ What security patterns are used here?
+```
+
+```bash Iterative Debugging
+# Debug issues interactively
+cn
+> @tests/auth.test.js This test is failing, help me understand why
+> @src/auth/middleware.js Let's examine this middleware
+> /debug What could be causing the timeout error?
+```
+
+```bash Workflow Development
+# Develop and test automation workflows
+cn
+> @package.json @CHANGELOG.md Generate a release notes template
+> # Test and refine the approach
+> # Once working, convert to: cn -p "Generate release notes"
+```
+
+</CodeGroup>
+
+### Continuous AI Mode Examples
+
+**Production automation and scripting:**
+
+<CodeGroup>
+```bash Git Automation
 # Generate commit messages
 cn -p "Generate a conventional commit message for the current changes"
-```
 
-```bash Code Review
 # Code review automation
+
 cn -p "Review the current git changes for bugs and suggest improvements"
-```
 
-```bash Test Generation
-# Test generation
-cn "@src/utils.js Generate comprehensive unit tests for this file"
-```
+````
 
-</CodeGroup>
-
-### CI/CD Integration
-
-<CodeGroup>
-```bash Pipeline Scripts
+```bash CI/CD Integration
 # In your pipeline scripts
-cn -p "Analyze test failures and suggest fixes" 
-```
+cn -p "Analyze test failures and suggest fixes"
 
-```bash Documentation Updates
 # Automated documentation updates
-cn "@README.md Update this documentation based on recent changes"
-```
+cn -p "@README.md Update this documentation based on recent changes"
+````
 
-</CodeGroup>
+```bash Issue Management
+# Create GitHub issues from PostHog data
+cn -p "@posthog-data.json Create GitHub issues for UX problems found in this session data"
 
-### Codebase Analysis
-
-<CodeGroup>
-```bash Interactive Exploration
-# Interactive exploration
-cn
-> @src/components Find all unused React components. How does authentication work in this codebase?
-```
-
-```bash Security Audits
-# Security audits
+# Automated security audits
 cn -p "Scan the codebase for potential security vulnerabilities"
 ```
 
