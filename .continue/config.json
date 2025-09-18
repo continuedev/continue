@@ -1,0 +1,76 @@
+{
+  "models": [
+    {
+      "title": "DeepSeek Coder (Ollama 33B)",
+      "provider": "ollama",
+      "model": "deepseek-coder:33b",
+      "apiBase": "http://localhost:11434",
+      "template": "deepseek",
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "keepAlive": 600
+      }
+    },
+    {
+      "title": "DeepSeek Coder (Ollama 6.7B)",
+      "provider": "ollama",
+      "model": "deepseek-coder:6.7b",
+      "apiBase": "http://localhost:11434",
+      "template": "deepseek",
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 1024,
+        "keepAlive": 600
+      }
+    },
+    {
+      "title": "CodeLlama Instruct (Ollama 7B)",
+      "provider": "ollama",
+      "model": "codellama:7b-instruct",
+      "apiBase": "http://localhost:11434",
+      "template": "llama2",
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 1024,
+        "keepAlive": 600
+      }
+    }
+  ],
+  "chatModel": {
+    "title": "DeepSeek Coder (Ollama 33B)",
+    "provider": "ollama",
+    "model": "deepseek-coder:33b",
+    "apiBase": "http://localhost:11434",
+    "template": "deepseek",
+    "completionOptions": {
+      "temperature": 0.2,
+      "topP": 0.95,
+      "maxTokens": 2048,
+      "keepAlive": 600
+    }
+  },
+  "tabAutocompleteModel": {
+    "title": "DeepSeek Coder (Ollama 6.7B)",
+    "provider": "ollama",
+    "model": "deepseek-coder:6.7b",
+    "apiBase": "http://localhost:11434",
+    "template": "deepseek",
+    "completionOptions": {
+      "temperature": 0.2,
+      "topP": 0.95,
+      "maxTokens": 256,
+      "keepAlive": 600
+    }
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "apiBase": "http://localhost:11434",
+    "model": "mxbai-embed-large"
+  },
+  "analytics": { "provider": "posthog" },
+  "devData": {}
+}

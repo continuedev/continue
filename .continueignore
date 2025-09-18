@@ -7,3 +7,15 @@ docs/docs/languages
 **/*.scm
 **/*.diff
 .continue/
+# Common noise for indexing
+node_modules/
+dist/
+build/
+.cache/
+.coverage/
+**/*.log
+**/*.tmp
+**/*.min.*
+**/*.map
+.DS_Store
+Thumbs.db

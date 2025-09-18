@@ -7,7 +7,6 @@
                                  Autocomplete, Edit, Chat, and Agent tutorial
 """
 
-
 # —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— #
 #                            Autocomplete provides inline code suggestions as you type.
 
@@ -19,6 +18,7 @@
 # —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— #
 #                   Edit is a convenient way to make quick changes to specific code and files.
 
+
 # 1. Highlight the code below
 # 2. Press [Cmd/Ctrl + I] to Edit
 # 3. Try asking Continue to "make this more readable"
@@ -29,8 +29,10 @@ def sorting_algorithm(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
 
+
 # —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— #
 #                    Chat makes it easy to ask for help from an LLM without needing to leave the IDE.
+
 
 # 1. Highlight the code below
 # 2. Press [Cmd/Ctrl + L] to add to Chat
@@ -41,6 +43,7 @@ def sorting_algorithm2(x):
             if x[j] > x[j + 1]:
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
+
 
 # —————————————————————————————————————————————————     Agent      ————————————————————————————————————————————————— #
 #           Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing
