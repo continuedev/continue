@@ -1,78 +1,341 @@
-# Snyk + Continue Hub Agent Cookbook (MCP)
+---
+title: "Automated Security Scanning with Snyk MCP and Continue"
+description: "Set up an AI-powered security workflow that automatically scans your code, dependencies, infrastructure, and containers using natural language commands."
+sidebarTitle: "Snyk Security Scanning with Continue"
+---
 
-Goal
-- Integrate Snyk’s MCP with a Continue Hub agent to scan code (SAST), dependencies (SCA), IaC, and containers from natural language prompts. Keep it simple and reliable.
+<Card title="What You'll Build" icon="shield-halved">
+  An automated security scanning system that uses Continue's AI agent with Snyk
+  MCP to identify vulnerabilities in code, dependencies, infrastructure, and
+  containers - all through simple natural language prompts
+</Card>
 
-References (ground truth)
-- Snyk MCP on Continue Hub: https://hub.continue.dev/snyk/snyk-mcp
-- Snyk "Secure at inception" rules (Hub): https://hub.continue.dev/snyk/secure-at-inception
-- Snyk MCP quickstart (Cline, concepts apply): https://docs.snyk.io/integrations/developer-guardrails-for-agentic-workflows/quickstart-guides-for-mcp/cline-guide
+## Prerequisites
 
-Prerequisites
-- Continue account (with Hub access)
-- Node.js 18+
-- Snyk account
-- A local project to scan
+Before starting, ensure you have:
 
-Step 1 — Connect Snyk MCP via Continue Hub
-- Open https://hub.continue.dev/snyk/snyk-mcp and install to your Continue Hub account.
-- Use the Hub listing (do not manually wire endpoints). The listing provides the MCP command:
-  - `npx -y snyk@latest mcp -t stdio`
-- When first used, the MCP will request trust/auth as needed (handled by the agent flow).
+- Continue account with **Hub access**
+- Node.js 18+ installed locally
+- [Snyk account](https://snyk.io/) (free tier works)
+- A local project to scan for vulnerabilities
 
-Step 2 — Add Secure-at-Inception rules
-- Open https://hub.continue.dev/snyk/secure-at-inception and install/add the rules to your agent.
-- These align the agent to:
-  - Run Snyk Code (SAST) for newly generated/modified first‑party code
-  - Run Snyk Open Source (SCA) when adding/updating dependencies
-  - If issues are found, attempt fixes using Snyk results, then rescan until clean
+<Steps>
+  <Step title="Connect Snyk MCP via Continue Hub">
+    Visit the [Snyk MCP on Continue Hub](https://hub.continue.dev/snyk/snyk-mcp) and click **Install** to add it to your Continue account.
 
-Step 3 — Authenticate Snyk via the agent
-- Prompt your agent: "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
-- The MCP may open a browser to complete login and ask to trust the project folder (as per Snyk docs). Approve when prompted.
+    The Hub listing automatically configures the MCP command:
+    ```bash
+    npx -y snyk@latest mcp -t stdio
+    ```
 
-Step 4 — Core recipes (prompts)
-Use short prompts; the agent will call Snyk MCP tools.
+    <Info>
+      The MCP will request authentication and folder trust permissions when first used.
+      This is handled automatically by the Continue agent.
+    </Info>
 
-1) SAST (Snyk Code)
-- Prompt: "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify."
+  </Step>
 
-2) Dependencies (Snyk Open Source)
-- Prompt: "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)."
+  <Step title="Add Secure-at-Inception Rules">
+    Install the [Snyk Secure-at-Inception rules](https://hub.continue.dev/snyk/secure-at-inception) from the Hub to enable automatic security scanning.
 
-3) IaC
-- Prompt: "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm."
+    These rules configure your agent to:
+    - **Run [SAST](https://snyk.io/learn/application-security/sast/) scans** on newly generated or modified code
+    - **Check dependencies** when adding or updating packages
+    - **Auto-fix issues** using Snyk's recommendations, then rescan
 
-4) Container image
-- Prompt: "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)."
+  </Step>
 
-5) Changed files only
-- Prompt: "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas."
+  <Step title="Authenticate with Snyk">
+    Run this command with your Continue agent to set up authentication:
 
-6) Snyk Learn
-- Prompt: "Open Snyk Learn lessons related to the top CWE(s) from this scan."
+    ```bash
+    "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
+    ```
 
-Step 5 — Make it continuous (CI outline)
-- Run the agent via Continue CLI in CI (GitHub Actions, etc.). Example outline:
-  - checkout
-  - setup Node 18
-  - `npm i -g @continuedev/cli`
-  - `cn auth login --api-key $CONTINUE_API_KEY`
-  - `cn -p "Run Snyk Code scan with severity high on this repo. Fail if any high issues are present."`
-  - `cn -p "Run Snyk Open Source on this repo. Fail on fixable high issues."`
-- Manage secrets in your CI (e.g., CONTINUE_API_KEY). The Snyk MCP connection/auth is initiated via the Hub listing and handled by the agent; do not hardcode tokens here.
+    <Tip>
+      A browser window will open for Snyk login. After authenticating, approve
+      the request to trust your project folder when prompted.
+    </Tip>
 
-Step 6 — Guardrails with rules
-- Ensure the Secure-at-Inception rules are enabled.
-- Optionally add project rules, e.g.:
-  - "Always run Snyk Code before committing newly generated code; refuse to proceed if high issues remain."
-  - "When adding/updating a dependency, run Snyk Open Source, choose the lowest-risk upgrade, and re-test."
+  </Step>
+</Steps>
 
-Troubleshooting
-- Prompt: "Check Snyk auth status and current org. If not authenticated, help me authenticate. Then run a quick Code scan on ./ with severity medium and print one example issue."
-- If fixes don’t validate: "Propose minimal diffs only in affected files, then rerun the same Snyk scan to confirm resolution."
+## Security Scanning Recipes
 
-Notes
-- Always connect Snyk MCP via the Continue Hub listing: https://hub.continue.dev/snyk/snyk-mcp
-- Use the Snyk Secure-at-Inception rules pack from the Hub: https://hub.continue.dev/snyk/secure-at-inception
-- Keep prompts explicit about scan type, target (path/image), and severity.
+Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
+
+<Info>
+  **Test in Plan Mode First**: Before running security scans that might make changes,
+  test your prompts in plan mode (press **Shift+Tab** to switch modes). This shows you
+  what the agent will do without executing it. For example:
+  `"Run a Snyk Code scan and fix the top 3 issues"`
+</Info>
+
+### Code Vulnerability Scanning ([SAST](https://snyk.io/learn/application-security/sast/))
+
+<Card title="Static Application Security Testing" icon="code">
+  Scan your source code for security vulnerabilities and code quality issues.
+
+```bash
+"Run a Snyk Code scan on this repo with severity threshold medium.
+Summarize issues with file:line. Propose minimal diffs for the top 3
+and rerun to verify."
+```
+
+</Card>
+
+### Dependency Scanning ([SCA](https://snyk.io/learn/software-composition-analysis-sca/))
+
+<Card title="Software Composition Analysis" icon="cube">
+  Check open source dependencies for known vulnerabilities.
+
+```bash
+"Run Snyk Open Source on this repo (include dev deps).
+Summarize vulnerable paths and propose a minimal-risk upgrade plan.
+Re-test after the plan (dry run)."
+```
+
+</Card>
+
+### Infrastructure as Code ([IaC](https://snyk.io/learn/infrastructure-as-code-iac/))
+
+<Card title="IaC Security" icon="cloud">
+  Scan Terraform, CloudFormation, and Kubernetes configs for misconfigurations.
+
+```bash
+"Scan ./infra with Snyk IaC. Report high/critical misconfigs
+with exact files/lines. Provide code changes and re-scan to confirm."
+```
+
+</Card>
+
+### Container Scanning
+
+<Card title="Container Security" icon="docker">
+  Analyze Docker images for vulnerabilities in base images and packages.
+
+```bash
+"Scan image my-api:latest. Exclude base image vulns.
+Print dependency tree. Recommend a safer base image or upgrades.
+Re-test after the change (dry run)."
+```
+
+</Card>
+
+### Pull Request Scanning
+
+<Card title="Changed Files Only" icon="code-branch">
+  Focus scanning on modified files to catch issues before merging.
+
+```bash
+"Scan only files changed since origin/main with Snyk Code.
+Block if new high issues would be introduced. Show deltas."
+```
+
+</Card>
+
+### Security Learning
+
+<Card title="Snyk Learn Integration" icon="graduation-cap">
+  Access security education resources based on identified vulnerabilities ([CWE](https://cwe.mitre.org/)).
+
+```bash
+"Open Snyk Learn lessons related to the top CWE(s) from this scan."
+```
+
+</Card>
+
+## Continuous Security with GitHub Actions
+
+Automate security scanning in your CI/CD pipeline using Continue CLI and Snyk MCP.
+
+### Add GitHub Secrets
+
+Navigate to **Repository Settings → Secrets and variables → Actions** and add:
+
+- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+
+### Create Workflow File
+
+Create `.github/workflows/snyk-security.yml` in your repository:
+
+```yaml
+name: Security Scanning with Snyk MCP
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 8 * * *" # Daily at 8 AM UTC
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+
+      - name: Authenticate Continue CLI
+        run: |
+          cn auth login --api-key "${{ secrets.CONTINUE_API_KEY }}"
+          echo "✅ Continue CLI authenticated"
+
+      - name: Run Security Scans
+        run: |
+          echo "🔍 Running code vulnerability scan..."
+          cn -p "Run Snyk Code scan with severity high on this repo.
+                 Fail if any high issues are present."
+
+          echo "📦 Checking dependencies..."
+          cn -p "Run Snyk Open Source on this repo.
+                 Fail on fixable high issues."
+
+      - name: Generate Security Report
+        if: always()
+        run: |
+          cn -p "Generate a markdown security report summarizing:
+                 - Total vulnerabilities by severity
+                 - Top 3 critical issues (if any)
+                 - Recommended next steps
+                 Save to security-report.md"
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-report-${{ github.run_number }}
+          path: security-report.md
+          retention-days: 30
+```
+
+<Info>
+  The Snyk MCP authentication is handled through Continue Hub. No need to manage
+  Snyk tokens directly in CI - the agent manages authentication.
+</Info>
+
+## Security Guardrails
+
+Implement automated security policies using Continue's rule system.
+
+<CardGroup cols={2}>
+  <Card title="Pre-commit Scanning" icon="lock">
+    ```bash
+    "Always run Snyk Code before committing newly
+    generated code; refuse to proceed if high
+    issues remain."
+    ```
+  </Card>
+
+<Card title="Dependency Safety" icon="shield-check">
+  ```bash
+  "When adding/updating a dependency, run Snyk Open Source, choose the
+  lowest-risk upgrade, and re-test."
+  ```
+</Card>
+
+<Card title="Container Hardening" icon="box">
+  ```bash
+  "Before building containers, scan base images and recommend
+  security-hardened alternatives."
+  ```
+</Card>
+
+  <Card title="IaC Compliance" icon="check-circle">
+    ```bash
+    "Scan all Terraform changes for compliance
+    violations before applying infrastructure."
+    ```
+  </Card>
+</CardGroup>
+
+<Tip>
+  Enable the **Secure-at-Inception** rules from the Hub to automatically apply
+  these guardrails to all code generation and modifications.
+</Tip>
+
+## Troubleshooting
+
+### Authentication Issues
+
+```bash
+"Check Snyk auth status and current org. If not authenticated,
+help me authenticate. Then run a quick Code scan on ./
+with severity medium and print one example issue."
+```
+
+### Fix Validation
+
+```bash
+"Propose minimal diffs only in affected files,
+then rerun the same Snyk scan to confirm resolution."
+```
+
+### Connection Problems
+
+<Check>
+  **Verification Steps:** - Snyk MCP is installed via [Continue
+  Hub](https://hub.continue.dev/snyk/snyk-mcp) - Secure-at-Inception rules are
+  [enabled](https://hub.continue.dev/snyk/secure-at-inception) - Authentication
+  completed successfully - Project folder has been trusted
+</Check>
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered security system** that:
+
+✅ **Uses natural language** - Simple prompts instead of complex CLI commands
+✅ **Fixes automatically** - AI suggests and validates security fixes
+✅ **Runs continuously** - Automated scanning in CI/CD pipelines
+✅ **Enforces guardrails** - Security rules prevent vulnerable code from shipping
+
+<Card title="Continuous AI" icon="rocket">
+  Your security workflow now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine security scanning and remediation with human oversight
+  through review and approval of fixes.
+</Card>
+
+## Next Steps
+
+1. **Run your first scan** - Try the [SAST](https://snyk.io/learn/application-security/sast/) prompt on your current project
+2. **Review findings** - Analyze the security report and implement fixes
+3. **Set up CI pipeline** - Add the GitHub Actions workflow to your repo
+4. **Customize rules** - Add project-specific security policies
+5. **Monitor trends** - Track [vulnerability](https://snyk.io/learn/security-vulnerability/) reduction over time
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Snyk Documentation" icon="book" href="https://docs.snyk.io">
+    Complete Snyk platform documentation
+  </Card>
+  <Card title="Continue Hub" icon="plug" href="https://hub.continue.dev">
+    Explore more MCP integrations and agents
+  </Card>
+  <Card
+    title="Security Best Practices"
+    icon="shield"
+    href="https://snyk.io/learn"
+  >
+    Learn about secure coding practices
+  </Card>
+  <Card
+    title="MCP Concepts"
+    icon="puzzle-piece"
+    href="https://docs.snyk.io/integrations/developer-guardrails-for-agentic-workflows"
+  >
+    Understanding MCP architecture
+  </Card>
+</CardGroup>
