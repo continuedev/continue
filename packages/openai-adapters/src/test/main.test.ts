@@ -330,4 +330,15 @@ describe("Configuration", () => {
       "http://localhost:123/v1/",
     );
   });
+
+  it("should not reappend /v1 to apibase for ollama if it is already present", () => {
+    const ollama = constructLlmApi({
+      provider: "ollama",
+      apiBase: "http://localhost:123/v1/",
+    });
+
+    expect((ollama as OpenAIApi).openai.baseURL).toBe(
+      "http://localhost:123/v1/",
+    );
+  });
 });

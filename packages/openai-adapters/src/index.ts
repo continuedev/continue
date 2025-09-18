@@ -143,7 +143,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "ollama":
       // for openai compaitability, we need to add /v1 to the end of the url
       // this is required for cli (for core, endpoints are overriden by core/llm/llms/Ollama.ts)
-      if (config.apiBase && !config.apiBase.endsWith("v1")) {
+      if (config.apiBase && !new RegExp(/v1\/?$/).test(config.apiBase)) {
         if (config.apiBase.endsWith("/")) {
           config.apiBase += "v1/";
         } else {
