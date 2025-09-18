@@ -158,4 +158,62 @@ describe("PackageIdentifier", () => {
       "Unknown URI type: invalid",
     );
   });
+
+  it("should expand leading tilde when HOME is available", () => {
+    const originalHome = process.env.HOME;
+    const originalUserProfile = process.env.USERPROFILE;
+
+    try {
+      process.env.HOME = "/tmp/test-home";
+      delete process.env.USERPROFILE;
+
+      const decoded = decodePackageIdentifier("~/package.yaml");
+
+      expect(decoded).toEqual({
+        uriType: "file" as const,
+        fileUri: "/tmp/test-home/package.yaml",
+      });
+    } finally {
+      if (originalHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = originalHome;
+      }
+
+      if (originalUserProfile === undefined) {
+        delete process.env.USERPROFILE;
+      } else {
+        process.env.USERPROFILE = originalUserProfile;
+      }
+    }
+  });
+
+  it("should leave leading tilde when no home directory is available", () => {
+    const originalHome = process.env.HOME;
+    const originalUserProfile = process.env.USERPROFILE;
+
+    try {
+      delete process.env.HOME;
+      delete process.env.USERPROFILE;
+
+      const decoded = decodePackageIdentifier("~/package.yaml");
+
+      expect(decoded).toEqual({
+        uriType: "file" as const,
+        fileUri: "~/package.yaml",
+      });
+    } finally {
+      if (originalHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = originalHome;
+      }
+
+      if (originalUserProfile === undefined) {
+        delete process.env.USERPROFILE;
+      } else {
+        process.env.USERPROFILE = originalUserProfile;
+      }
+    }
+  });
 });
