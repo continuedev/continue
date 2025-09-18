@@ -55,7 +55,7 @@ export function createRuleMarkdown(
     frontmatter.description = options.description.trim();
   }
 
-  if (options.invokable) {
+  if (options.invokable !== undefined) {
     frontmatter.invokable = options.invokable;
   }
 
