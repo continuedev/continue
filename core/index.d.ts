@@ -1333,6 +1333,7 @@ export interface MCPTool {
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];
+  infos: string[];
   isProtectedResource: boolean;
 
   prompts: MCPPrompt[];
