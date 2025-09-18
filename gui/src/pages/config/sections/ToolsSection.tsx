@@ -287,6 +287,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 
 function McpSubsection() {
   const currentOrg = useAppSelector(selectCurrentOrg);
+  const mode = useAppSelector((store) => store.session.mode);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
@@ -341,6 +342,13 @@ function McpSubsection() {
         <Card>
           <EmptyState message="MCP servers are disabled in your organization" />
         </Card>
+      ) : mode === "chat" ? (
+        <Alert type="info" size="sm">
+          <span className="text-2xs italic">
+            All MCPs are disabled in Chat, switch to Plan or Agent mode to use
+            MCPs
+          </span>
+        </Alert>
       ) : mergedBlocks.length > 0 ? (
         mergedBlocks.map(({ block, blockFromYaml }, index) => (
           <div key={block.id}>

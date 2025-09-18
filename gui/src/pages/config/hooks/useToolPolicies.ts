@@ -45,7 +45,7 @@ export function useToolPolicies() {
       case "chat":
         return "All tools disabled in Chat, switch to Plan or Agent mode to use tools";
       case "plan":
-        return "Read-only/MCP tools available in Plan mode";
+        return "Read-only tools available in Plan mode";
       default:
         return "";
     }
