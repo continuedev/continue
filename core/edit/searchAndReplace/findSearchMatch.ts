@@ -81,32 +81,38 @@ function whitespaceIgnoredMatch(
   }
 
   // Map the stripped position back to the original file content
-  let originalStartIndex = 0;
+  let originalStartIndex = -1;
   let strippedCharCount = 0;
 
-  // Find the original position by counting non-whitespace characters
+  // Find the original start position by counting non-whitespace characters
   for (let i = 0; i < fileContent.length; i++) {
-    if (strippedCharCount === strippedIndex) {
-      originalStartIndex = i;
-      break;
-    }
     if (!/\s/.test(fileContent[i])) {
+      if (strippedCharCount === strippedIndex) {
+        originalStartIndex = i;
+        break;
+      }
       strippedCharCount++;
     }
   }
 
-  // Find the end position by counting the length of the search content
-  let originalEndIndex = originalStartIndex;
-  let matchedChars = 0;
+  if (originalStartIndex === -1) {
+    return null; // Should not happen if strippedIndex was valid
+  }
 
-  for (
-    let i = originalStartIndex;
-    i < fileContent.length && matchedChars < strippedSearchContent.length;
-    i++
-  ) {
+  // Find the end position by counting through all characters (including whitespace)
+  // that correspond to the stripped search content length
+  let originalEndIndex = originalStartIndex;
+  let matchedNonWhitespaceChars = 0;
+
+  for (let i = originalStartIndex; i < fileContent.length; i++) {
     if (!/\s/.test(fileContent[i])) {
-      matchedChars++;
+      matchedNonWhitespaceChars++;
+      if (matchedNonWhitespaceChars === strippedSearchContent.length) {
+        originalEndIndex = i + 1;
+        break;
+      }
     }
+    // Always update end index to include current position (whether whitespace or not)
     originalEndIndex = i + 1;
   }
 
@@ -118,6 +124,7 @@ function whitespaceIgnoredMatch(
 
 /**
  * Calculate the Jaro similarity between two strings
+ * TODO Re
  */
 function jaroSimilarity(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
@@ -278,7 +285,7 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
   { strategy: exactMatch, name: "exactMatch" },
   { strategy: trimmedMatch, name: "trimmedMatch" },
   { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
-  { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
+  // { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
 ];
 
 /**
