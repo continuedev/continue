@@ -1,54 +1,68 @@
-// Since we want to test just the interface and not the internals,
-// let's create a simplified version of the run function to test the truncation logic
-describe("searchCodeTool", () => {
-  // We'll test the functionality without mocking the dependencies
-  // Instead, we'll focus on the core truncation logic by directly checking
-  // if truncation happens with large outputs
+import { smartTruncate, formatTruncationMessage } from './truncation.js';
 
-  it("should include truncation message when output exceeds limit", () => {
+describe("searchCodeTool truncation logic", () => {
+  it("should include truncation message when output exceeds line limit", () => {
     // Create a large sample output (more than 100 lines)
     const largeOutput = Array.from(
       { length: 150 },
       (_, i) => `file${i}.ts:${i}:const foo = 'bar';`,
     ).join("\n");
 
-    // Check if the truncation logic is applied by the function
-    const truncatedOutput = `Search results for pattern "foo":\n\n${largeOutput.split("\n").slice(0, 100).join("\n")}\n\n[Results truncated: showing 100 of 150 matches]`;
+    // Apply the new smart truncation logic
+    const truncationResult = smartTruncate(largeOutput, { maxLines: 100 });
+    const truncationMessage = formatTruncationMessage(truncationResult);
 
-    // Verify the truncation message is included and only 100 lines are shown
-    const lines = truncatedOutput.split("\n");
-    const nonEmptyLines = lines.filter((line) => line.trim() !== "");
-
-    // Count the content lines (excluding header and truncation message)
-    const contentLines = nonEmptyLines.slice(1, -1);
-
-    // Check that we have exactly 100 content lines
-    expect(contentLines.length).toBe(100);
-
-    // Check that the truncation message is present
-    expect(truncatedOutput).toContain(
-      "[Results truncated: showing 100 of 150 matches]",
-    );
+    expect(truncationResult.truncated).toBe(true);
+    expect(truncationResult.truncatedLineCount).toBe(100);
+    expect(truncationResult.originalLineCount).toBe(150);
+    expect(truncationMessage).toContain("showing 100 of 150 matches");
   });
 
-  it("should not include truncation message when output is within limit", () => {
+  it("should not include truncation message when output is within limits", () => {
     // Create a sample output (less than 100 lines)
     const smallOutput = Array.from(
       { length: 50 },
       (_, i) => `file${i}.ts:${i}:const foo = 'bar';`,
     ).join("\n");
 
-    // Format the output as the function would
-    const output = `Search results for pattern "foo":\n\n${smallOutput}`;
+    // Apply the new smart truncation logic
+    const truncationResult = smartTruncate(smallOutput, { maxLines: 100 });
+    const truncationMessage = formatTruncationMessage(truncationResult);
 
-    // Verify no truncation message is included
-    expect(output).not.toContain("[Results truncated:");
+    expect(truncationResult.truncated).toBe(false);
+    expect(truncationMessage).toBe("");
+  });
 
-    // Count the lines
-    const lines = output.split("\n");
-    const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+  it("should handle very long lines like base64 content", () => {
+    // Simulate a search result with base64 content
+    const base64Line = `data.js:1:const image = "data:image/png;base64,${'iVBORw0KGgoAAAANSUhEUgAA'.repeat(100)}";`;
+    const normalLines = Array.from({ length: 5 }, (_, i) => `file${i}.js:${i}:normal line`);
+    const content = [base64Line, ...normalLines].join('\n');
 
-    // Check that we have the expected number of lines (header + 50 content lines)
-    expect(nonEmptyLines.length).toBe(51);
+    const truncationResult = smartTruncate(content, { 
+      maxLines: 100, 
+      maxLineLength: 200 
+    });
+
+    expect(truncationResult.truncated).toBe(true);
+    expect(truncationResult.content).toContain('... [line truncated]');
+    expect(truncationResult.content.split('\n')[0].length).toBeLessThan(base64Line.length);
+  });
+
+  it("should handle content that exceeds character limit", () => {
+    // Create content that exceeds character limit but not line limit
+    const longLines = Array.from({ length: 10 }, (_, i) => 
+      `file${i}.js:${i}:${'x'.repeat(600)} // long line content`
+    );
+    const content = longLines.join('\n');
+
+    const truncationResult = smartTruncate(content, { 
+      maxLines: 100, 
+      maxChars: 3000 
+    });
+
+    expect(truncationResult.truncated).toBe(true);
+    expect(truncationResult.truncatedCharCount).toBeLessThanOrEqual(3000);
+    expect(truncationResult.truncatedLineCount).toBeLessThan(10);
   });
 });
