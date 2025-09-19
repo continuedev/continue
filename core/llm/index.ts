@@ -1056,6 +1056,10 @@ export abstract class BaseLLM implements ILLM {
             const msg = fromChatResponse(response);
             yield msg;
             completion = this._formatChatMessage(msg);
+            interaction?.logItem({
+              kind: "message",
+              message: msg,
+            });
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
