@@ -41,13 +41,15 @@ function ensureDir(p) {
 }
 
 function cpDir(src, dest) {
+  // Node.js ≥16.7 has fs.cpSync; CI and devs use Node ≥18 so we can rely on it.
+  // Use Node's copy API to avoid shelling out (satisfies CodeQL)
   ensureDir(dest);
-  // Node 20+ supports fs.cpSync; fallback to shell cp -a if needed
-  if (fs.cpSync) {
-    fs.cpSync(src, dest, { recursive: true, force: true });
-  } else {
-    execSync(`cp -a "${src}/." "${dest}/"`);
-  }
+  fs.cpSync(src, dest, {
+    recursive: true,
+    force: true,
+    dereference: true, // match prior behavior of copying target files
+    errorOnExist: false,
+  });
 }
 
 function pathExists(p) {
