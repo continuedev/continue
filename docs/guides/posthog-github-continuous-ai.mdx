@@ -6,13 +6,14 @@ sidebarTitle: "PostHog Analytics with Continue CLI"
 
 <Card title="What You'll Build" icon="robot">
   A fully automated workflow that uses Continue CLI with PostHog MCP to fetch
-  analytics data, analyze user experience issues with AI, and automatically create GitHub
-  issues with specific technical recommendations using GitHub CLI
+  analytics data, analyze user experience issues with AI, and automatically
+  create GitHub issues with specific technical recommendations using GitHub CLI
 </Card>
 
 ## What You'll Learn
 
 This cookbook teaches you to:
+
 - Use [PostHog MCP](https://posthog.com/docs/model-context-protocol) to query [analytics](https://posthog.com/docs/web-analytics), [errors](https://posthog.com/docs/error-tracking), and [feature flags](https://posthog.com/docs/feature-flags)
 - Analyze user behavior patterns with AI
 - Automatically create GitHub issues using GitHub CLI
@@ -25,8 +26,6 @@ This cookbook teaches you to:
 - Node.js 18+ installed locally
 - [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
 - [GitHub CLI](https://cli.github.com/) installed (`gh` command)
-
-## Quick Setup
 
 <Steps>
   <Step title="Install Continue CLI">
@@ -44,12 +43,12 @@ This cookbook teaches you to:
     4. See [PostHog MCP documentation](https://posthog.com/docs/model-context-protocol) for details
   </Step>
 
-  <Step title="Set Up Continue CLI & GitHub CLI">
-    1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
-    2. Create an API key and login: `cn login`
-    3. Install GitHub CLI: `brew install gh` (macOS) or [see docs](https://cli.github.com/)
-    4. Authenticate GitHub: `gh auth login`
-  </Step>
+<Step title="Set Up Continue CLI & GitHub CLI">
+  1. Visit [Continue
+  Organizations](https://hub.continue.dev/settings/organizations) 2. Create an
+  API key and login: `cn login` 3. Install GitHub CLI: `brew install gh` (macOS)
+  or [see docs](https://cli.github.com/) 4. Authenticate GitHub: `gh auth login`
+</Step>
 
   <Step title="Verify Setup">
     Test PostHog MCP connection:
@@ -63,7 +62,8 @@ This cookbook teaches you to:
 
 <Tip>
   PostHog MCP handles all authentication through the Continue Hub - no need to
-  manually configure API keys! GitHub CLI manages GitHub authentication separately.
+  manually configure API keys! GitHub CLI manages GitHub authentication
+  separately.
 </Tip>
 
 ## Step 1: Set Up Your Credentials
@@ -86,7 +86,9 @@ You need a **Personal API Key** (not a Project API key) to access [session recor
    - See [Continue Secrets Documentation](https://docs.continue.dev/hub/secrets/secret-types#secret-types) for how to add secrets
 
 <Info>
-  **Continue Secrets**: The `POSTHOG_AUTH_HEADER` secret should be stored in Continue's secure secrets storage. This keeps your API key safe and the MCP automatically connects to your default PostHog project.
+  **Continue Secrets**: The `POSTHOG_AUTH_HEADER` secret should be stored in
+  Continue's secure secrets storage. This keeps your API key safe and the MCP
+  automatically connects to your default PostHog project.
 </Info>
 
 ### Set Up GitHub CLI Authentication
@@ -113,16 +115,16 @@ gh auth login
 ```
 
 <Info>
-  **How PostHog MCP Works**:
-  - Your API key is tied to your PostHog account and organization
-  - It automatically uses your default project (no project ID needed)
-  - If you have multiple projects, use `mcp__posthog__switch-project` to change
-  - The MCP connects via `https://mcp.posthog.com/sse` using your account context
+  **How PostHog MCP Works**: - Your API key is tied to your PostHog account and
+  organization - It automatically uses your default project (no project ID
+  needed) - If you have multiple projects, use `mcp__posthog__switch-project` to
+  change - The MCP connects via `https://mcp.posthog.com/sse` using your account
+  context
 </Info>
 
 <Tip>
-  **No GitHub PAT Needed**: The `gh` CLI handles GitHub authentication separately.
-  Just run `gh auth login` once and it manages tokens automatically.
+  **No GitHub PAT Needed**: The `gh` CLI handles GitHub authentication
+  separately. Just run `gh auth login` once and it manages tokens automatically.
 </Tip>
 
 ## Performance Analysis Steps
@@ -150,11 +152,9 @@ Format as GitHub issues ready for creation."
 ```
 
 <Card title="Automatic Analysis" icon="wand-magic-sparkles">
-  Continue CLI will:
-  - Fetch session data from PostHog API
-  - Apply intelligent filtering for problematic sessions
-  - Generate actionable GitHub issues
-  - Quantify impact based on real data
+  Continue CLI will: - Fetch session data from PostHog API - Apply intelligent
+  filtering for problematic sessions - Generate actionable GitHub issues -
+  Quantify impact based on real data
 </Card>
 
 ### Step 2: Create GitHub Issues
@@ -172,10 +172,10 @@ Execute the commands and confirm each issue was created with URL."
 ```
 
 <Info>
-  **Why GitHub CLI over GitHub MCP**: While GitHub MCP is available, it can be 
-  token-expensive to run. The `gh` CLI is more efficient, requires no API tokens 
-  (authenticated via `gh auth login`), and provides a cleaner command-line experience.
-  GitHub MCP remains an option if you prefer full MCP integration.
+  **Why GitHub CLI over GitHub MCP**: While GitHub MCP is available, it can be
+  token-expensive to run. The `gh` CLI is more efficient, requires no API tokens
+  (authenticated via `gh auth login`), and provides a cleaner command-line
+  experience. GitHub MCP remains an option if you prefer full MCP integration.
 </Info>
 
 <Warning>
@@ -186,7 +186,7 @@ Execute the commands and confirm each issue was created with URL."
 
 ## Continuous Monitoring
 
-### Step 3: Automated GitHub Actions Workflow
+### Step 3: Set Up Automated GitHub Actions Workflowc
 
 Create a GitHub Actions workflow that runs your Continue CLI analysis automatically on a schedule.
 
@@ -259,7 +259,7 @@ jobs:
       - name: Run PostHog Session Analysis
         run: |
           echo "🎬 Starting PostHog session analysis..."
-          
+
           npx @continuedev/cli@latest << 'EOF'
           Analyze PostHog sessions and create GitHub issues:
           1. Fetch last 20 sessions from PostHog API
@@ -267,15 +267,15 @@ jobs:
           3. Identify top 3 UX problems
           4. Create GitHub issues with labels and priority using gh CLI
           5. Execute: gh issue create --title '[Title]' --body '[Details]' --label 'automated'
-          
+
           PostHog credentials from environment:
           - API Key: $POSTHOG_API_KEY
           - Project: $POSTHOG_PROJECT_ID
           - Host: $POSTHOG_HOST
-          
+
           Output summary of created issues.
           EOF > results.txt
-          
+
           echo "✅ Analysis completed"
           cat results.txt
 
@@ -296,30 +296,37 @@ jobs:
           echo "🐛 Check your repository issues for newly created UX issues"
 ```
 
-## Testing Your Setup
+## Step 4: Testing Your Workflow
 
-### Local Testing
+### Test Locally First
 
-Test the complete workflow locally:
+Before setting up automation, test the workflow locally:
+
+**Test 1: Session Analysis**
 
 ```bash
-# In cn TUI mode:
-"Test PostHog to GitHub workflow:
-1. Fetch 5 recent PostHog sessions
-2. Analyze for UX issues
-3. Create 1 test GitHub issue with 'test' label
-4. Confirm issue creation and provide URL"
+cn -p "[Paste the PostHog analysis prompt from Step 1]"
 ```
 
-### Production Testing Checklist
+Expected: Analysis output with 3 formatted GitHub issues
+
+**Test 2: Issue Creation**
+
+```bash
+cn -p "[Paste the GitHub issue creation prompt from Step 2 with your analysis results]"
+```
+
+Expected: Confirmation of GitHub issues created with URLs
+
+### Test the GitHub Actions Workflow
+
+1. **Manual Trigger**: Go to **Actions** tab in your repository and manually trigger the workflow
+2. **Check Artifacts**: Download the analysis results from the workflow run
 
 <Check>
-  **Success Indicators:**
-  - PostHog API connection verified
-  - Session data fetched successfully
-  - AI analysis identifies real UX issues
-  - GitHub issues created with proper labels
-  - GitHub Actions workflow runs on schedule
+  **Success Indicators:** - PostHog API connection verified - Session data
+  fetched successfully - AI analysis identifies real UX issues - GitHub issues
+  created with proper labels - GitHub Actions workflow runs on schedule
 </Check>
 
 ## Troubleshooting
@@ -335,14 +342,14 @@ Test the complete workflow locally:
 4. Suggest fixes for any errors found"
 ```
 
-### Common Issues
+### Troubleshooting
 
-| Issue | Quick Fix |
-|-------|----------|
-| PostHog API fails | Check API key scopes include session_recording:read |
-| GitHub issues not created | Run `gh auth login` to authenticate GitHub CLI |
-| No session data | Ensure [PostHog session recordings](https://posthog.com/docs/session-replay/installation) are enabled |
-| Rate limits | Reduce session fetch limit or add delays |
+| Issue                     | Quick Fix                                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| PostHog API fails         | Check API key scopes include session_recording:read                                                   |
+| GitHub issues not created | Run `gh auth login` to authenticate GitHub CLI                                                        |
+| No session data           | Ensure [PostHog session recordings](https://posthog.com/docs/session-replay/installation) are enabled |
+| Rate limits               | Reduce session fetch limit or add delays                                                              |
 
 ## What You've Built
 
@@ -364,12 +371,10 @@ After completing this guide, you have a complete **Continuous AI system** that:
 ## Security Best Practices
 
 <Warning>
-  **Protect Your API Keys:**
-  - Store all credentials as GitHub Secrets, never in code
-  - Use Continue CLI's secure secret storage
-  - Limit token scopes to minimum required permissions
-  - Rotate API keys regularly (every 90 days recommended)
-  - Monitor token usage for unusual activity
+  **Protect Your API Keys:** - Store all credentials as GitHub Secrets, never in
+  code - Use Continue CLI's secure secret storage - Limit token scopes to
+  minimum required permissions - Rotate API keys regularly (every 90 days
+  recommended) - Monitor token usage for unusual activity
 </Warning>
 
 ## Advanced Prompts
@@ -378,16 +383,17 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
 
 <CardGroup cols={2}>
   <Card title="Performance Analysis" icon="chart-line">
-    "Analyze [PostHog performance metrics](https://posthog.com/docs/web-analytics) alongside session recordings to
-    identify slow page loads affecting user experience"
+    "Analyze [PostHog performance
+    metrics](https://posthog.com/docs/web-analytics) alongside session
+    recordings to identify slow page loads affecting user experience"
   </Card>
   <Card title="Error Correlation" icon="bug">
     "Cross-reference JavaScript console errors with user actions to identify the
     root cause of UX issues"
   </Card>
   <Card title="Feature Flag Analysis" icon="flag">
-    "Analyze how [PostHog feature flags](https://posthog.com/docs/feature-flags) impact user behavior in session
-    recordings"
+    "Analyze how [PostHog feature flags](https://posthog.com/docs/feature-flags)
+    impact user behavior in session recordings"
   </Card>
   <Card title="Custom Slack Alerts" icon="slack">
     "Create Slack alerts when critical UX issues are detected in PostHog
