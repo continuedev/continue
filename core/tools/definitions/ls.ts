@@ -38,4 +38,5 @@ export const lsTool: Tool = {
       ["recursive", "false"],
     ],
   },
+  toolCallIcon: "FolderIcon",
 };
