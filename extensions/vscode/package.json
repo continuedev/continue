@@ -242,6 +242,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.shareSession",
+        "category": "Continue",
+        "title": "Share Current Chat Session as Markdown",
+        "group": "Continue"
+      },
+      {
         "command": "continue.viewHistory",
         "category": "Continue",
         "title": "View History",
