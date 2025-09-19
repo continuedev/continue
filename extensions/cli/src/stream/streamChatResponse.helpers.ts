@@ -19,6 +19,7 @@ import {
 import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
 // Helper function to handle permission denied
@@ -354,6 +355,11 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
+      const errorReason =
+        error instanceof ContinueError
+          ? error.reason
+          : ContinueErrorReason.Unknown;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -368,6 +374,8 @@ export async function preprocessStreamedToolCalls(
         success: false,
         durationMs: duration,
         error: errorMessage,
+        errorReason,
+        // modelName,
       });
 
       // Add error to chat history

@@ -42,6 +42,7 @@ export enum ContinueErrorReason {
   FileAlreadyExists = "file_already_exists",
   FileNotFound = "file_not_found",
   FileWriteError = "file_write_error",
+  FileIsSecurityConcern = "file_is_security_concern",
   ParentDirectoryNotFound = "parent_directory_not_found",
 
   // Other

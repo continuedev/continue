@@ -1,4 +1,5 @@
 // @ts-ignore
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import {
   getServiceSync,
   MCPServiceState,
@@ -222,12 +223,17 @@ export async function executeToolCall(
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorReason =
+      error instanceof ContinueError
+        ? error.reason
+        : ContinueErrorReason.Unknown;
 
     telemetryService.logToolResult({
       toolName: toolCall.name,
       success: false,
       durationMs: duration,
       error: errorMessage,
+      errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
 
