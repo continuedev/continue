@@ -229,6 +229,7 @@ export class VsCodeMessenger {
           new vscode.Position(end.line, end.character),
         ),
         rulesToInclude: config.rules,
+        isApply: false,
       });
 
       // Log dev data

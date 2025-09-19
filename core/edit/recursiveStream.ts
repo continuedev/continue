@@ -1,4 +1,10 @@
-import { ChatMessage, ILLM, Prediction, PromptLog } from "..";
+import {
+  ChatMessage,
+  ILLM,
+  Prediction,
+  PromptLog,
+  type StreamDiffLinesType,
+} from "..";
 import { DEFAULT_MAX_TOKENS } from "../llm/constants";
 import { countTokens } from "../llm/countTokens";
 import { renderChatMessage } from "../util/messageContent";
@@ -18,6 +24,7 @@ const RECURSIVE_PROMPT = `Continue EXACTLY where you left`;
 export async function* recursiveStream(
   llm: ILLM,
   abortController: AbortController,
+  type: StreamDiffLinesType,
   prompt: ChatMessage[] | string,
   prediction: Prediction | undefined,
   currentBuffer = "",
@@ -29,8 +36,11 @@ export async function* recursiveStream(
   let buffer = currentBuffer;
   // let whiteSpaceAtEndOfBuffer = buffer.match(/\s*$/)?.[0] ?? ""; // attempts at fixing whitespace bug with recursive boundaries
 
+  const injectApplyToken = type === "apply" && shouldInjectApplyToken(llm);
   if (typeof prompt === "string") {
-    const generator = llm.streamComplete(prompt, abortController.signal, {
+    const finalPrompt = injectApplyToken ? prompt + APPLY_UNIQUE_TOKEN : prompt;
+
+    const generator = llm.streamComplete(finalPrompt, abortController.signal, {
       raw: true,
       prediction: undefined,
       reasoning: false,
@@ -63,7 +73,7 @@ export async function* recursiveStream(
       }
     }
   } else {
-    const promptMessages = shouldInjectApplyToken(llm)
+    const promptMessages = injectApplyToken
       ? appendTokenToLastMessage(prompt, APPLY_UNIQUE_TOKEN)
       : prompt;
 
@@ -112,7 +122,7 @@ export async function* recursiveStream(
 
 function shouldInjectApplyToken(llm: ILLM): boolean {
   const model = llm.model?.toLowerCase() ?? "";
-  return llm.providerName === "inception" && model.includes("mercury-coder");
+  return llm.providerName === "inception" && model.includes("mercury");
 }
 
 function appendTokenToLastMessage(

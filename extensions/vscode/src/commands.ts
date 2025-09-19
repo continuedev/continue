@@ -152,6 +152,7 @@ const getCommandsMap: (
       llm,
       range,
       rulesToInclude: config.rules,
+      isApply: false,
     });
   }
 
