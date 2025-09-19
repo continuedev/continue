@@ -172,12 +172,32 @@ Track actual user experience:
 
 ### Step 8: Lighthouse CI Integration
 
-Automate performance testing:
+Automate performance testing with strict budgets:
 
 ```bash
 # In cn TUI mode:
-"Add Lighthouse CI with minimum score 90"
+"Set up Lighthouse CI with performance budgets for my Netlify site:
+
+Requirements:
+- LCP must be < 2.5 seconds  
+- JavaScript bundle must be < 200KB
+- Total size < 500KB
+- Performance score >= 90
+
+Setup needed:
+1. Install @lhci/cli and @netlify/plugin-lighthouse
+2. Create lighthouserc.js with these budget assertions
+3. Configure netlify.toml to run checks on all deploys
+4. Add GitHub status checks to block PRs that exceed budgets
+5. Create performance dashboard at /lighthouse-reports
+
+Please configure the complete Lighthouse CI setup with these budgets."
 ```
+
+<Tip>
+  This comprehensive setup will automatically test every deploy preview and 
+  production deployment, blocking any changes that violate your performance budgets.
+</Tip>
 
 ## Automated Performance Checks
 
