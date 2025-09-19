@@ -17,8 +17,8 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
-import Ollama from "./llm/llms/Ollama";
 import Lemonade from "./llm/llms/Lemonade";
+import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -228,6 +228,17 @@ export class Core {
               progress: 0,
               desc: "Initial Indexing Skipped",
               status: "paused",
+            });
+            return;
+          }
+
+          // Check for disableIndexing to prevent race condition
+          const { config } = await this.configHandler.loadConfig();
+          if (!config || config.disableIndexing) {
+            void this.messenger.request("indexProgress", {
+              progress: 0,
+              desc: "Indexing is disabled",
+              status: "disabled",
             });
             return;
           }
