@@ -234,6 +234,7 @@
               "guides/cli",
               "guides/continuous-ai",
               "guides/posthog-github-continuous-ai",
+              "guides/netlify-mcp-continuous-deployment",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",

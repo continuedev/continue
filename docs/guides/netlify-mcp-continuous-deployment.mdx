@@ -1,0 +1,585 @@
+---
+title: "Building a Continuous Deployment Workflow with Netlify MCP and Continue CLI"
+description: "Build an automated system that uses Continue CLI with Netlify MCP to deploy sites, manage environments, and automate deployment workflows through natural language commands."
+sidebarTitle: "Netlify Deployment with Continue CLI"
+---
+
+<Card title="What You'll Build" icon="rocket">
+  A fully automated workflow that uses Continue CLI with Netlify MCP to create
+  sites, deploy code changes, manage environment variables, and monitor
+  deployments - all through natural language commands
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- GitHub repository with a web project (React, Vue, Next.js, etc.)
+- Netlify account (free tier works)
+- Node.js 22+ installed locally  
+- Continue CLI account with **active credits** (required for API usage)
+- Continue Hub account to install Netlify MCP
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+  
+  <Step title="Install Netlify CLI">
+    ```bash
+    npm i -g netlify-cli
+    ```
+  </Step>
+  
+  <Step title="Set up Continue CLI Account & API Key">
+    1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+    2. Sign up or log in to your Continue account
+    3. Navigate to your organization settings
+    4. Click **"API Keys"** and then **"+ New API Key"**
+    5. Copy the API key immediately (you won't see it again!)
+    6. Login to the CLI: `cn login`
+  </Step>
+
+  <Step title="Install Netlify MCP from Continue Hub">
+    Visit [Netlify MCP on Continue Hub](https://hub.continue.dev/netlify/netlify-mcp) and follow the installation instructions for your preferred editor, or add to your MCP config manually.
+  </Step>
+</Steps>
+
+<Tip>
+  Netlify MCP gives Continue CLI direct access to Netlify's API and CLI
+  commands, enabling powerful deployment automation through natural language!
+</Tip>
+
+## Step 1: Set Up Your Credentials
+
+First, you'll need to gather your API credentials and configure both Netlify CLI and Continue CLI.
+
+### Get Your Netlify Personal Access Token
+
+1. Go to [Netlify Personal Access Tokens](https://app.netlify.com/user/applications#personal-access-tokens)
+2. Click **"New access token"**
+3. Name it "Continue CLI Deployment"
+4. Copy the token immediately (you won't see it again!)
+
+### Authenticate Netlify CLI
+
+```bash
+netlify login
+```
+
+This will open your browser for authentication. Alternatively, you can use your Personal Access Token:
+
+```bash
+export NETLIFY_AUTH_TOKEN="your-personal-access-token"
+```
+
+### Configure MCP with Netlify
+
+Add Netlify MCP to your MCP configuration file (usually `~/.config/mcp/config.json` or similar):
+
+```json
+{
+  "mcpServers": {
+    "netlify": {
+      "command": "npx",
+      "args": ["-y", "@netlify/mcp"],
+      "env": {
+        "NETLIFY_PERSONAL_ACCESS_TOKEN": "your-pat-here"
+      }
+    }
+  }
+}
+```
+
+<Warning>
+  **Security Note**: Never commit your Personal Access Token to version control.
+  Consider using environment variables or secure secret management.
+</Warning>
+
+### Test Your Setup
+
+Use Continue CLI to verify Netlify MCP is working:
+
+```bash
+cn -p "Using the Netlify MCP server, please:
+1. Check if I'm authenticated with Netlify
+2. List my current Netlify sites (if any)
+3. Show my Netlify account information
+4. Confirm the MCP connection is working properly
+
+Please provide a summary of the connection status and any sites found."
+```
+
+## Step 2: Create and Deploy Your First Site
+
+Now you'll use Continue CLI with Netlify MCP to create a new site and deploy your project.
+
+### Create a New Netlify Site
+
+```bash
+cn -p "Using Netlify MCP, I need to create and deploy a new site. Please:
+
+1. Create a new Netlify site with these specifications:
+   - Name: my-continue-cli-demo-{random-id}
+   - Use the current directory as the project root
+   - Detect the build settings automatically
+
+2. Link the site to my current Git repository if one exists
+
+3. Set up the following build configuration:
+   - Build command: Detect automatically or use 'npm run build'
+   - Publish directory: Detect automatically or use 'dist' or 'build'
+   - Node version: 22.x
+
+4. Deploy the site immediately after creation
+
+5. Provide me with:
+   - The site URL
+   - The site ID for future reference
+   - Build status
+   - Any deployment logs
+
+Please execute these steps and show me the results."
+```
+
+<Info>
+  **What Netlify MCP Does:** 
+  - Creates a new site in your Netlify account
+  - Automatically detects framework settings (React, Vue, Next.js, etc.)
+  - Links to your Git repository for continuous deployment
+  - Triggers an initial deployment
+  - Provides live site URL
+</Info>
+
+## Step 3: Manage Environment Variables
+
+Use Continue CLI to manage your site's environment variables securely:
+
+```bash
+cn -p "Using Netlify MCP, help me manage environment variables for my site. Please:
+
+1. List all current environment variables for site: {your-site-id}
+
+2. Add these new environment variables:
+   - API_KEY: 'demo-api-key-123'
+   - NODE_ENV: 'production'
+   - ENABLE_FEATURE_FLAGS: 'true'
+
+3. Create these build-time only variables:
+   - BUILD_TIMESTAMP: Current ISO timestamp
+   - GIT_COMMIT_SHA: Latest commit SHA if available
+
+4. Set up these sensitive variables (mark as secret):
+   - DATABASE_URL: 'postgresql://user:pass@host:5432/db'
+   - JWT_SECRET: Generate a secure random string
+
+5. Verify all variables are set correctly
+
+6. Trigger a new deployment to apply the changes
+
+Please execute these operations and confirm the environment variables are properly configured."
+```
+
+<Tip>
+  Environment variables set through Netlify MCP are encrypted and only
+  accessible during build time and runtime, keeping your secrets secure.
+</Tip>
+
+## Step 4: Set Up Continuous Deployment Workflow
+
+Create an automated workflow that deploys on code changes and monitors build status.
+
+### Create Deployment Automation Script
+
+Create a file called `deploy-with-continue.sh`:
+
+```bash
+#!/bin/bash
+
+# Deploy with Continue CLI and Netlify MCP
+cn -p "Using Netlify MCP, perform a production deployment:
+
+1. Check the current deployment status of my Netlify site
+
+2. If there are uncommitted changes:
+   - Show me what files have changed
+   - Ask if I want to commit them first
+
+3. Create a new deployment with:
+   - Clear build cache if needed
+   - Production context
+   - Auto-publish enabled
+
+4. Monitor the deployment:
+   - Show build logs in real-time
+   - Report any errors immediately
+   - Notify when deployment is complete
+
+5. After successful deployment:
+   - Show the preview URL
+   - Run basic smoke tests (check if site is accessible)
+   - Report Core Web Vitals if available
+
+6. If deployment fails:
+   - Show error logs
+   - Suggest potential fixes
+   - Option to rollback to previous deployment
+
+Please execute this deployment workflow and keep me updated on progress."
+```
+
+Make it executable:
+```bash
+chmod +x deploy-with-continue.sh
+```
+
+## Step 5: Advanced Netlify Operations
+
+### Manage Multiple Environments
+
+```bash
+cn -p "Using Netlify MCP, help me set up a staging environment:
+
+1. Create a branch deploy for 'staging' branch:
+   - Enable automatic deploys from staging branch
+   - Use different environment variables for staging
+   - Create unique URL: staging--{site-name}.netlify.app
+
+2. Set up deploy previews:
+   - Enable for all pull requests
+   - Add comment to PR with preview URL
+   - Run tests on preview deploys
+
+3. Configure split testing:
+   - Create A/B test between main and staging
+   - Split traffic 50/50
+   - Track performance metrics
+
+Please set up these deployment environments and provide the configuration details."
+```
+
+### Enable Netlify Functions
+
+```bash
+cn -p "Using Netlify MCP, help me set up serverless functions:
+
+1. Enable Netlify Functions for my site
+
+2. Create a sample function at netlify/functions/hello-world.js:
+   - Simple JSON response
+   - Handle GET and POST requests
+   - Include CORS headers
+
+3. Create an API endpoint function at netlify/functions/api.js:
+   - Connect to environment variables
+   - Handle multiple routes
+   - Include error handling
+
+4. Deploy the functions and provide:
+   - Function endpoints
+   - Invocation URLs
+   - Test commands
+
+Please set up these serverless functions and show me how to invoke them."
+```
+
+### Set Up Form Handling
+
+```bash
+cn -p "Using Netlify MCP, configure form handling for my site:
+
+1. Enable Netlify Forms
+
+2. Set up form notifications:
+   - Email notifications to: admin@example.com
+   - Webhook to: https://api.example.com/form-webhook
+   - Slack notifications if possible
+
+3. Configure spam filtering:
+   - Enable reCAPTCHA
+   - Set up honeypot field
+   - Configure Akismet if available
+
+4. Create form submission handling:
+   - Store submissions in Netlify
+   - Export endpoint for submissions
+   - Set up auto-response emails
+
+Please configure these form features and provide integration instructions."
+```
+
+## Step 6: Monitoring and Analytics
+
+### Set Up Deployment Monitoring
+
+```bash
+cn -p "Using Netlify MCP, help me monitor my site's performance:
+
+1. Get deployment analytics:
+   - Build times over last 30 days
+   - Success/failure rate
+   - Average deploy time
+
+2. Check current site metrics:
+   - Bandwidth usage
+   - Request count
+   - Form submission count
+
+3. Set up monitoring alerts:
+   - Build failures
+   - High bandwidth usage
+   - Form spam detection
+
+4. Generate a deployment report:
+   - Last 10 deployments
+   - Git commits for each
+   - Build duration trends
+
+Please gather this monitoring data and create a comprehensive report."
+```
+
+## Step 7: GitHub Actions Integration
+
+Create a GitHub Actions workflow that uses Continue CLI with Netlify MCP for automated deployments.
+
+### Add GitHub Secrets
+
+1. Go to **Repository Settings → Secrets and variables → Actions**
+2. Add these secrets:
+   - `CONTINUE_API_KEY`: Your Continue API key
+   - `NETLIFY_AUTH_TOKEN`: Your Netlify Personal Access Token
+   - `NETLIFY_SITE_ID`: Your Netlify site ID
+
+### Create GitHub Actions Workflow
+
+Create `.github/workflows/netlify-deploy.yml`:
+
+```yaml
+name: Deploy to Netlify with Continue CLI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - production
+          - staging
+          - preview
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @continuedev/cli netlify-cli
+          
+      - name: Authenticate Continue CLI
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          cn auth login --api-key "$CONTINUE_API_KEY"
+          echo "✅ Continue CLI authenticated"
+          
+      - name: Deploy with Netlify MCP
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          DEPLOY_ENV: ${{ github.event.inputs.environment || 'preview' }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          cat > deploy_prompt.txt << 'EOF'
+          Using Netlify MCP, deploy my site with these specifications:
+          
+          1. Site ID: $NETLIFY_SITE_ID
+          2. Environment: $DEPLOY_ENV
+          3. Branch: $BRANCH_NAME
+          4. Commit: $COMMIT_SHA
+          
+          Deployment steps:
+          1. Build the project with production optimizations
+          2. Deploy to Netlify with appropriate context
+          3. If PR, create preview deployment with comment
+          4. If main branch, deploy to production
+          5. If staging branch, deploy to staging environment
+          
+          After deployment:
+          - Provide deployment URL
+          - Show build logs summary
+          - Report Core Web Vitals if available
+          - Add deployment status to GitHub commit
+          
+          Please execute this deployment and provide detailed feedback.
+          EOF
+          
+          cn < deploy_prompt.txt
+          
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `🚀 **Netlify Preview Deployment Ready!**
+            
+            Preview URL: https://deploy-preview-${{ github.event.number }}--${{ secrets.NETLIFY_SITE_ID }}.netlify.app
+            
+            Deployment triggered by Continue CLI with Netlify MCP.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+```
+
+## Step 8: Testing Your Workflow
+
+### Local Testing
+
+Test your Netlify MCP integration locally:
+
+```bash
+# Test site creation
+cn -p "Using Netlify MCP, create a test site and immediately delete it to verify my setup works"
+
+# Test deployment
+cn -p "Using Netlify MCP, deploy my current project to Netlify and show me the deployment logs"
+
+# Test environment variables
+cn -p "Using Netlify MCP, list and update environment variables for my site"
+```
+
+### Production Testing Checklist
+
+<Check>
+  **Deployment Checklist:**
+  - Site builds successfully without errors
+  - Environment variables are properly set
+  - Custom domain is configured (if applicable)
+  - SSL certificate is active
+  - Forms are working (if used)
+  - Functions are accessible (if used)
+  - Analytics tracking is enabled
+  - Performance metrics meet targets
+</Check>
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+```bash
+cn -p "Help me troubleshoot my Netlify deployment. Please:
+
+1. Check Netlify MCP connection status
+2. Verify my authentication is working
+3. List recent deployment failures and their causes
+4. Check for common configuration issues:
+   - Missing environment variables
+   - Incorrect build commands
+   - Wrong publish directory
+   - Node version mismatches
+5. Suggest fixes for any issues found
+
+Please diagnose and help me resolve any problems."
+```
+
+### Debug Build Failures
+
+```bash
+cn -p "Using Netlify MCP, help me debug a build failure:
+
+1. Get the latest failed build logs
+2. Identify the error message and stack trace
+3. Check for:
+   - Missing dependencies
+   - Build command errors
+   - Environment variable issues
+   - Memory limit exceeded
+4. Suggest specific fixes
+5. Attempt to redeploy with fixes
+
+Show me the full diagnostic process."
+```
+
+## What You've Built
+
+After completing this guide, you have a complete **Continuous Deployment system** that:
+
+✅ **Automates deployments** - Deploy sites through natural language commands  
+✅ **Manages environments** - Handle production, staging, and preview deployments  
+✅ **Configures infrastructure** - Set up forms, functions, and environment variables  
+✅ **Monitors performance** - Track build times, success rates, and site metrics  
+✅ **Integrates with Git** - Automatic deployments on push with GitHub Actions  
+
+<Card title="Continuous Deployment AI" icon="rocket">
+  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - 
+  AI handles deployment tasks while maintaining human oversight through 
+  PR reviews and deployment approvals.
+</Card>
+
+## Security Best Practices
+
+<Warning>
+  **Protect Your Credentials:**
+  - Store Netlify tokens as GitHub Secrets
+  - Use Continue CLI's secure authentication
+  - Rotate Personal Access Tokens regularly
+  - Enable 2FA on your Netlify account
+  - Audit deployment logs regularly
+  - Use environment-specific variables
+</Warning>
+
+## Advanced Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Blue-Green Deployments" icon="toggle-on">
+    "Set up blue-green deployments with instant rollback capabilities using 
+    Netlify's split testing features"
+  </Card>
+  <Card title="Edge Functions" icon="bolt">
+    "Deploy edge functions for personalization and A/B testing at the CDN level"
+  </Card>
+  <Card title="Multi-Region Deployment" icon="globe">
+    "Configure geo-distributed deployments for optimal global performance"
+  </Card>
+  <Card title="Automated Testing" icon="check-circle">
+    "Run Lighthouse tests on every deployment and block if scores drop"
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+1. **Deploy your first site** - Use Continue CLI to deploy a real project
+2. **Set up staging** - Create a complete deployment pipeline
+3. **Add monitoring** - Configure alerts for build failures and performance issues
+4. **Optimize builds** - Implement caching and incremental builds
+5. **Scale your workflow** - Add more sites and team collaboration features
+
+## Resources
+
+- [Netlify MCP Documentation](https://docs.netlify.com/welcome/build-with-ai/netlify-mcp-server/)
+- [Continue CLI Documentation](https://docs.continue.dev/cli)
+- [Model Context Protocol](https://modelcontextprotocol.org)
+- [Netlify CLI Reference](https://docs.netlify.com/cli/get-started/)
