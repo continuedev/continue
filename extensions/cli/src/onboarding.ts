@@ -105,7 +105,10 @@ async function runOnboardingFlow(
   if (choice === "1" || choice === "") {
     const newAuthConfig = await login();
 
-    const result = await initialize(newAuthConfig, undefined);
+    const { ensureOrganization } = await import("./auth/workos.js");
+    const finalAuthConfig = await ensureOrganization(newAuthConfig);
+
+    const result = await initialize(finalAuthConfig, undefined);
     return { ...result, wasOnboarded: true };
   } else if (choice === "2") {
     const apiKey = readlineSync.question(

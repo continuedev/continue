@@ -39,7 +39,7 @@ export function createLlmApi(
           apiKey: accessToken ?? undefined,
           env: {
             apiKeyLocation: (model as any).apiKeyLocation,
-            orgScopeId: organizationId,
+            orgScopeId: organizationId ?? null,
             proxyUrl:
               (model as { onPremProxyUrl: string | undefined })
                 .onPremProxyUrl ?? undefined,
