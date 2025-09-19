@@ -66,10 +66,11 @@ Before starting, ensure you have:
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
-  **Test in Plan Mode First**: Before running security scans that might make changes,
-  test your prompts in plan mode (see the [Plan Mode Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This shows you
-  what the agent will do without executing it. For example:
-  `"Run a Snyk Code scan and fix the top 3 issues"`
+  **Test in Plan Mode First**: Before running security scans that might make
+  changes, test your prompts in plan mode (see the [Plan Mode
+  Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This
+  shows you what the agent will do without executing it. For example: `"Run a
+  Snyk Code scan and fix the top 3 issues"`
 </Info>
 
 ### Code Vulnerability Scanning ([SAST](https://snyk.io/learn/application-security/sast/))
@@ -240,17 +241,13 @@ Implement automated security policies using Continue's rule system. See the [Rul
   </Card>
 
 <Card title="Dependency Safety" icon="shield-check">
-  ```bash
-  "When adding/updating a dependency, run Snyk Open Source, choose the
-  lowest-risk upgrade, and re-test."
-  ```
+  ```bash "When adding/updating a dependency, run Snyk Open Source, choose the
+  lowest-risk upgrade, and re-test." ```
 </Card>
 
 <Card title="Container Hardening" icon="box">
-  ```bash
-  "Before building containers, scan base images and recommend
-  security-hardened alternatives."
-  ```
+  ```bash "Before building containers, scan base images and recommend
+  security-hardened alternatives." ```
 </Card>
 
   <Card title="IaC Compliance" icon="clipboard-list">
@@ -286,21 +283,20 @@ then rerun the same Snyk scan to confirm resolution."
 ### Connection Problems
 
 <Check>
-  **Verification Steps:**
-  - Snyk MCP is installed via [Continue Hub](https://hub.continue.dev/snyk/snyk-mcp)
-  - Secure-at-Inception rules are [enabled](https://hub.continue.dev/snyk/secure-at-inception)
-  - Authentication completed successfully
-  - Project folder has been trusted
+  **Verification Steps:** - Snyk MCP is installed via [Continue
+  Hub](https://hub.continue.dev/snyk/snyk-mcp) - Secure-at-Inception rules are
+  [enabled](https://hub.continue.dev/snyk/secure-at-inception) - Authentication
+  completed successfully - Project folder has been trusted
 </Check>
 
 ## What You've Built
 
 After completing this guide, you have a complete **AI-powered security system** that:
 
-- ✅ Uses natural language — Simple prompts instead of complex CLI commands
-- ✅ Fixes automatically — AI suggests and validates security fixes
-- ✅ Runs continuously — Automated scanning in CI/CD pipelines
-- ✅ Enforces guardrails — Security rules prevent vulnerable code from shipping
+✅ Uses natural language — Simple prompts instead of complex CLI commands
+✅ Fixes automatically — AI suggests and validates security fixes
+✅ Runs continuously — Automated scanning in CI/CD pipelines
+✅ Enforces guardrails — Security rules prevent vulnerable code from shipping
 
 <Card title="Continuous AI" icon="rocket">
   Your security workflow now operates at **[Level 2 Continuous
