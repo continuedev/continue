@@ -1,0 +1,157 @@
+---
+title: "Understanding Blocks"
+description: "Learn how to work with Continue's composable block system. Understand how to use hub blocks, create local blocks, and organize your configurations for maximum reusability."
+---
+
+# Understanding Blocks
+
+Continue uses composable **blocks** - reusable building components like models, context providers, rules, and documentation sources. Think of blocks as LEGO pieces that you can mix and match to create powerful coding agents tailored to your needs.
+
+## What Are Blocks?
+
+**Blocks** are individual building components that agents use. Each block handles one specific function - for example, one language model, one documentation source, or one set of rules. Agents combine multiple blocks to create complete coding assistants.
+
+## Where Agents Live
+
+Agents can be loaded from two places:
+
+**[Continue Hub](https://hub.continue.dev/explore/agents)**
+Community-shared agents stored on the hub and automatically synced to your extension.
+
+**Local Storage**
+Your custom agents stored in:
+- **Global**: `~/.continue/agents` (Mac) or `%USERPROFILE%\.continue/agents` (Windows)
+- **Workspace**: `/.continue/agents` folder in your project
+
+The filename becomes the display name (e.g., `My Custom Agent.yaml`).
+
+## Working with Hub Blocks
+
+Hub blocks are identified by slugs in the format `owner/block-name`. For example, to use the [OpenAI GPT-4o block](https://hub.continue.dev/openai/gpt-4o), you'd reference it as `openai/gpt-4o`.
+
+Import hub blocks using the `uses` syntax alongside your custom blocks:
+
+```yaml
+name: Team Agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: anthropic/claude-3.5-sonnet # Import from hub
+  - model: deepseek-reasoner          # Define custom block
+    provider: ollama
+```
+
+## Creating Local Blocks
+
+Local blocks let you create reusable components that automatically apply to multiple agents, reducing duplication and ensuring consistency across your setup.
+
+**Workspace Blocks**
+Applied automatically to all agents when working in a specific project. Perfect for project-specific configurations like TypeScript rules for web apps or Python linting standards for data science projects.
+
+**Global Blocks**
+Applied to all agents across all workspaces. Ideal for personal preferences, universal coding standards, or tools you use everywhere.
+
+## Block Types & Organization
+
+Organize your local blocks using these directories:
+
+<Columns cols={2}>
+<Card title="Agents" icon="robot">
+`.continue/agents` - Complete agent configurations
+</Card>
+
+<Card title="Rules" icon="shield">
+`.continue/rules` - Coding standards and guidelines
+</Card>
+
+<Card title="Models" icon="brain">
+`.continue/models` - Language model configurations
+</Card>
+
+<Card title="Prompts" icon="message-square">
+`.continue/prompts` - Custom prompt templates
+</Card>
+
+<Card title="Context" icon="layers">
+`.continue/context` - Context provider configurations
+</Card>
+
+<Card title="Documentation" icon="book">
+`.continue/docs` - Documentation site integrations
+</Card>
+
+<Card title="Data" icon="database">
+`.continue/data` - Development data destinations
+</Card>
+
+<Card title="MCP Servers" icon="server">
+`.continue/mcpServers` - Model Context Protocol servers
+</Card>
+</Columns>
+
+## Working with Secrets
+
+Local blocks can use mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) which read from:
+- **Global**: `.env` file in `~/.continue/.env`
+- **Workspace**: `.env` file at your project root
+
+## Block Inputs and Customization
+
+Blocks can accept user inputs for customization. Create parameterized blocks using mustache templating:
+
+```yaml title="config.yaml"
+name: myprofile/custom-model
+version: 1.0.0
+schema: v1
+
+models:
+  - name: My Favorite Model
+    provider: anthropic
+    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      temperature: ${{ inputs.TEMP }}
+```
+
+Then import with custom values:
+
+```yaml title="config.yaml"
+name: myprofile/custom-agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+```
+
+Note that hub secrets can be passed as inputs using the mustache format: `${{ secrets.SECRET_NAME }}`.
+
+## Overriding Block Properties
+
+You can directly override block properties using the `override` syntax:
+
+```yaml title="config.yaml"
+name: myprofile/custom-agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+    override:
+      roles:
+        - chat
+```
+
+## Next Steps
+
+Now that you understand how blocks and agents work, explore:
+- **[Config Reference](/reference)**: Detailed documentation of all available properties
+- **[Continue Hub](https://hub.continue.dev)**: Browse community blocks and agents
+- **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
+- **[Model Roles](/customize/model-roles/overview)**: Understanding how different models work together
