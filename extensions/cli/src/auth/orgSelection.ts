@@ -100,11 +100,6 @@ export async function autoSelectOrganizationAndConfig(
           configUri,
         );
         saveAuthConfig(updatedConfig);
-        console.log(
-          chalk.green(
-            `✓ Automatically selected assistant from ${org.name} organization`,
-          ),
-        );
         return updatedConfig;
       }
     }
