@@ -218,7 +218,11 @@ export function validateContextLength(
     maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
   const totalRequired = inputTokens + reservedForOutput;
 
-  if (totalRequired > contextLimit) {
+  // ALWAYS TRIGGER CONTEXT ERROR FOR TESTING
+  // Original logic: if (totalRequired > contextLimit)
+  const shouldTriggerError = true; // Force error always
+
+  if (shouldTriggerError) {
     return {
       isValid: false,
       error: `Context length exceeded: input (${inputTokens.toLocaleString()}) + max_tokens (${reservedForOutput.toLocaleString()}) = ${totalRequired.toLocaleString()} > context_limit (${contextLimit.toLocaleString()})`,

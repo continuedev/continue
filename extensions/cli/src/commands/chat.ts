@@ -378,18 +378,15 @@ async function processMessage(
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 
-    if (model.provider === "anthropic") {
-      logger.error(`\n${chalk.red(`Error: ${formatAnthropicError(error)}`)}`);
-    } else {
-      logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
-    }
-
-    sentryService.captureException(error, {
-      context: "chat_response",
-      isHeadless,
-      chatHistoryLength: services.chatHistory.getHistory().length,
-    });
+    // In headless mode, don't output JSON here - let error bubble up to main handler
     if (!isHeadless) {
+      // Non-headless mode: use colored console output
+      if (model.provider === "anthropic") {
+        logger.error(`\n${chalk.red(`Error: ${formatAnthropicError(error)}`)}`);
+      } else {
+        logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+      }
+
       logger.info(
         chalk.dim(
           `Chat history:\n${JSON.stringify(
@@ -399,6 +396,18 @@ async function processMessage(
           )}`,
         ),
       );
+    }
+
+    sentryService.captureException(error, {
+      context: "chat_response",
+      isHeadless,
+      chatHistoryLength: services.chatHistory.getHistory().length,
+    });
+
+    // In headless mode, re-throw the error to bubble up to main error handler
+    // This preserves downstream logic like telemetry cleanup
+    if (isHeadless) {
+      throw error;
     }
   }
 }
@@ -540,15 +549,30 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     await runHeadlessMode(prompt, options);
   } catch (error: any) {
     const err = error instanceof Error ? error : new Error(String(error));
-    // Use headless-aware error logging to ensure fatal errors are shown in headless mode
-    logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
+
+    // In headless mode, output error as JSON to stdout
+    if (options.headless) {
+      const errorOutput = {
+        status: "error",
+        message: err.message || String(err),
+      };
+      safeStdout(JSON.stringify(errorOutput) + "\n");
+    } else {
+      // Use headless-aware error logging for non-headless mode
+      logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
+    }
+
     sentryService.captureException(err, {
       context: "chat_command_fatal",
       headless: options.headless,
     });
+
+    // Stop active time tracking BEFORE graceful exit
+    telemetryService.stopActiveTime();
+
     await gracefulExit(1);
   } finally {
-    // Stop active time tracking
+    // Stop active time tracking for normal completion
     telemetryService.stopActiveTime();
   }
 }
