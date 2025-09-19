@@ -310,35 +310,51 @@ describe("Configuration", () => {
     expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
   });
 
-  it('should have correct default API base for "ollama"', () => {
-    const ollama = constructLlmApi({
-      provider: "ollama",
+  describe("ollama api base", () => {
+    it('should have correct default API base for "ollama"', () => {
+      const ollama = constructLlmApi({
+        provider: "ollama",
+      });
+
+      expect((ollama as OpenAIApi).openai.baseURL).toBe(
+        "http://localhost:11434/v1/",
+      );
     });
+    it('should append /v1 to apiBase for "ollama"', () => {
+      const ollama = constructLlmApi({
+        provider: "ollama",
+        apiBase: "http://localhost:123",
+      });
 
-    expect((ollama as OpenAIApi).openai.baseURL).toBe(
-      "http://localhost:11434/v1/",
-    );
-  });
-
-  it('should append /v1 to apiBase for "ollama"', () => {
-    const ollama = constructLlmApi({
-      provider: "ollama",
-      apiBase: "http://localhost:123",
+      expect((ollama as OpenAIApi).openai.baseURL).toBe(
+        "http://localhost:123/v1/",
+      );
     });
+    it("should not reappend /v1 to apibase for ollama if it is already present", () => {
+      const ollama = constructLlmApi({
+        provider: "ollama",
+        apiBase: "http://localhost:123/v1/",
+      });
 
-    expect((ollama as OpenAIApi).openai.baseURL).toBe(
-      "http://localhost:123/v1/",
-    );
-  });
-
-  it("should not reappend /v1 to apibase for ollama if it is already present", () => {
-    const ollama = constructLlmApi({
-      provider: "ollama",
-      apiBase: "http://localhost:123/v1/",
+      expect((ollama as OpenAIApi).openai.baseURL).toBe(
+        "http://localhost:123/v1/",
+      );
     });
-
-    expect((ollama as OpenAIApi).openai.baseURL).toBe(
-      "http://localhost:123/v1/",
-    );
+    it("should append v1 if apiBase is like myhostv1/", () => {
+      const ollama = constructLlmApi({
+        provider: "ollama",
+        apiBase: "https://myhostv1/",
+      });
+      expect((ollama as OpenAIApi).openai.baseURL).toBe("https://myhostv1/v1/");
+    });
+    it("should preserve query params and append v1 in apibase", () => {
+      const ollama = constructLlmApi({
+        provider: "ollama",
+        apiBase: "https://test.com:123/ollama-server?x=1",
+      });
+      expect((ollama as OpenAIApi).openai.baseURL).toBe(
+        "https://test.com:123/ollama-server/v1/?x=1",
+      );
+    });
   });
 });
