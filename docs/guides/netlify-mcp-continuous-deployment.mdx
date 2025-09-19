@@ -141,16 +141,7 @@ Identify and fix bundle size issues:
   - Optimize image formats
 </Card>
 
-### Step 5: Performance Budget Enforcement
-
-Set and enforce performance budgets:
-
-```bash
-# In cn TUI mode:
-"Set performance budget: LCP < 2.5s, bundle < 200KB"
-```
-
-### Step 6: Image Optimization
+### Step 5: Image Optimization
 
 Optimize images for better performance:
 
@@ -161,18 +152,9 @@ Optimize images for better performance:
 
 ## Continuous Performance Monitoring
 
-### Step 7: Real User Monitoring
+### Step 6: Performance Budget Enforcement with Lighthouse CI
 
-Track actual user experience:
-
-```bash
-# In cn TUI mode:
-"Set up RUM tracking with alerts for P75 degradation"
-```
-
-### Step 8: Lighthouse CI Integration
-
-Automate performance testing with strict budgets:
+Set and enforce performance budgets with automated testing:
 
 ```bash
 # In cn TUI mode:
@@ -198,6 +180,17 @@ Please configure the complete Lighthouse CI setup with these budgets."
   This comprehensive setup will automatically test every deploy preview and 
   production deployment, blocking any changes that violate your performance budgets.
 </Tip>
+
+### Step 7: Real User Monitoring
+
+Track actual user experience:
+
+```bash
+# In cn TUI mode:
+"Set up RUM tracking with alerts for P75 degradation"
+```
+
+
 
 ## Automated Performance Checks
 
@@ -276,7 +269,7 @@ jobs:
 
 ## Performance Testing Locally
 
-### Step 9: Local Performance Testing
+### Step 8: Local Performance Testing
 
 Test performance before deploying:
 
@@ -285,7 +278,7 @@ Test performance before deploying:
 "Run production build and measure bundle sizes"
 ```
 
-### Step 10: Pre-commit Performance Checks
+### Step 9: Pre-commit Performance Checks
 
 Prevent performance regressions before they happen:
 
