@@ -1,4 +1,5 @@
 import { ModelConfig } from "@continuedev/config-yaml";
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { ChatDescriber } from "core/util/chatDescriber.js";
@@ -119,7 +120,7 @@ export async function initializeChatHistory(
 async function handleManualCompaction(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   isHeadless: boolean,
 ): Promise<{ compactionIndex?: number | null } | void> {
   if (!isHeadless) {
@@ -160,11 +161,66 @@ async function handleManualCompaction(
   }
 }
 
+// Helper function to get streaming response based on compaction state
+async function getStreamingResponse(
+  compactionIndex: number | null | undefined,
+  model: ModelConfig,
+  llmApi: BaseLlmApi,
+): Promise<string> {
+  const abortController = new AbortController();
+
+  if (compactionIndex !== null && compactionIndex !== undefined) {
+    // Use service to compute history for LLM
+    const historyForLLM =
+      services.chatHistory.getHistoryForLLM(compactionIndex);
+
+    return await streamChatResponse(
+      historyForLLM,
+      model,
+      llmApi,
+      abortController,
+    );
+  } else {
+    // No compaction - get full history from service
+    return await streamChatResponse(
+      services.chatHistory.getHistory(),
+      model,
+      llmApi,
+      abortController,
+    );
+  }
+}
+
+// Helper function to process and output response in headless mode
+function processAndOutputResponse(
+  finalResponse: string,
+  isHeadless: boolean,
+  silent?: boolean,
+  format?: "json",
+): void {
+  if (isHeadless && finalResponse && finalResponse.trim()) {
+    let processedResponse = finalResponse;
+
+    // Strip think tags if --silent flag is enabled
+    if (silent) {
+      processedResponse = stripThinkTags(processedResponse);
+    }
+
+    // Process output based on format
+    const outputResponse =
+      format === "json"
+        ? processJsonOutput(processedResponse)
+        : processedResponse;
+
+    safeStdout(outputResponse + "\n");
+  }
+}
+
 // Helper function to handle auto-compaction for headless mode
 async function handleAutoCompaction(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   isHeadless: boolean,
   format?: "json",
 ): Promise<number | null> {
@@ -244,7 +300,7 @@ async function handleAutoCompaction(
  */
 async function handleTitleGeneration(
   assistantResponse: string,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   model: ModelConfig,
 ): Promise<void> {
   try {
@@ -270,7 +326,7 @@ interface ProcessMessageOptions {
   userInput: string;
   chatHistory: ChatHistoryItem[];
   model: ModelConfig;
-  llmApi: any;
+  llmApi: BaseLlmApi;
   isHeadless: boolean;
   format?: "json";
   silent?: boolean;
@@ -325,53 +381,20 @@ async function processMessage(
   }
 
   try {
-    const abortController = new AbortController();
-
-    // Service-driven streaming; history updates occur via ChatHistoryService
-    let finalResponse;
-    if (compactionIndex !== null && compactionIndex !== undefined) {
-      // Use service to compute history for LLM
-      const historyForLLM =
-        services.chatHistory.getHistoryForLLM(compactionIndex);
-
-      finalResponse = await streamChatResponse(
-        historyForLLM,
-        model,
-        llmApi,
-        abortController,
-      );
-    } else {
-      // No compaction - get full history from service
-      finalResponse = await streamChatResponse(
-        services.chatHistory.getHistory(),
-        model,
-        llmApi,
-        abortController,
-      );
-    }
+    // Get AI response with potential tool usage
+    const finalResponse = await getStreamingResponse(
+      compactionIndex,
+      model,
+      llmApi,
+    );
 
     // Generate session title after first assistant response
     if (firstAssistantResponse && finalResponse && finalResponse.trim()) {
       await handleTitleGeneration(finalResponse, llmApi, model);
     }
 
-    // In headless mode, only print the final response using safe stdout
-    if (isHeadless && finalResponse && finalResponse.trim()) {
-      let processedResponse = finalResponse;
-
-      // Strip think tags if --silent flag is enabled
-      if (silent) {
-        processedResponse = stripThinkTags(processedResponse);
-      }
-
-      // Process output based on format
-      const outputResponse =
-        format === "json"
-          ? processJsonOutput(processedResponse)
-          : processedResponse;
-
-      safeStdout(outputResponse + "\n");
-    }
+    // Process and output response in headless mode
+    processAndOutputResponse(finalResponse, isHeadless, silent, format);
 
     // Save session after each successful response
     updateSessionHistory(services.chatHistory.getHistory());
@@ -433,6 +456,10 @@ async function runHeadlessMode(
 
   if (!model) {
     throw new Error("No models were found.");
+  }
+
+  if (!llmApi) {
+    throw new Error("No LLM API instance found.");
   }
 
   // Initialize service-driven history (resume if requested)
