@@ -1,5 +1,8 @@
 import { Tool, ToolCallState } from "core";
+import { renderContextItems } from "core/util/messageContent";
 import Mustache from "mustache";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { getStatusIntro } from "./utils";
 
 interface ToolCallStatusMessageProps {
@@ -11,6 +14,16 @@ export function ToolCallStatusMessage({
   tool,
   toolCallState,
 }: ToolCallStatusMessageProps) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  function handleClick() {
+    if (toolCallState.output) {
+      ideMessenger.post("showVirtualFile", {
+        name: "Tool Output",
+        content: renderContextItems(toolCallState.output),
+      });
+    }
+  }
   if (!tool) return "Agent tool use";
 
   const toolName = tool.displayTitle ?? tool.function.name;
@@ -51,10 +64,19 @@ export function ToolCallStatusMessage({
     }
   }
 
+  const isClickable =
+    toolCallState.output &&
+    (toolCallState.status === "done" ||
+      toolCallState.status === "canceled" ||
+      toolCallState.status === "errored");
+
   return (
     <div
-      className="text-description line-clamp-4 min-w-0 break-all"
+      className={`text-description line-clamp-4 min-w-0 break-all transition-colors duration-200 ease-in-out ${
+        isClickable ? "cursor-pointer hover:brightness-125" : ""
+      }`}
       data-testid="tool-call-title"
+      onClick={isClickable ? handleClick : undefined}
     >
       {`Continue ${intro} ${message}`}
     </div>
