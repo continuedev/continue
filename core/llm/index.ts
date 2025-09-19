@@ -191,6 +191,7 @@ export abstract class BaseLLM implements ILLM {
 
   //URI to local block defining this LLM
   sourceFile?: string;
+  forceStreamChat = false;
 
   isFromAutoDetect?: boolean;
 
@@ -978,6 +979,44 @@ export abstract class BaseLLM implements ILLM {
     return completionOptions;
   }
 
+  // Update the processChatChunk method:
+  private processChatChunk(
+    chunk: ChatMessage,
+    interaction: ILLMInteractionLog | undefined,
+  ): {
+    completion: string[];
+    thinking: string[];
+    usage: Usage | null;
+    chunk: ChatMessage;
+  } {
+    const completion: string[] = [];
+    const thinking: string[] = [];
+    let usage: Usage | null = null;
+
+    if (chunk.role === "assistant") {
+      completion.push(this._formatChatMessage(chunk));
+    } else if (chunk.role === "thinking" && typeof chunk.content === "string") {
+      thinking.push(chunk.content);
+    }
+
+    interaction?.logItem({
+      kind: "message",
+      message: chunk,
+    });
+
+    if (chunk.role === "assistant" && chunk.usage) {
+      usage = chunk.usage;
+    }
+
+    return {
+      completion,
+      thinking,
+      usage,
+      chunk,
+    };
+  }
+
+  // Update the streamChat method:
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
@@ -1009,9 +1048,11 @@ export abstract class BaseLLM implements ILLM {
       messages = compiledChatMessages;
     }
 
+    const messagesCopy = [...messages]; // templateMessages may modify messages.
+
     const prompt = this.templateMessages
-      ? this.templateMessages(messages)
-      : this._formatChatMessages(messages);
+      ? this.templateMessages(messagesCopy)
+      : this._formatChatMessages(messagesCopy);
     if (logEnabled) {
       interaction?.logItem({
         kind: "startChat",
@@ -1024,18 +1065,22 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    let thinking = "";
-    let completion = "";
+    // Performance optimization: Use arrays instead of string concatenation.
+    // String concatenation in loops creates new string objects for each operation,
+    // which is O(n²) for n chunks. Arrays with push() are O(1) per operation,
+    // making the total O(n). We join() only once at the end.
+    const thinking: string[] = [];
+    const completion: string[] = [];
     let usage: Usage | undefined = undefined;
 
     try {
-      if (this.templateMessages) {
+      if (this.templateMessages && !this.forceStreamChat) {
         for await (const chunk of this._streamComplete(
           prompt,
           signal,
           completionOptions,
         )) {
-          completion += chunk;
+          completion.push(chunk);
           interaction?.logItem({
             kind: "chunk",
             chunk: chunk,
@@ -1053,9 +1098,16 @@ export abstract class BaseLLM implements ILLM {
               { ...body, stream: false },
               signal,
             );
-            const msg = fromChatResponse(response);
-            yield msg;
-            completion = this._formatChatMessage(msg);
+            const messages = fromChatResponse(response);
+            for (const msg of messages) {
+              const result = this.processChatChunk(msg, interaction);
+              completion.push(...result.completion);
+              thinking.push(...result.thinking);
+              if (result.usage !== null) {
+                usage = result.usage;
+              }
+              yield result.chunk;
+            }
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
@@ -1066,14 +1118,13 @@ export abstract class BaseLLM implements ILLM {
               signal,
             );
             for await (const chunk of stream) {
-              const result = fromChatCompletionChunk(chunk);
-              if (result) {
-                completion += this._formatChatMessage(result);
-                interaction?.logItem({
-                  kind: "message",
-                  message: result,
-                });
-                yield result;
+              const chatChunk = fromChatCompletionChunk(chunk);
+              if (chatChunk) {
+                const result = this.processChatChunk(chatChunk, interaction);
+                completion.push(...result.completion);
+                thinking.push(...result.thinking);
+                usage = result.usage || usage;
+                yield result.chunk;
               }
             }
           }
@@ -1083,30 +1134,22 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            if (chunk.role === "assistant") {
-              completion += this._formatChatMessage(chunk);
-            } else if (chunk.role === "thinking") {
-              thinking += chunk.content;
+            const result = this.processChatChunk(chunk, interaction);
+            completion.push(...result.completion);
+            thinking.push(...result.thinking);
+            if (result.usage !== null) {
+              usage = result.usage;
             }
-
-            interaction?.logItem({
-              kind: "message",
-              message: chunk,
-            });
-
-            if (chunk.role === "assistant" && chunk.usage) {
-              usage = chunk.usage;
-            }
-
-            yield chunk;
+            yield result.chunk;
           }
         }
       }
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
-        completion,
-        thinking,
+        completion.join(""),
+        thinking.join(""),
         interaction,
         usage,
       );
@@ -1124,8 +1167,8 @@ export abstract class BaseLLM implements ILLM {
       status = this._logEnd(
         completionOptions.model,
         prompt,
-        completion,
-        thinking,
+        completion.join(""),
+        thinking.join(""),
         interaction,
         usage,
         e,
@@ -1136,7 +1179,7 @@ export abstract class BaseLLM implements ILLM {
         this._logEnd(
           completionOptions.model,
           prompt,
-          completion,
+          completion.join(""),
           undefined,
           interaction,
           usage,
@@ -1145,20 +1188,20 @@ export abstract class BaseLLM implements ILLM {
       }
     }
     /*
-    TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
-    During tool use, you must pass thinking and redacted_thinking blocks back to the API,
-    and you must include the complete unmodified block back to the API. This is critical
-    for maintaining the model's reasoning flow and conversation integrity.
+  TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+  During tool use, you must pass thinking and redacted_thinking blocks back to the API,
+  and you must include the complete unmodified block back to the API. This is critical
+  for maintaining the model's reasoning flow and conversation integrity.
 
-    On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
-    requests when not using tools, so it's the simplest option to always add to history.
-    */
+  On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
+  requests when not using tools, so it's the simplest option to always add to history.
+  */
 
     return {
       modelTitle: this.title ?? completionOptions.model,
       modelProvider: this.underlyingProviderName,
       prompt,
-      completion,
+      completion: completion.join(""),
     };
   }
 
