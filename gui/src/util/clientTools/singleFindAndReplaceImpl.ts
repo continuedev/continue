@@ -1,3 +1,4 @@
+import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
@@ -24,7 +25,10 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
 
   // Validate arguments
   if (!filepath) {
-    throw new Error("filepath is required");
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingFilepath,
+      "filepath is required",
+    );
   }
   validateSingleEdit(old_string, new_string);
 
@@ -34,7 +38,10 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     extras.ideMessenger.ide,
   );
   if (!resolvedFilepath) {
-    throw new Error(`File ${filepath} does not exist`);
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceFileNotFound,
+      `File ${filepath} does not exist`,
+    );
   }
 
   // Read the current file content

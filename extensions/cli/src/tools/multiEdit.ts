@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -33,11 +34,21 @@ function validateMultiEditArgs(args: any): {
   const { file_path, edits } = args as MultiEditArgs;
 
   if (!file_path) {
-    throw new Error("file_path is required");
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingFilepath,
+      "file_path is required",
+    );
   }
-  if (!edits || !Array.isArray(edits) || edits.length === 0) {
-    throw new Error(
-      "edits array is required and must contain at least one edit",
+  if (!edits || !Array.isArray(edits)) {
+    throw new ContinueError(
+      ContinueErrorReason.MultiEditEditsArrayRequired,
+      "edits array is required",
+    );
+  }
+  if (edits.length === 0) {
+    throw new ContinueError(
+      ContinueErrorReason.MultiEditEditsArrayEmpty,
+      "edits array must contain at least one edit",
     );
   }
 
@@ -55,13 +66,20 @@ function validateEdits(edits: EditOperation[]): void {
   for (let i = 0; i < edits.length; i++) {
     const edit = edits[i];
     if (!edit.old_string && edit.old_string !== "") {
-      throw new Error(`Edit ${i + 1}: old_string is required`);
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceMissingOldString,
+        `Edit ${i + 1}: old_string is required`,
+      );
     }
     if (edit.new_string === undefined) {
-      throw new Error(`Edit ${i + 1}: new_string is required`);
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceMissingNewString,
+        `Edit ${i + 1}: new_string is required`,
+      );
     }
     if (edit.old_string === edit.new_string) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceIdenticalStrings,
         `Edit ${i + 1}: old_string and new_string must be different`,
       );
     }
@@ -76,18 +94,25 @@ function validateFileAccess(
     // For new file creation, check if parent directory exists
     const parentDir = path.dirname(resolvedPath);
     if (parentDir && !fs.existsSync(parentDir)) {
-      throw new Error(`Parent directory does not exist: ${parentDir}`);
+      throw new ContinueError(
+        ContinueErrorReason.CliParentDirectoryNotFound,
+        `Parent directory does not exist: ${parentDir}`,
+      );
     }
   } else {
     // For existing files, check if file has been read
     // Check with the original path first, then with absolute path
     if (!readFilesSet.has(resolvedPath)) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.EditToolFileNotRead,
         `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
       );
     }
     if (!fs.existsSync(resolvedPath)) {
-      throw new Error(`File ${resolvedPath} does not exist`);
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceFileNotFound,
+        `File ${resolvedPath} does not exist`,
+      );
     }
   }
 }
@@ -107,7 +132,8 @@ function applyEdit(
 
   // Check if old_string exists in current content
   if (!content.includes(old_string)) {
-    throw new Error(
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceOldStringNotFound,
       `Edit ${editIndex + 1}: String not found in file: "${old_string}"`,
     );
   }
@@ -119,7 +145,8 @@ function applyEdit(
     // Replace only the first occurrence, but check for uniqueness
     const occurrences = content.split(old_string).length - 1;
     if (occurrences > 1) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceMultipleOccurrences,
         `Edit ${editIndex + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
       );
     }
@@ -275,7 +302,11 @@ WARNINGS:
       const action = args.isCreatingNewFile ? "created" : "edited";
       return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}\nDiff:\n${diff}`;
     } catch (error) {
-      throw new Error(
+      if (error instanceof ContinueError) {
+        throw error;
+      }
+      throw new ContinueError(
+        ContinueErrorReason.CliFileWriteError,
         `Error: failed to edit ${args.file_path}: ${
           error instanceof Error ? error.message : String(error)
         }`,

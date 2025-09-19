@@ -1,3 +1,4 @@
+import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import {
   inferResolvedUriFromRelativePath,
   resolveRelativePathInDir,
@@ -22,11 +23,21 @@ export const multiEditImpl: ClientToolImpl = async (
 
   // Validate arguments
   if (!filepath) {
-    throw new Error("filepath is required");
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingFilepath,
+      "filepath is required",
+    );
   }
-  if (!edits || !Array.isArray(edits) || edits.length === 0) {
-    throw new Error(
-      "edits array is required and must contain at least one edit",
+  if (!edits || !Array.isArray(edits)) {
+    throw new ContinueError(
+      ContinueErrorReason.MultiEditEditsArrayRequired,
+      "edits array is required",
+    );
+  }
+  if (edits.length === 0) {
+    throw new ContinueError(
+      ContinueErrorReason.MultiEditEditsArrayEmpty,
+      "edits array must contain at least one edit",
     );
   }
 
@@ -47,7 +58,8 @@ export const multiEditImpl: ClientToolImpl = async (
   let fileUri: string;
   if (isCreatingNewFile) {
     if (resolvedUri) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceFileAlreadyExists,
         `file ${filepath} already exists, cannot create new file`,
       );
     }
@@ -60,7 +72,8 @@ export const multiEditImpl: ClientToolImpl = async (
     );
   } else {
     if (!resolvedUri) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceFileNotFound,
         `file ${filepath} does not exist. If you are trying to edit it, correct the filepath. If you are trying to create it, you must pass old_string=""`,
       );
     }

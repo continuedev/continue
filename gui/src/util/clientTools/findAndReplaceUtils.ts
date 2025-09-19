@@ -1,4 +1,5 @@
 import { EditOperation } from "core/tools/definitions/multiEdit";
+import { ContinueError, ContinueErrorReason } from "core/util/errors";
 
 export const FOUND_MULTIPLE_FIND_STRINGS_ERROR =
   "Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.";
@@ -16,7 +17,10 @@ export function performFindAndReplace(
   const errorContext = index !== undefined ? `edit at index ${index}: ` : "";
   // Check if old_string exists in current content
   if (!content.includes(oldString)) {
-    throw new Error(`${errorContext}string not found in file: "${oldString}"`);
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceOldStringNotFound,
+      `${errorContext}string not found in file: "${oldString}"`,
+    );
   }
 
   if (replaceAll) {
@@ -37,7 +41,8 @@ export function performFindAndReplace(
     }
 
     if (count > 1) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FindAndReplaceMultipleOccurrences,
         `${errorContext}String "${oldString}" appears ${count} times in the file. ${FOUND_MULTIPLE_FIND_STRINGS_ERROR}`,
       );
     }
@@ -63,13 +68,22 @@ export function validateSingleEdit(
   const context = index !== undefined ? `edit at index ${index}: ` : "";
 
   if (!oldString && oldString !== "") {
-    throw new Error(`${context}old_string is required`);
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingOldString,
+      `${context}old_string is required`,
+    );
   }
   if (newString === undefined) {
-    throw new Error(`${context}new_string is required`);
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingNewString,
+      `${context}new_string is required`,
+    );
   }
   if (oldString === newString) {
-    throw new Error(`${context}old_string and new_string must be different`);
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceIdenticalStrings,
+      `${context}old_string and new_string must be different`,
+    );
   }
 }
 
@@ -79,13 +93,15 @@ export function validateCreatingForMultiEdit(edits: EditOperation[]) {
   const isCreating = edits[0].old_string === "";
   if (edits.length > 1) {
     if (isCreating) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.MultiEditSubsequentEditsOnCreation,
         "cannot make subsequent edits on a file you are creating",
       );
     } else {
       for (let i = 1; i < edits.length; i++) {
         if (edits[i].old_string === "") {
-          throw new Error(
+          throw new ContinueError(
+            ContinueErrorReason.MultiEditEmptyOldStringNotFirst,
             `edit at index ${i}: ${EMPTY_NON_FIRST_EDIT_MESSAGE}`,
           );
         }
