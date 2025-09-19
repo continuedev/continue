@@ -39,7 +39,7 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   );
   if (!resolvedFilepath) {
     throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceFileNotFound,
+      ContinueErrorReason.FileNotFound,
       `File ${filepath} does not exist`,
     );
   }

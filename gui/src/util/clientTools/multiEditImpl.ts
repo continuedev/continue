@@ -59,7 +59,7 @@ export const multiEditImpl: ClientToolImpl = async (
   if (isCreatingNewFile) {
     if (resolvedUri) {
       throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceFileAlreadyExists,
+        ContinueErrorReason.FileAlreadyExists,
         `file ${filepath} already exists, cannot create new file`,
       );
     }
@@ -73,7 +73,7 @@ export const multiEditImpl: ClientToolImpl = async (
   } else {
     if (!resolvedUri) {
       throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceFileNotFound,
+        ContinueErrorReason.FileNotFound,
         `file ${filepath} does not exist. If you are trying to edit it, correct the filepath. If you are trying to create it, you must pass old_string=""`,
       );
     }

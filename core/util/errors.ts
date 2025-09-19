@@ -27,23 +27,24 @@ export enum ContinueErrorReason {
   FindAndReplaceMissingNewString = "find_and_replace_missing_new_string",
   FindAndReplaceOldStringNotFound = "find_and_replace_old_string_not_found",
   FindAndReplaceMultipleOccurrences = "find_and_replace_multiple_occurrences",
-
-  // File path errors
   FindAndReplaceMissingFilepath = "find_and_replace_missing_filepath",
-  FindAndReplaceFileNotFound = "find_and_replace_file_not_found",
-  FindAndReplaceFileAlreadyExists = "find_and_replace_file_already_exists",
 
-  // Multi-edit specific errors
+  // Multi-edit
   MultiEditEditsArrayRequired = "multi_edit_edits_array_required",
   MultiEditEditsArrayEmpty = "multi_edit_edits_array_empty",
   MultiEditSubsequentEditsOnCreation = "multi_edit_subsequent_edits_on_creation",
   MultiEditEmptyOldStringNotFirst = "multi_edit_empty_old_string_not_first",
 
-  // CLI-specific errors
-  EditToolFileNotRead = "edit_tool_file_not_read",
-  CliParentDirectoryNotFound = "cli_parent_directory_not_found",
-  CliFileWriteError = "cli_file_write_error",
+  // General Edit
+  EditToolFileNotRead = "edit_tool_file_not_yet_read",
 
+  // General File
+  FileAlreadyExists = "file_already_exists",
+  FileNotFound = "file_not_found",
+  FileWriteError = "file_write_error",
+  ParentDirectoryNotFound = "parent_directory_not_found",
+
+  // Other
   Unspecificied = "unspecified",
   Unknown = "unknown",
 }

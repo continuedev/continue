@@ -95,7 +95,7 @@ function validateFileAccess(
     const parentDir = path.dirname(resolvedPath);
     if (parentDir && !fs.existsSync(parentDir)) {
       throw new ContinueError(
-        ContinueErrorReason.CliParentDirectoryNotFound,
+        ContinueErrorReason.ParentDirectoryNotFound,
         `Parent directory does not exist: ${parentDir}`,
       );
     }
@@ -110,7 +110,7 @@ function validateFileAccess(
     }
     if (!fs.existsSync(resolvedPath)) {
       throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceFileNotFound,
+        ContinueErrorReason.FileNotFound,
         `File ${resolvedPath} does not exist`,
       );
     }
@@ -306,7 +306,7 @@ WARNINGS:
         throw error;
       }
       throw new ContinueError(
-        ContinueErrorReason.CliFileWriteError,
+        ContinueErrorReason.FileWriteError,
         `Error: failed to edit ${args.file_path}: ${
           error instanceof Error ? error.message : String(error)
         }`,

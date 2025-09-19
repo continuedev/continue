@@ -111,7 +111,7 @@ WARNINGS:
     // Check if file exists
     if (!fs.existsSync(resolvedPath)) {
       throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceFileNotFound,
+        ContinueErrorReason.FileNotFound,
         `File ${file_path} does not exist`,
       );
     }
@@ -204,7 +204,7 @@ WARNINGS:
         throw error;
       }
       throw new ContinueError(
-        ContinueErrorReason.CliFileWriteError,
+        ContinueErrorReason.FileWriteError,
         `Error: failed to edit ${args.resolvedPath}: ${
           error instanceof Error ? error.message : String(error)
         }`,
