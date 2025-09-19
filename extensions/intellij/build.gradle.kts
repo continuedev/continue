@@ -1,17 +1,17 @@
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
+import org.gradle.kotlin.dsl.intellijPlatform
 
 fun environment(key: String) = providers.environmentVariable(key)
 
-val remoteRobotVersion = "0.11.23"
 val platformVersion: String by project
 val pluginGroup: String by project
 val pluginVersion: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.1.0"
     id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
@@ -28,17 +28,28 @@ repositories {
     }
 }
 
+sourceSets {
+    val testIntegration = create("testIntegration")
+    testIntegration.apply {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+val testIntegrationImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
 dependencies {
     intellijPlatform {
-        create("IC", platformVersion)
+        intellijIdeaCommunity(platformVersion)
         plugins(listOf("org.jetbrains.plugins.terminal:241.14494.150"))
         testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Starter, "243.21565.193", configurationName = "testIntegrationImplementation")
     }
     implementation("com.posthog.java:posthog:1.2.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
-    testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
     testImplementation("io.mockk:mockk:1.14.2") {
         // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
         // otherwise e2e tests (runIdeForUiTests) will have linkage errors
@@ -47,6 +58,10 @@ dependencies {
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0") // required to run both JUnit 5 and JUnit 3
+
+    testIntegrationImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testIntegrationImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
+    testIntegrationImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
 }
 
 kotlin {
@@ -88,40 +103,6 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-intellijPlatformTesting {
-    runIde {
-        // This task might not work locally because the binary tends to ignore CONTINUE_GLOBAL_DIR when a
-        // local Continue config is present. If you want to run the e2e tests locally, the most effective
-        // way is to temporarily disconnect from the network and run the tests again.
-        // todo: fix it properly
-        register("runIdeForUiTests") {
-            task {
-                environment(
-                    "CONTINUE_GLOBAL_DIR",
-                    "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue"
-                )
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        "-Dide.mac.file.chooser.native=false",
-                        "-DjbScreenMenuBar.enabled=false",
-                        "-Dapple.laf.useScreenMenuBar=false",
-                        "-Didea.trust.all.projects=true",
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.sandbox.enable=false"
-                    )
-                }
-            }
-            plugins {
-                robotServerPlugin()
-            }
-        }
-    }
-}
-
 tasks {
     withType<PrepareSandboxTask> {
         from("../../binary/bin") {
@@ -146,6 +127,17 @@ tasks {
 
     test {
         useJUnitPlatform()
+        environment("CONTINUE_GLOBAL_DIR", "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/test-continue")
         jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
+}
+
+val testIntegration = task<Test>("testIntegration") {
+    val integrationTestSourceSet = sourceSets.getByName("testIntegration")
+    testClassesDirs = integrationTestSourceSet.output.classesDirs
+    classpath = integrationTestSourceSet.runtimeClasspath
+    systemProperty("CONTINUE_PLUGIN_DIR", tasks.prepareSandbox.get().pluginDirectory.get().asFile)
+    environment("CONTINUE_GLOBAL_DIR", "${rootProject.projectDir}/src/testIntegration/kotlin/com/github/continuedev/continueintellijextension/test-continue")
+    useJUnitPlatform()
+    dependsOn(tasks.prepareSandbox)
 }
