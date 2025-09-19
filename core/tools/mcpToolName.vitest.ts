@@ -5,6 +5,7 @@ import { getMCPToolName } from "./mcpToolName";
 const createMcpServer = (name: string): MCPServerStatus => ({
   name,
   errors: [],
+  infos: [],
   prompts: [],
   tools: [],
   resources: [],
