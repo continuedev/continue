@@ -17,8 +17,8 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
-import Ollama from "./llm/llms/Ollama";
 import Lemonade from "./llm/llms/Lemonade";
+import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -448,6 +448,20 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
+    });
+    on("mcp/disconnectServer", async (msg) => {
+      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
+        msg.data.id,
+      );
+      if (!mcpConnection)
+        throw new Error(`MCP connection with id ${msg.data.id} not found`);
+      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
+      await mcpConnection.disconnect();
+      await this.configHandler.refreshAll("MCP Servers disconnected");
+    });
+    on("mcp/getDisconnectedServers", async (_msg) => {
+      return MCPManagerSingleton.getInstance().getDisconnectedServers();
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;

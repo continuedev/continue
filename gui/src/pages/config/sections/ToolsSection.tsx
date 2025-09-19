@@ -5,11 +5,13 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   GlobeAltIcon,
+  PlayCircleIcon,
+  StopCircleIcon,
   UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPConnectionStatus, MCPServerStatus } from "core";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
@@ -47,10 +49,12 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
   }>({});
+  const [disconnectedMCPServers, setDisconnectedMCPServers] = useState<
+    string[]
+  >([]);
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
   const dispatch = useAppDispatch();
-
   const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
@@ -80,9 +84,35 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 
   const onRefresh = async () => {
     updateMCPServerStatus("connecting");
-    ideMessenger.post("mcp/reloadServer", {
+    await ideMessenger.request("mcp/reloadServer", {
       id: server.id,
     });
+    await fetchDisconectedMCPServers();
+  };
+
+  const onDisconnect = async () => {
+    updateMCPServerStatus("not-connected");
+    setDisconnectedMCPServers((prev) => [...prev, server.id]);
+    dispatch(
+      updateConfig({
+        ...config,
+        tools: config.tools.filter((tool) => tool.group !== server.id),
+      }),
+    );
+    await ideMessenger.request("mcp/disconnectServer", {
+      id: server.id,
+    });
+    await fetchDisconectedMCPServers();
+  };
+
+  const fetchDisconectedMCPServers = async () => {
+    const disconnectedServersData = await ideMessenger.request(
+      "mcp/getDisconnectedServers",
+      undefined,
+    );
+    if (disconnectedServersData.status === "success") {
+      setDisconnectedMCPServers(disconnectedServersData.content);
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -91,6 +121,8 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
       [section]: !prev[section],
     }));
   };
+
+  useEffect(() => void fetchDisconectedMCPServers(), []);
 
   const ResourceRow = ({
     title,
@@ -218,14 +250,31 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
             </div>
           </ToolTip>
 
-          <ToolTip content="Refresh server">
+          {!disconnectedMCPServers.includes(server.name) && (
+            <ToolTip content="Disconnect server">
+              <Button
+                onClick={onDisconnect}
+                variant="ghost"
+                size="sm"
+                className="text-description-muted hover:enabled:text-foreground my-0 -mr-1 h-6 w-6 p-0"
+              >
+                <StopCircleIcon className="h-4 w-4 flex-shrink-0" />
+              </Button>
+            </ToolTip>
+          )}
+
+          <ToolTip content="Reconnect server">
             <Button
               onClick={onRefresh}
               variant="ghost"
               size="sm"
               className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
             >
-              <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+              {disconnectedMCPServers.includes(server.name) ? (
+                <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+              )}
             </Button>
           </ToolTip>
         </div>

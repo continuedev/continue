@@ -140,6 +140,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/disconnectServer": [{ id: string }, void];
+  "mcp/getDisconnectedServers": [undefined, string[]];
   "mcp/getPrompt": [
     {
       serverName: string;

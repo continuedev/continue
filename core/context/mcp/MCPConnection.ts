@@ -84,6 +84,7 @@ class MCPConnection {
   }
 
   async disconnect() {
+    this.status = "not-connected";
     this.abortController.abort();
     await this.client.close();
     await this.transport.close();
