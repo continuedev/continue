@@ -256,14 +256,71 @@ Please configure the complete Lighthouse CI setup with these budgets."
   production deployment, blocking any changes that violate your performance budgets.
 </Tip>
 
-### Step 7: Real User Monitoring
+### Step 7: Real User Monitoring with Netlify Analytics
 
-Track actual user experience:
+Leverage Netlify's built-in analytics and integrate advanced RUM solutions:
 
 ```bash
 # In cn TUI mode:
-"Set up RUM tracking with alerts for P75 degradation"
+"Set up comprehensive Real User Monitoring for my Netlify site:
+
+1. Enable Netlify Analytics Pro:
+   - Activate server-side analytics (no JS required)
+   - Track Core Web Vitals (LCP, FID, CLS, INP)
+   - Monitor top pages by performance score
+   - Set up custom performance alerts
+   - Configure weekly performance reports
+
+2. Integrate Web Vitals tracking:
+   - Install web-vitals library for detailed metrics
+   - Send metrics to Netlify Functions endpoint
+   - Store performance data in Netlify Blobs
+   - Create performance dashboard at /metrics
+
+3. Set up Performance Alerts:
+   - Alert when P75 LCP > 3 seconds
+   - Notify if CLS increases by 20%
+   - Monitor JavaScript error rates
+   - Track 404s and broken resources
+   - Send alerts to Slack via Netlify Functions
+
+4. Configure Geographic Performance Monitoring:
+   - Use Netlify Edge Functions to track region-specific metrics
+   - Identify slow regions with Edge geo data
+   - Compare performance across CDN nodes
+   - Optimize edge caching for slow regions
+
+5. Create Custom Performance Dashboard:
+   - Build dashboard page using Netlify Functions
+   - Display real-time Core Web Vitals
+   - Show performance trends over time
+   - Include browser and device breakdowns
+
+Show me the complete implementation with all code and configurations"
 ```
+
+<Info>
+  **Netlify Analytics Advantages**:
+  - [Server-side Analytics](https://docs.netlify.com/analytics/get-started/) - No client-side JavaScript needed
+  - [Core Web Vitals](https://docs.netlify.com/analytics/core-web-vitals/) - Automatic tracking of Google's metrics
+  - [Custom Metrics](https://docs.netlify.com/functions/logs/) - Track any metric via Functions
+  - [Edge Insights](https://docs.netlify.com/edge-functions/overview/#geolocation) - Geographic performance data
+  - [No Cookie Banner Required](https://docs.netlify.com/analytics/get-started/#privacy) - GDPR compliant by default
+
+  Unlike Google Analytics, Netlify Analytics:
+  - Doesn't slow down your site (server-side)
+  - Captures 100% of traffic (no ad blockers)
+  - Respects user privacy (no cookies)
+  - Shows bot traffic separately
+</Info>
+
+<Tip>
+  **Pro Tip**: Combine Netlify Analytics with Edge Functions to create a powerful RUM solution that:
+  - Tracks performance by user segment
+  - A/B tests performance optimizations
+  - Personalizes content based on connection speed
+  - Automatically serves lighter assets to slow connections
+</Tip>
 
 
 
