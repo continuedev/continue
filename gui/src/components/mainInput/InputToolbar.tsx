@@ -9,7 +9,7 @@ import {
   modelSupportsImages,
   modelSupportsReasoning,
 } from "core/llm/autodetect";
-import { useContext, useRef } from "react";
+import { memo, useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
@@ -242,4 +242,24 @@ function InputToolbar(props: InputToolbarProps) {
   );
 }
 
-export default InputToolbar;
+function shallowToolbarOptionsEqual(a?: ToolbarOptions, b?: ToolbarOptions) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.hideAddContext === b.hideAddContext &&
+    a.hideImageUpload === b.hideImageUpload &&
+    a.hideUseCodebase === b.hideUseCodebase &&
+    a.hideSelectModel === b.hideSelectModel &&
+    a.enterText === b.enterText
+  );
+}
+
+export default memo(
+  InputToolbar,
+  (prev, next) =>
+    prev.hidden === next.hidden &&
+    prev.disabled === next.disabled &&
+    prev.isMainInput === next.isMainInput &&
+    prev.activeKey === next.activeKey &&
+    shallowToolbarOptionsEqual(prev.toolbarOptions, next.toolbarOptions),
+);

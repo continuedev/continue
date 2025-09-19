@@ -32,6 +32,10 @@ on:
         required: false
       VOYAGE_API_KEY:
         required: false
+      RELACE_API_KEY:
+        required: false
+      INCEPTION_API_KEY:
+        required: false
 
 permissions:
   contents: write
@@ -77,6 +81,8 @@ jobs:
           AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+          INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
 
       - name: Release
         env:

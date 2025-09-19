@@ -11,13 +11,16 @@ import type {
 import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
 import { systemMessageService } from "../services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
+  isContextLengthError,
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
+import { validateContextLength } from "../util/tokenizer.js";
 
 import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
@@ -147,6 +150,12 @@ export async function processStreamingResponse(
     tools,
   } = options;
 
+  // Validate context length before making the request
+  const validation = validateContextLength(chatHistory, model);
+  if (!validation.isValid) {
+    throw new Error(`Context length validation failed: ${validation.error}`);
+  }
+
   // Get fresh system message and inject it
   const systemMessage = await systemMessageService.getSystemMessage();
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
@@ -258,6 +267,15 @@ export async function processStreamingResponse(
       error: error.message || String(error),
     });
 
+    try {
+      posthogService.capture("apiRequest", {
+        model: model.model,
+        durationMs: errorDuration,
+        success: false,
+        error: error.message || String(error),
+      });
+    } catch {}
+
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");
       return {
@@ -267,6 +285,13 @@ export async function processStreamingResponse(
         shouldContinue: false,
       };
     }
+
+    // Handle context length errors with helpful message
+    if (isContextLengthError(error)) {
+      logger.debug(`Context length exceeded: ${error}`);
+      throw new Error(`Context length exceeded: ${error}`);
+    }
+
     throw error;
   }
 

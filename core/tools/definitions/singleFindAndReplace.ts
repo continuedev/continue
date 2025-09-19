@@ -12,9 +12,9 @@ export interface SingleFindAndReplaceArgs {
 export const singleFindAndReplaceTool: Tool = {
   type: "function",
   displayTitle: "Find and Replace",
-  wouldLikeTo: "find and replace in {{{ filepath }}}",
-  isCurrently: "finding and replacing in {{{ filepath }}}",
-  hasAlready: "found and replaced in {{{ filepath }}}",
+  wouldLikeTo: "edit {{{ filepath }}}",
+  isCurrently: "editing {{{ filepath }}}",
+  hasAlready: "edited {{{ filepath }}}",
   group: BUILT_IN_GROUP_NAME,
   readonly: false,
   isInstant: false,
