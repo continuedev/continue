@@ -13,7 +13,7 @@ sidebarTitle: "PostHog Analytics with Continue CLI"
 ## What You'll Learn
 
 This cookbook teaches you to:
-- Use PostHog MCP to query analytics, errors, and feature flags
+- Use [PostHog MCP](https://posthog.com/docs/model-context-protocol) to query [analytics](https://posthog.com/docs/web-analytics), [errors](https://posthog.com/docs/error-tracking), and [feature flags](https://posthog.com/docs/feature-flags)
 - Analyze user behavior patterns with AI
 - Automatically create GitHub issues using GitHub CLI
 - Set up continuous monitoring with GitHub Actions
@@ -21,7 +21,7 @@ This cookbook teaches you to:
 ## Prerequisites
 
 - GitHub repository where you want to create issues
-- [PostHog account](https://posthog.com) with data collecting
+- [PostHog account](https://posthog.com) with [session recordings enabled](https://posthog.com/docs/session-replay/installation) and data collecting
 - Node.js 18+ installed locally
 - [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
 - [GitHub CLI](https://cli.github.com/) installed (`gh` command)
@@ -41,7 +41,7 @@ This cookbook teaches you to:
     1. Visit [PostHog MCP on Continue Hub](https://hub.continue.dev/posthog/posthog-mcp)
     2. Click **"Install"** and follow the configuration for your editor
     3. Or run: `npx @posthog/wizard@latest mcp add`
-    4. See [PostHog MCP docs](https://posthog.com/docs/model-context-protocol) for details
+    4. See [PostHog MCP documentation](https://posthog.com/docs/model-context-protocol) for details
   </Step>
 
   <Step title="Set Up Continue CLI & GitHub CLI">
@@ -56,7 +56,7 @@ This cookbook teaches you to:
     ```bash
     cn
     # Then in TUI mode:
-    "Using PostHog MCP, show my active feature flags and recent errors"
+    "Using [PostHog MCP](https://posthog.com/docs/model-context-protocol), show my active feature flags and recent errors"
     ```
   </Step>
 </Steps>
@@ -72,7 +72,7 @@ First, you'll need to gather your API credentials and add them as secrets in Con
 
 ### Get Your PostHog API Credentials
 
-You need a **Personal API Key** (not a Project API key) to access session recordings:
+You need a **Personal API Key** (not a Project API key) to access [session recordings](https://posthog.com/docs/session-replay):
 
 1. Go to [Personal API Keys](https://app.posthog.com/settings/user-api-keys) in PostHog
 2. Click **+ Create a personal API Key**
@@ -136,7 +136,7 @@ Fetch and analyze session recordings for UX issues:
 cn
 
 # Then ask:
-"Analyze PostHog session recordings for UX issues:
+"Analyze [PostHog session recordings](https://posthog.com/docs/session-replay) for UX issues:
 - Fetch last 20 sessions from PostHog API
 - Filter for: console errors OR duration > 5 minutes
 - Identify top 3 UX problems with:
@@ -341,63 +341,74 @@ Test the complete workflow locally:
 |-------|----------|
 | PostHog API fails | Check API key scopes include session_recording:read |
 | GitHub issues not created | Run `gh auth login` to authenticate GitHub CLI |
-| No session data | Ensure PostHog has session recordings enabled |
+| No session data | Ensure [PostHog session recordings](https://posthog.com/docs/session-replay/installation) are enabled |
 | Rate limits | Reduce session fetch limit or add delays |
 
-## What You've Accomplished
+## What You've Built
 
-<Card title="Automated UX Analysis Pipeline" icon="chart-line">
-  You've built an AI-powered system that:
-  - Continuously monitors PostHog session recordings
-  - Identifies UX problems automatically
-  - Creates actionable GitHub issues
-  - Runs daily via GitHub Actions
-  - Leverages MCP tools for seamless integration
+After completing this guide, you have a complete **Continuous AI system** that:
+
+✅ **Monitors user experience** - Automatically fetches and analyzes PostHog session data
+✅ **Identifies problems intelligently** - Uses AI to spot patterns and technical issues
+✅ **Creates actionable tasks** - Generates GitHub issues with specific recommendations
+✅ **Runs autonomously** - Operates daily without manual intervention using GitHub Actions
+✅ **Scales with your team** - Handles growing amounts of session data automatically
+
+<Card title="Continuous AI" icon="rocket">
+  Your system now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine analysis tasks with human oversight through GitHub issue
+  review and prioritization.
 </Card>
 
-✅ **Level 2 Continuous AI** - AI analyzes data and creates tasks with human review  
-✅ **MCP Integration** - Natural language commands replace manual API calls  
-✅ **Scalable Workflow** - Handles growing session data automatically
-
-## Best Practices
+## Security Best Practices
 
 <Warning>
-  **Security First:**
-  - Store credentials as GitHub Secrets only
-  - Use MCP tools for authentication when possible
-  - Limit API scopes to minimum required
-  - Rotate keys every 90 days
-  - Monitor API usage for anomalies
+  **Protect Your API Keys:**
+  - Store all credentials as GitHub Secrets, never in code
+  - Use Continue CLI's secure secret storage
+  - Limit token scopes to minimum required permissions
+  - Rotate API keys regularly (every 90 days recommended)
+  - Monitor token usage for unusual activity
 </Warning>
 
-## Advanced Strategies
+## Advanced Prompts
 
-### Performance Correlation
-```bash
-# In cn TUI mode:
-"Correlate PostHog performance metrics with session errors"
-```
+Consider enhancing your workflow with these advanced Continue CLI prompts:
 
-### Feature Flag Impact
-```bash
-"Analyze how feature flags affect user behavior in sessions"
-```
-
-### Slack Integration
-```bash
-"Send critical UX issues to Slack channel #ux-alerts"
-```
+<CardGroup cols={2}>
+  <Card title="Performance Analysis" icon="chart-line">
+    "Analyze [PostHog performance metrics](https://posthog.com/docs/web-analytics) alongside session recordings to
+    identify slow page loads affecting user experience"
+  </Card>
+  <Card title="Error Correlation" icon="bug">
+    "Cross-reference JavaScript console errors with user actions to identify the
+    root cause of UX issues"
+  </Card>
+  <Card title="Feature Flag Analysis" icon="flag">
+    "Analyze how [PostHog feature flags](https://posthog.com/docs/feature-flags) impact user behavior in session
+    recordings"
+  </Card>
+  <Card title="Custom Slack Alerts" icon="slack">
+    "Create Slack alerts when critical UX issues are detected in PostHog
+    sessions"
+  </Card>
+</CardGroup>
 
 ## Next Steps
 
 - Consider [GitHub MCP](https://hub.continue.dev/github/github-mcp) as an alternative (note: can be token-expensive)
 - Configure [Slack MCP](https://hub.continue.dev/slack/slack-mcp) for alerts
-- Set up [performance monitoring](https://posthog.com/docs/web-analytics)
+- Set up [PostHog performance monitoring](https://posthog.com/docs/web-analytics)
 - Join the [Continue Discord](https://discord.gg/continue) for support
 
 ## Resources
 
 - [PostHog API Documentation](https://posthog.com/docs/api)
+- [PostHog MCP Documentation](https://posthog.com/docs/model-context-protocol)
+- [PostHog Session Replay](https://posthog.com/docs/session-replay)
+- [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
+- [PostHog Error Tracking](https://posthog.com/docs/error-tracking)
 - [GitHub CLI Documentation](https://cli.github.com/)
 - [GitHub MCP on Continue Hub](https://hub.continue.dev/github/github-mcp) (alternative option)
 - [Continue CLI Guide](https://docs.continue.dev/guides/cli)
