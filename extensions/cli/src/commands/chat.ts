@@ -7,7 +7,7 @@ import * as readlineSync from "readline-sync";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
-import { safeStdout } from "../init.js";
+import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { sentryService } from "../sentry.js";
@@ -583,7 +583,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         status: "error",
         message: err.message || String(err),
       };
-      safeStdout(JSON.stringify(errorOutput) + "\n");
+      safeStderr(JSON.stringify(errorOutput) + "\n");
     } else {
       // Use headless-aware error logging for non-headless mode
       logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
