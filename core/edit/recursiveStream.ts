@@ -122,7 +122,9 @@ export async function* recursiveStream(
 
 function shouldInjectApplyToken(llm: ILLM): boolean {
   const model = llm.model?.toLowerCase() ?? "";
-  return llm.providerName === "inception" && model.includes("mercury");
+  return (
+    llm.underlyingProviderName === "inception" && model.includes("mercury")
+  );
 }
 
 function appendTokenToLastMessage(
