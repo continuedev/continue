@@ -44,10 +44,11 @@ function formatMessageContentForDisplay(
 interface MemoizedMessageProps {
   item: ChatHistoryItem;
   index: number;
+  hideBullet?: boolean;
 }
 
 export const MemoizedMessage = memo<MemoizedMessageProps>(
-  ({ item, index }) => {
+  ({ item, index, hideBullet = false }) => {
     const { message, toolCallStates, conversationSummary } = item;
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
@@ -93,7 +94,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
           {/* Render assistant message content if any */}
           {message.content && (
             <Box marginBottom={1}>
-              <Text color="white">●</Text>
+              <Text color="white">{hideBullet ? " " : "●"}</Text>
               <Text> </Text>
               <MarkdownRenderer
                 content={formatMessageContentForDisplay(message.content)}
@@ -166,7 +167,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "blue" : "white"}>●</Text>
+        <Text color={isUser ? "blue" : "white"}>{hideBullet ? " " : "●"}</Text>
         <Text> </Text>
         {isUser ? (
           <Text color="gray">
@@ -195,7 +196,8 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       JSON.stringify(prevToolStates) === JSON.stringify(nextToolStates) &&
       prevProps.item.conversationSummary ===
         nextProps.item.conversationSummary &&
-      prevProps.index === nextProps.index
+      prevProps.index === nextProps.index &&
+      prevProps.hideBullet === nextProps.hideBullet
     );
   },
 );
