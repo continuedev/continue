@@ -99,10 +99,12 @@ export const callToolById = createAsyncThunk<
       throw new Error(result.error);
     } else {
       output = result.content.contextItems;
-      error = new ContinueError(
-        ContinueErrorReason.Unspecificied,
-        result.content.errorMessage,
-      );
+      error = result.content.errorMessage
+        ? new ContinueError(
+            ContinueErrorReason.Unspecified,
+            result.content.errorMessage,
+          )
+        : undefined;
     }
     streamResponse = true;
   }

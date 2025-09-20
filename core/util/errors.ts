@@ -46,6 +46,6 @@ export enum ContinueErrorReason {
   ParentDirectoryNotFound = "parent_directory_not_found",
 
   // Other
-  Unspecificied = "unspecified",
+  Unspecified = "unspecified",
   Unknown = "unknown",
 }
