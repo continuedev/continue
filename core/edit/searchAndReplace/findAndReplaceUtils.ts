@@ -1,4 +1,3 @@
-import { EditOperation } from "../../tools/definitions/multiEdit";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const FOUND_MULTIPLE_FIND_STRINGS_ERROR =
@@ -85,32 +84,6 @@ export function validateSingleEdit(
       `${context}old_string and new_string must be different`,
     );
   }
-}
-
-export const EMPTY_NON_FIRST_EDIT_MESSAGE =
-  "contains empty old_string. Only the first edit can contain an empty old_string, which is only used for file creation.";
-
-export function validateCreatingForMultiEdit(edits: EditOperation[]) {
-  const isCreating = edits[0].old_string === "";
-  if (edits.length > 1) {
-    if (isCreating) {
-      throw new ContinueError(
-        ContinueErrorReason.MultiEditSubsequentEditsOnCreation,
-        "cannot make subsequent edits on a file you are creating",
-      );
-    } else {
-      for (let i = 1; i < edits.length; i++) {
-        if (edits[i].old_string === "") {
-          throw new ContinueError(
-            ContinueErrorReason.MultiEditEmptyOldStringNotFirst,
-            `edit at index ${i}: ${EMPTY_NON_FIRST_EDIT_MESSAGE}`,
-          );
-        }
-      }
-    }
-  }
-
-  return isCreating;
 }
 
 export function trimEmptyLines({

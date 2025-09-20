@@ -86,34 +86,19 @@ function validateEdits(edits: EditOperation[]): void {
   }
 }
 
-function validateFileAccess(
-  resolvedPath: string,
-  isCreatingNewFile: boolean,
-): void {
-  if (isCreatingNewFile) {
-    // For new file creation, check if parent directory exists
-    const parentDir = path.dirname(resolvedPath);
-    if (parentDir && !fs.existsSync(parentDir)) {
-      throw new ContinueError(
-        ContinueErrorReason.ParentDirectoryNotFound,
-        `Parent directory does not exist: ${parentDir}`,
-      );
-    }
-  } else {
-    // For existing files, check if file has been read
-    // Check with the original path first, then with absolute path
-    if (!readFilesSet.has(resolvedPath)) {
-      throw new ContinueError(
-        ContinueErrorReason.EditToolFileNotRead,
-        `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
-      );
-    }
-    if (!fs.existsSync(resolvedPath)) {
-      throw new ContinueError(
-        ContinueErrorReason.FileNotFound,
-        `File ${resolvedPath} does not exist`,
-      );
-    }
+function validateFileAccess(resolvedPath: string): void {
+  // Check if file has been read
+  if (!readFilesSet.has(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.EditToolFileNotRead,
+      `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
+    );
+  }
+  if (!fs.existsSync(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
+      `File ${resolvedPath} does not exist`,
+    );
   }
 }
 
@@ -121,13 +106,15 @@ function applyEdit(
   content: string,
   edit: EditOperation,
   editIndex: number,
-  isFirstEditOfNewFile: boolean,
 ): string {
   const { old_string, new_string, replace_all = false } = edit;
 
-  // For new file creation, the first edit can have empty old_string
-  if (isFirstEditOfNewFile && old_string === "") {
-    return new_string;
+  // Validate that old_string is not empty (no file creation allowed)
+  if (old_string === "") {
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingOldString,
+      `Edit ${editIndex + 1}: old_string cannot be empty. File creation is not allowed.`,
+    );
   }
 
   // Check if old_string exists in current content
@@ -184,12 +171,6 @@ CRITICAL REQUIREMENTS:
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
 - Use replace_all for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.
 
-If you want to create a new file, use:
-- A new file path, including new directory if needed
-- First edit: empty old_string and the new file's contents as new_string
-- Subsequent edits: normal edit operations on the created content
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required
-
 WARNINGS:
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
@@ -220,25 +201,17 @@ WARNINGS:
     // Validate each edit operation
     validateEdits(edits);
 
-    // Check if this is creating a new file (first edit has empty old_string)
-    const isCreatingNewFile = edits[0].old_string === "";
-
     // Validate file access
-    validateFileAccess(resolved_path, isCreatingNewFile);
+    validateFileAccess(resolved_path);
 
-    // Read current file content (or start with empty for new files)
-    let currentContent = "";
-    if (!isCreatingNewFile) {
-      currentContent = fs.readFileSync(resolved_path, "utf-8");
-    }
-
+    // Read current file content
+    const currentContent = fs.readFileSync(resolved_path, "utf-8");
     const originalContent = currentContent;
     let newContent = currentContent;
 
     // Apply all edits sequentially
     for (let i = 0; i < edits.length; i++) {
-      const isFirstEditOfNewFile = i === 0 && isCreatingNewFile;
-      newContent = applyEdit(newContent, edits[i], i, isFirstEditOfNewFile);
+      newContent = applyEdit(newContent, edits[i], i);
     }
 
     // Generate diff for preview
@@ -249,13 +222,12 @@ WARNINGS:
         file_path: resolved_path,
         newContent,
         originalContent,
-        isCreatingNewFile,
         editCount: edits.length,
       },
       preview: [
         {
           type: "text",
-          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${isCreatingNewFile ? "create" : "modify"} ${resolved_path}:`,
+          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${resolved_path}:`,
         },
         {
           type: "diff",
@@ -268,7 +240,6 @@ WARNINGS:
     file_path: string;
     newContent: string;
     originalContent: string;
-    isCreatingNewFile: boolean;
     editCount: number;
   }) => {
     try {
@@ -299,8 +270,7 @@ WARNINGS:
         args.file_path,
       );
 
-      const action = args.isCreatingNewFile ? "created" : "edited";
-      return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}\nDiff:\n${diff}`;
+      return `Successfully edited ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}\nDiff:\n${diff}`;
     } catch (error) {
       if (error instanceof ContinueError) {
         throw error;
