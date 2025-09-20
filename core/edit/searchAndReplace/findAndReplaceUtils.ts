@@ -40,7 +40,7 @@ export function trimEmptyLines({
   lines: string[];
   fromEnd: boolean;
 }): string[] {
-  lines = fromEnd ? lines.toReversed() : lines.slice();
+  lines = fromEnd ? lines.slice().reverse() : lines.slice();
   const newLines: string[] = [];
   let shouldContinueRemoving = true;
   for (let index = 0; index < lines.length; index++) {
