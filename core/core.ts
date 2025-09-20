@@ -458,6 +458,10 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      if (msg.data.path.startsWith("http")) {
+        await this.messenger.request("openUrl", msg.data.path);
+        return;
+      }
       const urlPath = msg.data.path.startsWith("/")
         ? msg.data.path.slice(1)
         : msg.data.path;
