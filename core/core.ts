@@ -17,8 +17,8 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
-import Ollama from "./llm/llms/Ollama";
 import Lemonade from "./llm/llms/Lemonade";
+import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -729,20 +729,13 @@ export class Core {
         data.fileUri ?? "current-file-stream",
       ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
 
-      return streamDiffLines({
-        highlighted: data.highlighted,
-        prefix: data.prefix,
-        suffix: data.suffix,
+      return streamDiffLines(
+        data,
         llm,
-        // rules included for edit, NOT apply
-        rulesToInclude: data.includeRulesInSystemMessage
-          ? config.rules
-          : undefined,
-        input: data.input,
-        language: data.language,
-        overridePrompt: undefined,
         abortController,
-      });
+        undefined,
+        data.includeRulesInSystemMessage ? config.rules : undefined,
+      );
     });
 
     on("cancelApply", async (msg) => {

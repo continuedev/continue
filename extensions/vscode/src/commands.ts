@@ -8,8 +8,8 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import { startLocalLemonade } from "core/util/lemonadeHelper";
+import { startLocalOllama } from "core/util/ollamaHelper";
 import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -153,6 +153,7 @@ const getCommandsMap: (
       llm,
       range,
       rulesToInclude: config.rules,
+      isApply: false,
     });
   }
 

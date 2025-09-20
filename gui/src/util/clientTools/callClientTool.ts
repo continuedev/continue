@@ -60,7 +60,7 @@ export async function callClientTool(
         e instanceof ContinueError
           ? e
           : e instanceof Error
-            ? new ContinueError(ContinueErrorReason.Unspecificied, e.message)
+            ? new ContinueError(ContinueErrorReason.Unspecified, e.message)
             : new ContinueError(ContinueErrorReason.Unknown),
       output: undefined,
     };
