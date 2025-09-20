@@ -272,7 +272,7 @@ export interface Session {
   history: ChatHistoryItem[];
 }
 
-export interface SessionMetadata {
+export interface BaseSessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;

@@ -11,7 +11,12 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IDE, ModelDescription, Session, SessionMetadata } from "../index.js";
+import {
+  IDE,
+  ModelDescription,
+  Session,
+  BaseSessionMetadata,
+} from "../index.js";
 import { Logger } from "../util/Logger.js";
 
 import {
@@ -45,7 +50,7 @@ export interface FreeTrialStatus {
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
-export interface RemoteSessionMetadata extends SessionMetadata {
+export interface RemoteSessionMetadata extends BaseSessionMetadata {
   isRemote: true;
   remoteId: string;
 }

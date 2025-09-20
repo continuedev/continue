@@ -2,7 +2,11 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
+import type {
+  BaseSessionMetadata,
+  ChatHistoryItem,
+  Session,
+} from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -15,11 +19,11 @@ import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
-// Re-export SessionMetadata for external consumers
-export type { SessionMetadata };
+// Re-export BaseSessionMetadata for external consumers
+export type { BaseSessionMetadata };
 
 // Extended type for sessions that can be local or remote
-export interface ExtendedSessionMetadata extends SessionMetadata {
+export interface ExtendedSessionMetadata extends BaseSessionMetadata {
   firstUserMessage?: string;
   isRemote?: boolean;
   remoteId?: string; // For remote sessions, this is the agent ID

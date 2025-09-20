@@ -1,4 +1,4 @@
-import { SessionMetadata } from "core";
+import { BaseSessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
 
 export const parseDate = (date: string): Date => {
@@ -11,11 +11,11 @@ export const parseDate = (date: string): Date => {
 
 export interface SessionGroup {
   label: string;
-  sessions: (SessionMetadata | RemoteSessionMetadata)[];
+  sessions: (BaseSessionMetadata | RemoteSessionMetadata)[];
 }
 
 export const groupSessionsByDate = (
-  sessions: (SessionMetadata | RemoteSessionMetadata)[],
+  sessions: (BaseSessionMetadata | RemoteSessionMetadata)[],
 ): SessionGroup[] => {
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);

@@ -1,9 +1,9 @@
 import {
-  ArrowUpRightIcon,
+  CloudIcon,
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { SessionMetadata } from "core";
+import { BaseSessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { getUriPathBasename } from "core/util/uri";
 import React, { useContext, useEffect, useState } from "react";
@@ -25,7 +25,7 @@ export function HistoryTableRow({
   sessionMetadata,
   index,
 }: {
-  sessionMetadata: SessionMetadata | RemoteSessionMetadata;
+  sessionMetadata: BaseSessionMetadata | RemoteSessionMetadata;
   index: number;
 }) {
   const dispatch = useAppDispatch();
@@ -165,7 +165,7 @@ export function HistoryTableRow({
                 });
               }}
             >
-              <ArrowUpRightIcon width="1em" height="1em" />
+              <CloudIcon width="1em" height="1em" />
             </HeaderButtonWithToolTip>
           ) : (
             <>

@@ -35,7 +35,7 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  SessionMetadata,
+  BaseSessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -76,7 +76,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // History
   "history/list": [
     ListHistoryOptions,
-    (SessionMetadata | RemoteSessionMetadata)[],
+    (BaseSessionMetadata | RemoteSessionMetadata)[],
   ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];

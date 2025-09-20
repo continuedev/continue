@@ -52,7 +52,8 @@ export function SessionSelector({
     // - Empty line after instructions: 1 line
     // - Potential scroll indicators: up to 2 lines (1 above, 1 below)
     // Total overhead: ~9 lines
-    const availableHeight = Math.max(1, terminalHeight - 9);
+    const MAGIC_NUMBER = 9;
+    const availableHeight = Math.max(1, terminalHeight - MAGIC_NUMBER);
     const maxDisplayableSessions = Math.floor(availableHeight / 3);
 
     // If we can display all sessions, no need to scroll
