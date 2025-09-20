@@ -1,8 +1,8 @@
 import * as fs from "fs";
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { editTool } from "./edit.js";
 import { markFileAsRead, readFilesSet } from "./readFile.js";
 

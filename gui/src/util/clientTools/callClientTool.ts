@@ -61,7 +61,7 @@ export async function callClientTool(
           ? e
           : e instanceof Error
             ? new ContinueError(ContinueErrorReason.Unspecified, e.message)
-            : new ContinueError(ContinueErrorReason.Unknown),
+            : new ContinueError(ContinueErrorReason.Unknown, String(e)),
       output: undefined,
     };
   }

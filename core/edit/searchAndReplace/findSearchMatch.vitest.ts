@@ -201,7 +201,7 @@ describe("findSearchMatch", () => {
       });
     });
 
-    it("should return null for empty search content after whitespace removal", () => {
+    it("should recognize empty search", () => {
       const fileContent = "some content";
       const searchContent = "   \t\n   ";
       const result = findSearchMatch(fileContent, searchContent);
