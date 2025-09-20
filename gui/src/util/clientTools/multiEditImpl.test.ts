@@ -58,9 +58,7 @@ describe("multiEditImpl", () => {
     it("should throw if edits array is empty", async () => {
       await expect(
         multiEditImpl({ filepath: "test.txt", edits: [] }, "id", mockExtras),
-      ).rejects.toThrow(
-        "edits array is required and must contain at least one edit",
-      );
+      ).rejects.toThrow("edits array must contain at least one edit");
     });
 
     it("should throw if edit has invalid old_string", async () => {

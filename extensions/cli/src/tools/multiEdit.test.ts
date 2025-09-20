@@ -90,7 +90,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "edits array is required and must contain at least one edit",
+        "edits array must contain at least one edit",
       );
     });
 
