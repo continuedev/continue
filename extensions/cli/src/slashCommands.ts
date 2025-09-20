@@ -10,7 +10,7 @@ import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getCurrentSession } from "./session.js";
+import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
@@ -18,6 +18,8 @@ import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
+  remoteUrl?: string,
+  options?: { isRemoteMode?: boolean },
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -139,6 +141,33 @@ async function handleFork() {
   }
 }
 
+function handleTitle(args: string[]) {
+  posthogService.capture("useSlashCommand", { name: "title" });
+
+  const title = args.join(" ").trim();
+  if (!title) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a title. Usage: /title <your title>",
+      ),
+    };
+  }
+
+  try {
+    updateSessionTitle(title);
+    return {
+      exit: false,
+      output: chalk.green(`Session title updated to: "${title}"`),
+    };
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to update title: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -165,7 +194,11 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openSessionSelector: true };
   },
   fork: handleFork,
-  init: handleInit,
+  title: handleTitle,
+  init: (args, assistant) => {
+    posthogService.capture("useSlashCommand", { name: "init" });
+    return handleInit(args, assistant);
+  },
   update: () => {
     return { openUpdateSelector: true };
   },
@@ -174,6 +207,7 @@ const commandHandlers: Record<string, CommandHandler> = {
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
+  options?: { remoteUrl?: string; isRemoteMode?: boolean },
 ): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
@@ -187,7 +221,7 @@ export async function handleSlashCommands(
 
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant);
+    return await handler(args, assistant, options?.remoteUrl, options);
   }
 
   // Check for custom assistant prompts
@@ -200,7 +234,9 @@ export async function handleSlashCommands(
   }
 
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant);
+  const allCommands = getAllSlashCommands(assistant, {
+    isRemoteMode: options?.isRemoteMode,
+  });
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );

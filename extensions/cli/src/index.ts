@@ -344,17 +344,19 @@ program.on("command:*", () => {
   void gracefulExit(1);
 });
 
-// Parse arguments and handle errors
-try {
-  program.parse();
-} catch (error) {
-  console.error(error);
-  sentryService.captureException(
-    error instanceof Error ? error : new Error(String(error)),
-  );
-  void gracefulExit(1);
-}
+export async function runCli(): Promise<void> {
+  // Parse arguments and handle errors
+  try {
+    program.parse();
+  } catch (error) {
+    console.error(error);
+    sentryService.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    process.exit(1);
+  }
 
-process.on("SIGTERM", async () => {
-  await gracefulExit(0);
-});
+  process.on("SIGTERM", async () => {
+    await gracefulExit(0);
+  });
+}

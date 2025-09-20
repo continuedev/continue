@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -10,6 +11,13 @@ import { getApiClient } from "../config.js";
 import { env } from "../env.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
+}
+
+// Config file path - define as a function to avoid initialization order issues
+function getAuthConfigPath() {
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  return path.join(continueHome, "auth.json");
 }
 
 // Represents an authenticated user's configuration
@@ -95,7 +103,6 @@ export function getModelName(config: AuthConfig): string | null {
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
-import { AUTH_CONFIG_PATH } from "./authEnv.js";
 import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
@@ -129,8 +136,9 @@ export function loadAuthConfig(): AuthConfig {
   }
 
   try {
-    if (fs.existsSync(AUTH_CONFIG_PATH)) {
-      const data = JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+    const authConfigPath = getAuthConfigPath();
+    if (fs.existsSync(authConfigPath)) {
+      const data = JSON.parse(fs.readFileSync(authConfigPath, "utf8"));
 
       // Validate that we have all required fields for authenticated config
       if (
@@ -172,13 +180,14 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
   }
 
   try {
+    const authConfigPath = getAuthConfigPath();
     // Make sure the directory exists
-    const dir = path.dirname(AUTH_CONFIG_PATH);
+    const dir = path.dirname(authConfigPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(AUTH_CONFIG_PATH, JSON.stringify(config, null, 2));
+    fs.writeFileSync(authConfigPath, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Error saving auth config: ${error}`);
   }
@@ -676,10 +685,9 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
-  const onboardingFlagPath = path.join(
-    env.continueHome,
-    ".onboarding_complete",
-  );
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const onboardingFlagPath = path.join(continueHome, ".onboarding_complete");
 
   // Remove onboarding completion flag so user will go through onboarding again
   if (fs.existsSync(onboardingFlagPath)) {
@@ -695,8 +703,9 @@ export function logout(): void {
     return;
   }
 
-  if (fs.existsSync(AUTH_CONFIG_PATH)) {
-    fs.unlinkSync(AUTH_CONFIG_PATH);
+  const authConfigPath = getAuthConfigPath();
+  if (fs.existsSync(authConfigPath)) {
+    fs.unlinkSync(authConfigPath);
     console.info(chalk.green("Successfully logged out"));
   } else {
     console.info(chalk.yellow("No active session found"));

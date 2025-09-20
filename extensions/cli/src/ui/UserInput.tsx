@@ -243,20 +243,24 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    // Get the complete slash command, not just the part before cursor
+    // Get the complete slash command from the text (not just before cursor)
     const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
     const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-    // Hide selector if we have an exact match and there's a space after cursor
+    // Hide selector if we have an exact match and there's any additional content
     if (exactMatch) {
-      const restOfText = text.slice(cursor);
-      // Only hide if there's a space or newline immediately after cursor
-      const shouldHide =
-        restOfText.startsWith(" ") || restOfText.startsWith("\n");
-      if (shouldHide) {
+      // Check if there's anything after the command name (space + args)
+      const commandWithSlash = "/" + exactMatch.name;
+      const textAfterCommand = trimmedText.slice(commandWithSlash.length);
+
+      // If there's any content after the command name (space + args), hide dropdown
+      if (
+        textAfterCommand.trim().length > 0 &&
+        beforeCursor.length >= commandWithSlash.length
+      ) {
         setShowSlashCommands(false);
         return;
       }

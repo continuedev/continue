@@ -3,17 +3,17 @@ import React from "react";
 
 import { UpdateServiceState } from "src/services/types.js";
 
-import { listSessions } from "../../session.js";
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
+import { DiffViewer } from "../DiffViewer.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
-import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
+import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
 
 interface ScreenContentProps {
@@ -43,6 +43,7 @@ interface ScreenContentProps {
   wasInterrupted?: boolean;
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  diffContent?: string;
 }
 
 function hideScreenContent(state?: UpdateServiceState) {
@@ -75,6 +76,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   wasInterrupted = false,
   isRemoteMode,
   onImageInClipboardChange,
+  diffContent,
 }) => {
   if (hideScreenContent(services.update)) {
     return null;
@@ -137,10 +139,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   // Session selector
   if (isScreenActive("session")) {
-    const sessions = listSessions(20);
     return (
-      <SessionSelector
-        sessions={sessions}
+      <SessionSelectorWithLoading
         onSelect={handleSessionSelect}
         onExit={closeCurrentScreen}
       />
@@ -150,6 +150,16 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   // Free trial transition UI
   if (isScreenActive("free-trial")) {
     return <FreeTrialTransitionUI onReload={handleReload} />;
+  }
+
+  // Diff viewer overlay
+  if (isScreenActive("diff")) {
+    return (
+      <DiffViewer
+        diffContent={diffContent || ""}
+        onClose={closeCurrentScreen}
+      />
+    );
   }
 
   // Chat screen with input area
