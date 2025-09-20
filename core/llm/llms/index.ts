@@ -17,6 +17,7 @@ import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
+import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
@@ -67,6 +68,7 @@ import xAI from "./xAI";
 export const LLMClasses = [
   Anthropic,
   Cohere,
+  CometAPI,
   FunctionNetwork,
   Gemini,
   Llamafile,
