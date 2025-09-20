@@ -216,7 +216,7 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
-    posthogService.capture("tool_call_outcome", {
+    void posthogService.capture("tool_call_outcome", {
       succeeded: true,
       toolName: toolCall.name,
       duration_ms: duration,
@@ -244,7 +244,7 @@ export async function executeToolCall(
       errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
-    posthogService.capture("tool_call_outcome", {
+    void posthogService.capture("tool_call_outcome", {
       succeeded: false,
       toolName: toolCall.name,
       duration_ms: duration,

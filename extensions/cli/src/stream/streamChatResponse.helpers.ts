@@ -377,7 +377,7 @@ export async function preprocessStreamedToolCalls(
         errorReason,
         // modelName, TODO
       });
-      posthogService.capture("tool_call_outcome", {
+      void posthogService.capture("tool_call_outcome", {
         succeeded: false,
         toolName: toolCall.name,
         errorReason,

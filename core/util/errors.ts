@@ -17,6 +17,7 @@ export class ContinueError extends Error {
   constructor(reason: ContinueErrorReason, message?: string) {
     super(message);
     this.reason = reason;
+    this.name = "ContinueError";
   }
 }
 
