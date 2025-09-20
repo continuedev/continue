@@ -15,251 +15,95 @@ You can add any built-in context-providers in your config file as shown below:
 
 Reference any file in your current workspace.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: file
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "file"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: file
+```
 
 ### `@Code`
 
 Reference specific functions or classes from throughout your project.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: code
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "code"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: code
+```
 
 ### `@Git Diff`
 
 Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: diff
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "diff"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: diff
+```
 
 ### `@Current File`
 
 Reference the currently open file.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: currentFile
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "currentFile"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: currentFile
+```
 
 ### `@Terminal`
 
 Reference the last command you ran in your IDE's terminal and its output.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: terminal
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "terminal"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: terminal
+```
 
 ### `@Open`
 
 Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: open
-        params:
-          onlyPinned: true
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "open",
-          "params": {
-            "onlyPinned": true
-          }
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: open
+    params:
+      onlyPinned: true
+```
 
 ### `@Clipboard`
 
 Reference recent clipboard items
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: clipboard
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "clipboard"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: clipboard
+```
 
 ### `@Tree`
 
 Reference the structure of your current workspace.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: tree
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "tree"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: tree
+```
 
 ### `@Problems`
 
 Get Problems from the current file.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: problems
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "problems"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: problems
+```
 
 ### `@Debugger`
 
 Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: debugger
-        params:
-          stackDepth: 3
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "debugger",
-          "params": {
-            "stackDepth": 3
-          }
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: debugger
+    params:
+      stackDepth: 3
+```
 
 Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
 
@@ -269,30 +113,12 @@ Reference the outline of your codebase. By default, signatures are included alon
 
 `includeSignatures` params can be set to false to exclude signatures. This could be necessary for large codebases and/or to reduce context size significantly. Signatures will not be included if indexing is disabled.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: repo-map
-        params:
-          includeSignatures: false # default true
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "repo-map",
-          "params": {
-            "includeSignatures": false // default true
-          }
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: repo-map
+    params:
+      includeSignatures: false # default true
+```
 
 Provides a list of files and the call signatures of top-level classes, functions, and methods in those files. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
 
@@ -304,56 +130,23 @@ This context provider is inpsired by [Aider's repository map](https://aider.chat
 
 Reference the architecture and platform of your current operating system.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: os
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "os"
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: os
+```
 
 ### `@HTTP`
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    context:
-      - provider: http
-        params:
-          url: "https://api.example.com/v1/users"
-          headers:
-            - Authorization: "Bearer <token>"
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "contextProviders": [
-        {
-          "name": "http",
-          "params": {
-            "url": "https://api.example.com/v1/users"
-          }
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+context:
+  - provider: http
+    params:
+      url: "https://api.example.com/v1/users"
+      headers:
+        - Authorization: "Bearer <token>"
+```
 
 The receiving URL should expect to receive the following parameters:
 
@@ -375,36 +168,15 @@ Response
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
-<Tabs>
-  <Tab title="YAML">
-    ```yaml config.yaml
-    mcpServers:
-      - name: My MCP Server
-        command: uvx
-        args:
-          - mcp-server-sqlite
-          - --db-path
-          - /Users/NAME/test.db
-    ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-    ```json config.json
-    {
-      "experimental": {
-        "modelContextProtocolServers": [
-          {
-            "transport": {
-              "type": "stdio",
-              "command": "uvx",
-              "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-            }
-          }
-        ]
-      }
-    }
-    ```
-  </Tab>
-</Tabs>
+```yaml config.yaml
+mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
+```
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 

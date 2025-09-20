@@ -36,19 +36,6 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
         - rerank
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "voyage",
-        "params": {
-            "model": "rerank-2",
-            "apiKey": "<YOUR_VOYAGE_API_KEY>"
-        }
-    }
-  }
-  ```
-  </Tab>
 </Tabs>
 
 ### Cohere
@@ -69,19 +56,6 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
       apiKey: <YOUR_COHERE_API_KEY>
       roles:
         - rerank
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "cohere",
-        "params": {
-          "model": "rerank-english-v3.0",
-          "apiKey": "<YOUR_COHERE_API_KEY>"
-        }
-    }
-  }
   ```
   </Tab>
 </Tabs>
@@ -105,21 +79,9 @@ If you only have access to a single LLM, then you can use it as a reranker. This
         - rerank
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "llm",
-        "params": {
-            "modelTitle": "My Model Title"
-        }
-    }
-  }
-  ```
-  </Tab>
 </Tabs>
 
-The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
 
 ### Text Embeddings Inference
 
@@ -140,19 +102,6 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
         apiKey: <YOUR_TEI_API_KEY>
         roles:
           - rerank
-    ```
-    </Tab>
-    <Tab title="JSON">
-    ```json title="config.json"
-    {
-      "reranker": {
-        "name": "huggingface-tei",
-        "params": {
-          "apiBase": "http://localhost:8080",
-          "apiKey": "<YOUR_TEI_API_KEY>"
-        }
-      }
-    }
     ```
     </Tab>
 </Tabs>
