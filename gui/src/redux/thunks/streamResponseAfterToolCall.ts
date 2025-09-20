@@ -69,7 +69,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         // Check if we should continue streaming based on tool call completion
         const history = getState().session.history;
-        const assistantMessage = history.find(
+        const assistantMessage = history.findLast(
           (item) =>
             item.message.role === "assistant" &&
             item.toolCallStates?.some((tc) => tc.toolCallId === toolCallId),
