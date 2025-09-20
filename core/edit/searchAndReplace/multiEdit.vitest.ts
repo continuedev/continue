@@ -1,25 +1,32 @@
 import { describe, expect, it } from "vitest";
 import { EditOperation } from "../../tools/definitions/multiEdit";
-import { validateAllEdits, validateMultiEditArgs } from "./multiEditValidation";
+import { ContinueErrorReason } from "../../util/errors";
+import { validateMultiEdit } from "./multiEditValidation";
 import { executeMultiFindAndReplace } from "./performReplace";
 
 describe("multiEdit shared validation", () => {
-  describe("validateMultiEditArgs", () => {
+  describe("validateMultiEdit", () => {
     it("should throw error if edits is not an array", () => {
-      expect(() => validateMultiEditArgs({ edits: "not an array" })).toThrow(
-        "edits array is required",
+      expect(() => validateMultiEdit({ edits: "not an array" })).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.MultiEditEditsArrayRequired,
+        }),
       );
     });
 
     it("should throw error if edits is missing", () => {
-      expect(() => validateMultiEditArgs({})).toThrow(
-        "edits array is required",
+      expect(() => validateMultiEdit({})).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.MultiEditEditsArrayRequired,
+        }),
       );
     });
 
     it("should throw error if edits array is empty", () => {
-      expect(() => validateMultiEditArgs({ edits: [] })).toThrow(
-        "edits array must contain at least one edit",
+      expect(() => validateMultiEdit({ edits: [] })).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.MultiEditEditsArrayEmpty,
+        }),
       );
     });
 
@@ -27,77 +34,95 @@ describe("multiEdit shared validation", () => {
       const edits: EditOperation[] = [
         { old_string: "hello", new_string: "world" },
       ];
-      const result = validateMultiEditArgs({ edits });
+      const result = validateMultiEdit({ edits });
       expect(result.edits).toEqual(edits);
     });
   });
 
-  describe("validateAllEdits", () => {
+  describe("validateMultiEdit - individual edit validation", () => {
     it("should throw error if edit has missing old_string", () => {
-      const edits = [
-        {
-          old_string: undefined as any,
-          new_string: "Hi there",
-        },
-      ];
+      const args = {
+        edits: [
+          {
+            old_string: undefined as any,
+            new_string: "Hi there",
+          },
+        ],
+      };
 
-      expect(() => validateAllEdits(edits)).toThrow(
-        "edit at index 0: old_string is required",
+      expect(() => validateMultiEdit(args)).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingOldString,
+        }),
       );
     });
 
     it("should throw error if edit has missing new_string", () => {
-      const edits = [
-        {
-          old_string: "Hello world",
-          new_string: undefined as any,
-        },
-      ];
+      const args = {
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: undefined as any,
+          },
+        ],
+      };
 
-      expect(() => validateAllEdits(edits)).toThrow(
-        "edit at index 0: new_string is required",
+      expect(() => validateMultiEdit(args)).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingNewString,
+        }),
       );
     });
 
     it("should throw error if old_string and new_string are the same", () => {
-      const edits = [
-        {
-          old_string: "Hello world",
-          new_string: "Hello world",
-        },
-      ];
+      const args = {
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hello world",
+          },
+        ],
+      };
 
-      expect(() => validateAllEdits(edits)).toThrow(
-        "edit at index 0: old_string and new_string must be different",
+      expect(() => validateMultiEdit(args)).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
       );
     });
 
     it("should throw error if non-first edit has empty old_string", () => {
-      const edits = [
-        {
-          old_string: "Hello world",
-          new_string: "Hi there",
-        },
-        {
-          old_string: "",
-          new_string: "Invalid insertion",
-        },
-      ];
+      const args = {
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hi there",
+          },
+          {
+            old_string: "",
+            new_string: "Invalid insertion",
+          },
+        ],
+      };
 
-      expect(() => validateAllEdits(edits)).toThrow(
-        "Edit at index 1: old_string cannot be empty. Only the first edit can have an empty old_string for insertion at the beginning of the file.",
+      expect(() => validateMultiEdit(args)).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceNonFirstEmptyOldString,
+        }),
       );
     });
 
     it("should allow first edit to have empty old_string", () => {
-      const edits = [
-        {
-          old_string: "",
-          new_string: "New content",
-        },
-      ];
+      const args = {
+        edits: [
+          {
+            old_string: "",
+            new_string: "New content",
+          },
+        ],
+      };
 
-      expect(() => validateAllEdits(edits)).not.toThrow();
+      expect(() => validateMultiEdit(args)).not.toThrow();
     });
   });
 
@@ -169,6 +194,7 @@ describe("multiEdit shared validation", () => {
         },
       ];
 
+      // Empty old_string matches at position 0 (beginning of file)
       const result = executeMultiFindAndReplace("", edits);
       expect(result).toBe("Content for empty file");
     });
@@ -199,8 +225,12 @@ describe("multiEdit shared validation", () => {
         },
       ];
 
-      expect(() => executeMultiFindAndReplace(originalContent, edits)).toThrow(
-        'Edit at index 0: string not found in file: "Not found"',
+      expect(() =>
+        executeMultiFindAndReplace(originalContent, edits),
+      ).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceOldStringNotFound,
+        }),
       );
     });
 
@@ -213,8 +243,12 @@ describe("multiEdit shared validation", () => {
         },
       ];
 
-      expect(() => executeMultiFindAndReplace(originalContent, edits)).toThrow(
-        'Edit at index 0: String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+      expect(() =>
+        executeMultiFindAndReplace(originalContent, edits),
+      ).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMultipleOccurrences,
+        }),
       );
     });
 
@@ -225,8 +259,10 @@ describe("multiEdit shared validation", () => {
         { old_string: "not found", new_string: "test" },
       ];
 
-      expect(() => executeMultiFindAndReplace(content, edits)).toThrow(
-        'Edit at index 1: string not found in file: "not found"',
+      expect(() => executeMultiFindAndReplace(content, edits)).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceOldStringNotFound,
+        }),
       );
     });
 

@@ -23,8 +23,9 @@ export class ContinueError extends Error {
 
 export enum ContinueErrorReason {
   // Find and Replace validation errors
-  FindAndReplaceIdenticalStrings = "find_and_replace_old_and_new_strings_identical",
+  FindAndReplaceIdenticalOldAndNewStrings = "find_and_replace_identical_old_and_new_strings",
   FindAndReplaceMissingOldString = "find_and_replace_missing_old_string",
+  FindAndReplaceNonFirstEmptyOldString = "find_and_replace_non_first_empty_old_string",
   FindAndReplaceMissingNewString = "find_and_replace_missing_new_string",
   FindAndReplaceOldStringNotFound = "find_and_replace_old_string_not_found",
   FindAndReplaceMultipleOccurrences = "find_and_replace_multiple_occurrences",

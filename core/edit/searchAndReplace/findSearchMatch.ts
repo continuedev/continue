@@ -336,6 +336,12 @@ export function findSearchMatches(
   searchContent: string,
 ): SearchMatchResult[] {
   const matches: SearchMatchResult[] = [];
+
+  // Special case: empty search string always matches at position 0
+  if (searchContent.trim() === "") {
+    return [{ startIndex: 0, endIndex: 0, strategyName: "emptySearch" }];
+  }
+
   let remainingContent = fileContent;
   let currentOffset = 0;
 

@@ -1,23 +1,62 @@
-import * as fs from "fs";
-
+import { validateSingleEdit } from "core/edit/searchAndReplace/findAndReplaceUtils.js";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace.js";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
-
+import * as fs from "fs";
+import path from "path";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
+import { EditOperation } from "./multiEdit.js";
 import { readFilesSet, readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
-export interface EditArgs {
+export function validateAndResolveFilePath(args: any): {
+  originalPath: string;
+  resolvedPath: string;
+} {
+  const { file_path } = args;
+
+  if (!file_path) {
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingFilepath,
+      "file_path is required",
+    );
+  }
+
+  const absolutePath = path.isAbsolute(file_path)
+    ? file_path
+    : path.resolve(process.cwd(), file_path);
+
+  const resolvedPath = fs.realpathSync(absolutePath);
+
+  throwIfFileIsSecurityConcern(resolvedPath);
+
+  // Check if file exists
+  if (!fs.existsSync(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
+      `File ${file_path} does not exist`,
+    );
+  }
+
+  // Check if file has been read
+  if (!readFilesSet.has(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.EditToolFileNotRead,
+      `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
+    );
+  }
+
+  return { originalPath: file_path, resolvedPath: resolvedPath };
+}
+
+export interface EditArgs extends EditOperation {
   file_path: string;
-  old_string: string;
-  new_string: string;
-  replace_all?: boolean;
 }
 
 export const editTool: Tool = {
@@ -62,87 +101,20 @@ WARNINGS:
     },
   },
   preprocess: async (args) => {
-    const {
-      file_path,
+    const { old_string, new_string, replace_all = false } = args as EditArgs;
+
+    const { resolvedPath } = validateAndResolveFilePath(args);
+
+    validateSingleEdit(old_string, new_string);
+
+    const oldContent = fs.readFileSync(resolvedPath, "utf-8");
+    const newContent = executeFindAndReplace(
+      oldContent,
       old_string,
       new_string,
-      replace_all = false,
-    } = args as EditArgs;
-
-    // Validate arguments
-    if (!file_path) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingFilepath,
-        "file_path is required",
-      );
-    }
-
-    if (!old_string) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingOldString,
-        "old_string is required",
-      );
-    }
-    if (new_string === undefined) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingNewString,
-        "new_string is required",
-      );
-    }
-    if (old_string === new_string) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceIdenticalStrings,
-        "old_string and new_string must be different",
-      );
-    }
-
-    const resolvedPath = fs.realpathSync(file_path);
-
-    // Check if file has been read
-    if (!readFilesSet.has(resolvedPath)) {
-      throw new ContinueError(
-        ContinueErrorReason.EditToolFileNotRead,
-        `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
-      );
-    }
-
-    throwIfFileIsSecurityConcern(resolvedPath);
-
-    // Check if file exists
-    if (!fs.existsSync(resolvedPath)) {
-      throw new ContinueError(
-        ContinueErrorReason.FileNotFound,
-        `File ${file_path} does not exist`,
-      );
-    }
-
-    // Read current file content
-    const oldContent = fs.readFileSync(resolvedPath, "utf-8");
-
-    // Check if old_string exists in the file
-    if (!oldContent.includes(old_string)) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceOldStringNotFound,
-        `String not found in file: ${old_string}`,
-      );
-    }
-
-    let newContent: string;
-
-    if (replace_all) {
-      // Replace all occurrences
-      newContent = oldContent.split(old_string).join(new_string);
-    } else {
-      // Replace only the first occurrence
-      const occurrences = oldContent.split(old_string).length - 1;
-      if (occurrences > 1) {
-        throw new ContinueError(
-          ContinueErrorReason.FindAndReplaceMultipleOccurrences,
-          `String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-        );
-      }
-      newContent = oldContent.replace(old_string, new_string);
-    }
+      replace_all,
+      0,
+    );
 
     // Generate diff for preview
     const diff = generateDiff(oldContent, newContent, resolvedPath);

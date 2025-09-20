@@ -3,6 +3,7 @@ import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { multiEditTool } from "./multiEdit.js";
 import { markFileAsRead } from "./readFile.js";
 
@@ -57,9 +58,9 @@ describe("multiEditTool CLI specific", () => {
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `You must use the Read tool to read ${testFilePath} before editing it.`,
-      );
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.EditToolFileNotRead);
     });
 
     it("should throw error if file does not exist", async () => {
@@ -77,9 +78,9 @@ describe("multiEditTool CLI specific", () => {
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `File ${nonExistentFile} does not exist. This tool cannot create new files.`,
-      );
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileNotFound);
     });
 
     it("should throw error if file_path is missing", async () => {
@@ -92,8 +93,10 @@ describe("multiEditTool CLI specific", () => {
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "file_path is required",
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(
+        ContinueErrorReason.FindAndReplaceMissingFilepath,
       );
     });
   });
@@ -117,7 +120,7 @@ describe("multiEditTool CLI specific", () => {
       expect(result.preview).toHaveLength(2);
       expect(result.preview?.[0]).toEqual({
         type: "text",
-        content: "Will apply 1 edit to modify /tmp/test-multi-edit-file.txt:",
+        content: "Will apply 1 edit to /tmp/test-multi-edit-file.txt:",
       });
       expect(result.preview?.[1]).toEqual({
         type: "diff",
@@ -175,9 +178,9 @@ describe("multiEditTool CLI specific", () => {
         editCount: 1,
       };
 
-      await expect(multiEditTool.run(args)).rejects.toThrow(
-        `Error: failed to edit ${testFilePath}: Write failed`,
-      );
+      const error = await multiEditTool.run(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileWriteError);
     });
   });
 

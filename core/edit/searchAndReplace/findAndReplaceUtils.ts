@@ -4,59 +4,6 @@ export const FOUND_MULTIPLE_FIND_STRINGS_ERROR =
   "Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.";
 
 /**
- * Performs a find and replace operation on text content with proper handling of special characters
- */
-export function performFindAndReplace(
-  content: string,
-  oldString: string,
-  newString: string,
-  replaceAll: boolean = false,
-  index?: number, // For error messages
-): string {
-  const errorContext = index !== undefined ? `edit at index ${index}: ` : "";
-  // Check if old_string exists in current content
-  if (!content.includes(oldString)) {
-    throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceOldStringNotFound,
-      `${errorContext}string not found in file: "${oldString}"`,
-    );
-  }
-
-  if (replaceAll) {
-    // Replace all occurrences using replaceAll for proper handling of special characters
-    return content.replaceAll(oldString, newString);
-  } else {
-    // Handle empty oldString case (insertion)
-    if (oldString === "") {
-      return newString + content;
-    }
-
-    // Count occurrences using indexOf for proper handling of special characters
-    let count = 0;
-    let searchIndex = content.indexOf(oldString);
-    while (searchIndex !== -1) {
-      count++;
-      searchIndex = content.indexOf(oldString, searchIndex + 1);
-    }
-
-    if (count > 1) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMultipleOccurrences,
-        `${errorContext}String "${oldString}" appears ${count} times in the file. ${FOUND_MULTIPLE_FIND_STRINGS_ERROR}`,
-      );
-    }
-
-    // Replace only the first occurrence
-    const firstIndex = content.indexOf(oldString);
-    return (
-      content.substring(0, firstIndex) +
-      newString +
-      content.substring(firstIndex + oldString.length)
-    );
-  }
-}
-
-/**
  * Validates a single edit operation
  */
 export function validateSingleEdit(
@@ -80,7 +27,7 @@ export function validateSingleEdit(
   }
   if (oldString === newString) {
     throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceIdenticalStrings,
+      ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
       `${context}old_string and new_string must be different`,
     );
   }

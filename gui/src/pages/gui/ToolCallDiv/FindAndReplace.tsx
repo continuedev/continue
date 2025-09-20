@@ -1,9 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
-import {
-  performFindAndReplace,
-  trimEmptyLines,
-} from "core/edit/searchAndReplace/findAndReplaceUtils";
+import { trimEmptyLines } from "core/edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
@@ -136,11 +134,11 @@ export function FindAndReplaceDisplay({
           new_string: newString,
           replace_all: replaceAll,
         } = edits[i];
-        newContent = performFindAndReplace(
+        newContent = executeFindAndReplace(
           newContent,
           oldString,
           newString,
-          replaceAll,
+          !!replaceAll,
           i,
         );
       }

@@ -7,11 +7,15 @@ export interface MultiEditValidationResult {
 }
 
 /**
- * Validates multi edit arguments (non-file system specific)
+ * Validates multi-edit arguments and all edits in a single pass
+ * @param args - The arguments object containing the edits array
+ * @returns Validated edits array
+ * @throws ContinueError if validation fails
  */
-export function validateMultiEditArgs(args: any): MultiEditValidationResult {
+export function validateMultiEdit(args: any): MultiEditValidationResult {
   const { edits } = args;
 
+  // Validate that edits is a non-empty array
   if (!edits || !Array.isArray(edits)) {
     throw new ContinueError(
       ContinueErrorReason.MultiEditEditsArrayRequired,
@@ -26,25 +30,21 @@ export function validateMultiEditArgs(args: any): MultiEditValidationResult {
     );
   }
 
-  return { edits };
-}
-
-/**
- * Validates all edits in the array
- */
-export function validateAllEdits(edits: EditOperation[]): void {
+  // Validate each individual edit
   for (let i = 0; i < edits.length; i++) {
     const edit = edits[i];
 
-    // Use existing validation
+    // Use existing single edit validation
     validateSingleEdit(edit.old_string, edit.new_string, i);
 
     // Only the first edit can have empty old_string (for insertion at beginning)
     if (i > 0 && edit.old_string === "") {
       throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingOldString,
+        ContinueErrorReason.FindAndReplaceNonFirstEmptyOldString,
         `Edit at index ${i}: old_string cannot be empty. Only the first edit can have an empty old_string for insertion at the beginning of the file.`,
       );
     }
   }
+
+  return { edits };
 }

@@ -1,3 +1,4 @@
+import { ContinueErrorReason } from "core/util/errors";
 import * as ideUtils from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
@@ -46,7 +47,11 @@ describe("multiEditImpl GUI specific", () => {
     it("should throw if filepath is missing", async () => {
       await expect(
         multiEditImpl({ edits: [] }, "id", mockExtras),
-      ).rejects.toThrow("filepath is required");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingFilepath,
+        }),
+      );
     });
 
     it("should throw if file does not exist in workspace", async () => {
@@ -61,8 +66,10 @@ describe("multiEditImpl GUI specific", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow(
-        "file nonexistent.txt does not exist. This tool cannot create new files.",
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FileNotFound,
+        }),
       );
     });
   });

@@ -1,13 +1,9 @@
-import {
-  validateAllEdits,
-  validateMultiEditArgs,
-} from "core/edit/searchAndReplace/multiEditValidation";
+import { validateMultiEdit } from "core/edit/searchAndReplace/multiEditValidation";
 import { executeMultiFindAndReplace } from "core/edit/searchAndReplace/performReplace";
-import { ContinueError, ContinueErrorReason } from "core/util/errors";
-import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
+import { validateSearchAndReplaceFilepath } from "./singleFindAndReplaceImpl";
 
 export const multiEditImpl: ClientToolImpl = async (
   args,
@@ -16,41 +12,21 @@ export const multiEditImpl: ClientToolImpl = async (
 ) => {
   const { filepath, editingFileContents } = args;
 
-  const streamId = uuid();
-
-  // Validate filepath (GUI specific)
-  if (!filepath) {
-    throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceMissingFilepath,
-      "filepath is required",
-    );
-  }
-
-  // Validate edits using shared logic
-  const { edits } = validateMultiEditArgs(args);
-  validateAllEdits(edits);
-
-  const resolvedUri = await resolveRelativePathInDir(
+  const resolvedUri = await validateSearchAndReplaceFilepath(
     filepath,
     extras.ideMessenger.ide,
   );
 
-  if (!resolvedUri) {
-    throw new ContinueError(
-      ContinueErrorReason.FileNotFound,
-      `file ${filepath} does not exist. This tool cannot create new files.`,
-    );
-  }
+  const { edits } = validateMultiEdit(args);
 
   const currentContent =
     editingFileContents ??
     (await extras.ideMessenger.ide.readFile(resolvedUri));
   const fileUri = resolvedUri;
 
-  // Apply all edits using shared logic with findSearchMatch
   const newContent = executeMultiFindAndReplace(currentContent, edits);
 
-  // Apply the changes to the file
+  const streamId = uuid();
   void extras.dispatch(
     applyForEditTool({
       streamId,

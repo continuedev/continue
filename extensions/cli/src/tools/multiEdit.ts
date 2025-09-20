@@ -1,12 +1,7 @@
 import * as fs from "fs";
-import * as path from "path";
 
-import {
-  validateAllEdits,
-  validateMultiEditArgs,
-} from "core/edit/searchAndReplace/multiEditValidation.js";
+import { validateMultiEdit } from "core/edit/searchAndReplace/multiEditValidation.js";
 import { executeMultiFindAndReplace } from "core/edit/searchAndReplace/performReplace.js";
-import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -15,7 +10,8 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { readFilesSet, readFileTool } from "./readFile.js";
+import { validateAndResolveFilePath } from "./edit.js";
+import { readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
@@ -28,47 +24,6 @@ export interface EditOperation {
 export interface MultiEditArgs {
   file_path: string;
   edits: EditOperation[];
-}
-
-// File system specific validation
-function validateAndResolveFilePath(args: any): {
-  original_path: string;
-  resolved_path: string;
-} {
-  const { file_path } = args as MultiEditArgs;
-
-  if (!file_path) {
-    throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceMissingFilepath,
-      "file_path is required",
-    );
-  }
-
-  // Convert relative paths to absolute paths
-  const absolutePath = path.isAbsolute(file_path)
-    ? file_path
-    : path.resolve(process.cwd(), file_path);
-
-  const resolvedPath = fs.realpathSync(absolutePath);
-
-  return { original_path: file_path, resolved_path: resolvedPath };
-}
-
-function validateFileAccess(resolvedPath: string): void {
-  // Check if file exists first
-  if (!fs.existsSync(resolvedPath)) {
-    throw new ContinueError(
-      ContinueErrorReason.FileNotFound,
-      `File ${resolvedPath} does not exist. This tool cannot create new files.`,
-    );
-  }
-  // Check if file has been read
-  if (!readFilesSet.has(resolvedPath)) {
-    throw new ContinueError(
-      ContinueErrorReason.EditToolFileNotRead,
-      `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
-    );
-  }
 }
 
 export const multiEditTool: Tool = {
@@ -103,12 +58,12 @@ CRITICAL REQUIREMENTS:
 - Empty old_string can be used to insert content at the beginning of a file
 
 WARNINGS:
-- This tool cannot create new files - the file must already exist
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
 - The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
 - The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session
-- The tool will fail if the file does not exist - it cannot create new files`,
+- The tool will fail if the file does not exist - it cannot create new files
+- This tool cannot create new files - the file must already exist`,
   parameters: {
     file_path: {
       type: "string",
@@ -126,39 +81,27 @@ WARNINGS:
     },
   },
   preprocess: async (args) => {
-    // Validate file path (CLI specific)
-    const { resolved_path } = validateAndResolveFilePath(args);
+    const { resolvedPath } = validateAndResolveFilePath(args);
 
-    // Validate edits (shared logic)
-    const { edits } = validateMultiEditArgs(args);
-    validateAllEdits(edits);
+    const { edits } = validateMultiEdit(args);
 
-    throwIfFileIsSecurityConcern(resolved_path);
-
-    // Validate file access (CLI specific)
-    validateFileAccess(resolved_path);
-
-    // Read current file content
-    const currentContent = fs.readFileSync(resolved_path, "utf-8");
-    const originalContent = currentContent;
-
-    // Apply all edits using shared logic with findSearchMatch
+    const currentContent = fs.readFileSync(resolvedPath, "utf-8");
     const newContent = executeMultiFindAndReplace(currentContent, edits);
 
     // Generate diff for preview
-    const diff = generateDiff(originalContent, newContent, resolved_path);
+    const diff = generateDiff(currentContent, newContent, resolvedPath);
 
     return {
       args: {
-        file_path: resolved_path,
+        file_path: resolvedPath,
         newContent,
-        originalContent,
+        originalContent: currentContent,
         editCount: edits.length,
       },
       preview: [
         {
           type: "text",
-          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to modify ${resolved_path}:`,
+          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${resolvedPath}:`,
         },
         {
           type: "diff",
