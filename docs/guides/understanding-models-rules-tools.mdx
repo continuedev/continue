@@ -35,17 +35,17 @@ Custom configurations you create and manage in your workspace or globally
 
 ## Hub
 
-Hub items are identified by slugs in the format `owner/item-name`. For example, to use the [OpenAI GPT-4o model](https://hub.continue.dev/openai/gpt-4o), you'd reference it as `openai/gpt-4o`.
+Hub items are identified by slugs in the format `owner/item-name`. For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
 
 Import from the hub using the `uses` syntax alongside your custom configurations:
 
-```yaml config.yaml
+```yaml config.yaml highlight={6}
 name: Team Agent
 version: 1.0.0
 schema: v1
 
 models:
-  - uses: anthropic/claude-3.5-sonnet # Import from hub
+  - uses: anthropic/claude-4-sonnet
     with:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
 ```
