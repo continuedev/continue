@@ -1,5 +1,6 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
@@ -19,7 +20,6 @@ import {
 import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
-import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
 // Helper function to handle permission denied
@@ -375,7 +375,14 @@ export async function preprocessStreamedToolCalls(
         durationMs: duration,
         error: errorMessage,
         errorReason,
-        // modelName,
+        // modelName, TODO
+      });
+      posthogService.capture("tool_call_outcome", {
+        succeeded: false,
+        toolName: toolCall.name,
+        errorReason,
+        duration_ms: duration,
+        // model: options.modelName, TODO
       });
 
       // Add error to chat history

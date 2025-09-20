@@ -46,7 +46,7 @@ export const callToolById = createAsyncThunk<
 
   const selectedChatModel = selectSelectedChatModel(state);
 
-  posthog.capture("gui_tool_call_decision", {
+  posthog.capture("tool_call_decision", {
     model: selectedChatModel,
     decision: isAutoApproved ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
@@ -135,7 +135,7 @@ export const callToolById = createAsyncThunk<
 
   // Capture telemetry for tool call execution outcome with duration
   const duration_ms = Date.now() - startTime;
-  posthog.capture("gui_tool_call_outcome", {
+  posthog.capture("tool_call_outcome", {
     model: selectedChatModel,
     succeeded: !error,
     toolName: toolCallState.toolCall.function.name,

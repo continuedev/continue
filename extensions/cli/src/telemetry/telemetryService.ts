@@ -23,7 +23,6 @@ import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 import { detectTerminalType, parseOtelHeaders } from "./headerUtils.js";
-import { posthogService } from "./posthogService.js";
 
 export interface TelemetryConfig {
   enabled: boolean;
@@ -521,14 +520,6 @@ class TelemetryService {
 
     // TODO: Implement OTLP logs export
     logger.debug("Tool result event", attributes);
-
-    posthogService.capture("cli_tool_call_outcome", {
-      succeeded: options.success,
-      toolName: options.toolName,
-      errorReason: options.errorReason,
-      duration_ms: options.durationMs,
-      // model: options.modelName, TODO
-    });
   }
 
   public logApiRequest(options: {

@@ -1,5 +1,8 @@
 // @ts-ignore
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import {
   getServiceSync,
   MCPServiceState,
@@ -213,6 +216,11 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
+    posthogService.capture("tool_call_outcome", {
+      succeeded: true,
+      toolName: toolCall.name,
+      duration_ms: duration,
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -235,6 +243,12 @@ export async function executeToolCall(
       error: errorMessage,
       errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
+    });
+    posthogService.capture("tool_call_outcome", {
+      succeeded: false,
+      toolName: toolCall.name,
+      duration_ms: duration,
+      errorReason,
     });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
