@@ -116,7 +116,10 @@ export function FindAndReplaceDisplay({
     if (editingFileContents) {
       return editingFileContents;
     }
-    return edits?.map((edit) => edit.old_string ?? "").join("\n");
+    if (Array.isArray(edits)) {
+      return edits.map((edit) => edit.old_string ?? "").join("\n");
+    }
+    return "";
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
