@@ -213,15 +213,15 @@ EOF
           # Write prompt to temp file for better handling
           PROMPT_FILE="/tmp/continue-prompt-$.txt"
           cp review_prompt.txt "$PROMPT_FILE"
-          
-        # Use timeout to prevent hanging (240 seconds = 4 minutes)
-        if ! timeout 240 cn --config "$CONTINUE_ORG/$CONTINUE_CONFIG" -p "@$PROMPT_FILE" --allow Bash > code_review.md 2>cli_error.log; then
-          echo "Error: Continue CLI command failed"
-          echo "CLI error log:"
-          cat cli_error.log
-          
-          # Create fallback review
-          cat > code_review.md << 'EOF'
+
+          # Use timeout to prevent hanging (240 seconds = 4 minutes)
+          if ! timeout 240 cn --config "$CONTINUE_ORG/$CONTINUE_CONFIG" -p "@$PROMPT_FILE" --allow Bash > code_review.md 2>cli_error.log; then
+            echo "Error: Continue CLI command failed"
+            echo "CLI error log:"
+            cat cli_error.log
+
+            # Create fallback review
+            cat > code_review.md << 'EOF'
 ## Code Review Summary
 
 ⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
@@ -231,9 +231,9 @@ EOF
 - Check that the organization and config path are valid
 - Ensure the Continue service is accessible
 EOF
-        else
-          echo "Review generated successfully"
-        fi
+          else
+            echo "Review generated successfully"
+          fi
         fi
 
     - name: Upload Review Results

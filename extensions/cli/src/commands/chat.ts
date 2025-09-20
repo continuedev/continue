@@ -498,16 +498,11 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const { permissionOverrides } = processCommandFlags(options);
 
       // Initialize services with onboarding handled internally
-      const initResult = await initializeServices({
+      await initializeServices({
         options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
-
-      // If onboarding was completed, show success message
-      if (initResult.wasOnboarded) {
-        console.log(chalk.green("✓ Setup complete! Starting chat..."));
-      }
 
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {

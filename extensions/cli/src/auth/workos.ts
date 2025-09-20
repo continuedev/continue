@@ -22,7 +22,7 @@ export interface AuthenticatedConfig {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
-  organizationId: string | null; // null means personal organization
+  organizationId: string | null | undefined; // null means personal organization, undefined triggers auto-selection
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -74,7 +74,9 @@ export function getAccessToken(config: AuthConfig): string | null {
 /**
  * Gets the organization ID from any auth config type
  */
-export function getOrganizationId(config: AuthConfig): string | null {
+export function getOrganizationId(
+  config: AuthConfig,
+): string | null | undefined {
   if (config === null) return null;
   return config.organizationId;
 }
@@ -96,10 +98,9 @@ export function getModelName(config: AuthConfig): string | null {
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
-  autoSelectOrganization,
-  createUpdatedAuthConfig,
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
 } from "./workos.helpers.js";
@@ -360,7 +361,7 @@ async function pollForDeviceToken(
           accessToken: access_token,
           refreshToken: refresh_token,
           expiresAt: tokenExpiresAt,
-          organizationId: null,
+          organizationId: undefined, // undefined triggers auto-selection, null means personal org selected
         };
 
         // Save the config
@@ -563,20 +564,18 @@ export async function ensureOrganization(
     );
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authenticatedConfig.organizationId !== undefined) {
-    return authenticatedConfig;
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
+    return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // In headless mode, default to personal organization if none saved
-  if (isHeadless) {
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  }
-
-  // Need to select organization
-  return autoSelectOrganization(authenticatedConfig);
+  // User already has made a selection (org or config) - respect their choice
+  return authenticatedConfig;
 }
 
 /**
