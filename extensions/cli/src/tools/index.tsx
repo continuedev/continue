@@ -1,5 +1,8 @@
 // @ts-ignore
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import {
   getServiceSync,
   MCPServiceState,
@@ -12,7 +15,6 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 import { isModelCapable } from "../utils/index.js";
 
-import { posthogService } from "src/telemetry/posthogService.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";

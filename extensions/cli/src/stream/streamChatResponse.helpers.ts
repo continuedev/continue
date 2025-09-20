@@ -1,5 +1,6 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
@@ -19,7 +20,6 @@ import {
 import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
-import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
 // Helper function to handle permission denied
