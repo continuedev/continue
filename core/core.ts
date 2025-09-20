@@ -232,6 +232,17 @@ export class Core {
             return;
           }
 
+          // Check for disableIndexing to prevent race condition
+          const { config } = await this.configHandler.loadConfig();
+          if (!config || config.disableIndexing) {
+            void this.messenger.request("indexProgress", {
+              progress: 0,
+              desc: "Indexing is disabled",
+              status: "disabled",
+            });
+            return;
+          }
+
           void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
         });
       });
