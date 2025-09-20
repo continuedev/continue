@@ -4,7 +4,7 @@
 interface BasicMatchResult {
   /** The starting character index of the match in the file content */
   startIndex: number;
-  /** The ending character index of the match in the file content */
+  /** The ending character index of the match in the file content (NOT inclusive - e.g. like slice)*/
   endIndex: number;
 }
 
@@ -124,7 +124,7 @@ function whitespaceIgnoredMatch(
 
 /**
  * Calculate the Jaro similarity between two strings
- * TODO Re
+ * TODO Restore this functionality - current implementation has some kind of bug where it only returns one line for the match
  */
 function jaroSimilarity(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
@@ -321,4 +321,53 @@ export function findSearchMatch(
   }
 
   return null;
+}
+
+/**
+ * Find all matches for search content in file content.
+ * Uses the same matching strategies as findSearchMatch, applied iteratively.
+ *
+ * @param fileContent - The complete content of the file to search in
+ * @param searchContent - The content to search for
+ * @returns Array of match results with character positions, empty array if no matches found
+ */
+export function findSearchMatches(
+  fileContent: string,
+  searchContent: string,
+): SearchMatchResult[] {
+  const matches: SearchMatchResult[] = [];
+  let remainingContent = fileContent;
+  let currentOffset = 0;
+
+  while (remainingContent.length > 0) {
+    const match = findSearchMatch(remainingContent, searchContent);
+
+    if (match === null) {
+      break;
+    }
+
+    // Adjust match positions to account for the current offset
+    const adjustedMatch: SearchMatchResult = {
+      startIndex: match.startIndex + currentOffset,
+      endIndex: match.endIndex + currentOffset,
+      strategyName: match.strategyName,
+    };
+
+    // Prevent infinite loops by ensuring we're making progress
+    // If the new match starts at or before the last match's start position, break
+    if (
+      matches.length > 0 &&
+      adjustedMatch.startIndex <= matches[matches.length - 1].startIndex
+    ) {
+      break;
+    }
+
+    matches.push(adjustedMatch);
+
+    // Update offset and truncate content after the current match
+    currentOffset = adjustedMatch.endIndex;
+    remainingContent = fileContent.slice(currentOffset);
+  }
+
+  return matches;
 }

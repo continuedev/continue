@@ -1,12 +1,12 @@
+import {
+  performFindAndReplace,
+  validateSingleEdit,
+} from "core/edit/searchAndReplace/findAndReplaceUtils";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
-import {
-  performFindAndReplace,
-  validateSingleEdit,
-} from "./findAndReplaceUtils";
 
 export const singleFindAndReplaceImpl: ClientToolImpl = async (
   args,

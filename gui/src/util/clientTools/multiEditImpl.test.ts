@@ -1,8 +1,8 @@
+import { FOUND_MULTIPLE_FIND_STRINGS_ERROR } from "core/edit/searchAndReplace/findAndReplaceUtils";
 import * as ideUtils from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolExtras } from "./callClientTool";
-import { FOUND_MULTIPLE_FIND_STRINGS_ERROR } from "./findAndReplaceUtils";
 import { multiEditImpl } from "./multiEditImpl";
 
 vi.mock("uuid", () => ({

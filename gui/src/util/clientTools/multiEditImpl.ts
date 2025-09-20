@@ -1,3 +1,8 @@
+import {
+  performFindAndReplace,
+  validateCreatingForMultiEdit,
+  validateSingleEdit,
+} from "core/edit/searchAndReplace/findAndReplaceUtils";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import {
   inferResolvedUriFromRelativePath,
@@ -6,11 +11,6 @@ import {
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
-import {
-  performFindAndReplace,
-  validateCreatingForMultiEdit,
-  validateSingleEdit,
-} from "./findAndReplaceUtils";
 
 export const multiEditImpl: ClientToolImpl = async (
   args,

@@ -1,5 +1,9 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import {
+  performFindAndReplace,
+  trimEmptyLines,
+} from "core/edit/searchAndReplace/findAndReplaceUtils";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
@@ -13,10 +17,6 @@ import {
   selectApplyStateByToolCallId,
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
-import {
-  performFindAndReplace,
-  trimEmptyLines,
-} from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 

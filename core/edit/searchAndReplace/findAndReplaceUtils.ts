@@ -1,5 +1,5 @@
-import { EditOperation } from "core/tools/definitions/multiEdit";
-import { ContinueError, ContinueErrorReason } from "core/util/errors";
+import { EditOperation } from "../../tools/definitions/multiEdit";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const FOUND_MULTIPLE_FIND_STRINGS_ERROR =
   "Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.";
@@ -89,6 +89,7 @@ export function validateSingleEdit(
 
 export const EMPTY_NON_FIRST_EDIT_MESSAGE =
   "contains empty old_string. Only the first edit can contain an empty old_string, which is only used for file creation.";
+
 export function validateCreatingForMultiEdit(edits: EditOperation[]) {
   const isCreating = edits[0].old_string === "";
   if (edits.length > 1) {

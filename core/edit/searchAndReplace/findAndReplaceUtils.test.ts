@@ -1,5 +1,5 @@
-import { EditOperation } from "core/tools/definitions/multiEdit";
 import { describe, expect, it } from "vitest";
+import { EditOperation } from "../../tools/definitions/multiEdit";
 import {
   EMPTY_NON_FIRST_EDIT_MESSAGE,
   FOUND_MULTIPLE_FIND_STRINGS_ERROR,

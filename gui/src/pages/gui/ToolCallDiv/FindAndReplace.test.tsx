@@ -43,8 +43,8 @@ vi.mock("react", async () => {
 });
 
 // Import mocked modules
+import { performFindAndReplace } from "core/edit/searchAndReplace/findAndReplaceUtils";
 import { useAppSelector } from "../../../redux/hooks";
-import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
 
 const mockPost = vi.fn();
 const mockUseAppSelector = useAppSelector as any;
