@@ -234,6 +234,7 @@
               "guides/cli",
               "guides/continuous-ai",
               "guides/posthog-github-continuous-ai",
+              "guides/snyk-mcp-continue-cookbook",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
