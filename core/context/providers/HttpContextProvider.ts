@@ -68,25 +68,26 @@ class HttpContextProvider extends BaseContextProvider {
     const json = await response.json();
 
     try {
-const createContextItem = (item: any) => {
-  const contextItem = {
-    description: item.description ?? "HTTP Context Item",
-    content: item.content ?? "",
-    name: item.name ?? this.options.title ?? "HTTP",
-  };
+      const createContextItem = (item: any) => {
+        const contextItem = {
+          description: item.description ?? "HTTP Context Item",
+          content: item.content ?? "",
+          name: item.name ?? this.options.title ?? "HTTP",
+        };
 
-  if (item.uri && typeof item.uri === 'object') {
-    return {
-      ...contextItem,
-      uri: {
-        type: item.uri.type,
-        value: item.uri.value,
-      },
-    };
-  }
+        if (item.uri && typeof item.uri === "object") {
+          return {
+            ...contextItem,
+            uri: {
+              type: item.uri.type,
+              value: item.uri.value,
+            },
+          };
+        }
 
-  return contextItem;
-};      return Array.isArray(json)
+        return contextItem;
+      };
+      return Array.isArray(json)
         ? json.map(createContextItem)
         : [createContextItem(json)];
     } catch (e) {

@@ -1,4 +1,9 @@
-import type { ChatMessage, CompletionOptions, ContextProviderExtras, ILLM } from "../../index.js";
+import type {
+  ChatMessage,
+  CompletionOptions,
+  ContextProviderExtras,
+  ILLM,
+} from "../../index.js";
 import { LLMConfigurationStatuses } from "../../llm/constants.js";
 import HttpContextProvider from "./HttpContextProvider";
 
@@ -12,47 +17,64 @@ const mockLLM: ILLM = {
   completionOptions: {
     model: "test-model",
     temperature: 0.7,
-    maxTokens: 2048
+    maxTokens: 2048,
   },
   uniqueId: "test-id",
   providerName: "test",
   underlyingProviderName: "test",
   complete: async () => "test",
-  streamComplete: async function* (_prompt: string, _signal: AbortSignal, _options?: CompletionOptions) { 
-    yield "test"; 
+  streamComplete: async function* (
+    _prompt: string,
+    _signal: AbortSignal,
+    _options?: CompletionOptions,
+  ) {
+    yield "test";
     return {
-      prompt: "test", 
+      prompt: "test",
       response: "test",
       modelTitle: "test",
       modelProvider: "test",
       completion: "test",
       usage: undefined,
-      thinkingText: "test"
+      thinkingText: "test",
     };
   },
-  streamFim: async function* (_prefix: string, _suffix: string, _signal: AbortSignal, _options?: CompletionOptions) { 
-    yield "test"; 
+  streamFim: async function* (
+    _prefix: string,
+    _suffix: string,
+    _signal: AbortSignal,
+    _options?: CompletionOptions,
+  ) {
+    yield "test";
     return {
-      prompt: "test", 
+      prompt: "test",
       response: "test",
       modelTitle: "test",
       modelProvider: "test",
       completion: "test",
       usage: undefined,
-      thinkingText: "test"
+      thinkingText: "test",
     };
   },
-  chat: async (_messages: ChatMessage[], _signal: AbortSignal, _options?: CompletionOptions) => ({ role: "assistant", content: "test" }),
-  streamChat: async function* (_messages: ChatMessage[], _signal: AbortSignal, _options?: CompletionOptions) { 
+  chat: async (
+    _messages: ChatMessage[],
+    _signal: AbortSignal,
+    _options?: CompletionOptions,
+  ) => ({ role: "assistant", content: "test" }),
+  streamChat: async function* (
+    _messages: ChatMessage[],
+    _signal: AbortSignal,
+    _options?: CompletionOptions,
+  ) {
     yield { role: "assistant", content: "test" };
     return {
-      prompt: "test", 
+      prompt: "test",
       response: "test",
       modelTitle: "test",
       modelProvider: "test",
       completion: "test",
       usage: undefined,
-      thinkingText: "test"
+      thinkingText: "test",
     };
   },
   embed: async () => [[0, 0]],
@@ -77,12 +99,18 @@ describe("HttpContextProvider", () => {
     mockFetch = jest.fn();
 
     const mockIde = {
-      getIdeInfo: jest.fn().mockResolvedValue({ name: "test", version: "1.0.0", machineId: "test" }),
+      getIdeInfo: jest.fn().mockResolvedValue({
+        name: "test",
+        version: "1.0.0",
+        machineId: "test",
+      }),
       getIdeSettings: jest.fn().mockResolvedValue({}),
       getDiff: jest.fn().mockResolvedValue([]),
-      getClipboardContent: jest.fn().mockResolvedValue({ text: "", copiedAt: new Date().toISOString() }),
+      getClipboardContent: jest
+        .fn()
+        .mockResolvedValue({ text: "", copiedAt: new Date().toISOString() }),
       isTelemetryEnabled: jest.fn().mockResolvedValue(true),
-      isWorkspaceRemote: jest.fn().mockResolvedValue(false)
+      isWorkspaceRemote: jest.fn().mockResolvedValue(false),
     };
 
     const config = {
@@ -101,7 +129,7 @@ describe("HttpContextProvider", () => {
         rerank: [mockLLM],
         edit: [mockLLM],
         apply: [mockLLM],
-        summarize: [mockLLM]
+        summarize: [mockLLM],
       },
       selectedModelByRole: {
         chat: mockLLM,
@@ -110,8 +138,8 @@ describe("HttpContextProvider", () => {
         rerank: mockLLM,
         edit: mockLLM,
         apply: mockLLM,
-        summarize: mockLLM
-      }
+        summarize: mockLLM,
+      },
     };
 
     mockExtras = {
@@ -125,7 +153,7 @@ describe("HttpContextProvider", () => {
       selectedCode: [],
       isInAgentMode: false,
       hideSelf: false,
-      useCache: false
+      useCache: false,
     } as unknown as ContextProviderExtras;
 
     provider = new HttpContextProvider({
@@ -143,16 +171,16 @@ describe("HttpContextProvider", () => {
         name: "Test Name",
         uri: {
           type: "file",
-          value: "/test/file.txt"
-        }
+          value: "/test/file.txt",
+        },
       };
-      
+
       mockFetch.mockResolvedValue({
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await provider.getContextItems("test query", mockExtras);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         description: "Test Description",
@@ -160,8 +188,8 @@ describe("HttpContextProvider", () => {
         name: "Test Name",
         uri: {
           type: "file",
-          value: "/test/file.txt"
-        }
+          value: "/test/file.txt",
+        },
       });
     });
 
@@ -169,21 +197,21 @@ describe("HttpContextProvider", () => {
       const mockResponse = {
         description: "Test Description",
         content: "Test Content",
-        name: "Test Name"
+        name: "Test Name",
       };
-      
+
       mockFetch.mockResolvedValue({
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await provider.getContextItems("test query", mockExtras);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         description: "Test Description",
         content: "Test Content",
         name: "Test Name",
-        uri: undefined
+        uri: undefined,
       });
     });
 
@@ -192,21 +220,21 @@ describe("HttpContextProvider", () => {
         description: "Test Description",
         content: "Test Content",
         name: "Test Name",
-        uri: null
+        uri: null,
       };
-      
+
       mockFetch.mockResolvedValue({
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await provider.getContextItems("test query", mockExtras);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         description: "Test Description",
         content: "Test Content",
         name: "Test Name",
-        uri: undefined
+        uri: undefined,
       });
     });
 
@@ -216,21 +244,21 @@ describe("HttpContextProvider", () => {
           description: "Item 1",
           content: "Content 1",
           name: "Name 1",
-          uri: { type: "file", value: "/test/1.txt" }
+          uri: { type: "file", value: "/test/1.txt" },
         },
         {
           description: "Item 2",
           content: "Content 2",
-          name: "Name 2"
-        }
+          name: "Name 2",
+        },
       ];
-      
+
       mockFetch.mockResolvedValue({
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await provider.getContextItems("test query", mockExtras);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].uri).toBeDefined();
       expect(result[1].uri).toBeUndefined();
