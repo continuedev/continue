@@ -358,6 +358,31 @@ export async function streamChatResponse(
     }
     logger.debug("Starting conversation iteration");
 
+    // Pre-API auto-compaction checkpoint
+    const { wasCompacted: preCompacted, chatHistory: preCompactHistory } =
+      await handleAutoCompaction(chatHistory, model, llmApi, {
+        isHeadless,
+        callbacks: {
+          onSystemMessage: callbacks?.onSystemMessage,
+          onContent: callbacks?.onContent,
+        },
+      });
+
+    if (preCompacted) {
+      logger.debug("Pre-API compaction occurred, updating chat history");
+      // Update chat history after pre-compaction
+      const chatHistorySvc2 = services.chatHistory;
+      if (
+        typeof chatHistorySvc2?.isReady === "function" &&
+        chatHistorySvc2.isReady()
+      ) {
+        chatHistorySvc2.setHistory(preCompactHistory);
+        chatHistory = chatHistorySvc2.getHistory();
+      } else {
+        chatHistory = [...preCompactHistory];
+      }
+    }
+
     // Recompute tools on each iteration to handle mode changes during streaming
     const tools = await getAllTools();
 
