@@ -408,6 +408,12 @@ class VsCodeIde implements IDE {
     await vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
+  async getExternalUri(uri: string): Promise<string> {
+    const vsCodeUri = vscode.Uri.parse(uri);
+    const externalUri = await vscode.env.asExternalUri(vsCodeUri);
+    return externalUri.toString(true);
+  }
+
   async getOpenFiles(): Promise<string[]> {
     return this.ideUtils.getOpenFiles().map((uri) => uri.toString());
   }
