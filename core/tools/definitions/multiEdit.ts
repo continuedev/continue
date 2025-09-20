@@ -50,12 +50,6 @@ CRITICAL REQUIREMENTS:
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked
 - Use replace_all for replacing and renaming all matches for a string across the file. This parameter is useful if you want to rename a variable, for instance
 
-If you want to create a new file, use:
-- A new file path, including new directory if needed
-- First edit: empty old_string and the new file's contents as new_string
-- Subsequent edits are not allowed - there is no need since you are creating
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required
-
 WARNINGS:
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)

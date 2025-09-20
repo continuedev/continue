@@ -27,7 +27,7 @@ export const cancelToolCallThunk = createAsyncThunk<
 
   if (toolCallState) {
     // Track tool call rejection
-    posthog.capture("gui_tool_call_decision", {
+    posthog.capture("tool_call_decision", {
       model: selectedChatModel,
       decision: "reject",
       toolName: toolCallState.toolCall.function.name,
