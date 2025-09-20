@@ -7,13 +7,17 @@
     "tsc:watch:core": "tsc --project core/tsconfig.json --watch --noEmit --pretty",
     "tsc:watch:binary": "tsc --project binary/tsconfig.json --watch --noEmit --pretty",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore --ignore-path .prettierignore",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore --ignore-path .prettierignore"
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "lint:core": "cd core && npm run lint",
+    "lint:vscode": "cd extensions/vscode && npm run lint",
+    "lint:all": "npm run lint:core && npm run lint:vscode"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/parser": "^8.44.0",
     "concurrently": "^9.1.2",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.3.3",
