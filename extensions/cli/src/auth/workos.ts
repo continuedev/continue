@@ -12,9 +12,6 @@ if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
 
-// Config file path
-const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
-
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
   userId: string;
@@ -98,6 +95,7 @@ export function getModelName(config: AuthConfig): string | null {
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import { AUTH_CONFIG_PATH } from "./authEnv.js";
 import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
