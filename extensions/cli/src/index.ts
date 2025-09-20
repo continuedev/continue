@@ -19,6 +19,8 @@ import {
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
+import { posthogService } from "./telemetry/posthogService.js";
+import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
@@ -62,8 +64,7 @@ export function enableSigintHandler() {
       if (tuiUnmount) {
         tuiUnmount();
       }
-      await sentryService.flush();
-      process.exit(0);
+      await gracefulExit(0);
     } else {
       // First Ctrl+C or too much time elapsed - show exit message
       lastCtrlCTime = now;
@@ -106,6 +107,11 @@ process.on("uncaughtException", (error) => {
   // Don't exit the process, just log the error
 });
 
+// keyboard interruption handler for non-TUI flows
+process.on("SIGINT", async () => {
+  await gracefulExit(130);
+});
+
 const program = new Command();
 
 program
@@ -131,6 +137,8 @@ addCommonOptions(program)
   .option("--resume", "Resume from last session")
   .option("--fork <sessionId>", "Fork from an existing session ID")
   .action(async (prompt, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "cn" });
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -217,7 +225,7 @@ addCommonOptions(program)
       safeStderr('  cn -p "please review my current git diff"\n');
       safeStderr('  echo "hello" | cn -p\n');
       safeStderr('  cn -p "analyze the code in src/"\n');
-      process.exit(1);
+      await gracefulExit(1);
     }
 
     // Map --print to headless mode
@@ -231,6 +239,8 @@ program
   .command("login")
   .description("Authenticate with Continue")
   .action(async () => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "login" });
     await login();
   });
 
@@ -239,6 +249,8 @@ program
   .command("logout")
   .description("Log out from Continue")
   .action(async () => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "logout" });
     await logout();
   });
 
@@ -248,6 +260,8 @@ program
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "ls" });
     await listSessionsCommand({
       format: options.json ? "json" : undefined,
     });
@@ -280,6 +294,11 @@ addCommonOptions(
     "Specify the repository URL to use in the remote environment",
   )
   .action(async (prompt: string | undefined, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", {
+      command: "remote",
+      flagS: options.start,
+    });
     await remote(prompt, options);
   });
 
@@ -294,6 +313,8 @@ program
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .action(async (prompt, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "serve" });
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
 
@@ -311,6 +332,8 @@ program
   .description("Test remote TUI mode with a local server")
   .option("--url <url>", "Server URL (default: http://localhost:8000)")
   .action(async (prompt: string | undefined, options) => {
+    // Telemetry: record command invocation
+    await posthogService.capture("cliCommand", { command: "remote-test" });
     await remoteTest(prompt, options.url);
   });
 
@@ -318,7 +341,7 @@ program
 program.on("command:*", () => {
   console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
   program.outputHelp();
-  process.exit(1);
+  void gracefulExit(1);
 });
 
 export async function runCli(): Promise<void> {
@@ -334,7 +357,6 @@ export async function runCli(): Promise<void> {
   }
 
   process.on("SIGTERM", async () => {
-    await sentryService.flush();
-    process.exit(0);
+    await gracefulExit(0);
   });
 }

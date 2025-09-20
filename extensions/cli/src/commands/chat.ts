@@ -22,6 +22,7 @@ import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
+import { gracefulExit } from "../util/exit.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import {
@@ -96,7 +97,7 @@ export async function initializeChatHistory(
       return newSession.history;
     } else {
       logger.error(chalk.red(`Session with ID "${options.fork}" not found.`));
-      process.exit(1);
+      await gracefulExit(1);
     }
   }
 
@@ -497,16 +498,11 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const { permissionOverrides } = processCommandFlags(options);
 
       // Initialize services with onboarding handled internally
-      const initResult = await initializeServices({
+      await initializeServices({
         options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
-
-      // If onboarding was completed, show success message
-      if (initResult.wasOnboarded) {
-        console.log(chalk.green("✓ Setup complete! Starting chat..."));
-      }
 
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {
@@ -545,7 +541,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       context: "chat_command_fatal",
       headless: options.headless,
     });
-    process.exit(1);
+    await gracefulExit(1);
   } finally {
     // Stop active time tracking
     telemetryService.stopActiveTime();

@@ -1,3 +1,50 @@
+type ProcessWithEnv = {
+  env?: Record<string, string | undefined>;
+};
+
+function getProcessEnv(): Record<string, string | undefined> | undefined {
+  if (
+    typeof process !== "undefined" &&
+    process &&
+    typeof process === "object"
+  ) {
+    return (process as ProcessWithEnv).env;
+  }
+
+  if (typeof globalThis !== "undefined") {
+    const maybeProcess = (globalThis as { process?: ProcessWithEnv }).process;
+    return maybeProcess?.env;
+  }
+
+  return undefined;
+}
+
+function getHomeDirectory(): string | undefined {
+  const env = getProcessEnv();
+
+  const fromHome = env?.HOME?.trim();
+  if (fromHome) {
+    return fromHome;
+  }
+
+  const fromUserProfile = env?.USERPROFILE?.trim();
+  if (fromUserProfile) {
+    return fromUserProfile;
+  }
+
+  return undefined;
+}
+
+function expandLeadingTilde(identifier: string): string {
+  const homeDirectory = getHomeDirectory();
+  if (!homeDirectory) {
+    return identifier;
+  }
+
+  // Only replace a leading ~ so relative paths like ../~file stay untouched
+  return homeDirectory + identifier.slice(1);
+}
+
 export interface PackageSlug {
   ownerSlug: string;
   packageSlug: string;
@@ -61,13 +108,18 @@ export function decodePackageIdentifier(identifier: string): PackageIdentifier {
       fileUri: identifier.substring(7),
     };
   }
-  // Otherwise, it's a slug
-  else {
+  // support ~ by replacing with home directory
+  else if (identifier.startsWith("~")) {
     return {
-      uriType: "slug",
-      fullSlug: decodeFullSlug(identifier),
+      uriType: "file",
+      fileUri: expandLeadingTilde(identifier),
     };
   }
+  // Otherwise, it's a slug
+  return {
+    uriType: "slug",
+    fullSlug: decodeFullSlug(identifier),
+  };
 }
 
 export enum VirtualTags {

@@ -1,20 +1,20 @@
-name: 'Continue PR Review'
-description: 'Automated code review for pull requests using Continue CLI'
-author: 'Continue Dev, Inc.'
+name: "Continue PR Review"
+description: "Automated code review for pull requests using Continue CLI"
+author: "Continue Dev, Inc."
 
 inputs:
   continue-api-key:
-    description: 'API key for Continue service'
+    description: "API key for Continue service"
     required: true
   continue-org:
-    description: 'Organization for Continue config'
+    description: "Organization for Continue config"
     required: true
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -27,7 +27,7 @@ runs:
       run: |
         # Check if this action should run based on event type and user permissions
         SHOULD_RUN="false"
-        
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           # Check if PR is a draft
           if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
@@ -56,7 +56,7 @@ runs:
         else
           echo "::notice::Skipping review - Unsupported event type: ${{ github.event_name }}"
         fi
-        
+
         echo "SHOULD_RUN=$SHOULD_RUN" >> $GITHUB_ENV
 
     - name: Setup Node.js
@@ -180,7 +180,7 @@ runs:
           echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
           exit 1
         fi
-        
+
         if [[ ! "$CONTINUE_CONFIG" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
           echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
           exit 1
@@ -294,5 +294,5 @@ runs:
           }
 
 branding:
-  icon: 'code'
-  color: 'blue'
+  icon: "code"
+  color: "blue"

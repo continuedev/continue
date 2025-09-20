@@ -210,26 +210,28 @@ export function testChat(
   });
 
   test("should acknowledge system message in chat", async () => {
-    const response = await api.chatCompletionNonStream(
-      {
-        model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Regardless of what is asked of you, your answer should start with 'RESPONSE: '.",
-          },
-          { role: "user", content: "Who are you?" },
-        ],
-        stream: false,
-      },
-      new AbortController().signal,
-    );
-    expect(response.choices.length).toBeGreaterThan(0);
-    const completion = response.choices[0].message.content;
-    expect(typeof completion).toBe("string");
-    expect(completion?.length).toBeGreaterThan(0);
-    expect(completion?.startsWith("RESPONSE: ")).toBe(true);
+    if (options?.skipSystemMessage !== true) {
+      const response = await api.chatCompletionNonStream(
+        {
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Regardless of what is asked of you, your answer should start with 'RESPONSE: '.",
+            },
+            { role: "user", content: "Who are you?" },
+          ],
+          stream: false,
+        },
+        new AbortController().signal,
+      );
+      expect(response.choices.length).toBeGreaterThan(0);
+      const completion = response.choices[0].message.content;
+      expect(typeof completion).toBe("string");
+      expect(completion?.length).toBeGreaterThan(0);
+      expect(completion?.startsWith("RESPONSE: ")).toBe(true);
+    }
   });
 
   if (options?.skipTools === false) {
@@ -315,14 +317,14 @@ export function testChat(
                     arguments: '{"name":"Nate"}',
                     name: "say_hello",
                   },
-                  id: "tool_call_1",
+                  id: "toolcall1", // mistral requires alphanumeric length of 9
                   type: "function",
                 },
               ],
             },
             {
               role: "tool",
-              tool_call_id: "tool_call_1",
+              tool_call_id: "toolcall1",
               content: "Nate was greeted",
             },
           ],

@@ -50,12 +50,10 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  Type ${chalk.cyan("/")} to see available slash commands`,
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
-  posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
 }
 
 async function handleLogin() {
-  posthogService.capture("useSlashCommand", { name: "login" });
   try {
     const newAuthState = await services.auth.login();
     await reloadService(SERVICE_NAMES.AUTH);
@@ -81,7 +79,6 @@ async function handleLogin() {
 }
 
 async function handleLogout() {
-  posthogService.capture("useSlashCommand", { name: "logout" });
   try {
     await services.auth.logout();
     return {
@@ -97,7 +94,6 @@ async function handleLogout() {
 }
 
 function handleWhoami() {
-  posthogService.capture("useSlashCommand", { name: "whoami" });
   if (isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
@@ -120,8 +116,6 @@ function handleWhoami() {
 }
 
 async function handleFork() {
-  posthogService.capture("useSlashCommand", { name: "fork" });
-
   try {
     const currentSession = getCurrentSession();
     const forkCommand = `cn --fork ${currentSession.sessionId}`;
@@ -177,15 +171,12 @@ function handleTitle(args: string[]) {
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
-    posthogService.capture("useSlashCommand", { name: "clear" });
     return { clear: true, output: "Chat history cleared" };
   },
   exit: () => {
-    posthogService.capture("useSlashCommand", { name: "exit" });
     return { exit: true, output: "Goodbye!" };
   },
   config: () => {
-    posthogService.capture("useSlashCommand", { name: "config" });
     return { openConfigSelector: true };
   },
   login: handleLogin,
@@ -194,15 +185,12 @@ const commandHandlers: Record<string, CommandHandler> = {
   info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
-    posthogService.capture("useSlashCommand", { name: "compact" });
     return { compact: true };
   },
   mcp: () => {
-    posthogService.capture("useSlashCommand", { name: "mcp" });
     return { openMcpSelector: true };
   },
   resume: () => {
-    posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
   },
   fork: handleFork,
@@ -211,24 +199,16 @@ const commandHandlers: Record<string, CommandHandler> = {
     posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
   },
+  update: () => {
+    return { openUpdateSelector: true };
+  },
 };
 
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
   options?: { remoteUrl?: string; isRemoteMode?: boolean },
-): Promise<{
-  output?: string;
-  exit?: boolean;
-  newInput?: string;
-  clear?: boolean;
-  openConfigSelector?: boolean;
-  openModelSelector?: boolean;
-  openMCPSelector?: boolean;
-  openSessionSelector?: boolean;
-  compact?: boolean;
-  diffContent?: string;
-} | null> {
+): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
     return null;

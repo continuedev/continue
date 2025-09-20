@@ -55,7 +55,7 @@ export async function loadConfiguration(
   const config = await loadFromSource(
     configSource,
     accessToken,
-    organizationId,
+    organizationId ?? null,
     apiClient,
   );
 

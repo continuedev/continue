@@ -27,7 +27,7 @@ export interface AuthenticatedConfig {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
-  organizationId: string | null; // null means personal organization
+  organizationId: string | null | undefined; // null means personal organization, undefined triggers auto-selection
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -79,7 +79,9 @@ export function getAccessToken(config: AuthConfig): string | null {
 /**
  * Gets the organization ID from any auth config type
  */
-export function getOrganizationId(config: AuthConfig): string | null {
+export function getOrganizationId(
+  config: AuthConfig,
+): string | null | undefined {
   if (config === null) return null;
   return config.organizationId;
 }
@@ -101,10 +103,9 @@ export function getModelName(config: AuthConfig): string | null {
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
-  autoSelectOrganization,
-  createUpdatedAuthConfig,
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
 } from "./workos.helpers.js";
@@ -367,7 +368,7 @@ async function pollForDeviceToken(
           accessToken: access_token,
           refreshToken: refresh_token,
           expiresAt: tokenExpiresAt,
-          organizationId: null,
+          organizationId: undefined, // undefined triggers auto-selection, null means personal org selected
         };
 
         // Save the config
@@ -547,8 +548,10 @@ export async function ensureOrganization(
       );
     }
   } else if (isEnvironmentAuthConfig(authConfig)) {
-    // No CLI organization slug (or "personal" was specified) - return as-is
-    return authConfig;
+    // No CLI organization slug (or "personal" was specified)
+    // If using API key auth, attempt to resolve its organization scope once
+    const resolved = await resolveOrgScopeForApiKey(authConfig);
+    return resolved;
   }
 
   // If not authenticated, return as-is
@@ -568,20 +571,71 @@ export async function ensureOrganization(
     );
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authenticatedConfig.organizationId !== undefined) {
-    return authenticatedConfig;
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
+    return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // In headless mode, default to personal organization if none saved
-  if (isHeadless) {
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
+  // User already has made a selection (org or config) - respect their choice
+  return authenticatedConfig;
+}
+
+/**
+ * Attempts to resolve the organization scope for API key auth (environment-based auth).
+ * Calls a lightweight backend endpoint to determine if the API key is an org-scoped key.
+ * If successful, returns a new EnvironmentAuthConfig with organizationId set; otherwise returns the original config.
+ */
+async function resolveOrgScopeForApiKey(
+  envConfig: EnvironmentAuthConfig,
+): Promise<EnvironmentAuthConfig> {
+  // If already set (including explicit null), return as-is
+  if (envConfig.organizationId !== null) {
+    return envConfig;
   }
 
-  // Need to select organization
-  return autoSelectOrganization(authenticatedConfig);
+  const accessToken = envConfig.accessToken;
+  if (!accessToken) return envConfig;
+
+  try {
+    // Prefer a dedicated endpoint for scope discovery. This should return JSON like:
+    // { organizationId: string | null } (aka orgScopeId)
+    const url = new URL("auth/scope", env.apiBase);
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      // Gracefully ignore if the endpoint isn't available yet (e.g., 404) or other non-2xx errors
+      return envConfig;
+    }
+
+    const data: any = await resp.json().catch(() => ({}));
+    const orgId =
+      data?.organizationId ??
+      data?.orgScopeId ??
+      data?.organization?.id ??
+      null;
+
+    if (orgId && typeof orgId === "string") {
+      return {
+        ...envConfig,
+        organizationId: orgId,
+      };
+    }
+  } catch {
+    // Network or parsing issues: leave config unchanged
+  }
+
+  return envConfig;
 }
 
 /**

@@ -95,3 +95,22 @@ export function validateCreatingForMultiEdit(edits: EditOperation[]) {
 
   return isCreating;
 }
+
+export function trimEmptyLines({
+  lines,
+  fromEnd,
+}: {
+  lines: string[];
+  fromEnd: boolean;
+}): string[] {
+  lines = fromEnd ? lines.toReversed() : lines.slice();
+  const newLines: string[] = [];
+  let shouldContinueRemoving = true;
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (shouldContinueRemoving && line.trim() === "") continue;
+    shouldContinueRemoving = false;
+    newLines.push(line);
+  }
+  return fromEnd ? newLines.reverse() : newLines;
+}

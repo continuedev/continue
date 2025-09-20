@@ -47,7 +47,7 @@ export function countChatHistoryItemTokens(
         // Images and other content types have their own token costs
         // but we'll use a rough estimate for now
         if (part.type === "imageUrl") {
-          tokenCount += 85; // Rough estimate for image tokens
+          tokenCount += 1024; // Rough estimate for image tokens
         }
       }
     }
@@ -191,4 +191,47 @@ export function shouldAutoCompact(
 export function getAutoCompactMessage(model: ModelConfig): string {
   const limit = getModelContextLimit(model);
   return `Approaching context limit (${(limit / 1000).toFixed(0)}K tokens). Auto-compacting chat history...`;
+}
+
+/**
+ * Validates that the input tokens + max_tokens don't exceed context limit
+ * @param chatHistory The chat history to validate
+ * @param model The model configuration
+ * @returns Validation result with error details if invalid
+ */
+export function validateContextLength(
+  chatHistory: ChatHistoryItem[],
+  model: ModelConfig,
+): {
+  isValid: boolean;
+  error?: string;
+  inputTokens?: number;
+  contextLimit?: number;
+  maxTokens?: number;
+} {
+  const inputTokens = countChatHistoryTokens(chatHistory);
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
+
+  // If maxTokens is not set, use 35% default reservation for output
+  const reservedForOutput =
+    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
+  const totalRequired = inputTokens + reservedForOutput;
+
+  if (totalRequired > contextLimit) {
+    return {
+      isValid: false,
+      error: `Context length exceeded: input (${inputTokens.toLocaleString()}) + max_tokens (${reservedForOutput.toLocaleString()}) = ${totalRequired.toLocaleString()} > context_limit (${contextLimit.toLocaleString()})`,
+      inputTokens,
+      contextLimit,
+      maxTokens: reservedForOutput,
+    };
+  }
+
+  return {
+    isValid: true,
+    inputTokens,
+    contextLimit,
+    maxTokens: reservedForOutput,
+  };
 }

@@ -14,6 +14,7 @@ import {
   ConfigServiceState,
   MCPServiceState,
   ModelServiceState,
+  UpdateServiceState,
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
@@ -93,7 +94,8 @@ function useTUIChatServices(remoteUrl?: string) {
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    update: UpdateServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient", "update"]);
 
   return { services, allServicesReady, isRemoteMode };
 }
@@ -231,6 +233,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
+    onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,

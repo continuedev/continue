@@ -1,6 +1,8 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import { UpdateServiceState } from "src/services/types.js";
+
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
@@ -8,6 +10,7 @@ import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
+import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
 import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
@@ -43,6 +46,14 @@ interface ScreenContentProps {
   diffContent?: string;
 }
 
+function hideScreenContent(state?: UpdateServiceState) {
+  return (
+    (state?.status === "checking" && state?.autoUpdate) ||
+    (state?.isAutoUpdate &&
+      (state?.status === "updating" || state?.status === "updated"))
+  );
+}
+
 export const ScreenContent: React.FC<ScreenContentProps> = ({
   isScreenActive,
   navState,
@@ -67,6 +78,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   onImageInClipboardChange,
   diffContent,
 }) => {
+  if (hideScreenContent(services.update)) {
+    return null;
+  }
+
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
     return (
@@ -106,6 +121,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   if (isScreenActive("mcp")) {
     return <MCPSelector onCancel={closeCurrentScreen} />;
+  }
+
+  if (isScreenActive("update")) {
+    return <UpdateSelector onCancel={closeCurrentScreen} />;
   }
 
   // Model selector
