@@ -19,13 +19,17 @@ export const listFilesTool: Tool = {
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
+    let { dirpath } = args;
+    if (dirpath.startsWith("./")) {
+      dirpath = dirpath.slice(2);
+    }
     return {
       args,
       preview: [
         {
           type: "text",
-          content: args.dirpath
-            ? `Will list files in: ${formatToolArgument(args.dirpath)}`
+          content: dirpath
+            ? `Will list files in: ${formatToolArgument(dirpath)}`
             : "Will list files in current directory",
         },
       ],
@@ -33,24 +37,29 @@ export const listFilesTool: Tool = {
   },
   run: async (args: { dirpath: string }): Promise<string> => {
     try {
-      if (!fs.existsSync(args.dirpath)) {
-        return `Error: Directory does not exist: ${args.dirpath}`;
+      let { dirpath } = args;
+      if (dirpath.startsWith("./")) {
+        dirpath = dirpath.slice(2);
       }
 
-      if (!fs.statSync(args.dirpath).isDirectory()) {
-        return `Error: Path is not a directory: ${args.dirpath}`;
+      if (!fs.existsSync(dirpath)) {
+        return `Error: Directory does not exist: ${dirpath}`;
       }
 
-      const files = fs.readdirSync(args.dirpath);
+      if (!fs.statSync(dirpath).isDirectory()) {
+        return `Error: Path is not a directory: ${dirpath}`;
+      }
+
+      const files = fs.readdirSync(dirpath);
       const fileDetails = files.map((file) => {
-        const fullPath = path.join(args.dirpath, file);
+        const fullPath = path.join(dirpath, file);
         const stats = fs.statSync(fullPath);
         const type = stats.isDirectory() ? "directory" : "file";
         const size = stats.isFile() ? `${stats.size} bytes` : "";
         return `${file} (${type}${size ? `, ${size}` : ""})`;
       });
 
-      return `Files in ${args.dirpath}:\n${fileDetails.join("\n")}`;
+      return `Files in ${dirpath}:\n${fileDetails.join("\n")}`;
     } catch (error) {
       return `Error listing files: ${
         error instanceof Error ? error.message : String(error)
