@@ -1,6 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
 
+import {
+  validateAllEdits,
+  validateMultiEditArgs,
+} from "core/edit/searchAndReplace/multiEditValidation.js";
+import { executeMultiFindAndReplace } from "core/edit/searchAndReplace/performReplace.js";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
@@ -25,30 +30,17 @@ export interface MultiEditArgs {
   edits: EditOperation[];
 }
 
-// Helper functions for multiEdit validation
-function validateMultiEditArgs(args: any): {
+// File system specific validation
+function validateAndResolveFilePath(args: any): {
   original_path: string;
   resolved_path: string;
-  edits: EditOperation[];
 } {
-  const { file_path, edits } = args as MultiEditArgs;
+  const { file_path } = args as MultiEditArgs;
 
   if (!file_path) {
     throw new ContinueError(
       ContinueErrorReason.FindAndReplaceMissingFilepath,
       "file_path is required",
-    );
-  }
-  if (!edits || !Array.isArray(edits)) {
-    throw new ContinueError(
-      ContinueErrorReason.MultiEditEditsArrayRequired,
-      "edits array is required",
-    );
-  }
-  if (edits.length === 0) {
-    throw new ContinueError(
-      ContinueErrorReason.MultiEditEditsArrayEmpty,
-      "edits array must contain at least one edit",
     );
   }
 
@@ -59,85 +51,23 @@ function validateMultiEditArgs(args: any): {
 
   const resolvedPath = fs.realpathSync(absolutePath);
 
-  return { original_path: file_path, resolved_path: resolvedPath, edits };
-}
-
-function validateEdits(edits: EditOperation[]): void {
-  for (let i = 0; i < edits.length; i++) {
-    const edit = edits[i];
-    if (!edit.old_string && edit.old_string !== "") {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingOldString,
-        `Edit ${i + 1}: old_string is required`,
-      );
-    }
-    if (edit.new_string === undefined) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingNewString,
-        `Edit ${i + 1}: new_string is required`,
-      );
-    }
-    if (edit.old_string === edit.new_string) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceIdenticalStrings,
-        `Edit ${i + 1}: old_string and new_string must be different`,
-      );
-    }
-  }
+  return { original_path: file_path, resolved_path: resolvedPath };
 }
 
 function validateFileAccess(resolvedPath: string): void {
+  // Check if file exists first
+  if (!fs.existsSync(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
+      `File ${resolvedPath} does not exist. This tool cannot create new files.`,
+    );
+  }
   // Check if file has been read
   if (!readFilesSet.has(resolvedPath)) {
     throw new ContinueError(
       ContinueErrorReason.EditToolFileNotRead,
       `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
     );
-  }
-  if (!fs.existsSync(resolvedPath)) {
-    throw new ContinueError(
-      ContinueErrorReason.FileNotFound,
-      `File ${resolvedPath} does not exist`,
-    );
-  }
-}
-
-function applyEdit(
-  content: string,
-  edit: EditOperation,
-  editIndex: number,
-): string {
-  const { old_string, new_string, replace_all = false } = edit;
-
-  // Validate that old_string is not empty (no file creation allowed)
-  if (old_string === "") {
-    throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceMissingOldString,
-      `Edit ${editIndex + 1}: old_string cannot be empty. File creation is not allowed.`,
-    );
-  }
-
-  // Check if old_string exists in current content
-  if (!content.includes(old_string)) {
-    throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceOldStringNotFound,
-      `Edit ${editIndex + 1}: String not found in file: "${old_string}"`,
-    );
-  }
-
-  if (replace_all) {
-    // Replace all occurrences
-    return content.split(old_string).join(new_string);
-  } else {
-    // Replace only the first occurrence, but check for uniqueness
-    const occurrences = content.split(old_string).length - 1;
-    if (occurrences > 1) {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMultipleOccurrences,
-        `Edit ${editIndex + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-      );
-    }
-    return content.replace(old_string, new_string);
   }
 }
 
@@ -170,12 +100,15 @@ CRITICAL REQUIREMENTS:
 - Always use absolute file paths (starting with /)
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
 - Use replace_all for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.
+- Empty old_string can be used to insert content at the beginning of a file
 
 WARNINGS:
+- This tool cannot create new files - the file must already exist
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
 - The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
-- The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session`,
+- The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session
+- The tool will fail if the file does not exist - it cannot create new files`,
   parameters: {
     file_path: {
       type: "string",
@@ -193,26 +126,24 @@ WARNINGS:
     },
   },
   preprocess: async (args) => {
-    // Validate and extract arguments
-    const { resolved_path, edits } = validateMultiEditArgs(args);
+    // Validate file path (CLI specific)
+    const { resolved_path } = validateAndResolveFilePath(args);
+
+    // Validate edits (shared logic)
+    const { edits } = validateMultiEditArgs(args);
+    validateAllEdits(edits);
 
     throwIfFileIsSecurityConcern(resolved_path);
 
-    // Validate each edit operation
-    validateEdits(edits);
-
-    // Validate file access
+    // Validate file access (CLI specific)
     validateFileAccess(resolved_path);
 
     // Read current file content
     const currentContent = fs.readFileSync(resolved_path, "utf-8");
     const originalContent = currentContent;
-    let newContent = currentContent;
 
-    // Apply all edits sequentially
-    for (let i = 0; i < edits.length; i++) {
-      newContent = applyEdit(newContent, edits[i], i);
-    }
+    // Apply all edits using shared logic with findSearchMatch
+    const newContent = executeMultiFindAndReplace(currentContent, edits);
 
     // Generate diff for preview
     const diff = generateDiff(originalContent, newContent, resolved_path);
@@ -227,7 +158,7 @@ WARNINGS:
       preview: [
         {
           type: "text",
-          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${resolved_path}:`,
+          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to modify ${resolved_path}:`,
         },
         {
           type: "diff",

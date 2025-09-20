@@ -1,7 +1,8 @@
 import {
-  performFindAndReplace,
-  validateSingleEdit,
-} from "core/edit/searchAndReplace/findAndReplaceUtils";
+  validateAllEdits,
+  validateMultiEditArgs,
+} from "core/edit/searchAndReplace/multiEditValidation";
+import { executeMultiFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
@@ -13,45 +14,21 @@ export const multiEditImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, edits, editingFileContents } = args;
+  const { filepath, editingFileContents } = args;
 
   const streamId = uuid();
 
-  // Validate arguments
+  // Validate filepath (GUI specific)
   if (!filepath) {
     throw new ContinueError(
       ContinueErrorReason.FindAndReplaceMissingFilepath,
       "filepath is required",
     );
   }
-  if (!edits || !Array.isArray(edits)) {
-    throw new ContinueError(
-      ContinueErrorReason.MultiEditEditsArrayRequired,
-      "edits array is required",
-    );
-  }
-  if (edits.length === 0) {
-    throw new ContinueError(
-      ContinueErrorReason.MultiEditEditsArrayEmpty,
-      "edits array must contain at least one edit",
-    );
-  }
 
-  // Validate each edit operation
-  for (let i = 0; i < edits.length; i++) {
-    const edit = edits[i];
-    validateSingleEdit(edit.old_string, edit.new_string, i);
-  }
-
-  // Validate that no edit has empty old_string (file creation not allowed)
-  for (let i = 0; i < edits.length; i++) {
-    if (edits[i].old_string === "") {
-      throw new ContinueError(
-        ContinueErrorReason.FindAndReplaceMissingOldString,
-        `edit at index ${i}: old_string cannot be empty. File creation is not allowed.`,
-      );
-    }
-  }
+  // Validate edits using shared logic
+  const { edits } = validateMultiEditArgs(args);
+  validateAllEdits(edits);
 
   const resolvedUri = await resolveRelativePathInDir(
     filepath,
@@ -61,25 +38,17 @@ export const multiEditImpl: ClientToolImpl = async (
   if (!resolvedUri) {
     throw new ContinueError(
       ContinueErrorReason.FileNotFound,
-      `file ${filepath} does not exist`,
+      `file ${filepath} does not exist. This tool cannot create new files.`,
     );
   }
 
-  let newContent =
+  const currentContent =
     editingFileContents ??
     (await extras.ideMessenger.ide.readFile(resolvedUri));
   const fileUri = resolvedUri;
 
-  for (let i = 0; i < edits.length; i++) {
-    const { old_string, new_string, replace_all } = edits[i];
-    newContent = performFindAndReplace(
-      newContent,
-      old_string,
-      new_string,
-      replace_all,
-      i,
-    );
-  }
+  // Apply all edits using shared logic with findSearchMatch
+  const newContent = executeMultiFindAndReplace(currentContent, edits);
 
   // Apply the changes to the file
   void extras.dispatch(
