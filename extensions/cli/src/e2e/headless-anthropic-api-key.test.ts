@@ -8,8 +8,8 @@ import {
 } from "../test-helpers/cli-helpers.js";
 import {
   cleanupMockLLMServer,
-  type MockLLMServer,
   createMockLLMServer,
+  type MockLLMServer,
 } from "../test-helpers/mock-llm-server.js";
 
 describe("E2E: Headless Mode with ANTHROPIC_API_KEY", () => {
@@ -80,9 +80,9 @@ models:
     expect(userMessage.content).toBe("Hi there");
   }, 20000);
 
-  it("should create config and work with ANTHROPIC_API_KEY when no config exists", async () => {
+  it("should create config but fail with invalid API key when no config exists", async () => {
     // This test verifies that CLI automatically creates config from ANTHROPIC_API_KEY
-    // when no config file exists in headless mode
+    // when no config file exists, but fails when the API key is invalid
 
     const result = await runCLI(context, {
       args: ["-p", "test prompt"],
@@ -90,13 +90,17 @@ models:
         ANTHROPIC_API_KEY: "TEST-test-invalid-key-format",
         CONTINUE_GLOBAL_DIR: context.testDir + "/.continue",
       },
-      expectError: false, // Config creation succeeds even with invalid key
+      expectError: true, // API call should fail with invalid key
       timeout: 15000,
     });
 
-    // The CLI should create config and exit successfully in headless mode
-    // (it doesn't actually make API calls unless there's a valid provider setup)
-    expect(result.exitCode).toBe(0);
+    // The CLI should create config but fail due to invalid API key
+    // This is expected behavior - invalid API keys should cause authentication errors
+    expect(result.exitCode).toBe(1);
+
+    // Should contain authentication error (not service initialization error)
+    expect(result.stderr).toContain("authentication_error");
+    expect(result.stderr).toContain("invalid x-api-key");
 
     // Should NOT contain the old error about service initialization
     expect(result.stderr).not.toContain("Failed to initialize ConfigService");
