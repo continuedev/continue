@@ -375,7 +375,14 @@ export async function preprocessStreamedToolCalls(
         durationMs: duration,
         error: errorMessage,
         errorReason,
-        // modelName,
+        // modelName, TODO
+      });
+      posthogService.capture("tool_call_outcome", {
+        succeeded: false,
+        toolName: toolCall.name,
+        errorReason,
+        duration_ms: duration,
+        // model: options.modelName, TODO
       });
 
       // Add error to chat history

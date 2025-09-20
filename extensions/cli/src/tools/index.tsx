@@ -12,6 +12,7 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 import { isModelCapable } from "../utils/index.js";
 
+import { posthogService } from "src/telemetry/posthogService.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -213,6 +214,11 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
+    posthogService.capture("tool_call_outcome", {
+      succeeded: true,
+      toolName: toolCall.name,
+      duration_ms: duration,
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -235,6 +241,12 @@ export async function executeToolCall(
       error: errorMessage,
       errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
+    });
+    posthogService.capture("tool_call_outcome", {
+      succeeded: false,
+      toolName: toolCall.name,
+      duration_ms: duration,
+      errorReason,
     });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;

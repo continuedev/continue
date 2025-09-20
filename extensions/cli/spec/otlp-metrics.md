@@ -188,7 +188,7 @@ All metrics and events share these standard attributes:
 
 ### ✅ Tool Result Event
 
-**Event Name:** `continue_cli_tool_result`
+**Event Name:** `tool_result`
 
 **Attributes:**
 
