@@ -34,6 +34,8 @@ import {
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  /** Storage identifier for remote sync */
+  id?: string;
 }
 
 // eslint-disable-next-line max-statements

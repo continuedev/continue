@@ -124,7 +124,7 @@ export class StorageSyncService {
     });
 
     const intervalMs = options.intervalMs ?? DEFAULT_UPLOAD_INTERVAL_MS;
-    console.log(
+    logger.info(
       chalk.dim(
         `Storage sync enabled (uploading every ${Math.round(intervalMs / 1000)}s)`,
       ),

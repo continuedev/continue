@@ -2,6 +2,7 @@ import { exec, execSync } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
+const LARGE_STDIO_BUFFER_BYTES = 10 * 1024 * 1024; // bump buffer for large git output
 
 /**
  * Get the git remote URL for the current repository
@@ -131,7 +132,9 @@ function isExecError(
 
 export async function getGitDiffSnapshot(): Promise<GitDiffSnapshot> {
   try {
-    await execAsync("git rev-parse --git-dir");
+    await execAsync("git rev-parse --git-dir", {
+      maxBuffer: LARGE_STDIO_BUFFER_BYTES,
+    });
   } catch (error) {
     if (isExecError(error) && error.code === 128) {
       return { diff: "", repoFound: false };
@@ -140,11 +143,19 @@ export async function getGitDiffSnapshot(): Promise<GitDiffSnapshot> {
   }
 
   try {
-    const { stdout } = await execAsync("git diff main");
+    const { stdout } = await execAsync("git diff main", {
+      maxBuffer: LARGE_STDIO_BUFFER_BYTES,
+    });
     return { diff: stdout, repoFound: true };
   } catch (error) {
-    if (isExecError(error) && error.code === 1 && error.stdout) {
-      return { diff: error.stdout, repoFound: true };
+    if (isExecError(error)) {
+      if (error.code === 1 && error.stdout) {
+        return { diff: error.stdout, repoFound: true };
+      }
+
+      if (error.code === 128) {
+        return { diff: "", repoFound: false };
+      }
     }
     throw error;
   }

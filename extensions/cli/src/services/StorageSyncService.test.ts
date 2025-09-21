@@ -26,10 +26,14 @@ describe("StorageSyncService", () => {
   const fetchMock = vi.fn();
   const gitDiffMock = vi.mocked(getGitDiffSnapshot);
   let service: StorageSyncService;
+  let originalFetch: typeof fetch | undefined;
+  let hadFetch = false;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     fetchMock.mockReset();
+    hadFetch = "fetch" in globalThis;
+    originalFetch = globalThis.fetch;
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     gitDiffMock.mockReset();
 
@@ -39,7 +43,11 @@ describe("StorageSyncService", () => {
 
   afterEach(() => {
     service.stop();
-    delete (globalThis as { fetch?: typeof fetch }).fetch;
+    if (hadFetch) {
+      globalThis.fetch = originalFetch!;
+    } else {
+      delete (globalThis as { fetch?: typeof fetch }).fetch;
+    }
   });
 
   it("returns false when no storage option provided", async () => {
