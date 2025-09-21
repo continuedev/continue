@@ -6,6 +6,7 @@ import {
   isAuthenticatedConfig,
   loadAuthConfig,
 } from "./auth/workos.js";
+import { getCurrentChecklist, hasChecklist } from "./checklistManager.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
@@ -168,6 +169,23 @@ function handleTitle(args: string[]) {
   }
 }
 
+function handleTodo() {
+  posthogService.capture("useSlashCommand", { name: "todo" });
+  
+  if (hasChecklist()) {
+    const checklist = getCurrentChecklist();
+    return {
+      exit: false,
+      output: chalk.cyan("Current checklist:\n") + checklist,
+    };
+  } else {
+    return {
+      exit: false,
+      output: chalk.yellow("No active checklist found. Use the Checklist tool to create one."),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -195,6 +213,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   },
   fork: handleFork,
   title: handleTitle,
+  todo: handleTodo,
   init: (args, assistant) => {
     posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
