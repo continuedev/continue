@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { StorageSyncService } from "./StorageSyncService.js";
-import { logger } from "../util/logger.js";
 import { getGitDiffSnapshot } from "../util/git.js";
+import { logger } from "../util/logger.js";
+
+import { StorageSyncService } from "./StorageSyncService.js";
 
 vi.mock("../util/logger.js", () => ({
   logger: {
