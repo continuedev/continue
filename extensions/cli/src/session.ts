@@ -157,13 +157,17 @@ function modifySessionBeforeSave(session: Session): Session {
   };
 }
 
+export function getSessionPersistenceSnapshot(session: Session): Session {
+  return modifySessionBeforeSave(session);
+}
+
 /**
  * Save the current session to file
  */
 export function saveSession(): void {
   try {
     const session = SessionManager.getInstance().getCurrentSession();
-    const sessionToSave = modifySessionBeforeSave(session);
+    const sessionToSave = getSessionPersistenceSnapshot(session);
     historyManager.save(sessionToSave);
   } catch (error) {
     logger.error("Error saving session:", error);

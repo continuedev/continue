@@ -312,6 +312,10 @@ program
     "300",
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
+  .option(
+    "--id <storageId>",
+    "Upload session snapshots to Continue-managed storage using the provided identifier",
+  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "serve" });
