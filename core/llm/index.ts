@@ -190,7 +190,6 @@ export abstract class BaseLLM implements ILLM {
 
   //URI to local block defining this LLM
   sourceFile?: string;
-  forceStreamChat = false;
 
   isFromAutoDetect?: boolean;
 
@@ -1057,20 +1056,7 @@ export abstract class BaseLLM implements ILLM {
     let usage: Usage | undefined = undefined;
 
     try {
-      if (this.templateMessages && !this.forceStreamChat) {
-        for await (const chunk of this._streamComplete(
-          prompt,
-          signal,
-          completionOptions,
-        )) {
-          completion.push(chunk);
-          interaction?.logItem({
-            kind: "chunk",
-            chunk: chunk,
-          });
-          yield { role: "assistant", content: chunk };
-        }
-      } else {
+      {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           let body = toChatBody(messages, completionOptions);
           body = this.modifyChatBody(body);
