@@ -33,4 +33,6 @@ export interface ExtendedCommandOptions extends BaseCommandOptions {
   readonly?: boolean;
   /** Start in auto mode (all tools allowed) */
   auto?: boolean;
+  /** Storage identifier for remote sync */
+  id?: string;
 }

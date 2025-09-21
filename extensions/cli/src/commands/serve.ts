@@ -1,11 +1,8 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
-import { getAssistantSlug } from "../auth/workos.js";
+import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -19,11 +16,12 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession } from "../session.js";
+import { createSession, getSessionPersistenceSnapshot } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { gracefulExit } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
+import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
@@ -32,8 +30,6 @@ import {
   streamChatResponseWithInterruption,
   type ServerState,
 } from "./serve.helpers.js";
-
-const execAsync = promisify(exec);
 
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
@@ -86,6 +82,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   if (authState.organizationId) {
     telemetryService.updateOrganization(authState.organizationId);
   }
+  const accessToken = getAccessToken(authState.authConfig);
 
   // Log configuration information
   const organizationId = authState.organizationId || "personal";
@@ -146,6 +143,32 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     pendingPermission: null,
   };
 
+  const syncSessionHistory = () => {
+    try {
+      state.session.history = services.chatHistory.getHistory();
+    } catch (e) {
+      logger.debug(
+        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
+      );
+    }
+  };
+
+  const storageSyncService = services.storageSync;
+  let storageSyncActive = await storageSyncService.startFromOptions({
+    storageOption: options.id,
+    accessToken,
+    syncSessionHistory,
+    getSessionSnapshot: () => getSessionPersistenceSnapshot(state.session),
+    isActive: () => state.serverRunning,
+  });
+
+  const stopStorageSync = () => {
+    if (storageSyncActive) {
+      storageSyncService.stop();
+      storageSyncActive = false;
+    }
+  };
+
   // Record session start
   telemetryService.recordSessionStart();
   telemetryService.startActiveTime();
@@ -156,14 +179,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
-    // Ensure session history reflects ChatHistoryService state
-    try {
-      state.session.history = services.chatHistory.getHistory();
-    } catch (e) {
-      logger.debug(
-        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
-      );
-    }
+    syncSessionHistory();
     res.json({
       session: state.session, // Return session directly instead of converting
       isProcessing: state.isProcessing,
@@ -239,34 +255,25 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     state.lastActivity = Date.now();
 
     try {
-      // First check if we're in a git repository
-      await execAsync("git rev-parse --git-dir");
+      const diffResult = await getGitDiffSnapshot();
 
-      // Get the diff against main branch
-      const { stdout } = await execAsync("git diff main");
-
-      res.json({
-        diff: stdout,
-      });
-    } catch (error: any) {
-      // Git diff returns exit code 1 when there are differences, which is normal
-      if (error.code === 1 && error.stdout) {
-        res.json({
-          diff: error.stdout,
-        });
-      } else if (error.code === 128) {
-        // Handle case where we're not in a git repo or main branch doesn't exist
+      if (!diffResult.repoFound) {
         res.status(404).json({
           error: "Not in a git repository or main branch doesn't exist",
           diff: "",
         });
-      } else {
-        logger.error(`Git diff error: ${formatError(error)}`);
-        res.status(500).json({
-          error: `Failed to get git diff: ${formatError(error)}`,
-          diff: "",
-        });
+        return;
       }
+
+      res.json({
+        diff: diffResult.diff,
+      });
+    } catch (error) {
+      logger.error(`Git diff error: ${formatError(error)}`);
+      res.status(500).json({
+        error: `Failed to get git diff: ${formatError(error)}`,
+        diff: "",
+      });
     }
   });
 
@@ -287,6 +294,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
     // Set server running flag to false to stop processing
     state.serverRunning = false;
+    stopStorageSync();
 
     // Abort any current processing
     if (state.currentAbortController) {
@@ -438,6 +446,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         ),
       );
       state.serverRunning = false;
+      stopStorageSync();
       server.close(() => {
         telemetryService.stopActiveTime();
         gracefulExit(0).catch((err) => {
@@ -456,6 +465,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   process.on("SIGINT", () => {
     console.log(chalk.yellow("\nShutting down server..."));
     state.serverRunning = false;
+    stopStorageSync();
     if (inactivityChecker) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;
