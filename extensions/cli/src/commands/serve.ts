@@ -6,6 +6,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
 import { getAssistantSlug } from "../auth/workos.js";
+import { getCurrentChecklist, hasChecklist } from "../checklistManager.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -169,6 +170,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
       pendingPermission: state.pendingPermission,
+      checklist: getCurrentChecklist(),
     });
   });
 
@@ -232,6 +234,25 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       success: true,
       approved,
     });
+  });
+
+  // GET /todo - Return current checklist state
+  app.get("/todo", (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    if (hasChecklist()) {
+      const checklist = getCurrentChecklist();
+      res.json({
+        checklist: checklist,
+        hasChecklist: true,
+      });
+    } else {
+      res.json({
+        checklist: null,
+        hasChecklist: false,
+        message: "No active checklist found. Use the Checklist tool to create one.",
+      });
+    }
   });
 
   // GET /diff - Return git diff against main branch
@@ -328,6 +349,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       chalk.dim(
         "  POST /permission - Approve/reject tool (body: { requestId, approved })",
       ),
+    );
+    console.log(
+      chalk.dim("  GET  /todo       - Get current checklist state"),
     );
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),

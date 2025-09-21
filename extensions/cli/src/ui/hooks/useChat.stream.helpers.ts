@@ -3,6 +3,7 @@ import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 import { getAllBuiltinTools } from "src/tools/index.js";
 import { logger } from "src/util/logger.js";
 
+import { updateChecklistFromToolResult } from "../../checklistManager.js";
 import { services } from "../../services/index.js";
 import { getCurrentSession, updateSessionTitle } from "../../session.js";
 
@@ -113,6 +114,9 @@ export function createStreamCallbacks(
     },
 
     onToolResult: (result: string, toolName: string, status: ToolStatus) => {
+      // Track checklist state when Checklist tool is used
+      updateChecklistFromToolResult(result, toolName);
+      
       // When service is ready, it updates tool results; avoid duplicate local updates
       const svc = services.chatHistory;
       const useService = typeof svc?.isReady === "function" && svc.isReady();

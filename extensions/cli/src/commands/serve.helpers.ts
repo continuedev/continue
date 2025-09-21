@@ -1,5 +1,6 @@
 import type { Session, ToolStatus } from "core/index.js";
 
+import { updateChecklistFromToolResult } from "../checklistManager.js";
 import { services } from "../services/index.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
@@ -40,8 +41,14 @@ export async function streamChatResponseWithInterruption(
       // This callback is just for notification/UI updates
       // The tool call state is already created and added by handleToolCalls
     },
-    onToolResult: (_result: string, _toolName: string, _status: ToolStatus) => {
+    onToolResult: (result: string, toolName: string, _status: ToolStatus) => {
       // No-op when using ChatHistoryService; it updates tool states/results
+      
+      // Track checklist state when Checklist tool is used
+      updateChecklistFromToolResult(result, toolName);
+      if (toolName === "Checklist" && result.startsWith("Task list status:\n")) {
+        state.checklist = result.substring("Task list status:\n".length);
+      }
     },
     onToolError: (_error: string, _toolName?: string) => {
       // No-op; errors are added to history via handleToolCalls flow
@@ -125,4 +132,5 @@ export interface ServerState {
   serverRunning: boolean;
   pendingPermission: PendingPermission | null;
   systemMessage?: string;
+  checklist?: string;
 }
