@@ -1,7 +1,14 @@
 import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
@@ -38,7 +45,7 @@ export interface TipTapEditorProps {
 
 export const TIPPY_DIV_ID = "tippy-js-div";
 
-export function TipTapEditor(props: TipTapEditorProps) {
+function TipTapEditorInner(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
   const mainEditorContext = useMainEditor();
 
@@ -50,10 +57,13 @@ export function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
   const { editor, onEnterRef } = createEditorConfig({
     props,
     ideMessenger,
     dispatch,
+    setShowDragOverMsg,
   });
 
   // Register the main editor with the provider
@@ -72,12 +82,13 @@ export function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
     const placeholder = getPlaceholderText(props.placeholder, historyLength);
-
-    editor.extensionManager.extensions.filter(
-      (extension) => extension.name === "placeholder",
-    )[0].options["placeholder"] = placeholder;
-
-    editor.view.dispatch(editor.state.tr);
+    const placeholderExt = editor.extensionManager.extensions.find(
+      (e) => e.name === "placeholder",
+    ) as any;
+    if (placeholderExt) {
+      placeholderExt.options["placeholder"] = placeholder;
+      editor.view.dispatch(editor.state.tr);
+    }
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
@@ -112,7 +123,22 @@ export function TipTapEditor(props: TipTapEditorProps) {
     }
   }, [props.isMainInput, isStreaming, editor]);
 
-  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+  // Recovery mechanism: ensure historical inputs regain editability when streaming ends
+  useEffect(() => {
+    if (!isStreaming && !props.isMainInput && editor) {
+      // Small delay to ensure editor state has settled after streaming transition
+      const timeoutId = setTimeout(() => {
+        if (editor && !editor.isDestroyed) {
+          // Force re-enable the editor
+          editor.setOptions({ editable: true });
+          // Trigger view update to refresh editor state
+          editor.view.dispatch(editor.state.tr);
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isStreaming, props.isMainInput]);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
@@ -196,40 +222,23 @@ export function TipTapEditor(props: TipTapEditorProps) {
           if (e.shiftKey) {
             setShowDragOverMsg(false);
           } else {
-            setTimeout(() => setShowDragOverMsg(false), 2000);
+            setTimeout(() => {
+              setShowDragOverMsg(false);
+            }, 2000);
           }
         }
+        setShowDragOverMsg(false);
       }}
       onDragEnter={() => {
         setShowDragOverMsg(true);
       }}
-      onDrop={(event) => {
-        if (
-          !defaultModel ||
-          !modelSupportsImages(
-            defaultModel.provider,
-            defaultModel.model,
-            defaultModel.title,
-            defaultModel.capabilities,
-          )
-        ) {
-          return;
-        }
+      onDragEnd={() => {
         setShowDragOverMsg(false);
-        let file = event.dataTransfer.files[0];
-        void handleImageFile(ideMessenger, file).then((result) => {
-          if (!editor) {
-            return;
-          }
-          if (result) {
-            const [_, dataUrl] = result;
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const tr = editor.state.tr.insert(0, node);
-            editor.view.dispatch(tr);
-          }
-        });
-        event.preventDefault();
+      }}
+      onDrop={(event) => {
+        // Just hide the drag overlay - ProseMirror handles the actual drop
+        setShowDragOverMsg(false);
+        // Let the event bubble to ProseMirror by not preventing default
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
@@ -274,10 +283,42 @@ export function TipTapEditor(props: TipTapEditorProps) {
           defaultModel?.model || "",
           defaultModel?.title,
           defaultModel?.capabilities,
-        ) && (
-          <DragOverlay show={showDragOverMsg} setShow={setShowDragOverMsg} />
-        )}
+        ) && <DragOverlay show={showDragOverMsg} />}
       <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
+  );
+}
+
+function toolbarOptionsEqual(a?: ToolbarOptions, b?: ToolbarOptions) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.hideAddContext === b.hideAddContext &&
+    a.hideImageUpload === b.hideImageUpload &&
+    a.hideUseCodebase === b.hideUseCodebase &&
+    a.hideSelectModel === b.hideSelectModel &&
+    a.enterText === b.enterText
+  );
+}
+
+const MemoInner = memo(
+  TipTapEditorInner,
+  (prev, next) =>
+    prev.isMainInput === next.isMainInput &&
+    prev.placeholder === next.placeholder &&
+    prev.historyKey === next.historyKey &&
+    prev.inputId === next.inputId &&
+    toolbarOptionsEqual(prev.toolbarOptions, next.toolbarOptions) &&
+    (prev.availableContextProviders?.length || 0) ===
+      (next.availableContextProviders?.length || 0) &&
+    (prev.availableSlashCommands?.length || 0) ===
+      (next.availableSlashCommands?.length || 0),
+);
+
+export function TipTapEditor(props: TipTapEditorProps) {
+  return (
+    <div className="relative w-full">
+      <MemoInner {...props} />
+    </div>
   );
 }

@@ -18,6 +18,7 @@ import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
+import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
 dotenv.config();
 
@@ -29,6 +30,33 @@ function openAICompatible(
     ...config,
     apiBase: config.apiBase ?? apiBase,
   });
+}
+
+/**
+ * Detects if a HuggingFace API URL is using an OpenAI-compatible router
+ * @param url The URL to check
+ * @returns true if the URL appears to be using an OpenAI-compatible router
+ */
+function isHuggingFaceOpenAICompatible(url: string): boolean {
+  if (!url) {
+    return false;
+  }
+
+  // Normalize the URL to lowercase for case-insensitive matching
+  const normalizedUrl = url.toLowerCase();
+
+  // Check for common OpenAI-compatible patterns
+  const openAIPatterns = [
+    "/v1/", // Standard OpenAI v1 API pattern
+    "/openai/", // Explicit OpenAI compatibility path
+    "/v1/chat/completions", // Specific OpenAI chat completions endpoint
+    "/v1/completions", // OpenAI completions endpoint
+    "/v1/embeddings", // OpenAI embeddings endpoint
+    "/v1/models", // OpenAI models endpoint
+  ];
+
+  // Check if the URL contains any of the OpenAI-compatible patterns
+  return openAIPatterns.some((pattern) => normalizedUrl.includes(pattern));
 }
 
 export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
@@ -114,9 +142,21 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
     case "ollama":
+      // for openai compaitability, we need to add /v1 to the end of the url
+      // this is required for cli (for core, endpoints are overriden by core/llm/llms/Ollama.ts)
+      if (config.apiBase)
+        config.apiBase = appendPathToUrlIfNotPresent(config.apiBase, "v1");
       return openAICompatible("http://localhost:11434/v1/", config);
     case "mock":
       return new MockApi();
+    case "huggingface-inference-api":
+      // Check if it's an OpenAI-compatible router
+      if (config.apiBase && isHuggingFaceOpenAICompatible(config.apiBase)) {
+        return openAICompatible(config.apiBase, config);
+      }
+      // Return undefined for native HuggingFace endpoints
+      // (handled by HuggingFaceInferenceAPI class in core)
+      return undefined;
     default:
       return undefined;
   }

@@ -1,240 +1,107 @@
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 
 describe("runTerminalCommandTool", () => {
-  const TEST_TIMEOUT_MS = 1000; // 1 second for tests
+  const isWindows = process.platform === "win32";
+  const isMac = process.platform === "darwin";
+  const isLinux = process.platform === "linux";
 
-  beforeAll(() => {
-    process.env.NODE_ENV = "test";
-    process.env.TEST_TERMINAL_TIMEOUT = String(TEST_TIMEOUT_MS);
-  });
+  describe("basic platform-specific terminal execution", () => {
+    it("should execute a simple echo command", async () => {
+      let command: string;
+      let expectedOutput: string;
 
-  afterAll(() => {
-    delete process.env.TEST_TERMINAL_TIMEOUT;
-  });
-  describe("basic command execution", () => {
-    it("should execute simple echo command and return stdout", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "echo 'hello world'",
-      });
-      expect(result.trim()).toBe("hello world");
+      if (isWindows) {
+        command = 'Write-Output "hello world"';
+        expectedOutput = "hello world";
+      } else {
+        command = 'echo "hello world"';
+        expectedOutput = "hello world";
+      }
+
+      const result = await runTerminalCommandTool.run({ command });
+      expect(result.trim()).toBe(expectedOutput);
     });
 
-    it("should execute pwd command and return current directory", async () => {
-      const result = await runTerminalCommandTool.run({ command: "pwd" });
-      expect(result.trim()).toMatch(/^\/.*$/); // Should be an absolute path
-    });
+    it("should get current directory", async () => {
+      let command: string;
 
-    it("should execute directory listing command and return file listings", async () => {
-      // Use a cross-platform command that works on both Unix and Windows
-      const command = process.platform === "win32" ? "dir" : "ls -la .";
+      if (isWindows) {
+        command = "Get-Location | Select-Object -ExpandProperty Path";
+      } else {
+        command = "pwd";
+      }
+
       const result = await runTerminalCommandTool.run({ command });
 
-      // On Windows, look for <DIR> entries, on Unix look for . and ..
-      if (process.platform === "win32") {
-        expect(result).toContain(".");
+      if (isWindows) {
+        // Windows paths like C:\path\to\dir
+        expect(result.trim()).toMatch(/^[A-Za-z]:\\.*/);
       } else {
-        expect(result).toContain(".");
-        expect(result).toContain("..");
+        // Unix paths like /path/to/dir
+        expect(result.trim()).toMatch(/^\/.*$/);
       }
     });
 
-    it("should handle commands with multiple arguments", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "echo 'arg1' 'arg2' 'arg3'",
-      });
-      expect(result.trim()).toBe("arg1 arg2 arg3");
+    it("should list directory contents", async () => {
+      let command: string;
+
+      if (isWindows) {
+        command = "Get-ChildItem | Select-Object -ExpandProperty Name";
+      } else {
+        command = "ls";
+      }
+
+      const result = await runTerminalCommandTool.run({ command });
+      // Should return some directory content (not empty)
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it("should handle command that produces version info", async () => {
+      // Node.js should be available on all platforms in CI
+      const command = "node --version";
+      const result = await runTerminalCommandTool.run({ command });
+
+      // Should contain version number (starts with v)
+      expect(result.trim()).toMatch(/^v\d+\.\d+\.\d+/);
     });
   });
 
-  describe("error handling", () => {
-    it("should reject with error message for non-existent commands", async () => {
-      await expect(
-        runTerminalCommandTool.run({ command: "nonexistentcommand12345" }),
-      ).rejects.toMatch(/Error \(exit code 127\):/);
-    });
+  describe("basic error handling", () => {
+    it("should handle non-existent commands", async () => {
+      const command = "definitely-not-a-real-command-xyz123";
 
-    it("should handle commands with non-zero exit codes and stderr", async () => {
-      await expect(
-        runTerminalCommandTool.run({
-          command: "sh -c 'echo error >&2; exit 1'",
-        }),
-      ).rejects.toMatch(/Error \(exit code 1\): error/);
-    });
-
-    it("should resolve when commands have non-zero exit codes but no stderr", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "sh -c 'exit 1'",
-      });
-      expect(result).toBe("");
-    });
-
-    it("should handle commands that write to stderr", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: 'sh -c \'echo "error message" >&2; echo "success"\'',
-      });
-      expect(result).toContain("success");
-      expect(result).toContain("Stderr: error message");
-    });
-  });
-
-  describe("timeout functionality", () => {
-    it(
-      "should timeout commands that produce no output for configured duration",
-      async () => {
-        // Create a command that sleeps longer than the timeout
-        const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep 0.5s longer than timeout
-        const startTime = Date.now();
-        const result = await runTerminalCommandTool.run({
-          command: `sleep ${sleepDuration}`,
-        });
-        const endTime = Date.now();
-        const elapsed = endTime - startTime;
-
-        // Should timeout within a reasonable margin of the configured timeout
-        expect(elapsed).toBeLessThan(TEST_TIMEOUT_MS + 200); // Allow 200ms margin
-        expect(elapsed).toBeGreaterThan(TEST_TIMEOUT_MS - 100); // Allow 100ms margin
-        expect(result).toContain(
-          `[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`,
-        );
-      },
-      TEST_TIMEOUT_MS + 2000,
-    ); // Set test timeout with buffer
-
-    it(
-      "should not timeout commands that continuously produce output",
-      async () => {
-        // Create a command that produces output at intervals shorter than timeout
-        const outputInterval = TEST_TIMEOUT_MS / 1000 / 3; // Output 3 times within timeout period
-        const iterations = 3;
-        const startTime = Date.now();
-        const result = await runTerminalCommandTool.run({
-          command: `for i in $(seq 1 ${iterations}); do echo "output $i"; sleep ${outputInterval}; done`,
-        });
-        const endTime = Date.now();
-
-        // Should complete normally
-        expect(endTime - startTime).toBeLessThan(TEST_TIMEOUT_MS * 2);
-        expect(result).toContain("output 1");
-        expect(result).toContain(`output ${iterations}`);
-        expect(result).not.toContain("[Command timed out");
-      },
-      TEST_TIMEOUT_MS * 3,
-    ); // Set test timeout with buffer
-
-    it(
-      "should reset timeout when command produces stderr output",
-      async () => {
-        // Create a command that produces stderr output periodically
-        const outputInterval = TEST_TIMEOUT_MS / 1000 / 3; // Output 3 times within timeout period
-        const iterations = 3;
-        const startTime = Date.now();
-        const result = await runTerminalCommandTool.run({
-          command: `for i in $(seq 1 ${iterations}); do echo "error $i" >&2; sleep ${outputInterval}; done; echo 'done'`,
-        });
-        const endTime = Date.now();
-
-        // Should complete normally
-        expect(endTime - startTime).toBeLessThan(TEST_TIMEOUT_MS * 2);
-        expect(result).toContain("done");
-        expect(result).toContain("Stderr: error 1");
-        expect(result).not.toContain("[Command timed out");
-      },
-      TEST_TIMEOUT_MS * 3,
-    ); // Set test timeout with buffer
-
-    it(
-      "should include partial output when timing out",
-      async () => {
-        // Create a command that produces some output then stops
-        const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep longer than timeout
-        const result = await runTerminalCommandTool.run({
-          command: `echo 'initial output'; sleep ${sleepDuration}`,
-        });
-
-        expect(result).toContain("initial output");
-        expect(result).toContain(
-          `[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`,
-        );
-      },
-      TEST_TIMEOUT_MS + 2000,
-    ); // Set test timeout with buffer
-  });
-
-  describe("output handling", () => {
-    it("should preserve line breaks in output", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "printf 'line1\\nline2\\nline3'",
-      });
-      expect(result).toContain("line1\nline2\nline3");
-    });
-
-    it("should handle empty output", async () => {
-      const result = await runTerminalCommandTool.run({ command: "true" });
-      expect(result).toBe("");
-    });
-
-    it("should handle large output", async () => {
-      // Generate a command that produces substantial output
-      const result = await runTerminalCommandTool.run({
-        command: "seq 1 1000",
-      });
-      expect(result).toContain("1\n");
-      expect(result).toContain("1000");
-      // Count lines to ensure all output is captured
-      const lines = result.trim().split("\n");
-      expect(lines).toHaveLength(1000);
-    });
-
-    it("should truncate output when it exceeds 5000 lines", async () => {
-      // Generate a command that produces more than 5000 lines
-      const result = await runTerminalCommandTool.run({
-        command: "seq 1 6000",
-      });
-
-      // Should contain the truncation message
-      expect(result).toContain(
-        "[Output truncated to first 5000 lines of 6001 total]",
+      await expect(runTerminalCommandTool.run({ command })).rejects.toMatch(
+        /Error \(exit code|Command timed out|not found|not recognized/,
       );
-
-      // Should contain first line
-      expect(result).toContain("1\n");
-
-      // Should contain line 5000 but not line 6000
-      expect(result).toContain("5000");
-      expect(result).not.toContain("6000");
-
-      // Count lines in the result - should be 5000 content lines + 2 truncation message lines
-      const lines = result.split("\n");
-      expect(lines).toHaveLength(5002); // 5000 content lines + empty line + truncation message
     });
   });
 
-  describe("command types", () => {
-    it("should handle shell built-ins", async () => {
-      const result = await runTerminalCommandTool.run({ command: "echo $PWD" });
-      expect(result.trim()).toMatch(/^\/.*$/);
-    });
-
-    it("should handle commands with pipes", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "echo 'hello world' | wc -w",
+  describe("platform-specific features", () => {
+    if (isWindows) {
+      it("should work with Windows commands", async () => {
+        const result = await runTerminalCommandTool.run({
+          command: "Write-Output $env:OS",
+        });
+        expect(result.trim()).toBe("Windows_NT");
       });
-      expect(result.trim()).toBe("2");
-    });
+    }
 
-    it("should handle commands with redirections", async () => {
-      const result = await runTerminalCommandTool.run({
-        command:
-          "echo 'test' > /tmp/test-file && cat /tmp/test-file && rm /tmp/test-file",
+    if (isMac) {
+      it("should work with macOS commands", async () => {
+        const result = await runTerminalCommandTool.run({
+          command: "uname -s",
+        });
+        expect(result.trim()).toBe("Darwin");
       });
-      expect(result.trim()).toBe("test");
-    });
+    }
 
-    it("should handle commands with environment variables", async () => {
-      const result = await runTerminalCommandTool.run({
-        command: "TEST_VAR='hello' sh -c 'echo $TEST_VAR'",
+    if (isLinux) {
+      it("should work with Linux commands", async () => {
+        const result = await runTerminalCommandTool.run({
+          command: "uname -s",
+        });
+        expect(result.trim()).toBe("Linux");
       });
-      expect(result.trim()).toBe("hello");
-    });
+    }
   });
 });

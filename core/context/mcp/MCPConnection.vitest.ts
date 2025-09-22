@@ -142,6 +142,7 @@ describe("MCPConnection", () => {
       expect(status).toEqual({
         ...options,
         errors: [],
+        infos: [],
         isProtectedResource: false,
         prompts: [],
         resources: [],

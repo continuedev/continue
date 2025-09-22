@@ -17,6 +17,7 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
+import Lemonade from "./llm/llms/Lemonade";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -29,8 +30,9 @@ import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
   isProcessBackgrounded,
+  killTerminalProcess,
   markProcessAsBackgrounded,
-} from "./util/processTerminalBackgroundStates";
+} from "./util/processTerminalStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -76,6 +78,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 import { getUriPathBasename } from "./util/uri";
 
@@ -138,7 +141,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-      const sessionInfoPromise = messenger.request(
+      const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
           silent: true,
@@ -148,9 +151,8 @@ export class Core {
 
       this.configHandler = new ConfigHandler(
         this.ide,
-        ideSettingsPromise,
         this.llmLogger,
-        sessionInfoPromise,
+        initialSessionInfoPromise,
       );
 
       this.docsService = DocsService.createSingleton(
@@ -175,6 +177,13 @@ export class Core {
         }
       };
 
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
+
       this.configHandler.onConfigUpdate((result) => {
         void (async () => {
           const serializedResult =
@@ -187,6 +196,12 @@ export class Core {
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
 
+          if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
+            await this.codeBaseIndexer.refreshCodebaseIndex(
+              await this.ide.getWorkspaceDirs(),
+            );
+          }
+
           // update additional submenu context providers registered via VSCode API
           const additionalProviders =
             this.configHandler.getAdditionalSubmenuContextProviders();
@@ -197,13 +212,6 @@ export class Core {
           }
         })();
       });
-
-      this.codeBaseIndexer = new CodebaseIndexer(
-        this.configHandler,
-        this.ide,
-        this.messenger,
-        this.globalContext.get("indexingPaused"),
-      );
 
       // Dev Data Logger
       const dataLogger = DataLogger.getInstance();
@@ -221,6 +229,17 @@ export class Core {
               progress: 0,
               desc: "Initial Indexing Skipped",
               status: "paused",
+            });
+            return;
+          }
+
+          // Check for disableIndexing to prevent race condition
+          const { config } = await this.configHandler.loadConfig();
+          if (!config || config.disableIndexing) {
+            void this.messenger.request("indexProgress", {
+              progress: 0,
+              desc: "Indexing is disabled",
+              status: "disabled",
             });
             return;
           }
@@ -307,8 +326,27 @@ export class Core {
     });
 
     // History
-    on("history/list", (msg) => {
-      return historyManager.list(msg.data);
+    on("history/list", async (msg) => {
+      const localSessions = historyManager.list(msg.data);
+
+      // Check if remote sessions should be enabled based on feature flags
+      const shouldFetchRemote =
+        await this.configHandler.controlPlaneClient.shouldEnableRemoteSessions();
+
+      // Get remote sessions from control plane if feature is enabled
+      const remoteSessions = shouldFetchRemote
+        ? await this.configHandler.controlPlaneClient.listRemoteSessions()
+        : [];
+
+      // Combine and sort by date (most recent first)
+      const allSessions = [...localSessions, ...remoteSessions].sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      );
+
+      // Apply limit if specified
+      const limit = msg.data?.limit ?? 100;
+      return allSessions.slice(0, limit);
     });
 
     on("history/delete", (msg) => {
@@ -319,8 +357,21 @@ export class Core {
       return historyManager.load(msg.data.id);
     });
 
+    on("history/loadRemote", async (msg) => {
+      return this.configHandler.controlPlaneClient.loadRemoteSession(
+        msg.data.remoteId,
+      );
+    });
+
     on("history/save", (msg) => {
       historyManager.save(msg.data);
+    });
+
+    on("history/share", async (msg) => {
+      const session = historyManager.load(msg.data.id);
+      const outputDir = msg.data.outputDir;
+      const history = session.history.map((msg) => msg.message);
+      await shareSession(this.ide, history, outputDir);
     });
 
     on("history/clear", (msg) => {
@@ -668,6 +719,8 @@ export class Core {
       return queue.dequeueProcessed() || null;
     });
 
+    // NOTE: This is not used unless prefetch is used.
+    // At this point this is not used because I opted to rely on the model to return multiple diffs than to use prefetching.
     on("nextEdit/queue/processOne", async (msg) => {
       console.log("nextEdit/queue/processOne");
       const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
@@ -720,20 +773,13 @@ export class Core {
         data.fileUri ?? "current-file-stream",
       ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
 
-      return streamDiffLines({
-        highlighted: data.highlighted,
-        prefix: data.prefix,
-        suffix: data.suffix,
+      return streamDiffLines(
+        data,
         llm,
-        // rules included for edit, NOT apply
-        rulesToInclude: data.includeRulesInSystemMessage
-          ? config.rules
-          : undefined,
-        input: data.input,
-        language: data.language,
-        overridePrompt: undefined,
         abortController,
-      });
+        undefined,
+        data.includeRulesInSystemMessage ? config.rules : undefined,
+      );
     });
 
     on("cancelApply", async (msg) => {
@@ -1007,6 +1053,37 @@ export class Core {
       this.handleToolCall(toolCall),
     );
 
+    on(
+      "tools/evaluatePolicy",
+      async ({ data: { toolName, basePolicy, args } }) => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          throw new Error("Config not loaded");
+        }
+
+        const tool = config.tools.find((t) => t.function.name === toolName);
+        if (!tool) {
+          // Tool not found, return base policy
+          return { policy: basePolicy };
+        }
+
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
+        // If tool has evaluateToolCallPolicy function, use it
+        if (tool.evaluateToolCallPolicy) {
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          return { policy: evaluatedPolicy, displayValue };
+        }
+
+        // Otherwise return base policy unchanged
+        return { policy: basePolicy, displayValue };
+      },
+    );
+
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
     });
@@ -1023,6 +1100,10 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("process/killTerminalProcess", async ({ data: { toolCallId } }) => {
+      await killTerminalProcess(toolCallId);
+    });
 
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
@@ -1220,6 +1301,9 @@ export class Core {
         if (msg.data.title === "Ollama") {
           const models = await new Ollama({ model: "" }).listModels();
           return models;
+        } else if (msg.data.title === "Lemonade") {
+          const models = await new Lemonade({ model: "" }).listModels();
+          return models;
         } else {
           return undefined;
         }
@@ -1305,6 +1389,8 @@ export class Core {
         selectedCode,
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
+          // Important note: context providers fetch uses global request options not LLM request options
+          // Because LLM calls are handled separately
           fetchwithRequestOptions(url, init, config.requestOptions),
         isInAgentMode: msg.data.isInAgentMode,
       });

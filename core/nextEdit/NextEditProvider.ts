@@ -19,14 +19,13 @@ import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { isSecurityConcern } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
-import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
 import { NextEditProviderFactory } from "./NextEditProviderFactory.js";
-import { BaseNextEditProvider } from "./providers/BaseNextEditProvider.js";
+import { BaseNextEditModelProvider } from "./providers/BaseNextEditProvider.js";
 import {
   ModelSpecificContext,
   NextEditOutcome,
@@ -45,6 +44,14 @@ const ERRORS_TO_IGNORE = [
   "operation was aborted",
 ];
 
+/**
+ * This is the next edit analogue to autocomplete's CompletionProvider.
+ * You will see a lot of similar if not identical methods to CompletionProvider methods.
+ * All logic used to live inside this class, but that became untenable quickly.
+ * I moved a lot of the model-specific logic (prompt building, pre/post processing, etc.) to the BaseNextEditProvider and the children inheriting from it.
+ * Keeping this class around might be a good idea because it handles lots of delicate logic such as abort signals, chains, logging, etc.
+ * There being a singleton also gives a lot of guarantees about the state of the next edit state machine.
+ */
 export class NextEditProvider {
   private static instance: NextEditProvider | null = null;
 
@@ -62,10 +69,9 @@ export class NextEditProvider {
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
   private previousCompletions: NextEditOutcome[] = [];
-  // private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
 
   // Model-specific provider instance.
-  private modelProvider: BaseNextEditProvider | null = null;
+  private modelProvider: BaseNextEditModelProvider | null = null;
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -223,14 +229,14 @@ export class NextEditProvider {
 
     this.currentEditChainId = null;
     this.previousCompletions = [];
-    // TODO: this should be cleaned up in the prefetch queue.
-    // this.nextEditableRegionsInTheCurrentChain = [];
 
     if (this.previousRequest) {
       const fileContent = (
         await this.ide.readFile(this.previousRequest.filepath)
       ).toString();
+
       const ast = await getAst(this.previousRequest.filepath, fileContent);
+
       if (ast) {
         DocumentHistoryTracker.getInstance().push(
           localPathOrUriToPath(this.previousRequest.filepath),
@@ -253,6 +259,9 @@ export class NextEditProvider {
     return this.previousCompletions.length === 1;
   }
 
+  /**
+   * This is the main entry point to this class.
+   */
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -370,6 +379,8 @@ export class NextEditProvider {
       throw new Error("Model provider not initialized");
     }
 
+    // NOTE: getAllSnippetsWithoutRace doesn't seem to incur much performance penalties when compared to getAllSnippets.
+    // Use getAllSnippets if snippet gathering becomes noticably slow.
     const [snippetPayload, workspaceDirs] = await Promise.all([
       getAllSnippetsWithoutRace({
         helper,
@@ -445,6 +456,9 @@ export class NextEditProvider {
     }
 
     // Send prompts to LLM (using only user prompt for fine-tuned models).
+    // prompts[1] extracts the user prompt from the system-user prompt pair.
+    // NOTE: Stream is currently set to false, but this should ideally be a per-model flag.
+    // Mercury Coder currently does not support streaming.
     const msg: ChatMessage = await llm.chat([prompts[1]], token, {
       stream: false,
     });
@@ -484,7 +498,7 @@ export class NextEditProvider {
     }
 
     if (outcome) {
-      // Handle NextEditProvider-specific state
+      // Handle NextEditProvider-specific state.
       this.previousCompletions.push(outcome);
 
       // Mark as displayed for JetBrains
@@ -492,97 +506,6 @@ export class NextEditProvider {
     }
 
     return outcome;
-  }
-
-  private _calculateOptimalEditableRegion(
-    helper: HelperVars,
-    heuristic: "fourChars" | "tokenizer" = "tokenizer",
-  ): {
-    editableRegionStartLine: number;
-    editableRegionEndLine: number;
-  } {
-    const cursorLine = helper.pos.line;
-    const fileLines = helper.fileLines;
-    const MAX_TOKENS = 512;
-
-    // Initialize with cursor line.
-    let editableRegionStartLine = cursorLine;
-    let editableRegionEndLine = cursorLine;
-
-    // Get initial content and token count.
-    let currentContent = fileLines[cursorLine];
-    let totalTokens =
-      heuristic === "tokenizer"
-        ? countTokens(currentContent, helper.modelName)
-        : Math.ceil(currentContent.length / 4);
-
-    // Expand outward alternating between adding lines above and below.
-    let addingAbove = true;
-
-    while (totalTokens < MAX_TOKENS) {
-      let addedLine = false;
-
-      if (addingAbove) {
-        // Try to add a line above.
-        if (editableRegionStartLine > 0) {
-          editableRegionStartLine--;
-          const lineContent = fileLines[editableRegionStartLine];
-          const lineTokens =
-            heuristic === "tokenizer"
-              ? countTokens(lineContent, helper.modelName)
-              : Math.ceil(lineContent.length / 4);
-
-          totalTokens += lineTokens;
-          addedLine = true;
-        }
-      } else {
-        // Try to add a line below.
-        if (editableRegionEndLine < fileLines.length - 1) {
-          editableRegionEndLine++;
-          const lineContent = fileLines[editableRegionEndLine];
-          const lineTokens =
-            heuristic === "tokenizer"
-              ? countTokens(lineContent, helper.modelName)
-              : Math.ceil(lineContent.length / 4);
-
-          totalTokens += lineTokens;
-          addedLine = true;
-        }
-      }
-
-      // If we can't add in the current direction, try the other.
-      if (!addedLine) {
-        // If we're already at both file boundaries, we're done.
-        if (
-          editableRegionStartLine === 0 &&
-          editableRegionEndLine === fileLines.length - 1
-        ) {
-          break;
-        }
-
-        // If we couldn't add in one direction, force the next attempt in the other direction.
-        addingAbove = !addingAbove;
-        continue;
-      }
-
-      // If we exceeded the token limit, revert the last addition.
-      if (totalTokens > MAX_TOKENS) {
-        if (addingAbove) {
-          editableRegionStartLine++;
-        } else {
-          editableRegionEndLine--;
-        }
-        break;
-      }
-
-      // Alternate between adding above and below for balanced context.
-      addingAbove = !addingAbove;
-    }
-
-    return {
-      editableRegionStartLine,
-      editableRegionEndLine,
-    };
   }
 
   private async _markDisplayedIfJetBrains(
@@ -595,6 +518,12 @@ export class NextEditProvider {
     }
   }
 
+  /**
+   * This is a wrapper around provideInlineCompletionItems.
+   * This is invoked when we call the model in the background using prefetch.
+   * It's not currently used anywhere (references are not used either), but I decided to keep it in case we actually need to use prefetch.
+   * You will see that calls to this method is made from NextEditPrefetchQueue.proecss(), which is wrapped in `if (!this.usingFullFileDiff)`.
+   */
   public async provideInlineCompletionItemsWithChain(
     ctx: {
       completionId: string;

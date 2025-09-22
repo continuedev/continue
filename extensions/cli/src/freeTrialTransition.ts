@@ -4,13 +4,14 @@ import * as path from "path";
 
 import chalk from "chalk";
 import open from "open";
-import * as readlineSync from "readline-sync";
 
 import { env } from "./env.js";
 import {
-  isValidAnthropicApiKey,
   getApiKeyValidationError,
+  isValidAnthropicApiKey,
 } from "./util/apiKeyValidation.js";
+import { gracefulExit } from "./util/exit.js";
+import { question, questionWithChoices } from "./util/prompt.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
@@ -51,10 +52,12 @@ export async function handleMaxedOutFreeTrial(
   console.log(chalk.white("1. 💳 Sign up for models add-on"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
 
-  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "), {
-    limit: ["1", "2", ""],
-    limitMessage: chalk.dim("Please enter 1 or 2"),
-  });
+  const choice = await questionWithChoices(
+    chalk.yellow("\nEnter choice (1): "),
+    ["1", "2", ""],
+    "1",
+    chalk.dim("Please enter 1 or 2"),
+  );
 
   if (choice === "1" || choice === "") {
     // Option 1: Open models setup page
@@ -80,20 +83,17 @@ export async function handleMaxedOutFreeTrial(
     }
 
     // Wait for user to acknowledge
-    readlineSync.question(chalk.dim("\nPress Enter to exit..."));
-    process.exit(0);
+    await question(chalk.dim("\nPress Enter to exit..."));
+    await gracefulExit(0);
   } else if (choice === "2") {
     // Option 2: Enter Anthropic API key
-    const apiKey = readlineSync.question(
+    const apiKey = await question(
       chalk.white("\nEnter your Anthropic API key: "),
-      {
-        hideEchoBack: true,
-      },
     );
 
     if (!isValidAnthropicApiKey(apiKey)) {
       console.log(chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`));
-      process.exit(1);
+      await gracefulExit(1);
     }
 
     try {
@@ -108,7 +108,7 @@ export async function handleMaxedOutFreeTrial(
       }
     } catch (error) {
       console.log(chalk.red(`❌ Error saving API key: ${error}`));
-      process.exit(1);
+      await gracefulExit(1);
     }
   }
 
@@ -137,5 +137,5 @@ export async function handleMaxedOutFreeTrial(
   child.unref();
 
   // Exit the current process
-  process.exit(0);
+  await gracefulExit(0);
 }

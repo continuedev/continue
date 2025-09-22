@@ -1,8 +1,10 @@
 import * as fs from "fs";
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { editTool, markFileAsRead, readFilesSet } from "./edit.js";
+import { editTool } from "./edit.js";
+import { markFileAsRead, readFilesSet } from "./readFile.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
@@ -21,6 +23,7 @@ vi.mock("fs", async () => {
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
     unlinkSync: vi.fn(),
+    realpathSync: vi.fn(),
   };
 });
 
@@ -34,6 +37,7 @@ describe("editTool", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
+    vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
   });
 
   afterEach(() => {
@@ -49,9 +53,9 @@ describe("editTool", () => {
         new_string: "Hi there",
       };
 
-      await expect(editTool.preprocess!(args)).rejects.toThrow(
-        `You must use the Read tool to read ${testFilePath} before editing it.`,
-      );
+      const error = await editTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.EditToolFileNotRead);
     });
 
     it("should throw error if file does not exist", async () => {
@@ -65,9 +69,9 @@ describe("editTool", () => {
         new_string: "Hi",
       };
 
-      await expect(editTool.preprocess!(args)).rejects.toThrow(
-        `File ${nonExistentFile} does not exist`,
-      );
+      const error = await editTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileNotFound);
     });
 
     it("should throw error if old_string is not found", async () => {
@@ -80,8 +84,10 @@ describe("editTool", () => {
         new_string: "Hi there",
       };
 
-      await expect(editTool.preprocess!(args)).rejects.toThrow(
-        "String not found in file: Not found",
+      const error = await editTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(
+        ContinueErrorReason.FindAndReplaceOldStringNotFound,
       );
     });
 
@@ -95,8 +101,10 @@ describe("editTool", () => {
         replace_all: false,
       };
 
-      await expect(editTool.preprocess!(args)).rejects.toThrow(
-        'String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+      const error = await editTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(
+        ContinueErrorReason.FindAndReplaceMultipleOccurrences,
       );
     });
 
@@ -109,8 +117,10 @@ describe("editTool", () => {
         new_string: "Hello world",
       };
 
-      await expect(editTool.preprocess!(args)).rejects.toThrow(
-        "old_string and new_string must be different",
+      const error = await editTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(
+        ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
       );
     });
 
@@ -126,7 +136,7 @@ describe("editTool", () => {
       const result = await editTool.preprocess!(args);
 
       expect(result.args).toEqual({
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent: "Hi there\nThis is a test file\nGoodbye world",
         oldContent: originalContent,
       });
@@ -163,7 +173,7 @@ describe("editTool", () => {
     it("should successfully write file and return success message", async () => {
       const newContent = "Hi there\nThis is a test file\nGoodbye world";
       const args = {
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent,
         oldContent: originalContent,
       };
@@ -186,14 +196,14 @@ describe("editTool", () => {
       });
 
       const args = {
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent: "new content",
         oldContent: originalContent,
       };
 
-      await expect(editTool.run(args)).rejects.toThrow(
-        `Error: failed to edit ${testFilePath}: Write failed`,
-      );
+      const error = await editTool.run(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileWriteError);
     });
   });
 

@@ -41,10 +41,11 @@ const SVG_CONFIG = {
   // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
   //       drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
   //       drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
-  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
-        drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
-        drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
-        drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+  //       drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
+  //       drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
+  //       drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  filter: "none",
   radius: 3,
   leftMargin: 40,
   defaultText: "",
@@ -97,6 +98,11 @@ export const HIDE_NEXT_EDIT_SUGGESTION_COMMAND =
 export const ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND =
   "continue.nextEditWindow.acceptNextEditSuggestion";
 
+/**
+ * This is where we create SVG windows and deletion decorations for non-FIM next edit suggestions.
+ * This class controls the decoration object lifetime.
+ * The syntax highlighting and the actual building of SVG happens inside core/codeRenderer/CodeRenderer.ts.
+ */
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
 
@@ -408,6 +414,8 @@ export class NextEditWindowManager {
       );
     }
 
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
     // Create and apply decoration with the text.
     if (newEditRangeSlice !== "") {
       try {
@@ -418,6 +426,7 @@ export class NextEditWindowManager {
           newEditRangeSlice,
           this.editableRegionStartLine,
           diffLines,
+          diffChars,
         );
       } catch (error) {
         console.error("Failed to render window:", error);
@@ -426,8 +435,6 @@ export class NextEditWindowManager {
         return;
       }
     }
-
-    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
     this.renderDeletions(editor, diffChars);
 
@@ -492,9 +499,6 @@ export class NextEditWindowManager {
     this.mostRecentCompletionId = null;
   }
 
-  /**
-   * Accept the current next edit suggestion by inserting it at cursor position.
-   */
   /**
    * Accept the current next edit suggestion by inserting it at cursor position.
    */
@@ -684,6 +688,7 @@ export class NextEditWindowManager {
     text: string,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -708,6 +713,7 @@ export class NextEditWindowManager {
         },
         currLineOffsetFromTop,
         newDiffLines,
+        diffChars,
       );
 
       return {
@@ -731,12 +737,14 @@ export class NextEditWindowManager {
     position: vscode.Position,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
       predictedCode,
       currLineOffsetFromTop,
       newDiffLines,
+      diffChars,
     );
     if (!uriAndDimensions) {
       return undefined;
@@ -840,15 +848,6 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     position: vscode.Position,
   ): vscode.Position {
-    // Create a position that's offset spaces to the right of the cursor.
-
-    // const line = editor.document.lineAt(position.line);
-    // const offsetChar = Math.min(
-    //   position.character + SVG_CONFIG.cursorOffset,
-    //   line.text.length,
-    // );
-    // return new vscode.Position(position.line, offsetChar);
-
     // Place decoration at the end of the current line
     const line = editor.document.lineAt(position.line);
     return new vscode.Position(position.line, line.text.length);
@@ -864,6 +863,7 @@ export class NextEditWindowManager {
     predictedCode: string,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ) {
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
@@ -875,6 +875,7 @@ export class NextEditWindowManager {
       position,
       editableRegionStartLine,
       newDiffLines,
+      diffChars,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
@@ -951,7 +952,6 @@ export class NextEditWindowManager {
 
     const deleteDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: "rgba(255, 0, 0, 0.5)",
-      textDecoration: "line-through",
     });
 
     editor.setDecorations(deleteDecorationType, charsToDelete);

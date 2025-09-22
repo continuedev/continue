@@ -34,23 +34,6 @@ function FunctionSpecificToolCallDiv({
           historyIndex={historyIndex}
         />
       );
-    case BuiltInToolNames.SearchAndReplaceInFile:
-      const changes = args?.diffs
-        ? Array.isArray(args.diffs)
-          ? args.diffs?.join("\n\n---\n\n")
-          : args.diffs
-        : "";
-
-      return (
-        <EditFile
-          showToolCallStatusIcon={true}
-          status={toolCallState.status}
-          relativeFilePath={args?.filepath ?? ""}
-          changes={changes}
-          toolCallId={toolCall.id}
-          historyIndex={historyIndex}
-        />
-      );
     case BuiltInToolNames.SingleFindAndReplace:
       const edits: EditOperation[] = [
         {

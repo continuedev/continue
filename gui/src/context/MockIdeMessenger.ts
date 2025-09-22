@@ -51,6 +51,14 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       dateCreated: new Date().toString(),
       workspaceDirectory: "/tmp",
     },
+    {
+      title: "Remote Agent",
+      sessionId: "remote-agent-123",
+      dateCreated: new Date().toString(),
+      workspaceDirectory: "",
+      isRemote: true,
+      remoteId: "agent-123",
+    },
   ],
   "history/save": undefined,
   getControlPlaneSessionInfo: {
@@ -89,6 +97,21 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     didPrune: false,
     contextPercentage: 0.5,
   },
+  "context/getContextItems": [
+    {
+      id: {
+        providerTitle: "mock",
+        itemId: "mock",
+      },
+      content: "Mock current file content",
+      name: "Mock File",
+      description: "Mock file for testing",
+      uri: {
+        type: "file",
+        value: "file:///Users/test/mock-file.ts",
+      },
+    },
+  ],
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [

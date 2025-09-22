@@ -261,6 +261,66 @@ This is a rule with alwaysApply explicitly set to false.`;
     const result = markdownToRule(content, mockId);
     expect(result.alwaysApply).toBe(false);
   });
+
+  it("should include invokable from frontmatter when true", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+name: Test Rule
+invokable: true
+---
+
+# Test Rule
+
+This is an invokable rule.`;
+
+    const result = markdownToRule(content, mockId);
+    expect(result.invokable).toBe(true);
+  });
+
+  it("should include invokable from frontmatter when false", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+name: Test Rule
+invokable: false
+---
+
+# Test Rule
+
+This is a non-invokable rule.`;
+
+    const result = markdownToRule(content, mockId);
+    expect(result.invokable).toBe(false);
+  });
+
+  it("should handle invokable with alwaysApply together", () => {
+    const content = `---
+alwaysApply: true
+invokable: true
+name: Test Rule
+---
+
+# Test Rule
+
+This is a rule with both alwaysApply and invokable.`;
+
+    const result = markdownToRule(content, mockId);
+    expect(result.alwaysApply).toBe(true);
+    expect(result.invokable).toBe(true);
+  });
+
+  it("should not include invokable when not in frontmatter", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+name: Test Rule
+---
+
+# Test Rule
+
+This is a rule without invokable property.`;
+
+    const result = markdownToRule(content, mockId);
+    expect(result.invokable).toBeUndefined();
+  });
 });
 
 describe("getRuleName", () => {

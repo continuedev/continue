@@ -1,4 +1,7 @@
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { renderContextItems } from "core/util/messageContent";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -22,6 +25,7 @@ import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
+import { evaluateTerminalCommandSecurity } from "@continuedev/terminal-security";
 
 export interface StepContainerPreToolbarProps {
   showToolCallStatusIcon?: boolean;
@@ -130,6 +134,44 @@ export function StepContainerPreToolbar({
   }, [history.length, itemIndex]);
 
   const isGeneratingCodeBlock = isLastItem && isLastCodeblock && isStreaming;
+
+  // Check if this is a bash/shell code block and evaluate security
+  const securityWarning = useMemo(() => {
+    // Check if it's a terminal code block (includes bash, sh, or looks like terminal commands)
+    if (isTerminalCodeBlock(language, codeBlockContent)) {
+      // First try evaluating the entire block
+      const wholeBlockEval = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        codeBlockContent,
+      );
+      if (
+        wholeBlockEval === "disabled" ||
+        wholeBlockEval === "allowedWithPermission"
+      ) {
+        return true;
+      }
+
+      // If the whole block seems safe, check individual lines
+      // This catches cases where dangerous commands are mixed with comments
+      const lines = codeBlockContent.split("\n");
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        // Skip empty lines and comments
+        if (!trimmedLine || trimmedLine.startsWith("#")) {
+          continue;
+        }
+
+        const lineEval = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          trimmedLine,
+        );
+        if (lineEval === "disabled" || lineEval === "allowedWithPermission") {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [language, codeBlockContent]);
 
   // If we are creating a file, we already render that in the button
   // so we don't want to dispaly it twice here
@@ -293,6 +335,15 @@ export function StepContainerPreToolbar({
 
   return (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
+      {securityWarning && (
+        <div className="bg-warning/10 border-warning/30 text-warning flex items-center gap-2 border-b px-2 py-1.5 text-sm">
+          <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
+          <span>
+            This code contains potentially dangerous commands. Please review and
+            understand the code before running.
+          </span>
+        </div>
+      )}
       <div
         className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
         style={{ fontSize: `${getFontSize() - 2}px` }}
