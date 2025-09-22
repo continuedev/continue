@@ -4,6 +4,7 @@ import {
   ChevronDownIcon,
   CircleStackIcon,
   CommandLineIcon,
+  EllipsisVerticalIcon,
   GlobeAltIcon,
   PlayCircleIcon,
   StopCircleIcon,
@@ -208,7 +209,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
 
         <div className="-mr-2.5 flex items-center gap-1">
-          {server.isProtectedResource && (
+          {server.isProtectedResource && server.status !== "connected" && (
             <ToolTip
               content={
                 server.status === "error"
@@ -239,42 +240,73 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               </Button>
             </ToolTip>
           )}
+          <ToolTip
+            openOnClick={true}
+            clickable={true}
+            offset={5}
+            place="bottom"
+            content={
+              <div className="flex items-center gap-x-1">
+                {server.isProtectedResource &&
+                  server.status === "connected" && (
+                    <ToolTip content="Remove Authentication">
+                      <Button
+                        onClick={onRemoveAuth}
+                        variant="ghost"
+                        size="sm"
+                        className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+                      >
+                        <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
+                      </Button>
+                    </ToolTip>
+                  )}
 
-          <ToolTip content="Edit server configuration">
-            <div>
-              <EditBlockButton
-                blockType={"mcpServers"}
-                block={serverFromYaml}
-                sourceFile={server.sourceFile}
-              />
-            </div>
-          </ToolTip>
+                <ToolTip content="Edit server configuration">
+                  <div>
+                    <EditBlockButton
+                      blockType={"mcpServers"}
+                      block={serverFromYaml}
+                      sourceFile={server.sourceFile}
+                    />
+                  </div>
+                </ToolTip>
 
-          {!disconnectedMCPServers.includes(server.name) && (
-            <ToolTip content="Disconnect server">
-              <Button
-                onClick={onDisconnect}
-                variant="ghost"
-                size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 -mr-1 h-6 w-6 p-0"
-              >
-                <StopCircleIcon className="h-4 w-4 flex-shrink-0" />
-              </Button>
-            </ToolTip>
-          )}
+                {!disconnectedMCPServers.includes(server.name) && (
+                  <ToolTip content="Disconnect server">
+                    <Button
+                      onClick={onDisconnect}
+                      variant="ghost"
+                      size="sm"
+                      className="text-description-muted hover:enabled:text-foreground my-0 -mr-1 h-6 w-6 p-0"
+                    >
+                      <StopCircleIcon className="h-4 w-4 flex-shrink-0" />
+                    </Button>
+                  </ToolTip>
+                )}
 
-          <ToolTip content="Reconnect server">
+                <ToolTip content="Reconnect server">
+                  <Button
+                    onClick={onRefresh}
+                    variant="ghost"
+                    size="sm"
+                    className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+                  >
+                    {disconnectedMCPServers.includes(server.name) ? (
+                      <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
+                    ) : (
+                      <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+                    )}
+                  </Button>
+                </ToolTip>
+              </div>
+            }
+          >
             <Button
-              onClick={onRefresh}
               variant="ghost"
               size="sm"
               className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
             >
-              {disconnectedMCPServers.includes(server.name) ? (
-                <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
-              ) : (
-                <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
-              )}
+              <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
             </Button>
           </ToolTip>
         </div>
