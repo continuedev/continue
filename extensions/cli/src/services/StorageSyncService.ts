@@ -250,11 +250,21 @@ export class StorageSyncService {
     body: string,
     contentType: string,
   ): Promise<void> {
+    // Parse the URL to extract any required headers from the query parameters
+    const parsedUrl = new URL(url);
+    const headers: Record<string, string> = {
+      "Content-Type": contentType,
+    };
+
+    // Check if the presigned URL includes server-side encryption in signed headers
+    const signedHeaders = parsedUrl.searchParams.get("X-Amz-SignedHeaders");
+    if (signedHeaders?.includes("x-amz-server-side-encryption")) {
+      headers["x-amz-server-side-encryption"] = "AES256";
+    }
+
     const response = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": contentType,
-      },
+      headers,
       body,
     });
 
