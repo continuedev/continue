@@ -20,12 +20,12 @@ npm i -g @continuedev/cli
 ## Two Ways to Use Continue CLI
 
 <Info>
-  **Quick Overview**: Continue CLI works in two modes - interactive
-  conversations or async, automated commands.
+  **Quick Overview**: Continue CLI works in two modes - TUI for interactive
+  conversations or headless for automated commands.
 </Info>
 
 <Tabs>
-<Tab title="REPL Mode">
+<Tab title="TUI Mode">
 **Interactive development sessions**
 
 Start a conversation with AI in your terminal:
@@ -39,7 +39,7 @@ Perfect for exploration, debugging, and iterative development.
 
 </Tab>
 
-<Tab title="Continuous AI Mode">
+<Tab title="Headless Mode">
 **Automation and scripting**
 
 Single commands that return results:
@@ -54,7 +54,7 @@ Perfect for CI/CD, git hooks, and automated workflows.
 </Tab>
 </Tabs>
 
-## Setup for CLI (REPL Mode)
+## Setup for CLI (TUI Mode)
 
 For interactive development and exploration:
 
@@ -66,7 +66,7 @@ cn login
 This will open your browser to authenticate with Continue Hub.
 </Step>
 
-<Step title="Test Interactive Mode">
+<Step title="Test TUI Mode">
 Start an interactive session:
 ```bash
 cn
@@ -81,7 +81,7 @@ Try asking a question:
 </Step>
 </Steps>
 
-## Setup for CLI (Continuous AI Mode)
+## Setup for CLI (Headless Mode)
 
 For automation workflows and scripting:
 
@@ -101,8 +101,8 @@ Store secure credentials for CLI workflows:
 3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
 </Step>
 
-<Step title="Test Async Mode">
-Try async mode for automation:
+<Step title="Test Headless Mode">
+Try headless mode for automation:
 ```bash
 cn -p "Generate a conventional commit message for the current git changes"
 ```
