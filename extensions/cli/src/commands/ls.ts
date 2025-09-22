@@ -30,13 +30,16 @@ export async function getTunnelForAgent(agentId: string): Promise<string> {
   const authConfig = loadAuthConfig();
   const accessToken = getAccessToken(authConfig);
 
-  const resp = await fetch(new URL(`agents/${encodeURIComponent(agentId)}/tunnel`, env.apiBase), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
+  const resp = await fetch(
+    new URL(`agents/${encodeURIComponent(agentId)}/tunnel`, env.apiBase),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error(
       `Failed to get tunnel for agent ${agentId}: ${await resp.text()}`,

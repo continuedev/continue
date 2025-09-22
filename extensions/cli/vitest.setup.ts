@@ -23,7 +23,7 @@ vi.mock("./src/systemMessage.js", () => ({
 process.env.CONTINUE_GLOBAL_DIR = "/tmp/continue-test";
 
 // Increase max listeners to prevent warnings during parallel testing
-if (typeof process !== 'undefined' && process.setMaxListeners) {
+if (typeof process !== "undefined" && process.setMaxListeners) {
   process.setMaxListeners(100);
 }
 
@@ -37,7 +37,7 @@ beforeEach(() => {
 afterEach(() => {
   // Clear vitest timers
   vi.clearAllTimers();
-  
+
   // Clear all mocks
   vi.clearAllMocks();
 

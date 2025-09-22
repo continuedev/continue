@@ -3,9 +3,12 @@ import * as fs from "fs";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  calculateLinesOfCodeDiff,
+  getLanguageFromFilePath,
+} from "../telemetry/utils.js";
 import { editTool } from "./edit.js";
 import { markFileAsRead, readFilesSet } from "./readFile.js";
-import { calculateLinesOfCodeDiff, getLanguageFromFilePath } from "../telemetry/utils.js";
 import { generateDiff } from "./writeFile.js";
 
 // Mock the dependencies
@@ -35,9 +38,12 @@ describe("editTool", () => {
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
     vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
-    
+
     // Setup utility mocks with proper return values
-    vi.mocked(calculateLinesOfCodeDiff).mockReturnValue({ added: 1, removed: 0 });
+    vi.mocked(calculateLinesOfCodeDiff).mockReturnValue({
+      added: 1,
+      removed: 0,
+    });
     vi.mocked(getLanguageFromFilePath).mockReturnValue("javascript");
     vi.mocked(generateDiff).mockReturnValue("mocked diff");
   });
