@@ -280,11 +280,6 @@ declare global {
     replacement: string;
   }
   
-  export interface ContinueError {
-    title: string;
-    message: string;
-  }
-  
   export interface CompletionOptions extends BaseCompletionOptions {
     model: string;
   }

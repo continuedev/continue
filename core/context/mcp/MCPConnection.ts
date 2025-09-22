@@ -52,6 +52,7 @@ class MCPConnection {
   public status: MCPConnectionStatus = "not-connected";
   public isProtectedResource = false;
   public errors: string[] = [];
+  public infos: string[] = [];
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
@@ -93,6 +94,7 @@ class MCPConnection {
     return {
       ...this.options,
       errors: this.errors,
+      infos: this.infos,
       prompts: this.prompts,
       resources: this.resources,
       resourceTemplates: this.resourceTemplates,
@@ -122,6 +124,7 @@ class MCPConnection {
     this.resources = [];
     this.resourceTemplates = [];
     this.errors = [];
+    this.infos = [];
     this.stdioOutput = { stdout: "", stderr: "" };
 
     this.abortController.abort();
@@ -280,6 +283,16 @@ class MCPConnection {
             if (msg.includes("spawn") && msg.includes("enoent")) {
               const command = msg.split(" ")[1];
               errorMessage += `Error: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+              if (["uv", "uvx"].includes(command)) {
+                this.infos.push(
+                  'Please install uv by following the installation guide: <a href="https://docs.astral.sh/uv/getting-started/installation/">https://docs.astral.sh/uv/getting-started/installation/</a>',
+                );
+              }
+              if (["node", "npx"].includes(command)) {
+                this.infos.push(
+                  'Please install npx by following the installation guide: <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">https://docs.npmjs.com/downloading-and-installing-node-js-and-npm</a>',
+                );
+              }
             } else {
               errorMessage += "Error: " + error.message;
             }
