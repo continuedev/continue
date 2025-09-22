@@ -112,9 +112,6 @@ export class VsCodeMessenger {
     this.onWebview("focusEditor", (msg) => {
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
     });
-    this.onWebview("toggleFullScreen", (msg) => {
-      vscode.commands.executeCommand("continue.toggleFullScreen");
-    });
 
     this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
       await vscode.commands.executeCommand(
@@ -232,6 +229,7 @@ export class VsCodeMessenger {
           new vscode.Position(end.line, end.character),
         ),
         rulesToInclude: config.rules,
+        isApply: false,
       });
 
       // Log dev data

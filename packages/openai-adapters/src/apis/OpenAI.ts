@@ -35,6 +35,11 @@ export class OpenAIApi implements BaseLlmApi {
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
+    // Add stream_options to include usage in streaming responses
+    if (body.stream) {
+      (body as any).stream_options = { include_usage: true };
+    }
+
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {

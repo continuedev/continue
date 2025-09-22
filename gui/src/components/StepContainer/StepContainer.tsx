@@ -23,9 +23,6 @@ export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const historyItemAfterThis = useAppSelector(
-    (state) => state.session.history[props.index + 1],
-  );
   const uiConfig = useAppSelector(selectUIConfig);
 
   // Calculate dimming and indicator state based on latest summary index
@@ -35,33 +32,38 @@ export default function StepContainer(props: StepContainerProps) {
   const isLatestSummary =
     latestSummaryIndex !== -1 && props.index === latestSummaryIndex;
 
+  const historyItemAfterThis = useAppSelector(
+    (state) => state.session.history[props.index + 1],
+  );
+
   const isNextMsgAssistantOrThinking =
     historyItemAfterThis?.message.role === "assistant" ||
     historyItemAfterThis?.message.role === "thinking" ||
     historyItemAfterThis?.message.role === "tool";
 
   const shouldRenderResponseAction = () => {
-    // Always show actions for assistant messages if conditions are met
-    if (props.item.message.role === "assistant") {
-      if (isNextMsgAssistantOrThinking) {
-        return false;
-      }
+    // Only for assistant messages
+    if (props.item.message.role !== "assistant") return false;
 
-      if (!historyItemAfterThis) {
-        return !props.item.toolCallStates;
-      }
+    // Hide when next is assistant/thinking/tool
+    if (isNextMsgAssistantOrThinking) return false;
 
-      return true;
+    // If this is the last message, only show when not streaming and no tool calls
+    if (props.isLast) {
+      return !isStreaming && !props.item.toolCallStates;
     }
 
-    return false;
+    // For non-last messages, only show if the next message is a user message
+    return historyItemAfterThis?.message.role === "user";
   };
 
   const shouldRenderUserMessageActions = () => {
     // Show actions for user messages when not streaming
-    console.log("last item role: ", props.item.message.role);
     return props.item.message.role === "user";
   };
+  const showResponseActions =
+    (props.isLast || historyItemAfterThis?.message.role === "user") &&
+    !(props.isLast && (isStreaming || props.item.toolCallStates));
 
   useEffect(() => {
     if (!isStreaming) {
@@ -124,7 +126,7 @@ export default function StepContainer(props: StepContainerProps) {
 
       {shouldRenderResponseAction() && (
         <div
-          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary || isStreaming ? "opacity-35" : ""} ${isStreaming && "pointer-events-none cursor-not-allowed"}`}
         >
           <ResponseActions
             isTruncated={isTruncated}

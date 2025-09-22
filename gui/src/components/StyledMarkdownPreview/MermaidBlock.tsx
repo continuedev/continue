@@ -7,7 +7,7 @@ import {
 import Panzoom from "@panzoom/panzoom";
 // @ts-ignore
 import mermaid from "mermaid";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebouncedEffect } from "../find/useDebounce";
 import { ToolTip } from "../gui/Tooltip";
 
@@ -78,10 +78,6 @@ export default function MermaidDiagram({ code }: { code: string }) {
   const zoomOutButtonRef = useRef<SVGSVGElement>(null);
   const resetZoomButtonRef = useRef<SVGSVGElement>(null);
 
-  const zoomInButtonId = useId();
-  const zoomOutButtonId = useId();
-  const resetZoomButtonId = useId();
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -147,24 +143,25 @@ export default function MermaidDiagram({ code }: { code: string }) {
       ) : (
         <div className="relative">
           <div className="absolute right-0 z-10 m-2 flex items-center gap-x-1">
-            <MagnifyingGlassPlusIcon
-              data-tooltip-id={zoomInButtonId}
-              ref={zoomInButtonRef}
-              className="h-4 w-4 cursor-pointer"
-            />
-            <ToolTip id={zoomInButtonId}>Zoom In</ToolTip>
-            <MagnifyingGlassMinusIcon
-              data-tooltip-id={zoomOutButtonId}
-              ref={zoomOutButtonRef}
-              className="h-4 w-4 cursor-pointer"
-            />
-            <ToolTip id={zoomOutButtonId}>Zoom Out</ToolTip>
-            <ArrowPathRoundedSquareIcon
-              data-tooltip-id={resetZoomButtonId}
-              ref={resetZoomButtonRef}
-              className="h-4 w-4 cursor-pointer"
-            />
-            <ToolTip id={resetZoomButtonId}>Reset Zoom</ToolTip>
+            <ToolTip content={"Zoom In"}>
+              <MagnifyingGlassPlusIcon
+                ref={zoomInButtonRef}
+                className="h-4 w-4 cursor-pointer"
+              />
+            </ToolTip>
+            <ToolTip content={"Zoom Out"}>
+              <MagnifyingGlassMinusIcon
+                ref={zoomOutButtonRef}
+                className="h-4 w-4 cursor-pointer"
+              />
+            </ToolTip>
+
+            <ToolTip content="Reset Zoom">
+              <ArrowPathRoundedSquareIcon
+                ref={resetZoomButtonRef}
+                className="h-4 w-4 cursor-pointer"
+              />
+            </ToolTip>
           </div>
           <div
             className="flex min-h-5 justify-center"

@@ -9,6 +9,7 @@ import {
   MCPServiceState,
   MCPTool,
   SERVICE_NAMES,
+  services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { getAllBuiltinTools, ToolCall } from "../tools/index.js";
@@ -27,14 +28,23 @@ export async function handleToolCalls(
   callbacks: StreamCallbacks | undefined,
   isHeadless: boolean,
 ): Promise<boolean> {
+  const chatHistorySvc = services.chatHistory;
+  const useService =
+    typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
   if (toolCalls.length === 0) {
     if (content) {
-      chatHistory.push(
-        createHistoryItem({
-          role: "assistant",
-          content,
-        }),
-      );
+      if (useService) {
+        // Service-driven: write assistant message via service
+        chatHistorySvc.addAssistantMessage(content);
+      } else {
+        // Fallback only when service is unavailable
+        chatHistory.push(
+          createHistoryItem({
+            role: "assistant",
+            content,
+          }),
+        );
+      }
     }
     return false;
   }
@@ -68,7 +78,16 @@ export async function handleToolCalls(
     })),
   };
 
-  chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
+  if (useService) {
+    // Important: pass ChatCompletion-style toolCalls, not internal ToolCall[]
+    chatHistorySvc.addAssistantMessage(
+      assistantMessage.content || "",
+      assistantMessage.toolCalls,
+    );
+  } else {
+    // Fallback only when service is unavailable
+    chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
+  }
 
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
@@ -77,13 +96,17 @@ export async function handleToolCalls(
   // Add any preprocessing errors to chat history
   // Convert error entries from OpenAI format to ChatHistoryItem format
   errorChatEntries.forEach((errorEntry) => {
-    chatHistory.push(
-      createHistoryItem({
-        role: "tool",
-        content: stripImages(errorEntry.content) || "",
-        toolCallId: errorEntry.tool_call_id,
-      }),
-    );
+    const item = createHistoryItem({
+      role: "tool",
+      content: stripImages(errorEntry.content) || "",
+      toolCallId: errorEntry.tool_call_id,
+    });
+    if (useService) {
+      chatHistorySvc.addHistoryItem(item);
+    } else {
+      // Fallback only when service is unavailable
+      chatHistory.push(item);
+    }
   });
 
   // Execute the valid preprocessed tool calls
@@ -97,32 +120,55 @@ export async function handleToolCalls(
     return true; // Signal early return needed
   }
 
-  // Convert tool results from OpenAI format to ChatHistoryItem format
-  // and add them to the chat history
+  // Convert tool results and add them to the chat history with per-result status
   toolResults.forEach((toolResult) => {
-    // Find the corresponding tool call state to update
-    const lastAssistantIndex = chatHistory.findLastIndex(
-      (item) => item.message.role === "assistant" && item.toolCallStates,
-    );
+    const resultContent =
+      typeof toolResult.content === "string" ? toolResult.content : "";
 
+    // Derive per-result status instead of applying batch-wide hasRejection
+    let status: ToolStatus = "done";
+    const lower = resultContent.toLowerCase();
     if (
-      lastAssistantIndex >= 0 &&
-      chatHistory[lastAssistantIndex].toolCallStates
+      lower.includes("permission denied by user") ||
+      lower.includes("cancelled due to previous tool rejection") ||
+      lower.includes("canceled due to previous tool rejection")
     ) {
-      const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-        (ts) => ts.toolCallId === toolResult.tool_call_id,
-      );
+      status = "canceled";
+    } else if (
+      lower.startsWith("error executing tool") ||
+      lower.startsWith("error:")
+    ) {
+      status = "errored" as ToolStatus;
+    }
 
-      if (toolState) {
-        toolState.status = hasRejection ? "canceled" : "done";
-        toolState.output = [
-          {
-            content:
-              typeof toolResult.content === "string" ? toolResult.content : "",
-            name: `Tool Result`,
-            description: "Tool execution result",
-          },
-        ];
+    if (useService) {
+      chatHistorySvc.addToolResult(
+        toolResult.tool_call_id,
+        resultContent,
+        status,
+      );
+    } else {
+      // Fallback only when service is unavailable: update local tool state
+      const lastAssistantIndex = chatHistory.findLastIndex(
+        (item) => item.message.role === "assistant" && item.toolCallStates,
+      );
+      if (
+        lastAssistantIndex >= 0 &&
+        chatHistory[lastAssistantIndex].toolCallStates
+      ) {
+        const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
+          (ts) => ts.toolCallId === toolResult.tool_call_id,
+        );
+        if (toolState) {
+          toolState.status = status;
+          toolState.output = [
+            {
+              content: resultContent,
+              name: `Tool Result`,
+              description: "Tool execution result",
+            },
+          ];
+        }
       }
     }
   });

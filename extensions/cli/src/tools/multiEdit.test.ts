@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { multiEditTool, markFileAsRead } from "./multiEdit.js";
+import { multiEditTool } from "./multiEdit.js";
+import { markFileAsRead } from "./readFile.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
@@ -22,6 +23,7 @@ vi.mock("fs", async () => {
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
     unlinkSync: vi.fn(),
+    realpathSync: vi.fn(),
   };
 });
 
@@ -35,6 +37,7 @@ describe("multiEditTool", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
+    vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
   });
 
   afterEach(() => {

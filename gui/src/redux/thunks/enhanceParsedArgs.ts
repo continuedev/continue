@@ -16,8 +16,7 @@ export async function enhanceParsedArgs(
   let enhancedArgs = { ...currentArgs };
   if (
     (toolName === BuiltInToolNames.SingleFindAndReplace ||
-      toolName === BuiltInToolNames.MultiEdit ||
-      toolName === BuiltInToolNames.SearchAndReplaceInFile) &&
+      toolName === BuiltInToolNames.MultiEdit) &&
     currentArgs?.filepath &&
     !currentArgs?.editingFileContents
   ) {

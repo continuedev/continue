@@ -4,7 +4,6 @@ import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
 import { multiEditImpl } from "./multiEditImpl";
-import { searchReplaceToolImpl } from "./searchReplaceImpl";
 import { singleFindAndReplaceImpl } from "./singleFindAndReplaceImpl";
 
 export interface ClientToolExtras {
@@ -38,9 +37,6 @@ export async function callClientTool(
     switch (toolCall.function.name) {
       case BuiltInToolNames.EditExistingFile:
         output = await editToolImpl(parsedArgs, toolCall.id, extras);
-        break;
-      case BuiltInToolNames.SearchAndReplaceInFile:
-        output = await searchReplaceToolImpl(parsedArgs, toolCall.id, extras);
         break;
       case BuiltInToolNames.SingleFindAndReplace:
         output = await singleFindAndReplaceImpl(
