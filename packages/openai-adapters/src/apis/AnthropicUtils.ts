@@ -27,7 +27,7 @@ export function getAnthropicErrorMessage(response: ErrorResponse): string {
     case "overloaded_error":
       return "Anthropic's API is temporarily overloaded. Please check their status page: https://status.anthropic.com/#past-incidents";
     case "timeout_error":
-      "Anthropic API timed out. Please check their status page: https://status.anthropic.com/#past-incidents";
+      return "Anthropic API timed out. Please check their status page: https://status.anthropic.com/#past-incidents";
     case "billing_error":
     default:
       return response.error.message;

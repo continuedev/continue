@@ -17,7 +17,6 @@
   "author": "Continue Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.62.0",
     "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.11.4",
@@ -55,6 +54,7 @@
     "vitest": "^3.1.4"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.62.0",
     "@aws-sdk/client-bedrock-runtime": "^3.779.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.777.0",
     "@aws-sdk/credential-providers": "^3.778.0",

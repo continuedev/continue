@@ -193,7 +193,7 @@ export class AnthropicApi implements BaseLlmApi {
       for (const part of supportedParts) {
         if (part.type === "image_url") {
           const dataUrl = part.image_url.url;
-          if (dataUrl) {
+          if (dataUrl?.startsWith("data:")) {
             blocks.push({
               type: "image",
               source: {
