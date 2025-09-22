@@ -5,7 +5,6 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   GlobeAltIcon,
-  PlusIcon,
   UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -264,6 +263,27 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               <span className="text-xs">
                 {error.length > 150 ? error.substring(0, 150) + "..." : error}
               </span>
+            </Alert>
+          ))}
+        </div>
+      )}
+
+      {server.infos && server.infos.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {server.infos.map((info, infoIndex) => (
+            <Alert
+              key={infoIndex}
+              type="info"
+              size="sm"
+              className="transition-all"
+              onClick={() =>
+                void ideMessenger.ide.showVirtualFile(server.name, info)
+              }
+            >
+              <span
+                className="text-xs"
+                dangerouslySetInnerHTML={{ __html: info }}
+              />
             </Alert>
           ))}
         </div>

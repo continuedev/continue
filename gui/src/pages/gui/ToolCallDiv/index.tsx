@@ -1,7 +1,4 @@
-import {
-  ArrowRightIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
@@ -62,7 +59,8 @@ export function ToolCallDiv({
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
     if (
       functionName === BuiltInToolNames.SingleFindAndReplace ||
-      functionName === BuiltInToolNames.MultiEdit
+      functionName === BuiltInToolNames.MultiEdit ||
+      functionName === BuiltInToolNames.RunTerminalCommand
     ) {
       return (
         <div className="flex flex-col px-1">
