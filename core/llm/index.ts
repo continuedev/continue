@@ -87,6 +87,9 @@ type InteractionStatus = "in_progress" | "success" | "error" | "cancelled";
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
+  // Provider capabilities (overridable by subclasses)
+  protected supportsReasoningField: boolean = false;
+  protected supportsReasoningDetailsField: boolean = false;
 
   get providerName(): string {
     return (this.constructor as typeof BaseLLM).providerName;
@@ -1137,7 +1140,10 @@ export abstract class BaseLLM implements ILLM {
     try {
       {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
-          let body = toChatBody(messages, completionOptions);
+          let body = toChatBody(messages, completionOptions, {
+            includeReasoningField: this.supportsReasoningField,
+            includeReasoningDetailsField: this.supportsReasoningDetailsField,
+          });
           body = this.modifyChatBody(body);
 
           if (logEnabled) {

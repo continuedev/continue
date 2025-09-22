@@ -42,10 +42,63 @@ import {
   MessagePart,
 } from "..";
 
+function appendReasoningFieldsIfSupported(
+  msg: ChatCompletionAssistantMessageParam & {
+    reasoning?: string;
+    reasoning_details?: any[];
+  },
+  options: CompletionOptions,
+  prevMessage?: ChatMessage,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
+) {
+  if (!prevMessage || prevMessage.role !== "thinking") return;
+
+  const includeReasoning = !!providerFlags?.includeReasoningField;
+  const includeReasoningDetails = !!providerFlags?.includeReasoningDetailsField;
+  if (!includeReasoning && !includeReasoningDetails) return;
+
+  const reasoningDetailsValue =
+    prevMessage.reasoning_details ||
+    (prevMessage.signature
+      ? [{ signature: prevMessage.signature }]
+      : undefined);
+
+  // Claude-specific safeguard: prevent errors when switching to Claude after another model.
+  // Claude requires a signed reasoning_details block; if missing, we must omit both fields.
+  // This check is done before adding any fields to avoid deletes.
+  if (
+    includeReasoningDetails &&
+    options.model.includes("claude") &&
+    !(
+      Array.isArray(reasoningDetailsValue) &&
+      reasoningDetailsValue.some((d) => d && d.signature)
+    )
+  ) {
+    console.warn(
+      "Omitting reasoning fields for Claude: no signature present in reasoning_details",
+    );
+    return;
+  }
+
+  if (includeReasoningDetails && reasoningDetailsValue) {
+    msg.reasoning_details = reasoningDetailsValue || [];
+  }
+  if (includeReasoning) {
+    msg.reasoning = prevMessage.content as string;
+  }
+}
+
 export function toChatMessage(
   message: ChatMessage,
   options: CompletionOptions,
   prevMessage?: ChatMessage,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
 ): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
@@ -96,33 +149,12 @@ export function toChatMessage(
     }
 
     // Preserving reasoning blocks
-    // TODO: Always preserve reasoning for now; make configurable later if needed
-    // see: https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
-    if (prevMessage?.role === "thinking") {
-      msg.reasoning = prevMessage.content as string;
-
-      const reasoningDetails =
-        prevMessage.reasoning_details ||
-        (prevMessage.signature
-          ? [
-              {
-                signature: prevMessage.signature,
-              },
-            ]
-          : undefined);
-
-      msg.reasoning_details = reasoningDetails || [];
-
-      if (
-        options.model.includes("claude") &&
-        !msg.reasoning_details.some((detail) => detail.signature)
-      ) {
-        console.warn("No signature found in reasoning details");
-        // Remove reasoning if no signature is present and calling claude models
-        delete msg.reasoning;
-        msg.reasoning_details = [];
-      }
-    }
+    appendReasoningFieldsIfSupported(
+      msg as any,
+      options,
+      prevMessage,
+      providerFlags,
+    );
 
     return msg as ChatCompletionMessageParam;
   } else {
@@ -161,10 +193,16 @@ export function toChatMessage(
 export function toChatBody(
   messages: ChatMessage[],
   options: CompletionOptions,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
     messages: messages
-      .map((m, index) => toChatMessage(m, options, messages[index - 1]))
+      .map((m, index) =>
+        toChatMessage(m, options, messages[index - 1], providerFlags),
+      )
       .filter((m) => m !== null) as ChatCompletionMessageParam[],
     model: options.model,
     max_tokens: options.maxTokens,
