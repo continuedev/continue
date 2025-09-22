@@ -270,7 +270,7 @@ describe("StorageSyncService", () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "x-amz-server-side-encryption": "",
+        "x-amz-server-side-encryption": "AES256",
       },
     });
 

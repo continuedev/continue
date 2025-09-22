@@ -4,16 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { editTool } from "./edit.js";
 import { markFileAsRead, readFilesSet } from "./readFile.js";
+import { calculateLinesOfCodeDiff, getLanguageFromFilePath } from "../telemetry/utils.js";
+import { generateDiff } from "./writeFile.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
-vi.mock("../telemetry/utils.js", () => ({
-  calculateLinesOfCodeDiff: vi.fn().mockReturnValue({ added: 1, removed: 0 }),
-  getLanguageFromFilePath: vi.fn().mockReturnValue("javascript"),
-}));
-vi.mock("./writeFile.js", () => ({
-  generateDiff: vi.fn().mockReturnValue("mocked diff"),
-}));
+vi.mock("../telemetry/utils.js");
+vi.mock("./writeFile.js");
 vi.mock("fs", async () => {
   const actual = await vi.importActual("fs");
   return {
@@ -37,6 +34,11 @@ describe("editTool", () => {
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
     vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
+    
+    // Setup utility mocks with proper return values
+    vi.mocked(calculateLinesOfCodeDiff).mockReturnValue({ added: 1, removed: 0 });
+    vi.mocked(getLanguageFromFilePath).mockReturnValue("javascript");
+    vi.mocked(generateDiff).mockReturnValue("mocked diff");
   });
 
   afterEach(() => {

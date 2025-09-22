@@ -22,10 +22,24 @@ vi.mock("./src/systemMessage.js", () => ({
 // Mock environment for tests
 process.env.CONTINUE_GLOBAL_DIR = "/tmp/continue-test";
 
+// Increase max listeners to prevent warnings during parallel testing
+if (typeof process !== 'undefined' && process.setMaxListeners) {
+  process.setMaxListeners(100);
+}
+
+// Global cleanup to prevent memory leaks
+beforeEach(() => {
+  // Reset all mocks before each test
+  vi.resetAllMocks();
+});
+
 // Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {
   // Clear vitest timers
   vi.clearAllTimers();
+  
+  // Clear all mocks
+  vi.clearAllMocks();
 
   // Reset console overrides to ensure clean state for each test
   try {
