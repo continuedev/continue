@@ -260,7 +260,8 @@ export class StorageSyncService {
 
     if (!response.ok) {
       const statusText = `${response.status} ${response.statusText}`.trim();
-      throw new Error(`Storage upload failed (${statusText})`);
+      const responseBody = await response.text();
+      throw new Error(`Storage upload failed (${statusText}): ${responseBody}`);
     }
   }
 
