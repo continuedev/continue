@@ -22,7 +22,6 @@ const {
   copyTreeSitterWasms,
   copyTreeSitterTagQryFiles,
   copyNodeModules,
-  downloadEsbuildBinary,
   downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
@@ -116,20 +115,15 @@ async function package(target, os, arch, exe) {
     lancePackageToInstall,
     "@lancedb",
   );
-  // *** esbuild ***
-  // await installNodeModuleInTempDirAndCopyToCurrent(
-  //   "esbuild@0.17.19",
-  //   "@esbuild",
-  // );
-  await downloadEsbuildBinary(target);
 
   // *** sqlite ***
   await downloadSqliteBinary(target);
   await copySqliteBinary();
 
+  // *** ripgrep ***
   await downloadRipgrepBinary(target);
 
-  // copy node_modules to out/node_modules
+  // copy node_modules to out/node_modules (no esbuild here)
   await copyNodeModules();
 
   // Copy over any worker files
@@ -138,7 +132,7 @@ async function package(target, os, arch, exe) {
     "out/xhr-sync-worker.js",
   );
 
-  // Validate the all of the necessary files are present
+  // Validate that all of the necessary files are present (no @esbuild checks)
   validateFilesPresent([
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/c_sharp.scm",
@@ -146,7 +140,7 @@ async function package(target, os, arch, exe) {
     // Queries used for @outline and @highlights context providers
     "tag-qry/tree-sitter-c_sharp-tags.scm",
 
-    // onnx runtime bindngs
+    // onnx runtime bindings
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       os === "darwin"
@@ -173,33 +167,30 @@ async function package(target, os, arch, exe) {
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
-    // node_modules (it's a bit confusing why this is necessary)
+    // node_modules (binary presence)
     `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 
     // out directory (where the extension.js lives)
     // "out/extension.js", This is generated afterward by vsce
+
     // web-tree-sitter
     "out/tree-sitter.wasm",
+
     // Worker required by jsdom
     "out/xhr-sync-worker.js",
+
     // SQLite3 Node native module
     "out/build/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
-    }`,
+
+    // lancedb native module per target
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
         ? "win32-x64-msvc"
         : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
-    `out/node_modules/esbuild/lib/main.js`,
   ]);
 }
 

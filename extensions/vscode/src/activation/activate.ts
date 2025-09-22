@@ -1,4 +1,4 @@
-import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
+import { getContinueRcPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
@@ -35,8 +35,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   }
 
-  // Add necessary files
-  getTsConfigPath();
+  // Ensure workspace/user config paths initialized
   getContinueRcPath();
 
   // Register commands and providers

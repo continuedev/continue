@@ -6,11 +6,10 @@ const { rimrafSync } = require("rimraf");
 
 const {
   validateFilesPresent,
-  execCmdSync,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
+const { copySqlite } = require("./download-copy-sqlite-esbuild"); // remains for sqlite only
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
 const { npmInstall } = require("./npm-install");
@@ -259,19 +258,6 @@ void (async () => {
     console.log(`[info] Copied ${path.basename(f)}`);
   }
 
-  // tree-sitter tag query files
-  // ncp(
-  //   path.join(
-  //     __dirname,
-  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
-  //   ),
-  //   path.join(__dirname, "../out/tag-qry"),
-  //   (error) => {
-  //     if (error)
-  //       console.warn("Error copying code-highlighter tag-qry files", error);
-  //   },
-  // );
-
   // textmate-syntaxes
   await new Promise((resolve, reject) => {
     ncp(
@@ -289,10 +275,9 @@ void (async () => {
   });
 
   if (!skipInstalls) {
-    // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-    // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
+    // 02/07/25 - comment kept for context: ARM runners now exist on GitHub Actions
     if (isArmTarget) {
-      // lancedb binary
+      // lancedb binary (prebuilt package per target)
       const packageToInstall = {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
@@ -303,14 +288,11 @@ void (async () => {
       );
 
       await Promise.all([
-        copyEsbuild(target),
-        copySqlite(target),
+        copySqlite(target), // keep sqlite copy helper
         installAndCopyNodeModules(packageToInstall, "@lancedb"),
       ]);
     } else {
-      // Download esbuild from npm in tmp and copy over
-      console.log("[info] npm installing esbuild binary");
-      await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
+      // Non-ARM: no esbuild packaging; sqlite handled below via core copy
     }
   }
 
@@ -348,14 +330,8 @@ void (async () => {
     );
   });
 
-  // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = [
-    "esbuild",
-    "@esbuild",
-    "@lancedb",
-    "@vscode/ripgrep",
-    "workerpool",
-  ];
+  // Copy node_modules for pre-built binaries (no esbuild here)
+  const NODE_MODULES_TO_COPY = ["@lancedb", "@vscode/ripgrep", "workerpool"];
 
   fs.mkdirSync("out/node_modules", { recursive: true });
 
@@ -382,9 +358,6 @@ void (async () => {
     ),
   );
 
-  // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmSync(`out/node_modules/esbuild/bin`, { recursive: true });
-
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
   // Copy over any worker files
@@ -393,7 +366,7 @@ void (async () => {
     "out/xhr-sync-worker.js",
   );
 
-  // Validate the all of the necessary files are present
+  // Validate that all necessary files are present (no @esbuild or esbuild checks)
   validateFilesPresent([
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/c_sharp.scm",
@@ -401,7 +374,7 @@ void (async () => {
     // Queries used for @outline and @highlights context providers
     "tag-qry/tree-sitter-c_sharp-tags.scm",
 
-    // onnx runtime bindngs
+    // onnx runtime bindings
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       isMacTarget
@@ -428,29 +401,26 @@ void (async () => {
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
-    // node_modules (it's a bit confusing why this is necessary)
+    // node_modules (binary presence)
     `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 
     // out directory (where the extension.js lives)
-    // "out/extension.js", This is generated afterward by vsce
+    // "out/extension.js", (generated afterward by vsce)
+
     // web-tree-sitter
     "out/tree-sitter.wasm",
+
     // Worker required by jsdom
     "out/xhr-sync-worker.js",
+
     // SQLite3 Node native module
     "out/build/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
-    }`,
+
+    // lancedb native module per target
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
-    `out/node_modules/esbuild/lib/main.js`,
   ]);
 
   console.log(
