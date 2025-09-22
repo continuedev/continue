@@ -818,7 +818,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.deepseekV3,
       models.deepseekV31,
       models.qwen332B,
-      models.gptOss120b
+      models.gptOss120b,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },

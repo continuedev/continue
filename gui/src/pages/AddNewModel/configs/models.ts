@@ -1804,8 +1804,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   qwen332B: {
     title: "Qwen 3 32B",
-    description:
-      "Qwen 3 32B model from Alibaba",
+    description: "Qwen 3 32B model from Alibaba",
     params: {
       title: "Qwen 3 32B",
       model: "Qwen3-32B",
