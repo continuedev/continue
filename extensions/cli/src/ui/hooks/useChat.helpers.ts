@@ -48,6 +48,7 @@ interface ProcessSlashCommandResultOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
+  onShowUpdateSelector?: () => void;
   onShowMCPSelector?: () => void;
   onShowSessionSelector?: () => void;
   onClear?: () => void;
@@ -61,17 +62,23 @@ export function processSlashCommandResult({
   chatHistory,
   setChatHistory,
   onShowConfigSelector,
+  onShowUpdateSelector,
   onShowModelSelector,
   onShowMCPSelector,
   onShowSessionSelector,
   onClear,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
-    process.exit(0);
+    import("../../util/exit.js").then(({ gracefulExit }) => gracefulExit(0));
   }
 
   if (result.openMcpSelector) {
     onShowMCPSelector?.();
+    return null;
+  }
+
+  if (result.openUpdateSelector) {
+    onShowUpdateSelector?.();
     return null;
   }
 
@@ -120,7 +127,19 @@ export function processSlashCommandResult({
     return null;
   }
 
-  if (result.output) {
+  if (result.diffContent) {
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        message: {
+          role: "system",
+          content: `Diff:\n${result.diffContent}`,
+        },
+        contextItems: [],
+      },
+    ]);
+    return null;
+  } else if (result.output) {
     setChatHistory((prev) => [
       ...prev,
       {
@@ -131,6 +150,7 @@ export function processSlashCommandResult({
         contextItems: [],
       },
     ]);
+    return null;
   }
 
   return result.newInput || null;
@@ -218,6 +238,85 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
+  onShowDiff?: (diffContent: string) => void;
+  onShowStatusMessage?: (message: string) => void;
+}
+
+/**
+ * Handle /diff command in remote mode
+ */
+async function handleRemoteDiffCommand(
+  remoteUrl: string,
+  onShowDiff?: (diffContent: string) => void,
+): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (onShowDiff) {
+      onShowDiff(diffContent);
+    }
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    if (onShowDiff) {
+      onShowDiff(`Error: Failed to fetch diff - ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Handle /apply command in remote mode
+ */
+async function handleRemoteApplyCommand(
+  remoteUrl: string,
+  onShowStatusMessage?: (message: string) => void,
+): Promise<void> {
+  try {
+    const response = await fetch(`${remoteUrl}/diff`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch diff: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    const diffContent = responseData.diff || "";
+
+    if (!diffContent || diffContent.trim() === "") {
+      if (onShowStatusMessage) {
+        onShowStatusMessage("No changes to apply");
+      }
+      return;
+    }
+
+    // Apply the diff using git apply
+    const { execFileSync } = await import("child_process");
+
+    try {
+      execFileSync("git", ["apply"], {
+        input: diffContent,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      if (onShowStatusMessage) {
+        onShowStatusMessage(
+          "✓ Successfully applied diff to local working tree",
+        );
+      }
+    } catch (gitError: any) {
+      if (onShowStatusMessage) {
+        onShowStatusMessage(`✗ Failed to apply diff: ${gitError.message}`);
+      }
+    }
+  } catch (error: any) {
+    logger.error("Failed to fetch diff from remote server:", error);
+    if (onShowStatusMessage) {
+      onShowStatusMessage(`✗ Failed to fetch diff: ${error.message}`);
+    }
+  }
 }
 
 /**
@@ -229,6 +328,8 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
+  onShowDiff,
+  onShowStatusMessage,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -242,6 +343,26 @@ export async function handleSpecialCommands({
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
     await handleRemoteExit(remoteUrl, exit);
+    return true;
+  }
+
+  // Handle /diff command in remote mode - show overlay instead of adding to history
+  if (
+    isRemoteMode &&
+    remoteUrl &&
+    (trimmedMessage === "/diff" || trimmedMessage.startsWith("/diff "))
+  ) {
+    await handleRemoteDiffCommand(remoteUrl, onShowDiff);
+    return true;
+  }
+
+  // Handle /apply command in remote mode - show temporary status message
+  if (
+    isRemoteMode &&
+    remoteUrl &&
+    (trimmedMessage === "/apply" || trimmedMessage.startsWith("/apply "))
+  ) {
+    await handleRemoteApplyCommand(remoteUrl, onShowStatusMessage);
     return true;
   }
 

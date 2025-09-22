@@ -566,6 +566,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.grokBeta],
     apiKeyUrl: "https://console.x.ai/",
   },
+  lemonade: {
+    title: "Lemonade",
+    provider: "lemonade",
+    description:
+      "High-performance local LLM inference with AMD hardware optimization",
+    longDescription:
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the Lemonade server is running, you can begin using Continue with your local models.",
+    icon: "lemonade.png",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "http://localhost:8000/api/v1/",
+    },
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Lemonade",
+        },
+      },
+      ...openSourceModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputsConfigs,
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000/api/v1/",
+        required: true,
+      },
+    ],
+    downloadUrl: "http://lemonade-server.ai",
+  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",

@@ -1,6 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { NO_PARALLEL_TOOL_CALLING_INTSRUCTION } from "./editFile";
+import { NO_PARALLEL_TOOL_CALLING_INSTRUCTION } from "./editFile";
 import { singleFindAndReplaceTool } from "./singleFindAndReplace";
 
 export interface EditOperation {
@@ -43,18 +43,12 @@ IMPORTANT:
 
 CRITICAL REQUIREMENTS:
 1. ALWAYS use the ${BuiltInToolNames.ReadFile} tool just before making edits, to understand the file's up-to-date contents and context. The user can also edit the file while you are working with it.
-2. ${NO_PARALLEL_TOOL_CALLING_INTSRUCTION}
+2. ${NO_PARALLEL_TOOL_CALLING_INSTRUCTION}
 3. When making edits:
 - Ensure all edits result in idiomatic, correct code
 - Do not leave the code in a broken state
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked
 - Use replace_all for replacing and renaming all matches for a string across the file. This parameter is useful if you want to rename a variable, for instance
-
-If you want to create a new file, use:
-- A new file path, including new directory if needed
-- First edit: empty old_string and the new file's contents as new_string
-- Subsequent edits are not allowed - there is no need since you are creating
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required
 
 WARNINGS:
 - If earlier edits affect the text that later edits are trying to find, files can become mangled

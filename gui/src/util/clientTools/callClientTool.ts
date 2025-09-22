@@ -1,5 +1,6 @@
 import { ContextItem, ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
@@ -18,7 +19,7 @@ export interface ClientToolOutput {
 }
 
 export interface ClientToolResult extends ClientToolOutput {
-  errorMessage: string | undefined;
+  error?: ContinueError;
 }
 
 export type ClientToolImpl = (
@@ -51,18 +52,16 @@ export async function callClientTool(
       default:
         throw new Error(`Invalid client tool name ${toolCall.function.name}`);
     }
-    return {
-      ...output,
-      errorMessage: undefined,
-    };
+    return output;
   } catch (e) {
-    let errorMessage = `${e}`;
-    if (e instanceof Error) {
-      errorMessage = e.message;
-    }
     return {
       respondImmediately: true,
-      errorMessage,
+      error:
+        e instanceof ContinueError
+          ? e
+          : e instanceof Error
+            ? new ContinueError(ContinueErrorReason.Unspecified, e.message)
+            : new ContinueError(ContinueErrorReason.Unknown, String(e)),
       output: undefined,
     };
   }

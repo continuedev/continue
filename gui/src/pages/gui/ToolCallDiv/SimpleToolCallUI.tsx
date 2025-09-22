@@ -6,9 +6,7 @@ import {
 } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToggleWithIcon } from "./ToggleWithIcon";
-import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 import { toolCallStateToContextItems } from "./utils";
 
 interface SimpleToolCallUIProps {
@@ -31,11 +29,6 @@ export function SimpleToolCallUI({
   }, [toolCallState]);
 
   const [open, setOpen] = useState(false);
-  const [showingArgs, setShowingArgs] = useState(false);
-
-  const args: [string, any][] = useMemo(() => {
-    return Object.entries(toolCallState.parsedArgs);
-  }, [toolCallState.parsedArgs]);
 
   const isToggleable = shownContextItems.length > 1;
   const isSingleItem = shownContextItems.length === 1;
@@ -46,18 +39,6 @@ export function SimpleToolCallUI({
     if (isToggleable) {
       setOpen((prev) => !prev);
     } else if (isSingleItem) {
-      openContextItem(shownContextItems[0], ideMessenger);
-    }
-  }
-
-  function handleToggleClick() {
-    if (isToggleable) {
-      setOpen((prev) => !prev);
-    }
-  }
-
-  function handleIconClick() {
-    if (isSingleItem) {
       openContextItem(shownContextItems[0], ideMessenger);
     }
   }
@@ -76,24 +57,11 @@ export function SimpleToolCallUI({
             icon={Icon}
             isToggleable={isToggleable}
             open={shouldShowContent}
-            onClick={isToggleable ? handleToggleClick : handleIconClick}
             isClickable={isSingleItem}
           />
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
-        <div className="flex flex-row items-center gap-1.5">
-          {!!toolCallState.output?.length && (
-            <ToolTruncateHistoryIcon historyIndex={historyIndex} />
-          )}
-          {args.length > 0 ? (
-            <ArgsToggleIcon
-              isShowing={showingArgs}
-              setIsShowing={setShowingArgs}
-            />
-          ) : null}
-        </div>
       </div>
-      <ArgsItems args={args} isShowing={showingArgs} />
 
       {isToggleable && (
         <div

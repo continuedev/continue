@@ -14,9 +14,11 @@ import {
   ConfigServiceState,
   MCPServiceState,
   ModelServiceState,
+  UpdateServiceState,
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
+import { ActionStatus } from "./components/ActionStatus.js";
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
@@ -31,8 +33,6 @@ import {
   useLoginHandlers,
   useSelectors,
 } from "./hooks/useTUIChatHooks.js";
-import { LoadingAnimation } from "./LoadingAnimation.js";
-import { Timer } from "./Timer.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -94,7 +94,8 @@ function useTUIChatServices(remoteUrl?: string) {
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    update: UpdateServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient", "update"]);
 
   return { services, allServicesReady, isRemoteMode };
 }
@@ -180,14 +181,41 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setStaticRefreshTrigger,
   );
 
+  // State for diff content overlay
+  const [diffContent, setDiffContent] = useState<string>("");
+
+  // State for temporary status message
+  const [statusMessage, setStatusMessage] = useState<string>("");
+
+  // Handler to show diff overlay
+  const handleShowDiff = useCallback(
+    (content: string) => {
+      setDiffContent(content);
+      navigateTo("diff");
+    },
+    [navigateTo],
+  );
+
+  // Handler to show temporary status message
+  const handleShowStatusMessage = useCallback((message: string) => {
+    setStatusMessage(message);
+    // Clear after 3 seconds
+    setTimeout(() => {
+      setStatusMessage("");
+    }, 3000);
+  }, []);
+
   const {
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
     responseStartTime,
+    isCompacting,
+    compactionStartTime,
     inputMode,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -205,6 +233,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
+    onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
@@ -212,6 +241,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    onShowDiff: handleShowDiff,
+    onShowStatusMessage: handleShowStatusMessage,
   });
 
   // Update ref after useChat returns
@@ -282,6 +313,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -290,16 +322,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
       {/* Fixed bottom section */}
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
-        {isWaitingForResponse && responseStartTime && (
-          <Box paddingX={1} flexDirection="row" gap={1}>
-            <LoadingAnimation visible={isWaitingForResponse} />
-            <Text key="loading-start" color="gray">
-              (
-            </Text>
-            <Timer startTime={responseStartTime} />
-            <Text key="loading-end" color="gray">
-              • esc to interrupt )
-            </Text>
+        <ActionStatus
+          visible={isWaitingForResponse && !!responseStartTime}
+          startTime={responseStartTime || 0}
+          message=""
+          showSpinner={true}
+        />
+
+        {/* Compaction Status */}
+        <ActionStatus
+          visible={isCompacting && !!compactionStartTime}
+          startTime={compactionStartTime || 0}
+          message="Compacting history"
+          showSpinner={true}
+          loadingColor="grey"
+        />
+
+        {/* Temporary status message */}
+        {statusMessage && (
+          <Box paddingX={1} paddingY={0}>
+            <Text color="green">{statusMessage}</Text>
           </Box>
         )}
 
@@ -318,6 +360,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleToolPermissionResponse={handleToolPermissionResponse}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
+          isCompacting={isCompacting}
           inputMode={inputMode}
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
@@ -325,6 +368,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
           onImageInClipboardChange={setHasImageInClipboard}
+          diffContent={diffContent}
         />
 
         {/* Resource debug bar - only in verbose mode */}

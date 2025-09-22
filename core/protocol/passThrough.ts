@@ -13,6 +13,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "history/list",
     "history/delete",
     "history/load",
+    "history/loadRemote",
     "history/save",
     "history/clear",
     "devdata/log",
@@ -86,6 +87,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "isItemTooBig",
     "process/markAsBackgrounded",
     "process/isBackgrounded",
+    "process/killTerminalProcess",
   ];
 
 // Message types to pass through from core to webview

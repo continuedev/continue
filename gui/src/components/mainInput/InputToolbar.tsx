@@ -5,8 +5,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
-import { modelSupportsImages } from "core/llm/autodetect";
-import { useContext, useRef } from "react";
+import {
+  modelSupportsImages,
+  modelSupportsReasoning,
+} from "core/llm/autodetect";
+import { memo, useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
@@ -65,6 +68,8 @@ function InputToolbar(props: InputToolbarProps) {
       defaultModel.title,
       defaultModel.capabilities,
     );
+
+  const supportsReasoning = modelSupportsReasoning(defaultModel);
 
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
@@ -130,7 +135,7 @@ function InputToolbar(props: InputToolbarProps) {
                 </HoverItem>
               </ToolTip>
             )}
-            {defaultModel?.underlyingProviderName === "anthropic" && (
+            {supportsReasoning && (
               <HoverItem
                 onClick={() =>
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled))
@@ -237,4 +242,24 @@ function InputToolbar(props: InputToolbarProps) {
   );
 }
 
-export default InputToolbar;
+function shallowToolbarOptionsEqual(a?: ToolbarOptions, b?: ToolbarOptions) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.hideAddContext === b.hideAddContext &&
+    a.hideImageUpload === b.hideImageUpload &&
+    a.hideUseCodebase === b.hideUseCodebase &&
+    a.hideSelectModel === b.hideSelectModel &&
+    a.enterText === b.enterText
+  );
+}
+
+export default memo(
+  InputToolbar,
+  (prev, next) =>
+    prev.hidden === next.hidden &&
+    prev.disabled === next.disabled &&
+    prev.isMainInput === next.isMainInput &&
+    prev.activeKey === next.activeKey &&
+    shallowToolbarOptionsEqual(prev.toolbarOptions, next.toolbarOptions),
+);

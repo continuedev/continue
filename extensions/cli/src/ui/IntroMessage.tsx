@@ -1,6 +1,3 @@
-import * as os from "node:os";
-import * as path from "node:path";
-
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
@@ -11,10 +8,6 @@ import { isModelCapable } from "../utils/modelCapability.js";
 
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
 import { TipsDisplay, shouldShowTip } from "./TipsDisplay.js";
-
-// Export the warning message for testing
-export const HOME_DIRECTORY_WARNING =
-  "Run cn in a project directory for the best experience (currently in home directory)";
 
 interface IntroMessageProps {
   config?: AssistantUnrolled;
@@ -39,18 +32,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
   // Determine if we should show a tip (1 in 5 chance) - computed once on mount
   const showTip = useMemo(() => shouldShowTip(), []);
-
-  // Check if current working directory is the home directory
-  const isInHomeDirectory = useMemo(() => {
-    const cwd = process.cwd();
-    const homedir = os.homedir();
-    const resolvedCwd = path.resolve(cwd);
-    const resolvedHome = path.resolve(homedir);
-    if (process.platform === "win32") {
-      return resolvedCwd.toLowerCase() === resolvedHome.toLowerCase();
-    }
-    return resolvedCwd === resolvedHome;
-  }, []);
 
   // Memoize expensive operations to avoid running on every resize
   const { allRules, modelCapable } = useMemo(() => {
@@ -151,14 +132,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {renderMcpPrompts()}
       {renderRules()}
       {renderMcpServers()}
-
-      {/* Home directory warning */}
-      {isInHomeDirectory && (
-        <>
-          <Text color="yellow">{HOME_DIRECTORY_WARNING}</Text>
-          <Text> </Text>
-        </>
-      )}
     </Box>
   );
 };

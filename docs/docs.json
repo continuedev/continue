@@ -233,6 +233,8 @@
               "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/continuous-ai",
+              "guides/posthog-github-continuous-ai",
+              "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/instinct",
@@ -352,10 +354,6 @@
     {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/agents/intro"
     },
     {
       "source": "/customize",

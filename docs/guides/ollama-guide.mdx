@@ -190,9 +190,12 @@ models:
 
 #### If Agent Mode Shows "Not Supported"
 
+![agent not supported](/images/guides/images/agent-not-supported.png)
+
 1. First, add `capabilities: [tool_use]` to your model config
 2. If you still get errors, the model may not actually support tools despite documentation
 3. Use a different model known to work with tools (e.g., Llama 3.1, Mistral)
+4. Alternatively, you can turn on [System Message tools](/features/agent/model-setup#how-system-message-tools-work)
 
 See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for more details.
 
