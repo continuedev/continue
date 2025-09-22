@@ -157,7 +157,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       {/* Queued messages - show at bottom with queue indicators */}
       {queuedMessages.length > 0 && (
         <Box paddingLeft={2} paddingBottom={1}>
-          <Text color="gray" italic>
+          <Text color="dim" italic>
             {queuedMessages.map((msg) => msg.message).join("\n")}
           </Text>
         </Box>
