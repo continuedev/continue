@@ -231,7 +231,11 @@ export async function getAllTools() {
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: tool.parameters,
+      parameters: {
+        type: "object",
+        required: tool.parameters.required,
+        properties: tool.parameters.properties,
+      },
     },
   }));
 

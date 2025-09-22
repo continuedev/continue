@@ -4,6 +4,8 @@ import type { ToolPolicy } from "@continuedev/terminal-security";
 export interface ParameterSchema {
   type: string;
   description: string;
+  required?: string[];
+  properties?: Record<string, ParameterSchema>;
   items?: {
     type: string;
     properties?: Record<string, ParameterSchema>;
