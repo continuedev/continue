@@ -56,6 +56,12 @@ function TipTapEditorInner(props: TipTapEditorProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const compactionLoading = useAppSelector(
+    (store) => store.session.compactionLoading,
+  );
+
+  // Check if any compaction is currently loading
+  const isAnyCompactionLoading = Object.keys(compactionLoading).length > 0;
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
@@ -273,7 +279,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
               }
             });
           }}
-          disabled={isStreaming}
+          disabled={isStreaming || isAnyCompactionLoading}
         />
       </div>
 
