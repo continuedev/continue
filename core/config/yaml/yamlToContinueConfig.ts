@@ -16,7 +16,7 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       description: rule.description,
       ruleFile: rule.sourceFile,
       alwaysApply: rule.alwaysApply,
-      invokable: rule.invokable,
+      invokable: rule.invokable ?? false,
     };
   }
 }

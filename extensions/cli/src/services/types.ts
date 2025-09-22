@@ -111,6 +111,13 @@ export interface ToolPermissionServiceState {
   originalPolicies?: ToolPermissions;
 }
 
+export interface StorageSyncServiceState {
+  isEnabled: boolean;
+  storageId?: string;
+  lastUploadAt?: number;
+  lastError?: string | null;
+}
+
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 
@@ -129,6 +136,7 @@ export const SERVICE_NAMES = {
   SYSTEM_MESSAGE: "systemMessage",
   CHAT_HISTORY: "chatHistory",
   UPDATE: "update",
+  STORAGE_SYNC: "storageSync",
 } as const;
 
 /**

@@ -16,7 +16,7 @@ import { saveAuthConfig } from "./workos.js";
  */
 export function createUpdatedAuthConfig(
   config: AuthenticatedConfig,
-  organizationId: string | null,
+  organizationId: string | null | undefined,
 ): AuthenticatedConfig {
   return {
     userId: config.userId,
@@ -123,44 +123,4 @@ export async function handleCliOrgForAuthenticatedConfig(
   );
   saveAuthConfig(updatedConfig);
   return updatedConfig;
-}
-
-/**
- * Automatically select organization for authenticated config
- */
-export async function autoSelectOrganization(
-  authenticatedConfig: AuthenticatedConfig,
-): Promise<AuthConfig> {
-  const apiClient = getApiClient(authenticatedConfig.accessToken);
-
-  try {
-    const resp = await apiClient.listOrganizations();
-    const organizations = resp.organizations;
-
-    if (organizations.length === 0) {
-      const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-      saveAuthConfig(updatedConfig);
-      return updatedConfig;
-    }
-
-    // Automatically select the first organization if available
-    const selectedOrg = organizations[0];
-    const selectedOrgId = selectedOrg.id;
-
-    const updatedConfig = createUpdatedAuthConfig(
-      authenticatedConfig,
-      selectedOrgId,
-    );
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  } catch (error: any) {
-    console.error(
-      chalk.red("Error fetching organizations:"),
-      error.response?.data?.message || error.message || error,
-    );
-    console.info(chalk.yellow("Continuing without organization selection."));
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  }
 }

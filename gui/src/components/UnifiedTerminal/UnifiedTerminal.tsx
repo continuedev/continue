@@ -420,7 +420,7 @@ export function UnifiedTerminalCommand({
   return (
     <StyledTerminalContainer
       fontSize={getFontSize()}
-      className="mb-4"
+      className="mx-2 mb-4"
       data-testid="terminal-container"
     >
       <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
