@@ -2,7 +2,7 @@ import {
   ArrowDownOnSquareIcon,
   PencilSquareIcon,
   TrashIcon,
-  CloudIcon
+  CloudIcon,
 } from "@heroicons/react/24/outline";
 import { BaseSessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
