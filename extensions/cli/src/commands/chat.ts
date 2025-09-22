@@ -1,8 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
-import type { ChatHistoryItem, Session } from "core/index.js";
+import { ChatHistoryItem, Session } from "core";
 import { ChatDescriber } from "core/util/chatDescriber.js";
-import * as readlineSync from "readline-sync";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
@@ -25,6 +24,7 @@ import { startTUIChat } from "../ui/index.js";
 import { gracefulExit } from "../util/exit.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { question } from "../util/prompt.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
@@ -454,7 +454,7 @@ async function runHeadlessMode(
     const userInput =
       isFirstMessage && initialUserInput
         ? initialUserInput
-        : readlineSync.question(`\n${chalk.bold.green("You:")} `);
+        : await question(`\n${chalk.bold.green("You:")} `);
 
     isFirstMessage = false;
 
