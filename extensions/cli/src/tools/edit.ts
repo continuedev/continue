@@ -37,27 +37,27 @@ WARNINGS:
 - When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
 - The edit will FAIL if you have not recently used the \`${readFileTool.name}\` tool to view up-to-date file contents.`,
   parameters: {
-    file_path: {
-      type: "string",
-      description: "The absolute path to the file to modify",
-      required: true,
-    },
-    old_string: {
-      type: "string",
-      description:
-        "The text to replace - must be exact including whitespace/indentation",
-      required: true,
-    },
-    new_string: {
-      type: "string",
-      description:
-        "The text to replace it with (MUST be different from old_string)",
-      required: true,
-    },
-    replace_all: {
-      type: "boolean",
-      description: "Replace all occurences of old_string (default false)",
-      required: false,
+    type: "object",
+    required: ["file_path", "old_string", "new_string"],
+    properties: {
+      file_path: {
+        type: "string",
+        description: "The absolute path to the file to modify",
+      },
+      old_string: {
+        type: "string",
+        description:
+          "The text to replace - must be exact including whitespace/indentation",
+      },
+      new_string: {
+        type: "string",
+        description:
+          "The text to replace it with (MUST be different from old_string)",
+      },
+      replace_all: {
+        type: "boolean",
+        description: "Replace all occurences of old_string (default false)",
+      },
     },
   },
   preprocess: async (args) => {

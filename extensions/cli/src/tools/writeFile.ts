@@ -32,15 +32,17 @@ export const writeFileTool: Tool = {
   displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {
-    filepath: {
-      type: "string",
-      description: "The path to the file to write",
-      required: true,
-    },
-    content: {
-      type: "string",
-      description: "The content to write to the file",
-      required: true,
+    type: "object",
+    required: ["filepath", "content"],
+    properties: {
+      filepath: {
+        type: "string",
+        description: "The path to the file to write",
+      },
+      content: {
+        type: "string",
+        description: "The content to write to the file",
+      },
     },
   },
   readonly: false,

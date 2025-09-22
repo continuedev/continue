@@ -231,22 +231,7 @@ export async function getAllTools() {
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: {
-        type: "object",
-        properties: Object.fromEntries(
-          Object.entries(tool.parameters).map(([key, param]) => [
-            key,
-            {
-              type: param.type,
-              description: param.description,
-              items: param.items,
-            },
-          ]),
-        ),
-        required: Object.entries(tool.parameters)
-          .filter(([_, param]) => param.required)
-          .map(([key, _]) => key),
-      },
+      parameters: tool.parameters,
     },
   }));
 

@@ -169,18 +169,38 @@ WARNINGS:
 - The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
 - The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session`,
   parameters: {
-    file_path: {
-      type: "string",
-      description: "The absolute path to the file to modify",
-      required: true,
-    },
-    edits: {
-      type: "array",
-      description:
-        "Array of edit operations to perform sequentially on the file",
-      required: true,
-      items: {
-        type: "object",
+    type: "object",
+    required: ["file_path", "edits"],
+    properties: {
+      file_path: {
+        type: "string",
+        description: "The absolute path to the file to modify",
+      },
+      edits: {
+        type: "array",
+        description:
+          "Array of edit operations to perform sequentially on the file",
+        items: {
+          type: "object",
+          required: ["old_string", "new_string"],
+          properties: {
+            old_string: {
+              type: "string",
+              description:
+                "The text to replace (exact match including whitespace/indentation)",
+            },
+            new_string: {
+              type: "string",
+              description:
+                "The text to replace it with. MUST be different than old_string.",
+            },
+            replace_all: {
+              type: "boolean",
+              description:
+                "Replace all occurrences of old_string (default false) in the file",
+            },
+          },
+        },
       },
     },
   },
