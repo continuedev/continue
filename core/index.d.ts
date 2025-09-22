@@ -1811,7 +1811,8 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
-  | ".continuerules";
+  | ".continuerules"
+  | "agent-file";
 
 export interface RuleWithSource {
   name?: string;
