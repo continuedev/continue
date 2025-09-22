@@ -26,4 +26,5 @@ export interface ComboBoxItem {
   icon?: string;
   action?: () => void;
   subActions?: ComboBoxSubAction[];
+  source?: string;
 }

@@ -38,6 +38,15 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "repo-map",
 ];
 
+// Slash command sources that should be allowed in edit mode
+const EDIT_ALLOWED_SLASH_COMMAND_SOURCES: Set<string> = new Set([
+  "yaml-prompt-block",
+  "mcp-prompt",
+  "prompt-file-v1",
+  "prompt-file-v2",
+  "invokable-rule",
+]);
+
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
@@ -50,7 +59,15 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = useMemo(() => {
-    return isInEdit ? [] : availableSlashCommands;
+    if (!isInEdit) {
+      return availableSlashCommands;
+    }
+    
+    // In edit mode, only allow prompt-based slash commands
+    return availableSlashCommands.filter((command) => {
+      // Check if this command has a source property and if it's allowed in edit mode
+      return command.source && EDIT_ALLOWED_SLASH_COMMAND_SOURCES.has(command.source);
+    });
   }, [isInEdit, availableSlashCommands]);
 
   const filteredContextProviders = useMemo(() => {
