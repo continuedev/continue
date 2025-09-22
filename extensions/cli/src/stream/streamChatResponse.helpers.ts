@@ -1,5 +1,6 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
@@ -354,6 +355,11 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
+      const errorReason =
+        error instanceof ContinueError
+          ? error.reason
+          : ContinueErrorReason.Unknown;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -368,6 +374,15 @@ export async function preprocessStreamedToolCalls(
         success: false,
         durationMs: duration,
         error: errorMessage,
+        errorReason,
+        // modelName, TODO
+      });
+      void posthogService.capture("tool_call_outcome", {
+        succeeded: false,
+        toolName: toolCall.name,
+        errorReason,
+        duration_ms: duration,
+        // model: options.modelName, TODO
       });
 
       // Add error to chat history

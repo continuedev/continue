@@ -82,6 +82,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/load": [{ id: string }, Session];
   "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
+  "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];

@@ -28,8 +28,8 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({
           if (preview.type === "text") {
             return (
               <Box key={index} paddingLeft={preview.paddingLeft ?? 0}>
-                {index === 0 && <Text color="gray">⎿ </Text>}
-                <Text color={preview.color ?? "gray"}>{preview.content}</Text>
+                {index === 0 && <Text color="dim">⎿ </Text>}
+                <Text color={preview.color ?? "dim"}>{preview.content}</Text>
               </Box>
             );
           } else if (preview.type === "checklist") {
@@ -56,8 +56,8 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({
 
   return (
     <Box>
-      <Text color="gray">⎿ </Text>
-      <Text color="gray">{message}</Text>
+      <Text color="dim">⎿ </Text>
+      <Text color="dim">{message}</Text>
     </Box>
   );
 };
