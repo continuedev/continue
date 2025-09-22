@@ -38,6 +38,14 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "repo-map",
 ];
 
+const EDIT_ALLOWED_SLASH_COMMAND_SOURCES = [
+  "yaml-prompt-block",
+  "mcp-prompt",
+  "prompt-file-v1",
+  "prompt-file-v2",
+  "invokable-rule",
+];
+
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
@@ -50,7 +58,12 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = useMemo(() => {
-    return isInEdit ? [] : availableSlashCommands;
+    if (isInEdit) {
+      return availableSlashCommands.filter((cmd) =>
+        cmd.source ? EDIT_ALLOWED_SLASH_COMMAND_SOURCES.includes(cmd.source) : false
+      );
+    }
+    return availableSlashCommands;
   }, [isInEdit, availableSlashCommands]);
 
   const filteredContextProviders = useMemo(() => {
