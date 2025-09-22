@@ -1,7 +1,5 @@
-import { execSync } from "child_process";
 import * as fs from "fs";
 import os from "os";
-import path from "path";
 
 import {
   ConfigResult,
@@ -9,7 +7,6 @@ import {
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
-import * as tar from "tar";
 
 import {
   BrowserSerializedContinueConfig,
@@ -46,19 +43,14 @@ import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
-  DEFAULT_CONFIG_TS_CONTENTS,
   getConfigJsonPath,
   getConfigJsonPathForRemote,
-  getConfigJsPath,
-  getConfigJsPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  getEsbuildBinaryPath,
 } from "../util/paths";
-import { localPathToUri } from "../util/pathToUri";
 
-import { PolicySingleton } from "../control-plane/PolicySingleton";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import { PolicySingleton } from "../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
@@ -112,9 +104,9 @@ const configMergeKeys = {
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
-  ideType: IdeType,
+  _ideType: IdeType, // kept for signature stability; unused
   overrideConfigJson: SerializedContinueConfig | undefined,
-  ide: IDE,
+  _ide: IDE, // kept for signature stability; unused
 ): ConfigResult<SerializedContinueConfig> {
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
@@ -159,8 +151,14 @@ function loadSerializedConfig(
     );
   }
 
-  if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
-    config.disableIndexing = true;
+  // Linux CPU target compatibility guard for indexing
+  if (os.platform() === "linux") {
+    // `isSupportedLanceDbCpuTargetForLinux` checks IDE env for known incompatibilities
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ide: any = _ide;
+    if (!isSupportedLanceDbCpuTargetForLinux(ide)) {
+      config.disableIndexing = true;
+    }
   }
 
   return { config, errors, configLoadInterrupted: false };
@@ -411,7 +409,7 @@ async function intermediateToFinalConfig({
     embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
   ): ILLM | null {
     if (embedConfig) {
-      // config.ts-injected ILLM
+      // If user provided an ILLM instance directly (e.g., via YAML injection), pass through
       if ("providerName" in embedConfig) {
         return embedConfig;
       }
@@ -451,7 +449,6 @@ async function intermediateToFinalConfig({
     if (!rerankingConfig) {
       return null;
     }
-    // config.ts-injected ILLM
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
@@ -531,7 +528,7 @@ async function intermediateToFinalConfig({
     } else {
       continueConfig.slashCommands.push({
         ...cmd,
-        source: "config-ts-slash-command",
+        source: "json-custom-command",
       });
     }
   }
@@ -679,186 +676,6 @@ async function finalToBrowserConfig(
   };
 }
 
-function escapeSpacesInPath(p: string): string {
-  return p.replace(/ /g, "\\ ");
-}
-
-async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
-  // JetBrains is currently the only IDE that we've reached the plugin size limit and
-  // therefore need to install esbuild manually to reduce the size
-  if (ideType !== "jetbrains") {
-    return;
-  }
-
-  const globalContext = new GlobalContext();
-  if (globalContext.get("hasDismissedConfigTsNoticeJetBrains")) {
-    return;
-  }
-
-  const esbuildPath = getEsbuildBinaryPath();
-
-  if (fs.existsSync(esbuildPath)) {
-    return;
-  }
-
-  console.debug("No esbuild binary detected");
-
-  const shouldInstall = await promptEsbuildInstallation(ide);
-
-  if (shouldInstall) {
-    await downloadAndInstallEsbuild(ide);
-  }
-}
-
-async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
-  const installMsg = "Install esbuild";
-  const dismissMsg = "Dismiss";
-
-  const res = await ide.showToast(
-    "warning",
-    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
-    dismissMsg,
-    installMsg,
-  );
-
-  if (res === dismissMsg) {
-    const globalContext = new GlobalContext();
-    globalContext.update("hasDismissedConfigTsNoticeJetBrains", true);
-    return false;
-  }
-
-  return res === installMsg;
-}
-
-/**
- * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
- */
-async function downloadAndInstallEsbuild(ide: IDE) {
-  const esbuildPath = getEsbuildBinaryPath();
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
-
-  try {
-    const target = `${os.platform()}-${os.arch()}`;
-    const version = "0.19.11";
-    const url = `https://registry.npmjs.org/@esbuild/${target}/-/${target}-${version}.tgz`;
-    const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
-
-    console.debug(`Downloading esbuild from: ${url}`);
-    execSync(`curl -fo "${tgzPath}" "${url}"`);
-
-    console.debug(`Extracting tgz file to: ${tempDir}`);
-    await tar.x({
-      file: tgzPath,
-      cwd: tempDir,
-      strip: 2, // Remove the top two levels of directories
-    });
-
-    // Ensure the destination directory exists
-    const destDir = path.dirname(esbuildPath);
-    if (!fs.existsSync(destDir)) {
-      fs.mkdirSync(destDir, { recursive: true });
-    }
-
-    // Move the file
-    const extractedBinaryPath = path.join(tempDir, "esbuild");
-    fs.renameSync(extractedBinaryPath, esbuildPath);
-
-    // Ensure the binary is executable (not needed on Windows)
-    if (os.platform() !== "win32") {
-      fs.chmodSync(esbuildPath, 0o755);
-    }
-
-    // Clean up
-    fs.unlinkSync(tgzPath);
-    fs.rmSync(tempDir, { recursive: true });
-
-    await ide.showToast(
-      "info",
-      `'esbuild' successfully installed to ${esbuildPath}`,
-    );
-  } catch (error) {
-    console.error("Error downloading or saving esbuild binary:", error);
-    throw error;
-  }
-}
-
-async function tryBuildConfigTs() {
-  try {
-    if (process.env.IS_BINARY === "true") {
-      await buildConfigTsWithBinary();
-    } else {
-      await buildConfigTsWithNodeModule();
-    }
-  } catch (e) {
-    console.log(
-      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
-    );
-  }
-}
-
-async function buildConfigTsWithBinary() {
-  const cmd = [
-    escapeSpacesInPath(getEsbuildBinaryPath()),
-    escapeSpacesInPath(getConfigTsPath()),
-    "--bundle",
-    `--outfile=${escapeSpacesInPath(getConfigJsPath())}`,
-    "--platform=node",
-    "--format=cjs",
-    "--sourcemap",
-    "--external:fetch",
-    "--external:fs",
-    "--external:path",
-    "--external:os",
-    "--external:child_process",
-  ].join(" ");
-
-  execSync(cmd);
-}
-
-async function buildConfigTsWithNodeModule() {
-  const { build } = await import("esbuild");
-
-  await build({
-    entryPoints: [getConfigTsPath()],
-    bundle: true,
-    platform: "node",
-    format: "cjs",
-    outfile: getConfigJsPath(),
-    external: ["fetch", "fs", "path", "os", "child_process"],
-    sourcemap: true,
-  });
-}
-
-function readConfigJs(): string | undefined {
-  const configJsPath = getConfigJsPath();
-
-  if (!fs.existsSync(configJsPath)) {
-    return undefined;
-  }
-
-  return fs.readFileSync(configJsPath, "utf8");
-}
-
-async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
-  const configTsPath = getConfigTsPath();
-
-  if (!fs.existsSync(configTsPath)) {
-    return;
-  }
-
-  const currentContent = fs.readFileSync(configTsPath, "utf8");
-
-  // If the user hasn't modified the default config.ts, don't bother building
-  if (currentContent.trim() === DEFAULT_CONFIG_TS_CONTENTS.trim()) {
-    return;
-  }
-
-  await handleEsbuildInstallation(ide, ideType);
-  await tryBuildConfigTs();
-
-  return readConfigJs();
-}
-
 async function loadContinueConfigFromJson(
   ide: IDE,
   ideSettings: IdeSettings,
@@ -868,7 +685,28 @@ async function loadContinueConfigFromJson(
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
+  // Fail fast if a legacy config.ts exists
+  try {
+    const tsPath = getConfigTsPath();
+    if (fs.existsSync(tsPath)) {
+      return {
+        errors: [
+          {
+            fatal: true,
+            message:
+              "Detected legacy '~/.continue/config.ts'. TypeScript configs are no longer supported. Please migrate your settings to 'config.json' / 'config.yaml'.",
+          },
+        ],
+        config: undefined,
+        configLoadInterrupted: true,
+      };
+    }
+  } catch {
+    // ignore path resolution errors; proceed with normal load
+  }
+
   const workspaceConfigs = await getWorkspaceRcConfigs(ide);
+
   // Serialized config
   let {
     config: serialized,
@@ -887,70 +725,13 @@ async function loadContinueConfigFromJson(
   }
 
   // Apply shared config
-  // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
   const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig);
 
   // Convert serialized to intermediate config
-  let intermediate = await serializedToIntermediateConfig(withShared, ide);
+  const intermediate = await serializedToIntermediateConfig(withShared, ide);
 
-  // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTsandReadConfigJs(
-    ide,
-    ideInfo.ideType,
-  );
-  if (configJsContents) {
-    try {
-      // Try config.ts first
-      const configJsPath = getConfigJsPath();
-      let module: any;
-
-      try {
-        module = await import(configJsPath);
-      } catch (e) {
-        console.log(e);
-        console.log(
-          "Could not load config.ts as absolute path, retrying as file url ...",
-        );
-        try {
-          module = await import(localPathToUri(configJsPath));
-        } catch (e) {
-          throw new Error("Could not load config.ts as file url either", {
-            cause: e,
-          });
-        }
-      }
-
-      if (typeof require !== "undefined") {
-        delete require.cache[require.resolve(configJsPath)];
-      }
-      if (!module.modifyConfig) {
-        throw new Error("config.ts does not export a modifyConfig function.");
-      }
-      intermediate = module.modifyConfig(intermediate);
-    } catch (e) {
-      console.log("Error loading config.ts: ", e);
-    }
-  }
-
-  // Apply remote config.js to modify intermediate config
-  if (ideSettings.remoteConfigServerUrl) {
-    try {
-      const configJsPathForRemote = getConfigJsPathForRemote(
-        ideSettings.remoteConfigServerUrl,
-      );
-      const module = await import(configJsPathForRemote);
-      if (typeof require !== "undefined") {
-        delete require.cache[require.resolve(configJsPathForRemote)];
-      }
-      if (!module.modifyConfig) {
-        throw new Error("config.ts does not export a modifyConfig function.");
-      }
-      intermediate = module.modifyConfig(intermediate);
-    } catch (e) {
-      console.log("Error loading remotely set config.js: ", e);
-    }
-  }
+  // NOTE: Previously, a TS/JS mutator could tweak the intermediate config; that is now removed.
 
   // Convert to final config format
   const { config: finalConfig, errors: finalErrors } =
@@ -963,6 +744,7 @@ async function loadContinueConfigFromJson(
       llmLogger,
       workOsAccessToken,
     });
+
   return {
     config: finalConfig,
     errors: [...(errors ?? []), ...finalErrors],

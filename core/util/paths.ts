@@ -165,40 +165,6 @@ export function getConfigJsPath(): string {
   return path.join(getContinueGlobalPath(), "out", "config.js");
 }
 
-export function getTsConfigPath(): string {
-  const tsConfigPath = path.join(getContinueGlobalPath(), "tsconfig.json");
-  if (!fs.existsSync(tsConfigPath)) {
-    fs.writeFileSync(
-      tsConfigPath,
-      JSON.stringify(
-        {
-          compilerOptions: {
-            target: "ESNext",
-            useDefineForClassFields: true,
-            lib: ["DOM", "DOM.Iterable", "ESNext"],
-            allowJs: true,
-            skipLibCheck: true,
-            esModuleInterop: false,
-            allowSyntheticDefaultImports: true,
-            strict: true,
-            forceConsistentCasingInFileNames: true,
-            module: "System",
-            moduleResolution: "Node",
-            noEmit: false,
-            noEmitOnError: false,
-            outFile: "./out/config.js",
-            typeRoots: ["./node_modules/@types", "./types"],
-          },
-          include: ["./config.ts"],
-        },
-        null,
-        2,
-      ),
-    );
-  }
-  return tsConfigPath;
-}
-
 export function getContinueRcPath(): string {
   // Disable indexing of the config folder to prevent infinite loops
   const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
@@ -422,10 +388,6 @@ export function readAllGlobalPromptFiles(
 
 export function getRepoMapFilePath(): string {
   return path.join(getContinueUtilsPath(), "repo_map.txt");
-}
-
-export function getEsbuildBinaryPath(): string {
-  return path.join(getContinueUtilsPath(), "esbuild");
 }
 
 export function migrateV1DevDataFiles() {

@@ -25,7 +25,7 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
     );
   });
 
-  test("should add a system message from config.ts", async () => {
+  test.skip("should add a system message from config.ts (legacy, removed)", async () => {
     const configTs = `export function modifyConfig(config: Config): Config {
     config.systemMessage = "SYSTEM";
     return config;

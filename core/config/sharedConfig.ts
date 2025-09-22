@@ -79,13 +79,13 @@ export function salvageSharedConfig(sharedConfig: object): SharedConfigSchema {
 
 // Apply shared config to all forms of config
 // - SerializedContinueConfig (config.json)
-// - Config ("intermediate") - passed to config.ts
+// - Config ("intermediate") - previously passed to a TS mutator (removed)
 // - ContinueConfig
 // - BrowserSerializedContinueConfig (final converted to be passed to GUI)
 
 // This modify function is split into two steps
 // - rectifySharedModelsFromSharedConfig - includes boolean flags like allowAnonymousTelemetry which
-//   must be added BEFORE config.ts and remote server config apply for JSON
+//   must be added BEFORE remaining JSON merges; TS mutator removed
 //   for security reasons
 // - setSharedModelsFromSharedConfig - exists because of selectedModelsByRole
 //   Which don't exist on SerializedContinueConfig/Config types, so must be added after the fact

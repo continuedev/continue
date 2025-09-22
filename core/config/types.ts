@@ -1166,7 +1166,7 @@ declare global {
     mergeBehavior: ConfigMergeType;
   };
   
-  // config.ts - give users simplified interfaces
+  // (legacy) TS mutator previously offered simplified interfaces
   export interface Config {
     /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
     allowAnonymousTelemetry?: boolean;

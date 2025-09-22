@@ -81,7 +81,7 @@ class CustomLLMClass extends BaseLLM {
       }
     } else {
       throw new Error(
-        "Either streamCompletion or streamChat must be defined in a custom LLM in config.ts",
+        "Either streamCompletion or streamChat must be defined for a custom LLM",
       );
     }
   }
