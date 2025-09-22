@@ -295,18 +295,6 @@ export class VsCodeMessenger {
         });
     });
 
-    this.onWebviewOrCore("readFileAsDataUrl", async (msg) => {
-      const { filepath } = msg.data;
-      const fileUri = vscode.Uri.file(filepath);
-      const fileContents = await vscode.workspace.fs.readFile(fileUri);
-      const fileType =
-        filepath.split(".").pop() === "png" ? "image/png" : "image/jpeg";
-      const dataUrl = `data:${fileType};base64,${Buffer.from(
-        fileContents,
-      ).toString("base64")}`;
-      return dataUrl;
-    });
-
     this.onWebviewOrCore("getIdeSettings", async (msg) => {
       return ide.getIdeSettings();
     });
