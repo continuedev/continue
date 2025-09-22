@@ -159,8 +159,12 @@ const getCommandsMap: (
 
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
-      captureCommandTelemetry("acceptDiff");
-      void processDiff(
+      console.log("=== AcceptDiff Debug Info ===");
+      console.log("newFileUri:", newFileUri);
+      console.log("streamId:", streamId);
+
+      console.log("Processing diff with action: accept");
+      const generatedLines = await processDiff(
         "accept",
         sidebar,
         ide,
@@ -169,10 +173,36 @@ const getCommandsMap: (
         newFileUri,
         streamId,
       );
+
+      // 构建简化的acceptDiff统计信息
+      const diffMetrics = {
+        filepath: newFileUri || "unknown",
+        streamId: streamId || "unknown",
+        timestamp: new Date().toISOString(),
+        action: "accept",
+        // 只统计模型生成的代码行数
+        generatedLines: generatedLines || 0,
+      };
+
+      console.log("AcceptDiff event recorded:", diffMetrics);
+
+      console.log(
+        "Sending acceptDiff telemetry with diff metrics:",
+        diffMetrics,
+      );
+      captureCommandTelemetry("acceptDiff", diffMetrics);
+      console.log("=== AcceptDiff Debug Info End ===");
     },
 
     "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+      console.log("=== RejectDiff Debug Info ===");
+      console.log("newFileUri:", newFileUri);
+      console.log("streamId:", streamId);
+
+      console.log("Sending rejectDiff telemetry");
       captureCommandTelemetry("rejectDiff");
+
+      console.log("Processing diff with action: reject");
       void processDiff(
         "reject",
         sidebar,
@@ -182,6 +212,7 @@ const getCommandsMap: (
         newFileUri,
         streamId,
       );
+      console.log("=== RejectDiff Debug Info End ===");
     },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");

@@ -39,7 +39,7 @@ export class ShihuoTelemetryService {
   private constructor() {
     this.config = {
       enabled: true,
-      reportInterval: 5 * 60 * 1000, // 5分钟
+      reportInterval: 1 * 60 * 1000, // 1分钟
       batchSize: 10,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -76,8 +76,14 @@ export class ShihuoTelemetryService {
     distinctId: string,
   ) {
     if (!this.config.enabled) {
+      console.log("Shihuo telemetry is disabled, skipping event:", event);
       return;
     }
+
+    console.log("=== ShihuoTelemetryService Capture Debug ===");
+    console.log("Capturing event:", event);
+    console.log("Properties:", properties);
+    console.log("DistinctId:", distinctId);
 
     const telemetryEvent: ShihuoTelemetryEvent = {
       event,
@@ -90,7 +96,10 @@ export class ShihuoTelemetryService {
       ideType: this.ideInfo?.ideType,
     };
 
+    console.log("Created telemetry event:", telemetryEvent);
     this.eventQueue.push(telemetryEvent);
+    console.log("Event added to queue. Queue length:", this.eventQueue.length);
+    console.log("=== ShihuoTelemetryService Capture Debug End ===");
 
     // 如果队列达到批量大小，立即上报（但在测试环境中跳过实际上报）
     if (
@@ -267,6 +276,9 @@ export class ShihuoTelemetryService {
       const userInfo = await this.getUserInfoFromSession();
       const deviceId = this.deviceId || this.getOrCreateDeviceId();
 
+      // 统计各种事件
+      const eventStats = this.calculateEventStats(events);
+
       // 构建业务数据
       const bizData = {
         events,
@@ -274,6 +286,7 @@ export class ShihuoTelemetryService {
         name: userInfo.name,
         dept_name: userInfo.dept_name,
         timestamp: new Date().toISOString(),
+        summary: eventStats,
       };
 
       console.log("Shihuo telemetry bizData", bizData);
@@ -334,6 +347,212 @@ export class ShihuoTelemetryService {
   }
 
   /**
+   * 计算各种事件统计
+   */
+  private calculateEventStats(events: ShihuoTelemetryEvent[]) {
+    // Autocomplete事件统计
+    const autocompleteEvents = events.filter(
+      (event) => event.event === "autocomplete",
+    );
+
+    let acceptCount = 0;
+    let cancelCount = 0;
+    let totalLines = 0;
+    let totalCharacters = 0;
+    let acceptedLines = 0;
+    let acceptedCharacters = 0;
+    let cancelledLines = 0;
+    let cancelledCharacters = 0;
+
+    autocompleteEvents.forEach((event) => {
+      const numLines = event.properties.numLines || 0;
+      const completionLength = event.properties.completionLength || 0;
+
+      totalLines += numLines;
+      totalCharacters += completionLength;
+
+      if (event.properties.accepted === true) {
+        acceptCount++;
+        acceptedLines += numLines;
+        acceptedCharacters += completionLength;
+      } else if (event.properties.accepted === false) {
+        cancelCount++;
+        cancelledLines += numLines;
+        cancelledCharacters += completionLength;
+      }
+    });
+
+    // 手动输入统计
+    const manualTypingEvents = events.filter(
+      (event) => event.event === "manual_typing_statistics",
+    );
+
+    let totalManualCharacters = 0;
+    let totalManualLines = 0;
+    let totalManualKeystrokes = 0;
+
+    manualTypingEvents.forEach((event) => {
+      totalManualCharacters += event.properties.totalCharactersTyped || 0;
+      totalManualLines += event.properties.totalLinesTyped || 0;
+      totalManualKeystrokes += event.properties.totalKeystrokes || 0;
+    });
+
+    // Agent/Chat相关事件统计
+    const chatEvents = events.filter((event) => event.event === "chat");
+    const userInputEvents = events.filter(
+      (event) => event.event === "userInput",
+    );
+    const stepRunEvents = events.filter((event) => event.event === "step run");
+    const apiRequestEvents = events.filter(
+      (event) => event.event === "apiRequest",
+    );
+    const slashCommandEvents = events.filter(
+      (event) => event.event === "useSlashCommand",
+    );
+    const toolCallDecisionEvents = events.filter(
+      (event) => event.event === "gui_tool_call_decision",
+    );
+    const toolCallOutcomeEvents = events.filter(
+      (event) => event.event === "gui_tool_call_outcome",
+    );
+
+    // Agent代码accept/reject统计
+    const acceptDiffEvents = events.filter(
+      (event) => event.event === "acceptDiff",
+    );
+    const rejectDiffEvents = events.filter(
+      (event) => event.event === "rejectDiff",
+    );
+
+    // CreateFile事件统计
+    const createFileEvents = events.filter(
+      (event) => event.event === "createfile",
+    );
+
+    // InlineEdit事件统计
+    const inlineEditEvents = events.filter(
+      (event) => event.event === "inlineEdit",
+    );
+
+    // 统计acceptDiff的模型生成代码量
+    let acceptDiffTotalGeneratedLines = 0;
+
+    // 统计createfile的模型生成代码量
+    let createFileTotalGeneratedLines = 0;
+
+    // 统计inlineEdit的模型生成代码量
+    let inlineEditTotalGeneratedLines = 0;
+
+    console.log("=== AcceptDiff Statistics Debug ===");
+    console.log("Found acceptDiff events:", acceptDiffEvents.length);
+
+    acceptDiffEvents.forEach((event, index) => {
+      console.log(`AcceptDiff event ${index + 1}:`, {
+        timestamp: event.timestamp,
+        properties: event.properties,
+      });
+
+      // 统计模型生成的代码行数
+      if (event.properties.generatedLines !== undefined) {
+        acceptDiffTotalGeneratedLines += event.properties.generatedLines;
+        console.log(
+          `Adding ${event.properties.generatedLines} generated lines to total`,
+        );
+      }
+    });
+
+    console.log("AcceptDiff totals:", {
+      totalGeneratedLines: acceptDiffTotalGeneratedLines,
+    });
+    console.log("=== AcceptDiff Statistics Debug End ===");
+
+    // 统计createfile事件
+    console.log("=== CreateFile Statistics Debug ===");
+    console.log("Found createfile events:", createFileEvents.length);
+
+    createFileEvents.forEach((event, index) => {
+      console.log(`CreateFile event ${index + 1}:`, {
+        timestamp: event.timestamp,
+        properties: event.properties,
+      });
+
+      // 统计模型生成的代码行数
+      if (event.properties.generatedLines !== undefined) {
+        createFileTotalGeneratedLines += event.properties.generatedLines;
+        console.log(
+          `Adding ${event.properties.generatedLines} generated lines to total`,
+        );
+      }
+    });
+
+    console.log("CreateFile totals:", {
+      totalGeneratedLines: createFileTotalGeneratedLines,
+    });
+    console.log("=== CreateFile Statistics Debug End ===");
+
+    // 统计inlineEdit事件
+    console.log("=== InlineEdit Statistics Debug ===");
+    console.log("Found inlineEdit events:", inlineEditEvents.length);
+
+    inlineEditEvents.forEach((event, index) => {
+      console.log(`InlineEdit event ${index + 1}:`, {
+        timestamp: event.timestamp,
+        properties: event.properties,
+      });
+
+      // 统计模型生成的代码行数
+      if (event.properties.expectedGeneratedLines !== undefined) {
+        inlineEditTotalGeneratedLines +=
+          event.properties.expectedGeneratedLines;
+        console.log(
+          `Adding ${event.properties.expectedGeneratedLines} expected generated lines to total`,
+        );
+      }
+
+      console.log(`InlineEdit: ${event.properties.type || "unknown"}`);
+    });
+
+    console.log("InlineEdit totals:", {
+      totalGeneratedLines: inlineEditTotalGeneratedLines,
+    });
+    console.log("=== InlineEdit Statistics Debug End ===");
+
+    // 计算Agent相关的字符数（从chat事件中提取）
+    let agentGeneratedCharacters = 0;
+    let agentPromptCharacters = 0;
+
+    chatEvents.forEach((event) => {
+      agentGeneratedCharacters += event.properties.completion?.length || 0;
+      agentPromptCharacters += event.properties.prompt?.length || 0;
+    });
+
+    return {
+      autocomplete: {
+        accepted: acceptCount,
+        cancelled: cancelCount,
+        total_lines: totalLines,
+        total_characters: totalCharacters,
+        accepted_lines: acceptedLines,
+        accepted_characters: acceptedCharacters,
+        cancelled_lines: cancelledLines,
+        cancelled_characters: cancelledCharacters,
+      },
+      manual_typing: {
+        total_characters: totalManualCharacters,
+        total_lines: totalManualLines,
+        total_keystrokes: totalManualKeystrokes,
+      },
+      agent: {
+        generated_characters: agentGeneratedCharacters,
+        prompt_characters: agentPromptCharacters,
+        accept_diff_generated_lines: acceptDiffTotalGeneratedLines,
+        createfile_generated_lines: createFileTotalGeneratedLines,
+        inlineedit_generated_lines: inlineEditTotalGeneratedLines,
+      },
+    };
+  }
+
+  /**
    * 获取用户信息（简化版本）
    */
   private async getUserInfoFromSession(): Promise<{
@@ -382,6 +601,13 @@ export class ShihuoTelemetryService {
       failedEventsLength: this.failedEvents.length,
       deviceId: this.deviceId,
     };
+  }
+
+  /**
+   * 获取当前队列中的事件统计（用于调试）
+   */
+  public getCurrentEventStats() {
+    return this.calculateEventStats(this.eventQueue);
   }
 
   /**

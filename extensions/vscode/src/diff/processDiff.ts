@@ -1,3 +1,4 @@
+import { DiffLine } from "core";
 import { Core } from "core/core";
 import { DataLogger } from "core/data/log";
 import { myersDiff } from "core/diff/myers";
@@ -8,6 +9,21 @@ import { VsCodeIde } from "../VsCodeIde";
 
 import { VerticalDiffManager } from "./vertical/manager";
 
+/**
+ * 计算模型生成的代码行数
+ */
+function calculateGeneratedCodeLines(diffLines: DiffLine[]): number {
+  let addedLines = 0;
+
+  for (const diffLine of diffLines) {
+    if (diffLine.type === "new") {
+      addedLines++;
+    }
+  }
+
+  return addedLines;
+}
+
 export async function processDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
@@ -17,7 +33,7 @@ export async function processDiff(
   newFileUri?: string,
   streamId?: string,
   toolCallId?: string,
-) {
+): Promise<number | undefined> {
   let newOrCurrentUri = newFileUri;
   if (!newOrCurrentUri) {
     const currentFile = await ide.getCurrentFile();
@@ -27,7 +43,7 @@ export async function processDiff(
     console.warn(
       `No file provided or current file open while attempting to resolve diff`,
     );
-    return;
+    return undefined;
   }
 
   await ide.openFile(newOrCurrentUri);
@@ -35,6 +51,22 @@ export async function processDiff(
   // If streamId is not provided, try to get it from the VerticalDiffManager
   if (!streamId) {
     streamId = verticalDiffManager.getStreamIdForFile(newOrCurrentUri);
+  }
+
+  // 获取模型生成的代码行数（仅在accept时）
+  let generatedLines: number | undefined;
+
+  if (action === "accept") {
+    // 获取VerticalDiffManager中的logDiffs来计算生成的代码行数
+    const logDiffs = verticalDiffManager.logDiffs;
+    if (logDiffs && logDiffs.length > 0) {
+      generatedLines = calculateGeneratedCodeLines(logDiffs);
+      console.log("=== AcceptDiff Statistics ===");
+      console.log("Generated code lines:", generatedLines);
+      console.log("=== AcceptDiff Statistics End ===");
+    } else {
+      console.warn("No diff information available for statistics calculation");
+    }
   }
 
   // Clear vertical diffs depending on action
@@ -96,4 +128,7 @@ export async function processDiff(
     // Save the file even if no streamId
     await ide.saveFile(newOrCurrentUri);
   }
+
+  // 返回生成的代码行数
+  return generatedLines;
 }
