@@ -220,7 +220,7 @@ describe("StorageSyncService", () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBeInstanceOf(URL);
     expect((url as URL).toString()).toBe(
-      "https://api.test/agents/sessions/session-123/read-status",
+      "https://api.test/agents/session-123/read-status",
     );
     expect(init).toMatchObject({
       method: "POST",
