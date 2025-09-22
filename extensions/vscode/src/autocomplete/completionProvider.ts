@@ -9,6 +9,7 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
+import { ensureShihuoAuthentication } from "../stubs/ShihuoAuthProvider";
 import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -154,6 +155,16 @@ export class ContinueCompletionProvider
     token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
+    // Check authentication first before any other processing
+    console.log("Autocomplete: Checking authentication...");
+    const isAuthenticated = await ensureShihuoAuthentication();
+    console.log("Autocomplete: Authentication result:", isAuthenticated);
+    if (!isAuthenticated) {
+      console.log("Autocomplete: Authentication failed, returning null");
+      return null;
+    }
+    console.log("Autocomplete: Authentication passed, continuing...");
+
     // This method is triggered on every keystroke, tab keypress, and cursor move.
     // We need to determine why it was triggered:
     // 1. Typing (chain doesn't exist)

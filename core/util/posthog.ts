@@ -5,6 +5,7 @@ import { IdeInfo } from "../index.js";
 
 import type { PostHog as PostHogType } from "posthog-node";
 import { extractMinimalStackTraceInfo } from "./extractMinimalStackTraceInfo.js";
+import { ShihuoTelemetryService } from "./ShihuoTelemetryService.js";
 import { TokensBatchingService } from "./TokensBatchingService.js";
 
 export enum PosthogFeatureFlag {
@@ -38,6 +39,7 @@ export class Telemetry {
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static ideInfo: IdeInfo | undefined = undefined;
+  static shihuoService: ShihuoTelemetryService | undefined = undefined;
 
   /**
    * Convenience method for capturing errors in a single event
@@ -89,7 +91,13 @@ export class Telemetry {
         return;
       }
 
+      // 发送到PostHog
       Telemetry.client?.capture(payload);
+
+      // 同时发送到Shihuo
+      if (Telemetry.shihuoService) {
+        Telemetry.shihuoService.capture(event, properties, Telemetry.uniqueId);
+      }
 
       if (sendToTeam) {
         void TeamAnalytics.capture(event, properties);
@@ -102,6 +110,7 @@ export class Telemetry {
   static shutdownPosthogClient() {
     TokensBatchingService.getInstance().shutdown();
     Telemetry.client?.shutdown();
+    Telemetry.shihuoService?.shutdown();
   }
 
   static async getTelemetryClient(): Promise<PostHogType | undefined> {
@@ -122,8 +131,17 @@ export class Telemetry {
 
     if (!allow || process.env.NODE_ENV === "test") {
       Telemetry.client = undefined;
-    } else if (!Telemetry.client) {
-      Telemetry.client = await Telemetry.getTelemetryClient();
+      Telemetry.shihuoService = undefined;
+    } else {
+      if (!Telemetry.client) {
+        Telemetry.client = await Telemetry.getTelemetryClient();
+      }
+
+      // 初始化Shihuo统计服务
+      if (!Telemetry.shihuoService) {
+        Telemetry.shihuoService = ShihuoTelemetryService.getInstance();
+        Telemetry.shihuoService.initialize(ideInfo);
+      }
     }
   }
 

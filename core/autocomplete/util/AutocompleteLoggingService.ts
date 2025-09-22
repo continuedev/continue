@@ -13,6 +13,9 @@ export class AutocompleteLoggingService {
   _lastDisplayedCompletion: { id: string; displayedAt: number } | undefined =
     undefined;
 
+  // Track suggestion display times for interaction events
+  private _suggestionDisplayTimes = new Map<string, number>();
+
   public createAbortController(completionId: string): AbortController {
     const abortController = new AbortController();
     this._abortControllers.set(completionId, abortController);
@@ -41,6 +44,7 @@ export class AutocompleteLoggingService {
       outcome.accepted = true;
       this.logAutocompleteOutcome(outcome);
       this._outcomes.delete(completionId);
+      this._suggestionDisplayTimes.delete(completionId);
       return outcome;
     }
   }
@@ -52,16 +56,25 @@ export class AutocompleteLoggingService {
     }
 
     if (this._outcomes.has(completionId)) {
+      const outcome = this._outcomes.get(completionId)!;
+      outcome.accepted = false;
+      this.logAutocompleteOutcome(outcome);
+
       this._outcomes.delete(completionId);
+      this._suggestionDisplayTimes.delete(completionId);
     }
   }
 
   public markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+    const displayTime = Date.now();
+    this._suggestionDisplayTimes.set(completionId, displayTime);
+
     const logRejectionTimeout = setTimeout(() => {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
       this.logAutocompleteOutcome(outcome);
       this._logRejectionTimeouts.delete(completionId);
+      this._suggestionDisplayTimes.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);
     this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
@@ -105,7 +118,15 @@ export class AutocompleteLoggingService {
     });
 
     const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
+
+    // 计算建议显示时间
+    const displayTime = this._suggestionDisplayTimes.get(outcome.completionId);
+    const suggestionDisplayTime = displayTime
+      ? Date.now() - displayTime
+      : undefined;
+
     const toLog = {
+      // 原有字段
       accepted: restOfOutcome.accepted,
       cacheHit: restOfOutcome.cacheHit,
       completionId: restOfOutcome.completionId,
@@ -119,6 +140,16 @@ export class AutocompleteLoggingService {
       time: restOfOutcome.time,
       useRecentlyEdited: restOfOutcome.useRecentlyEdited,
       numLines: restOfOutcome.numLines,
+
+      // 添加您需要的额外字段
+      completionLength: completion.length,
+      prefixLength: prefix.length,
+      suggestionDisplayTime,
+      completion: completion,
+      gitRepo: restOfOutcome.gitRepo,
+      uniqueId: restOfOutcome.uniqueId,
+      timestamp: new Date().toISOString(),
+      filepath: restOfOutcome.filepath,
     };
 
     outcome.enabledStaticContextualization

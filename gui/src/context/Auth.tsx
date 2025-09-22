@@ -2,7 +2,12 @@ import {
   ProfileDescription,
   SerializedOrgWithProfiles,
 } from "core/config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "core/control-plane/AuthTypes";
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+  getActiveSession,
+  MultiSessionInfo,
+} from "core/control-plane/AuthTypes";
 import React, {
   createContext,
   useCallback,
@@ -23,8 +28,18 @@ import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
+  multiSession: MultiSessionInfo;
   logout: () => void;
+  logoutContinue: () => void;
+  logoutShihuo: () => void;
   login: (useOnboarding: boolean) => Promise<boolean>;
+  loginWithShihuo: () => Promise<boolean>;
+  switchToSession: (
+    sessionType:
+      | AuthType.WorkOsProd
+      | AuthType.WorkOsStaging
+      | AuthType.ShihuoSSO,
+  ) => void;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
   refreshProfiles: (reason?: string) => Promise<void>;
@@ -38,10 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  // Session
-  const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
-    undefined,
-  );
+  // Multi-session management
+  const [multiSession, setMultiSession] = useState<MultiSessionInfo>({
+    continueSession: undefined,
+    shihuoSession: undefined,
+    activeSessionType: undefined,
+  });
+
+  // Current active session (computed from multiSession)
+  const session = getActiveSession(multiSession);
 
   // Orgs
   const orgs = useAppSelector((store) => store.profiles.organizations);
@@ -63,8 +83,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             return;
           }
 
-          const session = result.content;
-          setSession(session);
+          const continueSession = result.content;
+          setMultiSession((prev) => ({
+            ...prev,
+            continueSession,
+            activeSessionType:
+              continueSession?.AUTH_TYPE === AuthType.OnPrem
+                ? undefined
+                : continueSession?.AUTH_TYPE,
+          }));
+
+          resolve(true);
+        });
+    });
+  };
+
+  const loginWithShihuo: AuthContextType["loginWithShihuo"] = () => {
+    return new Promise(async (resolve) => {
+      await ideMessenger
+        .request("getShihuoSessionInfo", {
+          silent: false,
+        })
+        .then((result) => {
+          if (result.status === "error") {
+            resolve(false);
+            return;
+          }
+
+          const shihuoSession = result.content;
+          setMultiSession((prev) => ({
+            ...prev,
+            shihuoSession,
+            activeSessionType:
+              shihuoSession?.AUTH_TYPE === AuthType.OnPrem
+                ? undefined
+                : shihuoSession?.AUTH_TYPE,
+          }));
 
           resolve(true);
         });
@@ -72,21 +126,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    // Logout from both sessions
     ideMessenger.post("logoutOfControlPlane", undefined);
+    ideMessenger.post("logoutOfShihuo", undefined);
     dispatch(setOrganizations(orgs.filter((org) => org.id === "personal")));
     dispatch(setSelectedOrgId("personal"));
-    setSession(undefined);
+    setMultiSession({
+      continueSession: undefined,
+      shihuoSession: undefined,
+      activeSessionType: undefined,
+    });
+  };
+
+  const logoutContinue = () => {
+    ideMessenger.post("logoutOfControlPlane", undefined);
+    setMultiSession((prev) => ({
+      ...prev,
+      continueSession: undefined,
+      activeSessionType: prev.shihuoSession ? AuthType.ShihuoSSO : undefined,
+    }));
+  };
+
+  const logoutShihuo = () => {
+    ideMessenger.post("logoutOfShihuo", undefined);
+    setMultiSession((prev) => ({
+      ...prev,
+      shihuoSession: undefined,
+      activeSessionType:
+        prev.continueSession &&
+        prev.continueSession.AUTH_TYPE !== AuthType.OnPrem
+          ? prev.continueSession.AUTH_TYPE
+          : undefined,
+    }));
+  };
+
+  const switchToSession = (
+    sessionType:
+      | AuthType.WorkOsProd
+      | AuthType.WorkOsStaging
+      | AuthType.ShihuoSSO,
+  ) => {
+    setMultiSession((prev) => ({
+      ...prev,
+      activeSessionType: sessionType,
+    }));
   };
 
   useEffect(() => {
     async function init() {
-      const result = await ideMessenger.request("getControlPlaneSessionInfo", {
-        silent: true,
-        useOnboarding: false,
+      // Initialize both sessions
+      const [continueResult, shihuoResult] = await Promise.all([
+        ideMessenger.request("getControlPlaneSessionInfo", {
+          silent: true,
+          useOnboarding: false,
+        }),
+        ideMessenger.request("getShihuoSessionInfo", {
+          silent: true,
+        }),
+      ]);
+
+      const continueSession =
+        continueResult.status === "success"
+          ? continueResult.content
+          : undefined;
+      const shihuoSession =
+        shihuoResult.status === "success" ? shihuoResult.content : undefined;
+
+      setMultiSession({
+        continueSession,
+        shihuoSession,
+        activeSessionType:
+          (continueSession?.AUTH_TYPE !== AuthType.OnPrem
+            ? continueSession?.AUTH_TYPE
+            : undefined) ||
+          (shihuoSession?.AUTH_TYPE !== AuthType.OnPrem
+            ? shihuoSession?.AUTH_TYPE
+            : undefined),
       });
-      if (result.status === "success") {
-        setSession(result.content);
-      }
     }
     void init();
   }, []);
@@ -94,7 +210,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useWebviewListener(
     "sessionUpdate",
     async (data) => {
-      setSession(data.sessionInfo);
+      const sessionInfo = data.sessionInfo;
+      if (sessionInfo) {
+        if (sessionInfo.AUTH_TYPE === AuthType.ShihuoSSO) {
+          setMultiSession((prev) => ({
+            ...prev,
+            shihuoSession: sessionInfo,
+            activeSessionType: prev.activeSessionType || AuthType.ShihuoSSO,
+          }));
+        } else if (
+          sessionInfo.AUTH_TYPE === AuthType.WorkOsProd ||
+          sessionInfo.AUTH_TYPE === AuthType.WorkOsStaging
+        ) {
+          setMultiSession((prev) => ({
+            ...prev,
+            continueSession: sessionInfo,
+            activeSessionType: prev.activeSessionType || sessionInfo.AUTH_TYPE,
+          }));
+        }
+      }
     },
     [],
   );
@@ -121,8 +255,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     <AuthContext.Provider
       value={{
         session,
+        multiSession,
         logout,
+        logoutContinue,
+        logoutShihuo,
         login,
+        loginWithShihuo,
+        switchToSession,
         selectedProfile,
         profiles: currentOrg?.profiles ?? [],
         refreshProfiles,

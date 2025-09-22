@@ -29,6 +29,10 @@ import { registerAllPromptFilesCompletionProviders } from "../lang-server/prompt
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import {
+  getShihuoSessionInfo,
+  ShihuoAuthProvider,
+} from "../stubs/ShihuoAuthProvider";
 import { UriEventHandler } from "../stubs/uriHandler";
 import {
   getControlPlaneSessionInfo,
@@ -60,6 +64,7 @@ import {
 import { GhostTextAcceptanceTracker } from "../autocomplete/GhostTextAcceptanceTracker";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { handleTextDocumentChange } from "../util/editLoggingUtils";
+import { ManualTypingTracker } from "../util/manualTypingTracker";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -78,9 +83,11 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
+  private shihuoAuthProvider: ShihuoAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
   private completionProvider: ContinueCompletionProvider;
+  private manualTypingTracker: ManualTypingTracker;
 
   private ARBITRARY_TYPING_DELAY = 2000;
 
@@ -173,11 +180,14 @@ export class VsCodeExtension {
   }
 
   constructor(context: vscode.ExtensionContext) {
-    // Register auth provider
+    // Register auth providers
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
+    this.shihuoAuthProvider = new ShihuoAuthProvider(context, this.uriHandler);
 
     void this.workOsAuthProvider.refreshSessions();
+    void this.shihuoAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
+    context.subscriptions.push(this.shihuoAuthProvider);
 
     this.editDecorationManager = new EditDecorationManager(context);
 
@@ -281,6 +291,7 @@ export class VsCodeExtension {
       verticalDiffManagerPromise,
       configHandlerPromise,
       this.workOsAuthProvider,
+      this.shihuoAuthProvider,
       this.editDecorationManager,
       context,
       this,
@@ -363,6 +374,10 @@ export class VsCodeExtension {
         this.completionProvider,
       ),
     );
+
+    // Initialize manual typing tracker
+    this.manualTypingTracker = new ManualTypingTracker();
+    this.manualTypingTracker.initialize(context);
 
     // Handle uri events
     this.uriHandler.event((uri) => {
@@ -526,6 +541,12 @@ export class VsCodeExtension {
         );
 
         const sessionInfo = await getControlPlaneSessionInfo(true, false);
+        void this.core.invoke("didChangeControlPlaneSessionInfo", {
+          sessionInfo,
+        });
+      } else if (e.provider.id === "shihuo-sso") {
+        // Handle Shihuo SSO session changes
+        const sessionInfo = await getShihuoSessionInfo(true);
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });
