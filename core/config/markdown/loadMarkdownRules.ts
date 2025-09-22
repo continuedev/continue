@@ -6,6 +6,7 @@ import { IDE, RuleWithSource } from "../..";
 import { findUriInDirs, joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
+export const SUPPORTED_AGENT_FILES = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
 /**
  * Loads rules from markdown files in the .continue/rules directory
  * and agent files (AGENTS.md, AGENT.md, CLAUDE.md) at workspace root
@@ -18,12 +19,11 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
   const rules: RuleWithSource[] = [];
 
   // First, try to load agent files from workspace root
-  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
   const workspaceDirs = await ide.getWorkspaceDirs();
 
   for (const workspaceDir of workspaceDirs) {
     let agentFileFound = false;
-    for (const fileName of agentFiles) {
+    for (const fileName of SUPPORTED_AGENT_FILES) {
       try {
         const agentFilePath = joinPathsToUri(workspaceDir, fileName);
         const agentContent = await ide.readFile(agentFilePath);
