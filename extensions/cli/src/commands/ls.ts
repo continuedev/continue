@@ -30,7 +30,7 @@ export async function getTunnelForAgent(agentId: string): Promise<string> {
   const authConfig = loadAuthConfig();
   const accessToken = getAccessToken(authConfig);
 
-  const resp = await fetch(`${env.apiBase}agents/devboxes/${agentId}/tunnel`, {
+  const resp = await fetch(`${env.apiBase}agents/${agentId}/tunnel`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
