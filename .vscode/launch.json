@@ -137,7 +137,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/extensions/cli/dist/cn.js",
-      "args": ["serve", "--id", "8623194f-9072-4d18-8d38-7178fafa0cf0"],
+      "args": [],
       "runtimeArgs": ["--enable-source-maps"],
       "env": {
         "NODE_ENV": "development"
