@@ -1,3 +1,4 @@
+import { RequestOptions } from "../browser.js";
 import { AssistantUnrolled, ConfigYaml } from "../schemas/index.js";
 
 export function mergePackages(
@@ -14,6 +15,10 @@ export function mergePackages(
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
     env: { ...current.env, ...incoming.env },
+    requestOptions: mergeConfigYamlRequestOptions(
+      current.requestOptions,
+      incoming.requestOptions,
+    ),
   };
 }
 
@@ -31,5 +36,35 @@ export function mergeUnrolledAssistants(
     mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     env: { ...current.env, ...incoming.env },
+    requestOptions: mergeConfigYamlRequestOptions(
+      current.requestOptions,
+      incoming.requestOptions,
+    ),
+  };
+}
+
+export function mergeConfigYamlRequestOptions(
+  base: RequestOptions | undefined,
+  global: RequestOptions | undefined,
+): RequestOptions | undefined {
+  if (!base && !global) {
+    return undefined;
+  }
+  if (!base) {
+    return global;
+  }
+  if (!global) {
+    return base;
+  }
+
+  const headers = {
+    ...global.headers,
+    ...base.headers,
+  };
+
+  return {
+    ...global,
+    ...base, // base overrides for simple values as well as noProxy and extraBodyProperties
+    headers: Object.keys(headers).length === 0 ? undefined : headers, // headers are the only thing that really merge
   };
 }

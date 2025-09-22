@@ -4,6 +4,7 @@ import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
 import { env } from "../env.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
+import { gracefulExit } from "../util/exit.js";
 import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
@@ -16,6 +17,7 @@ export async function remote(
     start?: boolean;
     branch?: string;
     repo?: string;
+    config?: string;
   } = {},
 ) {
   // Check if prompt should come from stdin instead of parameter
@@ -74,7 +76,7 @@ export async function remote(
       console.error(
         chalk.red("Not authenticated. Please run 'cn login' first."),
       );
-      process.exit(1);
+      await gracefulExit(1);
     }
 
     const accessToken = getAccessToken(authConfig);
@@ -84,6 +86,8 @@ export async function remote(
       name: `devbox-${Date.now()}`,
       prompt: actualPrompt,
       idempotencyKey: options.idempotencyKey,
+      agent: options.config,
+      config: options.config,
     };
 
     // Add branchName to request body if branch option is provided
@@ -154,6 +158,6 @@ export async function remote(
     logger.error(
       chalk.red(`Failed to create remote environment: ${error.message}`),
     );
-    process.exit(1);
+    await gracefulExit(1);
   }
 }

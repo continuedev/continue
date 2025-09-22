@@ -166,8 +166,13 @@ export const CODE_KEYWORDS_ENDING_IN_SEMICOLON = ["def"];
 export const CODE_STOP_BLOCK = "[/CODE]";
 export const BRACKET_ENDING_CHARS = [")", "]", "}", ";"];
 export const PREFIXES_TO_SKIP = ["<COMPLETION>"];
-export const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
-export const LINES_TO_SKIP = ["</START EDITING HERE>"];
+export const LINES_TO_STOP_AT = [
+  "# End of file.",
+  "<STOP EDITING HERE",
+  "<|/updated_code|>",
+  "```",
+];
+export const LINES_TO_SKIP = ["</START EDITING HERE>", "<|updated_code|>"];
 export const LINES_TO_REMOVE_BEFORE_START = [
   "<COMPLETION>",
   "[CODE]",

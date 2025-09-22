@@ -177,7 +177,7 @@ class OpenAI extends BaseLLM {
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`,
+      ...(this.apiKey && { Authorization: `Bearer ${this.apiKey}` }),
       "api-key": this.apiKey ?? "", // For Azure
     };
   }

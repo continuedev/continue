@@ -30,6 +30,7 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
 import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
@@ -373,8 +374,17 @@ export abstract class BaseLLM implements ILLM {
       },
     });
 
-    if (error !== undefined) {
-      if (error === "cancel" || error.name === "AbortError") {
+    if (typeof error === "undefined") {
+      interaction?.logItem({
+        kind: "success",
+        promptTokens,
+        generatedTokens,
+        thinkingTokens,
+        usage,
+      });
+      return "success";
+    } else {
+      if (error === "cancel" || error?.name?.includes("AbortError")) {
         interaction?.logItem({
           kind: "cancel",
           promptTokens,
@@ -396,15 +406,6 @@ export abstract class BaseLLM implements ILLM {
         });
         return "error";
       }
-    } else {
-      interaction?.logItem({
-        kind: "success",
-        promptTokens,
-        generatedTokens,
-        thinkingTokens,
-        usage,
-      });
-      return "success";
     }
   }
 
@@ -506,6 +507,24 @@ export abstract class BaseLLM implements ILLM {
               : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
             throw new Error(message);
           }
+          if (
+            e.code === "ECONNREFUSED" &&
+            e.message.includes("http://localhost:8000")
+          ) {
+            const isInstalled = await isLemonadeInstalled();
+            let message: string;
+            if (process.platform === "linux") {
+              // On Linux, isLemonadeInstalled checks if it's running (via health endpoint)
+              message =
+                "Unable to connect to local Lemonade instance. Please ensure Lemonade is running. Visit http://lemonade-server.ai for setup instructions.";
+            } else {
+              // On Windows, we can check if it's installed
+              message = isInstalled
+                ? "Unable to connect to local Lemonade instance. Lemonade server may not be running."
+                : "Unable to connect to local Lemonade instance. Lemonade may not be installed or may not be running.";
+            }
+            throw new Error(message);
+          }
         }
         throw e;
       }
@@ -540,18 +559,14 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _formatChatMessage(msg: ChatMessage): string {
-    let contentToShow = "";
-    if (msg.role === "tool") {
-      contentToShow = msg.content;
-    } else if (msg.role === "assistant" && msg.toolCalls?.length) {
-      contentToShow = msg.toolCalls
+    let contentToShow = renderChatMessage(msg);
+    if (msg.role === "assistant" && msg.toolCalls?.length) {
+      contentToShow += msg.toolCalls
         ?.map(
           (toolCall) =>
             `${toolCall.function?.name}(${toolCall.function?.arguments})`,
         )
         .join("\n");
-    } else if ("content" in msg) {
-      contentToShow = renderChatMessage(msg);
     }
 
     return `<${msg.role}>\n${contentToShow}\n\n`;
@@ -618,6 +633,7 @@ export abstract class BaseLLM implements ILLM {
               kind: "chunk",
               chunk: formattedContent,
             });
+
             completion += formattedContent;
             yield content;
           }
@@ -633,6 +649,7 @@ export abstract class BaseLLM implements ILLM {
             kind: "chunk",
             chunk,
           });
+
           completion += chunk;
           yield chunk;
         }
@@ -1073,6 +1090,7 @@ export abstract class BaseLLM implements ILLM {
               { ...body, stream: false },
               signal,
             );
+            
             const messages = fromChatResponse(response);
             for (const msg of messages) {
               const result = this.processChatChunk(msg, interaction);
@@ -1083,6 +1101,7 @@ export abstract class BaseLLM implements ILLM {
               }
               yield result.chunk;
             }
+
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(

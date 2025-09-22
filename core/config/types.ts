@@ -1061,6 +1061,7 @@ declare global {
     filepath?: string;
     fileContent?: string;
     originalFileContent?: string;
+    autoFormattingDiff?: string;
   }
   
   export interface RangeInFileWithContents {

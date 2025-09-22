@@ -1,4 +1,9 @@
-import { ChatMessage, ModelCapability, TemplateType } from "../index.js";
+import {
+  ChatMessage,
+  ModelCapability,
+  ModelDescription,
+  TemplateType,
+} from "../index.js";
 import { NEXT_EDIT_MODELS } from "./constants.js";
 
 import {
@@ -40,6 +45,7 @@ import {
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
+  "lemonade",
   "openai",
   "nvidia",
   "ollama",
@@ -62,6 +68,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
+  "lemonade",
   "cohere",
   "gemini",
   "msty",
@@ -80,26 +87,24 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
 ];
 
-const MODEL_SUPPORTS_IMAGES: string[] = [
-  "llava",
-  "gpt-4-turbo",
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4-vision",
-  "claude-3",
-  "c4ai-aya-vision-8b",
-  "c4ai-aya-vision-32b",
-  "gemini-ultra",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash",
-  "sonnet",
-  "opus",
-  "haiku",
-  "pixtral",
-  "llama3.2",
-  "llama-3.2",
-  "llama4",
-  "granite-vision",
+const MODEL_SUPPORTS_IMAGES: RegExp[] = [
+  /llava/,
+  /gpt-4-turbo/,
+  /gpt-4o/,
+  /gpt-4o-mini/,
+  /claude-3/,
+  /gemini-ultra/,
+  /gemini-1\.5-pro/,
+  /gemini-1\.5-flash/,
+  /sonnet/,
+  /opus/,
+  /haiku/,
+  /pixtral/,
+  /llama-?3\.2/,
+  /llama-?4/, // might use something like /llama-?(?:[4-9](?:\.\d+)?|\d{2,}(?:\.\d+)?)/ for forward compat, if needed
+  /\bgemma-?3(?!n)/, // gemma3 supports vision, but gemma3n doesn't!
+  /\b(pali|med)gemma/,
+  /qwen(.*)vl/,
 ];
 
 function modelSupportsImages(
@@ -115,10 +120,14 @@ function modelSupportsImages(
     return false;
   }
 
-  const lower = model.toLowerCase();
+  const lowerModel = model.toLowerCase();
+  const lowerTitle = title?.toLowerCase() ?? "";
+
   if (
+    lowerModel.includes("vision") ||
+    lowerTitle.includes("vision") ||
     MODEL_SUPPORTS_IMAGES.some(
-      (modelName) => lower.includes(modelName) || title?.includes(modelName),
+      (modelrx) => modelrx.test(lowerModel) || modelrx.test(lowerTitle),
     )
   ) {
     return true;
@@ -126,6 +135,26 @@ function modelSupportsImages(
 
   return false;
 }
+
+function modelSupportsReasoning(
+  model: ModelDescription | null | undefined,
+): boolean {
+  if (!model) {
+    return false;
+  }
+  if ("anthropic" === model.underlyingProviderName) {
+    return true;
+  }
+  if (model.model.includes("deepseek-r")) {
+    return true;
+  }
+  if (model.completionOptions?.reasoning) {
+    // Reasoning support is forced at the config level. Model might not necessarily support it though!
+    return true;
+  }
+  return false;
+}
+
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
@@ -421,4 +450,5 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
+  modelSupportsReasoning,
 };

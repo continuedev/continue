@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import {
+  ContextIndexingType,
   ContinueConfig,
   IDE,
   IndexingProgressUpdate,
@@ -58,6 +59,7 @@ export class CodebaseIndexer {
   private indexingCancellationController: AbortController;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
+  private builtIndexes: CodebaseIndex[] = [];
 
   private getUserFriendlyIndexName(artifactId: string): string {
     if (artifactId === FullTextSearchCodebaseIndex.artifactId)
@@ -166,28 +168,46 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes: CodebaseIndex[] = [
-      new ChunkCodebaseIndex(
-        this.ide.readFile.bind(this.ide),
-        continueServerClient,
-        embeddingsModel.maxEmbeddingChunkSize,
-      ), // Chunking must come first
-    ];
-
-    const lanceDbIndex = await LanceDbIndex.create(
-      embeddingsModel,
-      this.ide.readFile.bind(this.ide),
+    const indexTypesToBuild = new Set( // use set to remove duplicates
+      config.contextProviders
+        .map((provider) => provider.description.dependsOnIndexing)
+        .filter((indexType) => Array.isArray(indexType)) // remove undefined indexTypes
+        .flat(),
     );
 
-    if (lanceDbIndex) {
-      indexes.push(lanceDbIndex);
+    const indexTypeToIndexerMapping: Record<
+      ContextIndexingType,
+      () => Promise<CodebaseIndex | null>
+    > = {
+      chunk: async () =>
+        new ChunkCodebaseIndex(
+          this.ide.readFile.bind(this.ide),
+          continueServerClient,
+          embeddingsModel.maxEmbeddingChunkSize,
+        ),
+      codeSnippets: async () => new CodeSnippetsCodebaseIndex(this.ide),
+      fullTextSearch: async () => new FullTextSearchCodebaseIndex(),
+      embeddings: async () => {
+        const lanceDbIndex = await LanceDbIndex.create(
+          embeddingsModel,
+          this.ide.readFile.bind(this.ide),
+        );
+        return lanceDbIndex;
+      },
+    };
+
+    const indexes: CodebaseIndex[] = [];
+    // not parallelizing to avoid race conditions in sqlite
+    for (const indexType of indexTypesToBuild) {
+      if (indexType && indexType in indexTypeToIndexerMapping) {
+        const index = await indexTypeToIndexerMapping[indexType]();
+        if (index) {
+          indexes.push(index);
+        }
+      }
     }
 
-    indexes.push(
-      new FullTextSearchCodebaseIndex(),
-      new CodeSnippetsCodebaseIndex(this.ide),
-    );
-
+    this.builtIndexes = indexes;
     return indexes;
   }
 
@@ -692,6 +712,15 @@ export class CodebaseIndexer {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       foundLock = await IndexLock.isLocked();
     }
+  }
+
+  public async wasAnyOneIndexAdded() {
+    const indexes = await this.getIndexesToBuild();
+    return !indexes.every((index) =>
+      this.builtIndexes.some(
+        (builtIndex) => builtIndex.artifactId === index.artifactId,
+      ),
+    );
   }
 
   public async refreshCodebaseIndex(paths: string[]) {

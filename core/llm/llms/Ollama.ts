@@ -87,6 +87,7 @@ interface OllamaChatOptions extends OllamaBaseOptions {
   tools?: OllamaTool[]; // the tools of the chat, this can be used to keep a tool memory
   // Not supported yet - tools: tools for the model to use if supported. Requires stream to be set to false
   // And correspondingly, tool calls in OllamaChatMessage
+  think?: boolean; // if true the model will be prompted to think about the response before generating it
 }
 
 type OllamaBaseResponse = {
@@ -146,11 +147,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
-
   constructor(options: LLMOptions) {
     super(options);
 
-    if (options.isFromAutoDetect) {
+    if (options.model === "AUTODETECT") {
       return;
     }
     const headers: Record<string, string> = {
@@ -267,6 +267,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
   private _getModel() {
     return this.modelMap[this.model] ?? this.model;
+  }
+
+  get contextLength() {
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // twice of https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
   }
 
   private _getModelFileParams(
@@ -393,6 +398,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       model: this._getModel(),
       messages: ollamaMessages,
       options: this._getModelFileParams(options),
+      think: options.reasoning,
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
       // format: options.format, // Not currently in base completion options

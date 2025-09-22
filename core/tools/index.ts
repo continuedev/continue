@@ -1,4 +1,5 @@
 import { ConfigDependentToolParams, Tool } from "..";
+import { isRecommendedAgentModel } from "../llm/toolSupport";
 import * as toolDefinitions from "./definitions";
 
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
@@ -12,7 +13,6 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
-  toolDefinitions.singleFindAndReplaceTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
@@ -33,15 +33,15 @@ export const getConfigDependentToolDefinitions = (
       toolDefinitions.viewRepoMapTool,
       toolDefinitions.viewSubdirectoryTool,
       toolDefinitions.codebaseTool,
+      toolDefinitions.readFileRangeTool,
     );
   }
 
-  // OLD SEARCH AND REPLACE IS CURRENTLY NOT USED
-  // toolDefinitions.searchAndReplaceInFileTool
-  if (modelName?.includes("claude") || modelName?.includes("gpt-5")) {
+  if (modelName && isRecommendedAgentModel(modelName)) {
     tools.push(toolDefinitions.multiEditTool);
   } else {
     tools.push(toolDefinitions.editFileTool);
+    tools.push(toolDefinitions.singleFindAndReplaceTool);
   }
 
   // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
