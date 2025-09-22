@@ -200,4 +200,35 @@ describe("StorageSyncService", () => {
     service.stop();
     warnSpy.mockRestore();
   });
+
+  it("does nothing when markAgentStatusUnread has no storage context", async () => {
+    await service.markAgentStatusUnread();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("marks the agent session as unread", async () => {
+    (service as unknown as { options: any }).options = {
+      storageId: "session-123",
+      accessToken: "token",
+    };
+
+    fetchMock.mockResolvedValueOnce({ ok: true });
+
+    await service.markAgentStatusUnread();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBeInstanceOf(URL);
+    expect((url as URL).toString()).toBe(
+      "https://api.test/agents/sessions/session-123/read-status",
+    );
+    expect(init).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ unread: true }),
+      headers: {
+        Authorization: "Bearer token",
+        "Content-Type": "application/json",
+      },
+    });
+  });
 });
