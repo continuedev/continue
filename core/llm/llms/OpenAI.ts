@@ -14,9 +14,18 @@ import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
   fromChatCompletionChunk,
+  fromResponsesChunk,
   LlmApiRequestType,
   toChatBody,
+  toResponsesInput,
 } from "../openaiTypeConverters.js";
+import {
+  ResponseInput,
+  ResponseInputItem,
+  ResponseInputMessageContentList,
+  ResponseCreateParamsBase,
+  Tool as ResponsesTool,
+} from "openai/resources/responses/responses.mjs";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -47,6 +56,139 @@ const formatMessageForO1OrGpt5 = (messages: ChatCompletionMessageParam[]) => {
 
     return message;
   });
+};
+
+const formatMessageForO1OrGpt5ForResponses = (
+  messages: ChatCompletionMessageParam[],
+): ResponseInputItem[] => {
+  const input: ResponseInputItem[] = [];
+
+  const pushMessage = (
+    role: "user" | "assistant" | "system" | "developer",
+    content: string | ResponseInputMessageContentList,
+  ) => {
+    // o-series / gpt-5 use `developer` instead of `system`
+    const normalizedRole: "user" | "assistant" | "system" | "developer" =
+      role === "system" ? "developer" : role;
+
+    input.push({ role: normalizedRole, content });
+  };
+
+  for (const message of messages) {
+    switch (message.role) {
+      case "system":
+      case "developer": {
+        const content = message.content;
+        if (typeof content === "string") {
+          pushMessage("developer", content);
+        } else if (Array.isArray(content)) {
+          const parts: ResponseInputMessageContentList = content
+            .filter(
+              (p): p is { type: "text"; text: string } => p.type === "text",
+            )
+            .map((p) => ({ type: "input_text" as const, text: p.text }));
+          pushMessage("developer", parts.length ? parts : "");
+        }
+        break;
+      }
+
+      case "user": {
+        const content = message.content;
+        if (typeof content === "string") {
+          pushMessage("user", content);
+        } else if (Array.isArray(content)) {
+          const parts: ResponseInputMessageContentList = [];
+          for (const part of content) {
+            if (part.type === "text") {
+              parts.push({ type: "input_text", text: part.text });
+            } else if (part.type === "image_url") {
+              parts.push({
+                type: "input_image",
+                image_url: part.image_url.url,
+                detail: part.image_url.detail ?? "auto",
+              });
+            } else if (part.type === "file") {
+              parts.push({
+                type: "input_file",
+                file_data: part.file.file_data,
+                file_id: part.file.file_id ?? undefined,
+                filename: part.file.filename,
+              });
+            }
+          }
+          if (parts.length) {
+            pushMessage("user", parts);
+          }
+        }
+        break;
+      }
+
+      case "assistant": {
+        const content = message.content;
+        if (typeof content === "string") {
+          if (content.length) pushMessage("assistant", content);
+        } else if (Array.isArray(content)) {
+          const text = content
+            .filter(
+              (p): p is { type: "text"; text: string } => p.type === "text",
+            )
+            .map((p) => p.text)
+            .join("");
+          if (text.length) pushMessage("assistant", text);
+        }
+
+        if (Array.isArray(message.tool_calls)) {
+          for (const tc of message.tool_calls) {
+            if (tc.type === "function") {
+              input.push({
+                type: "function_call",
+                name: tc.function.name,
+                arguments: tc.function.arguments,
+                call_id: tc.id,
+              });
+            } else if (tc.type === "custom") {
+              input.push({
+                type: "custom_tool_call",
+                name: tc.custom.name,
+                input: tc.custom.input,
+                call_id: tc.id,
+              });
+            }
+          }
+        }
+        break;
+      }
+
+      case "tool": {
+        const content = message.content;
+        const output =
+          typeof content === "string"
+            ? content
+            : content
+                .filter(
+                  (p): p is { type: "text"; text: string } => p.type === "text",
+                )
+                .map((p) => p.text)
+                .join("");
+        input.push({
+          type: "function_call_output",
+          call_id: message.tool_call_id,
+          output,
+        });
+        break;
+      }
+
+      case "function": {
+        // Deprecated in Chat Completions; no safe mapping into Responses input
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  return input;
 };
 
 class OpenAI extends BaseLLM {
@@ -171,6 +313,60 @@ class OpenAI extends BaseLLM {
     return finalOptions;
   }
 
+  protected _convertArgsResponses(
+    options: CompletionOptions,
+    messages: ChatMessage[],
+  ): ResponseCreateParamsBase {
+    // Specialized conversion for Responses API (strongly typed body)
+    const model = options.model;
+
+    const input = toResponsesInput(messages);
+
+    const body: ResponseCreateParamsBase = {
+      model,
+      input,
+      temperature: options.temperature ?? null,
+      top_p: options.topP ?? null,
+      reasoning: {
+        effort: "medium",
+        summary: "auto",
+      },
+      include: ["reasoning.encrypted_content"],
+    };
+
+    // Tools support for Responses API (schema differs from Chat Completions)
+    if (options.tools?.length) {
+      body.tools = options.tools
+        .filter((t) => !t.type || t.type === "function")
+        .map(
+          (t) =>
+            ({
+              type: "function",
+              name: t.function.name,
+              description: t.function.description ?? undefined,
+              parameters: t.function.parameters ?? undefined,
+              strict: t.function.strict ?? undefined,
+            }) as ResponsesTool,
+        );
+    }
+    if (options.toolChoice) {
+      body.tool_choice = {
+        type: "function",
+        name: options.toolChoice.function.name,
+      } as ResponseCreateParamsBase["tool_choice"];
+    }
+
+    if (typeof options.maxTokens === "number") {
+      body.max_output_tokens = options.maxTokens;
+    }
+
+    if (model === "o1") {
+      body.stream = false;
+    }
+
+    return body;
+  }
+
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
@@ -197,7 +393,7 @@ class OpenAI extends BaseLLM {
   }
 
   protected _getEndpoint(
-    endpoint: "chat/completions" | "completions" | "models",
+    endpoint: "chat/completions" | "completions" | "models" | "responses",
   ) {
     if (!this.apiBase) {
       throw new Error(
@@ -366,6 +562,91 @@ class OpenAI extends BaseLLM {
         yield chunk;
       }
     }
+  }
+
+  // Minimal draft: Responses API support for select models
+  protected async *_streamResponses(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    if (!this.isOSeriesOrGpt5Model(options.model)) {
+      return;
+    }
+
+    const body: any = this._convertArgsResponses(options, messages);
+
+    // o1 does not support streaming
+    if (body.model === "o1") {
+      const res = await this._responses(messages, signal, options);
+      if (Array.isArray(res)) {
+        for (const m of res) {
+          if (m) yield m;
+        }
+      } else if (res) {
+        yield res;
+      }
+      return;
+    }
+
+    const response = await this.fetch(this._getEndpoint("responses"), {
+      method: "POST",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
+        ...body,
+        stream: true,
+        ...this.extraBodyProperties(),
+      }),
+      signal,
+    });
+
+    for await (const evt of streamSse(response)) {
+      try {
+        const msg = fromResponsesChunk(evt);
+        if (Array.isArray(msg)) {
+          for (const m of msg) {
+            if (m) yield m;
+          }
+        } else if (msg) {
+          yield msg;
+        }
+      } catch {
+        // ignore malformed chunks
+      }
+    }
+  }
+
+  protected async _responses(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): Promise<ChatMessage | ChatMessage[]> {
+    if (!this.isOSeriesOrGpt5Model(options.model)) {
+      // Minimal draft: only handle supported models for now
+      return { role: "assistant", content: "" };
+    }
+
+    const body: any = this._convertArgsResponses(options, messages);
+
+    const response = await this.fetch(this._getEndpoint("responses"), {
+      method: "POST",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
+        ...body,
+        stream: false,
+        ...this.extraBodyProperties(),
+      }),
+      signal,
+    });
+
+    if ((response as any).status === 499) {
+      return { role: "assistant", content: "" };
+    }
+
+    const data: any = await response.json().catch(() => ({}));
+    const msg = fromResponsesChunk(data);
+    if (msg) return msg;
+    return { role: "assistant", content: "" };
   }
 
   protected async *_streamFim(

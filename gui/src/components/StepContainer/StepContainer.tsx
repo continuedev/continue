@@ -40,15 +40,25 @@ export default function StepContainer(props: StepContainerProps) {
     historyItemAfterThis?.message.role === "tool";
 
   const shouldRenderResponseAction = () => {
-    if (isNextMsgAssistantOrThinking) {
-      return false;
+    // Always show actions for assistant messages if conditions are met
+    if (props.item.message.role === "assistant") {
+      if (isNextMsgAssistantOrThinking) {
+        return false;
+      }
+
+      if (!historyItemAfterThis) {
+        return !props.item.toolCallStates;
+      }
+
+      return true;
     }
 
-    if (!historyItemAfterThis) {
-      return !props.item.toolCallStates;
-    }
+    return false;
+  };
 
-    return true;
+  const shouldRenderUserMessageActions = () => {
+    // Show actions for user messages when not streaming
+    return props.item.message.role === "user";
   };
 
   useEffect(() => {
@@ -110,7 +120,7 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {shouldRenderResponseAction() && !isStreaming && (
+      {shouldRenderResponseAction() && (
         <div
           className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
         >

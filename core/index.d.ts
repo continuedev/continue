@@ -357,11 +357,15 @@ export interface ToolResultChatMessage {
   role: "tool";
   content: string;
   toolCallId: string;
+  /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
+  metadata?: Record<string, unknown>;
 }
 
 export interface UserChatMessage {
   role: "user";
   content: MessageContent;
+  /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
+  metadata?: Record<string, unknown>;
 }
 
 export interface ThinkingChatMessage {
@@ -374,6 +378,8 @@ export interface ThinkingChatMessage {
     signature?: string;
     [key: string]: any;
   }[];
+  /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -402,11 +408,15 @@ export interface AssistantChatMessage {
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
   usage?: Usage;
+  /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
+  metadata?: Record<string, unknown>;
 }
 
 export interface SystemChatMessage {
   role: "system";
   content: string;
+  /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
+  metadata?: Record<string, unknown>;
 }
 
 export type ChatMessage =

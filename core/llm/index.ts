@@ -370,7 +370,16 @@ export abstract class BaseLLM implements ILLM {
       },
     });
 
-    if (error !== undefined) {
+    if (error === undefined) {
+      interaction?.logItem({
+        kind: "success",
+        promptTokens,
+        generatedTokens,
+        thinkingTokens,
+        usage,
+      });
+      return "success";
+    } else {
       if (error === "cancel" || error.name === "AbortError") {
         interaction?.logItem({
           kind: "cancel",
@@ -393,40 +402,42 @@ export abstract class BaseLLM implements ILLM {
         });
         return "error";
       }
-    } else {
-      interaction?.logItem({
-        kind: "success",
-        promptTokens,
-        generatedTokens,
-        thinkingTokens,
-        usage,
-      });
-      return "success";
     }
   }
 
   private async parseError(resp: any): Promise<Error> {
     let text = await resp.text();
 
-    if (resp.status === 404 && !resp.url.includes("/v1")) {
-      const parsedError = JSON.parse(text);
-      const errorMessageRaw = parsedError?.error ?? parsedError?.message;
-      const error =
-        typeof errorMessageRaw === "string"
-          ? errorMessageRaw.replace(/"/g, "'")
-          : undefined;
-      let model = error?.match(/model '(.*)' not found/)?.[1];
-      if (model && resp.url.match("127.0.0.1:11434")) {
-        text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-        return new LLMError(text, this); // No need to add HTTP status details
-      } else if (text.includes("/api/chat")) {
+    if (resp.status === 404) {
+      if (resp.url.includes("api.openai.com")) {
         text =
-          "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
+          "You may need to add pre-paid credits before using the OpenAI API.";
+      } else if (resp.url.includes("/v1")) {
+        // leave text as-is and fall through to generic error handling below
       } else {
-        text =
-          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+        const parsedError = JSON.parse(text);
+        const errorMessageRaw = parsedError?.error ?? parsedError?.message;
+        const error =
+          typeof errorMessageRaw === "string"
+            ? errorMessageRaw.replace(/"/g, "'")
+            : undefined;
+        let model = error?.match(/model '(.*)' not found/)?.[1];
+        if (model && resp.url.match("127.0.0.1:11434")) {
+          text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+          return new LLMError(text, this); // No need to add HTTP status details
+        } else if (text.includes("/api/chat")) {
+          text =
+            "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
+        } else {
+          text =
+            "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+        }
       }
-    } else if (resp.status === 404 && resp.url.includes("api.openai.com")) {
+    } else if (
+      resp.status === 401 &&
+      (resp.url.includes("api.mistral.ai") ||
+        resp.url.includes("codestral.mistral.ai"))
+    ) {
       text =
         "You may need to add pre-paid credits before using the OpenAI API.";
     } else if (
@@ -998,6 +1009,72 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
+  private canUseOpenAIResponses(options: CompletionOptions): boolean {
+    return (
+      this.providerName === "openai" &&
+      typeof (this as any)._streamResponses === "function" &&
+      (this as any).isOSeriesOrGpt5Model(options.model)
+    );
+  }
+
+  private async *openAIAdapterStream(
+    body: ChatCompletionCreateParams,
+    signal: AbortSignal,
+    onCitations: (c: string[]) => void,
+  ): AsyncGenerator<ChatMessage> {
+    const stream = this.openaiAdapter!.chatCompletionStream(
+      { ...body, stream: true },
+      signal,
+    );
+    for await (const chunk of stream) {
+      const chatChunk = fromChatCompletionChunk(chunk as any);
+      if (chatChunk) {
+        yield chatChunk;
+      }
+      if ((chunk as any).citations && Array.isArray((chunk as any).citations)) {
+        onCitations((chunk as any).citations);
+      }
+    }
+  }
+
+  private async *openAIAdapterNonStream(
+    body: ChatCompletionCreateParams,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatMessage> {
+    const response = await this.openaiAdapter!.chatCompletionNonStream(
+      { ...body, stream: false },
+      signal,
+    );
+    const messages = fromChatResponse(response as any);
+    for (const msg of messages) {
+      yield msg;
+    }
+  }
+
+  private async *responsesStream(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    const g = (this as any)._streamResponses(
+      messages,
+      signal,
+      options,
+    ) as AsyncGenerator<ChatMessage>;
+    for await (const m of g) {
+      yield m;
+    }
+  }
+
+  private async *responsesNonStream(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    const msg = await (this as any)._responses(messages, signal, options);
+    yield msg as ChatMessage;
+  }
+
   // Update the streamChat method:
   async *streamChat(
     _messages: ChatMessage[],
@@ -1035,6 +1112,7 @@ export abstract class BaseLLM implements ILLM {
     const prompt = this.templateMessages
       ? this.templateMessages(messagesCopy)
       : this._formatChatMessages(messagesCopy);
+
     if (logEnabled) {
       interaction?.logItem({
         kind: "startChat",
@@ -1054,6 +1132,7 @@ export abstract class BaseLLM implements ILLM {
     const thinking: string[] = [];
     const completion: string[] = [];
     let usage: Usage | undefined = undefined;
+    let citations: null | string[] = null;
 
     try {
       {
@@ -1061,43 +1140,61 @@ export abstract class BaseLLM implements ILLM {
           let body = toChatBody(messages, completionOptions);
           body = this.modifyChatBody(body);
 
-          if (completionOptions.stream === false) {
-            // Stream false
-            const response = await this.openaiAdapter.chatCompletionNonStream(
-              { ...body, stream: false },
-              signal,
-            );
-            const messages = fromChatResponse(response);
-            for (const msg of messages) {
-              const result = this.processChatChunk(msg, interaction);
-              completion.push(...result.completion);
-              thinking.push(...result.thinking);
-              if (result.usage !== null) {
-                usage = result.usage;
-              }
-              yield result.chunk;
-            }
-          } else {
-            // Stream true
-            const stream = this.openaiAdapter.chatCompletionStream(
-              {
-                ...body,
-                stream: true,
-              },
-              signal,
-            );
-            for await (const chunk of stream) {
-              const chatChunk = fromChatCompletionChunk(chunk);
-              if (chatChunk) {
-                const result = this.processChatChunk(chatChunk, interaction);
-                completion.push(...result.completion);
-                thinking.push(...result.thinking);
-                usage = result.usage || usage;
-                yield result.chunk;
-              }
+          if (logEnabled) {
+            interaction?.logItem({
+              kind: "startChat",
+              messages,
+              options: {
+                ...completionOptions,
+                requestBody: body,
+              } as CompletionOptions,
+              provider: this.providerName,
+            });
+            if (this.llmRequestHook) {
+              this.llmRequestHook(completionOptions.model, prompt);
             }
           }
+
+          const canUseResponses = this.canUseOpenAIResponses(completionOptions);
+          const useStream = completionOptions.stream !== false;
+
+          let iterable: AsyncIterable<ChatMessage>;
+          if (canUseResponses) {
+            iterable = useStream
+              ? this.responsesStream(messages, signal, completionOptions)
+              : this.responsesNonStream(messages, signal, completionOptions);
+          } else {
+            iterable = useStream
+              ? this.openAIAdapterStream(body, signal, (c) => {
+                  if (!citations) {
+                    citations = c;
+                  }
+                })
+              : this.openAIAdapterNonStream(body, signal);
+          }
+
+          for await (const chunk of iterable) {
+            const result = this.processChatChunk(chunk, interaction);
+            completion.push(...result.completion);
+            thinking.push(...result.thinking);
+            if (result.usage !== null) {
+              usage = result.usage;
+            }
+            yield result.chunk;
+          }
         } else {
+          if (logEnabled) {
+            interaction?.logItem({
+              kind: "startChat",
+              messages,
+              options: completionOptions,
+              provider: this.providerName,
+            });
+            if (this.llmRequestHook) {
+              this.llmRequestHook(completionOptions.model, prompt);
+            }
+          }
+
           for await (const chunk of this._streamChat(
             messages,
             signal,
@@ -1112,6 +1209,17 @@ export abstract class BaseLLM implements ILLM {
             yield result.chunk;
           }
         }
+      }
+
+      if (citations) {
+        const cits = citations as string[];
+        interaction?.logItem({
+          kind: "message",
+          message: {
+            role: "assistant",
+            content: `\n\nCitations:\n${cits.map((c: string, i: number) => `${i + 1}: ${c}`).join("\n")}\n\n`,
+          },
+        });
       }
 
       status = this._logEnd(
