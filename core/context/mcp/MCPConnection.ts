@@ -1,6 +1,4 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-
 import {
   SSEClientTransport,
   SseError,
@@ -8,7 +6,8 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
-
+import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { Agent as HttpsAgent } from "https";
 import {
   IDE,
   MCPConnectionStatus,
@@ -53,6 +52,7 @@ class MCPConnection {
   public status: MCPConnectionStatus = "not-connected";
   public isProtectedResource = false;
   public errors: string[] = [];
+  public infos: string[] = [];
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
@@ -94,6 +94,7 @@ class MCPConnection {
     return {
       ...this.options,
       errors: this.errors,
+      infos: this.infos,
       prompts: this.prompts,
       resources: this.resources,
       resourceTemplates: this.resourceTemplates,
@@ -123,6 +124,7 @@ class MCPConnection {
     this.resources = [];
     this.resourceTemplates = [];
     this.errors = [];
+    this.infos = [];
     this.stdioOutput = { stdout: "", stderr: "" };
 
     this.abortController.abort();
@@ -281,6 +283,16 @@ class MCPConnection {
             if (msg.includes("spawn") && msg.includes("enoent")) {
               const command = msg.split(" ")[1];
               errorMessage += `Error: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+              if (["uv", "uvx"].includes(command)) {
+                this.infos.push(
+                  'Please install uv by following the installation guide: <a href="https://docs.astral.sh/uv/getting-started/installation/">https://docs.astral.sh/uv/getting-started/installation/</a>',
+                );
+              }
+              if (["node", "npx"].includes(command)) {
+                this.infos.push(
+                  'Please install npx by following the installation guide: <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">https://docs.npmjs.com/downloading-and-installing-node-js-and-npm</a>',
+                );
+              }
             } else {
               errorMessage += "Error: " + error.message;
             }
@@ -393,6 +405,11 @@ class MCPConnection {
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
       case "sse":
+        const sseAgent =
+          options.transport.requestOptions?.verifySsl === false
+            ? new HttpsAgent({ rejectUnauthorized: false })
+            : undefined;
+
         return new SSEClientTransport(new URL(options.transport.url), {
           eventSourceInit: {
             fetch: (input, init) =>
@@ -404,17 +421,27 @@ class MCPConnection {
                     | Record<string, string>
                     | undefined),
                 },
+                ...(sseAgent && { agent: sseAgent }),
               }),
           },
-          requestInit: { headers: options.transport.requestOptions?.headers },
+          requestInit: {
+            headers: options.transport.requestOptions?.headers,
+            ...(sseAgent && { agent: sseAgent }),
+          },
         });
       case "streamable-http":
-        return new StreamableHTTPClientTransport(
-          new URL(options.transport.url),
-          {
-            requestInit: { headers: options.transport.requestOptions?.headers },
+        const { url, requestOptions } = options.transport;
+        const streamableAgent =
+          requestOptions?.verifySsl === false
+            ? new HttpsAgent({ rejectUnauthorized: false })
+            : undefined;
+
+        return new StreamableHTTPClientTransport(new URL(url), {
+          requestInit: {
+            headers: requestOptions?.headers,
+            ...(streamableAgent && { agent: streamableAgent }),
           },
-        );
+        });
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,

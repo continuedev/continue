@@ -8,16 +8,19 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
 import { systemMessageService } from "../services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
+  isContextLengthError,
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
+import { validateContextLength } from "../util/tokenizer.js";
 
 import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
@@ -147,6 +150,12 @@ export async function processStreamingResponse(
     tools,
   } = options;
 
+  // Validate context length before making the request
+  const validation = validateContextLength(chatHistory, model);
+  if (!validation.isValid) {
+    throw new Error(`Context length validation failed: ${validation.error}`);
+  }
+
   // Get fresh system message and inject it
   const systemMessage = await systemMessageService.getSystemMessage();
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
@@ -258,6 +267,15 @@ export async function processStreamingResponse(
       error: error.message || String(error),
     });
 
+    try {
+      posthogService.capture("apiRequest", {
+        model: model.model,
+        durationMs: errorDuration,
+        success: false,
+        error: error.message || String(error),
+      });
+    } catch {}
+
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");
       return {
@@ -267,6 +285,13 @@ export async function processStreamingResponse(
         shouldContinue: false,
       };
     }
+
+    // Handle context length errors with helpful message
+    if (isContextLengthError(error)) {
+      logger.debug(`Context length exceeded: ${error}`);
+      throw new Error(`Context length exceeded: ${error}`);
+    }
+
     throw error;
   }
 
@@ -298,6 +323,7 @@ export async function processStreamingResponse(
 }
 
 // Main function that handles the conversation loop
+// eslint-disable-next-line complexity
 export async function streamChatResponse(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
@@ -320,7 +346,42 @@ export async function streamChatResponse(
   let finalResponse = "";
 
   while (true) {
+    // If ChatHistoryService is available, refresh local chatHistory view
+    const chatHistorySvc = services.chatHistory;
+    if (
+      typeof chatHistorySvc?.isReady === "function" &&
+      chatHistorySvc.isReady()
+    ) {
+      try {
+        chatHistory = chatHistorySvc.getHistory();
+      } catch {}
+    }
     logger.debug("Starting conversation iteration");
+
+    // Pre-API auto-compaction checkpoint
+    const { wasCompacted: preCompacted, chatHistory: preCompactHistory } =
+      await handleAutoCompaction(chatHistory, model, llmApi, {
+        isHeadless,
+        callbacks: {
+          onSystemMessage: callbacks?.onSystemMessage,
+          onContent: callbacks?.onContent,
+        },
+      });
+
+    if (preCompacted) {
+      logger.debug("Pre-API compaction occurred, updating chat history");
+      // Update chat history after pre-compaction
+      const chatHistorySvc2 = services.chatHistory;
+      if (
+        typeof chatHistorySvc2?.isReady === "function" &&
+        chatHistorySvc2.isReady()
+      ) {
+        chatHistorySvc2.setHistory(preCompactHistory);
+        chatHistory = chatHistorySvc2.getHistory();
+      } else {
+        chatHistory = [...preCompactHistory];
+      }
+    }
 
     // Recompute tools on each iteration to handle mode changes during streaming
     const tools = await getAllTools();
@@ -342,6 +403,10 @@ export async function streamChatResponse(
         tools,
       });
 
+    if (abortController?.signal.aborted) {
+      return finalResponse || content || fullResponse;
+    }
+
     fullResponse += content;
 
     // Update final response based on mode
@@ -355,7 +420,7 @@ export async function streamChatResponse(
     // Handle content display
     handleContentDisplay(content, callbacks, isHeadless);
 
-    // Handle tool calls and check for early return
+    // Handle tool calls and check for early return. This updates history via ChatHistoryService.
     const shouldReturn = await handleToolCalls(
       toolCalls,
       chatHistory,
@@ -381,7 +446,18 @@ export async function streamChatResponse(
 
       // Only update chat history if compaction actually occurred
       if (wasCompacted) {
-        chatHistory = [...updatedChatHistory];
+        // Always prefer service; local copy is for temporary reads only
+        const chatHistorySvc2 = services.chatHistory;
+        if (
+          typeof chatHistorySvc2?.isReady === "function" &&
+          chatHistorySvc2.isReady()
+        ) {
+          chatHistorySvc2.setHistory(updatedChatHistory);
+          chatHistory = chatHistorySvc2.getHistory();
+        } else {
+          // Fallback only when service is unavailable
+          chatHistory = [...updatedChatHistory];
+        }
       }
     }
 

@@ -36,6 +36,7 @@ export function createRuleMarkdown(
     globs?: string | string[];
     regex?: string | string[];
     alwaysApply?: boolean;
+    invokable?: boolean;
   } = {},
 ): string {
   const frontmatter: RuleFrontmatter = {};
@@ -52,6 +53,10 @@ export function createRuleMarkdown(
 
   if (options.description) {
     frontmatter.description = options.description.trim();
+  }
+
+  if (options.invokable !== undefined) {
+    frontmatter.invokable = options.invokable;
   }
 
   if (options.alwaysApply !== undefined) {

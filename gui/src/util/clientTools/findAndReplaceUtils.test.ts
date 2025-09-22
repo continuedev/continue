@@ -4,6 +4,7 @@ import {
   EMPTY_NON_FIRST_EDIT_MESSAGE,
   FOUND_MULTIPLE_FIND_STRINGS_ERROR,
   performFindAndReplace,
+  trimEmptyLines,
   validateCreatingForMultiEdit,
   validateSingleEdit,
 } from "./findAndReplaceUtils";
@@ -452,5 +453,25 @@ describe("validateCreatingForMultiEdit", () => {
       expect(() => validateCreatingForMultiEdit(edits)).not.toThrow();
       expect(validateCreatingForMultiEdit(edits)).toBe(false);
     });
+  });
+});
+
+describe("trimEmptyLines", () => {
+  it("trims leading empty lines from start", () => {
+    const input = ["", "", "a", "", "b"];
+    const result = trimEmptyLines({ lines: input, fromEnd: false });
+    expect(result).toEqual(["a", "", "b"]);
+  });
+
+  it("trims trailing empty lines from end", () => {
+    const input = ["a", "", "b", "", ""];
+    const result = trimEmptyLines({ lines: input, fromEnd: true });
+    expect(result).toEqual(["a", "", "b"]);
+  });
+
+  it("returns empty array when all lines are empty", () => {
+    const input = ["", "", ""];
+    const result = trimEmptyLines({ lines: input, fromEnd: false });
+    expect(result).toEqual([]);
   });
 });

@@ -48,15 +48,15 @@ If you are using VS Code and require requests to be made through a proxy, you ar
 
 Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
-## Changes to assistants not showing in VS Code
+## Changes to agents not showing in VS Code
 
-If you've made changes to assistants (adding, modifying, or removing them) but the changes aren't appearing in the Continue extension in VS Code, try reloading the VS Code window:
+If you've made changes to agents (adding, modifying, or removing them) but the changes aren't appearing in the Continue extension in VS Code, try reloading the VS Code window:
 
 1. Open the command palette (`cmd/ctrl` + `shift` + `P`)
 2. Type "Reload Window"
 3. Select the reload option
 
-This will restart VS Code and reload all extensions, which should make your assistant changes visible.
+This will restart VS Code and reload all extensions, which should make your agent changes visible.
 
 ## I installed Continue, but don't see the sidebar window
 
@@ -256,7 +256,7 @@ If you're getting parse errors with remote Ollama:
 
 3. **Check URL format**: Ensure you're using `http://` not `https://` for local network addresses
 
-## Local Assistant
+## Local Agent
 
 ### Managing Local Secrets and Environment Variables
 
@@ -318,7 +318,7 @@ If your API keys aren't being recognized:
 
 ### Using Model Addons Locally
 
-You can leverage model addons from the Continue Hub in your local assistant configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+You can leverage model addons from the Continue Hub in your local agent configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
 
 #### Requirements
 
@@ -330,7 +330,7 @@ You can leverage model addons from the Continue Hub in your local assistant conf
 In your local `config.yaml`, reference model addons using the format `provider/model-name`:
 
 ```yaml
-name: My Local Assistant
+name: My Local Agent
 version: 0.0.1
 schema: v1
 models:
@@ -344,7 +344,7 @@ models:
 You can combine hub model addons with local models:
 
 ```yaml
-name: My Local Assistant
+name: My Local Agent
 version: 0.0.1
 schema: v1
 models:

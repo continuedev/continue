@@ -3,6 +3,7 @@ export interface CommandLineArgs {
   organizationSlug?: string; // Organization slug to use for this session
   prompt?: string; // Optional prompt argument
   resume?: boolean; // Resume from last session
+  fork?: string; // Fork from an existing session ID
   readonly?: boolean; // Start in plan mode (backward compatibility)
   rules?: string[]; // Array of rule specifications
   mcps?: string[]; // Array of MCP server slugs from the hub
@@ -71,6 +72,12 @@ export function parseArgs(): CommandLineArgs {
     result.readonly = true;
   }
 
+  // Parse fork flag
+  const forkValue = extractSingleFlag(args, "--fork");
+  if (forkValue) {
+    result.fork = forkValue;
+  }
+
   // Parse single-value flags
   const formatValue = extractSingleFlag(args, "--format");
   if (formatValue === "json") {
@@ -124,6 +131,7 @@ export function parseArgs(): CommandLineArgs {
     "--model",
     "--prompt",
     "--format",
+    "--fork",
   ];
   const nonFlagArgs = args.filter((arg, index) => {
     if (arg.startsWith("--") || arg === "-p") return false;

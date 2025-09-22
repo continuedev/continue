@@ -78,9 +78,39 @@ function isConnectionError(errorMessage: string): boolean {
 }
 
 /**
+ * Checks if the error indicates a context length issue (non-retryable)
+ */
+export function isContextLengthError(error: any): boolean {
+  const errorMessage = error.message?.toLowerCase() || "";
+  const contextLengthPatterns = [
+    // Anthropic Claude
+    "input length and max_tokens exceed context limit",
+    "decrease input length or max_tokens",
+    // OpenAI
+    "maximum context length",
+    "reduce the length of the messages",
+    // Mistral
+    "tokens in the prompt exceeds",
+    "use a shorter prompt",
+    // Generic patterns
+    "context_length_exceeded",
+    "invalid_request_error",
+  ];
+
+  return contextLengthPatterns.some((pattern) =>
+    errorMessage.includes(pattern),
+  );
+}
+
+/**
  * Determines if an error is retryable based on the error type and status code
  */
 function isRetryableError(error: any): boolean {
+  // Context length errors are never retryable - they need user intervention
+  if (isContextLengthError(error)) {
+    return false;
+  }
+
   // Network errors are retryable
   if (isNetworkError(error)) {
     return true;

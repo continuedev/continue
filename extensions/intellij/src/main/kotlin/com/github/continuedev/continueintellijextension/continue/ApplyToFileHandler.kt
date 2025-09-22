@@ -46,7 +46,7 @@ class ApplyToFileHandler(
         }
 
         // Handle search/replace mode
-        if (params.isSearchReplace == true) {
+        if (params.isSearchAndReplace == true) {
             handleSearchReplace(editorUtils)
             return
         }
@@ -91,7 +91,8 @@ class ApplyToFileHandler(
             highlighted = currentContent, // Current file content
             suffix = "",                  // No suffix since we're rewriting the whole file
             modelTitle = null,            // No model needed for search/replace instant apply
-            includeRulesInSystemMessage = false // No LLM involved, just diff generation
+            includeRulesInSystemMessage = false, // No LLM involved, just diff generation
+            isApply = true
         )
     }
 
@@ -145,7 +146,7 @@ class ApplyToFileHandler(
 
         // Stream the diffs
         diffStreamHandler.streamDiffLinesToEditor(
-            prompt, prefix, highlighted, suffix, llmTitle, false
+            prompt, prefix, highlighted, suffix, llmTitle, false, true
         )
     }
 

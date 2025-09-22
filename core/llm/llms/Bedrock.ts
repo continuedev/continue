@@ -513,7 +513,10 @@ class Bedrock extends BaseLLM {
     // The second-to-last because it retrieves potentially already cached contents,
     // The last one because we want it cached for later retrieval.
     // See: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
-    if (this.cacheBehavior?.cacheConversation) {
+    if (
+      this.cacheBehavior?.cacheConversation ||
+      this.completionOptions.promptCaching
+    ) {
       this._addCachingToLastTwoUserMessages(converted);
     }
 

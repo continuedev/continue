@@ -4,7 +4,7 @@
 
 | Name                        | Type          | Description                                           | Notes      |
 | --------------------------- | ------------- | ----------------------------------------------------- | ---------- |
-| **config**                  | **object**    | The unrolled assistant configuration                  |
+| **config**                  | **object**    | The unrolled agent configuration                  |
 | **config_load_interrupted** | **bool**      | Whether the configuration loading was interrupted     |
 | **errors**                  | **List[str]** | Any errors that occurred during configuration loading | [optional] |
 

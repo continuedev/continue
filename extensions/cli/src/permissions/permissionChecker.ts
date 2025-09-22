@@ -1,10 +1,14 @@
+import type { ToolPolicy } from "@continuedev/terminal-security";
+
 import { getServiceSync } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/types.js";
 import { SERVICE_NAMES } from "../services/types.js";
+import { getAllBuiltinTools } from "../tools/index.js";
 
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import {
   PermissionCheckResult,
+  PermissionPolicy,
   ToolCallRequest,
   ToolPermissions,
 } from "./types.js";
@@ -104,6 +108,24 @@ export function matchesArguments(
 }
 
 /**
+ * Converts CLI's PermissionPolicy to core's ToolPolicy
+ */
+function permissionPolicyToToolPolicy(
+  permission: PermissionPolicy,
+): ToolPolicy {
+  switch (permission) {
+    case "allow":
+      return "allowedWithoutPermission";
+    case "ask":
+      return "allowedWithPermission";
+    case "exclude":
+      return "disabled";
+    default:
+      return "allowedWithPermission";
+  }
+}
+
+/**
  * Evaluates a tool call request against a set of permission policies.
  * Returns the permission for the first matching policy.
  */
@@ -129,21 +151,54 @@ export function checkToolPermission(
     }
   }
 
+  // First, get the base permission from static policies
+  let basePermission: PermissionPolicy = "ask";
+  let matchedPolicy = undefined;
+
   for (const policy of policies) {
     if (
       matchesToolPattern(toolCall.name, policy.tool, toolCall.arguments) &&
       matchesArguments(toolCall.arguments, policy.argumentMatches)
     ) {
-      return {
-        permission: policy.permission,
-        matchedPolicy: policy,
-      };
+      basePermission = policy.permission;
+      matchedPolicy = policy;
+      break;
     }
   }
 
-  // Fallback to "ask" if no policy matches
+  // Check if tool has dynamic policy evaluation
+  const builtinTools = getAllBuiltinTools();
+  const tool = builtinTools.find((t) => t.name === toolCall.name);
+
+  if (tool?.evaluateToolCallPolicy) {
+    // Convert CLI permission to core policy
+    const basePolicy = permissionPolicyToToolPolicy(basePermission);
+
+    // Evaluate the dynamic policy
+    const evaluatedPolicy = tool.evaluateToolCallPolicy(
+      basePolicy,
+      toolCall.arguments,
+    );
+
+    // If dynamic evaluation says disabled, that ALWAYS takes precedence
+    if (evaluatedPolicy === "disabled") {
+      return {
+        permission: "exclude",
+        matchedPolicy,
+      };
+    }
+
+    // Otherwise, user preference wins - return the original base permission
+    return {
+      permission: basePermission,
+      matchedPolicy,
+    };
+  }
+
+  // No dynamic evaluation, return static result
   return {
-    permission: "ask",
+    permission: basePermission,
+    matchedPolicy,
   };
 }
 

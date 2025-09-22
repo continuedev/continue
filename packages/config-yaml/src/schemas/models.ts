@@ -37,8 +37,11 @@ export const modelCapabilitySchema = z.union([
   z.literal("tool_use"),
   z.literal("image_input"),
   z.literal("next_edit"),
+  z.string(), // Needed for forwards compatibility, see https://github.com/continuedev/continue/pull/7676
 ]);
-export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
+
+// not ideal but lose type suggestions if use z.infer because of the string fallback
+export type ModelCapability = "tool_use" | "image_input" | "next_edit";
 
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
@@ -118,6 +121,7 @@ export const autocompleteOptionsSchema = z.object({
   modelTimeout: z.number().optional(),
   maxSuffixPercentage: z.number().optional(),
   prefixPercentage: z.number().optional(),
+  transform: z.boolean().optional(),
   template: z.string().optional(),
   onlyMyCode: z.boolean().optional(),
   useCache: z.boolean().optional(),
