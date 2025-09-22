@@ -84,7 +84,8 @@ WARNINGS:
     properties: {
       file_path: {
         type: "string",
-        description: "The absolute path to the file to modify",
+        description:
+          "Absolute or relative path to the file to modify. Absolute preferred",
       },
       old_string: {
         type: "string",
@@ -98,7 +99,7 @@ WARNINGS:
       },
       replace_all: {
         type: "boolean",
-        description: "Replace all occurences of old_string (default false)",
+        description: "Replace all occurrences of old_string (default false)",
       },
     },
   },
