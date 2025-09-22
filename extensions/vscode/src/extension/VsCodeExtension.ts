@@ -460,7 +460,9 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      void this.configHandler.reloadConfig("config.ts updated - fs file watch");
+      void this.configHandler.reloadConfig(
+        "config.yaml updated - fs file watch",
+      );
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {

@@ -132,7 +132,7 @@ async function package(target, os, arch, exe) {
     "out/xhr-sync-worker.js",
   );
 
-  // Validate that all of the necessary files are present (no @esbuild checks)
+  // Validate that all of the necessary files are present (esbuild not required)
   validateFilesPresent([
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/c_sharp.scm",

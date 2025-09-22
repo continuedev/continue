@@ -366,7 +366,7 @@ void (async () => {
     "out/xhr-sync-worker.js",
   );
 
-  // Validate that all necessary files are present (no @esbuild or esbuild checks)
+  // Validate that all necessary files are present (esbuild not required)
   validateFilesPresent([
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/c_sharp.scm",
