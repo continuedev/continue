@@ -35,7 +35,7 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  SessionMetadata,
+  BaseSessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -49,7 +49,10 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import { FreeTrialStatus } from "../control-plane/client";
+import {
+  FreeTrialStatus,
+  RemoteSessionMetadata,
+} from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 
@@ -71,9 +74,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionMetadata[]];
+  "history/list": [
+    ListHistoryOptions,
+    (BaseSessionMetadata | RemoteSessionMetadata)[],
+  ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
+  "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
   "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];

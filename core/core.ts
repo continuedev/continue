@@ -232,6 +232,17 @@ export class Core {
             return;
           }
 
+          // Check for disableIndexing to prevent race condition
+          const { config } = await this.configHandler.loadConfig();
+          if (!config || config.disableIndexing) {
+            void this.messenger.request("indexProgress", {
+              progress: 0,
+              desc: "Indexing is disabled",
+              status: "disabled",
+            });
+            return;
+          }
+
           void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
         });
       });
@@ -314,8 +325,27 @@ export class Core {
     });
 
     // History
-    on("history/list", (msg) => {
-      return historyManager.list(msg.data);
+    on("history/list", async (msg) => {
+      const localSessions = historyManager.list(msg.data);
+
+      // Check if remote sessions should be enabled based on feature flags
+      const shouldFetchRemote =
+        await this.configHandler.controlPlaneClient.shouldEnableRemoteSessions();
+
+      // Get remote sessions from control plane if feature is enabled
+      const remoteSessions = shouldFetchRemote
+        ? await this.configHandler.controlPlaneClient.listRemoteSessions()
+        : [];
+
+      // Combine and sort by date (most recent first)
+      const allSessions = [...localSessions, ...remoteSessions].sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      );
+
+      // Apply limit if specified
+      const limit = msg.data?.limit ?? 100;
+      return allSessions.slice(0, limit);
     });
 
     on("history/delete", (msg) => {
@@ -324,6 +354,12 @@ export class Core {
 
     on("history/load", (msg) => {
       return historyManager.load(msg.data.id);
+    });
+
+    on("history/loadRemote", async (msg) => {
+      return this.configHandler.controlPlaneClient.loadRemoteSession(
+        msg.data.remoteId,
+      );
     });
 
     on("history/save", (msg) => {
@@ -743,20 +779,13 @@ export class Core {
         data.fileUri ?? "current-file-stream",
       ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
 
-      return streamDiffLines({
-        highlighted: data.highlighted,
-        prefix: data.prefix,
-        suffix: data.suffix,
+      return streamDiffLines(
+        data,
         llm,
-        // rules included for edit, NOT apply
-        rulesToInclude: data.includeRulesInSystemMessage
-          ? config.rules
-          : undefined,
-        input: data.input,
-        language: data.language,
-        overridePrompt: undefined,
         abortController,
-      });
+        undefined,
+        data.includeRulesInSystemMessage ? config.rules : undefined,
+      );
     });
 
     on("cancelApply", async (msg) => {

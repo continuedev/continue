@@ -272,7 +272,7 @@ export interface Session {
   history: ChatHistoryItem[];
 }
 
-export interface SessionMetadata {
+export interface BaseSessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;
@@ -1393,7 +1393,9 @@ export interface ApplyState {
   autoFormattingDiff?: string;
 }
 
-export interface StreamDiffLinesPayload {
+export type StreamDiffLinesType = "edit" | "apply";
+interface StreamDiffLinesOptionsBase {
+  type: StreamDiffLinesType;
   prefix: string;
   highlighted: string;
   suffix: string;
@@ -1403,6 +1405,19 @@ export interface StreamDiffLinesPayload {
   includeRulesInSystemMessage: boolean;
   fileUri?: string;
 }
+
+interface StreamDiffLinesOptionsEdit extends StreamDiffLinesOptionsBase {
+  type: "edit";
+}
+
+interface StreamDiffLinesOptionsApply extends StreamDiffLinesOptionsBase {
+  type: "apply";
+  newCode: string;
+}
+
+type StreamDiffLinesPayload =
+  | StreamDiffLinesOptionsApply
+  | StreamDiffLinesOptionsEdit;
 
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
