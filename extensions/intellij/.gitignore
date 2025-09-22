@@ -5,5 +5,5 @@ src/main/resources/config_schema.json
 src/main/resources/continue_rc_schema.json
 video
 .intellijPlatform
-src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue/*
-!src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue/config.json
+src/testIntegration/kotlin/com/github/continuedev/continueintellijextension/test-continue/*
+!src/testIntegration/kotlin/com/github/continuedev/continueintellijextension/test-continue/config.json
