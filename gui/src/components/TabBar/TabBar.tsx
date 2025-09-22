@@ -177,7 +177,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
 
   useEffect(() => {
     if (!tabs.length) {
-      handleNewTab();
+      void handleNewTab();
     }
   }, [tabs.map((t) => t.id).join(",")]);
 
@@ -236,12 +236,12 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         <Tab
           key={tab.id}
           isActive={tab.isActive}
-          onClick={() => handleTabClick(tab.id)}
+          onClick={() => void handleTabClick(tab.id)}
           onAuxClick={(e) => {
             // Middle mouse button
             if (e.button === 1) {
               e.preventDefault();
-              handleTabClose(tab.id);
+              void handleTabClose(tab.id);
             }
           }}
         >
@@ -250,7 +250,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
             /* disabled={tabs.length === 1} */
             onClick={(e) => {
               e.stopPropagation();
-              handleTabClose(tab.id);
+              void handleTabClose(tab.id);
             }}
           >
             <XMarkIcon width={12} height={12} />
