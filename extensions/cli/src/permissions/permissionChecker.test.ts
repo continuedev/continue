@@ -1,3 +1,7 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+
+import * as toolsModule from "../tools/index.js";
+
 import {
   checkToolPermission,
   filterExcludedTools,
@@ -591,6 +595,375 @@ describe("Permission Checker", () => {
 
       // All tools should be included (none excluded by default)
       expect(filtered).toEqual(tools);
+    });
+  });
+
+  describe("Hybrid Permission Model with Dynamic Evaluation", () => {
+    // Mock the runTerminalCommand tool with evaluateToolCallPolicy
+    const mockBashTool = {
+      name: "Bash",
+      displayName: "Bash",
+      description: "Execute bash commands",
+      parameters: {},
+      isBuiltIn: true,
+      evaluateToolCallPolicy: vi.fn(),
+      run: vi.fn(),
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      // Mock getAllBuiltinTools to return our test tool
+      vi.spyOn(toolsModule, "getAllBuiltinTools").mockReturnValue([
+        mockBashTool,
+      ]);
+
+      // Reset mock between tests
+      mockBashTool.evaluateToolCallPolicy.mockClear();
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    describe("User has Bash in 'allow' mode", () => {
+      const permissions: ToolPermissions = {
+        policies: [
+          { tool: "Bash", permission: "allow" },
+          { tool: "*", permission: "ask" },
+        ],
+      };
+
+      it("should allow safe commands (echo hello)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithoutPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("allow"); // User preference wins
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithoutPermission", // converted from "allow"
+          { command: "echo hello" },
+        );
+      });
+
+      it("should allow risky commands based on user preference (curl)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "curl https://example.com" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("allow"); // User preference wins over "ask"
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithoutPermission", // converted from "allow"
+          { command: "curl https://example.com" },
+        );
+      });
+
+      it("should block dangerous commands despite user preference (eval)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue("disabled");
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "eval 'echo safe'" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("exclude"); // Security wins
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithoutPermission", // converted from "allow"
+          { command: "eval 'echo safe'" },
+        );
+      });
+
+      it("should block sudo commands despite user preference", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue("disabled");
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "sudo rm -rf /" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("exclude"); // Security wins
+      });
+    });
+
+    describe("User has Bash in 'ask' mode (default)", () => {
+      const permissions: ToolPermissions = {
+        policies: [
+          { tool: "Bash", permission: "ask" },
+          { tool: "*", permission: "ask" },
+        ],
+      };
+
+      it("should ask for safe commands based on user preference (echo)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithoutPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("ask"); // User preference wins
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithPermission", // converted from "ask"
+          { command: "echo hello" },
+        );
+      });
+
+      it("should ask for risky commands (curl)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "curl https://example.com" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("ask"); // Both agree on "ask"
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithPermission", // converted from "ask"
+          { command: "curl https://example.com" },
+        );
+      });
+
+      it("should block dangerous commands (eval)", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue("disabled");
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "eval 'echo safe'" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("exclude"); // Security wins
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithPermission", // converted from "ask"
+          { command: "eval 'echo safe'" },
+        );
+      });
+
+      it("should block rm -rf commands", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue("disabled");
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "rm -rf /tmp/important" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("exclude"); // Security wins
+      });
+    });
+
+    describe("User has Bash in 'exclude' mode", () => {
+      const permissions: ToolPermissions = {
+        policies: [{ tool: "Bash", permission: "exclude" }],
+      };
+
+      it("should always exclude regardless of dynamic evaluation", () => {
+        // Even if dynamic evaluation would allow it
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithoutPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("exclude"); // User excluded the tool entirely
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "disabled", // converted from "exclude"
+          { command: "echo hello" },
+        );
+      });
+    });
+
+    describe("Comprehensive command testing", () => {
+      const permissions: ToolPermissions = {
+        policies: [{ tool: "Bash", permission: "allow" }],
+      };
+
+      const testCases = [
+        // Safe commands
+        {
+          command: "ls",
+          dynamicResult: "allowedWithoutPermission",
+          expected: "allow",
+        },
+        {
+          command: "pwd",
+          dynamicResult: "allowedWithoutPermission",
+          expected: "allow",
+        },
+        {
+          command: "date",
+          dynamicResult: "allowedWithoutPermission",
+          expected: "allow",
+        },
+        {
+          command: "echo test",
+          dynamicResult: "allowedWithoutPermission",
+          expected: "allow",
+        },
+        {
+          command: "git status",
+          dynamicResult: "allowedWithoutPermission",
+          expected: "allow",
+        },
+
+        // Risky commands (user preference wins when not disabled)
+        {
+          command: "npm install pkg",
+          dynamicResult: "allowedWithPermission",
+          expected: "allow",
+        },
+        {
+          command: "rm file.txt",
+          dynamicResult: "allowedWithPermission",
+          expected: "allow",
+        },
+        {
+          command: "curl https://api.example.com",
+          dynamicResult: "allowedWithPermission",
+          expected: "allow",
+        },
+        {
+          command: "wget https://example.com/file",
+          dynamicResult: "allowedWithPermission",
+          expected: "allow",
+        },
+
+        // Dangerous commands (always blocked)
+        {
+          command: "sudo rm -rf /",
+          dynamicResult: "disabled",
+          expected: "exclude",
+        },
+        {
+          command: "exec bash",
+          dynamicResult: "disabled",
+          expected: "exclude",
+        },
+        {
+          command: "eval 'malicious code'",
+          dynamicResult: "disabled",
+          expected: "exclude",
+        },
+        { command: "rm -rf /", dynamicResult: "disabled", expected: "exclude" },
+      ];
+
+      testCases.forEach(({ command, dynamicResult, expected }) => {
+        it(`should handle '${command}' correctly`, () => {
+          mockBashTool.evaluateToolCallPolicy.mockReturnValue(dynamicResult);
+
+          const result = checkToolPermission(
+            { name: "Bash", arguments: { command } },
+            permissions,
+          );
+
+          expect(result.permission).toBe(expected);
+        });
+      });
+    });
+
+    describe("Edge cases", () => {
+      it("should handle tools without dynamic evaluation", () => {
+        // Mock a Read tool without evaluateToolCallPolicy
+        const mockReadTool = {
+          name: "Read",
+          displayName: "Read",
+          description: "Read files",
+          parameters: {},
+          isBuiltIn: true,
+          run: vi.fn(),
+          // No evaluateToolCallPolicy
+        };
+        vi.mocked(toolsModule.getAllBuiltinTools).mockReturnValue([
+          mockReadTool,
+          mockBashTool,
+        ]);
+
+        const permissions: ToolPermissions = {
+          policies: [{ tool: "Read", permission: "allow" }],
+        };
+
+        const result = checkToolPermission(
+          { name: "Read", arguments: { path: "/tmp/file.txt" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("allow");
+        expect(mockBashTool.evaluateToolCallPolicy).not.toHaveBeenCalled();
+      });
+
+      it("should use default 'ask' when no policy matches", () => {
+        const permissions: ToolPermissions = {
+          policies: [],
+        };
+
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithPermission",
+        );
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo test" } },
+          permissions,
+        );
+
+        expect(result.permission).toBe("ask"); // Default fallback, user preference wins
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithPermission", // converted from default "ask"
+          { command: "echo test" },
+        );
+      });
+
+      it("should handle null/undefined arguments gracefully", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithPermission",
+        );
+
+        const permissions: ToolPermissions = {
+          policies: [{ tool: "Bash", permission: "allow" }],
+        };
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: {} },
+          permissions,
+        );
+
+        expect(result.permission).toBe("allow");
+        expect(mockBashTool.evaluateToolCallPolicy).toHaveBeenCalledWith(
+          "allowedWithoutPermission",
+          {},
+        );
+      });
+
+      it("should maintain matched policy information", () => {
+        mockBashTool.evaluateToolCallPolicy.mockReturnValue(
+          "allowedWithoutPermission",
+        );
+
+        const policy = { tool: "Bash", permission: "allow" as const };
+        const permissions: ToolPermissions = {
+          policies: [policy],
+        };
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "ls" } },
+          permissions,
+        );
+
+        expect(result.matchedPolicy).toBe(policy);
+      });
     });
   });
 });

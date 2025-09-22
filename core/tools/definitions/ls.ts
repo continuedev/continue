@@ -5,9 +5,9 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 export const lsTool: Tool = {
   type: "function",
   displayTitle: "ls",
-  wouldLikeTo: "list files and folders in {{{ dirPath }}}",
-  isCurrently: "listing files and folders in {{{ dirPath }}}",
-  hasAlready: "listed files and folders in {{{ dirPath }}}",
+  wouldLikeTo: "list files in {{{ dirPath }}}",
+  isCurrently: "listing files in {{{ dirPath }}}",
+  hasAlready: "listed files in {{{ dirPath }}}",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
@@ -38,4 +38,5 @@ export const lsTool: Tool = {
       ["recursive", "false"],
     ],
   },
+  toolCallIcon: "FolderIcon",
 };

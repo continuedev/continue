@@ -28,6 +28,18 @@
             "icon": "star",
             "pages": [
               {
+                "group": "Agent",
+                "icon": "robot",
+                "pages": [
+                  "features/agent/quick-start",
+                  "features/agent/how-it-works",
+                  "features/agent/plan-mode",
+                  "features/agent/model-setup",
+                  "features/agent/how-to-customize",
+                  "features/agent/context-selection"
+                ]
+              },
+              {
                 "group": "Chat",
                 "icon": "messages",
                 "pages": [
@@ -60,18 +72,6 @@
                   "features/edit/how-to-customize",
                   "features/edit/context-selection"
                 ]
-              },
-              {
-                "group": "Agent",
-                "icon": "robot",
-                "pages": [
-                  "features/agent/quick-start",
-                  "features/agent/how-it-works",
-                  "features/agent/plan-mode",
-                  "features/agent/model-setup",
-                  "features/agent/how-to-customize",
-                  "features/agent/context-selection"
-                ]
               }
             ]
           },
@@ -81,9 +81,9 @@
             "pages": [
               "customization/overview",
               "customization/models",
-              "customization/prompts",
+              "customization/mcp-tools",
               "customization/rules",
-              "customization/mcp-tools"
+              "customization/prompts"
             ]
           },
           {
@@ -109,32 +109,31 @@
                     "group": "Popular Providers",
                     "pages": [
                       "customize/model-providers/top-level/anthropic",
-                      "customize/model-providers/top-level/openai",
                       "customize/model-providers/top-level/azure",
                       "customize/model-providers/top-level/bedrock",
-                      "customize/model-providers/top-level/ollama",
                       "customize/model-providers/top-level/gemini",
-                      "customize/model-providers/top-level/deepseek",
-                      "customize/model-providers/top-level/mistral",
-                      "customize/model-providers/top-level/xAI",
-                      "customize/model-providers/top-level/vertexai",
-                      "customize/model-providers/top-level/inception"
+                      "customize/model-providers/top-level/inception",
+                      "customize/model-providers/top-level/lmstudio",
+                      "customize/model-providers/top-level/ollama",
+                      "customize/model-providers/top-level/openrouter",
+                      "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/tetrate_agent_router_service",
+                      "customize/model-providers/top-level/vertexai"
                     ]
                   },
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/deepseek",
+                      "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
-                      "customize/model-providers/more/together",
-                      "customize/model-providers/more/lmstudio",
+                      "customize/model-providers/more/huggingfaceinferenceapi",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
-                      "customize/model-providers/more/openrouter",
-                      "customize/model-providers/more/huggingfaceinferenceapi",
-                      "customize/model-providers/more/cohere",
+                      "customize/model-providers/more/mistral",
                       "customize/model-providers/more/nvidia",
-                      "customize/model-providers/more/cloudflare",
-                      "customize/model-providers/more/deepinfra"
+                      "customize/model-providers/more/together",
+                      "customize/model-providers/more/xAI"
                     ]
                   }
                 ]
@@ -152,36 +151,23 @@
                   "customize/model-roles/reranking"
                 ]
               },
-              {
-                "group": "Context Providers",
-                "icon": "code",
-                "pages": [
-                  "customize/context/codebase",
-                  "customize/context/documentation"
-                ]
-              },
+
               {
                 "group": "Deep Dives",
                 "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
-                  "customize/settings",
                   "customize/deep-dives/slash-commands",
                   "customize/deep-dives/rules",
                   "customize/deep-dives/prompts",
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
-                  "customize/deep-dives/vscode-actions",
                   "customize/deep-dives/mcp",
+                  "customize/deep-dives/custom-providers",
                   "customize/deep-dives/model-capabilities"
                 ]
               },
-              {
-                "group": "Telemetry",
-                "icon": "chart-line",
-                "pages": ["customize/telemetry"]
-              },
-              "customize/custom-providers"
+              "customize/telemetry"
             ]
           }
         ]
@@ -194,13 +180,13 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "Assistants",
+                "group": "agents",
                 "icon": "robot",
                 "pages": [
-                  "hub/assistants/intro",
-                  "hub/assistants/use-an-assistant",
-                  "hub/assistants/create-an-assistant",
-                  "hub/assistants/edit-an-assistant"
+                  "hub/agents/intro",
+                  "hub/agents/use-an-agent",
+                  "hub/agents/create-an-agent",
+                  "hub/agents/edit-an-agent"
                 ]
               },
               {
@@ -210,8 +196,7 @@
                   "hub/blocks/intro",
                   "hub/blocks/use-a-block",
                   "hub/blocks/block-types",
-                  "hub/blocks/create-a-block",
-                  "hub/blocks/bundles"
+                  "hub/blocks/create-a-block"
                 ]
               },
               {
@@ -244,15 +229,17 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-assistants",
+              "guides/understanding-agents",
+              "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/continuous-ai",
+              "guides/posthog-github-continuous-ai",
+              "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
-              "guides/llama3.1",
-              "guides/set-up-codestral",
+              "guides/instinct",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
-              "guides/build-your-own-context-provider",
               "guides/how-to-self-host-a-model"
             ]
           }
@@ -266,9 +253,12 @@
             "icon": "code",
             "pages": [
               "reference",
-              "reference/json-reference",
               "reference/yaml-migration",
-              "reference/continue-mcp"
+              "reference/continue-mcp",
+              "reference/json-reference",
+              "reference/deprecated-context-providers",
+              "reference/deprecated-codebase",
+              "reference/deprecated-docs"
             ]
           }
         ]
@@ -362,16 +352,8 @@
       "destination": "/hub/secrets/secret-types"
     },
     {
-      "source": "/hub/assistants",
-      "destination": "/hub/assistants/intro"
-    },
-    {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/assistants/intro"
     },
     {
       "source": "/customize",
@@ -392,14 +374,6 @@
     {
       "source": "/install/jetbrains",
       "destination": "/getting-started/install"
-    },
-    {
-      "source": "/advanced/deep-dives/settings",
-      "destination": "/customize/settings"
-    },
-    {
-      "source": "/customize/deep-dives/settings",
-      "destination": "/customize/settings"
     },
     {
       "source": "/customize/model-types",
@@ -479,19 +453,19 @@
     },
     {
       "source": "/walkthroughs/codebase-embeddings",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/features/codebase-embeddings",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/advanced/deep-dives/codebase",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/advanced/context/codebase",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/walkthroughs/tab-autocomplete",
@@ -555,11 +529,15 @@
     },
     {
       "source": "/walkthroughs/quick-actions",
-      "destination": "/customize/deep-dives/vscode-actions"
+      "destination": "/customize/overview"
     },
     {
       "source": "/advanced/deep-dives/vscode-actions",
-      "destination": "/customize/deep-dives/vscode-actions"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customize/deep-dives/vscode-actions",
+      "destination": "/customize/overview"
     },
     {
       "source": "/changelog",
@@ -579,19 +557,19 @@
     },
     {
       "source": "/customization/context-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/context-integration/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/context/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/development-data",
@@ -607,19 +585,19 @@
     },
     {
       "source": "/features/talk-to-your-docs",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/context-integration/documentation",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/deep-dives/docs",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/context/documentation",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/reference/Model Providers/anthropicllm",
@@ -1014,12 +992,92 @@
       "destination": "/features/agent/context-selection"
     },
     {
+      "source": "/customize/context/codebase",
+      "destination": "/guides/codebase-documentation-awareness"
+    },
+    {
+      "source": "/customize/context/documentation",
+      "destination": "/guides/codebase-documentation-awareness"
+    },
+    {
       "source": "/customization/overview#codebase-context",
-      "destination": "/customize/context/codebase"
+      "destination": "/guides/codebase-documentation-awareness"
     },
     {
       "source": "/customization/overview#documentation-context",
-      "destination": "/customize/context/documentation"
+      "destination": "/guides/codebase-documentation-awareness"
+    },
+    {
+      "source": "/guides/llama3.1",
+      "destination": "/guides/ollama-guide"
+    },
+    {
+      "source": "/guides/set-up-codestral",
+      "destination": "/customize/model-providers/top-level/mistral"
+    },
+    {
+      "source": "/guides/build-your-own-context-provider",
+      "destination": "/customize/deep-dives/custom-providers"
+    },
+    {
+      "source": "/hub/blocks/bundles",
+      "destination": "/hub/blocks/intro"
+    },
+    {
+      "source": "/customize/settings",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/advanced/deep-dives/settings",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customize/deep-dives/settings",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customize/custom-providers#@greptile-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@commits-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@discord-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@jira-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@gitlab-merge-request-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@google-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@database-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@issue-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@url-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@search-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@web-context-provider",
+      "destination": "/reference/deprecated-context-providers"
     },
     {
       "source": "/troubleshooting#faqs",
@@ -1043,7 +1101,7 @@
     },
     {
       "source": "/troubleshooting#changes-to-assistants-not-showing-in-vs-code",
-      "destination": "/faqs#changes-to-assistants-not-showing-in-vs-code"
+      "destination": "/faqs#changes-to-agents-not-showing-in-vs-code"
     },
     {
       "source": "/troubleshooting#i-installed-continue-but-dont-see-the-sidebar-window",
@@ -1112,6 +1170,26 @@
     {
       "source": "/features/edit/next-edit",
       "destination": "/features/autocomplete/next-edit"
+    },
+    {
+      "source": "/hub/assistants/intro",
+      "destination": "/hub/agents/intro"
+    },
+    {
+      "source": "/hub/assistants/use-an-assistant",
+      "destination": "/hub/agents/use-an-agent"
+    },
+    {
+      "source": "/hub/assistants/create-an-assistant",
+      "destination": "/hub/agents/create-an-agent"
+    },
+    {
+      "source": "/hub/assistants/edit-an-assistant",
+      "destination": "/hub/agents/edit-an-agent"
+    },
+    {
+      "source": "/guides/understanding-assistants",
+      "destination": "/guides/understanding-agents"
     }
   ]
 }

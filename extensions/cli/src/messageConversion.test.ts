@@ -1,6 +1,5 @@
 import type { ChatHistoryItem } from "core/index.js";
-
-import { convertFromUnifiedHistory } from "./messageConversion.js";
+import { convertFromUnifiedHistory } from "core/util/messageConversion.js";
 
 describe("convertFromUnifiedHistory", () => {
   it("should expand contextItems into user message content", () => {

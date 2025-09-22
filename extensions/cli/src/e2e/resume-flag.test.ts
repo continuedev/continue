@@ -35,6 +35,7 @@ describe("E2E: Resume Flag", () => {
       env: {
         // Use a fixed session ID so both CLI calls use the same session
         CONTINUE_CLI_TEST_SESSION_ID: "test-session-123",
+        CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
       },
       timeout: 15000,
     });
@@ -45,8 +46,16 @@ describe("E2E: Resume Flag", () => {
 
     // Verify that a session file was created
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
+
+    // Ensure session directory exists
+    try {
+      await fs.mkdir(sessionDir, { recursive: true });
+    } catch (error) {
+      // Directory already exists, continue
+    }
+
     const sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     expect(sessionFiles).toHaveLength(1);
 
@@ -75,6 +84,7 @@ describe("E2E: Resume Flag", () => {
       args: ["--resume", "--config", context.configPath],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: "test-session-123",
+        CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
       },
       timeout: 15000,
     });
@@ -92,6 +102,7 @@ describe("E2E: Resume Flag", () => {
       args: ["--resume", "--config", context.configPath],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: "no-session-456",
+        CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
       },
       timeout: 15000,
     });
@@ -129,6 +140,7 @@ describe("E2E: Resume Flag", () => {
       args: ["-p", "--config", context.configPath, "first message"],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: sessionId,
+        CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
       },
       timeout: 15000,
     });
@@ -138,8 +150,16 @@ describe("E2E: Resume Flag", () => {
 
     // Verify the first session was saved correctly
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
+
+    // Ensure session directory exists
+    try {
+      await fs.mkdir(sessionDir, { recursive: true });
+    } catch (error) {
+      // Directory already exists, continue
+    }
+
     let sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     expect(sessionFiles).toHaveLength(1);
 
@@ -159,6 +179,7 @@ describe("E2E: Resume Flag", () => {
       ],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: sessionId,
+        CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
       },
       timeout: 15000,
     });
@@ -172,7 +193,7 @@ describe("E2E: Resume Flag", () => {
 
     // Check that the session file contains both messages
     sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     sessionFile = sessionFiles[0];
     sessionPath = path.join(sessionDir, sessionFile);

@@ -112,9 +112,6 @@ export class VsCodeMessenger {
     this.onWebview("focusEditor", (msg) => {
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
     });
-    this.onWebview("toggleFullScreen", (msg) => {
-      vscode.commands.executeCommand("continue.toggleFullScreen");
-    });
 
     this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
       await vscode.commands.executeCommand(
@@ -232,6 +229,7 @@ export class VsCodeMessenger {
           new vscode.Position(end.line, end.character),
         ),
         rulesToInclude: config.rules,
+        isApply: false,
       });
 
       // Log dev data
@@ -287,6 +285,18 @@ export class VsCodeMessenger {
           const contents = document.getText(range);
           return contents;
         });
+    });
+
+    this.onWebviewOrCore("readFileAsDataUrl", async (msg) => {
+      const { filepath } = msg.data;
+      const fileUri = vscode.Uri.file(filepath);
+      const fileContents = await vscode.workspace.fs.readFile(fileUri);
+      const fileType =
+        filepath.split(".").pop() === "png" ? "image/png" : "image/jpeg";
+      const dataUrl = `data:${fileType};base64,${Buffer.from(
+        fileContents,
+      ).toString("base64")}`;
+      return dataUrl;
     });
 
     this.onWebviewOrCore("getIdeSettings", async (msg) => {

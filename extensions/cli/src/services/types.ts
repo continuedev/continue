@@ -81,6 +81,25 @@ export interface MCPServiceState {
   prompts: MCPPrompt[];
 }
 
+export enum UpdateStatus {
+  IDLE = "idle",
+  CHECKING = "checking",
+  UPDATING = "updating",
+  UPDATED = "updated",
+  ERROR = "error",
+}
+
+export interface UpdateServiceState {
+  autoUpdate: boolean;
+  isAutoUpdate: boolean;
+  status: UpdateStatus;
+  message: string;
+  error?: Error | null;
+  isUpdateAvailable: boolean;
+  latestVersion: string | null;
+  currentVersion: string;
+}
+
 export interface ApiClientServiceState {
   apiClient: DefaultApiInterface | null;
 }
@@ -92,6 +111,14 @@ export interface ToolPermissionServiceState {
   originalPolicies?: ToolPermissions;
 }
 
+export interface StorageSyncServiceState {
+  isEnabled: boolean;
+  storageId?: string;
+  lastUploadAt?: number;
+  lastError?: string | null;
+}
+
+export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 
 /**
@@ -106,6 +133,10 @@ export const SERVICE_NAMES = {
   TOOL_PERMISSIONS: "toolPermissions",
   FILE_INDEX: "fileIndex",
   RESOURCE_MONITORING: "resourceMonitoring",
+  SYSTEM_MESSAGE: "systemMessage",
+  CHAT_HISTORY: "chatHistory",
+  UPDATE: "update",
+  STORAGE_SYNC: "storageSync",
 } as const;
 
 /**

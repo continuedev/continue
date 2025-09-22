@@ -280,11 +280,6 @@ declare global {
     replacement: string;
   }
   
-  export interface ContinueError {
-    title: string;
-    message: string;
-  }
-  
   export interface CompletionOptions extends BaseCompletionOptions {
     model: string;
   }
@@ -1061,6 +1056,7 @@ declare global {
     filepath?: string;
     fileContent?: string;
     originalFileContent?: string;
+    autoFormattingDiff?: string;
   }
   
   export interface RangeInFileWithContents {

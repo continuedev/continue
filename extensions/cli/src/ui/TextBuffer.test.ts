@@ -1,7 +1,7 @@
 import {
-  TextBuffer,
   COLLAPSE_SIZE,
   RAPID_INPUT_THRESHOLD,
+  TextBuffer,
 } from "./TextBuffer.js";
 
 describe("TextBuffer", () => {
@@ -313,231 +313,255 @@ describe("TextBuffer", () => {
     });
   });
 
-  describe("paste collapse", () => {
-    it("should not collapse short pasted text", () => {
-      const shortText = "hello world";
-      buffer.handleInput(shortText, { ctrl: false, meta: false } as any);
+  describe("paste detection and collapse", () => {
+    describe("basic collapse behavior", () => {
+      it("should not collapse short content", () => {
+        const shortText = "hello world";
+        buffer.handleInput(shortText, { ctrl: false, meta: false } as any);
+        expect(buffer.text).toBe("hello world");
+      });
 
-      expect(buffer.text).toBe("hello world");
+      it("should collapse content exceeding threshold", () => {
+        const longText = "a".repeat(COLLAPSE_SIZE + 1);
+        buffer.handleInput(longText, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+        expect(buffer.text).toBe("[Paste #1]");
+      });
+
+      it("should count lines correctly in placeholders", () => {
+        const multiLineText =
+          "line1\nline2\nline3\n" + "a".repeat(COLLAPSE_SIZE);
+        buffer.handleInput(multiLineText, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+        expect(buffer.text).toBe("[Paste #1, 4 lines]");
+      });
     });
 
-    it("should collapse long pasted text exceeding collapse threshold", () => {
-      const longText = "a".repeat(COLLAPSE_SIZE + 1);
-      buffer.handleInput(longText, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
+    describe("expansion and state management", () => {
+      it("should expand collapsed content on demand", () => {
+        const longText = "content " + "a".repeat(COLLAPSE_SIZE);
+        buffer.handleInput(longText, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+
+        expect(buffer.text).toBe("[Paste #1]");
+        buffer.expandAllPasteBlocks();
+        expect(buffer.text).toBe(longText);
+      });
+
+      it("should increment paste counter for multiple pastes", () => {
+        const text1 = "a".repeat(COLLAPSE_SIZE + 1);
+        const text2 = "b".repeat(COLLAPSE_SIZE + 1);
+
+        buffer.handleInput(text1, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+        buffer.insertText(" ");
+        buffer.handleInput(text2, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+
+        expect(buffer.text).toBe("[Paste #1] [Paste #2]");
+      });
+
+      it("should normalize line endings when expanding", () => {
+        const textWithMixedEndings =
+          "line1\r\nline2\rline3\n" + "a".repeat(COLLAPSE_SIZE);
+        buffer.handleInput(textWithMixedEndings, {
+          ctrl: false,
+          meta: false,
+        } as any);
+        buffer.flushPendingInput();
+
+        buffer.expandAllPasteBlocks();
+        const expected = "line1\nline2\nline3\n" + "a".repeat(COLLAPSE_SIZE);
+        expect(buffer.text).toBe(expected);
+      });
+
+      it("should clear paste map after expansion", () => {
+        const longText = "a".repeat(COLLAPSE_SIZE + 1);
+        buffer.handleInput(longText, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+
+        buffer.expandAllPasteBlocks();
+        buffer.expandAllPasteBlocks(); // Second call should be no-op
+        expect(buffer.text).toBe(longText);
+      });
+    });
+
+    describe("rapid input detection (Terminal.app/Ghostty)", () => {
+      it("should detect large single input as rapid paste", () => {
+        const rapidText = "x".repeat(RAPID_INPUT_THRESHOLD + 1);
+        buffer.handleInput(rapidText, { ctrl: false, meta: false } as any);
+
+        expect(buffer.text).toBe(""); // Should be buffered
+        expect(buffer.isInRapidInputMode()).toBe(true);
+
+        buffer.flushPendingInput();
+        expect(buffer.text).toBe(rapidText); // < COLLAPSE_SIZE, so not collapsed
+      });
+
+      it("should combine multiple chunks into single paste", () => {
+        const chunk1 = "a".repeat(200);
+        const chunk2 = "b".repeat(700); // Combined > COLLAPSE_SIZE
+
+        buffer.handleInput(chunk1, { ctrl: false, meta: false } as any);
+        buffer.handleInput(chunk2, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+
+        expect(buffer.text).toBe("[Paste #1]");
+        buffer.expandAllPasteBlocks();
+        expect(buffer.text).toBe(chunk1 + chunk2);
+      });
+
+      it("should detect 50+ char chunks as start of paste session", () => {
+        const smallChunk = "x".repeat(60); // >= 50, should trigger
+        const largeChunk = "y".repeat(800);
+
+        buffer.handleInput(smallChunk, { ctrl: false, meta: false } as any);
+        expect(buffer.text).toBe("");
+
+        buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
+        buffer.flushPendingInput();
+
+        expect(buffer.text).toBe("[Paste #1]");
+        buffer.expandAllPasteBlocks();
+        expect(buffer.text).toBe(smallChunk + largeChunk);
+      });
+    });
+
+    describe("bracketed paste (iTerm2)", () => {
+      it("should handle bracketed paste sequences", () => {
+        const content = "function test() { return 'hello'; }" + "x".repeat(800);
+
+        buffer.handleInput("\u001b[200~", { ctrl: false, meta: false } as any);
+        expect(buffer.isInPasteMode()).toBe(true);
+        expect(buffer.text).toBe("");
+
+        buffer.handleInput(content, { ctrl: false, meta: false } as any);
+        expect(buffer.text).toBe(""); // Nothing visible during paste
+
+        buffer.handleInput("\u001b[201~", { ctrl: false, meta: false } as any);
+        expect(buffer.isInPasteMode()).toBe(false);
+        expect(buffer.text).toBe("[Paste #1]");
+
+        buffer.expandAllPasteBlocks();
+        expect(buffer.text).toBe(content);
+      });
+
+      it("should not collapse short bracketed content", () => {
+        const shortContent = "Hello world!";
+
+        buffer.handleInput("\u001b[200~", { ctrl: false, meta: false } as any);
+        buffer.handleInput(shortContent, { ctrl: false, meta: false } as any);
+        buffer.handleInput("\u001b[201~", { ctrl: false, meta: false } as any);
+
+        expect(buffer.text).toBe(shortContent);
+      });
+
+      it("should prioritize bracketed paste over rapid input", () => {
+        const largeContent = "x".repeat(1000);
+
+        buffer.handleInput("\u001b[200~", { ctrl: false, meta: false } as any);
+        buffer.handleInput(largeContent, { ctrl: false, meta: false } as any);
+
+        expect(buffer.isInPasteMode()).toBe(true);
+        expect(buffer.isInRapidInputMode()).toBe(false);
+
+        buffer.handleInput("\u001b[201~", { ctrl: false, meta: false } as any);
+        expect(buffer.text).toBe("[Paste #1]");
+      });
+    });
+  });
+
+  describe("timing behavior", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should combine chunks within 200ms timing window", () => {
+      const chunk1 = "x".repeat(100);
+      const chunk2 = "y".repeat(800);
+
+      buffer.handleInput(chunk1, { ctrl: false, meta: false } as any);
+
+      vi.advanceTimersByTime(100); // Within 200ms window
+      buffer.handleInput(chunk2, { ctrl: false, meta: false } as any);
+
+      vi.advanceTimersByTime(250); // Finalize
 
       expect(buffer.text).toBe("[Paste #1]");
-    });
-
-    it("should count lines correctly in collapsed text", () => {
-      const multiLineText = "line1\nline2\nline3\n" + "a".repeat(COLLAPSE_SIZE);
-      buffer.handleInput(multiLineText, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
-
-      expect(buffer.text).toBe("[Paste #1, 4 lines]");
-    });
-
-    it("should expand collapsed content on expandAllPasteBlocks", () => {
-      const longText = "hello " + "a".repeat(COLLAPSE_SIZE);
-      buffer.handleInput(longText, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
-
-      // Verify it was collapsed
-      expect(buffer.text).toBe("[Paste #1]");
-
-      // Expand it
       buffer.expandAllPasteBlocks();
-
-      // Verify it was expanded with normalized line endings
-      expect(buffer.text).toBe(longText);
+      expect(buffer.text).toBe(chunk1 + chunk2);
     });
 
-    it("should handle typing before and after collapsed content", () => {
-      buffer.setText("before ");
-      buffer.setCursor(7);
+    it("should finalize buffered content after 200ms timeout", () => {
+      const chunk = "x".repeat(100);
 
-      const longText = "a".repeat(COLLAPSE_SIZE + 1);
-      buffer.handleInput(longText, { ctrl: false, meta: false } as any);
+      buffer.handleInput(chunk, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe("");
+
+      vi.advanceTimersByTime(250);
+      expect(buffer.text).toBe(chunk);
+    });
+
+    it("should separate sessions when timing window expires", () => {
+      const chunk1 = "a".repeat(60);
+      const chunk2 = "b".repeat(900);
+
+      buffer.handleInput(chunk1, { ctrl: false, meta: false } as any);
+      vi.advanceTimersByTime(300); // Exceed timing window
+      expect(buffer.text).toBe(chunk1);
+
+      buffer.handleInput(chunk2, { ctrl: false, meta: false } as any);
+      vi.advanceTimersByTime(250);
+      expect(buffer.text).toBe(chunk1 + "[Paste #1]");
+    });
+  });
+
+  describe("regression tests", () => {
+    it("should prevent typing during paste accumulation (Terminal.app fix)", () => {
+      const largeChunk = "x".repeat(100);
+      buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
+
+      // Small typed input should not be mixed into paste
+      const typedChar = "a";
+      buffer.handleInput(typedChar, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe("a");
+
       buffer.flushPendingInput();
-
-      expect(buffer.text).toBe("before [Paste #1]");
-
-      // Type after collapsed content
-      buffer.insertText(" after");
-      expect(buffer.text).toBe("before [Paste #1] after");
-
-      // Move cursor to beginning and type
-      buffer.setCursor(0);
-      buffer.insertText("start ");
-      expect(buffer.text).toBe("start before [Paste #1] after");
+      expect(buffer.text).toBe("a" + largeChunk);
     });
 
-    it("should handle exactly collapse threshold without collapsing", () => {
-      const exactText = "a".repeat(COLLAPSE_SIZE); // exactly at threshold
-      buffer.handleInput(exactText, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput(); // This will go into rapid input mode due to size
-
-      expect(buffer.text).toBe(exactText); // Should not be collapsed
-    });
-
-    it("should handle paste operations as single large inputs", () => {
-      // This simulates the most common paste scenario: a single large input
-      const longText = "x".repeat(COLLAPSE_SIZE + 1);
-
-      expect(longText.length).toBeGreaterThan(COLLAPSE_SIZE);
-
-      buffer.handleInput(longText, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
-
-      // Should be collapsed
-      expect(buffer.text).toBe("[Paste #1]");
-    });
-
-    it("should handle bracketed paste mode", () => {
-      // Simulate bracketed paste: start sequence, content, end sequence
-
-      // Start paste mode
-      buffer.handleInput("\u001b[200~", {} as any);
-      expect(buffer.isInPasteMode()).toBe(true);
-
-      // Add some content (in chunks like real paste)
-      const chunks = [
-        "Hello ",
-        "world! ",
-        "This is a long piece of text. ".repeat(30),
-      ];
-      const totalContent = chunks.join("");
+    it("should preserve all chunks when expanding (content loss fix)", () => {
+      const chunks = ["a".repeat(1000), "b".repeat(1000), "c".repeat(1000)];
 
       chunks.forEach((chunk) => {
         buffer.handleInput(chunk, { ctrl: false, meta: false } as any);
       });
-
-      // Text should NOT be visible during paste mode (to avoid visual bugs)
-      expect(buffer.text).toBe("");
-
-      // End paste mode
-      buffer.handleInput("\u001b[201~", {} as any);
-      expect(buffer.isInPasteMode()).toBe(false);
-
-      // Now should be collapsed if > COLLAPSE_SIZE
-      if (totalContent.length > COLLAPSE_SIZE) {
-        expect(buffer.text).toBe("[Paste #1]");
-      }
-    });
-
-    it("should not collapse short bracketed paste content", () => {
-      // Start paste mode
-      buffer.handleInput("\u001b[200~", {} as any);
-
-      // Add short content
-      const shortContent = "Hello world!";
-      buffer.handleInput(shortContent, { ctrl: false, meta: false } as any);
-
-      // End paste mode
-      buffer.handleInput("\u001b[201~", {} as any);
-
-      // Should not be collapsed
-      expect(buffer.text).toBe(shortContent);
-    });
-
-    it("should normalize line endings when expanding", () => {
-      const textWithCarriageReturns =
-        "line1\r\nline2\rline3\n" + "a".repeat(COLLAPSE_SIZE);
-      buffer.handleInput(textWithCarriageReturns, {
-        ctrl: false,
-        meta: false,
-      } as any);
       buffer.flushPendingInput();
 
-      expect(buffer.text).toBe("[Paste #1, 4 lines]");
-
-      buffer.expandAllPasteBlocks();
-
-      // Should have normalized line endings
-      const expected = "line1\nline2\nline3\n" + "a".repeat(COLLAPSE_SIZE);
-      expect(buffer.text).toBe(expected);
-    });
-
-    it("should increment paste counter for multiple pastes", () => {
-      const longText1 = "a".repeat(COLLAPSE_SIZE + 1);
-      const longText2 = "b".repeat(COLLAPSE_SIZE + 1);
-
-      buffer.handleInput(longText1, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
       expect(buffer.text).toBe("[Paste #1]");
 
-      buffer.insertText(" ");
-      buffer.handleInput(longText2, { ctrl: false, meta: false } as any);
-      buffer.flushPendingInput();
-      expect(buffer.text).toBe("[Paste #1] [Paste #2]");
-    });
-
-    it("should detect rapid input above threshold", () => {
-      // Test that input above RAPID_INPUT_THRESHOLD triggers rapid input detection
-      const rapidText = "x".repeat(RAPID_INPUT_THRESHOLD + 1);
-      buffer.handleInput(rapidText, { ctrl: false, meta: false } as any);
-
-      // Should go into rapid input buffer (not displayed yet)
-      expect(buffer.text).toBe("");
-      expect(buffer.isInRapidInputMode()).toBe(true);
-
-      // Flush to finalize
-      buffer.flushPendingInput();
-
-      // Now should be displayed (but not collapsed since < COLLAPSE_SIZE)
-      expect(buffer.text).toBe(rapidText);
-    });
-
-    it("should combine split paste chunks", () => {
-      // Simulate macOS Terminal splitting paste
-      const firstChunk = "a".repeat(COLLAPSE_SIZE + 200); // Large first chunk
-      buffer.handleInput(firstChunk, { ctrl: false, meta: false } as any);
-
-      // First chunk goes into rapid input mode - no placeholder yet
-      expect(buffer.text).toBe("");
-
-      // Second chunk should be combined with the first (needs to be > 50 chars)
-      const secondChunk = "b".repeat(100); // Large enough to trigger split paste detection
-      buffer.handleInput(secondChunk, { ctrl: false, meta: false } as any);
-
-      // Flush to finalize the rapid input synchronously
-      buffer.flushPendingInput();
-
-      // Should show only one placeholder with combined content
-      expect(buffer.text).toBe("[Paste #1]");
-
-      // Verify the combined content is stored correctly
       buffer.expandAllPasteBlocks();
-      const expectedContent = firstChunk + secondChunk;
-      expect(buffer.text).toBe(expectedContent);
+      expect(buffer.text).toBe(chunks.join(""));
+      expect(buffer.text.length).toBe(3000);
     });
 
-    it("should expand paste blocks on submission (simulating Enter key behavior)", () => {
-      // Add some text before the paste
-      buffer.insertText("Command: ");
+    it("should handle complete paste-to-submit workflow", () => {
+      const pastedCode = 'console.log("test");' + "x".repeat(800);
 
-      // Add a large paste that gets collapsed
-      const pastedCode =
-        'function example() {\n  console.log("hello");\n  ' +
-        "x".repeat(COLLAPSE_SIZE);
       buffer.handleInput(pastedCode, { ctrl: false, meta: false } as any);
       buffer.flushPendingInput();
+      expect(buffer.text).toBe("[Paste #1]");
 
-      // Verify it's collapsed
-      expect(buffer.text).toBe("Command: [Paste #1, 3 lines]");
-
-      // Simulate what happens when user presses Enter - UserInput calls expandAllPasteBlocks()
+      // Simulate Enter key - expand before submission
       buffer.expandAllPasteBlocks();
+      expect(buffer.text).toBe(pastedCode);
 
-      // Should now show the full content with normalized line endings
-      const expectedFullText =
-        'Command: function example() {\n  console.log("hello");\n  ' +
-        "x".repeat(COLLAPSE_SIZE);
-      expect(buffer.text).toBe(expectedFullText);
-
-      // Verify paste map is cleared after expansion
-      buffer.expandAllPasteBlocks(); // Should be no-op now
-      expect(buffer.text).toBe(expectedFullText); // Should remain the same
+      buffer.clear();
+      expect(buffer.text).toBe("");
     });
   });
 

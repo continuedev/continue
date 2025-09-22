@@ -1,18 +1,27 @@
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { convertToUnifiedHistory } from "../../messageConversion.js";
+import { startNewSession } from "../../session.js";
 
 import { processSlashCommandResult } from "./useChat.helpers.js";
 
+// Mock the session module
+vi.mock("../../session.js", () => ({
+  loadSession: vi.fn(),
+  updateSessionHistory: vi.fn(),
+  startNewSession: vi.fn(),
+}));
+
 describe("useChat clear command", () => {
   let mockSetChatHistory: ReturnType<typeof vi.fn>;
-  let mockExit: ReturnType<typeof vi.fn>;
   let mockOnClear: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    // Clear all mocks to prevent call history leaking between tests
+    vi.clearAllMocks();
+
     mockSetChatHistory = vi.fn();
-    mockExit = vi.fn();
     mockOnClear = vi.fn();
   });
 
@@ -33,13 +42,17 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
 
     // Verify that onClear was called
     expect(mockOnClear).toHaveBeenCalledOnce();
+
+    // Verify that a new session was started with the system message
+    expect(startNewSession).toHaveBeenCalledWith([
+      chatHistory[0], // The system message ChatHistoryItem
+    ]);
 
     // Verify that chat history was reset (keeping only system message)
     expect(mockSetChatHistory).toHaveBeenCalledWith([
@@ -75,11 +88,15 @@ describe("useChat clear command", () => {
         result,
         chatHistory,
         setChatHistory: mockSetChatHistory,
-        exit: mockExit,
         onShowConfigSelector: vi.fn(),
         // onClear is not provided
       });
     }).not.toThrow();
+
+    // Verify that a new session was started with the system message
+    expect(startNewSession).toHaveBeenCalledWith([
+      chatHistory[0], // The system message ChatHistoryItem
+    ]);
 
     // Verify that history is still reset
     expect(mockSetChatHistory).toHaveBeenCalledWith([
@@ -106,10 +123,12 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
+
+    // Verify that a new session was started with the system message
+    expect(startNewSession).toHaveBeenCalledWith([systemHistoryItem]);
 
     // Should keep only the system message
     expect(mockSetChatHistory).toHaveBeenCalledWith([systemHistoryItem]);
@@ -125,10 +144,12 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
+
+    // Verify that a new session was started with empty history
+    expect(startNewSession).toHaveBeenCalledWith([]);
 
     // Should set empty history when no system message exists
     expect(mockSetChatHistory).toHaveBeenCalledWith([]);

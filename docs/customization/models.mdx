@@ -1,7 +1,9 @@
 ---
-title: "Model Blocks"
-description: "These blocks form the foundation of the entire assistant experience, offering different specialized capabilities:"
+title: "Models"
+description: "Models form the foundation of the entire agent experience, offering different specialized capabilities:"
 ---
+
+import { ModelRecommendations } from "/snippets/ModelRecommendations.jsx";
 
 - **[Chat](/customize/model-roles/chat)**: Power conversational interactions about code and provide detailed guidance
 - **[Edit](/customize/model-roles/edit)**: Handle complex code transformations and refactoring tasks
@@ -10,24 +12,118 @@ description: "These blocks form the foundation of the entire assistant experienc
 - **[Embedding](/customize/model-roles/embeddings)**: Transform code into vector representations for semantic search
 - **[Reranker](/customize/model-roles/reranking)**: Improve search relevance by ordering results based on semantic meaning
 
-![Model Blocks Overview](/images/customization/images/model-blocks-overview-36c30e7e01928d7a9b5b26ff1639c34b.png)
+![Models Overview](/images/customization/images/model-blocks-overview-36c30e7e01928d7a9b5b26ff1639c34b.png)
 
 ## Recommended Models
 
 ### Best Models by Role
 
-| Model role   | Best open models                                                                                                                                 | Best closed models                                                                                                                                                                                                                                             | Notes                                                                        |
-| :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| Agent / Plan | Qwen3 Coder (480B), Qwen3 Coder (30B), Devstral (27B), Devstral, GLM 4.5 (355B), GLM 4.5 Air (106B), Kimi K2 (1T), gpt-oss (120B), gpt-oss (20B) | [Claude Opus 4.1](https://hub.continue.dev/anthropic/claude-4-1-opus), [Claude Sonnet 4](https://hub.continue.dev/anthropic/claude-4-sonnet), [GPT-5](https://hub.continue.dev/openai/gpt-5), [Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) | Closed models are slightly better than open models                           |
-| Chat / Edit  | Qwen3 Coder (480B), Qwen3 Coder (30B), gpt-oss (120B), gpt-oss (20B)                                                                             | [Claude Opus 4.1](https://hub.continue.dev/anthropic/claude-4-1-opus), [Claude Sonnet 4](https://hub.continue.dev/anthropic/claude-4-sonnet), [GPT-5](https://hub.continue.dev/openai/gpt-5), [Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) | Closed and open models have pretty similar performance                       |
-| Autocomplete | [QwenCoder2.5 (1.5B)](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b), QwenCoder2.5 (7B)                                                     | [Codestral](https://hub.continue.dev/mistral/codestral), Mercury Coder                                                                                                                                                                                         | Closed models are slightly better than open models                           |
-| Apply        | N/A                                                                                                                                              | [Relace Instant Apply](https://hub.continue.dev/relace/instant-apply), [Morph Fast Apply](https://hub.continue.dev/morphllm/morph-v2)                                                                                                                          | Open models are basically non-existent / not good enough for this model role |
-| Embed        | [Nomic Embed Text](https://hub.continue.dev/ollama/nomic-embed-text-latest), Qwen3 Embedding                                                     | [Voyage Code 3](https://hub.continue.dev/voyageai/voyage-code-3), [Morph Embeddings](https://hub.continue.dev/morphllm/morph-embedding-v2), Codestral Embed                                                                                                    | Closed models are slightly better than open models                           |
-| Rerank       | zerank-1, zerank-1-small, Qwen3 Reranker                                                                                                         | [Voyage Rerank 2.5](https://hub.continue.dev/voyageai/rerank-2-5), Relace Code Rerank, [Morph Rerank](https://hub.continue.dev/morphllm/morph-rerank-v2)                                                                                                       | Open models are beginning to emerge for this model role                      |
-| Next Edit    | Zeta                                                                                                                                             | Mercury Coder                                                                                                                                                                                                                                                  | Closed models are significantly better than open models                      |
+<ModelRecommendations role="all" />
 
-## Learn More About Model Blocks
+## Learn More About Models
 
 Continue supports [many model providers](/customize/model-providers/top-level/openai), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, and more. Models can have various roles like `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`.
 
-Read more about roles [here](/customize/model-roles) and view [`models`](/reference#models) in the YAML Reference.
+Read more about [model roles](/customize/model-roles), [model capabilities](/customize/deep-dives/model-capabilities) and view [`models`](/reference#models) in the YAML Reference.
+
+### Example Model Setup Instructions
+
+# Frontier Models
+
+[Claude 4 Sonnet](https://hub.continue.dev/anthropic/claude-4-sonnet) from Anthropic
+
+1. Get your API key from [Anthropic](https://console.anthropic.com/)
+2. Add [Claude 4 Sonnet](https://hub.continue.dev/anthropic/claude-4-sonnet) to an agent on Continue Hub
+3. Add `ANTHROPIC_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Qwen Coder 3 480B](https://hub.continue.dev/openrouter/qwen3-coder) from Qwen
+
+1. Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
+2. Add [Qwen Coder 3 480B](https://hub.continue.dev/openrouter/qwen3-coder) to an agent on Continue Hub
+3. Add `OPENROUTER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[GPT-5](https://hub.continue.dev/openai/gpt-5) from OpenAI
+
+1. Get your API key from [OpenAI](https://platform.openai.com)
+2. Add [GPT-5](https://hub.continue.dev/openai/gpt-5) to an agent on Continue Hub
+3. Add `OPENAI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Kimi K2](https://hub.continue.dev/openrouter/kimi-k2) from Moonshot AI
+
+1. Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
+2. Add [Kimi K2](https://hub.continue.dev/openrouter/kimi-k2) to an agent on Continue Hub
+3. Add `OPENROUTER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) from Google
+
+1. Get your API key from [Google AI Studio](https://aistudio.google.com)
+2. Add [Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) to an agent on Continue Hub
+3. Add `GEMINI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Grok 4](https://hub.continue.dev/xai/grok-4) from xAI
+
+1. Get your API key from [xAI](https://console.x.ai/)
+2. Add [Grok 4](https://hub.continue.dev/xai/grok-4) to an agent on Continue Hub
+3. Add `XAI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Devstral Medium](https://hub.continue.dev/mistral/devstral-medium) from Mistral AI
+
+1. Get your API key from [Mistral AI](https://console.mistral.ai/)
+2. Add [Devstral Medium](https://hub.continue.dev/mistral/devstral-medium) to an agent on Continue Hub
+3. Add `MISTRAL_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[gpt-oss-120b](https://hub.continue.dev/openrouter/gpt-oss-120b) from OpenAI
+
+1. Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
+2. Add [gpt-oss-120b](https://hub.continue.dev/openrouter/gpt-oss-120b) to an agent on Continue Hub
+3. Add `OPENROUTER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the agent selector in the Continue IDE extension
+
+### Local Models
+
+These models can be run on your computer if you have enough VRAM.
+
+Their limited tool calling and reasoning capabilities will make it challenging to use Agent mode.
+
+[Qwen3 Coder 30B](https://hub.continue.dev/ollama/qwen3-coder-30b)
+
+1. Add [Qwen3 Coder 30B](https://hub.continue.dev/ollama/qwen3-coder-30b) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[gpt-oss-20b](https://hub.continue.dev/ollama/gpt-oss-20b)
+
+1. Add [gpt-oss-20b](ttps://hub.continue.dev/ollama/gpt-oss-20b) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Devstral Small 27B](https://hub.continue.dev/ollama/devstral)
+
+1. Add [Devstral Small](https://hub.continue.dev/ollama/devstral) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Qwen2.5-Coder 7B](https://hub.continue.dev/ollama/qwen2.5-coder-7b) from Qwen
+
+1. Add [Qwen2.5-Coder 7B](https://hub.continue.dev/ollama/qwen2.5-coder-7b) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Gemma 3 4B](https://hub.continue.dev/ollama/gemma3-4b) from Google
+
+1. Add [Gemma 3 4B](https://hub.continue.dev/ollama/gemma3-4b) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension
+
+[Qwen2.5-Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b) from Qwen
+
+1. Add [Qwen2.5-Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b) to an agent on Continue Hub
+2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
+3. Click `Reload config` in the agent selector in the Continue IDE extension

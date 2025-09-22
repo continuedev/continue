@@ -1,6 +1,6 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers, RuleWithSource } from "core";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
@@ -69,16 +69,20 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const historyKey = isInEdit ? "edit" : "chat";
   const placeholder = isInEdit ? "Edit selected code" : undefined;
 
-  const toolbarOptions: ToolbarOptions = isInEdit
-    ? {
+  const toolbarOptions: ToolbarOptions = useMemo(() => {
+    if (isInEdit) {
+      return {
         hideAddContext: false,
         hideImageUpload: false,
         hideUseCodebase: true,
         hideSelectModel: false,
         enterText:
           editModeState.applyState.status === "done" ? "Retry" : "Edit",
-      }
-    : {};
+      } as ToolbarOptions;
+    }
+    // Stable empty object to avoid re-renders from identity changes
+    return {} as ToolbarOptions;
+  }, [isInEdit, editModeState.applyState.status]);
 
   const { appliedRules = [], contextItems = [] } = props;
 
@@ -123,4 +127,4 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
 }
 
-export default ContinueInputBox;
+export default memo(ContinueInputBox);

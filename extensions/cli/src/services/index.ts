@@ -4,6 +4,7 @@ import { logger } from "../util/logger.js";
 
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
+import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
@@ -11,6 +12,8 @@ import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { StorageSyncService } from "./StorageSyncService.js";
+import { systemMessageService } from "./SystemMessageService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -19,6 +22,7 @@ import {
   ServiceInitOptions,
   ServiceInitResult,
 } from "./types.js";
+import { UpdateService } from "./UpdateService.js";
 
 // Service instances
 const authService = new AuthService();
@@ -28,6 +32,9 @@ const apiClientService = new ApiClientService();
 const mcpService = new MCPService();
 const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
+const chatHistoryService = new ChatHistoryService();
+const updateService = new UpdateService();
+const storageSyncService = new StorageSyncService();
 
 /**
  * Initialize all services and register them with the service container
@@ -111,9 +118,27 @@ export async function initializeServices(
     toolPermissionState,
   );
 
+  // Initialize SystemMessageService with command options
+  serviceContainer.register(
+    SERVICE_NAMES.SYSTEM_MESSAGE,
+    () =>
+      systemMessageService.initialize({
+        additionalRules: commandOptions.rule,
+        format: (commandOptions as any).format, // format option from CLI
+        headless: initOptions.headless,
+      }),
+    [], // No dependencies
+  );
+
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.UPDATE,
+    () => updateService.initialize(),
     [], // No dependencies
   );
 
@@ -228,6 +253,18 @@ export async function initializeServices(
     [],
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.STORAGE_SYNC,
+    () => storageSyncService.initialize(),
+    [],
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.CHAT_HISTORY,
+    () => chatHistoryService.initialize(undefined, initOptions.headless),
+    [], // No dependencies for now, but could depend on SESSION in future
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -262,16 +299,9 @@ export function reloadService(serviceName: string) {
  * Check if all core services are ready
  */
 export function areServicesReady(): boolean {
-  return [
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-    SERVICE_NAMES.AUTH,
-    SERVICE_NAMES.API_CLIENT,
-    SERVICE_NAMES.CONFIG,
-    SERVICE_NAMES.MODEL,
-    SERVICE_NAMES.MCP,
-    SERVICE_NAMES.FILE_INDEX,
-    SERVICE_NAMES.RESOURCE_MONITORING,
-  ].every((name) => serviceContainer.isReady(name));
+  return Object.values(SERVICE_NAMES).every((name) =>
+    serviceContainer.isReady(name),
+  );
 }
 
 /**
@@ -293,6 +323,10 @@ export const services = {
   fileIndex: fileIndexService,
   mode: modeService,
   resourceMonitoring: resourceMonitoringService,
+  systemMessage: systemMessageService,
+  chatHistory: chatHistoryService,
+  updateService: updateService,
+  storageSync: storageSyncService,
 } as const;
 
 // Export the service container for advanced usage

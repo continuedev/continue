@@ -1,6 +1,5 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
-import { Telemetry } from "../../util/posthog";
 
 import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
@@ -79,11 +78,6 @@ export function contextProviderClassFromName(
   name: ContextProviderName,
 ): typeof BaseContextProvider | undefined {
   const provider = Providers.find((cls) => cls.description.title === name);
-
-  void Telemetry.capture("context_provider_load", {
-    providerName: name,
-    found: !!provider, // also capture those which user expected to be present
-  });
 
   return provider;
 }

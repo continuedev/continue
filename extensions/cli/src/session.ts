@@ -2,14 +2,32 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
+import type {
+  BaseSessionMetadata,
+  ChatHistoryItem,
+  Session,
+} from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
-// Re-export SessionMetadata for external consumers
-export type { SessionMetadata };
-
+import {
+  getAccessToken,
+  isAuthenticatedConfig,
+  loadAuthConfig,
+} from "./auth/workos.js";
+import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+import { env } from "./env.js";
 import { logger } from "./util/logger.js";
+
+// Re-export BaseSessionMetadata for external consumers
+export type { BaseSessionMetadata };
+
+// Extended type for sessions that can be local or remote
+export interface ExtendedSessionMetadata extends BaseSessionMetadata {
+  firstUserMessage?: string;
+  isRemote?: boolean;
+  remoteId?: string; // For remote sessions, this is the agent ID
+}
 
 // Note: We now use UUID-based session IDs instead of terminal-based IDs.
 // Each new chat session gets a unique UUID.
@@ -31,8 +49,10 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, ".continue", "sessions");
+  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
@@ -67,9 +87,14 @@ class SessionManager {
 
   getCurrentSession(): Session {
     if (!this.currentSession) {
+      // Use test session ID for testing consistency
+      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID
+        ? process.env.CONTINUE_CLI_TEST_SESSION_ID
+        : uuidv4();
+
       this.currentSession = {
-        sessionId: uuidv4(),
-        title: "Untitled Session",
+        sessionId,
+        title: DEFAULT_SESSION_TITLE,
         workspaceDirectory: process.cwd(),
         history: [],
       };
@@ -132,13 +157,17 @@ function modifySessionBeforeSave(session: Session): Session {
   };
 }
 
+export function getSessionPersistenceSnapshot(session: Session): Session {
+  return modifySessionBeforeSave(session);
+}
+
 /**
  * Save the current session to file
  */
 export function saveSession(): void {
   try {
     const session = SessionManager.getInstance().getCurrentSession();
-    const sessionToSave = modifySessionBeforeSave(session);
+    const sessionToSave = getSessionPersistenceSnapshot(session);
     historyManager.save(sessionToSave);
   } catch (error) {
     logger.error("Error saving session:", error);
@@ -187,7 +216,7 @@ export function loadSession(): Session | null {
 export function createSession(history: ChatHistoryItem[] = []): Session {
   const session: Session = {
     sessionId: uuidv4(),
-    title: "Untitled Session",
+    title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
   };
@@ -236,7 +265,7 @@ export function hasSession(): boolean {
  */
 function getSessionMetadataWithPreview(
   filePath: string,
-): (SessionMetadata & { firstUserMessage?: string }) | null {
+): ExtendedSessionMetadata | null {
   try {
     const sessionData: Session = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const stats = fs.statSync(filePath);
@@ -265,7 +294,7 @@ function getSessionMetadataWithPreview(
 
     return {
       sessionId: sessionData.sessionId,
-      title: sessionData.title || "Untitled Session",
+      title: sessionData.title || DEFAULT_SESSION_TITLE,
       dateCreated: stats.birthtime.toISOString(),
       workspaceDirectory: sessionData.workspaceDirectory || "",
       firstUserMessage,
@@ -277,20 +306,65 @@ function getSessionMetadataWithPreview(
 }
 
 /**
- * List all available sessions with metadata
+ * Fetch remote agents/sessions from the API
  */
-export function listSessions(
-  limit: number = 10,
-): (SessionMetadata & { firstUserMessage?: string })[] {
+export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
   try {
-    const sessions = historyManager.list({ limit });
+    const authConfig = loadAuthConfig();
+    const accessToken = getAccessToken(authConfig);
 
-    // Add first user message preview to each session
-    const sessionsWithPreview: (SessionMetadata & {
-      firstUserMessage?: string;
-    })[] = [];
+    if (
+      !accessToken ||
+      !isAuthenticatedConfig(authConfig) ||
+      !authConfig.userEmail.endsWith("@continue.dev")
+    ) {
+      return [];
+    }
 
-    for (const sessionMeta of sessions) {
+    const response = await fetch(new URL("agents/devboxes", env.apiBase), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      logger.error(`Failed to fetch remote agents: ${response.status}`);
+      return [];
+    }
+
+    const agents = await response.json();
+
+    return agents.map((agent: any) => ({
+      sessionId: `remote-${agent.id}`,
+      title: agent.name || "Remote Agent",
+      dateCreated: new Date(agent.create_time_ms).toISOString(),
+      workspaceDirectory: "",
+      isRemote: true,
+      remoteId: agent.id,
+      firstUserMessage: "Remote agent session",
+    }));
+  } catch (error) {
+    logger.error("Error fetching remote sessions:", error);
+    return [];
+  }
+}
+
+/**
+ * List all available sessions with metadata (both local and remote)
+ */
+export async function listSessions(
+  limit: number = 100,
+): Promise<ExtendedSessionMetadata[]> {
+  try {
+    // Get local sessions
+    const localSessions = historyManager.list({ limit });
+
+    // Add first user message preview to each local session
+    const localSessionsWithPreview: ExtendedSessionMetadata[] = [];
+
+    for (const sessionMeta of localSessions) {
       const sessionFilePath = path.join(
         getSessionDir(),
         `${sessionMeta.sessionId}.json`,
@@ -299,15 +373,32 @@ export function listSessions(
       if (fs.existsSync(sessionFilePath)) {
         const metadata = getSessionMetadataWithPreview(sessionFilePath);
         if (metadata) {
-          sessionsWithPreview.push(metadata);
+          localSessionsWithPreview.push({
+            ...metadata,
+            isRemote: false,
+          });
         }
       } else {
         // Fall back to basic metadata if file doesn't exist
-        sessionsWithPreview.push(sessionMeta);
+        localSessionsWithPreview.push({
+          ...sessionMeta,
+          isRemote: false,
+        });
       }
     }
 
-    return sessionsWithPreview;
+    // Get remote sessions
+    const remoteSessions = await getRemoteSessions();
+
+    // Combine and sort by date (most recent first)
+    const allSessions = [...localSessionsWithPreview, ...remoteSessions]
+      .sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      )
+      .slice(0, limit);
+
+    return allSessions;
   } catch (error) {
     logger.error("Error listing sessions:", error);
     return [];
@@ -346,4 +437,25 @@ export function updateSessionTitle(title: string): void {
  */
 export function getCurrentSession(): Session {
   return SessionManager.getInstance().getCurrentSession();
+}
+
+/**
+ * Start a new session with a new sessionId
+ */
+export function startNewSession(history: ChatHistoryItem[] = []): Session {
+  const manager = SessionManager.getInstance();
+
+  // Clear the current session from memory (don't delete the file)
+  manager.clear();
+
+  // Create a new session with a new sessionId
+  const newSession: Session = {
+    sessionId: uuidv4(),
+    title: DEFAULT_SESSION_TITLE,
+    workspaceDirectory: process.cwd(),
+    history,
+  };
+
+  manager.setSession(newSession);
+  return newSession;
 }

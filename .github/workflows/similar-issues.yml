@@ -31,7 +31,7 @@ jobs:
           path: deja-view
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -190,7 +190,7 @@ jobs:
           echo "confidence=$CONFIDENCE" >> $GITHUB_OUTPUT
 
       - name: Comment with analysis
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             let comment = '';
@@ -307,7 +307,7 @@ jobs:
 
       - name: Add labels
         if: github.event_name == 'issues'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const labels = [];

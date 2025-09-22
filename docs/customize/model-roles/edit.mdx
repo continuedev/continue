@@ -4,6 +4,7 @@ description: Edit model role
 keywords: [edit, editing, model, role]
 sidebar_position: 3
 ---
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
 
 It's often useful to select a different model to respond to Edit prompts than for chat prompts, as Edits are often more code-specific and may require less conversational readability.
 
@@ -44,9 +45,9 @@ In Continue, you can add `edit` to a model's roles to specify that it can be use
 
 Explore edit models in [the hub](https://hub.continue.dev/explore/models?roles=edit). Generally, our recommendations for Edit overlap with recommendations for Chat.
 
-<Info>
-  See our [comprehensive model recommendations](/customization/models#recommended-models) for the best models for Edit and Chat roles.
-</Info>
+## Model Recommendations
+
+<ModelRecommendations role="chat_edit" />
 
 ## Prompt templating
 

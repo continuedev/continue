@@ -7,12 +7,6 @@ import styled, { keyframes } from "styled-components";
 import { useAppDispatch } from "../../redux/hooks";
 import { moveTerminalProcessToBackground } from "../../redux/thunks/moveTerminalProcessToBackground";
 import { getFontSize } from "../../util";
-import {
-  defaultBorderRadius,
-  vscBackground,
-  vscEditorBackground,
-  vscForeground,
-} from "../index";
 import { CopyButton } from "../StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
 import { RunInTerminalButton } from "../StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
 import { ButtonContent, SpoilerButton } from "../ui/SpoilerButton";
@@ -26,7 +20,7 @@ const BlinkingCursor = styled.span`
   &::after {
     content: "█";
     animation: ${blinkCursor} 1s infinite;
-    color: ${vscForeground};
+    color: var(--foreground);
   }
 `;
 
@@ -60,7 +54,7 @@ const AnsiSpan = styled.span<{
 `;
 
 const AnsiLink = styled.a`
-  color: var(--vscode-textLink-foreground, #3794ff);
+  color: var(--link);
   text-decoration: none;
   &:hover {
     text-decoration: underline;
@@ -69,24 +63,21 @@ const AnsiLink = styled.a`
 
 const StyledTerminalContainer = styled.div<{
   fontSize?: number;
-  bgColor: string;
 }>`
-  background-color: ${(props) => props.bgColor};
+  background-color: var(--background);
   font-family:
-    var(--vscode-font-family),
+    ui-sans-serif,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
     "Helvetica Neue",
+    Arial,
+    "Noto Sans",
     sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  color: ${vscForeground};
+  color: var(--foreground);
   line-height: 1.5;
 
   > *:last-child {
@@ -97,10 +88,6 @@ const StyledTerminalContainer = styled.div<{
 const TerminalContent = styled.div`
   pre {
     white-space: pre-wrap;
-    background-color: ${vscEditorBackground};
-    border-radius: ${defaultBorderRadius};
-    border: 1px solid
-      var(--vscode-editorWidget-border, rgba(127, 127, 127, 0.3));
     max-width: calc(100vw - 24px);
     overflow-x: scroll;
     overflow-y: hidden;
@@ -113,25 +100,20 @@ const TerminalContent = styled.div`
       display: none;
     }
     word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
-    background-color: ${vscEditorBackground};
+    border-radius: 0.5rem;
+    background-color: var(--editor-background);
     font-size: ${getFontSize() - 2}px;
-    font-family: var(--vscode-editor-font-family);
+    font-family:
+      ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono",
+      Menlo, monospace;
   }
 
   code:not(pre > code) {
-    font-family: var(--vscode-editor-font-family);
-    color: var(--vscode-input-placeholderForeground);
+    font-family:
+      ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono",
+      Menlo, monospace;
+    color: var(--input-placeholder);
   }
-`;
-
-const ToolbarContainer = styled.div<{ isExpanded: boolean }>`
-  font-size: ${getFontSize() - 2}px;
-`;
-
-const CommandLine = styled.div`
-  padding-bottom: 0.5rem;
-  color: var(--vscode-terminal-ansiGreen, #0dbc79);
 `;
 
 function ansiToJSON(
@@ -438,10 +420,10 @@ export function UnifiedTerminalCommand({
   return (
     <StyledTerminalContainer
       fontSize={getFontSize()}
-      bgColor={vscBackground}
-      className="mb-4"
+      className="mx-2 mb-4"
+      data-testid="terminal-container"
     >
-      <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
+      <div className="outline-command-border rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
         {/* Toolbar */}
         <div
           className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${
@@ -454,11 +436,11 @@ export function UnifiedTerminalCommand({
           <div className="flex max-w-[50%] flex-row items-center">
             <ChevronDownIcon
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
+              className={`text-description h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
                 isExpanded ? "rotate-0" : "-rotate-90"
               }`}
             />
-            <span className="text-lightgray ml-2 select-none">Terminal</span>
+            <span className="text-description ml-2 select-none">Terminal</span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -474,15 +456,10 @@ export function UnifiedTerminalCommand({
         {/* Content */}
         {isExpanded && (
           <TerminalContent>
-            <pre>
+            <pre className="bg-editor">
               <code>
                 {/* Command is always visible */}
-                <div
-                  className="pb-2"
-                  style={{ color: "var(--vscode-terminal-ansiGreen, #0DBC79)" }}
-                >
-                  $ {command}
-                </div>
+                <div className="text-terminal pb-2">$ {command}</div>
 
                 {/* Running state with cursor */}
                 {isRunning && !hasOutput && (
@@ -532,7 +509,13 @@ export function UnifiedTerminalCommand({
 
         {/* Status information */}
         {(statusMessage || isRunning) && (
-          <div className="text-description mt-2 flex items-center px-2 pb-2 text-xs">
+          <div
+            className="text-description flex items-center px-2 pb-2 pt-2 text-xs"
+            style={{
+              borderTop:
+                "1px solid var(--vscode-commandCenter-inactiveBorder, #555555)",
+            }}
+          >
             <StatusIcon status={statusType} />
             {isRunning ? "Running" : statusMessage}
             {isRunning && toolCallId && (

@@ -2,9 +2,10 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { getAllTools } from "src/stream/handleToolCalls.js";
+
 import { SERVICE_NAMES, serviceContainer } from "../../services/index.js";
 import { modeService } from "../../services/ModeService.js";
-import { getAllTools } from "../../streamChatResponse.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
 

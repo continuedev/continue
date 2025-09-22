@@ -81,11 +81,13 @@ module.exports = {
           DEFAULT: varWithFallback("badge-background"),
           foreground: varWithFallback("badge-foreground"),
         },
+        info: varWithFallback("info"),
         success: varWithFallback("success"),
         warning: varWithFallback("warning"),
         error: varWithFallback("error"),
         link: varWithFallback("link"),
         accent: varWithFallback("accent"),
+        terminal: varWithFallback("terminal"),
         findMatch: {
           DEFAULT: THEME_COLORS["find-match"].default,
           selected: varWithFallback("find-match-selected"),

@@ -2,8 +2,8 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 
-import { streamChatResponse } from "./streamChatResponse.js";
-import { StreamCallbacks } from "./streamChatResponse.types.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
+import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 import {
   countChatHistoryTokens,
@@ -28,6 +28,7 @@ export interface CompactionCallbacks {
  * @param model The model configuration
  * @param llmApi The LLM API instance
  * @param callbacks Optional callbacks for streaming updates
+ * @param abortController Optional abort controller for cancellation
  * @returns The compacted history with compaction index
  */
 export async function compactChatHistory(
@@ -35,6 +36,7 @@ export async function compactChatHistory(
   model: ModelConfig,
   llmApi: BaseLlmApi,
   callbacks?: CompactionCallbacks,
+  abortController?: AbortController,
 ): Promise<CompactionResult> {
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatHistoryItem = {
@@ -80,8 +82,8 @@ export async function compactChatHistory(
     historyForCompaction = [...historyToUse, compactionPrompt];
   }
 
-  // Stream the compaction response
-  const controller = new AbortController();
+  // Stream the compaction response (service drives updates; this collects content locally)
+  const controller = abortController || new AbortController();
 
   let compactionContent = "";
   const streamCallbacks: StreamCallbacks = {

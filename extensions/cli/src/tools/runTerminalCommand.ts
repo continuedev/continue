@@ -1,5 +1,10 @@
 import { spawn } from "child_process";
 
+import {
+  evaluateTerminalCommandSecurity,
+  type ToolPolicy,
+} from "@continuedev/terminal-security";
+
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -8,12 +13,27 @@ import {
 
 import { Tool } from "./types.js";
 
+// Helper function to use login shell on Unix/macOS and PowerShell on Windows
+function getShellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === "win32") {
+    // Windows: Use PowerShell
+    return {
+      shell: "powershell.exe",
+      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+    };
+  } else {
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    const userShell = process.env.SHELL || "/bin/bash";
+    return { shell: userShell, args: ["-l", "-c", command] };
+  }
+}
+
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
   description: `Executes a terminal command and returns the output
 
-The command will be executed from the current working directory: ${process.cwd()}
+Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 `,
   parameters: {
     command: {
@@ -24,6 +44,15 @@ The command will be executed from the current working directory: ${process.cwd()
   },
   readonly: false,
   isBuiltIn: true,
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
   preprocess: async (args) => {
     const command = args.command;
     if (!command || typeof command !== "string") {
@@ -43,7 +72,9 @@ The command will be executed from the current working directory: ${process.cwd()
   },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const child = spawn("sh", ["-c", command]);
+      // Use same shell logic as core implementation
+      const { shell, args } = getShellCommand(command);
+      const child = spawn(shell, args);
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;

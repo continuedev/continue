@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
+import { describe, expect, it } from "vitest";
 
 import { pruneLastMessage } from "./compaction.js";
-import { convertToUnifiedHistory } from "./messageConversion.js";
 import { logger } from "./util/logger.js";
 
 describe("pruneLastMessage", () => {

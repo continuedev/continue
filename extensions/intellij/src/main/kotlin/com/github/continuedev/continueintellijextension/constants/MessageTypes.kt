@@ -37,7 +37,6 @@ class MessageTypes {
             "applyToFile",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -142,10 +141,12 @@ class MessageTypes {
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
+            "tools/evaluatePolicy",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

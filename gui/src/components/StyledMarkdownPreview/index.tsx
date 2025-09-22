@@ -261,22 +261,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ ...aProps }) => {
-          const tooltipId = uuidv4();
-
           return (
-            <>
-              <a
-                href={aProps.href}
-                target="_blank"
-                className="hover:underline"
-                data-tooltip-id={tooltipId}
-              >
+            <ToolTip place="top" className="m-0 p-0" content={aProps.href}>
+              <a href={aProps.href} target="_blank" className="hover:underline">
                 {aProps.children}
               </a>
-              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
-                {aProps.href}
-              </ToolTip>
-            </>
+            </ToolTip>
           );
         },
         pre: ({ ...preProps }) => {

@@ -29,13 +29,23 @@ describe("E2E: Authentication", () => {
       await fs.writeFile(
         authPath,
         JSON.stringify({
+          userId: "test-user",
+          userEmail: "test@example.com",
           accessToken: "test-token",
-          user: { id: "test-user", email: "test@example.com" },
+          refreshToken: "test-refresh-token",
+          expiresAt: Date.now() + 3600000,
+          organizationId: null,
         }),
       );
 
       // Run logout
-      const result = await runCLI(context, { args: ["logout"] });
+      const result = await runCLI(context, {
+        args: ["logout"],
+        env: {
+          HOME: context.testDir,
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+        },
+      });
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Successfully logged out");
@@ -49,7 +59,13 @@ describe("E2E: Authentication", () => {
     });
 
     it("should handle logout when not logged in", async () => {
-      const result = await runCLI(context, { args: ["logout"] });
+      const result = await runCLI(context, {
+        args: ["logout"],
+        env: {
+          HOME: context.testDir,
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+        },
+      });
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("No active session found");
