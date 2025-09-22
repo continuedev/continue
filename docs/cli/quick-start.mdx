@@ -7,20 +7,20 @@ sidebarTitle: "Quick Start"
 Get hands-on experience with Continue CLI through practical development workflows.
 
 <Tabs>
-  <Tab title="REPL Mode">
-    REPL mode (`cn` command) is for **large development tasks** that require
+  <Tab title="TUI Mode">
+    TUI Mode (`cn` command) is for **large development tasks** that require
     agentic workflows with human oversight. Perfect for complex refactors,
     feature implementation, or one-off automation tasks that need monitoring and
     iteration.
   </Tab>
-  <Tab title="Continuous AI Mode">
-    Continuous AI mode (`-p` flag) is for **reliable, repeatable tasks** that no
+  <Tab title="Headless Mode">
+    Headless Mode (`-p` flag) is for **reliable, repeatable tasks** that no
     longer need constant supervision. Perfect for CI/CD pipelines, git hooks,
     and automated workflows you've already tested and refined.
   </Tab>
 </Tabs>
 
-## REPL Mode: Large Development Tasks
+## TUI Mode: Large Development Tasks
 
 Make sure you have [Continue CLI installed](/cli/install) and are in a project directory.
 
@@ -30,7 +30,7 @@ Make sure you have [Continue CLI installed](/cli/install) and are in a project d
 # Navigate to your project directory
 cd your-awesome-project
 
-# Start REPL mode for complex development work
+# Start TUI Mode for complex development work
 cn
 ```
 
@@ -64,7 +64,7 @@ cn
 > [You test and request adjustments]
 ```
 
-### When to Use REPL Mode
+### When to Use TUI Mode
 
 ✅ **Large development tasks** that need oversight  
 ✅ **Complex refactors** requiring multiple steps  
@@ -72,13 +72,13 @@ cn
 ✅ **One-off automation tasks** you haven't done before  
 ✅ **Debugging complex issues** that need exploration
 
-## Continuous AI Mode: Automated Workflows
+## Headless Mode: Automated Workflows
 
-Once you've refined a workflow in REPL mode, convert it to Continuous AI for automation.
+Once you've refined a workflow in TUI Mode, convert it to Continuous AI for automation.
 
 ### Example: From REPL → Continuous AI
 
-**Step 1: Develop in REPL mode**
+**Step 1: Develop in TUI Mode**
 
 ```bash
 cn
@@ -113,9 +113,9 @@ cn -p "Analyze test failures and create GitHub issue with findings"
 cn -p "Update version numbers and create release branch"
 ```
 
-### When to Use Continuous AI Mode
+### When to Use Headless Mode
 
-✅ **Proven workflows** you've tested in REPL mode  
+✅ **Proven workflows** you've tested in TUI Mode  
 ✅ **Repetitive tasks** that no longer need oversight  
 ✅ **CI/CD automation** in pipelines  
 ✅ **Git hooks** for automated checks  
@@ -145,14 +145,14 @@ Common slash commands available in CLI:
 ## The Development Workflow
 
 <Info>
-  **Recommended Approach**: Start complex tasks in REPL mode to iterate and
+  **Recommended Approach**: Start complex tasks in TUI Mode to iterate and
   refine your approach. Once you have a reliable workflow, convert it to
-  Continuous AI mode for automation.
+  Headless Mode for automation.
 </Info>
 
 ### Workflow Pattern
 
-1. **🔬 Experiment in REPL Mode**
+1. **🔬 Experiment in TUI Mode**
 
    - Try complex development tasks with human oversight
    - Iterate on prompts and approaches until they work reliably
