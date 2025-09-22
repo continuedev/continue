@@ -175,25 +175,6 @@
       ]
     },
     {
-      "label": "gui:build",
-      "type": "shell",
-      "command": "npm",
-      "options": {
-        "cwd": "${workspaceFolder}/gui",
-        "env": {
-          "NODE_OPTIONS": "--max-old-space-size=4096"
-        }
-      },
-      "args": ["run", "build"],
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "group": "build-tasks",
-        "panel": "shared",
-        "reveal": "silent",
-        "close": true
-      }
-    },
-    {
       "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",

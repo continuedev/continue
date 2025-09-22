@@ -56,7 +56,6 @@ export const HoverDiv = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
 `;
 
 export const HoverTextDiv = styled.div`
@@ -69,5 +68,4 @@ export const HoverTextDiv = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
 `;
