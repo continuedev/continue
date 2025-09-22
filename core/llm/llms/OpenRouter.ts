@@ -22,9 +22,7 @@ class OpenRouter extends OpenAI {
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
     const modelLower = model.toLowerCase();
-    return (
-      modelLower.includes("claude") || modelLower.includes("anthropic/claude")
-    );
+    return modelLower.includes("claude");
   }
 
   /**
@@ -69,12 +67,19 @@ class OpenRouter extends OpenAI {
     body = super.modifyChatBody(body);
 
     // Check if we should apply Anthropic caching
-    if (!this.isAnthropicModel(body.model) || !this.cacheBehavior) {
+    if (
+      !this.isAnthropicModel(body.model) ||
+      (!this.cacheBehavior && !this.completionOptions.promptCaching)
+    ) {
       return body;
     }
 
-    const shouldCacheConversation = this.cacheBehavior.cacheConversation;
-    const shouldCacheSystemMessage = this.cacheBehavior.cacheSystemMessage;
+    const shouldCacheConversation =
+      this.cacheBehavior?.cacheConversation ||
+      this.completionOptions.promptCaching;
+    const shouldCacheSystemMessage =
+      this.cacheBehavior?.cacheSystemMessage ||
+      this.completionOptions.promptCaching;
 
     if (!shouldCacheConversation && !shouldCacheSystemMessage) {
       return body;
