@@ -436,12 +436,15 @@ export class ShihuoTelemetryService {
 
     // 统计acceptDiff的模型生成代码量
     let acceptDiffTotalGeneratedLines = 0;
+    let acceptDiffTotalGeneratedCharacters = 0;
 
     // 统计createfile的模型生成代码量
     let createFileTotalGeneratedLines = 0;
+    let createFileTotalGeneratedCharacters = 0;
 
     // 统计inlineEdit的模型生成代码量
     let inlineEditTotalGeneratedLines = 0;
+    let inlineEditTotalGeneratedCharacters = 0;
 
     console.log("=== AcceptDiff Statistics Debug ===");
     console.log("Found acceptDiff events:", acceptDiffEvents.length);
@@ -459,10 +462,20 @@ export class ShihuoTelemetryService {
           `Adding ${event.properties.generatedLines} generated lines to total`,
         );
       }
+
+      // 统计模型生成的代码字符数
+      if (event.properties.generatedCharacters !== undefined) {
+        acceptDiffTotalGeneratedCharacters +=
+          event.properties.generatedCharacters;
+        console.log(
+          `Adding ${event.properties.generatedCharacters} generated characters to total`,
+        );
+      }
     });
 
     console.log("AcceptDiff totals:", {
       totalGeneratedLines: acceptDiffTotalGeneratedLines,
+      totalGeneratedCharacters: acceptDiffTotalGeneratedCharacters,
     });
     console.log("=== AcceptDiff Statistics Debug End ===");
 
@@ -483,10 +496,20 @@ export class ShihuoTelemetryService {
           `Adding ${event.properties.generatedLines} generated lines to total`,
         );
       }
+
+      // 统计模型生成的代码字符数
+      if (event.properties.generatedCharacters !== undefined) {
+        createFileTotalGeneratedCharacters +=
+          event.properties.generatedCharacters;
+        console.log(
+          `Adding ${event.properties.generatedCharacters} generated characters to total`,
+        );
+      }
     });
 
     console.log("CreateFile totals:", {
       totalGeneratedLines: createFileTotalGeneratedLines,
+      totalGeneratedCharacters: createFileTotalGeneratedCharacters,
     });
     console.log("=== CreateFile Statistics Debug End ===");
 
@@ -509,11 +532,21 @@ export class ShihuoTelemetryService {
         );
       }
 
+      // 统计模型生成的代码字符数
+      if (event.properties.expectedGeneratedCharacters !== undefined) {
+        inlineEditTotalGeneratedCharacters +=
+          event.properties.expectedGeneratedCharacters;
+        console.log(
+          `Adding ${event.properties.expectedGeneratedCharacters} expected generated characters to total`,
+        );
+      }
+
       console.log(`InlineEdit: ${event.properties.type || "unknown"}`);
     });
 
     console.log("InlineEdit totals:", {
       totalGeneratedLines: inlineEditTotalGeneratedLines,
+      totalGeneratedCharacters: inlineEditTotalGeneratedCharacters,
     });
     console.log("=== InlineEdit Statistics Debug End ===");
 
@@ -546,8 +579,11 @@ export class ShihuoTelemetryService {
         generated_characters: agentGeneratedCharacters,
         prompt_characters: agentPromptCharacters,
         accept_diff_generated_lines: acceptDiffTotalGeneratedLines,
+        accept_diff_generated_characters: acceptDiffTotalGeneratedCharacters,
         createfile_generated_lines: createFileTotalGeneratedLines,
+        createfile_generated_characters: createFileTotalGeneratedCharacters,
         inlineedit_generated_lines: inlineEditTotalGeneratedLines,
+        inlineedit_generated_characters: inlineEditTotalGeneratedCharacters,
       },
     };
   }

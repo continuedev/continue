@@ -83,9 +83,10 @@ export async function* streamDiffLines(
 ): AsyncGenerator<DiffLine> {
   const { type, prefix, highlighted, suffix, input, language } = options;
 
-  // 计算预期的生成代码行数（基于highlighted内容）
+  // 计算预期的生成代码行数和字符数（基于highlighted内容）
   const expectedGeneratedLines =
     highlighted.length > 0 ? highlighted.split("\n").length : 0;
+  const expectedGeneratedCharacters = highlighted.length;
 
   void Telemetry.capture(
     "inlineEdit",
@@ -94,6 +95,7 @@ export async function* streamDiffLines(
       provider: llm.providerName,
       type: type,
       expectedGeneratedLines: expectedGeneratedLines,
+      expectedGeneratedCharacters: expectedGeneratedCharacters,
       timestamp: new Date().toISOString(),
     },
     true,

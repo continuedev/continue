@@ -27,17 +27,20 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
       void extras.codeBaseIndexer?.refreshCodebaseIndexFiles([resolvedFileUri]);
     }
 
-    // 统计创建的代码行数
+    // 统计创建的代码行数和字符数
     const generatedLines = contents.split("\n").length;
+    const generatedCharacters = contents.length;
     console.log("=== CreateFile Statistics ===");
     console.log(`Created file: ${filepath}`);
     console.log(`Generated lines: ${generatedLines}`);
+    console.log(`Generated characters: ${generatedCharacters}`);
     console.log("=== CreateFile Statistics End ===");
 
     // 发送createfile telemetry事件
     Telemetry.capture("createfile", {
       filepath: filepath,
       generatedLines: generatedLines,
+      generatedCharacters: generatedCharacters,
       timestamp: new Date().toISOString(),
     });
     return [

@@ -180,8 +180,13 @@ const getCommandsMap: (
         streamId: streamId || "unknown",
         timestamp: new Date().toISOString(),
         action: "accept",
-        // 只统计模型生成的代码行数
+        // 统计模型生成的代码行数和字符数
         generatedLines: generatedLines || 0,
+        generatedCharacters: await calculateGeneratedCharacters(
+          newFileUri,
+          streamId,
+          verticalDiffManager,
+        ),
       };
 
       console.log("AcceptDiff event recorded:", diffMetrics);
@@ -849,4 +854,30 @@ export function registerAllCommands(
       vscode.commands.registerCommand(command, callback),
     );
   }
+}
+
+/**
+ * 计算生成的代码字符数
+ */
+async function calculateGeneratedCharacters(
+  newFileUri?: string,
+  streamId?: string,
+  verticalDiffManager?: VerticalDiffManager,
+): Promise<number> {
+  try {
+    // 获取VerticalDiffManager中的logDiffs来计算生成的字符数
+    const logDiffs = verticalDiffManager?.logDiffs;
+    if (logDiffs && logDiffs.length > 0) {
+      let generatedCharacters = 0;
+      for (const diffLine of logDiffs) {
+        if (diffLine.type === "new") {
+          generatedCharacters += diffLine.line.length;
+        }
+      }
+      return generatedCharacters;
+    }
+  } catch (error) {
+    console.warn("Failed to calculate generated characters:", error);
+  }
+  return 0;
 }
