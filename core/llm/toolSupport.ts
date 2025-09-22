@@ -203,7 +203,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       if (
         model.toLowerCase().startsWith("meta-llama-3") ||
         model.toLowerCase().includes("llama-4") ||
-        model.toLowerCase().includes("deepseek")
+        model.toLowerCase().includes("deepseek") ||
+        model.toLowerCase().includes("gpt") ||
+        model.toLowerCase().includes("qwen")
       ) {
         return true;
       }
