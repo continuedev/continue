@@ -70,11 +70,9 @@ export function toChatMessage(
     }
 
     // Preserving reasoning blocks
+    // TODO: Always preserve reasoning for now; make configurable later if needed
     // see: https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
-    if (
-      prevMessage?.role === "thinking" &&
-      options.preserveReasoning !== false
-    ) {
+    if (prevMessage?.role === "thinking") {
       msg.reasoning = prevMessage.content as string;
 
       const reasoningDetails =

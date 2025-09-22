@@ -1144,7 +1144,6 @@ export interface BaseCompletionOptions {
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
   promptCaching?: boolean;
-  preserveReasoning?: boolean;
 }
 
 export interface ModelCapability {
