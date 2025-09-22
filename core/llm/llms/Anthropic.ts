@@ -139,7 +139,7 @@ class Anthropic extends BaseLLM {
             type: "tool_result",
             tool_use_id: message.toolCallId,
             content: renderChatMessage(message) || undefined,
-          }
+          },
         ];
       case "user":
         return this.convertMessageContentToBlocks(message.content);
@@ -151,7 +151,6 @@ class Anthropic extends BaseLLM {
               data: message.redactedThinking,
             },
           ];
-
         }
         if (typeof message.content === "string") {
           return [
