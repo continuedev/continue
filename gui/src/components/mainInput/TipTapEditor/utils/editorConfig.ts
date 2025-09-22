@@ -27,7 +27,7 @@ import {
   getContextProviderDropdownOptions,
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
-import { handleImageFile } from "./imageUtils";
+import { handleImageFile, handleVSCodeResourceFromHtml } from "./imageUtils";
 
 export function getPlaceholderText(
   placeholder: TipTapEditorProps["placeholder"],
@@ -69,8 +69,9 @@ export function createEditorConfig(options: {
   props: TipTapEditorProps;
   ideMessenger: IIdeMessenger;
   dispatch: AppDispatch;
+  setShowDragOverMsg: (show: boolean) => void;
 }) {
-  const { props, ideMessenger, dispatch } = options;
+  const { props, ideMessenger, dispatch, setShowDragOverMsg } = options;
 
   const posthog = usePostHog();
 
@@ -147,6 +148,80 @@ export function createEditorConfig(options: {
           const plugin = new Plugin({
             props: {
               handleDOMEvents: {
+                drop(view, event) {
+                  // Hide drag overlay immediately when drop is handled
+                  setShowDragOverMsg(false);
+
+                  // Get current model and check if it supports images
+                  const model = defaultModelRef.current;
+                  if (
+                    !model ||
+                    !modelSupportsImages(
+                      model.provider,
+                      model.model,
+                      model.title,
+                      model.capabilities,
+                    )
+                  ) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return true;
+                  }
+
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  // Check if dataTransfer exists
+                  if (!event.dataTransfer) {
+                    return true;
+                  }
+
+                  // Handle file drop first
+                  if (event.dataTransfer.files.length > 0) {
+                    const file = event.dataTransfer.files[0];
+                    void handleImageFile(ideMessenger, file).then((result) => {
+                      if (result) {
+                        const [_, dataUrl] = result;
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({
+                          src: dataUrl,
+                        });
+                        const tr = view.state.tr.insert(0, node);
+                        view.dispatch(tr);
+                      }
+                    });
+                    return true;
+                  }
+
+                  // Handle drop of HTML content (including VS Code resource URLs)
+                  const html = event.dataTransfer.getData("text/html");
+                  if (html) {
+                    void handleVSCodeResourceFromHtml(ideMessenger, html)
+                      .then((dataUrl) => {
+                        if (dataUrl) {
+                          const { schema } = view.state;
+                          const node = schema.nodes.image.create({
+                            src: dataUrl,
+                          });
+                          const tr = view.state.tr.insert(0, node);
+                          view.dispatch(tr);
+                        }
+                      })
+                      .catch((err) =>
+                        console.error(
+                          "Failed to handle VS Code resource:",
+                          err,
+                        ),
+                      );
+                  }
+
+                  return true;
+                },
+                dragover(view, event) {
+                  // Allow dragover for proper drop handling
+                  event.preventDefault();
+                  return true;
+                },
                 paste(view, event) {
                   const model = defaultModelRef.current;
                   if (!model) return;

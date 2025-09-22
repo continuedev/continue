@@ -9,7 +9,7 @@ interface LoadingTextProps {
 
 export const LoadingText: React.FC<LoadingTextProps> = ({
   text,
-  color = "gray",
+  color = "dim",
   interval = 300,
 }) => {
   const [dotsCount, setDotsCount] = useState(1);

@@ -310,11 +310,6 @@ export interface FileEdit {
   replacement: string;
 }
 
-export interface ContinueError {
-  title: string;
-  message: string;
-}
-
 export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
@@ -823,6 +818,8 @@ export interface IDE {
   openFile(path: string): Promise<void>;
 
   openUrl(url: string): Promise<void>;
+
+  getExternalUri?(uri: string): Promise<string>;
 
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
