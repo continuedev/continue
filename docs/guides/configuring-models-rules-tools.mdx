@@ -1,5 +1,5 @@
 ---
-title: "Understanding Models, Rules, and Tools"
+title: "Configuring Models, Rules, and Tools"
 description: "Learn how to work with Continue's configuration system. Understand how to use hub models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
 ---
 
@@ -24,31 +24,14 @@ MCP tools that provide additional capabilities like database access, web search,
 There are two places where you can define these configurations:
 
 <Columns cols={2}>
-<Card title="Hub" icon="cloud">
-Pre-built models, rules, and tools from the Continue community that you can import and use immediately
-</Card>
-
 <Card title="Local" icon="computer">
 Custom configurations you create and manage in your workspace or globally
 </Card>
+
+<Card title="Hub" icon="cloud">
+Pre-built models, rules, and tools from the Continue community that you can import and use immediately
+</Card>
 </Columns>
-
-## Hub
-
-Hub items are identified by slugs in the format `owner/item-name`. For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
-
-Import from the hub using the `uses` syntax alongside your custom configurations:
-
-```yaml config.yaml highlight={6}
-name: Team Agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: anthropic/claude-4-sonnet
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
-```
 
 ## Local
 
@@ -131,6 +114,23 @@ models:
 
 Note that hub secrets can be passed as inputs using the mustache format: `${{ secrets.SECRET_NAME }}`.
 
+## Hub
+
+Hub items are identified by slugs in the format `owner/item-name`. For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
+
+Import from the hub using the `uses` syntax alongside your custom configurations:
+
+```yaml config.yaml highlight={6}
+name: Team Agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: anthropic/claude-4-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
+```
+
 ## Overriding Properties
 
 You can directly override properties using the `override` syntax:
@@ -157,4 +157,4 @@ Now that you understand how models, rules, and tools work, explore:
 - **[Config Reference](/reference)**: Detailed documentation of all available properties
 - **[Continue Hub](https://hub.continue.dev)**: Browse community models, rules, and tools
 - **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
-- **[Model Roles](/customize/model-roles/overview)**: Understanding how different models work together
+- **[Model Roles](/customize/model-roles/intro)**: Understanding how different models work together
