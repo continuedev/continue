@@ -9,6 +9,7 @@ import {
   CompletionOptions,
   LLMOptions,
   ModelInstaller,
+  ThinkingChatMessage,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
@@ -18,6 +19,7 @@ type OllamaChatMessage = {
   role: ChatMessageRole;
   content: string;
   images?: string[] | null;
+  thinking?: string;
   tool_calls?: {
     function: {
       name: string;
@@ -85,6 +87,7 @@ interface OllamaChatOptions extends OllamaBaseOptions {
   tools?: OllamaTool[]; // the tools of the chat, this can be used to keep a tool memory
   // Not supported yet - tools: tools for the model to use if supported. Requires stream to be set to false
   // And correspondingly, tool calls in OllamaChatMessage
+  think?: boolean; // if true the model will be prompted to think about the response before generating it
 }
 
 type OllamaBaseResponse = {
@@ -144,7 +147,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
-
   constructor(options: LLMOptions) {
     super(options);
 
@@ -265,6 +267,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
   private _getModel() {
     return this.modelMap[this.model] ?? this.model;
+  }
+
+  get contextLength() {
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // twice of https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
   }
 
   private _getModelFileParams(
@@ -391,6 +398,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       model: this._getModel(),
       messages: ollamaMessages,
       options: this._getModelFileParams(options),
+      think: options.reasoning,
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
@@ -420,24 +428,35 @@ class Ollama extends BaseLLM implements ModelInstaller {
       signal,
     });
 
-    function convertChatMessage(res: OllamaChatResponse): ChatMessage {
+    function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
       }
-      if (res.message.role === "tool") {
+
+      const { role, content, thinking, tool_calls: toolCalls } = res.message;
+
+      if (role === "tool") {
         throw new Error(
-          "Unexpected message received from ollama with role = tool",
+          "Unexpected message received from Ollama with role = tool",
         );
       }
-      if (res.message.role === "assistant") {
-        const chatMessage: ChatMessage = {
-          role: "assistant",
-          content: res.message.content,
-        };
-        if (res.message.tool_calls) {
+
+      if (role === "assistant") {
+        const thinkingMessage: ThinkingChatMessage | null = thinking
+          ? { role: "thinking", content: thinking }
+          : null;
+
+        if (thinkingMessage && !content) {
+          // When Streaming you can't have both thinking and content
+          return [thinkingMessage];
+        }
+        // Either not thinking, or not streaming
+        const chatMessage: ChatMessage = { role: "assistant", content };
+
+        if (toolCalls?.length) {
           // Continue handles the response as a tool call delta but
           // But ollama returns the full object in one response with no streaming
-          chatMessage.toolCalls = res.message.tool_calls.map((tc) => ({
+          chatMessage.toolCalls = toolCalls.map((tc) => ({
             type: "function",
             id: `tc_${uuidv4()}`, // Generate a proper UUID with a prefix
             function: {
@@ -446,13 +465,13 @@ class Ollama extends BaseLLM implements ModelInstaller {
             },
           }));
         }
-        return chatMessage;
-      } else {
-        return {
-          role: res.message.role,
-          content: res.message.content,
-        };
+
+        // Return both thinking and chat messages if applicable
+        return thinkingMessage ? [thinkingMessage, chatMessage] : [chatMessage];
       }
+
+      // Fallback for all other roles
+      return [{ role, content }];
     }
 
     if (chatOptions.stream === false) {
@@ -460,7 +479,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
         return; // Aborted by user
       }
       const json = (await response.json()) as OllamaChatResponse;
-      yield convertChatMessage(json);
+      for (const msg of convertChatMessage(json)) {
+        yield msg;
+      }
     } else {
       let buffer = "";
       for await (const value of streamResponse(response)) {
@@ -475,8 +496,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
           if (chunk.trim() !== "") {
             try {
               const j = JSON.parse(chunk) as OllamaChatResponse;
-              const chatMessage = convertChatMessage(j);
-              yield chatMessage;
+              for (const msg of convertChatMessage(j)) {
+                yield msg;
+              }
             } catch (e) {
               throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
             }

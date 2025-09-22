@@ -10,7 +10,7 @@ import {
   CompletionCreateParamsStreaming,
   CompletionUsage,
 } from "openai/resources/index";
-import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
+import { ChatCompletionCreateParams } from "openai/resources/index.js";
 import { AnthropicConfig } from "../types.js";
 import {
   chatChunk,
@@ -93,18 +93,27 @@ export class AnthropicApi implements BaseLlmApi {
       model: oaiBody.model,
       stop_sequences: stop,
       stream: oaiBody.stream,
-      tools: oaiBody.tools?.map((tool) => ({
-        name: tool.function.name,
-        description: tool.function.description,
-        input_schema: tool.function.parameters,
-      })),
+      tools: oaiBody.tools?.map((tool) => {
+        // Type guard for function tools
+        if (tool.type === "function" && "function" in tool) {
+          return {
+            name: tool.function.name,
+            description: tool.function.description,
+            input_schema: tool.function.parameters,
+          };
+        } else {
+          throw new Error(`Unsupported tool type in Anthropic: ${tool.type}`);
+        }
+      }),
       tool_choice: oaiBody.tool_choice
         ? {
             type: "tool",
             name:
               typeof oaiBody.tool_choice === "string"
                 ? oaiBody.tool_choice
-                : oaiBody.tool_choice?.function.name,
+                : oaiBody.tool_choice && "function" in oaiBody.tool_choice
+                  ? oaiBody.tool_choice.function.name
+                  : undefined,
           }
         : undefined,
     };
@@ -131,17 +140,44 @@ export class AnthropicApi implements BaseLlmApi {
           ],
         };
       } else if (message.role === "assistant" && message.tool_calls) {
+        const parts: any[] = [];
+        if (message.content) {
+          if (typeof message.content === "string") {
+            parts.push({
+              type: "text",
+              text: message.content,
+            });
+          } else if (message.content.length > 0) {
+            parts.push(
+              message.content.map((c) => ({
+                type: "text",
+                text: c.type === "text" ? c.text : c.refusal,
+              })),
+            );
+          }
+        }
+
+        parts.push(
+          ...message.tool_calls.map((toolCall) => {
+            // Type guard for function tool calls
+            if (toolCall.type === "function" && "function" in toolCall) {
+              return {
+                type: "tool_use",
+                id: toolCall.id,
+                name: toolCall.function?.name,
+                input: safeParseArgs(
+                  toolCall.function?.arguments,
+                  `${toolCall.function?.name} ${toolCall.id}`,
+                ),
+              };
+            } else {
+              throw new Error(`Unsupported tool call type: ${toolCall.type}`);
+            }
+          }),
+        );
         return {
           role: "assistant",
-          content: message.tool_calls.map((toolCall) => ({
-            type: "tool_use",
-            id: toolCall.id,
-            name: toolCall.function?.name,
-            input: safeParseArgs(
-              toolCall.function?.arguments,
-              `${toolCall.function?.name} ${toolCall.id}`,
-            ),
-          })),
+          content: parts,
         };
       }
 
@@ -158,13 +194,19 @@ export class AnthropicApi implements BaseLlmApi {
               }
               return part;
             }
+            const dataUrl =
+              (part as OpenAI.Chat.Completions.ChatCompletionContentPartImage)
+                ?.image_url?.url || "";
+            // Extract media type from data URL (ex. "data:image/png;base64,..." -> "image/png")
+            const mediaTypeMatch = dataUrl.match(/^data:([^;]+);base64,/);
+            const mediaType = mediaTypeMatch ? mediaTypeMatch[1] : "image/jpeg";
+
             return {
               type: "image",
               source: {
                 type: "base64",
-                media_type: "image/jpeg",
-                // @ts-ignore
-                data: part.image_url.url.split(",")[1],
+                media_type: mediaType,
+                data: dataUrl.split(",")[1],
               },
             };
           })

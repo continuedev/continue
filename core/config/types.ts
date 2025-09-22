@@ -280,11 +280,6 @@ declare global {
     replacement: string;
   }
   
-  export interface ContinueError {
-    title: string;
-    message: string;
-  }
-  
   export interface CompletionOptions extends BaseCompletionOptions {
     model: string;
   }
@@ -692,6 +687,8 @@ declare global {
   
     openUrl(url: string): Promise<void>;
   
+    getExternalUri?(uri: string): Promise<string>;
+  
     runCommand(command: string): Promise<void>;
   
     saveFile(filepath: string): Promise<void>;
@@ -1061,6 +1058,7 @@ declare global {
     filepath?: string;
     fileContent?: string;
     originalFileContent?: string;
+    autoFormattingDiff?: string;
   }
   
   export interface RangeInFileWithContents {

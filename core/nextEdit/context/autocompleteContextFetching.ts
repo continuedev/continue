@@ -11,6 +11,7 @@ import {
 } from "../../autocomplete/util/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { IDE, ILLM } from "../../index";
+import { isSecurityConcern } from "../../indexing/ignore";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../util/parameters";
 
 /**
@@ -59,6 +60,10 @@ export const getAutocompleteContext = async (
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("No config available");
+  }
+
+  if (isSecurityConcern(input.filepath)) {
+    throw new Error("File is a security concern, autocomplete disabled");
   }
 
   // Use provided autocomplete model or fall back to configured autocomplete model

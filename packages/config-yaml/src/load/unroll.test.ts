@@ -8,7 +8,7 @@ describe("parseMarkdownRuleOrAssistantUnrolled tests", () => {
       fileUri: "./foo/bar.yaml",
     };
     const yamlContent = `
-name: Test Assistant
+name: Test Agent
 version: 1.0.0
  
 models:
@@ -17,7 +17,7 @@ models:
     provider: ollama
 `;
     const result = parseMarkdownRuleOrAssistantUnrolled(yamlContent, mockId);
-    expect(result).toHaveProperty("name", "Test Assistant");
+    expect(result).toHaveProperty("name", "Test Agent");
     expect(result).toHaveProperty("version", "1.0.0");
     expect(result.models?.length).toBe(1);
     expect(result.models?.[0]).toHaveProperty("name", "model");
@@ -58,7 +58,7 @@ This is the rule
       fileUri: "./foo/bar.yaml",
     };
     const invalidContent = `
-name: Test Assistant
+name: Test Agent
 version: 1.0.0
  
 model: # should be models

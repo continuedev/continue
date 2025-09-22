@@ -18,7 +18,7 @@
       ],
       "pauseForSourceMap": false,
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
-      "preLaunchTask": "vscode-extension:build-with-packages",
+      "preLaunchTask": "vscode-extension:build-without-watch",
       "env": {
         // "CONTROL_PLANE_ENV": "local",
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
@@ -131,6 +131,49 @@
       "env": {
         "NODE_OPTIONS": "--experimental-vm-modules"
       }
+    },
+    {
+      "name": "Debug CLI",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/extensions/cli/src/index.ts",
+      "args": [],
+      "env": {
+        "NODE_ENV": "development"
+        // "CONTINUE_API_BASE": "http://localhost:3001/",
+        // "WORKOS_CLIENT_ID": "client_01J0FW6XCPMJMQ3CG51RB4HBZQ",
+        // "HUB_URL": "http://localhost:3000"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeArgs": ["--loader", "ts-node/esm"],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "cli:build-and-watch-logs",
+      "cwd": "${workspaceFolder}/extensions/cli"
+    },
+    {
+      "name": "Debug CLI Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/extensions/cli/node_modules/.bin/vitest",
+      "args": ["--run", "--no-cache"],
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "cwd": "${workspaceFolder}/extensions/cli"
     }
   ]
 }

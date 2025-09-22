@@ -21,6 +21,7 @@ import CodebaseContextProvider from "../context/providers/CodebaseContextProvide
 import { ContinueConfig } from "../index.js";
 import { localPathToUri } from "../util/pathToUri.js";
 import { CodebaseIndexer } from "./CodebaseIndexer.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
@@ -64,8 +65,8 @@ class TestCodebaseIndexer extends CodebaseIndexer {
   }
 
   // Add public methods to test private methods
-  public testHasCodebaseContextProvider() {
-    return (this as any).hasCodebaseContextProvider();
+  public testHasIndexingProvider() {
+    return (this as any).hasIndexingContextProvider();
   }
 
   public async testHandleConfigUpdate(
@@ -202,7 +203,7 @@ describe("CodebaseIndexer", () => {
 
     test("should have indexed all of the files", async () => {
       const indexed = await getAllIndexedFiles();
-      expect(indexed.length).toBe(4); // Files are indexed twice due to test execution
+      expect(indexed.length).toBe(2);
       expect(indexed.some((file) => file.endsWith("test.ts"))).toBe(true);
       expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
     });
@@ -226,7 +227,7 @@ describe("CodebaseIndexer", () => {
 
       // Check that the new file was indexed
       const files = await getAllIndexedFiles();
-      expect(files.length).toBe(5); // Updated to match actual behavior
+      expect(files.length).toBe(3);
       expect(files.some((file) => file.endsWith("main.rs"))).toBe(true);
     });
 
@@ -240,7 +241,7 @@ describe("CodebaseIndexer", () => {
 
       // Check that the deleted file was removed from the index
       const files = await getAllIndexedFiles();
-      expect(files.length).toBe(4); // Updated to match actual behavior
+      expect(files.length).toBe(2);
       expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
     });
 
@@ -474,20 +475,14 @@ describe("CodebaseIndexer", () => {
       jest.clearAllMocks();
     });
 
-    describe("hasCodebaseContextProvider", () => {
+    describe("hasIndexingProvider", () => {
       test("should return true when codebase context provider is present", () => {
         // Set up config with codebase context provider
         (testIndexer as any).config = {
-          contextProviders: [
-            {
-              description: {
-                title: CodebaseContextProvider.description.title,
-              },
-            },
-          ],
+          contextProviders: [new CodebaseContextProvider({})],
         };
 
-        const result = testIndexer.testHasCodebaseContextProvider();
+        const result = testIndexer.testHasIndexingProvider();
         expect(result).toBe(true);
       });
 
@@ -496,7 +491,7 @@ describe("CodebaseIndexer", () => {
           contextProviders: undefined,
         };
 
-        const result = testIndexer.testHasCodebaseContextProvider();
+        const result = testIndexer.testHasIndexingProvider();
         expect(result).toBe(false);
       });
 
@@ -511,7 +506,7 @@ describe("CodebaseIndexer", () => {
           ],
         };
 
-        const result = testIndexer.testHasCodebaseContextProvider();
+        const result = testIndexer.testHasIndexingProvider();
         expect(result).toBe(false);
       });
 
@@ -520,7 +515,7 @@ describe("CodebaseIndexer", () => {
           contextProviders: [],
         };
 
-        const result = testIndexer.testHasCodebaseContextProvider();
+        const result = testIndexer.testHasIndexingProvider();
         expect(result).toBe(false);
       });
     });
@@ -535,9 +530,8 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, so we want them to not get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
-        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(1);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(0);
+        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(0);
       });
 
       test("should return early when newConfig is undefined", async () => {
@@ -549,9 +543,8 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, so we want them to not get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
-        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(1);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(0);
+        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(0);
       });
 
       test("should return early when no codebase context provider is present", async () => {
@@ -577,21 +570,14 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, so we want them to not get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
-        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(1);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(0);
+        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(0);
       });
 
       test("should return early when no embed model is configured", async () => {
         const configResult: ConfigResult<ContinueConfig> = {
           config: {
-            contextProviders: [
-              {
-                description: {
-                  title: CodebaseContextProvider.description.title,
-                },
-              },
-            ],
+            contextProviders: [new CodebaseContextProvider({})],
             selectedModelByRole: {
               embed: undefined,
             },
@@ -602,21 +588,14 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, so we want them to not get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
-        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(1);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(0);
+        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(0);
       });
 
       test("should call refreshCodebaseIndex when all conditions are met", async () => {
         const configResult: ConfigResult<ContinueConfig> = {
           config: {
-            contextProviders: [
-              {
-                description: {
-                  title: CodebaseContextProvider.description.title,
-                },
-              },
-            ],
+            contextProviders: [new CodebaseContextProvider({})],
             selectedModelByRole: {
               embed: {
                 model: "test-model",
@@ -630,9 +609,8 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, and we want them to get called again
-        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(2);
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(2);
+        expect(mockGetWorkspaceDirs).toHaveBeenCalledTimes(1);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
         expect(mockRefreshCodebaseIndex).toHaveBeenCalledWith([
           "/test/workspace",
         ]);
@@ -640,13 +618,7 @@ describe("CodebaseIndexer", () => {
 
       test("should set config property before checking conditions", async () => {
         const testConfig = {
-          contextProviders: [
-            {
-              description: {
-                title: CodebaseContextProvider.description.title,
-              },
-            },
-          ],
+          contextProviders: [new CodebaseContextProvider({})],
           selectedModelByRole: {
             embed: {
               model: "test-model",
@@ -666,7 +638,7 @@ describe("CodebaseIndexer", () => {
         // Verify that the config was set
         expect((testIndexer as any).config).toBe(testConfig);
         // These get called once on init, and we want them to get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(2);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
       });
 
       test("should handle multiple context providers correctly", async () => {
@@ -678,11 +650,7 @@ describe("CodebaseIndexer", () => {
                   title: "SomeOtherProvider",
                 },
               },
-              {
-                description: {
-                  title: CodebaseContextProvider.description.title,
-                },
-              },
+              new CodebaseContextProvider({}),
               {
                 description: {
                   title: "AnotherProvider",
@@ -702,12 +670,160 @@ describe("CodebaseIndexer", () => {
 
         await testIndexer.testHandleConfigUpdate(configResult);
 
-        // These get called once on init, and we want them to get called again
-        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(2);
+        expect(mockRefreshCodebaseIndex).toHaveBeenCalledTimes(1);
         expect(mockRefreshCodebaseIndex).toHaveBeenCalledWith([
           "/test/workspace",
         ]);
       });
+    });
+
+    describe("getIndexesToBuild", () => {
+      let indexer: CodebaseIndexer;
+      let mockConfig: any;
+      let mockEmbeddingsModel: any;
+      let mockIdeSettings: any;
+
+      beforeEach(async () => {
+        indexer = new CodebaseIndexer(
+          testConfigHandler,
+          testIde,
+          mockMessenger as any,
+          false,
+        );
+
+        mockEmbeddingsModel = {
+          maxEmbeddingChunkSize: 1000,
+          model: "test-model",
+          provider: "test-provider",
+        };
+
+        mockIdeSettings = {
+          remoteConfigServerUrl: "http://test.com",
+          userToken: "test-token",
+        };
+
+        mockConfig = {
+          selectedModelByRole: {
+            embed: mockEmbeddingsModel,
+          },
+          contextProviders: [],
+        };
+
+        jest
+          .spyOn(testIde, "getIdeSettings")
+          .mockResolvedValue(mockIdeSettings);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test("should create specific indexTypes for the requested context providers", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["chunk", "codeSnippets"],
+            },
+          },
+        ];
+
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = (await (
+          indexer as any
+        ).getIndexesToBuild()) as CodebaseIndex[];
+
+        expect(indexes).toHaveLength(2);
+        expect(indexes[0].artifactId).toBe("chunks");
+        expect(indexes[1].artifactId).toBe("codeSnippets");
+      });
+
+      test("should handle duplicate contexts", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+        ];
+
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = await (indexer as any).getIndexesToBuild();
+
+        expect(indexes).toHaveLength(1);
+        expect(indexes[0].artifactId).toBe("codeSnippets");
+      });
+    });
+  });
+
+  describe("wasAnyOneIndexAdded", () => {
+    let testIndexer: TestCodebaseIndexer;
+    let mockGetIndexesToBuild: jest.MockedFunction<any>;
+
+    beforeEach(() => {
+      testIndexer = new TestCodebaseIndexer(
+        testConfigHandler,
+        testIde,
+        mockMessenger as any,
+        false,
+      );
+
+      // Mock getIndexesToBuild to control what indexes should be built
+      mockGetIndexesToBuild = jest
+        .spyOn(testIndexer as any, "getIndexesToBuild")
+        .mockResolvedValue([]);
+
+      jest
+        .spyOn(testIndexer, "refreshCodebaseIndex")
+        .mockImplementation(async () => {});
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test("should return true when indexes to build differ from built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex2];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(true);
+    });
+
+    test("should return true when there are more indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1, mockIndex2]);
+      (testIndexer as any).builtIndexes = [mockIndex1];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(true);
+    });
+
+    test("should return false when there are fewer indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(false);
     });
   });
 });

@@ -1,13 +1,18 @@
 import * as YAML from "yaml";
 import { ZodError } from "zod";
+import { mergeConfigYamlRequestOptions, RequestOptions } from "../browser.js";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
   decodeFQSN,
   decodePackageIdentifier,
   encodeFQSN,
+  encodePackageIdentifier,
+  encodePackageSlug,
   FQSN,
   PackageIdentifier,
+  PackageSlug,
+  packageSlugsEqual,
 } from "../interfaces/slugs.js";
 import { markdownToRule } from "../markdown/index.js";
 import {
@@ -45,12 +50,12 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       "cause" in e &&
       e.cause === "result.success was false"
     ) {
-      throw new Error(`Failed to parse assistant: ${e.message}`);
+      throw new Error(`Failed to parse agent: ${e.message}`);
     } else if (e instanceof ZodError) {
-      throw new Error(`Failed to parse assistant: ${formatZodError(e)}`);
+      throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
     } else {
       throw new Error(
-        `Failed to parse assistant: ${e instanceof Error ? e.message : e}`,
+        `Failed to parse agent: ${e instanceof Error ? e.message : e}`,
       );
     }
   }
@@ -65,7 +70,7 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
-    throw new Error(`Failed to parse unrolled assistant: ${formatZodError(e)}`);
+    throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
   }
 }
 
@@ -197,6 +202,9 @@ async function extractRenderedSecretsMap(
 export interface BaseUnrollAssistantOptions {
   renderSecrets: boolean;
   injectBlocks?: PackageIdentifier[];
+  allowlistedBlocks?: PackageSlug[];
+  blocklistedBlocks?: PackageSlug[];
+  injectRequestOptions?: RequestOptions;
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -262,7 +270,14 @@ export async function unrollAssistantFromContent(
     config: unrolledAssistant,
     configLoadInterrupted,
     errors,
-  } = await unrollBlocks(parsedYaml, registry, options.injectBlocks);
+  } = await unrollBlocks(
+    parsedYaml,
+    registry,
+    options.injectBlocks,
+    options.allowlistedBlocks,
+    options.blocklistedBlocks,
+    options.injectRequestOptions,
+  );
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -290,20 +305,55 @@ export async function unrollAssistantFromContent(
   const renderedYaml = renderTemplateData(templatedYaml, { secrets });
 
   // Parse again and replace models with proxy versions where secrets weren't rendered
-  const finalConfig = useProxyForUnrenderedSecrets(
+  const renderedConfig = useProxyForUnrenderedSecrets(
     parseAssistantUnrolled(renderedYaml),
     id,
     options.orgScopeId,
     options.onPremProxyUrl,
   );
 
-  return { config: finalConfig, errors, configLoadInterrupted };
+  return { config: renderedConfig, errors, configLoadInterrupted };
+}
+
+function isPackageAllowed(
+  pkgId: PackageIdentifier,
+  allowlistedBlocks?: PackageSlug[],
+  blocklistedBlocks?: PackageSlug[],
+): boolean {
+  // Only "slug" type blocks can be allow/block listed
+  if (pkgId.uriType !== "slug") {
+    return true;
+  }
+
+  const packageSlug = {
+    ownerSlug: pkgId.fullSlug.ownerSlug,
+    packageSlug: pkgId.fullSlug.packageSlug,
+  };
+
+  if (
+    allowlistedBlocks &&
+    !allowlistedBlocks.some((block) => packageSlugsEqual(block, packageSlug))
+  ) {
+    return false;
+  }
+
+  if (
+    blocklistedBlocks &&
+    blocklistedBlocks.some((block) => packageSlugsEqual(block, packageSlug))
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
+  allowlistedBlocks?: PackageSlug[],
+  blocklistedBlocks?: PackageSlug[],
+  injectRequestOptions?: RequestOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
@@ -317,11 +367,27 @@ export async function unrollBlocks(
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
+    requestOptions: assistant.requestOptions,
   };
+
+  if (injectRequestOptions) {
+    unrolledAssistant.requestOptions = mergeConfigYamlRequestOptions(
+      assistant.requestOptions,
+      injectRequestOptions,
+    );
+  } else {
+    unrolledAssistant.requestOptions = assistant.requestOptions;
+  }
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema" | "metadata"
+    | "name"
+    | "version"
+    | "rules"
+    | "schema"
+    | "metadata"
+    | "env"
+    | "requestOptions"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel
@@ -336,8 +402,29 @@ export async function unrollBlocks(
         // "uses/with" block
         if ("uses" in unrolledBlock) {
           try {
+            const blockIdentifier = decodePackageIdentifier(unrolledBlock.uses);
+
+            if (
+              !isPackageAllowed(
+                blockIdentifier,
+                allowlistedBlocks,
+                blocklistedBlocks,
+              )
+            ) {
+              throw new Error(
+                `${
+                  blockIdentifier.uriType === "slug"
+                    ? encodePackageSlug({
+                        ownerSlug: blockIdentifier.fullSlug.ownerSlug,
+                        packageSlug: blockIdentifier.fullSlug.packageSlug,
+                      })
+                    : encodePackageIdentifier(blockIdentifier)
+                } is block listed and can not be used.`,
+              );
+            }
+
             const blockConfigYaml = await resolveBlock(
-              decodePackageIdentifier(unrolledBlock.uses),
+              blockIdentifier,
               unrolledBlock.with,
               registry,
             );

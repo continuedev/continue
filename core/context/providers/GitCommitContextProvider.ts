@@ -44,6 +44,10 @@ class GitCommitContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  get deprecationMessage() {
+    return "The git commits context provider is now deprecated and may be removed in a later version. Please consider using the Git MCP (https://hub.continue.dev/docker/mcp-git) instead.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,

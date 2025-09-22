@@ -78,7 +78,7 @@
         },
         "reasoning": {
           "title": "Reasoning",
-          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models",
           "type": "boolean"
         },
         "reasoningBudgetTokens": {
@@ -233,7 +233,8 @@
             "morph",
             "ovhcloud",
             "venice",
-            "inception"
+            "inception",
+            "tars"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -283,7 +284,8 @@
             "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard).",
             "### OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR. To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).",
             "### Venice\n Venice.AI is a privacy-focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data.\nHosted models support the OpenAI API standard, providing seamless integration for users seeking privacy and flexibility.\nTo get started with the Venice API, either purchase a pro account, stake $VVV for daily inference allotments, or fund your account with USD.\nVisit the [API settings page](https://venice.ai/settings/api) or learn more at the [Venice API documentation](https://venice.ai/api).",
-            "### Inception\n Inception Labs offer a new generation of diffusion-based LLMs.\nVisit the [API settings page](https://platform.inceptionlabs.ai/) or learn more at the [Inception docs](https://platform.inceptionlabs.ai/docs)."
+            "### Inception\n Inception Labs offer a new generation of diffusion-based LLMs.\nVisit the [API settings page](https://platform.inceptionlabs.ai/) or learn more at the [Inception docs](https://platform.inceptionlabs.ai/docs).",
+            "### TARS\nTARS is an OpenAI-compatible proxy router. To get started, obtain an API key and configure the provider in your config.json."
           ],
           "type": "string"
         },

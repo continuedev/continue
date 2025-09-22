@@ -1,14 +1,10 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
-import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
-import {
-  setLastNonEditSessionEmpty,
-  updateEditStateApplyState,
-} from "../redux/slices/editState";
+import { setLastNonEditSessionEmpty } from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   initializeProfilePreferences,
@@ -17,27 +13,22 @@ import {
   setSelectedProfile,
 } from "../redux/slices/profilesSlice";
 import {
-  acceptToolCall,
   addContextItemsAtIndex,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
-  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { exitEdit } from "../redux/thunks/edit";
-import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
 
-import { store } from "../redux/store";
+import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
+import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
-import { findToolCallById, logToolUsage } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
-import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -51,9 +42,7 @@ function ParallelListeners() {
     (store) => store.profiles.selectedProfileId,
   );
   const hasDoneInitialConfigLoad = useRef(false);
-  const autoAcceptEditToolDiffs = useAppSelector(
-    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
-  );
+
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
 
@@ -91,12 +80,13 @@ function ParallelListeners() {
         document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
       }
 
-      if (
-        configResult.config?.selectedModelByRole.chat?.completionOptions
-          ?.reasoning
-      ) {
-        dispatch(setHasReasoningEnabled(true));
-      }
+      const chatModel = configResult.config?.selectedModelByRole.chat;
+      const supportsReasoning = modelSupportsReasoning(chatModel);
+      const isReasoningDisabled =
+        chatModel?.completionOptions?.reasoning === false;
+      dispatch(
+        setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
+      );
     },
     [dispatch, hasDoneInitialConfigLoad],
   );
@@ -235,83 +225,9 @@ function ParallelListeners() {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      if (state.streamId === EDIT_MODE_STREAM_ID) {
-        dispatch(updateEditStateApplyState(state));
-
-        if (state.status === "closed") {
-          const toolCallState = findToolCallById(
-            store.getState().session.history,
-            state.toolCallId!,
-          );
-          if (toolCallState) {
-            logToolUsage(toolCallState, true, true, ideMessenger);
-          }
-          void dispatch(exitEdit({}));
-        }
-      } else {
-        // chat or agent
-        dispatch(updateApplyState(state));
-
-        // Handle apply status updates - use toolCallId from event payload
-        if (state.toolCallId) {
-          if (state.status === "done" && autoAcceptEditToolDiffs) {
-            ideMessenger.post("acceptDiff", {
-              streamId: state.streamId,
-              filepath: state.filepath,
-            });
-          }
-          if (state.status === "closed") {
-            // Find the tool call to check if it was canceled
-            const toolCallState = findToolCallById(
-              store.getState().session.history,
-              state.toolCallId,
-            );
-
-            if (toolCallState) {
-              const accepted = toolCallState.status !== "canceled";
-
-              logToolUsage(toolCallState, accepted, true, ideMessenger);
-
-              // Log edit outcome for Agent Mode
-              const applyState = store
-                .getState()
-                .session.codeBlockApplyStates.states.find(
-                  (s) => s.streamId === state.streamId,
-                );
-
-              if (applyState) {
-                void logAgentModeEditOutcome(
-                  toolCallState,
-                  applyState,
-                  accepted,
-                  ideMessenger,
-                );
-              }
-
-              if (accepted) {
-                dispatch(
-                  acceptToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
-                void dispatch(
-                  streamResponseAfterToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
-              }
-            }
-            // const output: ContextItem = {
-            //   name: "Edit tool output",
-            //   content: "Completed edit",
-            //   description: "",
-            // };
-            // dispatch(setToolCallOutput([]));
-          }
-        }
-      }
+      void dispatch(handleApplyStateUpdate(state));
     },
-    [autoAcceptEditToolDiffs, ideMessenger],
+    [],
   );
 
   useEffect(() => {

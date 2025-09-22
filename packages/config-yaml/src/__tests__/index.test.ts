@@ -107,7 +107,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant-with-non-existing-block",
+          packageSlug: "agent-with-non-existing-block",
           versionSlug: "latest",
         },
       },
@@ -130,7 +130,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant",
+          packageSlug: "agent",
           versionSlug: "latest",
         },
       },
@@ -221,7 +221,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant",
+          packageSlug: "agent",
           versionSlug: "latest",
         },
       },
@@ -276,7 +276,7 @@ describe("E2E Scenarios", () => {
     const unrolledConfig = await unrollAssistant(
       {
         uriType: "file",
-        fileUri: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
+        fileUri: "./src/__tests__/local-files/duplicate-test-agent.yaml",
       },
       registry,
       {
@@ -328,6 +328,168 @@ describe("E2E Scenarios", () => {
         "Duplicate mcpServers named Browser search detected",
       ),
     ).toBe(true);
+  });
+
+  it("should throw when a block is blocklisted", async () => {
+    const result = await unrollAssistant(
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "agent",
+          versionSlug: "latest",
+        },
+      },
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        blocklistedBlocks: [
+          {
+            ownerSlug: "test-org",
+            packageSlug: "gemini",
+          },
+        ],
+      },
+    );
+
+    // Should contain an error about the blocklisted block
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.length).toBeGreaterThan(0);
+    expect(
+      result.errors?.some((error) =>
+        error.message.includes(
+          "test-org/gemini is block listed and can not be used.",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("should return an error when a block is not on the allowlist", async () => {
+    const result = await unrollAssistant(
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "agent",
+          versionSlug: "latest",
+        },
+      },
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        allowlistedBlocks: [
+          {
+            ownerSlug: "test-org",
+            packageSlug: "docs",
+          },
+          {
+            ownerSlug: "test-org",
+            packageSlug: "rules",
+          },
+          {
+            ownerSlug: "test-org",
+            packageSlug: "claude35sonnet",
+          },
+        ],
+      },
+    );
+
+    // Should contain an error about the non-allowlisted block (gemini)
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.length).toBeGreaterThan(0);
+    expect(
+      result.errors?.some((error) =>
+        error.message.includes(
+          "test-org/gemini is block listed and can not be used.",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("should allow blocks when they are on the allowlist", async () => {
+    const result = await unrollAssistant(
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "agent",
+          versionSlug: "latest",
+        },
+      },
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        allowlistedBlocks: [
+          {
+            ownerSlug: "test-org",
+            packageSlug: "docs",
+          },
+          {
+            ownerSlug: "test-org",
+            packageSlug: "rules",
+          },
+          {
+            ownerSlug: "test-org",
+            packageSlug: "gemini",
+          },
+          {
+            ownerSlug: "test-org",
+            packageSlug: "claude35sonnet",
+          },
+        ],
+      },
+    );
+
+    // Should successfully unroll without errors for allowed blocks
+    expect(result.config?.models?.length).toBe(4);
+    expect(result.config?.rules?.length).toBe(2);
+    expect(result.config?.docs?.length).toBe(1);
+  });
+
+  it("should not affect file-based blocks with allow/blocklists", async () => {
+    const result = await unrollAssistant(
+      {
+        uriType: "file",
+        fileUri: "./src/__tests__/local-files/duplicate-test-agent.yaml",
+      },
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        blocklistedBlocks: [
+          {
+            ownerSlug: "test-org",
+            packageSlug: "docs",
+          },
+        ],
+        injectBlocks: [
+          {
+            uriType: "file",
+            fileUri: "./src/__tests__/local-files/rules.yaml",
+          },
+        ],
+      },
+    );
+
+    // File-based blocks should not be affected by blocklists
+    expect(result.config?.models?.length).toBe(1);
+    expect(result.config?.context?.length).toBe(1);
+    expect(result.config?.rules?.length).toBeGreaterThan(0);
   });
 
   it.skip("should prioritize org over user / package secrets", () => {});

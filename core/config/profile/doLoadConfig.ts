@@ -11,7 +11,6 @@ import {
 import {
   ContinueConfig,
   IDE,
-  IdeSettings,
   ILLMLogger,
   RuleWithSource,
   SerializedContinueConfig,
@@ -20,9 +19,8 @@ import {
 } from "../../";
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
+import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
-import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
@@ -71,7 +69,6 @@ async function loadRules(ide: IDE) {
 }
 export default async function doLoadConfig(options: {
   ide: IDE;
-  ideSettingsPromise: Promise<IdeSettings>;
   controlPlaneClient: ControlPlaneClient;
   llmLogger: ILLMLogger;
   overrideConfigJson?: SerializedContinueConfig;
@@ -83,7 +80,6 @@ export default async function doLoadConfig(options: {
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
-    ideSettingsPromise,
     controlPlaneClient,
     llmLogger,
     overrideConfigJson,
@@ -96,8 +92,9 @@ export default async function doLoadConfig(options: {
 
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
-  const ideSettings = await ideSettingsPromise;
+  const ideSettings = await ide.getIdeSettings();
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
+  const isSignedIn = await controlPlaneClient.isSignedIn();
 
   // Migrations for old config files
   // Removes
@@ -157,17 +154,13 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-  newConfig.contextProviders.push(new RulesContextProvider({}));
 
-  // Add current file as context if setting is enabled
-  if (
-    newConfig.experimental?.useCurrentFileAsContext === true &&
-    !newConfig.contextProviders.find(
-      (c) =>
-        c.description.title === CurrentFileContextProvider.description.title,
-    )
-  ) {
-    newConfig.contextProviders.push(new CurrentFileContextProvider({}));
+  const proxyContextProvider = newConfig.contextProviders?.find(
+    (cp) => cp.description.title === "continue-proxy",
+  );
+  if (proxyContextProvider) {
+    (proxyContextProvider as ContinueProxyContextProvider).workOsAccessToken =
+      workOsAccessToken;
   }
 
   // Show deprecation warnings for providers
@@ -194,7 +187,6 @@ export default async function doLoadConfig(options: {
   const mcpManager = MCPManagerSingleton.getInstance();
   const mcpServerStatuses = mcpManager.getStatuses();
 
-  // Slightly hacky just need connection's client to make slash command for now
   const serializableStatuses = mcpServerStatuses.map((server) => {
     const { client, ...rest } = server;
     return rest;
@@ -285,6 +277,9 @@ export default async function doLoadConfig(options: {
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
+      isSignedIn,
+      isRemote: await ide.isWorkspaceRemote(),
+      modelName: newConfig.selectedModelByRole.chat?.model,
     }),
   );
 
@@ -333,11 +328,13 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  if (
-    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
-    false
-  ) {
+  // Org policies
+  const policy = PolicySingleton.getInstance().policy?.policy;
+  if (policy?.allowAnonymousTelemetry === false) {
     newConfig.allowAnonymousTelemetry = false;
+  }
+  if (policy?.allowCodebaseIndexing === false) {
+    newConfig.disableIndexing = true;
   }
 
   // Setup telemetry only after (and if) we know it is enabled
@@ -373,7 +370,7 @@ export default async function doLoadConfig(options: {
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
 
-  const env = await getControlPlaneEnv(ideSettingsPromise);
+  const env = await getControlPlaneEnv(Promise.resolve(ideSettings));
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
     : env.DEFAULT_CONTROL_PLANE_PROXY_URL;

@@ -6,12 +6,13 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 
+import { isSecurityConcern } from "../indexing/ignore.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
-import { renderPromptWithTokenLimit } from "./templating/index.js";
 import { getAllSnippetsWithoutRace } from "./snippets/index.js";
+import { renderPromptWithTokenLimit } from "./templating/index.js";
 import { GetLspDefinitionsFunction } from "./types.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
@@ -150,6 +151,10 @@ export class CompletionProvider {
         return undefined;
       }
 
+      if (isSecurityConcern(input.filepath)) {
+        return undefined;
+      }
+
       const options = await this._getAutocompleteOptions(llm);
 
       // Debounce
@@ -209,12 +214,6 @@ export class CompletionProvider {
       } else {
         const multiline =
           !helper.options.transform || shouldCompleteMultiline(helper);
-
-        const rawGeneration = await llm.complete(
-          prompt,
-          token,
-          completionOptions,
-        );
 
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(

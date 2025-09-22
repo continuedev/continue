@@ -249,7 +249,13 @@ export class BedrockApi implements BaseLlmApi {
         // TOOL CALLS
         if (message.tool_calls) {
           for (const toolCall of message.tool_calls) {
-            if (toolCall.id && toolCall.function?.name) {
+            // Type guard for function tool calls
+            if (
+              toolCall.type === "function" &&
+              "function" in toolCall &&
+              toolCall.id &&
+              toolCall.function?.name
+            ) {
               if (availableTools.has(toolCall.function.name)) {
                 currentBlocks.push({
                   toolUse: {
@@ -268,6 +274,10 @@ export class BedrockApi implements BaseLlmApi {
                   text: toolCallText,
                 });
               }
+            } else {
+              console.warn(
+                `Unsupported tool call type in Bedrock: ${toolCall.type}`,
+              );
             }
           }
         }
@@ -327,15 +337,22 @@ export class BedrockApi implements BaseLlmApi {
 
     if (oaiBody.tools && oaiBody.tools.length > 0) {
       toolConfig = {
-        tools: oaiBody.tools.map((tool) => ({
-          toolSpec: {
-            name: tool.function.name,
-            description: tool.function.description,
-            inputSchema: {
-              json: tool.function.parameters,
-            },
-          },
-        })),
+        tools: oaiBody.tools.map((tool) => {
+          // Type guard for function tools
+          if (tool.type === "function" && "function" in tool) {
+            return {
+              toolSpec: {
+                name: tool.function.name,
+                description: tool.function.description,
+                inputSchema: {
+                  json: tool.function.parameters,
+                },
+              },
+            };
+          } else {
+            throw new Error(`Unsupported tool type in Bedrock: ${tool.type}`);
+          }
+        }),
       } as ToolConfiguration;
 
       // Add cache point if needed
@@ -344,7 +361,9 @@ export class BedrockApi implements BaseLlmApi {
       // }
 
       oaiBody.tools.forEach((tool) => {
-        availableTools.add(tool.function.name);
+        if (tool.type === "function" && "function" in tool) {
+          availableTools.add(tool.function.name);
+        }
       });
     }
 

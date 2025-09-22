@@ -10,11 +10,11 @@ function logDomText() {
   const doc = parser.parseFromString(bodyText, "text/html");
   let cleaned = doc.body.textContent ?? "";
   cleaned = cleaned?.replace(
-    "No resultsAaModelsRulesDocsPromptsToolsMCPCreate your first assistant",
+    "No resultsAaModelsRulesDocsPromptsToolsMCPCreate your first agent",
     "",
   );
   cleaned = cleaned?.replace(
-    "Alt⏎ Active file⏎ Enter⏎Log in to access a free trial of theModels Add-OnLog in to Continue HubOr, configure your own models",
+    /[⌘Ctrl]+⏎ (?:No )?[Aa]ctive file⏎ Enter⏎Log in to access a free trial of theModels Add-OnLog in to Continue HubOr, configure your own models/,
     "",
   );
   cleaned = cleaned.replaceAll("Select model", "");

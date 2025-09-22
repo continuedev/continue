@@ -120,7 +120,7 @@ jobs:
 
       # # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
@@ -152,7 +152,7 @@ jobs:
 
       # # Setup Node.js
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -189,6 +189,8 @@ jobs:
           cd ../../gui
           npm ci
           npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
 
       # Run prepackage.js script
       - name: Run prepackage script
@@ -255,6 +257,7 @@ jobs:
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
         if: github.event_name == 'release' || (github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -265,6 +268,7 @@ jobs:
 
       - name: Publish Stable Plugin
         if: github.event_name == 'release' || (github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -366,7 +370,7 @@ jobs:
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -433,7 +437,7 @@ jobs:
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
@@ -455,12 +459,6 @@ jobs:
         with:
           name: tests-result
           path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
-
-      # Upload the Kover report to CodeCov
-      # - name: Upload Code Coverage Report
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     files: ${{ github.workspace }}/build/reports/kover/report.xml
 
   # Run Qodana inspections and provide report
   inspectCode:
@@ -486,7 +484,7 @@ jobs:
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
@@ -517,7 +515,7 @@ jobs:
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17

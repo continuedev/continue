@@ -4,18 +4,15 @@ import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
 import com.github.continuedev.continueintellijextension.ToastType
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.protocol.ApplyToFileParams
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Handles applying text to a file with streaming diff preview
@@ -49,7 +46,7 @@ class ApplyToFileHandler(
         }
 
         // Handle search/replace mode
-        if (params.isSearchReplace == true) {
+        if (params.isSearchAndReplace == true) {
             handleSearchReplace(editorUtils)
             return
         }
@@ -94,7 +91,8 @@ class ApplyToFileHandler(
             highlighted = currentContent, // Current file content
             suffix = "",                  // No suffix since we're rewriting the whole file
             modelTitle = null,            // No model needed for search/replace instant apply
-            includeRulesInSystemMessage = false // No LLM involved, just diff generation
+            includeRulesInSystemMessage = false, // No LLM involved, just diff generation
+            isApply = true
         )
     }
 
@@ -118,37 +116,13 @@ class ApplyToFileHandler(
             toolCallId = params.toolCallId.toString()
         )
 
-        continuePluginService.sendToWebview("updateApplyState", payload)
+        project.getBrowser()?.sendToWebview("updateApplyState", payload)
     }
 
     private suspend fun fetchApplyLLMConfig(): Any? {
-        return try {
-            suspendCancellableCoroutine { continuation ->
-                continuePluginService.coreMessenger?.request(
-                    "config/getSerializedProfileInfo", null, null
-                ) { response ->
-                    try {
-                        val selectedModels = response.castNestedOrNull<Map<String, Any>>(
-                            "content", "result", "config", "selectedModelByRole"
-                        )
-
-                        // If "apply" role model is not found, try "chat" role
-                        val applyCodeBlockModel = selectedModels?.get("apply") ?: selectedModels?.get("chat")
-
-                        if (applyCodeBlockModel != null) {
-                            continuation.resume(applyCodeBlockModel)
-                        } else {
-                            // If neither "apply" nor "chat" models are available, return with exception
-                            continuation.resumeWithException(IllegalStateException("No 'apply' or 'chat' model found in configuration."))
-                        }
-                    } catch (e: Exception) {
-                        continuation.resumeWithException(e)
-                    }
-                }
-            }
-        } catch (_: Exception) {
-            null
-        }
+        val selectedModelByRole = project.service<ProfileInfoService>().fetchSelectedModelByRoleOrNull()
+        return selectedModelByRole?.get("apply")
+            ?: selectedModelByRole?.get("chat")
     }
 
     private fun setupAndStreamDiffs(editorUtils: EditorUtils, llm: Any) {
@@ -172,7 +146,7 @@ class ApplyToFileHandler(
 
         // Stream the diffs
         diffStreamHandler.streamDiffLinesToEditor(
-            prompt, prefix, highlighted, suffix, llmTitle, false
+            prompt, prefix, highlighted, suffix, llmTitle, false, true
         )
     }
 

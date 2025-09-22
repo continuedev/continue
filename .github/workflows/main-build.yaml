@@ -24,17 +24,19 @@ jobs:
 
       - name: Get merged PR number
         id: get-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the commit message of the merge commit
-          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
-          echo "Commit message: $COMMIT_MSG"
+          # Get PR number for the current commit using GitHub API
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "Getting PR for commit: $COMMIT_SHA"
 
-          # Extract PR number from merge commit message (format: "Merge pull request #123 from...")
-          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -o "Merge pull request #[0-9]*" | grep -o "[0-9]*" || echo "6723")
+          PR_NUMBER=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls" \
+            | jq -r '.[0].number // empty')
 
           if [ -z "$PR_NUMBER" ]; then
-            echo "❌ Could not extract PR number from commit message. This might not be a PR merge."
-            echo "Commit message was: $COMMIT_MSG"
+            echo "❌ Could not find PR for commit $COMMIT_SHA"
             exit 1
           fi
 

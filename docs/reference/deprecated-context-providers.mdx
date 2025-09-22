@@ -1,0 +1,448 @@
+---
+title: "Context Providers (Deprecated)"
+description: "These context providers have been deprecated and are no longer actively maintained. They remain documented here for reference purposes only."
+noindex: true
+---
+
+<Warning>
+The context providers documented on this page have been deprecated and are no longer actively maintained. We recommend using alternative solutions or the Model Context Protocol (MCP) for similar functionality. These providers may be removed in future versions.
+</Warning>
+
+## Deprecated Providers
+
+The following context providers have been deprecated but are kept here for reference. If you're currently using any of these providers, consider migrating to alternative solutions.
+
+### `@Greptile`
+
+Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: greptile
+        params:
+          greptileToken: "..."
+          githubToken: "..."
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "greptile",
+          "params": { "GreptileToken": "...", "GithubToken": "..." }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+### `@Commits`
+
+Reference specific git commit metadata and diff or all of the recent commits.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: commit
+        params:
+          Depth: 50
+          LastXCommitsDepth: 10
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        { "name": "commit", "params": { "Depth": 50, "LastXCommitsDepth": 10 } }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+The depth is how many commits will be loaded into the submenu, defaults to 50. The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
+
+### `@Discord`
+
+Reference the messages in a Discord channel.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: discord
+        params:
+          discordKey: "bot token"
+          guildId: "1234567890"
+          channels:
+            - id: "123456"
+              name: "example-channel"
+            - id: "678901"
+              name: "example-channel-2"
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "discord",
+          "params": {
+            "discordKey": "bot token",
+            "guildId": "1234567890",
+            "channels": [
+              { "id": "123456", "name": "example-channel" },
+              { "id": "678901", "name": "example-channel-2" }
+            ]
+          }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
+
+### `@Jira`
+
+Reference the conversation in a Jira issue.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: jira
+        params:
+          domain: company.atlassian.net
+          token: ATATT...
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "jira",
+          "params": { "domain": "company.atlassian.net", "token": "ATATT..." }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
+
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: jira
+        params:
+          apiVersion: "2"
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    { "contextProviders": [{ "name": "jira", "params": { "apiVersion": "2" } }] }
+    ```
+  </Tab>
+</Tabs>
+
+#### Issue Query
+
+By default, the following query will be used to find issues:
+
+```
+assignee = currentUser() AND resolution = Unresolved order by updated DESC
+```
+
+You can override this query by setting the `issueQuery` parameter.
+
+#### Max results
+
+You can set the `maxResults` parameter to limit the number of results returned. The default is `50`.
+
+### `@Gitlab Merge Request`
+
+Reference an open MR for this branch on GitLab.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: gitlab-mr
+        params:
+          token: "..."
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    { "contextProviders": [{ "name": "gitlab-mr", "params": { "token": "..." } }] }
+    ```
+  </Tab>
+</Tabs>
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope.
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: gitlab-mr
+        params:
+          token: "..."
+          domain: "gitlab.example.com"
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "gitlab-mr",
+          "params": { "token": "...", "domain": "gitlab.example.com" }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
+### `@Google`
+
+Reference the results of a Google search.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: google
+        params:
+          serperApiKey: <YOUR_SERPER.DEV_API_KEY>
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "google",
+          "params": { "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>" }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
+
+Note: You can get an API key for free at [serper.dev](https://serper.dev).
+
+### @Database Context Provider – Reference Database Table Schemas
+
+Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: database
+        params:
+          connections:
+            - name: examplePostgres
+              connection_type: postgres
+              connection:
+                user: username
+                host: localhost
+                database: exampleDB
+                password: yourPassword
+                port: 5432
+            - name: exampleMssql
+              connection_type: mssql
+              connection:
+                user: username
+                server: localhost
+                database: exampleDB
+                password: yourPassword
+            - name: exampleSqlite
+              connection_type: sqlite
+              connection:
+                filename: /path/to/your/sqlite/database.db
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "database",
+          "params": {
+            "connections": [
+              {
+                "name": "examplePostgres",
+                "connection_type": "postgres",
+                "connection": {
+                  "user": "username",
+                  "host": "localhost",
+                  "database": "exampleDB",
+                  "password": "yourPassword",
+                  "port": 5432
+                }
+              },
+              {
+                "name": "exampleMssql",
+                "connection_type": "mssql",
+                "connection": {
+                  "user": "username",
+                  "server": "localhost",
+                  "database": "exampleDB",
+                  "password": "yourPassword"
+                }
+              },
+              {
+                "name": "exampleSqlite",
+                "connection_type": "sqlite",
+                "connection": { "filename": "/path/to/your/sqlite/database.db" }
+              }
+            ]
+          }
+      }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
+
+Available connection types:
+
+- `postgres`
+- `mysql`
+- `sqlite`
+
+### `@Issue`
+
+Reference the conversation in a GitHub issue.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: issue
+        params:
+          repos:
+            - owner: continuedev
+              repo: continue
+          githubToken: ghp_xxx
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "issue",
+          "params": {
+            "repos": [{ "owner": "continuedev", "repo": "continue" }],
+            "githubToken": "ghp_xxx"
+          }
+        }
+      ]
+    }
+```
+  </Tab>
+</Tabs>
+
+Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
+
+### `@Url`
+
+Reference the markdown converted contents of a given URL.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: url
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    { "contextProviders": [{ "name": "url" }] }
+    ```
+  </Tab>
+</Tabs>
+
+### `@Search`
+
+Reference the results of codebase search, just like the results you would get from VS Code search.
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: search
+        params:
+          maxResults: 100 # optional, defaults to 200
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    {
+      "contextProviders": [
+        {
+          "name": "search",
+          "params": {
+            "maxResults": 100 // optional, defaults to 200
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
+
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+Optionally, set `n` to limit the number of results returned (default 6).
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml config.yaml
+    context:
+      - provider: web
+        params:
+          n: 5
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json config.json
+    { "contextProviders": [{ "name": "web", "params": { "n": 5 } }] }
+    ```
+  </Tab>
+</Tabs>

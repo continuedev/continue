@@ -9,6 +9,17 @@ export const viewDiffImpl: ToolImpl = async (args, extras) => {
   // TODO includeUnstaged should be an option
 
   const combinedDiff = diffs.join("\n");
+
+  if (!combinedDiff.trim()) {
+    return [
+      {
+        name: "Diff",
+        description: "current Git diff",
+        content: "The current diff is empty",
+      },
+    ];
+  }
+
   const diffLines = combinedDiff.split("\n");
 
   let truncated = false;
@@ -29,8 +40,8 @@ export const viewDiffImpl: ToolImpl = async (args, extras) => {
 
   if (truncated) {
     contextItems.push({
-      name: "Diff truncation warning",
-      description: "Informs that git diff was truncated",
+      name: "Truncation warning",
+      description: "",
       content: `The git diff was truncated because it exceeded ${DEFAULT_GIT_DIFF_LINE_LIMIT} lines. Consider viewing specific files or focusing on smaller changes.`,
     });
   }

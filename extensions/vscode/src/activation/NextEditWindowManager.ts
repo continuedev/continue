@@ -41,10 +41,11 @@ const SVG_CONFIG = {
   // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
   //       drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
   //       drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
-  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
-        drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
-        drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
-        drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+  //       drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
+  //       drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
+  //       drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  filter: "none",
   radius: 3,
   leftMargin: 40,
   defaultText: "",
@@ -97,6 +98,11 @@ export const HIDE_NEXT_EDIT_SUGGESTION_COMMAND =
 export const ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND =
   "continue.nextEditWindow.acceptNextEditSuggestion";
 
+/**
+ * This is where we create SVG windows and deletion decorations for non-FIM next edit suggestions.
+ * This class controls the decoration object lifetime.
+ * The syntax highlighting and the actual building of SVG happens inside core/codeRenderer/CodeRenderer.ts.
+ */
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
 
@@ -121,6 +127,11 @@ export class NextEditWindowManager {
   // Helps us skip redundant calculations. No need for cleanup because this always gets reassigned with new values at showNextEditWindow, and we don't reuse windows.
   private editableRegionStartLine: number = 0;
   private editableRegionEndLine: number = 0;
+
+  // State tracking for key reservation.
+  // By default it is set to free, and is only set to reserved when the transition is done.
+  private keyReservationState: "free" | "reserved" | "transitioning" = "free";
+  private latestOperationId = 0;
 
   // Disposables
   private disposables: vscode.Disposable[] = [];
@@ -170,20 +181,71 @@ export class NextEditWindowManager {
     this.loggingService = NextEditLoggingService.getInstance();
   }
 
+  // This is an implementation of last-action-wins.
+  // For each action that fires setKeyReservation, it keeps its own operationId while incrementing latestOperationId.
+  // When an action completes, checking for operationId === latestOperationId will determine which one came last.
+  private async setKeyReservation(reserve: boolean): Promise<void> {
+    // Increment and capture this operation's ID.
+    const operationId = ++this.latestOperationId;
+
+    // Return early when already in desired state.
+    if (
+      (reserve && this.keyReservationState === "reserved") ||
+      (!reserve && this.keyReservationState === "free")
+    ) {
+      return;
+    }
+
+    try {
+      await this.performKeyReservation(reserve);
+
+      // Only update state if we're still the latest operation.
+      if (operationId === this.latestOperationId) {
+        this.keyReservationState = reserve ? "reserved" : "free";
+      }
+    } catch (err) {
+      console.error(`Failed to set nextEditWindowActive to ${reserve}: ${err}`);
+
+      // Only reset to free if we're still the latest operation.
+      if (operationId === this.latestOperationId) {
+        this.keyReservationState = "free";
+      }
+      throw err;
+    }
+  }
+
+  public async resetKeyReservation(): Promise<void> {
+    // Reset internal tracking.
+    this.keyReservationState = "free";
+    this.latestOperationId = 0;
+
+    // Ensure VS Code context matches.
+    try {
+      await this.performKeyReservation(false);
+    } catch (err) {
+      console.error(`Failed to reset nextEditWindowActive context: ${err}`);
+    }
+  }
+
+  private async performKeyReservation(reserve: boolean): Promise<void> {
+    try {
+      await vscode.commands.executeCommand(
+        "setContext",
+        "nextEditWindowActive",
+        reserve,
+      );
+    } catch (err) {
+      console.error(`Failed to set nextEditWindowActive to ${reserve}: ${err}`);
+      throw err;
+    }
+  }
+
   public static async reserveTabAndEsc() {
-    await vscode.commands.executeCommand(
-      "setContext",
-      "nextEditWindowActive",
-      true,
-    );
+    await NextEditWindowManager.getInstance().setKeyReservation(true);
   }
 
   public static async freeTabAndEsc() {
-    await vscode.commands.executeCommand(
-      "setContext",
-      "nextEditWindowActive",
-      false,
-    );
+    await NextEditWindowManager.getInstance().setKeyReservation(false);
   }
 
   /**
@@ -202,7 +264,8 @@ export class NextEditWindowManager {
 
     // Set nextEditWindowActive to false to free esc and tab,
     // letting them return to their original behaviors.
-    await NextEditWindowManager.freeTabAndEsc();
+    await this.resetKeyReservation();
+    // await NextEditWindowManager.freeTabAndEsc();
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
@@ -351,31 +414,51 @@ export class NextEditWindowManager {
       );
     }
 
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
     // Create and apply decoration with the text.
     if (newEditRangeSlice !== "") {
-      await this.renderWindow(
-        editor,
-        currCursorPos,
-        oldEditRangeSlice,
-        newEditRangeSlice,
-        this.editableRegionStartLine,
-        diffLines,
-      );
+      try {
+        await this.renderWindow(
+          editor,
+          currCursorPos,
+          oldEditRangeSlice,
+          newEditRangeSlice,
+          this.editableRegionStartLine,
+          diffLines,
+          diffChars,
+        );
+      } catch (error) {
+        console.error("Failed to render window:", error);
+        // Clean up and reset state.
+        await this.hideAllNextEditWindows();
+        return;
+      }
     }
-
-    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
     this.renderDeletions(editor, diffChars);
 
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
-    await NextEditWindowManager.reserveTabAndEsc();
+    try {
+      await NextEditWindowManager.reserveTabAndEsc();
+    } catch (err) {
+      console.error(
+        `Error reserving Tab/Esc after showing decorations: ${err}`,
+      );
+      await this.hideAllNextEditWindows();
+      return;
+    }
   }
 
   /**
    * Hide all tooltips in all editors.
    */
   public async hideAllNextEditWindows() {
-    await NextEditWindowManager.freeTabAndEsc();
+    try {
+      await NextEditWindowManager.freeTabAndEsc();
+    } catch (err) {
+      console.error(`Error freeing Tab/Esc while hiding: ${err}`);
+    }
 
     if (this.currentDecoration) {
       vscode.window.visibleTextEditors.forEach((editor) => {
@@ -416,9 +499,6 @@ export class NextEditWindowManager {
     this.mostRecentCompletionId = null;
   }
 
-  /**
-   * Accept the current next edit suggestion by inserting it at cursor position.
-   */
   /**
    * Accept the current next edit suggestion by inserting it at cursor position.
    */
@@ -502,6 +582,10 @@ export class NextEditWindowManager {
    * Dispose of the NextEditWindowManager.
    */
   public dispose() {
+    void this.resetKeyReservation().catch((err) =>
+      console.error(`Failed to reset keys on dispose: ${err}`),
+    );
+
     // Dispose current decoration.
     if (this.currentDecoration) {
       this.currentDecoration.dispose();
@@ -604,6 +688,7 @@ export class NextEditWindowManager {
     text: string,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -628,6 +713,7 @@ export class NextEditWindowManager {
         },
         currLineOffsetFromTop,
         newDiffLines,
+        diffChars,
       );
 
       return {
@@ -651,12 +737,14 @@ export class NextEditWindowManager {
     position: vscode.Position,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
       predictedCode,
       currLineOffsetFromTop,
       newDiffLines,
+      diffChars,
     );
     if (!uriAndDimensions) {
       return undefined;
@@ -760,15 +848,6 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     position: vscode.Position,
   ): vscode.Position {
-    // Create a position that's offset spaces to the right of the cursor.
-
-    // const line = editor.document.lineAt(position.line);
-    // const offsetChar = Math.min(
-    //   position.character + SVG_CONFIG.cursorOffset,
-    //   line.text.length,
-    // );
-    // return new vscode.Position(position.line, offsetChar);
-
     // Place decoration at the end of the current line
     const line = editor.document.lineAt(position.line);
     return new vscode.Position(position.line, line.text.length);
@@ -784,6 +863,7 @@ export class NextEditWindowManager {
     predictedCode: string,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ) {
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
@@ -795,6 +875,7 @@ export class NextEditWindowManager {
       position,
       editableRegionStartLine,
       newDiffLines,
+      diffChars,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
@@ -871,7 +952,6 @@ export class NextEditWindowManager {
 
     const deleteDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: "rgba(255, 0, 0, 0.5)",
-      textDecoration: "line-through",
     });
 
     editor.setDecorations(deleteDecorationType, charsToDelete);

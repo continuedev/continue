@@ -107,9 +107,30 @@ export async function fetchwithRequestOptions(
       : new protocol.Agent(agentOptions);
 
   let headers: { [key: string]: string } = {};
-  for (const [key, value] of Object.entries(init?.headers || {})) {
-    headers[key] = value as string;
+
+  // Handle different header formats
+  if (init?.headers) {
+    const headersSource = init.headers as any;
+
+    // Check if it's a Headers-like object (OpenAI v5 HeadersList, standard Headers)
+    if (headersSource && typeof headersSource.forEach === "function") {
+      // Use forEach method which works reliably on Headers objects
+      headersSource.forEach((value: string, key: string) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(headersSource)) {
+      // This is an array of [key, value] tuples
+      for (const [key, value] of headersSource) {
+        headers[key] = value as string;
+      }
+    } else if (headersSource && typeof headersSource === "object") {
+      // This is a plain object
+      for (const [key, value] of Object.entries(headersSource)) {
+        headers[key] = value as string;
+      }
+    }
   }
+
   headers = {
     ...headers,
     ...requestOptions?.headers,

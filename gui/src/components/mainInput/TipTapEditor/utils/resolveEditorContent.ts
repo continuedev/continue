@@ -196,7 +196,7 @@ async function gatherContextItems({
     );
     if (currentFileResponse.status === "success") {
       const currentFile = currentFileResponse.content[0];
-      if (currentFile.uri?.value) {
+      if (currentFile?.uri?.value) {
         currentFile.id = {
           providerTitle: "file",
           itemId: currentFile.uri.value,

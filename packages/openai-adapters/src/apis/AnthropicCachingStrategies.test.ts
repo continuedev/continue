@@ -219,14 +219,16 @@ describe("AnthropicCachingStrategies", () => {
       expect(result.messages).toEqual([{ content: smallContent }]);
     });
 
-    it("should cache large text items in array content", () => {
+    it("should cache large text items in array content but only once per message", () => {
       const largeText = "a".repeat(2100); // ~525 tokens
+      const anotherLargeText = "b".repeat(2100); // Also ~525 tokens
       const smallText = "a".repeat(100); // ~25 tokens
       const body = {
         messages: [
           {
             content: [
               { type: "text", text: largeText },
+              { type: "text", text: anotherLargeText },
               { type: "text", text: smallText },
               { type: "image", data: "image_data" },
             ],
@@ -236,6 +238,7 @@ describe("AnthropicCachingStrategies", () => {
 
       const result = CACHING_STRATEGIES.optimized(body);
 
+      // Only the first large text item should get cache_control
       expect(result.messages).toEqual([
         {
           content: [
@@ -244,6 +247,7 @@ describe("AnthropicCachingStrategies", () => {
               text: largeText,
               cache_control: { type: "ephemeral" },
             },
+            { type: "text", text: anotherLargeText },
             { type: "text", text: smallText },
             { type: "image", data: "image_data" },
           ],

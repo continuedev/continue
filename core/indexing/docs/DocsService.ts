@@ -272,7 +272,7 @@ export default class DocsService {
         id: doc.startUrl,
         isReindexing: false,
         title: doc.title,
-        debugInfo: `max depth: ${doc.maxDepth}`,
+        debugInfo: `max depth: ${doc.maxDepth ?? "unlimited"}`,
         icon: doc.faviconUrl,
         url: doc.startUrl,
       };
@@ -468,7 +468,7 @@ export default class DocsService {
       embeddingsProviderId: provider.embeddingId,
       isReindexing: forceReindex && indexExists,
       title: siteIndexingConfig.title,
-      debugInfo: `max depth: ${siteIndexingConfig.maxDepth}`,
+      debugInfo: `max depth: ${siteIndexingConfig.maxDepth ?? "unlimited"}`,
       icon: siteIndexingConfig.faviconUrl,
       url: siteIndexingConfig.startUrl,
     };
@@ -856,6 +856,27 @@ export default class DocsService {
     }
 
     return docs.map(this.lanceDBRowToChunk);
+  }
+
+  async getIndexedPages(startUrl: string): Promise<Set<string>> {
+    try {
+      const table = await this.getOrCreateLanceTable({
+        initializationVector: [],
+        startUrl,
+      });
+
+      const rows = (await table
+        .filter(`starturl = '${startUrl}'`)
+        .select(["path"]) // Only select path to minimize data transfer
+        .limit(99999999) // Default is 10, we want to show all
+        .execute()) as { path: string }[];
+
+      // Get unique paths (pages)
+      return new Set(rows.map((row) => row.path));
+    } catch (e) {
+      console.warn(`Error getting page list for ${startUrl}:`, e);
+      return new Set();
+    }
   }
 
   // SQLITE DB

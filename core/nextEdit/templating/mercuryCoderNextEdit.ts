@@ -3,6 +3,8 @@ import {
   MERCURY_CODE_TO_EDIT_CLOSE,
   MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_CURSOR,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN,
 } from "../constants";
 import { insertCursorToken } from "./utils";
 
@@ -11,8 +13,10 @@ export function recentlyViewedCodeSnippetsBlock(
 ) {
   return recentlyViewedCodeSnippets.reduce((acc, snippet, i) => {
     const block = [
+      MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN,
       `code_snippet_file_path: ${snippet.filepath}`,
       snippet.content,
+      MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE,
     ].join("\n");
 
     return (

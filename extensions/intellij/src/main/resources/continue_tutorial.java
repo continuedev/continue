@@ -58,6 +58,6 @@ public static int[] sortingAlgorithm2(int[] x) {
 //            the model to make decisions and save you the work of manually finding context and performing actions.
 
 // 1. Switch from "Chat" to "Agent" mode using the dropdown in the bottom left of the input box
-// 2. Try asking Continue "Write unit tests for this code in a new file and run the test"
+// 2. Use the "/init" slash command to generate a CONTINUE.md file
 
 // ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— //

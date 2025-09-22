@@ -1,4 +1,4 @@
-import com.github.continuedev.continueintellijextension.actions.focusContinueInput
+import com.github.continuedev.continueintellijextension.actions.FocusActionUtil
 import com.github.continuedev.continueintellijextension.editor.openInlineEdit
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -8,9 +8,9 @@ import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.geom.RoundRectangle2D
 import java.util.*
 import javax.swing.JButton
-import java.awt.geom.RoundRectangle2D
 
 class StyledButton(text: String) : JButton(text) {
     private var isHovered = false
@@ -92,7 +92,7 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         editButton = StyledButton("Edit (${cmdCtrlChar}+I)")
 
         addToChatButton.addActionListener { e: ActionEvent? ->
-            focusContinueInput(editor.project)
+            FocusActionUtil.sendHighlightedCodeWithMessageToWebview(editor.project, "focusContinueInputWithNewSession")
             editor.contentComponent.remove(this)
         }
         editButton.addActionListener { e: ActionEvent? ->

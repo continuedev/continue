@@ -39,13 +39,13 @@ export type GlobalContextType = {
    */
   hasDismissedConfigTsNoticeJetBrains: boolean;
   hasAlreadyCreatedAPromptFile: boolean;
+  hasShownUnsupportedPlatformWarning: boolean;
   showConfigUpdateToast: boolean;
   isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
   failedDocs: SiteIndexingConfig[];
-  shownDeprecatedProviderWarnings: {
-    [providerTitle: string]: boolean;
-  };
+  shownDeprecatedProviderWarnings: { [providerTitle: string]: boolean };
+  autoUpdateCli: boolean;
   mcpOauthStorage: {
     [serverUrl: string]: {
       clientInformation?: OAuthClientInformationFull;
@@ -65,16 +65,7 @@ export class GlobalContext {
   ) {
     const filepath = getGlobalContextFilePath();
     if (!fs.existsSync(filepath)) {
-      fs.writeFileSync(
-        filepath,
-        JSON.stringify(
-          {
-            [key]: value,
-          },
-          null,
-          2,
-        ),
-      );
+      fs.writeFileSync(filepath, JSON.stringify({ [key]: value }, null, 2));
     } else {
       const data = fs.readFileSync(filepath, "utf-8");
 
@@ -112,10 +103,7 @@ export class GlobalContext {
         }
 
         // Recreate the file with salvaged values plus the new value
-        const newData = {
-          ...salvaged,
-          [key]: value,
-        };
+        const newData = { ...salvaged, [key]: value };
 
         fs.writeFileSync(filepath, JSON.stringify(newData, null, 2));
         return;
@@ -173,10 +161,7 @@ export class GlobalContext {
     newValues: Partial<SharedConfigSchema>,
   ): SharedConfigSchema {
     const currentSharedConfig = this.getSharedConfig();
-    const updatedSharedConfig = {
-      ...currentSharedConfig,
-      ...newValues,
-    };
+    const updatedSharedConfig = { ...currentSharedConfig, ...newValues };
     this.update("sharedConfig", updatedSharedConfig);
     return updatedSharedConfig;
   }
@@ -188,10 +173,7 @@ export class GlobalContext {
   ): GlobalContextModelSelections {
     const currentSelections = this.get("selectedModelsByProfileId") ?? {};
     const forProfile = currentSelections[profileId] ?? {};
-    const newSelections = {
-      ...forProfile,
-      [role]: title,
-    };
+    const newSelections = { ...forProfile, [role]: title };
 
     this.update("selectedModelsByProfileId", {
       ...currentSelections,

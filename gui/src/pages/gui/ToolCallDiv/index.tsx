@@ -7,7 +7,7 @@ import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
-import { getStatusIcon, toolCallIcons } from "./utils";
+import { getIconByName, getStatusIcon } from "./utils";
 
 interface ToolCallDivProps {
   toolCallStates: ToolCallState[];
@@ -37,7 +37,10 @@ export function ToolCallDiv({
       (tool) => toolCallState.toolCall.function?.name === tool.function.name,
     );
     const functionName = toolCallState.toolCall.function?.name;
-    const icon = functionName && toolCallIcons[functionName];
+    const icon =
+      functionName && tool?.toolCallIcon
+        ? getIconByName(tool.toolCallIcon)
+        : undefined;
 
     if (icon) {
       return (
@@ -54,7 +57,11 @@ export function ToolCallDiv({
     // Obviously missing the truncate and args buttons
     // All the info from args is displayed here
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
-    if (functionName === BuiltInToolNames.SearchAndReplaceInFile) {
+    if (
+      functionName === BuiltInToolNames.SingleFindAndReplace ||
+      functionName === BuiltInToolNames.MultiEdit ||
+      functionName === BuiltInToolNames.RunTerminalCommand
+    ) {
       return (
         <div className="flex flex-col px-1">
           <FunctionSpecificToolCallDiv

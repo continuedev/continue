@@ -1,5 +1,5 @@
 import { ChunkWithoutID } from "../..";
-
+import { cleanupAsyncEncoders, countTokensAsync } from "../../llm/countTokens";
 import { codeChunker } from "./code";
 
 async function genToArr<T>(generator: AsyncGenerator<T>): Promise<T[]> {
@@ -69,5 +69,62 @@ describe.skip("codeChunker", () => {
     // The extra spaces seem to be a bug with tree-sitter-python
     expect(chunks).toContain('def method1():\n        return "Hello, 1!"');
     expect(chunks).toContain('def method20():\n        return "Hello, 20!"');
+  });
+});
+
+async function collectContents(
+  filepath: string,
+  contents: string,
+  maxChunkSize: number,
+): Promise<string[]> {
+  const out: string[] = [];
+  for await (const c of codeChunker(filepath, contents, maxChunkSize)) {
+    out.push(c.content);
+  }
+  return out;
+}
+
+describe("codeChunker function definition", () => {
+  afterAll(async () => await cleanupAsyncEncoders());
+
+  test("class methods never exceed maxChunkSize", async () => {
+    const body = Array.from(
+      { length: 200 },
+      (_, i) => `console.log(${i});`,
+    ).join("\n");
+    const contents = `
+class C {
+  a() {
+    ${body}
+  }
+  b() {
+    ${body}
+  }
+}
+`;
+    const max = 50;
+    const chunks = await collectContents("filename1.ts", contents, max);
+    const counts = await Promise.all(chunks.map((s) => countTokensAsync(s)));
+    counts.forEach((n) => expect(n).toBeLessThanOrEqual(max));
+  });
+
+  test("top-level functions never exceed maxChunkSize", async () => {
+    const body = Array.from(
+      { length: 150 },
+      (_, i) => `const x${i} = ${i};`,
+    ).join("\n");
+    const contents = `
+function f() {
+  ${body}
+}
+
+function g() {
+  ${body}
+}
+`;
+    const max = 60;
+    const chunks = await collectContents("filename2.ts", contents, max);
+    const counts = await Promise.all(chunks.map((s) => countTokensAsync(s)));
+    counts.forEach((n) => expect(n).toBeLessThanOrEqual(max));
   });
 });

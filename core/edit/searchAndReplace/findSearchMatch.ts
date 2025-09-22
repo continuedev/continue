@@ -4,7 +4,7 @@
 interface BasicMatchResult {
   /** The starting character index of the match in the file content */
   startIndex: number;
-  /** The ending character index of the match in the file content */
+  /** The ending character index of the match in the file content (NOT inclusive - e.g. like slice)*/
   endIndex: number;
 }
 
@@ -43,48 +43,20 @@ function exactMatch(
 
 /**
  * Trimmed content matching strategy
- * Finds content where the search content (when trimmed) matches content in the file,
- * and returns the span that includes the file content's whitespace
  */
 function trimmedMatch(
   fileContent: string,
   searchContent: string,
 ): BasicMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
-
-  // Don't apply if search content has no leading/trailing whitespace to trim
-  if (trimmedSearchContent === searchContent) {
-    return null;
+  const trimmedIndex = fileContent.indexOf(trimmedSearchContent);
+  if (trimmedIndex !== -1) {
+    return {
+      startIndex: trimmedIndex,
+      endIndex: trimmedIndex + trimmedSearchContent.length,
+    };
   }
-
-  // Don't match if trimmed content is empty
-  if (trimmedSearchContent === "") {
-    return null;
-  }
-
-  // Look for the trimmed content in the file
-  const trimmedContentIndex = fileContent.indexOf(trimmedSearchContent);
-  if (trimmedContentIndex === -1) {
-    return null;
-  }
-
-  // Find the boundaries that include surrounding whitespace (but not newlines)
-  // Look backwards for horizontal whitespace (spaces and tabs)
-  let startIndex = trimmedContentIndex;
-  while (startIndex > 0 && /[ \t]/.test(fileContent[startIndex - 1])) {
-    startIndex--;
-  }
-
-  // Look forwards for horizontal whitespace (spaces and tabs)
-  let endIndex = trimmedContentIndex + trimmedSearchContent.length;
-  while (endIndex < fileContent.length && /[ \t]/.test(fileContent[endIndex])) {
-    endIndex++;
-  }
-
-  return {
-    startIndex,
-    endIndex,
-  };
+  return null;
 }
 
 /**
@@ -109,32 +81,38 @@ function whitespaceIgnoredMatch(
   }
 
   // Map the stripped position back to the original file content
-  let originalStartIndex = 0;
+  let originalStartIndex = -1;
   let strippedCharCount = 0;
 
-  // Find the original position by counting non-whitespace characters
+  // Find the original start position by counting non-whitespace characters
   for (let i = 0; i < fileContent.length; i++) {
-    if (strippedCharCount === strippedIndex) {
-      originalStartIndex = i;
-      break;
-    }
     if (!/\s/.test(fileContent[i])) {
+      if (strippedCharCount === strippedIndex) {
+        originalStartIndex = i;
+        break;
+      }
       strippedCharCount++;
     }
   }
 
-  // Find the end position by counting the length of the search content
-  let originalEndIndex = originalStartIndex;
-  let matchedChars = 0;
+  if (originalStartIndex === -1) {
+    return null; // Should not happen if strippedIndex was valid
+  }
 
-  for (
-    let i = originalStartIndex;
-    i < fileContent.length && matchedChars < strippedSearchContent.length;
-    i++
-  ) {
+  // Find the end position by counting through all characters (including whitespace)
+  // that correspond to the stripped search content length
+  let originalEndIndex = originalStartIndex;
+  let matchedNonWhitespaceChars = 0;
+
+  for (let i = originalStartIndex; i < fileContent.length; i++) {
     if (!/\s/.test(fileContent[i])) {
-      matchedChars++;
+      matchedNonWhitespaceChars++;
+      if (matchedNonWhitespaceChars === strippedSearchContent.length) {
+        originalEndIndex = i + 1;
+        break;
+      }
     }
+    // Always update end index to include current position (whether whitespace or not)
     originalEndIndex = i + 1;
   }
 
@@ -146,6 +124,7 @@ function whitespaceIgnoredMatch(
 
 /**
  * Calculate the Jaro similarity between two strings
+ * TODO Restore this functionality - current implementation has some kind of bug where it only returns one line for the match
  */
 function jaroSimilarity(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
@@ -306,7 +285,7 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
   { strategy: exactMatch, name: "exactMatch" },
   { strategy: trimmedMatch, name: "trimmedMatch" },
   { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
-  { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
+  // { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
 ];
 
 /**
@@ -326,24 +305,10 @@ export function findSearchMatch(
   fileContent: string,
   searchContent: string,
 ): SearchMatchResult | null {
-  // Handle truly empty search content
-  if (searchContent === "") {
-    return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
-  }
-
-  // Handle whitespace-only search content that trims to empty
   const trimmedSearchContent = searchContent.trim();
+
   if (trimmedSearchContent === "") {
-    // Check if the whitespace-only search content has an exact match first
-    const exactIndex = fileContent.indexOf(searchContent);
-    if (exactIndex !== -1) {
-      return {
-        startIndex: exactIndex,
-        endIndex: exactIndex + searchContent.length,
-        strategyName: "exactMatch",
-      };
-    }
-    // If no exact match for whitespace-only content, treat as empty search
+    // Empty search content matches the beginning of the file
     return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
   }
 
@@ -356,4 +321,59 @@ export function findSearchMatch(
   }
 
   return null;
+}
+
+/**
+ * Find all matches for search content in file content.
+ * Uses the same matching strategies as findSearchMatch, applied iteratively.
+ *
+ * @param fileContent - The complete content of the file to search in
+ * @param searchContent - The content to search for
+ * @returns Array of match results with character positions, empty array if no matches found
+ */
+export function findSearchMatches(
+  fileContent: string,
+  searchContent: string,
+): SearchMatchResult[] {
+  const matches: SearchMatchResult[] = [];
+
+  // Special case: empty search string always matches at position 0
+  if (searchContent.trim() === "") {
+    return [{ startIndex: 0, endIndex: 0, strategyName: "emptySearch" }];
+  }
+
+  let remainingContent = fileContent;
+  let currentOffset = 0;
+
+  while (remainingContent.length > 0) {
+    const match = findSearchMatch(remainingContent, searchContent);
+
+    if (match === null) {
+      break;
+    }
+
+    // Adjust match positions to account for the current offset
+    const adjustedMatch: SearchMatchResult = {
+      startIndex: match.startIndex + currentOffset,
+      endIndex: match.endIndex + currentOffset,
+      strategyName: match.strategyName,
+    };
+
+    // Prevent infinite loops by ensuring we're making progress
+    // If the new match starts at or before the last match's start position, break
+    if (
+      matches.length > 0 &&
+      adjustedMatch.startIndex <= matches[matches.length - 1].startIndex
+    ) {
+      break;
+    }
+
+    matches.push(adjustedMatch);
+
+    // Update offset and truncate content after the current match
+    currentOffset = adjustedMatch.endIndex;
+    remainingContent = fileContent.slice(currentOffset);
+  }
+
+  return matches;
 }

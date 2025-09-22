@@ -37,7 +37,6 @@ class MessageTypes {
             "applyToFile",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -83,6 +82,7 @@ class MessageTypes {
             "devdata/log",
             "config/addModel",
             "config/newPromptFile",
+            "config/newAssistantFile",
             "config/ideSettingsUpdate",
             "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
@@ -134,16 +134,19 @@ class MessageTypes {
             "indexing/setPaused",
             "docs/initStatuses",
             "docs/getDetails",
+            "docs/getIndexedPages",
             //
             "onboarding/complete",
             "addAutocompleteModel",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
+            "tools/evaluatePolicy",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

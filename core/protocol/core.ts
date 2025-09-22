@@ -4,6 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
+import { ToolPolicy } from "@continuedev/terminal-security";
 
 import {
   AutocompleteInput,
@@ -34,7 +35,7 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  SessionMetadata,
+  BaseSessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -48,9 +49,12 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import { FreeTrialStatus } from "../control-plane/client";
-import { NextEditOutcome } from "../nextEdit/types";
+import {
+  FreeTrialStatus,
+  RemoteSessionMetadata,
+} from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
+import { NextEditOutcome } from "../nextEdit/types";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -70,9 +74,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionMetadata[]];
+  "history/list": [
+    ListHistoryOptions,
+    (BaseSessionMetadata | RemoteSessionMetadata)[],
+  ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
+  "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
   "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
@@ -87,6 +95,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
+  "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
@@ -285,12 +294,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
+  "docs/getIndexedPages": [{ startUrl: string }, string[]];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
     { contextItems: ContextItem[]; errorMessage?: string },
+  ];
+  "tools/evaluatePolicy": [
+    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    { policy: ToolPolicy; displayValue?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
@@ -307,5 +321,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "process/killTerminalProcess": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };

@@ -10,16 +10,16 @@ import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 
-export const ASSISTANTS = "assistants";
-export const ASSISTANTS_FOLDER = `.continue/${ASSISTANTS}`;
-
 export function isLocalDefinitionFile(uri: string): boolean {
   if (!uri.endsWith(".yaml") && !uri.endsWith(".yml") && !uri.endsWith(".md")) {
     return false;
   }
 
   const normalizedUri = URI.normalize(uri);
-  return normalizedUri.includes(`/${ASSISTANTS_FOLDER}/`);
+  return (
+    normalizedUri.includes(`/.continue/agents/`) ||
+    normalizedUri.includes(`/.continue/assistants/`)
+  );
 }
 
 async function getDefinitionFilesInDir(
@@ -35,7 +35,11 @@ async function getDefinitionFilesInDir(
     }
 
     const overrideDefaultIgnores = ignore()
-      .add(DEFAULT_IGNORE_FILETYPES.filter((t) => t !== "config.yaml"))
+      .add(
+        DEFAULT_IGNORE_FILETYPES.filter(
+          (t) => t !== "config.yaml" && t !== "config.yml",
+        ),
+      )
       .add(DEFAULT_IGNORE_DIRS);
 
     const uris = await walkDir(dir, ide, {
