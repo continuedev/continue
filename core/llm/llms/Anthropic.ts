@@ -68,6 +68,17 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
+  private buildTextPart(text: string, addCaching: boolean) {
+    const part: any = {
+      type: "text",
+      text,
+    };
+    if (addCaching) {
+      part.cache_control = { type: "ephemeral" };
+    }
+    return part;
+  }
+
   private convertMessage(message: ChatMessage, addCaching: boolean): any {
     if (message.role === "tool") {
       return {
@@ -81,14 +92,30 @@ class Anthropic extends BaseLLM {
         ],
       };
     } else if (message.role === "assistant" && message.toolCalls) {
-      return {
-        role: "assistant",
-        content: message.toolCalls.map((toolCall) => ({
+      const parts: any[] = [];
+      if (message.content) {
+        if (typeof message.content === "string") {
+          parts.push(this.buildTextPart(message.content, addCaching));
+        } else if (message.content.length > 0) {
+          const textContent = message.content.filter((p) => p.type === "text");
+          const textParts = textContent.map((part, idx) => {
+            const cache = idx === textContent.length - 1 && addCaching;
+            return this.buildTextPart(part.text, cache);
+          });
+          parts.push(...textParts);
+        }
+      }
+      parts.push(
+        ...message.toolCalls.map((toolCall) => ({
           type: "tool_use",
           id: toolCall.id,
           name: toolCall.function?.name,
           input: safeParseToolCallArgs(toolCall),
         })),
+      );
+      return {
+        role: "assistant",
+        content: parts,
       };
     } else if (message.role === "thinking" && !message.redactedThinking) {
       return {
@@ -154,9 +181,7 @@ class Anthropic extends BaseLLM {
 
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
-    const filteredmessages = msgs.filter(
-      (m) => m.role !== "system" && !!m.content,
-    );
+    const filteredmessages = msgs.filter((m) => m.role !== "system");
     const lastTwoUserMsgIndices = filteredmessages
       .map((msg, index) => (msg.role === "user" ? index : -1))
       .filter((index) => index !== -1)

@@ -173,6 +173,11 @@ export interface ModelInstaller {
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
+export type ContextIndexingType =
+  | "chunk"
+  | "embeddings"
+  | "fullTextSearch"
+  | "codeSnippets";
 
 export interface ContextProviderDescription {
   title: ContextProviderName;
@@ -180,7 +185,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
-  dependsOnIndexing?: boolean;
+  dependsOnIndexing?: ContextIndexingType[];
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -267,7 +272,7 @@ export interface Session {
   history: ChatHistoryItem[];
 }
 
-export interface SessionMetadata {
+export interface BaseSessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;
@@ -1084,11 +1089,6 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
-
 export interface Tool {
   type: "function";
   function: {
@@ -1113,6 +1113,11 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
+  toolCallIcon?: string;
+  evaluateToolCallPolicy?: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ) => ToolPolicy;
 }
 
 interface ToolChoice {
@@ -1291,6 +1296,7 @@ export interface MCPOptions {
   transport: TransportOptions;
   faviconUrl?: string;
   timeout?: number;
+  requestOptions?: RequestOptions;
 }
 
 export type MCPConnectionStatus =
@@ -1343,6 +1349,7 @@ export interface MCPTool {
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];
+  infos: string[];
   isProtectedResource: boolean;
 
   prompts: MCPPrompt[];
@@ -1397,9 +1404,12 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  autoFormattingDiff?: string;
 }
 
-export interface StreamDiffLinesPayload {
+export type StreamDiffLinesType = "edit" | "apply";
+interface StreamDiffLinesOptionsBase {
+  type: StreamDiffLinesType;
   prefix: string;
   highlighted: string;
   suffix: string;
@@ -1409,6 +1419,19 @@ export interface StreamDiffLinesPayload {
   includeRulesInSystemMessage: boolean;
   fileUri?: string;
 }
+
+interface StreamDiffLinesOptionsEdit extends StreamDiffLinesOptionsBase {
+  type: "edit";
+}
+
+interface StreamDiffLinesOptionsApply extends StreamDiffLinesOptionsBase {
+  type: "apply";
+  newCode: string;
+}
+
+type StreamDiffLinesPayload =
+  | StreamDiffLinesOptionsApply
+  | StreamDiffLinesOptionsEdit;
 
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
@@ -1817,6 +1840,7 @@ export interface RuleWithSource {
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
+  invokable?: boolean;
 }
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;

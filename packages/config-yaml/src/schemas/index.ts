@@ -57,6 +57,7 @@ const ruleObjectSchema = z.object({
   globs: z.union([z.string(), z.array(z.string())]).optional(),
   regex: z.union([z.string(), z.array(z.string())]).optional(),
   alwaysApply: z.boolean().optional(),
+  invokable: z.boolean().optional(),
   sourceFile: z.string().optional(), //TODO refactor RuleWithSource.ruleFile to align with sourceFile
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
@@ -116,6 +117,7 @@ export const baseConfigYamlSchema = z.object({
   schema: z.string().optional(),
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
   env: envRecord.optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 const modelsUsesSchema = z
@@ -261,6 +263,7 @@ export const configSchema = z.object({
   api_base: z.string().optional(),
   api_key: z.string().optional(),
   env: envRecord.optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

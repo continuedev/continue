@@ -30,7 +30,7 @@ sidebarTitle: "OpenAI"
     "models": [
       {
         "title": "<MODEL_NAME>",
-        "provider": "openai", 
+        "provider": "openai",
         "model": "<MODEL_ID>",
         "apiKey": "<YOUR_OPENAI_API_KEY>"
       }
@@ -56,6 +56,7 @@ OpenAI API compatible providers include
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
 - [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
 - [BerriAI/litellm](https://github.com/BerriAI/litellm)
+- [Tetrate Agent Router Service](https://router.tetrate.ai)
 
 If you are using an OpenAI API compatible providers, you can change the `apiBase` like this:
 
@@ -75,7 +76,7 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   {
     "models": [
       {
-        "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>", 
+        "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>",
         "provider": "openai",
         "model": "<MODEL_NAME>",
         "apiKey": "<YOUR_CUSTOM_API_KEY>",
@@ -110,7 +111,7 @@ To force usage of `chat/completions` instead of `completions` endpoint you can s
         "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>",
         "provider": "openai",
         "model": "<MODEL_NAME>",
-        "apiBase": "http://localhost:8000/v1", 
+        "apiBase": "http://localhost:8000/v1",
         "useLegacyCompletionsEndpoint": true
       }
     ]

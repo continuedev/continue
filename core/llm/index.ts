@@ -30,6 +30,7 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
 import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
@@ -373,7 +374,7 @@ export abstract class BaseLLM implements ILLM {
       },
     });
 
-    if (error === undefined) {
+    if (typeof error === "undefined") {
       interaction?.logItem({
         kind: "success",
         promptTokens,
@@ -383,7 +384,7 @@ export abstract class BaseLLM implements ILLM {
       });
       return "success";
     } else {
-      if (error === "cancel" || error.name === "AbortError") {
+      if (error === "cancel" || error?.name?.includes("AbortError")) {
         interaction?.logItem({
           kind: "cancel",
           promptTokens,
@@ -411,36 +412,25 @@ export abstract class BaseLLM implements ILLM {
   private async parseError(resp: any): Promise<Error> {
     let text = await resp.text();
 
-    if (resp.status === 404) {
-      if (resp.url.includes("api.openai.com")) {
+    if (resp.status === 404 && !resp.url.includes("/v1")) {
+      const parsedError = JSON.parse(text);
+      const errorMessageRaw = parsedError?.error ?? parsedError?.message;
+      const error =
+        typeof errorMessageRaw === "string"
+          ? errorMessageRaw.replace(/"/g, "'")
+          : undefined;
+      let model = error?.match(/model '(.*)' not found/)?.[1];
+      if (model && resp.url.match("127.0.0.1:11434")) {
+        text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+        return new LLMError(text, this); // No need to add HTTP status details
+      } else if (text.includes("/api/chat")) {
         text =
-          "You may need to add pre-paid credits before using the OpenAI API.";
-      } else if (resp.url.includes("/v1")) {
-        // leave text as-is and fall through to generic error handling below
+          "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
       } else {
-        const parsedError = JSON.parse(text);
-        const errorMessageRaw = parsedError?.error ?? parsedError?.message;
-        const error =
-          typeof errorMessageRaw === "string"
-            ? errorMessageRaw.replace(/"/g, "'")
-            : undefined;
-        let model = error?.match(/model '(.*)' not found/)?.[1];
-        if (model && resp.url.match("127.0.0.1:11434")) {
-          text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-          return new LLMError(text, this); // No need to add HTTP status details
-        } else if (text.includes("/api/chat")) {
-          text =
-            "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-        } else {
-          text =
-            "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-        }
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
       }
-    } else if (
-      resp.status === 401 &&
-      (resp.url.includes("api.mistral.ai") ||
-        resp.url.includes("codestral.mistral.ai"))
-    ) {
+    } else if (resp.status === 404 && resp.url.includes("api.openai.com")) {
       text =
         "You may need to add pre-paid credits before using the OpenAI API.";
     } else if (
@@ -517,6 +507,24 @@ export abstract class BaseLLM implements ILLM {
               : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
             throw new Error(message);
           }
+          if (
+            e.code === "ECONNREFUSED" &&
+            e.message.includes("http://localhost:8000")
+          ) {
+            const isInstalled = await isLemonadeInstalled();
+            let message: string;
+            if (process.platform === "linux") {
+              // On Linux, isLemonadeInstalled checks if it's running (via health endpoint)
+              message =
+                "Unable to connect to local Lemonade instance. Please ensure Lemonade is running. Visit http://lemonade-server.ai for setup instructions.";
+            } else {
+              // On Windows, we can check if it's installed
+              message = isInstalled
+                ? "Unable to connect to local Lemonade instance. Lemonade server may not be running."
+                : "Unable to connect to local Lemonade instance. Lemonade may not be installed or may not be running.";
+            }
+            throw new Error(message);
+          }
         }
         throw e;
       }
@@ -551,18 +559,14 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _formatChatMessage(msg: ChatMessage): string {
-    let contentToShow = "";
-    if (msg.role === "tool") {
-      contentToShow = msg.content;
-    } else if (msg.role === "assistant" && msg.toolCalls?.length) {
-      contentToShow = msg.toolCalls
+    let contentToShow = renderChatMessage(msg);
+    if (msg.role === "assistant" && msg.toolCalls?.length) {
+      contentToShow += msg.toolCalls
         ?.map(
           (toolCall) =>
             `${toolCall.function?.name}(${toolCall.function?.arguments})`,
         )
         .join("\n");
-    } else if ("content" in msg) {
-      contentToShow = renderChatMessage(msg);
     }
 
     return `<${msg.role}>\n${contentToShow}\n\n`;
@@ -629,6 +633,7 @@ export abstract class BaseLLM implements ILLM {
               kind: "chunk",
               chunk: formattedContent,
             });
+
             completion += formattedContent;
             yield content;
           }
@@ -644,6 +649,7 @@ export abstract class BaseLLM implements ILLM {
             kind: "chunk",
             chunk,
           });
+
           completion += chunk;
           yield chunk;
         }

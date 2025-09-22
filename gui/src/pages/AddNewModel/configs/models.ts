@@ -1184,42 +1184,27 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  claude35Sonnet: {
-    title: "Claude 3.5 Sonnet",
+  claude4Sonnet: {
+    title: "Claude 4 Sonnet",
     description:
-      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+      "The most intelligent model in the Claude 4 series. Costing lesser than Claude 4 Opus.",
     params: {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-4-sonnet-latest",
       contextLength: 200_000,
-      title: "Claude 3.5 Sonnet",
+      title: "Claude 4 Sonnet",
       apiKey: "",
     },
     providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude3Opus: {
-    title: "Claude 3 Opus",
-    description:
-      "The most capable model in the Claude 3 series, beating GPT-4 on many benchmarks",
+  claude41Opus: {
+    title: "Claude 4.1 Opus",
+    description: "The most capable model in the Claude 4 series",
     params: {
-      model: "claude-3-opus-20240229",
+      model: "claude-opus-4-1-20250805",
       contextLength: 200_000,
-      title: "Claude 3 Opus",
-      apiKey: "",
-    },
-    providerOptions: ["anthropic", "askSage"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
-  claude3Sonnet: {
-    title: "Claude 3 Sonnet",
-    description:
-      "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
-    params: {
-      model: "claude-3-sonnet-20240229",
-      contextLength: 200_000,
-      title: "Claude 3 Sonnet",
+      title: "Claude 4.1 Opus",
       apiKey: "",
     },
     providerOptions: ["anthropic", "askSage"],

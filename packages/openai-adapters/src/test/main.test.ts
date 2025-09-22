@@ -12,6 +12,7 @@ dotenv.config();
 export interface TestConfigOptions {
   skipTools: boolean;
   expectUsage?: boolean;
+  skipSystemMessage?: boolean;
 }
 
 function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
@@ -51,6 +52,20 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "gpt-4o",
     apiKey: process.env.OPENAI_API_KEY!,
     roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
+  },
+  {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    apiKey: process.env.OPENAI_API_KEY!,
+    roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
   },
   {
     provider: "anthropic",
@@ -67,14 +82,31 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "gemini-1.5-flash-latest",
     apiKey: process.env.GEMINI_API_KEY!,
     roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
   },
-  // {
-  //   provider: "mistral",
-  //   model: "codestral-latest",
-  //   apiKey: process.env.MISTRAL_API_KEY!,
-  //   apiBase: "https://api.mistral.ai/v1",
-  //   roles: ["autocomplete"],
-  // },
+  {
+    provider: "gemini",
+    model: "gemini-2.5-flash",
+    apiKey: process.env.GEMINI_API_KEY!,
+    roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
+  },
+  {
+    provider: "mistral",
+    model: "codestral-latest",
+    apiKey: process.env.MISTRAL_API_KEY!,
+    roles: ["chat", "autocomplete"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
+  },
   // {
   //   provider: "deepseek",
   //   model: "deepseek-coder",
@@ -110,6 +142,27 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "rerank-lite-1",
     apiKey: process.env.VOYAGE_API_KEY!,
     roles: ["rerank"],
+  },
+  {
+    provider: "relace",
+    model: "instant-apply",
+    apiKey: process.env.RELACE_API_KEY!,
+    roles: ["chat"],
+    options: {
+      skipTools: true,
+      expectUsage: true,
+      skipSystemMessage: true,
+    },
+  },
+  {
+    provider: "inception",
+    model: "mercury-coder",
+    apiKey: process.env.INCEPTION_API_KEY!,
+    roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
   },
   // {
   //   provider: "cohere",

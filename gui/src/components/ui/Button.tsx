@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "../../util/cn";
 
-type ButtonVariant = "ghost" | "primary" | "secondary" | "outline";
+type ButtonVariant = "ghost" | "primary" | "secondary" | "outline" | "icon";
 type ButtonSize = "sm" | "lg";
 
 type ButtonProps = React.ComponentProps<"button"> & {
@@ -15,9 +15,10 @@ const buttonVariants = {
   secondary:
     "border-none text-foreground bg-border hover:enabled:brightness-125",
   outline:
-    "border border-solid border-badge border-border text-foreground bg-transparent hover:enabled:bg-input",
+    "border border-solid border-description text-foreground bg-transparent hover:enabled:bg-input",
   ghost:
     "border-none text-foreground bg-inherit hover:enabled:brightness-125 hover:enabled:bg-input",
+  icon: "border border-solid border-description text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-input hover:enabled:border-description rounded-full p-0 flex items-center justify-center",
 };
 
 const buttonSizes = {
@@ -25,17 +26,25 @@ const buttonSizes = {
   lg: "px-2 py-1 text-sm",
 };
 
+const iconButtonSizes = {
+  sm: "h-4 w-4",
+  lg: "h-5 w-5",
+};
+
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", size = "lg", className, ...props }, ref) => {
+    const isIcon = variant === "icon";
     return (
       <button
         ref={ref}
         className={cn(
-          "my-1.5 cursor-pointer rounded transition-all duration-200",
+          "cursor-pointer transition-all duration-200",
           "hover:enabled:cursor-pointer",
           "disabled:text-description-muted disabled:pointer-events-none disabled:opacity-50",
           buttonVariants[variant],
-          buttonSizes[size],
+          isIcon
+            ? iconButtonSizes[size]
+            : `my-1.5 rounded ${buttonSizes[size]}`,
           className,
         )}
         style={{

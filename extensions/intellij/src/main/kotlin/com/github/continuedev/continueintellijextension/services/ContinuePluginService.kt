@@ -8,6 +8,7 @@ import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerM
 import com.github.continuedev.continueintellijextension.listeners.DocumentChangeTracker
 import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
 import com.github.continuedev.continueintellijextension.utils.uuid
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.EditorFactory
@@ -20,7 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlin.properties.Delegates
 
 @Service(Service.Level.PROJECT)
-class ContinuePluginService(private val project: Project) : DumbAware {
+class ContinuePluginService(private val project: Project) : Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
     var listener: (() -> Unit)? = null
     var ideProtocolClient: IdeProtocolClient? by Delegates.observable(null) { _, _, _ ->
@@ -57,7 +58,7 @@ class ContinuePluginService(private val project: Project) : DumbAware {
         }
     }
 
-    fun dispose() {
+    override fun dispose() {
         coroutineScope.cancel()
         coreMessenger?.coroutineScope?.let {
             it.cancel()

@@ -16,9 +16,9 @@ import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
+import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
-import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
 import {
   isNewUserOnboarding,
@@ -27,7 +27,6 @@ import {
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
-import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -55,6 +54,9 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isHome =
+    location.pathname === ROUTES.HOME ||
+    location.pathname === ROUTES.HOME_INDEX;
 
   useEffect(() => {
     (async () => {
@@ -90,8 +92,8 @@ const Layout = () => {
     async () => {
       return false;
     },
-    [location.pathname],
-    location.pathname === ROUTES.HOME,
+    [isHome],
+    isHome,
   );
 
   useWebviewListener(
@@ -113,8 +115,8 @@ const Layout = () => {
         );
       }
     },
-    [location.pathname, isInEdit],
-    location.pathname === ROUTES.HOME,
+    [isHome, isInEdit],
+    isHome,
   );
 
   useWebviewListener(
@@ -236,13 +238,10 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    if (
-      isNewUserOnboarding() &&
-      (location.pathname === "/" || location.pathname === "/index.html")
-    ) {
+    if (isNewUserOnboarding() && isHome) {
       onboardingCard.open();
     }
-  }, [location]);
+  }, [isHome]);
 
   return (
     <LocalStorageProvider>
@@ -258,35 +257,34 @@ const Layout = () => {
                 }}
               />
             )}
-            <LumpProvider>
-              <OSRContextMenu />
-              <div
-                style={{
-                  scrollbarGutter: "stable both-edges",
-                  minHeight: "100%",
-                  display: "grid",
-                  gridTemplateRows: "1fr auto",
+            <OSRContextMenu />
+            <div
+              style={{
+                scrollbarGutter: "stable both-edges",
+                minHeight: "100%",
+                display: "grid",
+                gridTemplateRows: "1fr auto",
+              }}
+            >
+              <TextDialog
+                showDialog={showDialog}
+                onEnter={() => {
+                  dispatch(setShowDialog(false));
                 }}
-              >
-                <TextDialog
-                  showDialog={showDialog}
-                  onEnter={() => {
-                    dispatch(setShowDialog(false));
-                  }}
-                  onClose={() => {
-                    dispatch(setShowDialog(false));
-                  }}
-                  message={dialogMessage}
-                />
+                onClose={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                message={dialogMessage}
+              />
 
-                <GridDiv>
-                  <PostHogPageView />
-                  <Outlet />
-                  <FatalErrorIndicator />
-                </GridDiv>
-              </div>
-              <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-            </LumpProvider>
+              <GridDiv>
+                <PostHogPageView />
+                <Outlet />
+                {/* The fatal error for chat is shown below input */}
+                {!isHome && <FatalErrorIndicator />}
+              </GridDiv>
+            </div>
+            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
           </LayoutTopDiv>
         </TelemetryProviders>
       </AuthProvider>

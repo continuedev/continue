@@ -58,6 +58,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
+    z.literal("huggingface-inference-api"),
   ]),
 });
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;

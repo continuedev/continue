@@ -97,7 +97,8 @@ class DiffStreamHandler(
         highlighted: String,
         suffix: String,
         modelTitle: String?,
-        includeRulesInSystemMessage: Boolean
+        includeRulesInSystemMessage: Boolean,
+        isApply: Boolean
     ) {
         isRunning = true
         sendUpdate(ApplyStateStatus.STREAMING)
@@ -112,7 +113,8 @@ class DiffStreamHandler(
                 language = virtualFile?.fileType?.name,
                 modelTitle = modelTitle,
                 includeRulesInSystemMessage = includeRulesInSystemMessage,
-                fileUri = virtualFile?.url
+                fileUri = virtualFile?.url,
+                isApply = isApply
             ),
             null
         ) { response ->

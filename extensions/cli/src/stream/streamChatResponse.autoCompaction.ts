@@ -55,7 +55,7 @@ function handleCompactionSuccess(
 ) {
   if (isHeadless) return;
 
-  const successMessage = "✓ Chat history auto-compacted successfully.";
+  const successMessage = "Chat history auto-compacted successfully.";
 
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(successMessage);
