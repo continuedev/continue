@@ -1,49 +1,49 @@
-name: 'Build VS Code Extension'
-description: 'Build VS Code extension for a specific platform'
+name: "Build VS Code Extension"
+description: "Build VS Code extension for a specific platform"
 inputs:
   platform:
-    description: 'Target platform (win32, linux, alpine, darwin)'
+    description: "Target platform (win32, linux, alpine, darwin)"
     required: true
   arch:
-    description: 'Target architecture (x64, arm64, armhf)'
+    description: "Target architecture (x64, arm64, armhf)"
     required: true
   npm_config_arch:
-    description: 'npm config arch (x64, arm64, arm)'
+    description: "npm config arch (x64, arm64, arm)"
     required: true
   pre-release:
-    description: 'Whether to build as pre-release'
+    description: "Whether to build as pre-release"
     required: false
-    default: 'false'
+    default: "false"
   commit-sha:
-    description: 'Commit SHA for version modification (optional, uses first 7 chars)'
+    description: "Commit SHA for version modification (optional, uses first 7 chars)"
     required: false
-    default: ''
+    default: ""
   github-token:
-    description: 'GitHub token for downloading ripgrep'
+    description: "GitHub token for downloading ripgrep"
     required: true
 outputs:
   target:
-    description: 'The target string used for the build'
+    description: "The target string used for the build"
     value: ${{ steps.set-target.outputs.target }}
   vsix-path:
-    description: 'Path to the generated VSIX file'
-    value: 'extensions/vscode/*.vsix'
+    description: "Path to the generated VSIX file"
+    value: "extensions/vscode/*.vsix"
   build-path:
-    description: 'Path to the build artifacts'
-    value: 'extensions/vscode/build'
+    description: "Path to the build artifacts"
+    value: "extensions/vscode/build"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: actions/setup-node@v4
       with:
         node-version-file: ".nvmrc"
-        
+
     - name: Set target variable
       id: set-target
       shell: bash
       run: echo "target=${{ inputs.platform }}-${{ inputs.arch }}" >> $GITHUB_OUTPUT
-    
+
     - name: Cache npm
       uses: actions/cache@v4
       with:
@@ -114,12 +114,6 @@ runs:
       run: |
         cd extensions/vscode
         npm run prepackage -- --target ${{ steps.set-target.outputs.target }}
-
-    - name: Re-install esbuild
-      shell: bash
-      run: |
-        cd extensions/vscode
-        npm install -f esbuild
 
     - name: Modify package.json version with commit SHA
       if: inputs.commit-sha != ''
