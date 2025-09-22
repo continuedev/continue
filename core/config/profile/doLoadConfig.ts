@@ -161,7 +161,7 @@ export default async function doLoadConfig(options: {
     if (rule.invokable) {
       try {
         const slashCommand = convertRuleBlockToSlashCommand(rule);
-        newConfig.slashCommands?.push(slashCommand);
+        (newConfig.slashCommands ??= []).push(slashCommand);
       } catch (e) {
         errors.push({
           message: `Error converting invokable rule ${rule.name} to slash command: ${e instanceof Error ? e.message : e}`,
