@@ -136,8 +136,9 @@
       "name": "Debug CLI",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/extensions/cli/src/index.ts",
-      "args": [],
+      "program": "${workspaceFolder}/extensions/cli/dist/cn.js",
+      "args": ["serve", "--id", "8623194f-9072-4d18-8d38-7178fafa0cf0"],
+      "runtimeArgs": ["--enable-source-maps"],
       "env": {
         "NODE_ENV": "development"
         // "CONTINUE_API_BASE": "http://localhost:3001/",
@@ -147,8 +148,12 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
-      "runtimeArgs": ["--loader", "ts-node/esm"],
       "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/extensions/cli/dist/**/*.js"],
+      "sourceMapPathOverrides": {
+        "../src/*": "${workspaceFolder}/extensions/cli/src/*",
+        "../../core/*": "${workspaceFolder}/core/*"
+      },
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
         "!**/node_modules/**"
