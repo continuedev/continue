@@ -25,7 +25,7 @@
 
 <div align="center">
 
-**Ship faster with Continuous AI**
+**🚀 The AI coding assistant that helps you ship faster**
 
 **Build and run custom agents across your IDE, terminal, and CI**
 
@@ -33,25 +33,25 @@
 
 Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue), [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension), or [CLI](https://docs.continue.dev/guides/cli)
 
-## Agent
+## AGENT
 
 [Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
 
 ![agent](docs/images/agent.gif)
 
-## Chat
+## CHAT
 
 [Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
 
 ![chat](docs/images/chat.gif)
 
-## Edit
+## EDIT
 
 [Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
 
 ![edit](docs/images/edit.gif)
 
-## Autocomplete
+## AUTOCOMPLETE
 
 [Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
 
@@ -59,11 +59,11 @@ Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Con
 
 </div>
 
-## Contributing
+## CONTRIBUTING
 
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
 join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
 
-## License
+## LICENSE
 
 [Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
