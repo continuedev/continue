@@ -50,6 +50,25 @@ Perfect for project-specific setups like TypeScript rules for web apps or the Pl
 
 </Columns>
 
+## Hub
+
+Continue hub uses a slug in the format of `owner/item-name` to resolve blocks.
+
+For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
+
+Import from the hub using the `uses` syntax alongside your custom configurations:
+
+```yaml config.yaml highlight={6}
+name: Team Agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: anthropic/claude-4-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
+```
+
 ### Organization
 
 Organize your local configurations using these directories:
@@ -70,7 +89,13 @@ Organize your local configurations using these directories:
 
 ## Working with Secrets
 
-Local configurations can use mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) which read from:
+Models, and many MCP servers, require a secret for things like API keys.
+
+On the hub, you can configure secrets when adding a model or MCP server.
+
+This will use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
+
+When configuring a local model or MCP server, you can use the same mustache notation for secrets which read from:
 
 <Columns cols={2}>
 <Card title="Global" icon="globe">
@@ -81,55 +106,6 @@ Local configurations can use mustache notation for secrets (`${{ secrets.SECRET_
 `.env` file at your project root
 </Card>
 </Columns>
-
-## Inputs and Customization
-
-Configurations can accept user inputs for customization by defining an `${{ inputs.SECRET_NAME }}` value.
-
-For example, here is how you could require that the user provide a value for the `apiKey` property on a model:
-
-```yaml title="config.yaml" highlight={8}
-name: myprofile/custom-model
-version: 1.0.0
-schema: v1
-
-models:
-  - name: My Favorite Model
-    # ... other model properties ...
-    apiKey: ${{ inputs.SECRET_NAME }}
-```
-
-Users then map their secret to this input using a `${{ secrets.SECRET_NAME }}` value that maps to a property name which matches the required input, e.g. `SECRET_NAME`. Note that on the hub, this mapping is created automatically for you.
-
-```yaml title="config.yaml" highlight={8}
-name: myprofile/custom-agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: myprofile/custom-model
-    with:
-      SECRET_NAME: ${{ secrets.SECRET_NAME }}
-```
-
-Note that hub secrets can be passed as inputs using the mustache format: `${{ secrets.SECRET_NAME }}`.
-
-## Hub
-
-Hub items are identified by slugs in the format `owner/item-name`. For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
-
-Import from the hub using the `uses` syntax alongside your custom configurations:
-
-```yaml config.yaml highlight={6}
-name: Team Agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: anthropic/claude-4-sonnet
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
-```
 
 ## Overriding Properties
 
@@ -148,6 +124,38 @@ models:
     override:
       roles:
         - chat
+```
+
+## Advanced
+
+### Inputs
+
+Models and MCP server authors can configure inputs that require the user to provide a secret value by defining a `${{ inputs.SECRET_NAME }}` value.
+
+For example, here is how you could require that the user provide a value for the `apiKey` property on a model:
+
+```yaml title="config.yaml" highlight={8}
+name: myprofile/custom-model
+version: 1.0.0
+schema: v1
+
+models:
+  - name: My Favorite Model
+    # ... other model properties ...
+    apiKey: ${{ inputs.SECRET_NAME }}
+```
+
+Users then map their secret to this input using a `${{ secrets.SECRET_NAME }}` value that maps to a property name which matches the required input, e.g. `SECRET_NAME`.
+
+```yaml title="config.yaml" highlight={8}
+name: myprofile/custom-agent
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: myprofile/custom-model
+    with:
+      SECRET_NAME: ${{ secrets.SECRET_NAME }}
 ```
 
 ## Next Steps
