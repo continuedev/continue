@@ -84,6 +84,27 @@ const StyledMarkdown = styled.div<{
     font-family: var(--vscode-editor-font-family);
   }
 
+  ul ul,
+  ul ol,
+  ol ul,
+  ol ol {
+    padding-left: 1.5em;
+    margin-top: 1em;
+  }
+
+  li {
+    margin-bottom: 0.8em;
+  }
+  li:last-child {
+    margin-bottom: 0;
+  }
+
+  ul,
+  ol {
+    padding-left: 2em;
+    padding-y: 1em;
+  }
+
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
   }

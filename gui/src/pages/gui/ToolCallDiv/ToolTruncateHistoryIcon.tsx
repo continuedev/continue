@@ -21,7 +21,7 @@ export function ToolTruncateHistoryIcon({
   const { mainEditor } = useMainEditor();
 
   if (historyIndex === lastMessageIndex) {
-    return null;
+    return <div className="h-3 w-3" />;
   }
 
   return (

@@ -1,5 +1,6 @@
 import { Tool, ToolCallState } from "core";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
@@ -29,6 +30,9 @@ export function ToolCallDisplay({
             )}
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>
+          {!!toolCallState.output?.length && (
+            <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+          )}
         </div>
       </div>
       <div>{children}</div>
