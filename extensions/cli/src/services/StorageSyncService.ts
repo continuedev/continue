@@ -29,7 +29,7 @@ export interface StorageSyncStartOptions {
   accessToken: string;
   intervalMs?: number;
   syncSessionHistory: () => void;
-  getSessionSnapshot: () => unknown;
+  getCompleteStateSnapshot: () => unknown;
   isActive?: () => boolean;
 }
 
@@ -288,7 +288,7 @@ export class StorageSyncService {
 
     try {
       this.options.syncSessionHistory();
-      const snapshot = this.options.getSessionSnapshot();
+      const snapshot = this.options.getCompleteStateSnapshot();
       const sessionPayload = JSON.stringify(snapshot, null, 2);
       await this.uploadToPresignedUrl(
         this.targets.sessionUrl,

@@ -16,7 +16,7 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession, getSessionPersistenceSnapshot } from "../session.js";
+import { createSession, getCompleteStateSnapshot } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { gracefulExit } from "../util/exit.js";
@@ -160,7 +160,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     storageOption: options.id,
     accessToken,
     syncSessionHistory,
-    getSessionSnapshot: () => getSessionPersistenceSnapshot(state.session),
+    getCompleteStateSnapshot: () => getCompleteStateSnapshot(
+      state.session,
+      state.isProcessing,
+      state.messageQueue.length,
+      state.pendingPermission,
+    ),
     isActive: () => state.serverRunning,
   });
 
@@ -182,12 +187,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     syncSessionHistory();
-    res.json({
-      session: state.session, // Return session directly instead of converting
-      isProcessing: state.isProcessing,
-      messageQueueLength: state.messageQueue.length,
-      pendingPermission: state.pendingPermission,
-    });
+    const stateSnapshot = getCompleteStateSnapshot(
+      state.session,
+      state.isProcessing,
+      state.messageQueue.length,
+      state.pendingPermission,
+    );
+    res.json(stateSnapshot);
   });
 
   // POST /message - Queue a message and potentially interrupt
