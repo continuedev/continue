@@ -10,38 +10,15 @@ It's often useful to select a different model to respond to Edit prompts than fo
 
 In Continue, you can add `edit` to a model's roles to specify that it can be used for Edit requests. If no edit models are specified, the selected `chat` model is used.
 
-<Tabs>
-  <Tab title="YAML">
-  Use model roles.
-  ```yaml title="config.yaml"
-  models:
-    - name: Claude 3.5 Sonnet
-      provider: anthropic
-      model: claude-3-5-sonnet-latest
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-      roles:
-        - edit
-  ```
-  </Tab>
-  <Tab title="JSON">
-  Set the `experimental.modelRoles.inlineEdit` property in `config.json`.
-  ```json title="config.json"
-  {
-    "models": {
-      "name": "Claude 3.5 Sonnet",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-    },
-    "experimental": {
-        "modelRoles": {
-            "inlineEdit": "Claude 3.5 Sonnet",
-      }
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
+```yaml title="config.yaml"
+models:
+  - name: Claude 4 Sonnet
+    provider: anthropic
+    model: claude-3-5-sonnet-latest
+    apiKey: <YOUR_ANTHROPIC_API_KEY>
+    roles:
+      - edit
+```
 
 Explore edit models in [the hub](https://hub.continue.dev/explore/models?roles=edit). Generally, our recommendations for Edit overlap with recommendations for Chat.
 
