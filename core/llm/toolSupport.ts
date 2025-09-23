@@ -105,7 +105,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     vertexai: (model) => {
       const lowerCaseModel = model.toLowerCase();
       // All gemini models except flash 2.0 lite support function calling
-      if (lowerCaseModel.includes("grok-3")) {
+      if (lowerCaseModel.includes("lite")) {
         return false;
       }
       return ["claude", "gemini"].some((val) => lowerCaseModel.includes(val));
