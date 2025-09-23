@@ -1,0 +1,10 @@
+name: Linear MCP
+description: Linear MCP server for creating and managing Linear issues
+
+mcpServers:
+  - name: "Linear"
+    type: "stdio"
+    command: "npx"
+    args: ["@linear/mcp-server"]
+    env:
+      LINEAR_API_KEY: "${LINEAR_API_KEY}"
