@@ -10,15 +10,14 @@ The build process is otherwise defined entirely in `build.js`.
 
 - sqlite3/build/Release/node_sqlite3.node (\*)
 - @lancedb/\*\*
-- esbuild?
-- @esbuild?
+- esbuild? <!-- still bundled, no @esbuild/* packages -->
 - onnxruntime-node?
 
 ### List of dynamically imported modules
 
 - posthog-node
 - @octokit/rest
-- esbuild
+- esbuild <!-- build-time only -->
 
 ### List of .wasm files
 
