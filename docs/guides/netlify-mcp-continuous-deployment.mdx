@@ -109,11 +109,12 @@ cn
 
 <Info>
 
-  Netlify automatically tracks:
-  - **Build Performance**: Compile times, cache hits
-  - **Runtime Performance**: Core Web Vitals, Time to Interactive
-  - **Resource Usage**: Bandwidth, function execution times
-
+    Netlify automatically tracks: 
+    - **Build Performance**: Compile times, cache
+    hits 
+    - **Runtime Performance**: Core Web Vitals, Time to Interactive 
+    -  **Resource Usage**: Bandwidth, function execution times
+    
 </Info>
 
 ### Step 2: A/B Test Branch Performance
@@ -230,12 +231,19 @@ Generate a full report with before/after bundle sizes"
 
 <Card title="Netlify's Performance Arsenal" icon="rocket">
 
-  **Features Available Through Netlify MCP**:
-  - [Bundle Analyzer](https://docs.netlify.com/configure-builds/build-plugins/bundle-analyzer/): Visualize your JavaScript bundles
-  - [Asset Optimization](https://docs.netlify.com/configure-builds/post-processing/): Automatic minification and compression
-  - [Edge Network](https://docs.netlify.com/platform/edge-network/): Global CDN with smart caching
-  - [Deploy Previews](https://docs.netlify.com/site-deploys/deploy-previews/): Test optimizations before production
-
+    **Features Available Through Netlify MCP**: 
+    - [Bundle
+    Analyzer](https://docs.netlify.com/configure-builds/build-plugins/bundle-analyzer/): Visualize your JavaScript bundles 
+    - [Asset
+    Optimization](https://docs.netlify.com/configure-builds/post-processing/):
+    Automatic minification and compression 
+    - [Edge
+    Network](https://docs.netlify.com/platform/edge-network/): Global CDN with
+    smart caching 
+    - [Deploy
+    Previews](https://docs.netlify.com/site-deploys/deploy-previews/): Test
+    optimizations before production
+  
 </Card>
 
 ### Step 5: Image Optimization
@@ -354,12 +362,15 @@ Unlike Google Analytics, Netlify Analytics:
 
 <Tip>
 
-  **Pro Tip**: Combine Netlify Analytics with Edge Functions to create a powerful RUM solution that:
-  - Tracks performance by user segment
-  - A/B tests performance optimizations
-  - Personalizes content based on connection speed
-  - Automatically serves lighter assets to slow connections
-
+    **Pro Tip**
+    Combine Netlify Analytics with Edge Functions to create a
+    powerful RUM solution that: 
+    - Tracks performance by user segment 
+    - A/B tests
+    performance optimizations 
+    - Personalizes content based on connection speed 
+    - Automatically serves lighter assets to slow connections
+  
 </Tip>
 
 ## Automated Performance Checks
@@ -385,8 +396,6 @@ jobs:
 
       - name: Deploy and Test Performance
         id: perf
-        # Note: These secrets are needed for direct Netlify API access in CI
-        # The Continue Hub manages authentication separately for interactive use
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
@@ -483,12 +492,13 @@ Identify and fix performance bottlenecks:
 
 <Card title="Performance-First Development" icon="gauge-high">
 
-  You've built an AI-powered performance optimization system that:
-  - Automatically monitors Core Web Vitals
-  - Runs A/B tests between branches
-  - Blocks deployments that degrade performance
-  - Provides actionable optimization suggestions
-
+    You've built an AI-powered performance optimization system that: 
+    - Automatically monitors Core Web Vitals 
+    - Runs A/B tests between branches 
+    - Blocks deployments that degrade performance 
+    - Provides actionable optimization
+    suggestions
+  
 </Card>
 
 ## Discover Netlify's Hidden Performance Gems
@@ -497,33 +507,30 @@ Features many developers don't know Netlify offers:
 
 <CardGroup cols={2}>
   <Card title="Edge Functions" icon="bolt">
-
-    **[Netlify Edge Functions](https://docs.netlify.com/edge-functions/overview/)**
-    - Run code at the edge, closer to users
-    - Transform responses on-the-fly
-    - A/B test at the edge level
-    - Personalize content without client-side JS
-
+  
+      **[Netlify Edge Functions](https://docs.netlify.com/edge-functions/overview/)**
+      - Run code at the edge, closer to users
+      - Transform responses on-the-fly
+      - A/B test at the edge level
+      - Personalize content without client-side JS
+    
   </Card>
 
 <Card title="Netlify Graph" icon="diagram-project">
 
-  **[Netlify Graph](https://docs.netlify.com/graph/overview/)**
-  - Unified GraphQL gateway for all your APIs
-  - Automatic TypeScript generation
-  - Built-in authentication handling
-  - Zero client-side API keys needed
-
+    **[Netlify Graph](https://docs.netlify.com/graph/overview/)** 
+    - Unified GraphQL gateway for all your APIs 
+    - Automatic TypeScript generation 
+    - Built-in authentication handling 
+    - Zero client-side API keys needed
+    
 </Card>
 
 <Card title="On-Demand Builders" icon="hammer">
-
-  **[On-Demand Builders](https://docs.netlify.com/configure-builds/on-demand-builders/)**
-  - Generate pages only when requested
-  - Cache dynamically generated content
-  - Perfect for large sites (10k+ pages)
-  - Reduce build times dramatically
-
+  **[On-Demand
+  Builders](https://docs.netlify.com/configure-builds/on-demand-builders/)** -
+  Generate pages only when requested - Cache dynamically generated content -
+  Perfect for large sites (10k+ pages) - Reduce build times dramatically
 </Card>
 
   <Card title="Netlify Functions" icon="function">
