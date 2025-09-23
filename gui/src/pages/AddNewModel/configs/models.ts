@@ -1585,14 +1585,83 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
-  grokBeta: {
-    title: "Grok Beta",
-    description: "Generative artificial intelligence chatbot developed by xAI.",
-    refUrl: "",
+  grokCodeFast1: {
+    title: "Grok Code Fast 1",
+    description:
+      "A speedy and economical reasoning model that excels at agentic coding",
+    refUrl: "https://docs.x.ai/docs/models/grok-code-fast-1",
     params: {
-      title: "Grok Beta",
-      model: "grok-beta",
-      contextLength: 128_000,
+      title: "Grok Code Fast 1",
+      model: "grok-code-fast-1",
+      contextLength: 256000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4FastReasoning: {
+    title: "Grok 4 Fast Reasoning",
+    description: "xAI's latest advancement in cost-efficient reasoning models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-reasoning",
+    params: {
+      title: "Grok 4 Fast Reasoning",
+      model: "grok-4-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4FastNonReasoning: {
+    title: "Grok 4 Fast Non-Reasoning",
+    description: "xAI's latest advancement in cost-efficient models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-non-reasoning",
+    params: {
+      title: "Grok 4 Fast Non-Reasoning",
+      model: "grok-4-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4: {
+    title: "Grok 4",
+    description:
+      "xAI's latest and greatest flagship model, offering strong performance in natural language, math and reasoning.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4",
+    params: {
+      title: "Grok 4",
+      model: "grok-4",
+      contextLength: 256_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok3: {
+    title: "Grok 3",
+    description:
+      "Excels at enterprise use cases like data extraction, coding, and text summarization",
+    refUrl: "https://docs.x.ai/docs/models/grok-3",
+    params: {
+      title: "Grok 3",
+      model: "grok-3",
+      contextLength: 131_072,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok3Mini: {
+    title: "Grok 3 Mini",
+    description:
+      "A lightweight model that thinks before responding. Fast, smart, and great for logic-based tasks that do not require deep domain knowledge.",
+    refUrl: "https://docs.x.ai/docs/models/grok-3-mini",
+    params: {
+      title: "Grok 3 Mini",
+      model: "grok-3-mini",
+      contextLength: 131_072,
     },
     icon: "xAI.png",
     providerOptions: ["xAI", "askSage"],

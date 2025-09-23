@@ -563,7 +563,14 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.grokBeta],
+    packages: [
+      models.grokCodeFast1,
+      models.grok4FastReasoning,
+      models.grok4FastNonReasoning,
+      models.grok4,
+      models.grok3,
+      models.grok3Mini,
+    ],
     apiKeyUrl: "https://console.x.ai/",
   },
   lemonade: {
