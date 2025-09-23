@@ -1,66 +1,67 @@
 ---
-title: "How to Set Up Model Context Protocol (MCP) in Continue"
-description: MCP use and customization
-keywords: [tool, use, function calling, claude, automatic]
-sidebarTitle: "Model Context Protocol (MCP)"
+title: "How to use MCP servers with Continue"
+description: "Learn how to set up and use Model Context Protocol (MCP) servers with Continue to enhance your AI agents with external tools and data sources."
+keywords: [tool, use, function calling, claude, automatic, mcp]
+sidebarTitle: "MCP Servers"
 ---
 
 As AI systems get better, they're still held back by their training data and
 can't access real-time information or specialized tools. The [Model Context
 Protocol](https://modelcontextprotocol.io/introduction) (MCP) fixes this by
 letting AI models connect with outside data sources, tools, and environments.
+
 This allows smooth sharing of information and abilities between AI systems and
 the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How MCP Works in Continue
-
-Currently custom tools can be configured using the Model Context
-Protocol standard to unify prompts, context, and tool use.
-
-MCP Servers can be added to hub Agents using `mcpServers` blocks. You can
-explore available MCP server blocks
-[here](https://hub.continue.dev/explore/mcp).
-
-<Info>MCP can only be used in the **agent** mode.</Info>
-
 ## Quick Start: How to Set Up Your First MCP Server
 
-Below is a quick example of setting up a new MCP server for use in your agent:
+Simply add the following configuration file to make the Linear MCP server available to your agents:
 
-1. Create a folder called `.continue/mcpServers` at the top level of your workspace
-2. Add a file called `playwright-mcp.yaml` to this folder.
-3. Write the following contents to `playwright-mcp.yaml` and save.
+- **For workspace-specific access**: Add to the root of your workspace
+- **For global access**: Add to your `~/.continue` directory
 
-```yaml title=".continue/mcpServers/playwright-mcp.yaml"
-name: Playwright mcpServer
+```yaml title=".continue/mcpServers/linear.yaml"
+name: Linear
 version: 0.0.1
 schema: v1
+
 mcpServers:
-  - name: Browser search
-    command: npx
-    args:
-      - "@playwright/mcp@latest"
+  ## This uses the slug from the official MCP registry: https://registry.modelcontextprotocol.io
+  - serverName: app.linear/linear
 ```
 
-Now test your MCP server by prompting the following command:
+To verify the server is working, run the following prompt:
 
 ```
-Open the browser and navigate Hacker News. Save the top 10 headlines in a hn.txt file.
+Find all open issues assigned to me in Linear and list their titles.
 ```
 
-The result will be a generated file called `hn.txt` in the current working directory.
+## Adding an MCP server from the Hub
 
-![playwright mcp](/images/mcp-playwright.png)
+You can also add an MCP server directly from the [Continue Hub](https://hub.continue.dev/?type=mcpServers).
 
-## How to Set Up Continue Documentation Search with MCP
+Continue pulls directly from the official MCP registry at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io) to provide a one-click install experience for popular MCP servers.
 
-You can set up an MCP server to search the Continue documentation directly from your agent. This is particularly useful for getting help with Continue configuration and features.
+## Configuring secrets
 
-For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
+For MCP servers that require secret values, such as API keys, you use secrets stored in Continue Hub, or directly set the value:
 
-## How to Configure MCP Servers
+```yaml title=".continue/mcpServers/linear.yaml highlight={3-4, 9-10}
+mcpServers:
+  - serverName: com.supabase/mcp
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }} ## Read from Continue Hub secrets
+
+  - serverName: com.supabase/mcp
+    env:
+      SUPABASE_ACCESS_TOKEN: <SUPABASE_ACCESS_TOKEN>
+```
+
+## Advanced
+
+### How to Configure MCP Servers
 
 To set up your own MCP server, read the [MCP
 quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
@@ -101,7 +102,7 @@ server block to your [config file](./configuration.md):
   </Tab>
 </Tabs>
 
-### How to Configure MCP Server Properties
+#### How to Configure MCP Server Properties
 
 MCP blocks follow the established syntax for blocks, with a few additional properties specific to MCP servers.
 
@@ -154,28 +155,3 @@ mcpServers:
 These remote transport options allow you to connect to MCP servers hosted on remote infrastructure, enabling more flexible deployment architectures and shared server resources across multiple clients.
 
 For detailed information about transport mechanisms and their use cases, refer to the official MCP documentation on [transports](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse).
-
-### How to Work with Secrets in MCP Servers
-
-With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
-as well as access hosted secrets in the Continue Hub. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
-
-```yaml
-mcpServers:
-  - name: Supabase MCP
-    command: npx
-    args:
-      - -y
-      - "@supabase/mcp-server-supabase@latest"
-      - --access-token
-      - ${{ secrets.SUPABASE_TOKEN }}
-    env:
-      SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
-  - name: GitHub
-    command: npx
-    args:
-      - "-y"
-      - "@modelcontextprotocol/server-github"
-    env:
-      GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
-```
