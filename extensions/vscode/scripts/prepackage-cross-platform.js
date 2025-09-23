@@ -20,7 +20,6 @@ const {
   buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
-  copyTreeSitterTagQryFiles,
   copyNodeModules,
   downloadRipgrepBinary,
   copySqliteBinary,
@@ -88,9 +87,6 @@ async function package(target, os, arch, exe) {
   // Assets
   // Copy tree-sitter-wasm files
   await copyTreeSitterWasms();
-
-  // Copy tree-sitter tag query files
-  await copyTreeSitterTagQryFiles();
 
   // Install and copy over native modules
   // *** onnxruntime-node ***

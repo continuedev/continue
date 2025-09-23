@@ -180,10 +180,6 @@ async function copyTreeSitterWasms() {
   console.log("[info] Copied tree-sitter wasms");
 }
 
-async function copyTreeSitterTagQryFiles() {
-  // (left intentionally empty; previously used for code-highlighter tag-qry)
-}
-
 async function copyNodeModules() {
   // Copy node_modules for pre-built binaries (no esbuild here)
   process.chdir(path.join(continueDir, "extensions", "vscode"));
@@ -386,7 +382,6 @@ module.exports = {
   buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
-  copyTreeSitterTagQryFiles,
   copyNodeModules,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
