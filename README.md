@@ -1,12 +1,12 @@
-<div align="center">
+<DIV ALIGN="CENTER">
 
-![Continue logo](media/readme.png)
+![CONTINUE LOGO](MEDIA/README.PNG)
 
-</div>
+</DIV>
 
-<h1 align="center">Continue</h1>
+<H1 ALIGN="CENTER">CONTINUE</H1>
 
-<div align="center">
+<DIV ALIGN="CENTER">
 
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 22px;" />
