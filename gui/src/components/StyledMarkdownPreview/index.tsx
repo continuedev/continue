@@ -102,7 +102,6 @@ const StyledMarkdown = styled.div<{
   ul,
   ol {
     padding-left: 2em;
-    padding-y: 1em;
   }
 
   code:not(pre > code) {
