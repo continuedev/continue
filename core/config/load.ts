@@ -35,7 +35,6 @@ import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { useHub } from "../control-plane/env";
 import { BaseLLM } from "../llm";
 import { LLMClasses, llmFromDescription } from "../llm/llms";
-import CustomLLMClass from "../llm/llms/CustomLLM";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../promptFiles/getPromptFiles";
@@ -303,34 +302,6 @@ async function intermediateToFinalConfig({
         } else {
           models.push(llm);
         }
-      } else {
-        const llm = new CustomLLMClass({
-          ...desc,
-          options: { ...desc.options, logger: llmLogger } as any,
-        });
-        if (llm.model === "AUTODETECT") {
-          try {
-            const modelNames = await llm.listModels();
-            const models = modelNames.map(
-              (modelName) =>
-                new CustomLLMClass({
-                  ...desc,
-                  options: {
-                    ...desc.options,
-                    model: modelName,
-                    logger: llmLogger,
-                    isFromAutoDetect: true,
-                  },
-                }),
-            );
-
-            models.push(...models);
-          } catch (e) {
-            console.warn("Error listing models: ", e);
-          }
-        } else {
-          models.push(llm);
-        }
       }
     }),
   );
@@ -375,8 +346,6 @@ async function intermediateToFinalConfig({
               tabAutocompleteModels.push(llm);
             }
           }
-        } else {
-          tabAutocompleteModels.push(new CustomLLMClass(desc));
         }
       }),
     );
