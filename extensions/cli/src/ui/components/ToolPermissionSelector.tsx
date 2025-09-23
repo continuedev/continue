@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from "ink";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
 
@@ -7,6 +7,9 @@ import { ToolCallPreview } from "../../tools/types.js";
 import { defaultBoxStyles } from "../styles.js";
 
 import { ToolPreview } from "./ToolPreview.js";
+
+// show dangerous commmand warning only once per CLI process
+let hasShownDangerousCommandWarning = false;
 
 interface PermissionOption {
   id: string;
@@ -61,6 +64,13 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 }) => {
   const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const showDynamicWarning =
+    hasDynamicEvaluation && !hasShownDangerousCommandWarning;
+  useEffect(() => {
+    if (showDynamicWarning) {
+      hasShownDangerousCommandWarning = true;
+    }
+  }, [showDynamicWarning]);
 
   useInput((input, key) => {
     if (key.return) {
@@ -125,7 +135,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 
       <Box marginTop={1} flexDirection="column">
         <Text color="dim">Would you like to continue?</Text>
-        {hasDynamicEvaluation && (
+        {showDynamicWarning && (
           <Box marginTop={1}>
             <Text color="yellow" dimColor>
               Note: Dangerous commands will be blocked regardless of your
