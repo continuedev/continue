@@ -16,7 +16,15 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
-import { Button, Card, EmptyState } from "../../../components/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -229,7 +237,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 }
                 variant="ghost"
                 size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
                 disabled={server.status === "authenticating"}
               >
                 {server.status === "authenticating" ? (
@@ -240,75 +248,60 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               </Button>
             </ToolTip>
           )}
-          <ToolTip
-            openOnClick={true}
-            clickable={true}
-            offset={5}
-            place="bottom"
-            content={
-              <div className="flex items-center gap-x-1">
-                {server.isProtectedResource &&
-                  server.status === "connected" && (
-                    <ToolTip content="Remove Authentication">
-                      <Button
-                        onClick={onRemoveAuth}
-                        variant="ghost"
-                        size="sm"
-                        className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-                      >
-                        <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
-                      </Button>
-                    </ToolTip>
-                  )}
-
-                <ToolTip content="Edit server configuration">
-                  <div>
-                    <EditBlockButton
-                      blockType={"mcpServers"}
-                      block={serverFromYaml}
-                      sourceFile={server.sourceFile}
-                    />
-                  </div>
-                </ToolTip>
-
-                {!disconnectedMCPServers.includes(server.name) && (
-                  <ToolTip content="Disconnect server">
-                    <Button
-                      onClick={onDisconnect}
-                      variant="ghost"
-                      size="sm"
-                      className="text-description-muted hover:enabled:text-foreground my-0 -mr-1 h-6 w-6 p-0"
-                    >
-                      <StopCircleIcon className="h-4 w-4 flex-shrink-0" />
-                    </Button>
-                  </ToolTip>
-                )}
-
-                <ToolTip content="Reconnect server">
-                  <Button
-                    onClick={onRefresh}
-                    variant="ghost"
-                    size="sm"
-                    className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-                  >
-                    {disconnectedMCPServers.includes(server.name) ? (
-                      <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
-                    ) : (
-                      <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
-                    )}
-                  </Button>
-                </ToolTip>
-              </div>
-            }
-          >
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-            >
+          <Listbox>
+            <ListboxButton>
               <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
-            </Button>
-          </ToolTip>
+            </ListboxButton>
+            <ListboxOptions className="min-w-fit">
+              {server.isProtectedResource && server.status === "connected" && (
+                <ListboxOption
+                  value="remove auth"
+                  onClick={onRemoveAuth}
+                  className="justify-start gap-x-1.5"
+                >
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Remove
+                  Auth
+                </ListboxOption>
+              )}
+
+              <ListboxOption
+                value="edit mcp"
+                className="justify-start gap-x-1.5"
+              >
+                <EditBlockButton
+                  blockType={"mcpServers"}
+                  block={serverFromYaml}
+                  sourceFile={server.sourceFile}
+                  className="h-3.5 w-3.5 text-inherit"
+                />
+                Edit MCP
+              </ListboxOption>
+
+              {!disconnectedMCPServers.includes(server.name) && (
+                <ListboxOption
+                  value="disconnect"
+                  onClick={onDisconnect}
+                  className="justify-start gap-x-1.5"
+                >
+                  <StopCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
+                  Disconnect Server
+                </ListboxOption>
+              )}
+
+              <ListboxOption
+                value="reconnect"
+                onClick={onRefresh}
+                className="justify-start gap-x-1.5"
+              >
+                {disconnectedMCPServers.includes(server.name) ? (
+                  <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
+                ) : (
+                  <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+                )}
+                Reconnect Server
+              </ListboxOption>
+            </ListboxOptions>
+          </Listbox>
         </div>
       </div>
 
