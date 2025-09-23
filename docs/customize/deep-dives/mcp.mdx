@@ -46,7 +46,7 @@ Continue pulls directly from the official MCP registry at [registry.modelcontext
 
 ## Using `.mcp.json` from Claude, Cursor, Cline, etc
 
-If you have an existing `.mcp.json` file from Claude, Cursor, Cline, or any other agent that supports the spec, just copy it into your `.continue/mcpServers` directory and Continue will automatically pick it up.
+If you have an existing `.mcp.json` file from Claude, Cursor, Cline, or any other agent that supports the spec, ~~just~~ copy it into your `.continue/mcpServers` directory and Continue will automatically pick it up.
 
 
 ## Configuring secrets
@@ -65,6 +65,16 @@ mcpServers:
 ```
 
 ## Advanced
+
+### Pointing to a different MCP registry
+
+You can use the `registryUrl` property to point to a different MCP registry:
+
+```yaml title=".continue/mcpServers/linear.yaml"
+mcpServers:
+  - serverName: app.linear/linear
+    registryUrl: https://my-custom-registry.com
+```
 
 ### How to Configure MCP Servers
 
