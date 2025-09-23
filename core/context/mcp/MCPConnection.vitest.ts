@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as ideUtils from "../../util/ideUtils";
 import MCPConnection from "./MCPConnection";
 
 // Mock the shell path utility
@@ -149,6 +150,39 @@ describe("MCPConnection", () => {
         tools: [],
         status: "not-connected",
       });
+    });
+  });
+
+  describe("resolveCwd", () => {
+    const baseOptions = {
+      name: "test-mcp",
+      id: "test-id",
+      transport: {
+        type: "stdio" as const,
+        command: "test-cmd",
+        args: [],
+      },
+    };
+
+    it("should return absolute cwd unchanged", async () => {
+      const conn = new MCPConnection(baseOptions);
+
+      await expect((conn as any).resolveCwd("/tmp/project")).resolves.toBe(
+        "/tmp/project",
+      );
+    });
+
+    it("should resolve relative cwd using IDE workspace", async () => {
+      const ide = {} as any;
+      const mockResolve = vi
+        .spyOn(ideUtils, "resolveRelativePathInDir")
+        .mockResolvedValue("file:///workspace/src");
+      const conn = new MCPConnection(baseOptions, { ide });
+
+      await expect((conn as any).resolveCwd("src")).resolves.toBe(
+        "/workspace/src",
+      );
+      expect(mockResolve).toHaveBeenCalledWith("src", ide);
     });
   });
 
