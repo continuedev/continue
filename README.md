@@ -25,7 +25,7 @@
 
 <div align="center">
 
-**Ship faster with Continuous AI**
+**Ship faster with Continuous AI **
 
 **Build and run custom agents across your IDE, terminal, and CI**
 
