@@ -1,8 +1,10 @@
 import { type AssistantConfig } from "@continuedev/sdk";
+import { createRelativeRuleFilePath } from "core/config/markdown/utils.js";
 
 import { SlashCommandResult } from "../ui/hooks/useChat.types.js";
 
 function createInitPrompt(): string {
+  const relativeRuleFilepath = createRelativeRuleFilePath("review");
   return `Please analyze this repository and create a comprehensive AGENTS.md file, along with a custom slash command. Use your available tools to understand the project structure, read important files like README.md, package.json, requirements.txt, and other configuration files to understand the technology stack and setup.
 
 Create an AGENTS.md file with the following structure:
@@ -30,7 +32,7 @@ Create an AGENTS.md file with the following structure:
 - Development environment setup
 - Lint and format commands
 
-Additionally, create a slash command file at .continue/rules/review.md with the following structure:
+Additionally, create a slash command file at ${relativeRuleFilepath} with the following structure:
 
 \`\`\`md
 ---
