@@ -435,6 +435,43 @@ const getCommandsMap: (
     "continue.newSession": () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
+
+    "continue.shareSession": async (sessionId: string | undefined) => {
+      if (!sessionId) {
+        sessionId = await sidebar.webviewProtocol?.request(
+          "getCurrentSessionId",
+          undefined,
+        );
+      }
+      if (!sessionId) {
+        void vscode.window.showErrorMessage(
+          "No session ID found. Please start a new session first.",
+        );
+        return;
+      }
+      //let user select the destination folder
+      const destinationFolder = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: "Select Destination Folder",
+      });
+      if (!destinationFolder || destinationFolder.length === 0) {
+        return;
+      }
+
+      try {
+        // despite core.invoke not being async, we still need to await it, because the 'history/share' command is async
+        // if not awaited, then errors will not be caught.
+        await core.invoke("history/share", {
+          id: sessionId,
+          outputDir: destinationFolder[0].fsPath,
+        });
+      } catch (error) {
+        const errorMessage = `Failed to save session: ${error instanceof Error ? error.message : String(error)}`;
+        void vscode.window.showErrorMessage(errorMessage);
+      }
+    },
     "continue.viewHistory": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/history", true);
     },
