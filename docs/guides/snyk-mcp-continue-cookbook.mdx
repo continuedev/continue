@@ -24,10 +24,18 @@ Before starting, ensure you have:
   <Step title="Connect Snyk MCP via Continue Hub">
     Visit the [Snyk MCP on Continue Hub](https://hub.continue.dev/snyk/snyk-mcp) and click **Install** to add it to your Continue account.
 
-    The Hub listing automatically configures the MCP command:
+    This will add Snyk MCP to your agent's available tools. The Hub listing automatically configures the MCP command:
     ```bash
     npx -y snyk@latest mcp -t stdio
     ```
+
+    <Tip>
+      **Alternative installation methods:**
+      1. **Quick CLI install**: `cn -p --mcp snyk/snyk-mcp`
+      2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
+
+      Once installed, Snyk MCP tools become available to your Continue agent for all prompts.
+    </Tip>
 
     <Info>
       The MCP will request authentication and folder trust permissions when first used.
@@ -39,6 +47,11 @@ Before starting, ensure you have:
   <Step title="Add Secure-at-Inception Rules">
     Install the [Snyk Secure-at-Inception rules](https://hub.continue.dev/snyk/secure-at-inception) from the Hub to enable automatic security scanning.
 
+    **How to add rules to your agent:**
+    1. Visit the rules link above and click **Install**
+    2. The rules will be added to your agent configuration automatically
+    3. Rules apply globally to all your Continue sessions
+
     These rules configure your agent to:
     - **Run [SAST](https://snyk.io/learn/application-security/sast/) scans** on newly generated or modified code
     - **Check dependencies** when adding or updating packages
@@ -47,10 +60,15 @@ Before starting, ensure you have:
   </Step>
 
   <Step title="Authenticate with Snyk">
-    Run this command with your Continue agent to set up authentication:
+    Use this prompt with your Continue agent to set up authentication:
 
+    ```
+    Check Snyk auth status. If not authenticated, authenticate me and confirm my org context.
+    ```
+
+    Or use the Continue CLI:
     ```bash
-    "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
+    cn -p "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
     ```
 
     <Tip>
@@ -66,9 +84,14 @@ Before starting, ensure you have:
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
+  **Where to run these workflows:**
+  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `cn -p "your prompt"` for one-off commands
+
   **Test in Plan Mode First**: Before running security scans that might make
   changes, test your prompts in plan mode (see the [Plan Mode
-  Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This
+  Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it. For example: `"Run a
   Snyk Code scan and fix the top 3 issues"`
 </Info>
@@ -78,10 +101,16 @@ Now you can use natural language prompts to run comprehensive security scans. Th
 <Card title="Static Application Security Testing" icon="code">
   Scan your source code for security vulnerabilities and code quality issues.
 
-```bash
-"Run a Snyk Code scan on this repo with severity threshold medium.
+**Example prompt:**
+```
+Run a Snyk Code scan on this repo with severity threshold medium.
 Summarize issues with file:line. Propose minimal diffs for the top 3
-and rerun to verify."
+and rerun to verify.
+```
+
+**Using Continue CLI:**
+```bash
+cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify."
 ```
 
 </Card>
@@ -91,10 +120,16 @@ and rerun to verify."
 <Card title="Software Composition Analysis" icon="cube">
   Check open source dependencies for known vulnerabilities.
 
-```bash
-"Run Snyk Open Source on this repo (include dev deps).
+**Example prompt:**
+```
+Run Snyk Open Source on this repo (include dev deps).
 Summarize vulnerable paths and propose a minimal-risk upgrade plan.
-Re-test after the plan (dry run)."
+Re-test after the plan (dry run).
+```
+
+**Using Continue CLI:**
+```bash
+cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)."
 ```
 
 </Card>
@@ -104,9 +139,15 @@ Re-test after the plan (dry run)."
 <Card title="IaC Security" icon="cloud">
   Scan Terraform, CloudFormation, and Kubernetes configs for misconfigurations.
 
+**Example prompt:**
+```
+Scan ./infra with Snyk IaC. Report high/critical misconfigs
+with exact files/lines. Provide code changes and re-scan to confirm.
+```
+
+**Using Continue CLI:**
 ```bash
-"Scan ./infra with Snyk IaC. Report high/critical misconfigs
-with exact files/lines. Provide code changes and re-scan to confirm."
+cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm."
 ```
 
 </Card>
@@ -116,10 +157,16 @@ with exact files/lines. Provide code changes and re-scan to confirm."
 <Card title="Container Security" icon="docker">
   Analyze Docker images for vulnerabilities in base images and packages.
 
-```bash
-"Scan image my-api:latest. Exclude base image vulns.
+**Example prompt:**
+```
+Scan image my-api:latest. Exclude base image vulns.
 Print dependency tree. Recommend a safer base image or upgrades.
-Re-test after the change (dry run)."
+Re-test after the change (dry run).
+```
+
+**Using Continue CLI:**
+```bash
+cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)."
 ```
 
 </Card>
@@ -129,9 +176,15 @@ Re-test after the change (dry run)."
 <Card title="Changed Files Only" icon="code-branch">
   Focus scanning on modified files to catch issues before merging.
 
+**Example prompt:**
+```
+Scan only files changed since origin/main with Snyk Code.
+Block if new high issues would be introduced. Show deltas.
+```
+
+**Using Continue CLI:**
 ```bash
-"Scan only files changed since origin/main with Snyk Code.
-Block if new high issues would be introduced. Show deltas."
+cn -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas."
 ```
 
 </Card>
@@ -141,15 +194,21 @@ Block if new high issues would be introduced. Show deltas."
 <Card title="Snyk Learn Integration" icon="graduation-cap">
   Access security education resources based on identified vulnerabilities ([CWE](https://cwe.mitre.org/)).
 
+**Example prompt:**
+```
+Open Snyk Learn lessons related to the top CWE(s) from this scan.
+```
+
+**Using Continue CLI:**
 ```bash
-"Open Snyk Learn lessons related to the top CWE(s) from this scan."
+cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan."
 ```
 
 </Card>
 
 ## Continuous Security with GitHub Actions
 
-Automate security scanning in your CI/CD pipeline using Continue CLI and Snyk MCP.
+This example demonstrates a **Continuous AI workflow** where security scanning runs automatically in your CI/CD pipeline using Continue CLI in headless mode (`cn -p`) with Snyk MCP.
 
 ### Add GitHub Secrets
 
@@ -231,32 +290,38 @@ jobs:
 
 Implement automated security policies using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
-<CardGroup cols={2}>
-  <Card title="Pre-commit Scanning" icon="lock">
-    ```bash
-    "Always run Snyk Code before committing newly
-    generated code; refuse to proceed if high
-    issues remain."
-    ```
-  </Card>
+<Note>
+  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Continue Hub for easy installation.
+</Note>
+
+<Card title="Pre-commit Scanning" icon="lock">
+  ```bash
+  "Always run Snyk Code before committing newly
+  generated code; refuse to proceed if high
+  issues remain."
+  ```
+</Card>
 
 <Card title="Dependency Safety" icon="shield-check">
-  ```bash "When adding/updating a dependency, run Snyk Open Source, choose the
-  lowest-risk upgrade, and re-test." ```
+  ```bash
+  "When adding/updating a dependency, run Snyk Open Source, choose the
+  lowest-risk upgrade, and re-test."
+  ```
 </Card>
 
 <Card title="Container Hardening" icon="box">
-  ```bash "Before building containers, scan base images and recommend
-  security-hardened alternatives." ```
+  ```bash
+  "Before building containers, scan base images and recommend
+  security-hardened alternatives."
+  ```
 </Card>
 
-  <Card title="IaC Compliance" icon="clipboard-list">
-    ```bash
-    "Scan all Terraform changes for compliance
-    violations before applying infrastructure."
-    ```
-  </Card>
-</CardGroup>
+<Card title="IaC Compliance" icon="clipboard-list">
+  ```bash
+  "Scan all Terraform changes for compliance
+  violations before applying infrastructure."
+  ```
+</Card>
 
 <Tip>
   Enable the **Secure-at-Inception** rules from the Hub to automatically apply
