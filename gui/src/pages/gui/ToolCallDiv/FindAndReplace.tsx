@@ -1,5 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import { trimEmptyLines } from "core/edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
@@ -13,10 +15,6 @@ import {
   selectApplyStateByToolCallId,
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
-import {
-  performFindAndReplace,
-  trimEmptyLines,
-} from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
@@ -119,7 +117,10 @@ export function FindAndReplaceDisplay({
     if (editingFileContents) {
       return editingFileContents;
     }
-    return edits?.map((edit) => edit.old_string ?? "").join("\n");
+    if (Array.isArray(edits)) {
+      return edits.map((edit) => edit.old_string ?? "").join("\n");
+    }
+    return "";
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
@@ -136,11 +137,11 @@ export function FindAndReplaceDisplay({
           new_string: newString,
           replace_all: replaceAll,
         } = edits[i];
-        newContent = performFindAndReplace(
+        newContent = executeFindAndReplace(
           newContent,
           oldString,
           newString,
-          replaceAll,
+          !!replaceAll,
           i,
         );
       }

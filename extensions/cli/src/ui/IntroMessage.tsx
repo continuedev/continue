@@ -52,7 +52,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         {mcpPrompts.map((prompt, index) => (
           <Text key={`mcp-${index}`}>
             - <Text color="white">/{prompt.name}</Text>:{" "}
-            <Text color="gray">{prompt.description}</Text>
+            <Text color="dim">{prompt.description}</Text>
           </Text>
         ))}
         <Text> </Text>
@@ -113,7 +113,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         </Text>
       ) : (
         <Text color="blue">
-          <Text bold>Model:</Text> <Text color="gray">Loading...</Text>
+          <Text bold>Model:</Text> <Text color="dim">Loading...</Text>
         </Text>
       )}
 

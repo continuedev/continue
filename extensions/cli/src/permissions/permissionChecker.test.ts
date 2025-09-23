@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as toolsModule from "../tools/index.js";
 
@@ -604,7 +604,10 @@ describe("Permission Checker", () => {
       name: "Bash",
       displayName: "Bash",
       description: "Execute bash commands",
-      parameters: {},
+      parameters: {
+        type: "object" as const,
+        properties: {},
+      },
       isBuiltIn: true,
       evaluateToolCallPolicy: vi.fn(),
       run: vi.fn(),
@@ -882,7 +885,10 @@ describe("Permission Checker", () => {
           name: "Read",
           displayName: "Read",
           description: "Read files",
-          parameters: {},
+          parameters: {
+            type: "object" as const,
+            properties: {},
+          },
           isBuiltIn: true,
           run: vi.fn(),
           // No evaluateToolCallPolicy

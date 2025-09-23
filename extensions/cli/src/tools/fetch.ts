@@ -9,10 +9,13 @@ export const fetchTool: Tool = {
   description:
     "Fetches content from a URL, converts to markdown, and handles long content with truncation",
   parameters: {
-    url: {
-      type: "string",
-      description: "The URL to fetch content from",
-      required: true,
+    type: "object",
+    required: ["url"],
+    properties: {
+      url: {
+        type: "string",
+        description: "The URL to fetch content from",
+      },
     },
   },
   readonly: true,

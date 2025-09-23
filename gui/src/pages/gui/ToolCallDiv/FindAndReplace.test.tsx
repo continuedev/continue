@@ -19,16 +19,9 @@ vi.mock("../../../components/ui", () => ({
   useFontSize: () => 14,
 }));
 
-vi.mock("../../../util/clientTools/findAndReplaceUtils", async () => {
-  const actual = await vi.importActual(
-    "../../../util/clientTools/findAndReplaceUtils",
-  );
-
-  return {
-    performFindAndReplace: vi.fn(),
-    trimEmptyLines: actual.trimEmptyLines,
-  };
-});
+vi.mock("core/edit/searchAndReplace/performReplace", () => ({
+  executeFindAndReplace: vi.fn(),
+}));
 
 vi.mock("./utils", () => ({
   getStatusIcon: vi.fn(() => <div data-testid="status-icon">✓</div>),
@@ -43,12 +36,12 @@ vi.mock("react", async () => {
 });
 
 // Import mocked modules
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { useAppSelector } from "../../../redux/hooks";
-import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
 
 const mockPost = vi.fn();
 const mockUseAppSelector = useAppSelector as any;
-const mockPerformFindAndReplace = performFindAndReplace as any;
+const mockExecuteFindAndReplace = executeFindAndReplace as any;
 
 describe("FindAndReplaceDisplay", () => {
   const defaultProps = {
@@ -100,7 +93,7 @@ describe("FindAndReplaceDisplay", () => {
       return selector(mockState);
     });
 
-    mockPerformFindAndReplace.mockImplementation(
+    mockExecuteFindAndReplace.mockImplementation(
       (content: string, oldStr: string, newStr: string) => {
         return content.replace(oldStr, newStr);
       },
@@ -224,7 +217,7 @@ describe("FindAndReplaceDisplay", () => {
         },
       ] as EditOperation[];
 
-      mockPerformFindAndReplace
+      mockExecuteFindAndReplace
         .mockReturnValueOnce("const new = 'value';\nconst other = 'test';")
         .mockReturnValueOnce("const new = 'value';\nconst other = 'updated';");
 
@@ -233,11 +226,11 @@ describe("FindAndReplaceDisplay", () => {
       const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
       fireEvent.click(toggleButton);
 
-      expect(mockPerformFindAndReplace).toHaveBeenCalledTimes(2);
+      expect(mockExecuteFindAndReplace).toHaveBeenCalledTimes(2);
     });
 
     it("should handle diff generation errors", () => {
-      mockPerformFindAndReplace.mockImplementation(() => {
+      mockExecuteFindAndReplace.mockImplementation(() => {
         throw new Error("Test error");
       });
 
@@ -252,7 +245,7 @@ describe("FindAndReplaceDisplay", () => {
 
     it("should show 'No changes to display' when diff is empty", () => {
       // Mock the function to return the exact same content (no changes)
-      mockPerformFindAndReplace.mockReturnValue(
+      mockExecuteFindAndReplace.mockReturnValue(
         defaultProps.editingFileContents,
       );
 
@@ -322,7 +315,7 @@ describe("FindAndReplaceDisplay", () => {
       const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
       fireEvent.click(toggleButton);
 
-      expect(mockPerformFindAndReplace).toHaveBeenCalledWith(
+      expect(mockExecuteFindAndReplace).toHaveBeenCalledWith(
         "const old = 'value';\nconst other = 'test';",
         "const old = 'value';",
         "const new = 'value';",
@@ -342,7 +335,7 @@ describe("FindAndReplaceDisplay", () => {
       const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
       fireEvent.click(toggleButton);
 
-      expect(mockPerformFindAndReplace).toHaveBeenCalledWith(
+      expect(mockExecuteFindAndReplace).toHaveBeenCalledWith(
         "const old = 'value';",
         "const old = 'value';",
         "const new = 'value';",

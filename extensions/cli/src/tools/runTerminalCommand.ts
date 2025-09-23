@@ -36,10 +36,13 @@ export const runTerminalCommandTool: Tool = {
 Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 `,
   parameters: {
-    command: {
-      type: "string",
-      description: "The command to execute in the terminal.",
-      required: true,
+    type: "object",
+    required: ["command"],
+    properties: {
+      command: {
+        type: "string",
+        description: "The command to execute in the terminal.",
+      },
     },
   },
   readonly: false,

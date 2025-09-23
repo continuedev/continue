@@ -321,7 +321,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
       return [];
     }
 
-    const response = await fetch(new URL("agents/devboxes", env.apiBase), {
+    const response = await fetch(new URL("agents", env.apiBase), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 ---
 title: "SambaNova"
-description: "Configure SambaNova Cloud with Continue to access their high-performance platform for running large AI models, including Llama 4 Scout with world record open source model performance"
+description: "Configure SambaCloud with Continue to access their high-performance platform for running large AI models, including Llama 4 Scout with world record open source model performance"
 ---
 
 The SambaNova Cloud is a cloud platform for running large AI models with the world record open source models performance. You can follow the instructions in [this blog post](https://sambanova.ai/blog/accelerating-coding-with-sambanova-cloud?ref=blog.continue.dev) to configure your setup.
@@ -9,9 +9,9 @@ The SambaNova Cloud is a cloud platform for running large AI models with the wor
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: SambaNova Llama 4 Scout
+    - name: GPT OSS 120B
       provider: sambanova
-      model: Llama-4-Scout-17B-16E-Instruct
+      model: gpt-oss-120b
       apiKey: <YOUR_SAMBANOVA_API_KEY>
   ```
   </Tab>
@@ -20,9 +20,9 @@ The SambaNova Cloud is a cloud platform for running large AI models with the wor
   {
     "models": [
       {
-        "title": "SambaNova Llama 4 Scout",
+        "title": "GPT OSS 120B",
         "provider": "sambanova",
-        "model": "Llama-4-Scout-17B-16E-Instruct",
+        "model": "gpt-oss-120b",
         "apiKey": "<YOUR_SAMBANOVA_API_KEY>"
       }
     ]
