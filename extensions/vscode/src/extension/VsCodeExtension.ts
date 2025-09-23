@@ -6,11 +6,7 @@ import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/protocol/messenger";
-import {
-  getConfigJsonPath,
-  getConfigTsPath,
-  getConfigYamlPath,
-} from "core/util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -455,15 +451,6 @@ export class VsCodeExtension {
         );
       },
     );
-
-    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
-      if (stats.size === 0) {
-        return;
-      }
-      void this.configHandler.reloadConfig(
-        "config.yaml updated - fs file watch",
-      );
-    });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (event.contentChanges.length > 0) {
