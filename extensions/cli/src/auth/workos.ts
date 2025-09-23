@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -12,8 +13,12 @@ if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
 
-// Config file path
-const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
+// Config file path - define as a function to avoid initialization order issues
+function getAuthConfigPath() {
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  return path.join(continueHome, "auth.json");
+}
 
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
@@ -22,7 +27,7 @@ export interface AuthenticatedConfig {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
-  organizationId: string | null; // null means personal organization
+  organizationId: string | null | undefined; // null means personal organization, undefined triggers auto-selection
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -74,7 +79,9 @@ export function getAccessToken(config: AuthConfig): string | null {
 /**
  * Gets the organization ID from any auth config type
  */
-export function getOrganizationId(config: AuthConfig): string | null {
+export function getOrganizationId(
+  config: AuthConfig,
+): string | null | undefined {
   if (config === null) return null;
   return config.organizationId;
 }
@@ -96,10 +103,9 @@ export function getModelName(config: AuthConfig): string | null {
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
-  autoSelectOrganization,
-  createUpdatedAuthConfig,
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
 } from "./workos.helpers.js";
@@ -130,8 +136,9 @@ export function loadAuthConfig(): AuthConfig {
   }
 
   try {
-    if (fs.existsSync(AUTH_CONFIG_PATH)) {
-      const data = JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+    const authConfigPath = getAuthConfigPath();
+    if (fs.existsSync(authConfigPath)) {
+      const data = JSON.parse(fs.readFileSync(authConfigPath, "utf8"));
 
       // Validate that we have all required fields for authenticated config
       if (
@@ -173,13 +180,14 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
   }
 
   try {
+    const authConfigPath = getAuthConfigPath();
     // Make sure the directory exists
-    const dir = path.dirname(AUTH_CONFIG_PATH);
+    const dir = path.dirname(authConfigPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(AUTH_CONFIG_PATH, JSON.stringify(config, null, 2));
+    fs.writeFileSync(authConfigPath, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Error saving auth config: ${error}`);
   }
@@ -360,7 +368,7 @@ async function pollForDeviceToken(
           accessToken: access_token,
           refreshToken: refresh_token,
           expiresAt: tokenExpiresAt,
-          organizationId: null,
+          organizationId: undefined, // undefined triggers auto-selection, null means personal org selected
         };
 
         // Save the config
@@ -563,20 +571,18 @@ export async function ensureOrganization(
     );
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authenticatedConfig.organizationId !== undefined) {
-    return authenticatedConfig;
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
+    return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // In headless mode, default to personal organization if none saved
-  if (isHeadless) {
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  }
-
-  // Need to select organization
-  return autoSelectOrganization(authenticatedConfig);
+  // User already has made a selection (org or config) - respect their choice
+  return authenticatedConfig;
 }
 
 /**
@@ -679,10 +685,9 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
-  const onboardingFlagPath = path.join(
-    env.continueHome,
-    ".onboarding_complete",
-  );
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const onboardingFlagPath = path.join(continueHome, ".onboarding_complete");
 
   // Remove onboarding completion flag so user will go through onboarding again
   if (fs.existsSync(onboardingFlagPath)) {
@@ -698,8 +703,9 @@ export function logout(): void {
     return;
   }
 
-  if (fs.existsSync(AUTH_CONFIG_PATH)) {
-    fs.unlinkSync(AUTH_CONFIG_PATH);
+  const authConfigPath = getAuthConfigPath();
+  if (fs.existsSync(authConfigPath)) {
+    fs.unlinkSync(authConfigPath);
     console.info(chalk.green("Successfully logged out"));
   } else {
     console.info(chalk.yellow("No active session found"));

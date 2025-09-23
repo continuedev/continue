@@ -4,6 +4,7 @@ import {
   ILLM,
   Prediction,
   RuleWithSource,
+  StreamDiffLinesPayload,
   ToolResultChatMessage,
   UserChatMessage,
 } from "../";
@@ -20,6 +21,7 @@ import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { defaultApplyPrompt } from "../llm/templates/edit/gpt";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 import { recursiveStream } from "./recursiveStream";
@@ -42,6 +44,20 @@ function constructEditPrompt(
   });
 }
 
+function constructApplyPrompt(
+  originalCode: string,
+  newCode: string,
+  llm: ILLM,
+) {
+  const template = llm.promptTemplates?.apply ?? defaultApplyPrompt;
+  const rendered = llm.renderPromptTemplate(template, [], {
+    original_code: originalCode,
+    new_code: newCode,
+  });
+
+  return rendered;
+}
+
 export async function* addIndentation(
   diffLineGenerator: AsyncGenerator<DiffLine>,
   indentation: string,
@@ -58,27 +74,15 @@ function modelIsInept(model: string): boolean {
   return !(model.includes("gpt") || model.includes("claude"));
 }
 
-export async function* streamDiffLines({
-  prefix,
-  highlighted,
-  suffix,
-  llm,
-  abortController,
-  input,
-  language,
-  overridePrompt,
-  rulesToInclude,
-}: {
-  prefix: string;
-  highlighted: string;
-  suffix: string;
-  llm: ILLM;
-  abortController: AbortController;
-  input: string;
-  language: string | undefined;
-  overridePrompt: ChatMessage[] | undefined;
-  rulesToInclude: RuleWithSource[] | undefined;
-}): AsyncGenerator<DiffLine> {
+export async function* streamDiffLines(
+  options: StreamDiffLinesPayload,
+  llm: ILLM,
+  abortController: AbortController,
+  overridePrompt: ChatMessage[] | undefined,
+  rulesToInclude: RuleWithSource[] | undefined,
+): AsyncGenerator<DiffLine> {
+  const { type, prefix, highlighted, suffix, input, language } = options;
+
   void Telemetry.capture(
     "inlineEdit",
     {
@@ -104,7 +108,9 @@ export async function* streamDiffLines({
   // For apply can be overridden with simply apply prompt
   let prompt =
     overridePrompt ??
-    constructEditPrompt(prefix, highlighted, suffix, llm, input, language);
+    (type === "apply"
+      ? constructApplyPrompt(oldLines.join("\n"), options.newCode, llm)
+      : constructEditPrompt(prefix, highlighted, suffix, llm, input, language));
 
   // Rules can be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
@@ -159,7 +165,13 @@ export async function* streamDiffLines({
     content: highlighted,
   };
 
-  const completion = recursiveStream(llm, abortController, prompt, prediction);
+  const completion = recursiveStream(
+    llm,
+    abortController,
+    type,
+    prompt,
+    prediction,
+  );
 
   let lines = streamLines(completion);
 

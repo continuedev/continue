@@ -71,15 +71,17 @@ describe("Slash Commands Integration", () => {
       });
     });
 
-    it("should only show exit command in remote mode", () => {
+    it("should only show remote mode commands in remote mode", () => {
       const commands = getAllSlashCommands(mockAssistant, {
         isRemoteMode: true,
       });
       const commandNames = commands.map((cmd) => cmd.name);
 
-      // In remote mode, only exit command should be available
+      // In remote mode, only remote commands should be available
       expect(commandNames).toContain("exit");
-      expect(commandNames).toHaveLength(1);
+      expect(commandNames).toContain("diff");
+      expect(commandNames).toContain("apply");
+      expect(commandNames).toHaveLength(3);
     });
   });
 });

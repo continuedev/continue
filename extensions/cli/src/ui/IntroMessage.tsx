@@ -4,15 +4,10 @@ import React, { useMemo } from "react";
 
 import { getDisplayableAsciiArt } from "../asciiArt.js";
 import { MCPService } from "../services/MCPService.js";
-import { isInHomeDirectory } from "../util/isInHomeDirectory.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
 import { TipsDisplay, shouldShowTip } from "./TipsDisplay.js";
-
-// Export the warning message for testing
-export const HOME_DIRECTORY_WARNING =
-  "Run cn in a project directory for the best experience (currently in home directory)";
 
 interface IntroMessageProps {
   config?: AssistantUnrolled;
@@ -26,8 +21,6 @@ const extractRuleNames = (rules: any[] = []): string[] => {
     typeof rule === "string" ? rule : rule?.name || "Unknown",
   );
 };
-
-const userInHomeDirectory = isInHomeDirectory();
 
 const IntroMessage: React.FC<IntroMessageProps> = ({
   config,
@@ -59,7 +52,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         {mcpPrompts.map((prompt, index) => (
           <Text key={`mcp-${index}`}>
             - <Text color="white">/{prompt.name}</Text>:{" "}
-            <Text color="gray">{prompt.description}</Text>
+            <Text color="dim">{prompt.description}</Text>
           </Text>
         ))}
         <Text> </Text>
@@ -120,7 +113,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         </Text>
       ) : (
         <Text color="blue">
-          <Text bold>Model:</Text> <Text color="gray">Loading...</Text>
+          <Text bold>Model:</Text> <Text color="dim">Loading...</Text>
         </Text>
       )}
 
@@ -139,14 +132,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {renderMcpPrompts()}
       {renderRules()}
       {renderMcpServers()}
-
-      {/* Home directory warning */}
-      {userInHomeDirectory && (
-        <>
-          <Text color="yellow">{HOME_DIRECTORY_WARNING}</Text>
-          <Text> </Text>
-        </>
-      )}
     </Box>
   );
 };

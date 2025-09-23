@@ -567,7 +567,7 @@ describe("streamResponseThunk - tool calls", () => {
     // Verify telemetry events for auto-approved tool execution
     // Use partial matching to allow additional fields (e.g. model) in payload
     expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "gui_tool_call_decision",
+      "tool_call_decision",
       expect.objectContaining({
         decision: "auto_accept",
         toolName: "search_codebase",
@@ -576,11 +576,11 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "gui_tool_call_outcome",
+      "tool_call_outcome",
       expect.objectContaining({
         succeeded: true,
         toolName: "search_codebase",
-        errorMessage: undefined,
+        errorReason: undefined,
         duration_ms: expect.any(Number),
       }),
     );
@@ -2819,7 +2819,7 @@ describe("streamResponseThunk - tool calls", () => {
     // Verify telemetry events for manual approval flow
     // Use partial matching to allow additional fields (e.g. model) in payload
     expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "gui_tool_call_decision",
+      "tool_call_decision",
       expect.objectContaining({
         decision: "accept",
         toolName: "search_codebase",
@@ -2828,11 +2828,11 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "gui_tool_call_outcome",
+      "tool_call_outcome",
       expect.objectContaining({
         succeeded: true,
         toolName: "search_codebase",
-        errorMessage: undefined,
+        errorReason: undefined,
         duration_ms: expect.any(Number),
       }),
     );

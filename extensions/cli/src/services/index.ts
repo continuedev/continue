@@ -12,6 +12,7 @@ import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { StorageSyncService } from "./StorageSyncService.js";
 import { systemMessageService } from "./SystemMessageService.js";
 import {
   ApiClientServiceState,
@@ -33,6 +34,7 @@ const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
 const chatHistoryService = new ChatHistoryService();
 const updateService = new UpdateService();
+const storageSyncService = new StorageSyncService();
 
 /**
  * Initialize all services and register them with the service container
@@ -252,6 +254,12 @@ export async function initializeServices(
   );
 
   serviceContainer.register(
+    SERVICE_NAMES.STORAGE_SYNC,
+    () => storageSyncService.initialize(),
+    [],
+  );
+
+  serviceContainer.register(
     SERVICE_NAMES.CHAT_HISTORY,
     () => chatHistoryService.initialize(undefined, initOptions.headless),
     [], // No dependencies for now, but could depend on SESSION in future
@@ -318,6 +326,7 @@ export const services = {
   systemMessage: systemMessageService,
   chatHistory: chatHistoryService,
   updateService: updateService,
+  storageSync: storageSyncService,
 } as const;
 
 // Export the service container for advanced usage

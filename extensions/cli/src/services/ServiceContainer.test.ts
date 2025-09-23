@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { ServiceContainer } from "./ServiceContainer.js";
 
@@ -8,6 +8,11 @@ describe("ServiceContainer", () => {
   beforeEach(() => {
     container = new ServiceContainer();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Clean up listeners to prevent memory leaks
+    container?.removeAllListeners();
   });
 
   describe("Dependency Cascade Reloading", () => {
