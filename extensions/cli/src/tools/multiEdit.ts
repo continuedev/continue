@@ -35,11 +35,11 @@ export const multiEditTool: Tool = {
 This tool is ideal when you need to make multiple edits to the same file.
 
 To make multiple edits to a file, provide the following:
-1. file_path: The absolute path to the file to modify (must be absolute, not relative)
+1. file_path: The absolute path to the file to modify. Relative paths can also be used (resolved against cwd) but absolute is preferred
 2. edits: An array of edit operations to perform, where each edit contains:
    - old_string: The text to replace (must match the file contents exactly, including all whitespace/indentation)
    - new_string: The edited text to replace the old_string
-   - replace_all: Replace all occurences of old_string. This parameter is optional and defaults to false.
+   - replace_all: Replace all occurrences of old_string. This parameter is optional and defaults to false.
 
 IMPORTANT:
 - All edits are applied in sequence, in the order they are provided
@@ -65,18 +65,39 @@ WARNINGS:
 - The tool will fail if the file does not exist - it cannot create new files
 - This tool cannot create new files - the file must already exist`,
   parameters: {
-    file_path: {
-      type: "string",
-      description: "The absolute path to the file to modify",
-      required: true,
-    },
-    edits: {
-      type: "array",
-      description:
-        "Array of edit operations to perform sequentially on the file",
-      required: true,
-      items: {
-        type: "object",
+    type: "object",
+    required: ["file_path", "edits"],
+    properties: {
+      file_path: {
+        type: "string",
+        description:
+          "Absolute or relative path to the file to modify. Absolute preferred",
+      },
+      edits: {
+        type: "array",
+        description:
+          "Array of edit operations to perform sequentially on the file",
+        items: {
+          type: "object",
+          required: ["old_string", "new_string"],
+          properties: {
+            old_string: {
+              type: "string",
+              description:
+                "The text to replace (exact match including whitespace/indentation)",
+            },
+            new_string: {
+              type: "string",
+              description:
+                "The text to replace it with. MUST be different than old_string.",
+            },
+            replace_all: {
+              type: "boolean",
+              description:
+                "Replace all occurrences of old_string (default false) in the file",
+            },
+          },
+        },
       },
     },
   },
