@@ -10,7 +10,10 @@ import {
   serviceContainer,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import type { ModelServiceState } from "../services/types.js";
+import type {
+  ModelServiceState,
+  StorageSyncServiceState,
+} from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 import { isModelCapable } from "../utils/index.js";
@@ -108,6 +111,23 @@ function shouldExcludeEditTool(): boolean {
   return false;
 }
 
+// Check if agent session is active for PR tool availability
+// Note: we might also be able to use env var to detect this as well, would be simpler
+function isRemoteHubSession(): boolean {
+  try {
+    const storageSyncResult = getServiceSync<StorageSyncServiceState>(
+      SERVICE_NAMES.STORAGE_SYNC,
+    );
+    return !!(
+      storageSyncResult.state === "ready" &&
+      storageSyncResult.value?.isEnabled &&
+      !!storageSyncResult.value?.storageId
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Get all builtin tools including dynamic ones, with capability-based filtering
 export function getAllBuiltinTools(): Tool[] {
   let builtinTools = [...BUILTIN_TOOLS];
@@ -119,6 +139,12 @@ export function getAllBuiltinTools(): Tool[] {
     logger.debug(
       "Excluded Edit tool for capable model - MultiEdit will be used instead",
     );
+  }
+
+  // Filter PR tool based on agent session availability
+  if (!isRemoteHubSession()) {
+    builtinTools = builtinTools.filter((tool) => tool.name !== "PR");
+    logger.debug("Excluded PR tool - only available with active agent session");
   }
 
   return [...builtinTools, ...getDynamicTools()];
