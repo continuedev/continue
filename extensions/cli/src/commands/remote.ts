@@ -95,7 +95,7 @@ export async function remote(
       requestBody.branchName = options.branch;
     }
 
-    const response = await fetch(new URL("agents/devboxes", env.apiBase), {
+    const response = await fetch(new URL("agents", env.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

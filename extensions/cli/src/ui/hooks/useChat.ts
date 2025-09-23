@@ -62,6 +62,8 @@ export function useChat({
   onClear,
   isRemoteMode = false,
   remoteUrl,
+  onShowDiff,
+  onShowStatusMessage,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -386,12 +388,16 @@ export function useChat({
   const handleSlashCommandProcessing = async (
     message: string,
   ): Promise<string | null> => {
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (isRemoteMode || !assistant) {
+    // Handle slash commands
+    if (!assistant) {
       return message;
     }
 
-    const commandResult = await handleSlashCommands(message, assistant);
+    const commandResult = await handleSlashCommands(message, assistant, {
+      remoteUrl,
+      isRemoteMode,
+    });
+
     if (!commandResult) {
       return message;
     }
@@ -457,6 +463,8 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
+      onShowDiff,
+      onShowStatusMessage,
     });
 
     if (handled) return;
@@ -468,7 +476,7 @@ export function useChat({
     }
     message = bashProcessedMessage;
 
-    // Handle slash commands
+    // Handle slash commands (MUST happen before remote message handling)
     const processedMessage = await handleSlashCommandProcessing(message);
     if (processedMessage === null) {
       return; // Command was handled and no further processing needed

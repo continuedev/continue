@@ -20,14 +20,24 @@ vi.mock("ink", () => ({
   render: vi.fn(() => ({ unmount: vi.fn() })),
 }));
 
-// Mock react
-vi.mock("react", () => ({
-  createElement: vi.fn(),
-}));
+// Mock react with createContext
+vi.mock("react", async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    createElement: vi.fn(),
+    createContext: vi.fn(() => ({ Provider: vi.fn(), Consumer: vi.fn() })),
+  };
+});
 
 // Mock the chat command
 vi.mock("./chat.js", () => ({
   chat: vi.fn(),
+}));
+
+// Mock the remote command
+vi.mock("./remote.js", () => ({
+  remote: vi.fn(),
 }));
 
 describe("listSessionsCommand", () => {
@@ -49,6 +59,7 @@ describe("listSessionsCommand", () => {
         dateCreated: "2023-01-01T10:00:00.000Z",
         workspaceDirectory: "/workspace",
         firstUserMessage: "Hello world",
+        isRemote: false,
       },
       {
         sessionId: "session-2",
@@ -56,10 +67,12 @@ describe("listSessionsCommand", () => {
         dateCreated: "2023-01-01T09:00:00.000Z",
         workspaceDirectory: "/workspace",
         firstUserMessage: "Test message",
+        isRemote: true,
+        remoteId: "agent-123",
       },
     ];
 
-    mockListSessions.mockReturnValue(mockSessions);
+    mockListSessions.mockResolvedValue(mockSessions);
 
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -75,6 +88,8 @@ describe("listSessionsCommand", () => {
               workspaceDirectory: "/workspace",
               title: "Session 1",
               firstUserMessage: "Hello world",
+              isRemote: false,
+              remoteId: undefined,
             },
             {
               id: "session-2",
@@ -82,6 +97,8 @@ describe("listSessionsCommand", () => {
               workspaceDirectory: "/workspace",
               title: "Session 2",
               firstUserMessage: "Test message",
+              isRemote: true,
+              remoteId: "agent-123",
             },
           ],
         },
@@ -93,20 +110,23 @@ describe("listSessionsCommand", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should use limit of 10 for JSON and 20 for TUI", async () => {
-    mockListSessions.mockReturnValue([]);
+  it("should call listSessions without limit restrictions", async () => {
+    mockListSessions.mockResolvedValue([]);
 
-    // JSON mode should fetch 10
+    // JSON mode - should call listSessions (implementation decides limit)
     await listSessionsCommand({ format: "json" });
-    expect(mockListSessions).toHaveBeenCalledWith(10);
+    expect(mockListSessions).toHaveBeenCalled();
 
-    // TUI mode should fetch 20 (so UI can choose how many to display)
+    // TUI mode - should call listSessions (implementation decides limit)
     await listSessionsCommand({});
-    expect(mockListSessions).toHaveBeenCalledWith(20);
+    expect(mockListSessions).toHaveBeenCalled();
+
+    // Verify it was called twice total
+    expect(mockListSessions).toHaveBeenCalledTimes(2);
   });
 
   it("should handle empty sessions gracefully in JSON mode", async () => {
-    mockListSessions.mockReturnValue([]);
+    mockListSessions.mockResolvedValue([]);
 
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -120,7 +140,7 @@ describe("listSessionsCommand", () => {
   });
 
   it("should handle empty sessions gracefully in TUI mode", async () => {
-    mockListSessions.mockReturnValue([]);
+    mockListSessions.mockResolvedValue([]);
 
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 

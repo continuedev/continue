@@ -61,26 +61,13 @@ class RejectDiffAction : AnAction() {
 
 class FocusContinueInputWithoutClearAction : ContinueToolbarAction() {
     override fun toolbarActionPerformed(project: Project) {
-        project.getBrowser()?.sendToWebview("focusContinueInputWithoutClear")
-        project.getBrowser()?.focusOnInput()
+        FocusActionUtil.sendHighlightedCodeWithMessageToWebview(project, "focusContinueInputWithoutClear")
     }
 }
 
 class FocusContinueInputAction : ContinueToolbarAction() {
-    override fun toolbarActionPerformed(project: Project) =
-        focusContinueInput(project)
-
-    companion object {
-        fun focusContinueInput(project: Project?) {
-            val browser = project?.getBrowser()
-                ?: return
-            browser.sendToWebview("focusContinueInputWithNewSession")
-            browser.focusOnInput()
-            val rif = EditorUtils.getEditor(project)?.getHighlightedRIF()
-                ?: return
-            val code = HighlightedCodePayload(RangeInFileWithContents(rif.filepath, rif.range, rif.contents))
-            browser.sendToWebview("highlightedCode", code)
-        }
+    override fun toolbarActionPerformed(project: Project) {
+        FocusActionUtil.sendHighlightedCodeWithMessageToWebview(project, "focusContinueInputWithNewSession")
     }
 }
 
@@ -115,5 +102,16 @@ class OpenLogsAction : AnAction() {
     }
 }
 
-
+object FocusActionUtil {
+    fun sendHighlightedCodeWithMessageToWebview(project: Project?, messageType: String) {
+        val browser = project?.getBrowser()
+            ?: return
+        browser.sendToWebview(messageType)
+        browser.focusOnInput()
+        val rif = EditorUtils.getEditor(project)?.getHighlightedRIF()
+            ?: return
+        val code = HighlightedCodePayload(RangeInFileWithContents(rif.filepath, rif.range, rif.contents))
+        browser.sendToWebview("highlightedCode", code)
+    }
+}
 

@@ -24,6 +24,8 @@ export interface UseChatProps {
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
+  onShowDiff?: (diffContent: string) => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 export interface AttachedFile {
@@ -61,4 +63,5 @@ export interface SlashCommandResult {
   openUpdateSelector?: boolean;
   openSessionSelector?: boolean;
   compact?: boolean;
+  diffContent?: string;
 }

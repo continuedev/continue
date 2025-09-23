@@ -71,3 +71,10 @@ export const gptEditPrompt: PromptTemplateFunction = (history, otherData) => {
 
   return paragraphs.join("\n\n");
 };
+
+export const defaultApplyPrompt: PromptTemplateFunction = (
+  history,
+  otherData,
+) => {
+  return `${otherData.original_code}\n\nThe following code was suggested as an edit:\n\`\`\`\n${otherData.new_code}\n\`\`\`\nPlease apply it to the previous code.`;
+};

@@ -18,7 +18,7 @@ const ActionStatus: React.FC<ActionStatusProps> = ({
   startTime,
   message,
   showSpinner = false,
-  color = "gray",
+  color = "dim",
   loadingColor = "green",
 }) => {
   if (!visible) return null;
@@ -27,9 +27,9 @@ const ActionStatus: React.FC<ActionStatusProps> = ({
     <Box paddingX={1} flexDirection="row" gap={1}>
       {showSpinner && <LoadingAnimation color={loadingColor} visible={true} />}
       <Text color={color}>{message}</Text>
-      <Text color="gray">(</Text>
+      <Text color="dim">(</Text>
       <Timer startTime={startTime} />
-      <Text color="gray">• esc to interrupt )</Text>
+      <Text color="dim">• esc to interrupt )</Text>
     </Box>
   );
 };

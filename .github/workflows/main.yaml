@@ -26,8 +26,24 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # This ensures all tags are fetched
+
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
+
+      - name: Make sure version isn't odd
+        run: |
+          cd extensions/vscode
+          node scripts/versionCheck.js
+
   build:
-    needs: check_release_name
+    needs: [check_release_name, check-version]
     if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
@@ -87,22 +103,6 @@ jobs:
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
           path: "extensions/vscode/*.vsix"
-
-  check-version:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # This ensures all tags are fetched
-
-      - name: Checkout tag
-        run: git checkout ${GITHUB_REF#refs/tags/}
-
-      - name: Make sure version isn't odd
-        run: |
-          cd extensions/vscode
-          node scripts/versionCheck.js
 
   release:
     permissions:

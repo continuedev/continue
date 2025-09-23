@@ -243,6 +243,14 @@
               "guides/custom-code-rag",
               "guides/how-to-self-host-a-model"
             ]
+          },
+          {
+            "group": "Cookbooks",
+            "icon": "book-open-cover",
+            "pages": [
+              "guides/posthog-github-continuous-ai",
+              "guides/netlify-mcp-continuous-deployment"
+            ]
           }
         ]
       },

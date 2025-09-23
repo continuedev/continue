@@ -272,7 +272,7 @@ export interface Session {
   history: ChatHistoryItem[];
 }
 
-export interface SessionMetadata {
+export interface BaseSessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;
@@ -308,11 +308,6 @@ export interface FileEdit {
   filepath: string;
   range: Range;
   replacement: string;
-}
-
-export interface ContinueError {
-  title: string;
-  message: string;
 }
 
 export interface CompletionOptions extends BaseCompletionOptions {
@@ -823,6 +818,8 @@ export interface IDE {
   openFile(path: string): Promise<void>;
 
   openUrl(url: string): Promise<void>;
+
+  getExternalUri?(uri: string): Promise<string>;
 
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
@@ -1335,6 +1332,7 @@ export interface MCPTool {
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];
+  infos: string[];
   isProtectedResource: boolean;
 
   prompts: MCPPrompt[];
@@ -1392,7 +1390,9 @@ export interface ApplyState {
   autoFormattingDiff?: string;
 }
 
-export interface StreamDiffLinesPayload {
+export type StreamDiffLinesType = "edit" | "apply";
+interface StreamDiffLinesOptionsBase {
+  type: StreamDiffLinesType;
   prefix: string;
   highlighted: string;
   suffix: string;
@@ -1402,6 +1402,19 @@ export interface StreamDiffLinesPayload {
   includeRulesInSystemMessage: boolean;
   fileUri?: string;
 }
+
+interface StreamDiffLinesOptionsEdit extends StreamDiffLinesOptionsBase {
+  type: "edit";
+}
+
+interface StreamDiffLinesOptionsApply extends StreamDiffLinesOptionsBase {
+  type: "apply";
+  newCode: string;
+}
+
+type StreamDiffLinesPayload =
+  | StreamDiffLinesOptionsApply
+  | StreamDiffLinesOptionsEdit;
 
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
@@ -1798,7 +1811,8 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
-  | ".continuerules";
+  | ".continuerules"
+  | "agent-file";
 
 export interface RuleWithSource {
   name?: string;
