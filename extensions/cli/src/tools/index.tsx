@@ -20,6 +20,7 @@ import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
+import { prTool } from "./pr.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
@@ -47,6 +48,7 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
+  prTool,
 ];
 
 // Export BUILTIN_TOOLS as the base set of tools
