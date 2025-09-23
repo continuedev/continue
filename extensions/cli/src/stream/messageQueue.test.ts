@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../util/logger.js", () => ({
   logger: {
@@ -18,13 +18,6 @@ import { messageQueue } from "./messageQueue.js";
 describe("messageQueue", () => {
   beforeEach(() => {
     // Drain any leftover items from previous tests
-    while (messageQueue.getAllQueuedMessages()) {}
-  });
-
-  afterEach(() => {
-    // Clean up any remaining listeners
-    messageQueue.removeAllListeners();
-    // Clear any remaining queued messages
     while (messageQueue.getAllQueuedMessages()) {}
   });
 
