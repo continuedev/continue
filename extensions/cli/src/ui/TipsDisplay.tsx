@@ -33,7 +33,7 @@ const TipsDisplay: React.FC<TipsDisplayProps> = () => {
       <Text color="green" bold>
         * Tip:
       </Text>
-      <Text color="gray" italic>
+      <Text color="dim" italic>
         {" "}
         {randomTip}
       </Text>

@@ -65,7 +65,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
       return (
         <Box key={index} marginBottom={1}>
-          <Text color="gray" italic>
+          <Text color="dim" italic>
             {message.content}
           </Text>
         </Box>
@@ -170,7 +170,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         <Text color={isUser ? "blue" : "white"}>{hideBullet ? " " : "●"}</Text>
         <Text> </Text>
         {isUser ? (
-          <Text color="gray">
+          <Text color="dim">
             {formatMessageContentForDisplay(message.content)}
           </Text>
         ) : (
@@ -178,7 +178,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             content={formatMessageContentForDisplay(message.content)}
           />
         )}
-        {isStreaming && <Text color="gray">▋</Text>}
+        {isStreaming && <Text color="dim">▋</Text>}
       </Box>
     );
   },

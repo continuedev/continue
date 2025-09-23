@@ -31,7 +31,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
       {
         regex: /<think>([\s\S]*?)<\/think>/g,
         render: (content, key) => (
-          <Text key={key} color="gray">
+          <Text key={key} color="dim">
             {content.trim()}
           </Text>
         ),
