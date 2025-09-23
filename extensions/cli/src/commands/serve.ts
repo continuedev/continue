@@ -382,11 +382,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   async function processMessages(state: ServerState, llmApi: any) {
+    let processedMessage = false;
     while (state.messageQueue.length > 0 && state.serverRunning) {
       const userMessage = state.messageQueue.shift()!;
       state.isProcessing = true;
       state.shouldInterrupt = false;
       state.lastActivity = Date.now();
+      processedMessage = true;
 
       // Add user message via ChatHistoryService (single source of truth)
       try {
@@ -436,6 +438,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         state.currentAbortController = null;
         state.isProcessing = false;
       }
+    }
+
+    if (
+      processedMessage &&
+      state.serverRunning &&
+      state.messageQueue.length === 0
+    ) {
+      await storageSyncService.markAgentStatusUnread();
     }
   }
 
