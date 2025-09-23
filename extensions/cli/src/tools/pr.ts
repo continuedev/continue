@@ -139,6 +139,10 @@ The GitHub CLI must be configured and authenticated for this to work.`,
       // Get current branch
       const currentBranch = await getCurrentBranch();
 
+      // Add standard suffix to the PR body
+      const standardSuffix = "\n\n---\n\nGenerated with [Continue](https://continue.dev)\n\nCo-Authored-By: Continue <noreply@continue.dev>";
+      const enhancedBody = body + standardSuffix;
+
       // Build gh CLI arguments
       const args = [
         "pr",
@@ -148,7 +152,7 @@ The GitHub CLI must be configured and authenticated for this to work.`,
         "--title",
         title,
         "--body",
-        body,
+        enhancedBody,
       ];
 
       if (draft) {

@@ -123,13 +123,14 @@ describe("PR Tool", () => {
     expect(result).toContain("Successfully created pull request");
     expect(result).toContain("https://github.com/owner/repo/pull/123");
     
-    // Verify gh command was called with correct arguments
+    // Verify gh command was called with correct arguments (including suffix)
+    const expectedBody = "Test description\n\n---\n\nGenerated with [Continue](https://continue.dev)\n\nCo-Authored-By: Continue <noreply@continue.dev>";
     expect(mockSpawn).toHaveBeenCalledWith("gh", [
       "pr",
       "create", 
       "--head", "feature-branch",
       "--title", "Test PR",
-      "--body", "Test description",
+      "--body", expectedBody,
     ]);
   });
 
@@ -163,13 +164,14 @@ describe("PR Tool", () => {
       draft: true,
     });
     
-    // Verify gh command was called with draft flag
+    // Verify gh command was called with draft flag (including suffix)
+    const expectedBody = "Test description\n\n---\n\nGenerated with [Continue](https://continue.dev)\n\nCo-Authored-By: Continue <noreply@continue.dev>";
     expect(mockSpawn).toHaveBeenCalledWith("gh", [
       "pr",
       "create", 
       "--head", "feature-branch",
       "--title", "Test PR",
-      "--body", "Test description",
+      "--body", expectedBody,
       "--draft",
     ]);
   });
@@ -190,6 +192,53 @@ describe("PR Tool", () => {
     });
 
     expect(result).toContain("Not in a git repository");
+  });
+
+  it("should add standard suffix to PR body", async () => {
+    const mockChild = new MockChildProcess();
+    mockSpawn.mockReturnValue(mockChild as any);
+
+    let currentCall = 0;
+    let capturedBody = "";
+    mockSpawn.mockImplementation((...args) => {
+      const child = new MockChildProcess();
+      currentCall++;
+      
+      // Capture the body argument from gh pr create command
+      if (currentCall === 2) {
+        const [, ghArgs] = args;
+        const bodyIndex = ghArgs.indexOf("--body");
+        if (bodyIndex !== -1 && bodyIndex + 1 < ghArgs.length) {
+          capturedBody = ghArgs[bodyIndex + 1];
+        }
+      }
+      
+      process.nextTick(() => {
+        if (currentCall === 1) {
+          // First call: git branch --show-current
+          child.stdout.on.mock.calls[0][1]("feature-branch\n");
+          child.on.mock.calls.find(([event]) => event === "close")?.[1](0);
+        } else {
+          // Second call: gh pr create
+          child.stdout.on.mock.calls[0][1]("https://github.com/owner/repo/pull/123\n");
+          child.on.mock.calls.find(([event]) => event === "close")?.[1](0);
+        }
+      });
+      
+      return child as any;
+    });
+
+    await prTool.run({
+      title: "Test PR",
+      body: "Original PR description",
+      draft: false,
+    });
+    
+    // Verify the body contains both original content and standard suffix
+    expect(capturedBody).toContain("Original PR description");
+    expect(capturedBody).toContain("Generated with [Continue](https://continue.dev)");
+    expect(capturedBody).toContain("Co-Authored-By: Continue <noreply@continue.dev>");
+    expect(capturedBody).toMatch(/---\n\nGenerated with \[Continue\]/);
   });
 
   it("should handle gh command not found", async () => {
