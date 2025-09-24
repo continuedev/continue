@@ -10,8 +10,8 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Agent as HttpsAgent } from "https";
 import {
   IDE,
+  InternalMcpOptions,
   MCPConnectionStatus,
-  MCPOptions,
   MCPPrompt,
   MCPResource,
   MCPResourceTemplate,
@@ -65,7 +65,7 @@ class MCPConnection {
   };
 
   constructor(
-    public options: MCPOptions,
+    public options: InternalMcpOptions,
     public extras?: MCPExtras,
   ) {
     // Don't construct transport in constructor to avoid blocking
@@ -131,20 +131,20 @@ class MCPConnection {
     this.abortController = new AbortController();
 
     // currently support oauth for sse transports only
-    if (this.options.transport.type === "sse") {
-      if (!this.options.transport.requestOptions) {
-        this.options.transport.requestOptions = {
+    if (this.options.type === "sse") {
+      if (!this.options.requestOptions) {
+        this.options.requestOptions = {
           headers: {},
         };
       }
       const accessToken = await getOauthToken(
-        this.options.transport.url,
+        this.options.url,
         this.extras?.ide!,
       );
       if (accessToken) {
         this.isProtectedResource = true;
-        this.options.transport.requestOptions.headers = {
-          ...this.options.transport.requestOptions.headers,
+        this.options.requestOptions.headers = {
+          ...this.options.requestOptions.headers,
           Authorization: `Bearer ${accessToken}`,
         };
       }
@@ -304,7 +304,7 @@ class MCPConnection {
 
           // Include stdio output if available for stdio transport
           if (
-            this.options.transport.type === "stdio" &&
+            this.options.type === "stdio" &&
             (this.stdioOutput.stdout || this.stdioOutput.stderr)
           ) {
             errorMessage += "\n\nProcess output:";
@@ -356,12 +356,12 @@ class MCPConnection {
   }
 
   private async constructTransportAsync(
-    options: MCPOptions,
+    options: InternalMcpOptions,
   ): Promise<Transport> {
-    switch (options.transport.type) {
+    switch (options.type) {
       case "stdio":
-        const env: Record<string, string> = options.transport.env
-          ? { ...options.transport.env }
+        const env: Record<string, string> = options.env
+          ? { ...options.env }
           : {};
 
         if (process.env.PATH !== undefined) {
@@ -383,15 +383,15 @@ class MCPConnection {
 
         // Resolve the command and args for the current platform
         const { command, args } = this.resolveCommandForPlatform(
-          options.transport.command,
-          options.transport.args || [],
+          options.command,
+          options.args || [],
         );
 
         const transport = new StdioClientTransport({
           command,
           args,
           env,
-          cwd: options.transport.cwd,
+          cwd: options.cwd,
           stderr: "pipe",
         });
 
@@ -403,34 +403,32 @@ class MCPConnection {
 
         return transport;
       case "websocket":
-        return new WebSocketClientTransport(new URL(options.transport.url));
+        return new WebSocketClientTransport(new URL(options.url));
       case "sse":
         const sseAgent =
-          options.transport.requestOptions?.verifySsl === false
+          options.requestOptions?.verifySsl === false
             ? new HttpsAgent({ rejectUnauthorized: false })
             : undefined;
 
-        return new SSEClientTransport(new URL(options.transport.url), {
+        return new SSEClientTransport(new URL(options.url), {
           eventSourceInit: {
             fetch: (input, init) =>
               fetch(input, {
                 ...init,
                 headers: {
                   ...init?.headers,
-                  ...(options.transport.requestOptions?.headers as
-                    | Record<string, string>
-                    | undefined),
+                  ...options.requestOptions?.headers,
                 },
                 ...(sseAgent && { agent: sseAgent }),
               }),
           },
           requestInit: {
-            headers: options.transport.requestOptions?.headers,
+            headers: options.requestOptions?.headers,
             ...(sseAgent && { agent: sseAgent }),
           },
         });
       case "streamable-http":
-        const { url, requestOptions } = options.transport;
+        const { url, requestOptions } = options;
         const streamableAgent =
           requestOptions?.verifySsl === false
             ? new HttpsAgent({ rejectUnauthorized: false })
@@ -443,9 +441,7 @@ class MCPConnection {
           },
         });
       default:
-        throw new Error(
-          `Unsupported transport type: ${(options.transport as any).type}`,
-        );
+        throw new Error(`Unsupported transport type: ${options.type}`);
     }
   }
 }

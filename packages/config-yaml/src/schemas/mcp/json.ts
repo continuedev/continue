@@ -22,7 +22,7 @@ const mcpServersJsonSchema = z.union([
   httpOrSseMcpJsonSchema,
   stdioMcpJsonSchema,
 ]);
-export type McpJsonConfig = z.infer<typeof stdioMcpJsonSchema>;
+export type McpJsonConfig = z.infer<typeof mcpServersJsonSchema>;
 
 export const mcpServersRecordSchema = z.record(
   z.string(),
@@ -33,4 +33,6 @@ export type McpServersJsonConfigRecord = z.infer<typeof mcpServersRecordSchema>;
 export const mcpServerConfigFileSchema = z.object({
   mcpServers: mcpServersRecordSchema,
 });
-export type McpServersJsonConfigFile = z.infer<typeof stdioMcpJsonSchema>;
+export type McpServersJsonConfigFile = z.infer<
+  typeof mcpServerConfigFileSchema
+>;

@@ -1,11 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import {
-  MCPOptions,
-  MCPServerStatus,
-  StdioOptions,
-  TransportOptions,
-} from "../..";
+import { InternalMcpOptions, MCPServerStatus } from "../..";
 import MCPConnection, { MCPExtras } from "./MCPConnection";
 
 export class MCPManagerSingleton {
@@ -25,7 +20,7 @@ export class MCPManagerSingleton {
     return MCPManagerSingleton.instance;
   }
 
-  createConnection(id: string, options: MCPOptions): MCPConnection {
+  createConnection(id: string, options: InternalMcpOptions): MCPConnection {
     if (this.connections.has(id)) {
       return this.connections.get(id)!;
     } else {
@@ -64,7 +59,7 @@ export class MCPManagerSingleton {
   }
 
   setConnections(
-    servers: MCPOptions[],
+    servers: InternalMcpOptions[],
     forceRefresh: boolean,
     extras?: MCPExtras,
   ) {
@@ -76,11 +71,7 @@ export class MCPManagerSingleton {
         !servers.find(
           // Refresh the connection if TransportOptions changed
           (s) =>
-            s.id === id &&
-            this.compareTransportOptions(
-              connection.options.transport,
-              s.transport,
-            ),
+            s.id === id && this.compareTransportOptions(connection.options, s),
         )
       ) {
         refresh = true;
@@ -111,8 +102,8 @@ export class MCPManagerSingleton {
   }
 
   private compareTransportOptions(
-    a: TransportOptions,
-    b: TransportOptions,
+    a: InternalMcpOptions,
+    b: InternalMcpOptions,
   ): boolean {
     if (a.type !== b.type) {
       return false;
@@ -121,7 +112,7 @@ export class MCPManagerSingleton {
       return (
         a.command === b.command &&
         JSON.stringify(a.args) === JSON.stringify(b.args) &&
-        this.compareEnv(a, b)
+        this.compareEnv(a.env, b.env)
       );
     } else if (a.type !== "stdio" && b.type !== "stdio") {
       return a.url === b.url;
@@ -129,15 +120,17 @@ export class MCPManagerSingleton {
     return false;
   }
 
-  private compareEnv(a: StdioOptions, b: StdioOptions): boolean {
-    const aEnv = a.env ?? {};
-    const bEnv = b.env ?? {};
-    const aKeys = Object.keys(aEnv);
-    const bKeys = Object.keys(bEnv);
+  private compareEnv(
+    aEnv: Record<string, string> | undefined,
+    bEnv: Record<string, string> | undefined,
+  ): boolean {
+    const a = aEnv ?? {};
+    const b = bEnv ?? {};
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
 
     return (
-      aKeys.length === bKeys.length &&
-      aKeys.every((key) => aEnv[key] === bEnv[key])
+      aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key])
     );
   }
 

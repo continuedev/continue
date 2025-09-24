@@ -382,21 +382,27 @@ export async function configYamlToContinueConfig(options: {
     await mcpManager.shutdown();
   } else {
     mcpManager.setConnections(
-      (config.mcpServers ?? []).map((server) => ({
-        id: server.name,
-        name: server.name,
-        sourceFile: server.sourceFile,
-        transport: {
-          type: "stdio",
-          args: [],
+      (config.mcpServers ?? []).map((server) => {
+        return {
+          name: server.name,
+          id: server.name,
           requestOptions: mergeConfigYamlRequestOptions(
             server.requestOptions,
             config.requestOptions,
           ),
-          ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-        },
-        timeout: server.connectionTimeout,
-      })),
+          sourceFile: server.sourceFile,
+          timeout: server.connectionTimeout,
+          requestOptions: mergedRequestOptions,
+          faviconUrl: server.faviconUrl,
+          args: server.args,
+          // command: server.command,
+          type: server.type,
+          // url: server.type,
+          // cwd: server.cwd,
+          // env: server.env,
+          requestOptions: server.requestOptions,
+        };
+      }),
       false,
       { ide },
     );

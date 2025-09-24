@@ -24,14 +24,27 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
 export function convertYamlMcpToContinueMcp(
   server: MCPServer,
 ): ExperimentalMCPOptions {
+  if (server.command) {
+    return {
+      transport: {
+        type: "stdio",
+        command: server.command,
+        args: server.args ?? [],
+        env: server.env,
+        cwd: server.cwd,
+        requestOptions: server.requestOptions,
+      },
+      timeout: server.connectionTimeout,
+      faviconUrl: server.faviconUrl,
+    };
+  }
   return {
     transport: {
-      type: "stdio",
-      command: server.command,
-      args: server.args ?? [],
-      env: server.env,
-      cwd: server.cwd,
-    } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
+      type: "sse",
+      url: server.url,
+      requestOptions: server.requestOptions,
+    },
     timeout: server.connectionTimeout,
+    faviconUrl: server.faviconUrl,
   };
 }

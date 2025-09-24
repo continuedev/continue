@@ -6,6 +6,7 @@ import path from "path";
 import {
   ConfigResult,
   ConfigValidationError,
+  mergeConfigYamlRequestOptions,
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
@@ -57,8 +58,8 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { PolicySingleton } from "../control-plane/PolicySingleton";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import { PolicySingleton } from "../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
@@ -555,8 +556,13 @@ async function intermediateToFinalConfig({
         (server, index) => ({
           id: `continue-mcp-server-${index + 1}`,
           name: `MCP Server`,
-          ...server,
-          requestOptions: config.requestOptions,
+          requestOptions: mergeConfigYamlRequestOptions(
+            server.transport.type !== "stdio"
+              ? server.transport.requestOptions
+              : undefined,
+            config.requestOptions,
+          ),
+          ...server.transport,
         }),
       ),
       false,

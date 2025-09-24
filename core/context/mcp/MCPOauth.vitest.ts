@@ -21,7 +21,8 @@ vi.mock("./MCPManagerSingleton", () => ({
 describe("MCPOauth", () => {
   let globalContextFilePath: string;
   let mockIde: any;
-  let mockMcpServer: any;
+  let mockMcpServerId: string;
+  let mockMcpServerUrl: string;
 
   beforeEach(() => {
     // file is present in the core/test directory
@@ -36,13 +37,8 @@ describe("MCPOauth", () => {
       getExternalUri: vi.fn((uri) => Promise.resolve(uri)),
     };
 
-    mockMcpServer = {
-      id: "test-server",
-      transport: {
-        type: "sse",
-        url: "https://test-server.com",
-      },
-    };
+    mockMcpServerId = "test-server";
+    mockMcpServerUrl = "https://test-server.com";
 
     vi.clearAllMocks();
   });
@@ -107,7 +103,11 @@ describe("MCPOauth", () => {
       const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue("AUTHORIZED");
 
-      const result = await performAuth(mockMcpServer, mockIde);
+      const result = await performAuth(
+        mockMcpServerId,
+        mockMcpServerUrl,
+        mockIde,
+      );
 
       expect(mockAuth).toHaveBeenCalledWith(
         expect.any(Object), // MCPConnectionOauthProvider instance
@@ -142,7 +142,7 @@ describe("MCPOauth", () => {
         },
       });
 
-      removeMCPAuth(mockMcpServer, mockIde);
+      removeMCPAuth(mockMcpServerId, mockIde);
 
       const updatedStorage = globalContext.get("mcpOauthStorage");
       expect(updatedStorage).toEqual({
@@ -166,7 +166,7 @@ describe("MCPOauth", () => {
         },
       });
 
-      removeMCPAuth(mockMcpServer, mockIde);
+      removeMCPAuth(mockMcpServerUrl, mockIde);
 
       const updatedStorage = globalContext.get("mcpOauthStorage");
       expect(updatedStorage).toEqual({
@@ -193,7 +193,7 @@ describe("MCPOauth", () => {
       const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue("AUTHORIZED");
 
-      await performAuth(mockMcpServer, vscodeIde);
+      await performAuth(mockMcpServerId, mockMcpServerUrl, vscodeIde);
 
       expect(vscodeIde.getExternalUri).toHaveBeenCalledWith(
         "http://localhost:3000",
@@ -210,7 +210,11 @@ describe("MCPOauth", () => {
       const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue("AUTHORIZED");
 
-      await performAuth(mockMcpServer, ideWithoutExternalUri as any);
+      await performAuth(
+        mockMcpServerId,
+        mockMcpServerUrl,
+        ideWithoutExternalUri as any,
+      );
 
       // Should still work without getExternalUri
       expect(mockAuth).toHaveBeenCalled();
@@ -227,7 +231,7 @@ describe("MCPOauth", () => {
       mockAuth.mockResolvedValue("AUTHORIZED");
 
       // Should not throw, should fallback to localhost
-      await performAuth(mockMcpServer, errorIde);
+      await performAuth(mockMcpServerId, mockMcpServerUrl, errorIde);
 
       expect(mockAuth).toHaveBeenCalled();
     });
@@ -235,41 +239,14 @@ describe("MCPOauth", () => {
 
   describe("concurrent authentication", () => {
     test("should handle multiple concurrent auth flows", async () => {
-      const server1 = {
-        id: "server-1",
-        transport: { type: "sse" as const, url: "https://server1.com" },
-        status: "connected" as const,
-        errors: [],
-        infos: [],
-        isProtectedResource: false,
-        prompts: [],
-        tools: [],
-        resources: [],
-        resourceTemplates: [],
-        name: "server-1",
-      };
-      const server2 = {
-        id: "server-2",
-        transport: { type: "sse" as const, url: "https://server2.com" },
-        status: "connected" as const,
-        errors: [],
-        infos: [],
-        isProtectedResource: false,
-        prompts: [],
-        tools: [],
-        resources: [],
-        resourceTemplates: [],
-        name: "server-2",
-      };
-
       const { auth } = await import("@modelcontextprotocol/sdk/client/auth.js");
       const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue("AUTHORIZED");
 
       // Start two auth flows concurrently
       const [result1, result2] = await Promise.all([
-        performAuth(server1, mockIde),
-        performAuth(server2, mockIde),
+        performAuth("server-1-id", "https://server1.com", mockIde),
+        performAuth("server-2-id", "https://server2.com", mockIde),
       ]);
 
       expect(result1).toBe("AUTHORIZED");
@@ -285,15 +262,15 @@ describe("MCPOauth", () => {
 
       // First successful call to set up the context
       mockAuth.mockResolvedValueOnce("AUTHORIZED");
-      await performAuth(mockMcpServer, mockIde);
+      await performAuth(mockMcpServerId, mockMcpServerUrl, mockIde);
 
       // Reset mock for the failure test
       mockAuth.mockRejectedValueOnce(new Error("Auth failed"));
 
       // Second call that should fail and clean up
-      await expect(performAuth(mockMcpServer, mockIde)).rejects.toThrow(
-        "Auth failed",
-      );
+      await expect(
+        performAuth(mockMcpServerId, mockMcpServerUrl, mockIde),
+      ).rejects.toThrow("Auth failed");
 
       // Verify auth was called twice
       expect(mockAuth).toHaveBeenCalledTimes(2);
@@ -301,30 +278,20 @@ describe("MCPOauth", () => {
       // The context cleanup happens internally in performAuth's catch block
       // We can verify it indirectly by checking that a subsequent auth call works
       mockAuth.mockResolvedValueOnce("AUTHORIZED");
-      const result = await performAuth(mockMcpServer, mockIde);
+      const result = await performAuth(
+        mockMcpServerId,
+        mockMcpServerUrl,
+        mockIde,
+      );
       expect(result).toBe("AUTHORIZED");
     });
 
     test("should handle missing server URL", async () => {
-      const invalidServer = {
-        id: "invalid",
-        transport: { type: "sse" as const, url: "" },
-        status: "connected" as const,
-        errors: [],
-        infos: [],
-        isProtectedResource: false,
-        prompts: [],
-        tools: [],
-        resources: [],
-        resourceTemplates: [],
-        name: "invalid",
-      };
-
       const { auth } = await import("@modelcontextprotocol/sdk/client/auth.js");
       const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue("AUTHORIZED");
 
-      await performAuth(invalidServer, mockIde);
+      await performAuth("invalid-id", "", mockIde);
 
       // Should still attempt auth with empty URL
       expect(mockAuth).toHaveBeenCalled();
