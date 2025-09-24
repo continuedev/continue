@@ -68,7 +68,6 @@ async function loadRules(ide: IDE) {
 
   return { rules, errors };
 }
-
 export default async function doLoadConfig(options: {
   ide: IDE;
   controlPlaneClient: ControlPlaneClient;
