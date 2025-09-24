@@ -252,7 +252,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
             <ListboxButton>
               <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
             </ListboxButton>
-            <ListboxOptions className="min-w-fit">
+            <ListboxOptions className="min-w-fit" anchor="bottom end">
               {server.isProtectedResource && server.status === "connected" && (
                 <ListboxOption
                   value="remove auth"
