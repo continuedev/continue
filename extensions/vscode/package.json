@@ -373,6 +373,12 @@
         "category": "Continue",
         "title": "Generate Rule",
         "group": "Continue"
+      },
+      {
+        "command": "continue.openInNewWindow",
+        "category": "Continue",
+        "title": "Open in new window",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -444,6 +450,12 @@
         "key": "ctrl+shift+r"
       },
       {
+        "command": "continue.openInNewWindow",
+        "mac": "cmd+k cmd+m",
+        "key": "ctrl+k ctrl+m",
+        "when": "!terminalFocus"
+      },
+      {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
@@ -512,6 +524,9 @@
         },
         {
           "command": "continue.generateRule"
+        },
+        {
+          "command": "continue.openInNewWindow"
         }
       ],
       "editor/context": [
