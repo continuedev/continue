@@ -1,0 +1,614 @@
+---
+title: "Netlify Performance Optimization Cookbook"
+description: "Optimize web performance with A/B testing, automated monitoring, and data-driven improvements using Netlify MCP and Continue."
+sidebarTitle: "Using Netlify MCP for Performance Optimization"
+---
+
+<Card title="Ship Faster Code, Not Slower Sites" icon="gauge-high">
+  Use AI to automatically monitor performance metrics, run A/B tests between
+  branches, and get actionable optimization suggestions based on real user data
+  from Netlify Analytics
+</Card>
+
+<Info>
+  **Did You Know?** Netlify is more than just static hosting! It offers:
+  - [Split Testing](https://docs.netlify.com/site-deploys/split-testing/) for A/B testing branches
+  - [Analytics](https://docs.netlify.com/analytics/get-started/) with Core Web Vitals tracking
+  - [Edge Functions](https://docs.netlify.com/edge-functions/overview/) for personalization at the edge
+  - [Build Plugins](https://docs.netlify.com/integrations/build-plugins/) ecosystem with 100+ integrations
+  - [Forms](https://docs.netlify.com/forms/setup/) with built-in spam protection
+  - [Identity](https://docs.netlify.com/visitor-access/identity/) for user authentication
+  - [Large Media](https://docs.netlify.com/large-media/overview/) for Git LFS support
+
+This guide shows you how to leverage these features through natural language with Continue CLI!
+
+</Info>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Run [A/B tests](https://docs.netlify.com/site-deploys/split-testing/) between branches to measure performance impact
+- Monitor [Core Web Vitals](https://docs.netlify.com/analytics/get-started/#core-web-vitals) and build performance metrics
+- Automatically block deploys that degrade performance using [Deploy Contexts](https://docs.netlify.com/site-deploys/overview/#deploy-contexts)
+- Optimize build times with [Build Plugins](https://docs.netlify.com/integrations/build-plugins/) and bundle sizes with AI assistance
+
+## Prerequisites
+
+- GitHub repository with a web project
+- [Netlify account](https://netlify.com) (free tier works)
+- Node.js 22+ installed (required for Netlify)
+- [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
+- [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) configured
+- [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) (recommended)
+
+## Quick Setup
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+<Step title="Configure Netlify MCP">
+  1. Install Netlify CLI: `npm i -g netlify-cli` 2. Authenticate with Netlify:
+  `netlify login` 3. Visit [Netlify MCP on Continue
+  Hub](https://hub.continue.dev/netlify/netlify-mcp) 4. Follow the configuration
+  instructions for your editor
+</Step>
+
+  <Step title="Add Development Rules">
+    Install the [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) bundle for best practices:
+
+    1. Visit the bundle page on Continue Hub
+    2. Click **"Install Rules"**
+    3. Rules automatically apply to your agent
+
+  </Step>
+
+  <Step title="Verify Setup">
+    Test the connection with cn CLI:
+
+    ```bash
+    cn
+    # Then in TUI mode:
+    "Check my Netlify auth and list sites"
+    ```
+
+  </Step>
+</Steps>
+
+<Info>
+  The Netlify Development Rules bundle includes guardrails for: - Proper
+  `.gitignore` configuration - Function structure and placement - Edge function
+  constraints - Local development best practices
+</Info>
+
+## Performance Optimization Steps
+
+### Step 1: Baseline Performance Metrics
+
+Establish your current performance baseline using cn CLI:
+
+```bash
+# Start cn in TUI mode
+cn
+
+# Then ask:
+"Show my site's Core Web Vitals and build times"
+```
+
+<Tip>
+  **Test in Plan Mode First**: Before making performance optimizations that
+  might affect your site, test your prompts in plan mode (see the [Plan Mode
+  Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This
+  shows you what the agent will do without executing it. For example: `"Set up
+  A/B testing between main and feature branch with performance monitoring"`
+</Tip>
+
+<Info>
+
+    Netlify automatically tracks: 
+    - **Build Performance**: Compile times, cache
+    hits 
+    - **Runtime Performance**: Core Web Vitals, Time to Interactive 
+    -  **Resource Usage**: Bandwidth, function execution times
+    
+</Info>
+
+### Step 2: A/B Test Branch Performance
+
+Compare performance between branches:
+
+```bash
+# In cn TUI mode:
+"Set up A/B test between main and feature branch on Netlify:
+- Split traffic 50/50 between branches
+- Track Core Web Vitals for each variant
+- Monitor conversion metrics and bounce rate
+- Enable analytics to measure performance impact
+- Configure cookie-based visitor persistence
+- Set test duration for 1000 unique visitors
+- Auto-conclude test when statistical significance reached
+Report winner based on performance + conversion metrics"
+```
+
+<Info>
+  **Enhanced Analytics**: Combine Netlify's A/B testing with PostHog session
+  recordings to understand not just which variant performs better, but why users
+  behave differently. See our [PostHog session analysis
+  guide](/guides/posthog-github-continuous-ai) to set up session tracking and
+  create a complete continuous AI analytics workflow.
+</Info>
+
+### Step 3: Advanced Build Optimization with Netlify
+
+Leverage Netlify's powerful build features to dramatically reduce build times:
+
+```bash
+# In cn TUI mode:
+"Optimize my Netlify build performance using these features:
+
+1. Enable Netlify Cache Plugin for dependency caching
+   - Configure @netlify/plugin-cache for node_modules
+   - Set up custom cache directories for .next/cache or .nuxt
+   - Enable Gatsby's incremental builds if applicable
+
+2. Set up Build Plugins from Netlify's ecosystem:
+   - Install @netlify/plugin-lighthouse for performance monitoring
+   - Add netlify-plugin-checklinks to prevent broken links
+   - Configure netlify-plugin-submit-sitemap for SEO
+
+3. Implement Conditional Builds:
+   - Skip builds when only docs change (ignore: /docs/**)
+   - Use build.ignore script for custom logic
+   - Set up monorepo-specific build triggers
+
+4. Configure concurrent builds for monorepos
+   - Set base directory per package
+   - Use pnpm workspaces or yarn workspaces
+
+Show me the netlify.toml configuration and explain each optimization"
+```
+
+<Info>
+  **Netlify Build Features You're Getting**:
+  - [Build Caching](https://docs.netlify.com/configure-builds/build-caching/) - Persist dependencies between builds
+  - [Build Plugins](https://docs.netlify.com/integrations/build-plugins/) - Extend build process with 100+ plugins
+  - [Conditional Builds](https://docs.netlify.com/configure-builds/ignore-builds/) - Skip unnecessary builds
+  - [Monorepo Support](https://docs.netlify.com/configure-builds/monorepos/) - Optimize multi-package repos
+
+These features can reduce build times by 50-70% for most projects!
+
+</Info>
+
+<Tip>
+  **Discover more optimization prompts!** The Netlify community has documented dozens of build optimization strategies in their [Support Guide: How can I optimize my Netlify build time](https://answers.netlify.com/t/support-guide-how-can-i-optimize-my-netlify-build-time/3907). 
+  
+  Use this guide as inspiration for cn CLI prompts not covered in this cookbook, such as:
+  - `"Configure my builds to skip Dependabot PRs automatically"`
+  - `"Set up custom ignore patterns for documentation-only changes"`
+  - `"Optimize my Contentful webhooks to prevent duplicate builds"`
+  - `"Show me how to use build hooks instead of automatic git triggers"`
+  - `"Help me choose between Astro and Hugo based on build performance"`
+  
+  The community guide contains real-world scenarios that you can turn into AI-assisted solutions - just describe what you want to achieve and let cn CLI handle the implementation!
+</Tip>
+
+### Step 4: Bundle Analysis with Netlify's Built-in Tools
+
+Use Netlify's bundle analyzer and optimization features:
+
+```bash
+# In cn TUI mode:
+"Analyze and optimize my bundle using Netlify's tools:
+
+1. Enable Netlify Bundle Analyzer:
+   - Add @netlify/plugin-bundle-analyzer to plugins
+   - Configure size thresholds in netlify.toml
+   - Generate visual bundle reports
+
+2. Set up Asset Optimization:
+   - Enable automatic JS minification
+   - Configure CSS optimization
+   - Turn on HTML minification
+   - Set up image processing pipeline
+
+3. Implement Smart Code Splitting:
+   - Analyze current chunks with the bundle analyzer
+   - Identify components over 50KB for splitting
+   - Configure webpack/vite for optimal chunking
+   - Set up route-based code splitting
+
+4. Configure Netlify's CDN for optimal delivery:
+   - Set cache headers for static assets
+   - Enable Brotli compression
+   - Configure edge caching rules
+
+Generate a full report with before/after bundle sizes"
+```
+
+<Card title="Netlify's Performance Arsenal" icon="rocket">
+
+    **Features Available Through Netlify MCP**: 
+    - [Bundle
+    Analyzer](https://docs.netlify.com/configure-builds/build-plugins/bundle-analyzer/): Visualize your JavaScript bundles 
+    - [Asset
+    Optimization](https://docs.netlify.com/configure-builds/post-processing/):
+    Automatic minification and compression 
+    - [Edge
+    Network](https://docs.netlify.com/platform/edge-network/): Global CDN with
+    smart caching 
+    - [Deploy
+    Previews](https://docs.netlify.com/site-deploys/deploy-previews/): Test
+    optimizations before production
+  
+</Card>
+
+### Step 5: Image Optimization
+
+Optimize images for better performance:
+
+```bash
+# In cn TUI mode:
+"Set up Cloudinary image optimization for my Netlify site:
+- Install @cloudinary/netlify-plugin via MCP
+- Auto-convert images to WebP with fallbacks
+- Generate responsive sizes (320w, 640w, 1024w, 1920w)
+- Add lazy loading for all images
+- Configure blur-up placeholders
+- Update netlify.toml with Cloudinary settings
+Target: Reduce image payload by 60-80% and improve LCP"
+```
+
+## Continuous Performance Monitoring
+
+### Step 6: Performance Budget Enforcement with Lighthouse CI
+
+Set and enforce performance budgets with automated testing:
+
+```bash
+# In cn TUI mode:
+"Set up Lighthouse CI with performance budgets for my Netlify site:
+
+Requirements:
+- LCP must be < 2.5 seconds
+- JavaScript bundle must be < 200KB
+- Total size < 500KB
+- Performance score >= 90
+
+Setup needed:
+1. Install @lhci/cli and @netlify/plugin-lighthouse
+2. Create lighthouserc.js with these budget assertions
+3. Configure netlify.toml to run checks on all deploys
+4. Add GitHub status checks to block PRs that exceed budgets
+5. Create performance dashboard at /lighthouse-reports
+
+Please configure the complete Lighthouse CI setup with these budgets."
+```
+
+<Tip>
+  This comprehensive setup will automatically test every deploy preview and
+  production deployment, blocking any changes that violate your performance
+  budgets.
+</Tip>
+
+### Step 7: Real User Monitoring with Netlify Analytics
+
+Leverage Netlify's built-in analytics and integrate advanced RUM solutions:
+
+```bash
+# In cn TUI mode:
+"Set up comprehensive Real User Monitoring for my Netlify site:
+
+1. Configure Netlify Analytics Pro (requires Pro account):
+   - Set up server-side analytics (no JS required)
+   - Track Core Web Vitals (LCP, FID, CLS, INP)
+   - Monitor top pages by performance score
+   - Create custom performance alerts
+   - Configure weekly performance reports
+
+2. Integrate Web Vitals tracking:
+   - Install web-vitals library for detailed metrics
+   - Send metrics to Netlify Functions endpoint
+   - Store performance data in Netlify Blobs
+   - Create performance dashboard at /metrics
+
+3. Set up Performance Alerts:
+   - Alert when P75 LCP > 3 seconds
+   - Notify if CLS increases by 20%
+   - Monitor JavaScript error rates
+   - Track 404s and broken resources
+   - Send alerts to Slack via Netlify Functions
+
+4. Configure Geographic Performance Monitoring:
+   - Use Netlify Edge Functions to track region-specific metrics
+   - Identify slow regions with Edge geo data
+   - Compare performance across CDN nodes
+   - Optimize edge caching for slow regions
+
+5. Create Custom Performance Dashboard:
+   - Build dashboard page using Netlify Functions
+   - Display real-time Core Web Vitals
+   - Show performance trends over time
+   - Include browser and device breakdowns
+
+Show me the complete implementation with all code and configurations"
+```
+
+<Warning>
+  **Note**: Netlify Analytics Pro requires a paid Netlify Pro account ($19/month
+  per site). The prompt above assumes you have this plan. For free tier users,
+  focus on steps 2-5 which use Netlify Functions and Edge Functions to build
+  custom analytics.
+</Warning>
+
+<Info>
+  **Netlify Analytics Advantages**:
+  - [Server-side Analytics](https://docs.netlify.com/analytics/get-started/) - No client-side JavaScript needed
+  - [Core Web Vitals](https://docs.netlify.com/analytics/core-web-vitals/) - Automatic tracking of Google's metrics
+  - [Custom Metrics](https://docs.netlify.com/functions/logs/) - Track any metric via Functions
+  - [Edge Insights](https://docs.netlify.com/edge-functions/overview/#geolocation) - Geographic performance data
+  - [No Cookie Banner Required](https://docs.netlify.com/analytics/get-started/#privacy) - GDPR compliant by default
+
+Unlike Google Analytics, Netlify Analytics:
+
+- Doesn't slow down your site (server-side)
+- Captures 100% of traffic (no ad blockers)
+- Respects user privacy (no cookies)
+- Shows bot traffic separately
+</Info>
+
+<Tip>
+
+    **Pro Tip**
+    Combine Netlify Analytics with Edge Functions to create a
+    powerful RUM solution that: 
+    - Tracks performance by user segment 
+    - A/B tests
+    performance optimizations 
+    - Personalizes content based on connection speed 
+    - Automatically serves lighter assets to slow connections
+  
+</Tip>
+
+## Automated Performance Checks
+
+### GitHub Actions Performance Guard
+
+Block PRs that degrade performance:
+
+```yaml
+name: Performance Check
+
+on:
+  pull_request:
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Deploy and Test Performance
+        id: perf
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          npx @continuedev/cli@latest << 'EOF'
+          Deploy PR preview and run Lighthouse.
+          Compare scores with main branch.
+          Output JSON with score deltas.
+          EOF > performance.json
+
+      - name: Comment Performance Results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const perf = JSON.parse(fs.readFileSync('performance.json'));
+
+            const emoji = perf.score_delta < -10 ? '🔴' :
+                         perf.score_delta < 0 ? '🟡' : '🟢';
+
+            const comment = `## ${emoji} Performance Impact
+
+            | Metric | Main | PR | Delta |
+            |--------|------|----|---------|
+            | Performance Score | ${perf.main_score} | ${perf.pr_score} | ${perf.score_delta > 0 ? '+' : ''}${perf.score_delta} |
+            | LCP | ${perf.main_lcp}s | ${perf.pr_lcp}s | ${perf.lcp_delta > 0 ? '+' : ''}${perf.lcp_delta}s |
+            | Bundle Size | ${perf.main_bundle}KB | ${perf.pr_bundle}KB | ${perf.bundle_delta > 0 ? '+' : ''}${perf.bundle_delta}KB |
+
+            ${perf.score_delta < -10 ? '⚠️ **This PR significantly degrades performance. Please optimize before merging.**' : ''}
+
+            [View Full Report](${perf.report_url})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+            // Fail check if performance degrades significantly
+            if (perf.score_delta < -10) {
+              core.setFailed('Performance degraded by more than 10 points');
+            }
+```
+
+<Warning>
+  This workflow will: - **Block merge** if performance score drops >10 points -
+  **Warn** on any performance regression - **Celebrate** improvements with green
+  indicators
+</Warning>
+
+## Performance Testing Locally
+
+### Step 8: Local Performance Testing
+
+Test performance before deploying:
+
+```bash
+# In cn TUI mode:
+"Run production build and measure bundle sizes"
+```
+
+### Step 9: Pre-commit Performance Checks
+
+Prevent performance regressions before they happen:
+
+```bash
+# In cn TUI mode:
+"Add pre-commit hooks for bundle size limits"
+```
+
+## Performance Troubleshooting
+
+### Debug Performance Issues
+
+Identify and fix performance bottlenecks:
+
+```bash
+# In cn TUI mode:
+"Why did my performance score drop?"
+```
+
+### Performance Issue Quick Fixes
+
+| Issue         | Quick Fix Command (in cn TUI)     |
+| ------------- | --------------------------------- |
+| Slow LCP      | `"Preload critical resources"`    |
+| High CLS      | `"Add size attributes to images"` |
+| Large bundles | `"Implement code splitting"`      |
+| Slow builds   | `"Enable build caching"`          |
+| Poor caching  | `"Configure cache headers"`       |
+
+## What You've Accomplished
+
+<Card title="Performance-First Development" icon="gauge-high">
+
+    You've built an AI-powered performance optimization system that: 
+    - Automatically monitors Core Web Vitals 
+    - Runs A/B tests between branches 
+    - Blocks deployments that degrade performance 
+    - Provides actionable optimization
+    suggestions
+  
+</Card>
+
+## Discover Netlify's Hidden Performance Gems
+
+Features many developers don't know Netlify offers:
+
+<CardGroup cols={2}>
+  <Card title="Edge Functions" icon="bolt">
+  
+      **[Netlify Edge Functions](https://docs.netlify.com/edge-functions/overview/)**
+      - Run code at the edge, closer to users
+      - Transform responses on-the-fly
+      - A/B test at the edge level
+      - Personalize content without client-side JS
+    
+  </Card>
+
+<Card title="Netlify Graph" icon="diagram-project">
+
+    **[Netlify Graph](https://docs.netlify.com/graph/overview/)** 
+    - Unified GraphQL gateway for all your APIs 
+    - Automatic TypeScript generation 
+    - Built-in authentication handling 
+    - Zero client-side API keys needed
+    
+</Card>
+
+<Card title="On-Demand Builders" icon="hammer">
+  **[On-Demand
+  Builders](https://docs.netlify.com/configure-builds/on-demand-builders/)** -
+  Generate pages only when requested - Cache dynamically generated content -
+  Perfect for large sites (10k+ pages) - Reduce build times dramatically
+</Card>
+
+  <Card title="Netlify Functions" icon="function">
+    **[Background Functions](https://docs.netlify.com/functions/background-functions/)**
+    - Run tasks up to 15 minutes
+    - Process webhooks asynchronously
+    - Handle heavy computations
+    - No timeout worries
+  </Card>
+</CardGroup>
+
+```bash
+# Try these advanced features in cn TUI mode:
+"Show me how to use Netlify Edge Functions for geo-based personalization"
+"Set up On-Demand Builders for my blog with 5000 posts"
+"Configure Background Functions for image processing"
+```
+
+## Performance Best Practices
+
+The Netlify Performance Rules enforce:
+
+<CardGroup cols={3}>
+  <Card title="Build Optimization" icon="hammer">
+    - Dependency caching enabled
+    - Parallel builds when possible
+    - Incremental compilation
+    - Smart cache invalidation
+  </Card>
+
+  <Card title="Runtime Performance" icon="bolt">
+    - Automatic image optimization
+    - Efficient resource hints (preload, prefetch)
+    - Optimal cache headers
+    - CDN configuration
+  </Card>
+
+  <Card title="Monitoring Standards" icon="chart-line">
+    - Performance budgets enforced
+    - Core Web Vitals tracking
+    - Real user monitoring
+    - Automated alerts
+  </Card>
+</CardGroup>
+
+## Advanced Performance Strategies
+
+### Progressive Enhancement
+
+```bash
+# In cn TUI mode:
+"Implement progressive enhancement with basic HTML first"
+```
+
+### Multi-variant Testing
+
+```bash
+# In cn TUI mode:
+"Test 3 bundle strategies and auto-select winner"
+```
+
+### Predictive Prefetching
+
+```bash
+# In cn TUI mode:
+"Analyze navigation patterns and prefetch next pages"
+```
+
+## Next Steps
+
+- Install [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) from Continue Hub
+- Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
+- Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
+- Join the [Continue Discord](https://discord.gg/continue) for support
+
+## Resources
+
+- [Netlify MCP on Continue Hub](https://hub.continue.dev/netlify/netlify-mcp)
+- [Core Web Vitals Guide](https://web.dev/vitals/)
+- [Netlify Analytics Documentation](https://docs.netlify.com/analytics/)
+- [Continue Performance Guides](https://docs.continue.dev/guides)
