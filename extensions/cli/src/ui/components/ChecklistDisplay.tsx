@@ -46,7 +46,9 @@ export const ChecklistDisplay: React.FC<ChecklistDisplayProps> = ({
               </Text>
               <Text> </Text>
               <Text
-                color={isCompleted ? "gray" : isFirstIncomplete ? "cyan" : "white"}
+                color={
+                  isCompleted ? "gray" : isFirstIncomplete ? "cyan" : "white"
+                }
                 strikethrough={isCompleted}
                 bold={isFirstIncomplete}
               >
