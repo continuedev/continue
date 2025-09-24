@@ -1,11 +1,12 @@
+import { v4 as uuidv4 } from "uuid";
 import { getSecureID } from "./getSecureID";
 
-// Mock the crypto.randomUUID function
-const mockRandomUUID = jest.fn();
-global.crypto = {
-  ...global.crypto,
-  randomUUID: mockRandomUUID,
-};
+// Mock the uuid function
+jest.mock("uuid", () => ({
+  v4: jest.fn(),
+}));
+
+const mockUuidv4 = uuidv4 as jest.MockedFunction<typeof uuidv4>;
 
 describe("getSecureID", () => {
   beforeEach(() => {
@@ -13,14 +14,14 @@ describe("getSecureID", () => {
     (getSecureID as any).uuid = undefined;
 
     // Reset the mock implementation
-    mockRandomUUID.mockReset();
+    mockUuidv4.mockReset();
     // Setup a mock implementation that returns a fixed value for testing
-    mockRandomUUID.mockReturnValue("test-uuid-1234");
+    mockUuidv4.mockReturnValue("test-uuid-1234");
   });
 
   test("should generate a UUID on first call", () => {
     const result = getSecureID();
-    expect(mockRandomUUID).toHaveBeenCalledTimes(1);
+    expect(mockUuidv4).toHaveBeenCalledTimes(1);
     expect(result).toBe("<!-- SID: test-uuid-1234 -->");
   });
 
@@ -29,7 +30,7 @@ describe("getSecureID", () => {
     const secondResult = getSecureID();
 
     // The UUID generation should only happen once
-    expect(mockRandomUUID).toHaveBeenCalledTimes(1);
+    expect(mockUuidv4).toHaveBeenCalledTimes(1);
 
     // Both results should be identical
     expect(firstResult).toBe(secondResult);
@@ -43,7 +44,7 @@ describe("getSecureID", () => {
     const result = getSecureID();
 
     // No new UUID should be generated
-    expect(mockRandomUUID).not.toHaveBeenCalled();
+    expect(mockUuidv4).not.toHaveBeenCalled();
     expect(result).toBe("<!-- SID: persistent-uuid -->");
   });
 });
