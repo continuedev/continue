@@ -1,0 +1,1062 @@
+[
+  {
+    "id": "D09GPQLSC76",
+    "name": "@slackbot",
+    "topic": "",
+    "purpose": "DM with Slackbot",
+    "memberCount": 2,
+    "mpim": false,
+    "im": true,
+    "private": false
+  },
+  {
+    "id": "D09GY7HT8UR",
+    "name": "@tingwaito",
+    "topic": "",
+    "purpose": "DM with Ting-Wai To",
+    "memberCount": 2,
+    "mpim": false,
+    "im": true,
+    "private": false
+  },
+  {
+    "id": "C096032ATNG",
+    "name": "#pr-reviews",
+    "topic": "",
+    "purpose": "Channel for nudging each other abut PR reviews and discussing PRs if discussion is needed. One thread per pull request, please respond in the thread!",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09CS6V4GAC",
+    "name": "#anyshift-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09F3JDMVRV",
+    "name": "#gitlab-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C06N8NP91DH",
+    "name": "#gigaml-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08M1EN93PB",
+    "name": "#continue-x-firecrawl",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C058C3NFPSP",
+    "name": "#general",
+    "topic": "",
+    "purpose": "This is the one channel that will always include everyone. It’s a great spot for announcements and team-wide conversations.",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C06K2KA5ADC",
+    "name": "#nerdcloud-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0849QN9L0M",
+    "name": "#stacklok-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 0,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08UL59QDB3",
+    "name": "#community-support",
+    "topic": "get help from each other on Discord questions, GitHub issues, etc.",
+    "purpose": "",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08VBCYJY2K",
+    "name": "#demos",
+    "topic": "",
+    "purpose": "demos \u0026gt; memos",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0939A7MZMJ",
+    "name": "#applainers-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 2,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C098T91K7SP",
+    "name": "#continue-status",
+    "topic": "",
+    "purpose": "Report outages or suspected outages here. Once outage is confirmed, open a dedicated Slack channel for the outage and invite everyone.\nIncident response plan: \u003chttps://www.notion.so/continuedev/Incident-response-plan-1dc1d55165f78094a5d5f340c6839374\u003e",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C099VAQAAQ1",
+    "name": "#cerebras-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C071UBDBS06",
+    "name": "#office",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08EB1E3TDH",
+    "name": "#deepinfra-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C06UAKPNTMY",
+    "name": "#koyeb-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08TFUD3VU6",
+    "name": "#morph-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C081D02CU2K",
+    "name": "#parloa-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08F98GFUHY",
+    "name": "#auto-hub-rules-feed",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08HFAZ8J69",
+    "name": "#inceptionlabs-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 19,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09924FC97A",
+    "name": "#continuous-ai",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0999PDCA03",
+    "name": "#github-discussions",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 1,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C073URE5YG7",
+    "name": "#mistral-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 45,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09E9LN5D51",
+    "name": "#tembo-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 2,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C07BZRP91A8",
+    "name": "#greptile-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C057XNXUUNT",
+    "name": "#auto-dev-webhooks",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C093T2WN45S",
+    "name": "#chroma-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C095LDKNSBC",
+    "name": "#nathants-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C085T9L01TM",
+    "name": "#anthropic-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C094LP8QZ2L",
+    "name": "#mintlify-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 15,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08F9GXDP16",
+    "name": "#logspend-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08LTKEC51T",
+    "name": "#nuanced-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08LVV0NJ0M",
+    "name": "#auto-linear-webhooks",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08PZKSLW2J",
+    "name": "#product",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09CW35K9CL",
+    "name": "#alumni-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09F9EBUJTT",
+    "name": "#changelog",
+    "topic": "",
+    "purpose": "Share any change log worthy work",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09G4HDU8VB",
+    "name": "#aditya_continue-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C05RG8Y5T09",
+    "name": "#den-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08MTDLUERX",
+    "name": "#gauge-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08PVLW8TT4",
+    "name": "#operative-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C098Q2L3A00",
+    "name": "#deploys",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C05SY2HA2S1",
+    "name": "#trunk-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C07SFH4JH0C",
+    "name": "#thinkalpha-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08FUCEB4RJ",
+    "name": "#auto-sentry",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08MSAM3C6T",
+    "name": "#customer-pcn",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08NZEN14Q1",
+    "name": "#shoutouts",
+    "topic": "let someone know that you appreciated something they did or said :tada:",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08F8RMUSRY",
+    "name": "#auto-partner",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0591UBCM2L",
+    "name": "#ideas",
+    "topic": "",
+    "purpose": "This channel is for everything #ideas. Hold meetings, share docs, and make decisions together with your team.",
+    "memberCount": 12,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C060AV775UZ",
+    "name": "#feedback",
+    "topic": "",
+    "purpose": "feedback from prospective, current, churned users",
+    "memberCount": 12,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08EPT3674Z",
+    "name": "#ncompass-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08NAJQMQMN",
+    "name": "#customer-praxent",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "D09GPQLSC76",
+    "name": "@slackbot",
+    "topic": "",
+    "purpose": "DM with Slackbot",
+    "memberCount": 2,
+    "mpim": false,
+    "im": true,
+    "private": false
+  },
+  {
+    "id": "C07A4MCH5JT",
+    "name": "#dev",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 13,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C07RCHL7U87",
+    "name": "#fps-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08R320GMND",
+    "name": "#mrge-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C098PRX5GD6",
+    "name": "#consent-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09AWU0NYAU",
+    "name": "#customer-ionos",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C064BD9G16X",
+    "name": "#reworkd-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C06L9FQ9B3K",
+    "name": "#tonik-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 16,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C07539B8D1T",
+    "name": "#workos-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 31,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08E3LYFA3C",
+    "name": "#unsloth-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08H87ZD2A1",
+    "name": "#together-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C095VPXK86N",
+    "name": "#dx",
+    "topic": "Syncronous chat here, but move to \u003c#C060AV775UZ|\u003e or \u003c#C08PZKSLW2J|\u003e when ready.",
+    "purpose": "A place to share actionable things for improving the DX of continue.",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C071RP877FT",
+    "name": "#replicated-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 8,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C085XMBTV7U",
+    "name": "#fireworks-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C088D6EAR3K",
+    "name": "#netlify-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 12,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C05JG554RF1",
+    "name": "#social-media",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09C1TMKF4K",
+    "name": "#security-compliance",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08AEV8N072",
+    "name": "#dlthub-partners-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 14,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C084HJ5HXEW",
+    "name": "#voyage-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09F0MDTX62",
+    "name": "#snyk-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 14,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09B13YCCKE",
+    "name": "#metronome-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 13,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "D09GY7HT8UR",
+    "name": "@tingwaito",
+    "topic": "",
+    "purpose": "DM with Ting-Wai To",
+    "memberCount": 2,
+    "mpim": false,
+    "im": true,
+    "private": false
+  },
+  {
+    "id": "C06UGHEDCHJ",
+    "name": "#go-to-market",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0828F4KXKJ",
+    "name": "#juliahub-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08CBQGUTH7",
+    "name": "#restack-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08LZ20G0MP",
+    "name": "#trainloop-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08M2FC1LLX",
+    "name": "#praxent-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 13,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C090WHD3SRH",
+    "name": "#aditya-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08QP1JPECD",
+    "name": "#kilocode-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 15,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C092X5A5CUU",
+    "name": "#auto-betterstack",
+    "topic": "",
+    "purpose": "Notifications from BetterStack when incidents occur",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C099AQE4RHC",
+    "name": "#releases",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C05FQ9BCSRH",
+    "name": "#cyclone-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C095H5Y56E5",
+    "name": "#runloop-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08T0JQG2GK",
+    "name": "#partnerships",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C091KSPFVTJ",
+    "name": "#auto-gitguardian",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C058C7LB9NE",
+    "name": "#random",
+    "topic": "",
+    "purpose": "This channel is for... well, everything else. It’s a place for team jokes, spur-of-the-moment ideas, and funny GIFs. Go wild!",
+    "memberCount": 12,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C081HHS1L93",
+    "name": "#lmstudio-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08FL6PF7RP",
+    "name": "#auto-sales",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 6,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08JDNYNBL7",
+    "name": "#huggingface-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 10,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08P0KVLUJ2",
+    "name": "#auto-posthog",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 2,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0931SP37PU",
+    "name": "#next-edit-feedback",
+    "topic": "",
+    "purpose": "Channel to share next edit feedback, eg Continue Console info when given a poor request, incorrect insertion logic, etc",
+    "memberCount": 7,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C06TERF1H7T",
+    "name": "#ragas-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08A34F177Z",
+    "name": "#docker-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 13,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08D5S68SQH",
+    "name": "#exa-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08DLQBR7UM",
+    "name": "#novita-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08MKDYN41K",
+    "name": "#arqolo-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C0943TXF5K2",
+    "name": "#summon-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C095VPZUYDP",
+    "name": "#cn",
+    "topic": "",
+    "purpose": ":con:",
+    "memberCount": 9,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C09990KTAUF",
+    "name": "#zeroentropy-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 3,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08QJPGAMAB",
+    "name": "#after-hours",
+    "topic": "",
+    "purpose": "invite people to join you for meetups, sports, drinks, etc.",
+    "memberCount": 11,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C092EKA4RNU",
+    "name": "#reo-alerts",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 2,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C08B4HNJBC3",
+    "name": "#staklok-x-continue",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 5,
+    "mpim": false,
+    "im": false,
+    "private": false
+  },
+  {
+    "id": "C098J994MHB",
+    "name": "#auto-git",
+    "topic": "",
+    "purpose": "",
+    "memberCount": 4,
+    "mpim": false,
+    "im": false,
+    "private": true
+  }
+]

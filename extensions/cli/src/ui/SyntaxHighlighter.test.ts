@@ -81,13 +81,6 @@ func main() {
     expect(detectLanguage(code)).toBe("go");
   });
 
-  it("should detect Rust from function syntax", () => {
-    const code = `fn main() {
-    println!("Hello, World!");
-}`;
-    expect(detectLanguage(code)).toBe("rust");
-  });
-
   it("should detect PHP from opening tag", () => {
     const code = `<?php
 echo "Hello, World!";

@@ -43,7 +43,6 @@ export function getLanguageFromFilePath(filePath: string): string {
     ".php": "PHP",
     ".rb": "Ruby",
     ".go": "Go",
-    ".rs": "Rust",
     ".swift": "Swift",
     ".kt": "Kotlin",
     ".scala": "Scala",

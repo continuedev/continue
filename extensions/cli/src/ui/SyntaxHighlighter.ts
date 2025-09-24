@@ -218,7 +218,6 @@ export function detectLanguage(code: string): string {
     { regex: /^\s*using\s+namespace\s+/, language: "cpp" },
     { regex: /^\s*using\s+System\s*;/, language: "csharp" },
     { regex: /^\s*package\s+main/, language: "go" },
-    { regex: /^\s*fn\s+\w+\s*\(/, language: "rust" },
     { regex: /^\s*<\?php/, language: "php" },
     { regex: /^\s*SELECT\s+.*FROM\s+/i, language: "sql" },
     { regex: /^\s*\{\s*$/, language: "json" },

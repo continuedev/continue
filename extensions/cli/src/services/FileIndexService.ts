@@ -41,7 +41,6 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
       "hpp",
       "cs",
       "go",
-      "rs",
       "rb",
       "php",
       "swift",
@@ -81,7 +80,6 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
       fileName.startsWith("license") ||
       fileName.startsWith("changelog") ||
       fileName === "package.json" ||
-      fileName === "cargo.toml" ||
       fileName === "pyproject.toml" ||
       fileName === "composer.json" ||
       fileName === "gemfile" ||
