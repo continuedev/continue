@@ -108,13 +108,13 @@ export class MCPManagerSingleton {
     if (a.type !== b.type) {
       return false;
     }
-    if (a.type === "stdio" && b.type === "stdio") {
+    if ("command" in a && "command" in b) {
       return (
         a.command === b.command &&
         JSON.stringify(a.args) === JSON.stringify(b.args) &&
         this.compareEnv(a.env, b.env)
       );
-    } else if (a.type !== "stdio" && b.type !== "stdio") {
+    } else if ("url" in a && "url" in b) {
       return a.url === b.url;
     }
     return false;
@@ -174,8 +174,8 @@ export class MCPManagerSingleton {
     }));
   }
 
-  setStatus(server: MCPServerStatus, status: MCPServerStatus["status"]) {
-    this.connections.get(server.id)!.status = status;
+  setStatus(serverId: string, status: MCPServerStatus["status"]) {
+    this.connections.get(serverId)!.status = status;
   }
 
   async getPrompt(

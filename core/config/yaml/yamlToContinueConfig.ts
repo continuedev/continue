@@ -36,12 +36,13 @@ export function convertYamlMcpConfigToInternalMcpOptions(
   config: MCPServer,
   globalRequestOptions?: RequestOptions,
 ): InternalMcpOptions {
-  const { connectionTimeout, faviconUrl, name } = config;
-  const base = {
+  const { connectionTimeout, faviconUrl, name, sourceFile } = config;
+  const shared = {
     id: name,
     name,
     faviconUrl: faviconUrl,
     timeout: connectionTimeout,
+    sourceFile,
   };
   // Stdio
   if ("command" in config) {
@@ -52,7 +53,7 @@ export function convertYamlMcpConfigToInternalMcpOptions(
       args,
       cwd,
       env,
-      ...base,
+      ...shared,
     };
     return stdioOptions;
   }
@@ -67,7 +68,7 @@ export function convertYamlMcpConfigToInternalMcpOptions(
       requestOptions,
       globalRequestOptions,
     ),
-    ...base,
+    ...shared,
   };
   return httpSseConfig;
 }

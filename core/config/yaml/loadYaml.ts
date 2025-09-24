@@ -32,6 +32,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
@@ -393,11 +394,17 @@ export async function configYamlToContinueConfig(options: {
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    const internalConfigs: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
       (server) =>
         convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
     );
-    mcpManager.setConnections(internalConfigs, false, { ide });
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+    );
+    localErrors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false, { ide });
   }
 
   return { config: continueConfig, errors: localErrors };

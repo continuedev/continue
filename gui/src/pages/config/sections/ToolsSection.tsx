@@ -53,13 +53,23 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   };
 
   const onAuthenticate = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/startAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/startAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRemoveAuth = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/removeAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/removeAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRefresh = async () => {
@@ -162,7 +172,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
 
         <div className="-mr-2.5 flex items-center gap-1">
-          {server.isProtectedResource && (
+          {server.isProtectedResource && "url" in server && (
             <ToolTip
               content={
                 server.status === "error"

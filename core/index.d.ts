@@ -1325,6 +1325,7 @@ type BaseInternalMCPOptions = {
   faviconUrl?: string;
   timeout?: number;
   requestOptions?: RequestOptions;
+  sourceFile?: string;
 };
 
 export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
@@ -1346,7 +1347,7 @@ export type InternalSseMcpOptions = BaseInternalMCPOptions & {
 };
 
 export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
-  type: "websocket";
+  type: "websocket"; // websocket requires explicit type
   url: string;
 };
 

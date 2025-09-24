@@ -508,15 +508,26 @@ export class Core {
     });
     on("mcp/startAuthentication", async (msg) => {
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      MCPManagerSingleton.getInstance().setStatus(msg.data, "authenticating");
-      const status = await performAuth(msg.data, this.ide);
+      MCPManagerSingleton.getInstance().setStatus(
+        msg.data.serverId,
+        "authenticating",
+      );
+      const status = await performAuth(
+        msg.data.serverId,
+        msg.data.serverUrl,
+        this.ide,
+      );
       if (status === "AUTHORIZED") {
-        await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+        await MCPManagerSingleton.getInstance().refreshConnection(
+          msg.data.serverId,
+        );
       }
     });
     on("mcp/removeAuthentication", async (msg) => {
-      removeMCPAuth(msg.data, this.ide);
-      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      removeMCPAuth(msg.data.serverUrl, this.ide);
+      await MCPManagerSingleton.getInstance().refreshConnection(
+        msg.data.serverId,
+      );
     });
 
     // Context providers
@@ -1244,7 +1255,9 @@ export class Core {
           uri.endsWith("CLAUDE.md") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") &&
-            (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
+            (uri.endsWith(".yaml") ||
+              uri.endsWith(".yml") ||
+              uri.endsWith(".json"))) ||
           BLOCK_TYPES.some((blockType) =>
             uri.includes(`.continue/${blockType}`),
           )
