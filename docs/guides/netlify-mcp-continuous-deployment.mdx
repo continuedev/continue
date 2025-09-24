@@ -42,8 +42,58 @@ This cookbook teaches you to:
 - [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) configured
 - [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) (recommended)
 
-## Quick Setup
+## Quick Start
 
+<Info>
+  The Netlify Development Rules bundle includes guardrails for: - Proper
+  `.gitignore` configuration - Function structure and placement - Edge function
+  constraints - Local development best practices
+</Info>
+
+## Netlify Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built Netlify Continuous AI agent that includes
+  optimized prompts, rules, and the Netlify MCP for more consistent results.
+</Card>
+
+After completing **Quick Setup** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate results with optimized prompts and built-in debugging
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Netlify Continuous AI Agent](https://hub.continue.dev/continuedev/netlify-continuous-ai) on Continue Hub and click **"Install Agent"**
+
+        This agent includes:
+        - **Optimized prompts** for Netlify deployment and performance analysis
+        - **Built-in rules** for consistent formatting and error handling
+        - **Netlify MCP** for more reliable API interactions
+      </Step>
+
+      <Step title="Verify Your Setup">
+        The agent uses the Netlify MCP automatically and includes best practice rules for deployment and performance optimization.
+      </Step>
+
+      <Step title="Run Performance Analysis">
+        Navigate to your project directory and run:
+        ```bash
+        cn "Analyze my Netlify site's performance and optimize it for better Core Web Vitals."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Netlify MCP integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
 <Steps>
   <Step title="Install Continue CLI">
     ```bash
@@ -52,10 +102,14 @@ This cookbook teaches you to:
   </Step>
 
 <Step title="Configure Netlify MCP">
-  1. Install Netlify CLI: `npm i -g netlify-cli` 2. Authenticate with Netlify:
-  `netlify login` 3. Visit [Netlify MCP on Continue
-  Hub](https://hub.continue.dev/netlify/netlify-mcp) 4. Follow the configuration
-  instructions for your editor
+
+  1. Install Netlify CLI: `npm i -g netlify-cli` 
+  2. Authenticate with Netlify:
+  `netlify login` 
+  3. Visit [Netlify MCP on Continue
+  Hub](https://hub.continue.dev/netlify/netlify-mcp) 
+  4. Follow the configuration instructions for your editor
+  
 </Step>
 
   <Step title="Add Development Rules">
@@ -78,12 +132,20 @@ This cookbook teaches you to:
 
   </Step>
 </Steps>
+  </Tab>
+</Tabs>
 
-<Info>
-  The Netlify Development Rules bundle includes guardrails for: - Proper
-  `.gitignore` configuration - Function structure and placement - Edge function
-  constraints - Local development best practices
-</Info>
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either: 
+      - **Continue CLI Pro Plan** with
+      the models add-on, OR 
+      - **Your own API keys** added to Continue Hub secrets
+      The agent will automatically detect and use your
+      configuration along with the Netlify MCP for deployment operations.
+
+</Accordion>
+
+---
 
 ## Performance Optimization Steps
 
