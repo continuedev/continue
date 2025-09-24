@@ -550,7 +550,7 @@ const UserInput: React.FC<UserInputProps> = ({
 
         inputHistory.addEntry(submittedText);
 
-        // We don't queue, we just send in remote mode because the server handles queeuing
+        // We don't queue, we just send in remote mode because the server handles queueing
         if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
           // Process message later when LLM has responded or compaction is complete
           void messageQueue.enqueueMessage(submittedText, imageMap);
