@@ -259,8 +259,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                   onClick={onRemoveAuth}
                   className="justify-start gap-x-1.5"
                 >
-                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Remove
-                  Auth
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Logout
                 </ListboxOption>
               )}
 
@@ -274,7 +273,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                   sourceFile={server.sourceFile}
                   className="h-3.5 w-3.5 text-inherit"
                 />
-                Edit MCP
+                Edit
               </ListboxOption>
 
               {!disconnectedMCPServers.includes(server.name) && (
@@ -284,7 +283,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                   className="justify-start gap-x-1.5"
                 >
                   <StopCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
-                  Disconnect Server
+                  Disconnect
                 </ListboxOption>
               )}
 
@@ -298,7 +297,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 ) : (
                   <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
                 )}
-                Reconnect Server
+                Reload
               </ListboxOption>
             </ListboxOptions>
           </Listbox>
