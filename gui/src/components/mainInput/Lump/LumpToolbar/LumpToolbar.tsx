@@ -12,6 +12,7 @@ import { callToolById } from "../../../../redux/thunks/callToolById";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { logToolUsage } from "../../../../redux/util";
 import { isJetBrains } from "../../../../util";
+import { useMainEditor } from "../../TipTapEditor";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
@@ -64,6 +65,7 @@ export function LumpToolbar() {
     (state) => state.status === "done",
   );
   const isApplying = applyStates.some((state) => state.status === "streaming");
+  const editor = useMainEditor();
 
   // Get ALL running terminal commands
   const runningToolCalls = useAppSelector((state) =>
@@ -140,7 +142,10 @@ export function LumpToolbar() {
           // Stop running terminal commands
           void handleStopAction();
         } else if (firstPendingToolCall) {
-          // Cancel pending tool call
+          // Cancel pending tool call. If last call, focus editor
+          if (pendingToolCalls.length === 1) {
+            editor.mainEditor?.commands.focus();
+          }
           void dispatch(
             cancelToolCall({
               toolCallId: firstPendingToolCall.toolCallId,
@@ -155,7 +160,13 @@ export function LumpToolbar() {
     return () => {
       document.removeEventListener("keydown", handleToolCallKeyboardShortcuts);
     };
-  }, [firstPendingToolCall, hasRunningTerminalCommand, runningTerminalCalls]);
+  }, [
+    firstPendingToolCall,
+    pendingToolCalls,
+    editor,
+    hasRunningTerminalCommand,
+    runningTerminalCalls,
+  ]);
 
   if (isApplying) {
     return <IsApplyingToolbar />;
