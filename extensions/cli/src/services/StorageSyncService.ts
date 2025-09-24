@@ -29,7 +29,7 @@ export interface StorageSyncStartOptions {
   accessToken: string;
   intervalMs?: number;
   syncSessionHistory: () => void;
-  getSessionSnapshot: () => unknown;
+  getCompleteStateSnapshot: () => unknown;
   isActive?: () => boolean;
 }
 
@@ -284,14 +284,18 @@ export class StorageSyncService {
       return;
     }
 
+    // Capture references to prevent race condition with stop()
+    const targets = this.targets;
+    const options = this.options;
+
     this.uploadInFlight = true;
 
     try {
-      this.options.syncSessionHistory();
-      const snapshot = this.options.getSessionSnapshot();
+      options.syncSessionHistory();
+      const snapshot = options.getCompleteStateSnapshot();
       const sessionPayload = JSON.stringify(snapshot, null, 2);
       await this.uploadToPresignedUrl(
-        this.targets.sessionUrl,
+        targets.sessionUrl,
         sessionPayload,
         "application/json",
       );
@@ -304,7 +308,7 @@ export class StorageSyncService {
         this.missingRepoLogged = true;
       }
       await this.uploadToPresignedUrl(
-        this.targets.diffUrl,
+        targets.diffUrl,
         diffResult.diff,
         "text/plain",
       );
