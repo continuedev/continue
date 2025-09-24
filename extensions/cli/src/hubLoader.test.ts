@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
+import * as hubLoader from "./hubLoader.js";
+
+const {
   loadPackageFromHub,
   mcpProcessor,
   modelProcessor,
   promptProcessor,
   ruleProcessor,
-} from "./hubLoader.js";
+  processRule,
+} = hubLoader;
 
 // Store the original fetch before any mocking
 const originalFetch = global.fetch;
@@ -133,6 +136,36 @@ describe("hubLoader", () => {
       ).rejects.toThrow(
         'Failed to load rule from hub "owner/empty": No rule content found in downloaded zip file. Expected files with extensions: .md',
       );
+    });
+  });
+
+  describe("processRule", () => {
+    it("should treat multi-line strings as inline rules", async () => {
+      const loadRuleSpy = vi
+        .spyOn(hubLoader, "loadRuleFromHub")
+        .mockResolvedValue("hub-content");
+
+      const multilineRule = "Line one\nEnsure /tmp is ignored\nFinal line";
+      const result = await processRule(multilineRule);
+
+      expect(result).toBe(multilineRule);
+      expect(loadRuleSpy).not.toHaveBeenCalled();
+
+      loadRuleSpy.mockRestore();
+    });
+
+    it("should still treat owner/package strings as hub slugs", async () => {
+      const loadRuleSpy = vi
+        .spyOn(hubLoader, "loadRuleFromHub")
+        .mockResolvedValue("hub-content");
+
+      const slug = "owner/package";
+      const result = await processRule(slug);
+
+      expect(loadRuleSpy).toHaveBeenCalledWith(slug);
+      expect(result).toBe("hub-content");
+
+      loadRuleSpy.mockRestore();
     });
   });
 

@@ -220,28 +220,32 @@ export const loadPromptFromHub = (slug: string) =>
  * Process a rule specification - supports file paths, hub slugs, or direct content
  */
 export async function processRule(ruleSpec: string): Promise<string> {
-  // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    ruleSpec.includes("/") &&
-    !ruleSpec.startsWith(".") &&
-    !ruleSpec.startsWith("/")
-  ) {
-    return await loadRuleFromHub(ruleSpec);
+  const trimmedRuleSpec = ruleSpec.trim();
+  const hasNewline = /[\r\n]/.test(ruleSpec);
+
+  // If it looks like a hub slug (exactly owner/package with no whitespace)
+  const isHubSlug =
+    !hasNewline && /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(trimmedRuleSpec);
+
+  if (isHubSlug) {
+    return await loadRuleFromHub(trimmedRuleSpec);
   }
 
-  // If it looks like a file path
-  if (
-    ruleSpec.startsWith(".") ||
-    ruleSpec.startsWith("/") ||
-    ruleSpec.includes("/") ||
-    ruleSpec.includes("\\") ||
-    /\.[a-zA-Z]+$/.test(ruleSpec) // Has file extension at the end
-  ) {
+  // If it looks like a file path (single line, typical path indicators)
+  const looksLikePath =
+    !hasNewline &&
+    (trimmedRuleSpec.startsWith(".") ||
+      trimmedRuleSpec.startsWith("/") ||
+      trimmedRuleSpec.includes("/") ||
+      trimmedRuleSpec.includes("\\") ||
+      /\.[a-zA-Z]+$/.test(trimmedRuleSpec));
+
+  if (looksLikePath) {
     const fs = await import("fs");
     const path = await import("path");
 
     try {
-      const absolutePath = path.resolve(ruleSpec);
+      const absolutePath = path.resolve(trimmedRuleSpec);
       if (!fs.existsSync(absolutePath)) {
         throw new Error(`Rule file not found: ${ruleSpec}`);
       }
