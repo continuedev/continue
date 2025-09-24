@@ -4,6 +4,7 @@ binary/out
 binary/tmp
 core/.continue-test
 docs/.docusaurus
+docs/**/*.mdx
 extensions/.continue-debug
 extensions/vscode/continue_rc_schema.json
 extensions/vscode/.vscode-test
@@ -17,6 +18,7 @@ extensions/vscode/models
 extensions/intellij/src/main/resources
 gui/dist
 **/.continueignore
+.continue/rules/mintlify-formatting.md
 CHANGELOG.md
 **/continue_tutorial.py
 **/node_modules
