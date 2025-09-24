@@ -15,7 +15,14 @@ import {
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
+import {
+  ContinueConfig,
+  IDE,
+  IdeInfo,
+  IdeSettings,
+  ILLMLogger,
+  InternalMcpOptions,
+} from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
@@ -34,7 +41,10 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-import { convertYamlRuleToContinueRule } from "./yamlToContinueConfig";
+import {
+  convertYamlMcpConfigToInternalMcpOptions,
+  convertYamlRuleToContinueRule,
+} from "./yamlToContinueConfig";
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
@@ -227,17 +237,19 @@ export async function configYamlToContinueConfig(options: {
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
-    const mcpArgVariables =
-      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
+    if ("args" in mcpServer) {
+      const mcpArgVariables =
+        mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
 
-    if (mcpArgVariables.length === 0) {
-      return;
+      if (mcpArgVariables.length === 0) {
+        return;
+      }
+
+      localErrors.push({
+        fatal: false,
+        message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
+      });
     }
-
-    localErrors.push({
-      fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-    });
   });
 
   // Prompt files -
@@ -381,31 +393,11 @@ export async function configYamlToContinueConfig(options: {
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    mcpManager.setConnections(
-      (config.mcpServers ?? []).map((server) => {
-        return {
-          name: server.name,
-          id: server.name,
-          requestOptions: mergeConfigYamlRequestOptions(
-            server.requestOptions,
-            config.requestOptions,
-          ),
-          sourceFile: server.sourceFile,
-          timeout: server.connectionTimeout,
-          requestOptions: mergedRequestOptions,
-          faviconUrl: server.faviconUrl,
-          args: server.args,
-          // command: server.command,
-          type: server.type,
-          // url: server.type,
-          // cwd: server.cwd,
-          // env: server.env,
-          requestOptions: server.requestOptions,
-        };
-      }),
-      false,
-      { ide },
+    const internalConfigs: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+      (server) =>
+        convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
     );
+    mcpManager.setConnections(internalConfigs, false, { ide });
   }
 
   return { config: continueConfig, errors: localErrors };

@@ -1328,7 +1328,7 @@ type BaseInternalMCPOptions = {
 };
 
 export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
-  type: "stdio";
+  type?: "stdio";
   command: string;
   args?: string[];
   env?: Record<string, string>;

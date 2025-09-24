@@ -19,7 +19,7 @@ export type StdioMcpServer = z.infer<typeof stdioMcpServerSchema>;
 
 const sseOrHttpMcpServerSchema = baseMcpServerSchema.extend({
   url: z.string(),
-  type: z.enum(["sse", "streamable-http"]).optional(),
+  type: z.union([z.literal("sse"), z.literal("streamable-http")]).optional(),
   requestOptions: requestOptionsSchema.optional(),
 });
 export type SseMcpServer = z.infer<typeof sseOrHttpMcpServerSchema>;
