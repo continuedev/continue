@@ -85,7 +85,7 @@ export function convertYamlMcpConfigToJsonMcpConfig(yamlConfig: MCPServer): {
   const warnings: string[] = [];
   if (faviconUrl) {
     warnings.push(
-      "`faviconUrl` from YAML MCP config not supported in Claude-style JSON, will be removed",
+      `\`faviconUrl\` from YAML MCP config not supported in Claude-style JSON, will be removed from server ${name}`,
     );
   }
 
@@ -98,7 +98,7 @@ export function convertYamlMcpConfigToJsonMcpConfig(yamlConfig: MCPServer): {
 
     if (cwd) {
       warnings.push(
-        "`cwd` from YAML MCP config not supported in Claude-style JSON, will be removed",
+        `\`cwd\` from YAML MCP config not supported in Claude-style JSON, will be removed from server ${name}`,
       );
     }
 
@@ -122,7 +122,7 @@ export function convertYamlMcpConfigToJsonMcpConfig(yamlConfig: MCPServer): {
     const { headers, ...unsupportedReqOptions } = requestOptions ?? {};
     for (const key of Object.keys(unsupportedReqOptions)) {
       warnings.push(
-        `${key} requestOption from YAML MCP config not supported in Claude-style JSON, will be ignored`,
+        `${key} requestOption from YAML MCP config not supported in Claude-style JSON, will be ignored in server ${name}`,
       );
     }
 

@@ -18,7 +18,7 @@ const stdioMcpJsonSchema = z.object({
 });
 export type StdioMcpJsonConfig = z.infer<typeof stdioMcpJsonSchema>;
 
-const mcpServersJsonSchema = z.union([
+export const mcpServersJsonSchema = z.union([
   httpOrSseMcpJsonSchema,
   stdioMcpJsonSchema,
 ]);
