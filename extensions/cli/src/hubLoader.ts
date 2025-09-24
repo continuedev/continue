@@ -4,6 +4,11 @@ import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
 /**
+ * Pattern to match valid hub slugs (owner/package format)
+ */
+const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+
+/**
  * Hub package type definitions
  */
 export type HubPackageType = "rule" | "mcp" | "model" | "prompt";
@@ -253,10 +258,7 @@ export async function processRule(ruleSpec: string): Promise<string> {
     const parts = trimmedRuleSpec.split("/");
 
     // If it's exactly 2 parts and matches hub slug pattern, treat as hub slug
-    if (
-      parts.length === 2 &&
-      /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(trimmedRuleSpec)
-    ) {
+    if (parts.length === 2 && HUB_SLUG_PATTERN.test(trimmedRuleSpec)) {
       return await loadRuleFromHub(trimmedRuleSpec);
     }
 
