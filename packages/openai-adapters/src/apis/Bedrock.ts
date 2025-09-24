@@ -40,7 +40,6 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-
 // Utility function to get or generate UUID for prompt caching
 function getSecureID(): string {
   // Adding a type declaration for the static property
