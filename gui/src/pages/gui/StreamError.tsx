@@ -21,7 +21,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isLocalProfile } from "../../util";
 import { analyzeError } from "../../util/errorAnalysis";
-import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
+import { OutOfCreditsDialog } from "./OutOfCreditsDialog";
 
 interface StreamErrorProps {
   error: unknown;
@@ -123,10 +123,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
-  if (
-    parsedError === "You have exceeded the chat limit for the Models Add-On."
-  ) {
-    return <ModelsAddOnLimitDialog />;
+  if (parsedError.includes("You're out of credits!")) {
+    return <OutOfCreditsDialog />;
   }
 
   let errorContent = (
