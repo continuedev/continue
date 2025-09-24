@@ -1,0 +1,11 @@
+{
+  "type": [
+    "hi",
+    "hello",
+    {
+      "hi": "hello",
+      "val2": "val3"
+    }
+  ],
+  "url": "https://mcp.deepwiki.com/mcp"
+}
