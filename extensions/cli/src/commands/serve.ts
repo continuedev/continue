@@ -374,7 +374,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   async function processMessages(state: ServerState, llmApi: any) {
     let processedMessage = false;
     while (state.serverRunning) {
-      const queuedMessage = messageQueue.getLatestMessage();
+      const queuedMessage = messageQueue.getNextMessage();
       if (!queuedMessage) {
         break;
       }

@@ -47,7 +47,10 @@ class MessageQueue extends EventEmitter {
     return true;
   }
 
-  public getLatestMessage(): QueuedMessage | undefined {
+  /**
+   * Dequeues and returns the next message to be processed (FIFO - oldest first)
+   */
+  public getNextMessage(): QueuedMessage | undefined {
     return this.queue.shift();
   }
 
