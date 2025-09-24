@@ -1,6 +1,6 @@
 <div align="center">
 
-![Continue logo](media/readme.png)
+![continue logo](media/readme.png)
 
 </div>
 
