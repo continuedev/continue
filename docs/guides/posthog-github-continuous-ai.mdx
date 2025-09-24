@@ -1,0 +1,517 @@
+---
+title: "Building a Continuous AI Workflow with PostHog and GitHub"
+description: "Build an automated system that continuously monitors PostHog session recordings, analyzes UX issues using Continue CLI, and creates GitHub issues automatically."
+sidebarTitle: "PostHog Session Analysis with Continue CLI"
+---
+
+<Card title="What You'll Build" icon="robot">
+  A fully automated workflow that uses Continue CLI to fetch PostHog session
+  data, analyze user experience issues with AI, and automatically create GitHub
+  issues with specific technical recommendations
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- GitHub repository where you want to create issues
+- PostHog account with **[session recordings enabled and collecting data](https://posthog.com/docs/session-replay/installation)**
+- Node.js 18+ installed locally
+- Continue CLI account with **active credits** (required for API usage)
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+  
+  <Step title="Set up Continue CLI Account & API Key">
+        1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+        2. Sign up or log in to your Continue account
+        3. Navigate to your organization settings
+        4. Click **"API Keys"** and then **"+ New API Key"** 
+        5. Copy the API key immediately (you won't see it again!)
+        6. Login to the CLI: `cn login`
+  </Step>
+
+  <Step title="Add Required Secrets to Continue CLI">
+    Continue CLI will securely store your API keys as secrets that can be referenced in prompts.
+  </Step>
+</Steps>
+
+<Tip>
+  Continue CLI handles the complex API interactions - you just need to provide
+  the right prompts!
+</Tip>
+
+## Step 1: Set Up Your Credentials
+
+First, you'll need to gather your PostHog and GitHub API credentials and add them as secrets in Continue CLI.
+
+<Tabs>
+  <Tab title="PostHog API Credentials">
+    You'll need a **Personal API Key** (not a Project API key) to access session recordings:
+
+    1. Go to [Personal API Keys](https://app.posthog.com/settings/user-api-keys) in PostHog
+    2. Click **+ Create a personal API Key**
+    3. Name it "Continue CLI Session Analysis"
+    4. Select these scopes:
+       - `session_recording:read` - **Required** for accessing session data
+       - `insight:read`
+       - `query:read`
+       - `session_recording_playlist:read`
+    5. Copy the key immediately (you won't see it again!)
+    6. Note your **Project ID** from your PostHog project settings
+    7. Note your PostHog host URL (e.g., `https://us.posthog.com` or your custom domain)
+    8. You'll also need your POSTHOG_AUTH_HEADER value, which is simply `Bearer YOUR_API_KEY`
+
+    <Tip>
+      **Find Your Project Details**: Your Project ID is in your PostHog URL:
+      `https://app.posthog.com/project/YOUR_PROJECT_ID`
+    </Tip>
+
+  </Tab>
+  <Tab title="GitHub Personal Access Token">
+    You'll need a **Personal Access Token** to create issues in your GitHub repository:
+
+    1. Go to [GitHub Personal Access Tokens](https://github.com/settings/personal-access-tokens/new)
+    2. Click **"Generate new token (classic)"**
+    3. Name it "Continue CLI PostHog Analysis"
+    4. Select these scopes:
+       - `repo` (or just `public_repo` if your repository is public)
+       - `issues:write` - **Required** for creating issues
+    5. Copy the token immediately
+
+  </Tab>
+</Tabs>
+
+### Add Secrets to Continue CLI
+
+To add environment variables to your Continue Hub account:
+
+1.  Go to the [Continue Hub](https://hub.continue.dev)
+2.  Sign in to your account
+3.  Navigate to your user settings
+4.  Look for the "Secrets" section
+5.  Add your variables there (like POSTHOG_API_KEY, POSTHOG_PROJECT_ID,
+    POSTHOG_HOST,GITHUB_PAT, etc.)
+
+These environment variables will then be securely stored and available for use in
+your Continue workflows.
+
+## PostHog GitHub Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built PostHog GitHub agent that includes
+  optimized prompts, rules, and the PostHog MCP for more consistent results.
+</Card>
+
+After completing **Step 1** below, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate results with optimized prompts and built-in debugging
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [PostHog GitHub Continuous AI Agent](https://hub.continue.dev/continuedev/awesome-models-posthog-gh) on Continue Hub and click **"Install Agent"**
+
+        This agent includes:
+        - **Optimized prompts** for PostHog analysis and GitHub issue creation
+        - **Built-in rules** for consistent formatting and error handling
+        - **PostHog MCP** for more reliable API interactions
+      </Step>
+
+      <Step title="Verify Your Secrets">
+        The agent uses these Hub resources automatically:
+        - **Environment Variables**: [bekahhw/env-vars](https://hub.continue.dev/bekahhw/env-vars)
+        - **Analysis Rules**: [bekah-hawrot-weigel/posthog-github-continuous-ai-rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules)
+        - **Analysis Prompt**: [continuedev/posthog-analysis](https://hub.continue.dev/continuedev/posthog-analysis)
+        - **Issue Creation Prompt**: [continuedev/github-issues](https://hub.continue.dev/continuedev/github-issues)
+      </Step>
+
+      <Step title="Run the Analysis">
+        Navigate to your project directory and run:
+        ```bash
+        cn "Give me my PostHog Session data and create GitHub issues based on the problems."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the PostHog MCP integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    **Perfect for:** Learning the process and customizing prompts.
+
+    Now you'll use Continue CLI to fetch PostHog session data and analyze it for UX issues. Continue CLI handles all the API calls and analysis automatically.
+
+### Run the PostHog Analysis
+
+Use this prompt with Continue CLI to fetch and analyze your PostHog sessions:
+
+```bash
+cn -p "I need you to help me analyze PostHog session recordings to identify UX issues. Please:
+
+1. First, fetch session recordings from PostHog using these details:
+   - Use the POSTHOG_API_KEY, POSTHOG_PROJECT_ID, and POSTHOG_HOST from my secrets
+   - API endpoint: {POSTHOG_HOST}/api/projects/{POSTHOG_PROJECT_ID}/session_recordings/?limit=20
+   - Include Authorization header: 'Bearer {POSTHOG_API_KEY}'
+
+2. Filter the sessions to find problematic ones with either:
+   - console_error_count > 0 (JavaScript errors)
+   - recording_duration > 300 (sessions longer than 5 minutes)
+
+3. Analyze the filtered sessions and create exactly 3 GitHub issues for the most critical UX problems.
+
+4. Format each issue like this:
+### 1. **Issue Title Here**
+**Problem**: One sentence describing the user problem
+**Technical Causes**: Brief technical explanation
+**Affected Pages**: List the URLs
+**Recommended Fix**:
+- Specific action item 1
+- Specific action item 2
+**Priority**: **HIGH** or **MEDIUM** or **LOW**
+**Impact**: Quantify the impact (e.g., 'Affects 80% of sessions')
+
+Please make the API call, analyze the data, and provide the 3 formatted issues. Base all recommendations on actual patterns in the session data."
+```
+
+### Create GitHub Issues from PostHog Analysis
+
+Now use Continue CLI to create GitHub issues from your analysis results:
+
+```bash
+cn -p "I have analyzed PostHog session data and identified UX issues. Now I need you to create GitHub issues using the GitHub API.
+
+Use these details from my secrets:
+- GITHUB_PAT: My GitHub Personal Access Token
+- Repository: Extract from git remote or ask me to specify
+
+For each issue in my analysis:
+1. Parse the issue title, body content, and priority level
+2. Create a GitHub issue via API POST to: https://api.github.com/repos/{owner}/{repo}/issues
+3. Use these headers:
+   - Authorization: token {GITHUB_PAT}
+   - Accept: application/vnd.github.v3+json
+   - Content-Type: application/json
+4. Set labels based on priority:
+   - HIGH: [\"bug\", \"high-priority\", \"user-experience\", \"automated\"]
+   - MEDIUM: [\"enhancement\", \"medium-priority\", \"user-experience\", \"automated\"]
+   - LOW: [\"low-priority\", \"user-experience\", \"automated\"]
+5. Format the issue title as: \"🔍 UX Issue: {original title}\"
+
+Please create the GitHub issues and confirm they were successfully created with issue numbers and URLs.
+"
+```
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either: 
+      - **Continue CLI Pro Plan** with
+      the models add-on, OR 
+      - **Your own API keys** added to Continue Hub secrets
+      (same as Step 1 below) The agent will automatically detect and use your
+      configuration.
+
+</Accordion>
+
+---
+
+<Warning>
+**Repository Labels Required**: Make sure your GitHub repository has these labels:
+- `bug`, `enhancement` 
+- `high-priority`, `medium-priority`, `low-priority`
+- `user-experience`, `automated`
+
+Create missing labels in your repo at: **Settings → Labels → New label**
+
+</Warning>
+
+<Info>
+  **What Continue CLI Does:** - Parses your analysis results automatically -
+  Makes authenticated GitHub API calls using your stored token - Creates
+  properly formatted issues with appropriate labels - Checks for duplicate
+  issues to avoid spam - Provides confirmation with issue URLs
+</Info>
+
+## Setting Up Automated GitHub Actions Workflow
+
+Create a GitHub Actions workflow that runs your Continue CLI analysis automatically on a schedule.
+
+### Add GitHub Secrets
+
+First, add these secrets to your GitHub repository:
+
+1. Go to **Repository Settings → Secrets and variables → Actions**
+2. Click **"New repository secret"** and add:
+   - `CONTINUE_API_KEY`: Your Continue API key from hub.continue.dev
+
+### Create GitHub Actions Workflow
+
+Create `.github/workflows/posthog-analysis.yml` in your repository:
+
+<Tabs>
+  <Tab title="⚡ Using Pre-Built Agent (Recommended)">
+```yaml
+name: PostHog Session Analysis with Continue CLI Agent
+
+on:
+schedule: - cron: "0 6 \* \* \*" # Run at 6 AM UTC daily
+workflow_dispatch: # Allow manual triggering
+
+jobs:
+analyze:
+runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+          cn --version
+
+      - name: Authenticate with Continue CLI
+        run: |
+          # Set Continue API key
+          export CONTINUE_API_KEY="${{ secrets.CONTINUE_API_KEY }}"
+          # Login to Continue CLI
+          if ! cn auth login --api-key "$CONTINUE_API_KEY"; then
+            echo "❌ Failed to authenticate with Continue CLI"
+            exit 1
+          fi
+          echo "✅ Continue CLI authenticated"
+
+      - name: Load PostHog GitHub Agent
+        run: |
+          echo "🤖 Loading PostHog GitHub Continuous AI Agent..."
+          cn --config continuedev/awesome-models-posthog-gh
+          echo "✅ Agent loaded successfully"
+
+      - name: Run PostHog Analysis and Create GitHub Issues
+        run: |
+          echo "🎬 Starting automated PostHog session analysis..."
+
+          # Run the agent with the simple prompt
+          cn -p "Tell me about my PostHog session recordings and create GitHub issues based on the problems."
+
+          echo "✅ Analysis and issue creation completed"
+
+      - name: Summary
+        run: |
+          echo "✅ PostHog analysis workflow completed!"
+          echo "📊 Check the artifacts for detailed analysis results"
+          echo "🐛 Check your repository issues for newly created UX issues"
+          echo "🤖 Agent automatically handled both analysis and issue creation"
+      ```
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup Version">
+  
+```yaml
+name: PostHog Session Analysis with Continue CLI Manual
+
+on:
+schedule: - cron: "0 6 \* \* \*" # Run at 6 AM UTC daily
+workflow_dispatch: # Allow manual triggering
+
+jobs:
+analyze:
+runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+          cn --version
+
+      - name: Authenticate with Continue CLI
+        run: |
+          # Set Continue API key
+          export CONTINUE_API_KEY="${{ secrets.CONTINUE_API_KEY }}"
+          # Login to Continue CLI
+          if ! cn auth login --api-key "$CONTINUE_API_KEY"; then
+            echo "❌ Failed to authenticate with Continue CLI"
+            exit 1
+          fi
+          echo "✅ Continue CLI authenticated"
+
+      - name: Run PostHog Session Analysis
+        run: |
+          echo "🎬 Starting PostHog session analysis..."
+          # Create the analysis prompt
+          I need you to help me analyze PostHog session recordings to identify UX issues. Please:
+
+          1. First, fetch session recordings from PostHog using these details:
+             - Use the POSTHOG_API_KEY, POSTHOG_PROJECT_ID, and POSTHOG_HOST from my secrets
+             - API endpoint: {POSTHOG_HOST}/api/projects/{POSTHOG_PROJECT_ID}/session_recordings/?limit=20
+             - Include Authorization header: 'Bearer {POSTHOG_API_KEY}'
+
+          2. Filter the sessions to find problematic ones with either:
+             - console_error_count > 0 (JavaScript errors)
+             - recording_duration > 300 (sessions longer than 5 minutes)
+
+          3. Analyze the filtered sessions and create exactly 3 GitHub issues for the most critical UX problems.
+
+          4. Format each issue like this:
+          ### 1. **Issue Title Here**
+          **Problem**: One sentence describing the user problem
+          **Technical Causes**: Brief technical explanation
+          **Affected Pages**: List the URLs
+          **Recommended Fix**:
+          - Specific action item 1
+          - Specific action item 2
+          **Priority**: **HIGH** or **MEDIUM** or **LOW**
+          **Impact**: Quantify the impact (e.g., 'Affects 80% of sessions')
+
+          Please make the API call, analyze the data, and provide the 3 formatted issues. Base all recommendations on actual patterns in the session data.
+          EOF
+
+          echo "✅ Analysis completed"
+
+
+      - name: Create GitHub Issues from Analysis
+        run: |
+          echo "📝 Creating GitHub issues from analysis..."
+          # Create the issue creation prompt
+          I have analyzed PostHog session data and identified UX issues. Now I need you to create GitHub issues using the GitHub API.
+
+          For each issue in my analysis:
+          1. Parse the issue title, body content, and priority level
+          2. Create a GitHub issue via API POST to: https://api.github.com/repos/{owner}/{repo}/issues
+          3. Use these headers:
+             - Authorization: token {GITHUB_PAT}
+             - Accept: application/vnd.github.v3+json
+             - Content-Type: application/json
+          4. Set labels based on priority:
+             - HIGH: ["bug", "high-priority", "user-experience", "automated"]
+             - MEDIUM: ["enhancement", "medium-priority", "user-experience", "automated"]
+             - LOW: ["low-priority", "user-experience", "automated"]
+          5. Format the issue title as: "🔍 UX Issue: {original title}"
+
+          Please create the GitHub issues and confirm they were successfully created with issue numbers and URLs.
+
+          echo "✅ Issue creation completed"
+
+      - name: Summary
+        run: |
+          echo "✅ PostHog analysis workflow completed!"
+          echo "🐛 Check your repository issues for newly created UX issues"
+    ```
+
+  </Tab>
+</Tabs>
+
+### Test the GitHub Actions Workflow
+
+1. **Manual Trigger**: Go to **Actions** tab in your repository and manually trigger the workflow
+2. **Check Artifacts**: Download the analysis results from the workflow run
+3. **Verify Issues**: Check that GitHub issues were created in your repository
+
+<Check>
+
+    **Success Indicators:**
+    - PostHog API returns session data (not empty)
+    - Continue CLI generates analysis with identified issues
+    - GitHub issues are created with proper labels and formatting
+    - Workflow completes without errors
+
+</Check>
+
+## What You've Built
+
+After completing this guide, you have a complete **Continuous AI system** that:
+
+- **Monitors user experience** - Automatically fetches and analyzes PostHog session data
+
+- **Identifies problems intelligently** - Uses AI to spot patterns and technical issues
+
+- **Creates actionable tasks** - Generates GitHub issues with specific recommendations
+
+- **Runs autonomously** - Operates daily without manual intervention using GitHub Actions
+
+- **Scales with your team** - Handles growing amounts of session data automatically
+
+<Card title="Continuous AI" icon="rocket">
+  Your system now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine analysis tasks with human oversight through GitHub issue
+  review and prioritization.
+</Card>
+
+## Security Best Practices
+
+<Warning>
+
+    **Protect Your API Keys:**
+    - Store all credentials as GitHub Secrets, never in
+    code
+    - Use Continue CLI's secure secret storage
+    - Limit token scopes to minimum required permissions
+    - Rotate API keys regularly (every 90 days recommended)
+    - Monitor token usage for unusual activity
+
+</Warning>
+
+## Advanced Prompts
+
+Consider enhancing your workflow with these advanced Continue CLI prompts:
+
+<CardGroup cols={2}>
+  <Card title="Performance Analysis" icon="chart-line">
+    "Analyze PostHog performance metrics alongside session recordings to
+    identify slow page loads affecting user experience"
+  </Card>
+  <Card title="Error Correlation" icon="bug">
+    "Cross-reference JavaScript console errors with user actions to identify the
+    root cause of UX issues"
+  </Card>
+  <Card title="Feature Flag Analysis" icon="flag">
+    "Analyze how PostHog feature flags impact user behavior in session
+    recordings"
+  </Card>
+  <Card title="Custom Slack Alerts" icon="slack">
+    "Create Slack alerts when critical UX issues are detected in PostHog
+    sessions"
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+1. **Monitor your first issues** - Review the GitHub issues created and implement fixes
+2. **Measure impact** - Track how resolved issues improve PostHog metrics
+3. **Refine prompts** - Adjust the Continue CLI prompts based on issue quality
+4. **Scale the system** - Add more data sources or create specialized analysis workflows

@@ -1,9 +1,9 @@
-import { subDays, subMonths, subYears, startOfDay, addHours } from "date-fns";
+import { addHours, startOfDay, subDays, subMonths, subYears } from "date-fns";
 import { render } from "ink-testing-library";
 import React from "react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { SessionMetadata } from "../session.js";
+import type { BaseSessionMetadata } from "../session.js";
 
 import { SessionSelector } from "./SessionSelector.js";
 
@@ -23,7 +23,7 @@ describe("SessionSelector", () => {
     const thisYear = subMonths(new Date(today), 2).toISOString(); // 2 months ago (this year)
     const lastYear = subYears(new Date(today), 1).toISOString(); // 1 year ago
 
-    const sessions: SessionMetadata[] = [
+    const sessions: BaseSessionMetadata[] = [
       {
         sessionId: "session-1",
         title: "Today's session",
@@ -93,7 +93,7 @@ describe("SessionSelector", () => {
   });
 
   it("handles sessions without first user message", () => {
-    const sessions: SessionMetadata[] = [
+    const sessions: BaseSessionMetadata[] = [
       {
         sessionId: "session-1",
         workspaceDirectory: "/test",

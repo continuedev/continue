@@ -1,16 +1,19 @@
 import { Box, Text } from "ink";
 import React from "react";
 
-import { listSessions } from "../../session.js";
+import { UpdateServiceState } from "src/services/types.js";
+
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
+import { DiffViewer } from "../DiffViewer.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
-import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
+import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
+import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
 
 interface ScreenContentProps {
@@ -32,6 +35,7 @@ interface ScreenContentProps {
   ) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
+  isCompacting: boolean;
   inputMode: boolean;
   handleInterrupt: () => void;
   handleFileAttached: (filePath: string, content: string) => void;
@@ -39,6 +43,15 @@ interface ScreenContentProps {
   wasInterrupted?: boolean;
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  diffContent?: string;
+}
+
+function hideScreenContent(state?: UpdateServiceState) {
+  return (
+    (state?.status === "checking" && state?.autoUpdate) ||
+    (state?.isAutoUpdate &&
+      (state?.status === "updating" || state?.status === "updated"))
+  );
 }
 
 export const ScreenContent: React.FC<ScreenContentProps> = ({
@@ -55,6 +68,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleToolPermissionResponse,
   handleUserMessage,
   isWaitingForResponse,
+  isCompacting,
   inputMode,
   handleInterrupt,
   handleFileAttached,
@@ -62,7 +76,12 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   wasInterrupted = false,
   isRemoteMode,
   onImageInClipboardChange,
+  diffContent,
 }) => {
+  if (hideScreenContent(services.update)) {
+    return null;
+  }
+
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
     return (
@@ -104,6 +123,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return <MCPSelector onCancel={closeCurrentScreen} />;
   }
 
+  if (isScreenActive("update")) {
+    return <UpdateSelector onCancel={closeCurrentScreen} />;
+  }
+
   // Model selector
   if (isScreenActive("model")) {
     return (
@@ -116,10 +139,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   // Session selector
   if (isScreenActive("session")) {
-    const sessions = listSessions(20);
     return (
-      <SessionSelector
-        sessions={sessions}
+      <SessionSelectorWithLoading
         onSelect={handleSessionSelect}
         onExit={closeCurrentScreen}
       />
@@ -129,6 +150,16 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   // Free trial transition UI
   if (isScreenActive("free-trial")) {
     return <FreeTrialTransitionUI onReload={handleReload} />;
+  }
+
+  // Diff viewer overlay
+  if (isScreenActive("diff")) {
+    return (
+      <DiffViewer
+        diffContent={diffContent || ""}
+        onClose={closeCurrentScreen}
+      />
+    );
   }
 
   // Chat screen with input area
@@ -149,6 +180,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
       <UserInput
         onSubmit={handleUserMessage}
         isWaitingForResponse={isWaitingForResponse}
+        isCompacting={isCompacting}
         inputMode={inputMode}
         onInterrupt={handleInterrupt}
         assistant={services.config?.config || undefined}

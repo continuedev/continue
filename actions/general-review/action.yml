@@ -1,20 +1,20 @@
-name: 'Continue PR Review'
-description: 'Automated code review for pull requests using Continue CLI'
-author: 'Continue Dev, Inc.'
+name: "Continue PR Review"
+description: "Automated code review for pull requests using Continue CLI"
+author: "Continue Dev, Inc."
 
 inputs:
   continue-api-key:
-    description: 'API key for Continue service'
+    description: "API key for Continue service"
     required: true
   continue-org:
-    description: 'Organization for Continue config'
+    description: "Organization for Continue config"
     required: true
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -27,7 +27,7 @@ runs:
       run: |
         # Check if this action should run based on event type and user permissions
         SHOULD_RUN="false"
-        
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           # Check if PR is a draft
           if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
@@ -56,7 +56,7 @@ runs:
         else
           echo "::notice::Skipping review - Unsupported event type: ${{ github.event_name }}"
         fi
-        
+
         echo "SHOULD_RUN=$SHOULD_RUN" >> $GITHUB_ENV
 
     - name: Setup Node.js
@@ -162,14 +162,14 @@ runs:
           echo "Warning: CONTINUE_API_KEY environment variable is not set"
           # Create fallback review and continue
           cat > code_review.md << 'EOF'
-## Code Review Summary
+          ## Code Review Summary
 
-⚠️ AI review skipped: CONTINUE_API_KEY not configured.
+          ⚠️ AI review skipped: CONTINUE_API_KEY not configured.
 
-### Configuration Required
-- Please set the CONTINUE_API_KEY secret in repository settings
-- Verify that the organization and config path are valid
-EOF
+          ### Configuration Required
+          - Please set the CONTINUE_API_KEY secret in repository settings
+          - Verify that the organization and config path are valid
+          EOF
           echo "SKIP_CLI=true" >> $GITHUB_ENV
         else
           echo "SKIP_CLI=false" >> $GITHUB_ENV
@@ -180,7 +180,7 @@ EOF
           echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
           exit 1
         fi
-        
+
         if [[ ! "$CONTINUE_CONFIG" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
           echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
           exit 1
@@ -192,14 +192,14 @@ EOF
           if ! cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > code_review.md << 'EOF'
-## Code Review Summary
+            ## Code Review Summary
 
-⚠️ AI review skipped: Continue CLI installation failed.
+            ⚠️ AI review skipped: Continue CLI installation failed.
 
-### Troubleshooting
-- Check that npm installation succeeded
-- Verify @continuedev/cli package is available
-EOF
+            ### Troubleshooting
+            - Check that npm installation succeeded
+            - Verify @continuedev/cli package is available
+            EOF
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
             echo "Continue CLI version: $(cn --version)"
@@ -222,15 +222,15 @@ EOF
           
           # Create fallback review
           cat > code_review.md << 'EOF'
-## Code Review Summary
+          ## Code Review Summary
 
-⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
+          ⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
 
-### Troubleshooting
-- Verify the CONTINUE_API_KEY secret is set correctly
-- Check that the organization and config path are valid
-- Ensure the Continue service is accessible
-EOF
+          ### Troubleshooting
+          - Verify the CONTINUE_API_KEY secret is set correctly
+          - Check that the organization and config path are valid
+          - Ensure the Continue service is accessible
+          EOF
         else
           echo "Review generated successfully"
         fi
@@ -294,5 +294,5 @@ EOF
           }
 
 branding:
-  icon: 'code'
-  color: 'blue'
+  icon: "code"
+  color: "blue"

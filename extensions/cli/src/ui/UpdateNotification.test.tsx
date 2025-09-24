@@ -1,10 +1,3 @@
-// Mock the version module before any other imports
-vi.mock("../version.js", () => ({
-  getVersion: vi.fn(),
-  getLatestVersion: vi.fn(),
-  compareVersions: vi.fn(),
-}));
-
 // Mock useTerminalSize hook
 vi.mock("./hooks/useTerminalSize.js", () => ({
   useTerminalSize: () => ({ columns: 80, rows: 24 }),
@@ -30,93 +23,202 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as versionModule from "../version.js";
+import { UpdateStatus } from "../services/types.js";
 
 import { UpdateNotification } from "./UpdateNotification.js";
 
-const mockVersionModule = vi.mocked(versionModule);
+// Mock useServices hook
+const mockUseServices = vi.fn();
+vi.mock("../hooks/useService.js", () => ({
+  useServices: () => mockUseServices(),
+}));
 
 describe("UpdateNotification", () => {
-  let originalNodeEnv: string | undefined;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    originalNodeEnv = process.env.NODE_ENV;
-    // Default mock implementations
-    mockVersionModule.getLatestVersion.mockResolvedValue("1.0.1");
-    mockVersionModule.compareVersions.mockReturnValue("older");
+    // Default mock implementation - no update available
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.IDLE,
+          message: "Continue CLI v1.0.0",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: null,
+          currentVersion: "1.0.0",
+        },
+      },
+    });
   });
 
   afterEach(() => {
-    // Restore original NODE_ENV
-    if (originalNodeEnv === undefined) {
-      delete process.env.NODE_ENV;
-    } else {
-      process.env.NODE_ENV = originalNodeEnv;
-    }
+    vi.clearAllMocks();
   });
 
-  it("should not check for updates when version ends with -dev", async () => {
-    // Set NODE_ENV to non-test value to enable update checks
-    process.env.NODE_ENV = "development";
-    mockVersionModule.getVersion.mockReturnValue("1.0.0-dev");
+  it("should show default message when no update is available", () => {
+    const { lastFrame } = render(<UpdateNotification />);
 
-    render(<UpdateNotification />);
-
-    // Wait a bit to ensure useEffect has run
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // getLatestVersion should not have been called for dev versions
-    expect(mockVersionModule.getLatestVersion).not.toHaveBeenCalled();
+    expect(lastFrame()).toContain("◉ Continue CLI v1.0.0");
   });
 
-  it("should check for updates when version does not end with -dev", async () => {
-    // Set NODE_ENV to non-test value to enable update checks
-    process.env.NODE_ENV = "development";
-    mockVersionModule.getVersion.mockReturnValue("1.0.0");
+  it("should show update available message when update is available", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.IDLE,
+          message: "Update available: v1.0.1",
+          error: null,
+          isUpdateAvailable: true,
+          latestVersion: "1.0.1",
+          currentVersion: "1.0.0",
+        },
+      },
+    });
 
-    render(<UpdateNotification />);
+    const { lastFrame } = render(<UpdateNotification />);
 
-    // Wait a bit to ensure useEffect has run
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // getLatestVersion should have been called for non-dev versions
-    expect(mockVersionModule.getLatestVersion).toHaveBeenCalled();
+    expect(lastFrame()).toContain("◉ Update available: v1.0.1");
   });
 
-  it("should handle various dev version formats", async () => {
-    // Set NODE_ENV to non-test value to enable update checks
-    process.env.NODE_ENV = "development";
-    const devVersions = ["1.0.0-dev", "2.1.3-dev", "0.5.0-dev"];
+  it("should show checking message when checking for updates", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.CHECKING,
+          message: "Checking for updates",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: null,
+          currentVersion: "1.0.0",
+        },
+      },
+    });
 
-    for (const version of devVersions) {
-      vi.clearAllMocks();
-      mockVersionModule.getVersion.mockReturnValue(version);
+    const { lastFrame } = render(<UpdateNotification />);
 
-      render(<UpdateNotification />);
-
-      // Wait a bit to ensure useEffect has run
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      expect(mockVersionModule.getLatestVersion).not.toHaveBeenCalled();
-    }
+    expect(lastFrame()).toContain("◉ Checking for updates");
   });
 
-  it("should still check for updates with other version suffixes", async () => {
-    // Set NODE_ENV to non-test value to enable update checks
-    process.env.NODE_ENV = "development";
-    const nonDevVersions = ["1.0.0-beta", "1.0.0-alpha", "1.0.0-rc1"];
+  it("should show updating message when updating", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.UPDATING,
+          message: "Updating to v1.0.1",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: "1.0.1",
+          currentVersion: "1.0.0",
+        },
+      },
+    });
 
-    for (const version of nonDevVersions) {
-      vi.clearAllMocks();
-      mockVersionModule.getVersion.mockReturnValue(version);
+    const { lastFrame } = render(<UpdateNotification />);
 
-      render(<UpdateNotification />);
+    expect(lastFrame()).toContain("◉ Updating to v1.0.1");
+  });
 
-      // Wait a bit to ensure useEffect has run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+  it("should show updated message when update completes", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.UPDATED,
+          message: "Auto-updated to v1.0.1",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: "1.0.1",
+          currentVersion: "1.0.0",
+        },
+      },
+    });
 
-      expect(mockVersionModule.getLatestVersion).toHaveBeenCalled();
-    }
+    const { lastFrame } = render(<UpdateNotification />);
+
+    expect(lastFrame()).toContain("◉ Auto-updated to v1.0.1");
+  });
+
+  it("should show error message when update fails", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.ERROR,
+          message: "Update failed",
+          error: new Error("Update error"),
+          isUpdateAvailable: true,
+          latestVersion: "1.0.1",
+          currentVersion: "1.0.0",
+        },
+      },
+    });
+
+    const { lastFrame } = render(<UpdateNotification />);
+
+    expect(lastFrame()).toContain("◉ Update failed");
+  });
+
+  it("should show remote mode when in remote mode and no update available", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.IDLE,
+          message: "Continue CLI v1.0.0",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: null,
+          currentVersion: "1.0.0",
+        },
+      },
+    });
+
+    const { lastFrame } = render(<UpdateNotification isRemoteMode={true} />);
+
+    expect(lastFrame()).toContain("◉ Remote Mode");
+  });
+
+  it("should show update message even in remote mode when update is available", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.IDLE,
+          message: "Update available: v1.0.1",
+          error: null,
+          isUpdateAvailable: true,
+          latestVersion: "1.0.1",
+          currentVersion: "1.0.0",
+        },
+      },
+    });
+
+    const { lastFrame } = render(<UpdateNotification isRemoteMode={true} />);
+
+    expect(lastFrame()).toContain("◉ Update available: v1.0.1");
+  });
+
+  it("should show default message when update service has no message", () => {
+    mockUseServices.mockReturnValue({
+      services: {
+        update: {
+          autoUpdate: true,
+          status: UpdateStatus.IDLE,
+          message: "",
+          error: null,
+          isUpdateAvailable: false,
+          latestVersion: null,
+          currentVersion: "1.0.0",
+        },
+      },
+    });
+
+    const { lastFrame } = render(<UpdateNotification />);
+
+    expect(lastFrame()).toContain("◉ Continue CLI");
   });
 });

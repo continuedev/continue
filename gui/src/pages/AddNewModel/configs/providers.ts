@@ -566,6 +566,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.grokBeta],
     apiKeyUrl: "https://console.x.ai/",
   },
+  lemonade: {
+    title: "Lemonade",
+    provider: "lemonade",
+    description:
+      "High-performance local LLM inference with AMD hardware optimization",
+    longDescription:
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the Lemonade server is running, you can begin using Continue with your local models.",
+    icon: "lemonade.png",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "http://localhost:8000/api/v1/",
+    },
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Lemonade",
+        },
+      },
+      ...openSourceModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputsConfigs,
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000/api/v1/",
+        required: true,
+      },
+    ],
+    downloadUrl: "http://lemonade-server.ai",
+  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",
@@ -777,17 +809,16 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
+      models.llama33Swallow70BInstruct,
       models.llama318BInstruct,
-      models.llama31405BInstruct,
-      models.llama321BInstruct,
-      models.llama323BInstruct,
-      models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
       models.deepseekV3,
+      models.deepseekV31,
+      models.qwen332B,
+      models.gptOss120b,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },

@@ -16,10 +16,13 @@ export const readFileTool: Tool = {
   displayName: "Read",
   description: "Read the contents of a file at the specified path",
   parameters: {
-    filepath: {
-      type: "string",
-      description: "The path to the file to read",
-      required: true,
+    type: "object",
+    required: ["filepath"],
+    properties: {
+      filepath: {
+        type: "string",
+        description: "The path to the file to read",
+      },
     },
   },
   readonly: true,

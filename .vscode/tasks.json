@@ -331,6 +331,26 @@
       }
     },
     {
+      "label": "cli:build-no-minify",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build:bundle", "--", "--no-minify"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "close": true
+      },
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
       "label": "cli:test",
       "type": "npm",
       "script": "test",
@@ -372,6 +392,21 @@
       },
       "options": {
         "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "cli:build-and-watch-logs",
+      "dependsOn": ["cli:build-no-minify", "watch-logs"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Build and watch logs completed"],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true,
+        "focus": false
       }
     }
   ]
