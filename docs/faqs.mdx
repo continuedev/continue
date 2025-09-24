@@ -3,6 +3,87 @@ title: "FAQs"
 description: "Frequently asked questions about Continue"
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "name": "Continue AI Coding Assistant - Frequently Asked Questions",
+  "description": "Find answers to common questions about Continue, including setup, troubleshooting, networking, and agent configuration",
+  "url": "https://docs.continue.dev/faqs",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Continue",
+    "url": "https://continue.dev"
+  },
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I configure certificates for Continue?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If your network requires custom certificates, add requestOptions.caBundlePath to your config file pointing to your certificate file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use Continue with a proxy server?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "VS Code users can use VS Code's built-in Proxy Server Support. Check your VS Code settings for proxy configuration."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Changes to agents not showing in VS Code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Try reloading the VS Code window using cmd/ctrl + shift + P, then select 'Reload Window'."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "I don't see the Continue sidebar window?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Continue window may be on the right side of VS Code. Use cmd/ctrl+L or click the right sidebar button to reveal it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Getting a 404 error from OpenAI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This may be because you need to add credits to your OpenAI billing account. Check your billing console and add credits if needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Agent mode is unavailable or tools aren't working?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This is likely due to model capability configuration. Check if your model supports tool calling and add 'tool_use' to your capabilities if needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I troubleshoot Ollama connection issues?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Verify Ollama is running by checking http://localhost:11434, ensure you start with 'ollama serve', and check your config.yaml setup."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I reset Continue extension state?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Remove the ~/.continue directory (~%USERPROFILE%\.continue on Windows), then uninstall and reinstall the extension."
+      }
+    }
+  ]
+}
+</script>
+
 ## Networking Issues
 
 ### Configure Certificates
