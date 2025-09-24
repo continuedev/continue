@@ -17,6 +17,7 @@ import {
   ModelServiceState,
 } from "../services/types.js";
 import { createSession, getCompleteStateSnapshot } from "../session.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { gracefulExit } from "../util/exit.js";
@@ -138,9 +139,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model,
     isProcessing: false,
     lastActivity: Date.now(),
-    messageQueue: [],
     currentAbortController: null,
-    shouldInterrupt: false,
     serverRunning: true,
     pendingPermission: null,
   };
@@ -164,7 +163,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       getCompleteStateSnapshot(
         state.session,
         state.isProcessing,
-        state.messageQueue.length,
+        messageQueue.getQueueLength(),
         state.pendingPermission,
       ),
     isActive: () => state.serverRunning,
@@ -191,7 +190,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     const stateSnapshot = getCompleteStateSnapshot(
       state.session,
       state.isProcessing,
-      state.messageQueue.length,
+      messageQueue.getQueueLength(),
       state.pendingPermission,
     );
     res.json(stateSnapshot);
@@ -207,17 +206,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Queue the message
-    state.messageQueue.push(message);
-
-    // If currently processing, set interrupt flag
-    if (state.isProcessing && state.currentAbortController) {
-      state.shouldInterrupt = true;
-    }
+    await messageQueue.enqueueMessage(message);
 
     res.json({
       queued: true,
-      position: state.messageQueue.length,
-      willInterrupt: state.shouldInterrupt,
+      position: messageQueue.getQueueLength(),
     });
 
     // Process messages if not already processing
@@ -310,9 +303,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.currentAbortController.abort();
     }
 
-    // Clear the message queue
-    state.messageQueue = [];
-
     // Clean up intervals
     if (inactivityChecker) {
       clearInterval(inactivityChecker);
@@ -332,7 +322,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, () => {
+  const server = app.listen(port, async () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
@@ -361,7 +351,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // If initial prompt provided, queue it for processing
     if (actualPrompt) {
       console.log(chalk.dim("\nProcessing initial prompt..."));
-      state.messageQueue.push(actualPrompt);
+      await messageQueue.enqueueMessage(actualPrompt);
       processMessages(state, llmApi);
     }
   });
@@ -390,10 +380,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   async function processMessages(state: ServerState, llmApi: any) {
     let processedMessage = false;
-    while (state.messageQueue.length > 0 && state.serverRunning) {
-      const userMessage = state.messageQueue.shift()!;
+    while (state.serverRunning) {
+      const queuedMessage = messageQueue.getNextMessage();
+      if (!queuedMessage) {
+        break;
+      }
+
+      const userMessage = queuedMessage.message;
       state.isProcessing = true;
-      state.shouldInterrupt = false;
       state.lastActivity = Date.now();
       processedMessage = true;
 
@@ -417,7 +411,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           state,
           llmApi,
           state.currentAbortController,
-          () => state.shouldInterrupt,
+          () => false,
         );
 
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
@@ -450,7 +444,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     if (
       processedMessage &&
       state.serverRunning &&
-      state.messageQueue.length === 0
+      messageQueue.getQueueLength() === 0
     ) {
       await storageSyncService.markAgentStatusUnread();
     }
