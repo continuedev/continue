@@ -189,6 +189,7 @@ class MCPConnection {
                 );
                 try {
                   await this.client.connect(transport, {});
+                  this.transport = transport;
                 } catch (error) {
                   // Allow the case where for whatever reason is already connected
                   if (
@@ -209,14 +210,17 @@ class MCPConnection {
                 if (this.options.type === "sse") {
                   const transport = this.constructSseTransport(this.options);
                   await this.client.connect(transport, {});
+                  this.transport = transport;
                 } else if (this.options.type === "streamable-http") {
                   const transport = this.constructHttpTransport(this.options);
                   await this.client.connect(transport, {});
+                  this.transport = transport;
                 } else if (this.options.type === "websocket") {
                   const transport = this.constructWebsocketTransport(
                     this.options,
                   );
                   await this.client.connect(transport, {});
+                  this.transport = transport;
                 } else {
                   try {
                     const transport = this.constructHttpTransport({
@@ -235,7 +239,7 @@ class MCPConnection {
                       this.transport = transport;
                     } catch (e) {
                       throw new Error(
-                        `MCP config with no URL and type specified failed both sse and http connection: ${e instanceof Error ? e.message : String(e)}`,
+                        `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
                       );
                     }
                   }

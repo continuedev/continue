@@ -132,7 +132,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
         z.object({
           uses: defaultUsesSchema,
           with: z.record(z.string()).optional(),
-          override: partialMcpServerSchema,
+          override: partialMcpServerSchema.optional(),
         }),
       ]),
     )

@@ -142,7 +142,7 @@ describe("MCPOauth", () => {
         },
       });
 
-      removeMCPAuth(mockMcpServerId, mockIde);
+      removeMCPAuth(mockMcpServerUrl, mockIde);
 
       const updatedStorage = globalContext.get("mcpOauthStorage");
       expect(updatedStorage).toEqual({

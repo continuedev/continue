@@ -19,8 +19,7 @@ import { localPathToUri } from "../../../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../../../util/uri";
 
 /**
- * This method searches in both ~/.continue and workspace .continue
- * for all YAML/Markdown files in the specified subdirectory, for example .continue/assistants or .continue/prompts
+ * Loads MCP configs from JSON files in ~/.continue/mcpServers and workspace .continue/mcpServers
  */
 export async function loadJsonMcpConfigs(
   ide: IDE,
@@ -129,9 +128,15 @@ export async function loadJsonMcpConfigs(
   const yamlConfigs = validJsonConfigs.map((c) =>
     convertJsonMcpConfigToYamlMcpConfig(c.name, c.mcpJson),
   );
-  const mcpServers = yamlConfigs.map((c) =>
-    convertYamlMcpConfigToInternalMcpOptions(c.yamlConfig),
-  );
+  const mcpServers = yamlConfigs.map((c) => {
+    errors.push(
+      ...c.warnings.map((warning) => ({
+        fatal: false,
+        message: warning,
+      })),
+    );
+    return convertYamlMcpConfigToInternalMcpOptions(c.yamlConfig);
+  });
   // Parse and convert files
   return {
     mcpServers,

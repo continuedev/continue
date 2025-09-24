@@ -3,15 +3,15 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-
-import { getErrorString } from "../util/error.js";
-import { logger } from "../util/logger.js";
-
 import {
   HttpMcpServer,
   SseMcpServer,
   StdioMcpServer,
 } from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
+
+import { getErrorString } from "../util/error.js";
+import { logger } from "../util/logger.js";
+
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -376,7 +376,7 @@ export class MCPService
         try {
           const transport = this.constructHttpTransport(serverConfig);
           await client.connect(transport, {});
-        } catch (e) {
+        } catch {
           logger.debug(
             "MCP Connection: http connection failed, falling back to sse connection",
             {
@@ -388,7 +388,7 @@ export class MCPService
             await client.connect(transport, {});
           } catch (e) {
             throw new Error(
-              `MCP config with no URL and type specified failed both sse and http connection: ${e instanceof Error ? e.message : String(e)}`,
+              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
             );
           }
         }

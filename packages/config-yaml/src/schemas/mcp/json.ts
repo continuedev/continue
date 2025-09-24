@@ -3,7 +3,7 @@ import z from "zod";
 // This is the schema for an entry in e.g. Claude Desktop, Claude code mcp config
 const httpOrSseMcpJsonSchema = z.object({
   type: z.union([z.literal("sse"), z.literal("http")]).optional(),
-  url: z.string().url(),
+  url: z.string(), // .url() fails with e.g. IP addresses
   headers: z.record(z.string(), z.string()).optional(),
 });
 export type HttpMcpJsonConfig = z.infer<typeof httpOrSseMcpJsonSchema>;
