@@ -28,8 +28,8 @@ version: 0.0.1
 schema: v1
 
 mcpServers:
-  ## This uses the slug from the official MCP registry: https://registry.modelcontextprotocol.io
-  - serverName: app.linear/linear
+  - name: Linear MCP
+    namespace: app.linear/linear ## This uses the slug from the official MCP registry: https://registry.modelcontextprotocol.io
 ```
 
 To verify the server is working, run the following prompt:
@@ -53,13 +53,15 @@ If you have an existing `.mcp.json` file from Claude, Cursor, Cline, or any othe
 
 For MCP servers that require secret values, such as API keys, you use secrets stored in Continue Hub, or directly set the value:
 
-```yaml title=".continue/mcpServers/linear.yaml highlight={3-4, 9-10}
+```yaml title=".continue/mcpServers/supabase.yaml highlight={3-4, 9-10}
 mcpServers:
-  - serverName: com.supabase/mcp
+  - name: Supabase MCP
+    namespace: com.supabase/mcp
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }} ## Read from Continue Hub secrets
 
-  - serverName: com.supabase/mcp
+  - name: Supabase MCP
+    namespace: com.supabase/mcp
     env:
       SUPABASE_ACCESS_TOKEN: <SUPABASE_ACCESS_TOKEN>
 ```
@@ -72,7 +74,8 @@ You can use the `registryUrl` property to point to a different MCP registry:
 
 ```yaml title=".continue/mcpServers/linear.yaml"
 mcpServers:
-  - serverName: app.linear/linear
+  - name: Linear MCP
+    namespace: app.linear/linear
     registryUrl: https://my-custom-registry.com
 ```
 
@@ -126,6 +129,10 @@ MCP blocks follow the established syntax for blocks, with a few additional prope
 - `command`: The command to run to start the MCP server.
 - `args`: Arguments to pass to the command.
 - `env`: Secrets to be injected into the command as environment variables.
+
+For MCP blocks that pull from a registry, use the following properties:
+- `namespace`: The namespace of the MCP server, e.g. `app.linear/linear`.
+- `registryUrl`: (Optional) The URL of the MCP registry to pull from. Defaults to `https://registry.modelcontextprotocol.io`.
 
 ### How to Choose MCP Transport Types
 
