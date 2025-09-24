@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../util/logger.js", () => ({
   logger: {
@@ -16,11 +16,6 @@ vi.mock("../util/logger.js", () => ({
 import { messageQueue } from "./messageQueue.js";
 
 describe("messageQueue", () => {
-  beforeEach(() => {
-    // Drain any leftover items from previous tests
-    while (messageQueue.getAllQueuedMessages()) {}
-  });
-
   it("enqueues and emits messageQueued", async () => {
     const event = new Promise<any>((resolve) =>
       messageQueue.once("messageQueued", resolve),

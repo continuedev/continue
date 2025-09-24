@@ -223,20 +223,11 @@ export async function processRule(ruleSpec: string): Promise<string> {
   const trimmedRuleSpec = ruleSpec.trim();
   const hasNewline = /[\r\n]/.test(ruleSpec);
 
-  // If it looks like a hub slug (exactly owner/package with no whitespace)
-  const isHubSlug =
-    !hasNewline && /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(trimmedRuleSpec);
-
-  if (isHubSlug) {
-    return await loadRuleFromHub(trimmedRuleSpec);
-  }
-
   // If it looks like a file path (single line, typical path indicators)
   const looksLikePath =
     !hasNewline &&
     (trimmedRuleSpec.startsWith(".") ||
       trimmedRuleSpec.startsWith("/") ||
-      trimmedRuleSpec.includes("/") ||
       trimmedRuleSpec.includes("\\") ||
       /\.[a-zA-Z]+$/.test(trimmedRuleSpec));
 
@@ -253,6 +244,26 @@ export async function processRule(ruleSpec: string): Promise<string> {
     } catch (error: any) {
       throw new Error(
         `Failed to read rule file "${ruleSpec}": ${error.message}`,
+      );
+    }
+  }
+
+  // Check if it might be a hub slug (contains "/" and is a single line)
+  if (!hasNewline && trimmedRuleSpec.includes("/")) {
+    const parts = trimmedRuleSpec.split("/");
+
+    // If it's exactly 2 parts and matches hub slug pattern, treat as hub slug
+    if (
+      parts.length === 2 &&
+      /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(trimmedRuleSpec)
+    ) {
+      return await loadRuleFromHub(trimmedRuleSpec);
+    }
+
+    // If it has more than 2 parts, it's an invalid hub slug
+    if (parts.length > 2) {
+      throw new Error(
+        `Invalid hub slug format. Expected "owner/package", got: ${trimmedRuleSpec}`,
       );
     }
   }

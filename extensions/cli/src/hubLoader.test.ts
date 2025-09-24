@@ -140,6 +140,11 @@ describe("hubLoader", () => {
   });
 
   describe("processRule", () => {
+    beforeEach(() => {
+      // Ensure mocks are set up properly for processRule tests
+      global.fetch = mockFetch;
+    });
+
     it("should treat multi-line strings as inline rules", async () => {
       const loadRuleSpy = vi
         .spyOn(hubLoader, "loadRuleFromHub")
@@ -155,17 +160,22 @@ describe("hubLoader", () => {
     });
 
     it("should still treat owner/package strings as hub slugs", async () => {
-      const loadRuleSpy = vi
-        .spyOn(hubLoader, "loadRuleFromHub")
-        .mockResolvedValue("hub-content");
+      // Mock fetch to return a proper response for this test
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      zip.file("rule.md", "hub-content");
+      const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(zipBuffer),
+      } as Response);
 
       const slug = "owner/package";
       const result = await processRule(slug);
 
-      expect(loadRuleSpy).toHaveBeenCalledWith(slug);
       expect(result).toBe("hub-content");
-
-      loadRuleSpy.mockRestore();
+      expect(mockFetch).toHaveBeenCalled();
     });
   });
 
