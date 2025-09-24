@@ -26,6 +26,10 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   experimental_includeRecentlyEditedRanges: true,
   experimental_includeDiff: true,
   experimental_enableStaticContextualization: false,
+  // send completion tracking data
+  enableCompletionTracking: false,
+  completionTrackingUrl: undefined,
+  completionTrackingHeaders: undefined,
 };
 
 export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;

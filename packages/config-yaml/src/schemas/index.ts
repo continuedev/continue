@@ -2,6 +2,7 @@ import * as z from "zod";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import {
+  autocompleteOptionsSchema,
   modelSchema,
   partialModelSchema,
   requestOptionsSchema,
@@ -152,6 +153,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   prompts: z.array(blockOrSchema(promptSchema)).optional(),
   docs: z.array(blockOrSchema(docSchema)).optional(),
+  tabAutocompleteOptions: autocompleteOptionsSchema.optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
@@ -164,6 +166,7 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema.nullable()).optional(),
   prompts: z.array(promptSchema.nullable()).optional(),
   docs: z.array(docSchema.nullable()).optional(),
+  tabAutocompleteOptions: autocompleteOptionsSchema.optional(),
 });
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
@@ -176,6 +179,7 @@ export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
+  tabAutocompleteOptions: autocompleteOptionsSchema.optional(),
 });
 
 export type AssistantUnrolledNonNullable = z.infer<

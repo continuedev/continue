@@ -1240,6 +1240,10 @@ export interface TabAutocompleteOptions {
   experimental_includeRecentlyEditedRanges: boolean | number;
   experimental_includeDiff: boolean | number;
   experimental_enableStaticContextualization: boolean;
+  // 补全信息发送配置
+  enableCompletionTracking?: boolean;
+  completionTrackingUrl?: string;
+  completionTrackingHeaders?: { [key: string]: string };
 }
 
 export interface StdioOptions {

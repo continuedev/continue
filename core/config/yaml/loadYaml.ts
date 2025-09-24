@@ -173,6 +173,7 @@ async function configYamlToContinueConfig(options: {
     tools: getBaseToolDefinitions(),
     mcpServerStatuses: [],
     contextProviders: [],
+    tabAutocompleteOptions: (config as any).tabAutocompleteOptions,
     modelsByRole: {
       chat: [],
       edit: [],

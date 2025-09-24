@@ -14,7 +14,12 @@ export function mergePackages(
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
     env: { ...current.env, ...incoming.env },
-  };
+    // Merge tabAutocompleteOptions - incoming overrides current
+    tabAutocompleteOptions: {
+      ...(current as any).tabAutocompleteOptions,
+      ...(incoming as any).tabAutocompleteOptions,
+    },
+  } as ConfigYaml;
 }
 
 export function mergeUnrolledAssistants(
@@ -31,5 +36,10 @@ export function mergeUnrolledAssistants(
     mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     env: { ...current.env, ...incoming.env },
-  };
+    // Merge tabAutocompleteOptions - incoming overrides current
+    tabAutocompleteOptions: {
+      ...(current as any).tabAutocompleteOptions,
+      ...(incoming as any).tabAutocompleteOptions,
+    },
+  } as AssistantUnrolled;
 }

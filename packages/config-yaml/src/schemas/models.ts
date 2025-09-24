@@ -134,6 +134,10 @@ export const autocompleteOptionsSchema = z.object({
   experimental_includeRecentlyEditedRanges: z.boolean().optional(),
   experimental_includeDiff: z.boolean().optional(),
   experimental_enableStaticContextualization: z.boolean().optional(),
+  // send completion tracking data
+  enableCompletionTracking: z.boolean().optional(),
+  completionTrackingUrl: z.string().optional(),
+  completionTrackingHeaders: z.record(z.string()).optional(),
 });
 
 /** Prompt templates use Handlebars syntax */

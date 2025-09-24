@@ -40,6 +40,8 @@ export const sharedConfigSchema = z
     disableAutocompleteInFiles: z.array(z.string()),
     modelTimeout: z.number(),
     debounceDelay: z.number(),
+    enableCompletionTracking: z.boolean(),
+    completionTrackingUrl: z.string(),
   })
   .partial();
 
@@ -118,6 +120,14 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.debounceDelay !== undefined) {
     configCopy.tabAutocompleteOptions.debounceDelay =
       sharedConfig.debounceDelay;
+  }
+  if (sharedConfig.enableCompletionTracking !== undefined) {
+    configCopy.tabAutocompleteOptions.enableCompletionTracking =
+      sharedConfig.enableCompletionTracking;
+  }
+  if (sharedConfig.completionTrackingUrl !== undefined) {
+    configCopy.tabAutocompleteOptions.completionTrackingUrl =
+      sharedConfig.completionTrackingUrl;
   }
 
   configCopy.ui = {

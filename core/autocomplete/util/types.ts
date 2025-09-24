@@ -44,3 +44,21 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   timestamp: string;
   enabledStaticContextualization?: boolean;
 }
+
+export interface CompletionTrackingData {
+  completionId: string;
+  filepath: string;
+  prefix: string;
+  suffix: string;
+  prompt: string;
+  completion: string;
+  modelProvider: string;
+  modelName: string;
+  accepted: boolean;
+  timestamp: string;
+  time: number;
+  gitRepo?: string;
+  uniqueId: string;
+  numLines: number;
+  cacheHit: boolean;
+}

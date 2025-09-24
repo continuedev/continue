@@ -3,7 +3,7 @@ import { COUNT_COMPLETION_REJECTED_AFTER } from "../../util/parameters";
 import { Telemetry } from "../../util/posthog";
 import { getUriFileExtension } from "../../util/uri";
 
-import { AutocompleteOutcome } from "./types";
+import { AutocompleteOutcome, CompletionTrackingData } from "./types";
 
 export class AutocompleteLoggingService {
   // Key is completionId
@@ -40,6 +40,10 @@ export class AutocompleteLoggingService {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       this.logAutocompleteOutcome(outcome);
+      
+      // 发送补全跟踪数据
+      this.sendCompletionTrackingData(outcome);
+      
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -61,6 +65,7 @@ export class AutocompleteLoggingService {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
       this.logAutocompleteOutcome(outcome);
+      this.sendCompletionTrackingData(outcome);
       this._logRejectionTimeouts.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);
@@ -127,5 +132,49 @@ export class AutocompleteLoggingService {
           enabledStaticContextualization: true,
         })
       : void Telemetry.capture("autocomplete", toLog);
+  }
+
+  private async sendCompletionTrackingData(outcome: AutocompleteOutcome) {
+    if (!(outcome as any).enableCompletionTracking || !(outcome as any).completionTrackingUrl) {
+      return;
+    }
+
+    // prepare the data to send
+    const trackingData: CompletionTrackingData = {
+      completionId: outcome.completionId,
+      filepath: outcome.filepath,
+      prefix: outcome.prefix,
+      suffix: outcome.suffix,
+      prompt: outcome.prompt,
+      completion: outcome.completion,
+      modelProvider: outcome.modelProvider,
+      modelName: outcome.modelName,
+      accepted: outcome.accepted ?? false,
+      timestamp: outcome.timestamp,
+      time: outcome.time,
+      gitRepo: outcome.gitRepo,
+      uniqueId: outcome.uniqueId,
+      numLines: outcome.numLines,
+      cacheHit: outcome.cacheHit,
+    };
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...((outcome as any).completionTrackingHeaders || {}),
+      };
+
+      const response = await fetch((outcome as any).completionTrackingUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(trackingData),
+      });
+
+      if (!response.ok) {
+        console.warn(`send completion tracking data failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn('send completion tracking data error: ', error);
+    }
   }
 }
