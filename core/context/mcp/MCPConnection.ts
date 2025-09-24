@@ -471,7 +471,6 @@ class MCPConnection {
       }
     }
 
-    // Resolve the command and args for the current platform
     const { command, args } = this.resolveCommandForPlatform(
       options.command,
       options.args || [],
@@ -486,7 +485,6 @@ class MCPConnection {
     });
 
     // Capture stdio output for better error reporting
-
     transport.stderr?.on("data", (data: Buffer) => {
       this.stdioOutput.stderr += data.toString();
     });
