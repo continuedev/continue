@@ -240,6 +240,22 @@ export class AnthropicApi implements BaseLlmApi {
       return EMPTY_CHAT_COMPLETION;
     }
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Handle rate limit errors with helpful messaging
+      if (response.status === 429 && errorData.error?.type === "rate_limit_error") {
+        const originalMessage = errorData.error?.message || "Rate limit exceeded";
+        const enhancedMessage = `${originalMessage}\n\nThis error often occurs with personal API keys that have lower rate limits. Consider upgrading to the Continue Models Add-On for higher rate limits and better performance: https://continue.dev/pricing`;
+        
+        throw new Error(enhancedMessage);
+      }
+      
+      // Handle other errors
+      const errorMessage = errorData.error?.message || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
     const completion = (await response.json()) as any;
 
     const usage: Record<string, number> | undefined = completion.usage;
@@ -369,6 +385,23 @@ export class AnthropicApi implements BaseLlmApi {
         signal,
       },
     );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Handle rate limit errors with helpful messaging
+      if (response.status === 429 && errorData.error?.type === "rate_limit_error") {
+        const originalMessage = errorData.error?.message || "Rate limit exceeded";
+        const enhancedMessage = `${originalMessage}\n\nThis error often occurs with personal API keys that have lower rate limits. Consider upgrading to the Continue Models Add-On for higher rate limits and better performance: https://continue.dev/pricing`;
+        
+        throw new Error(enhancedMessage);
+      }
+      
+      // Handle other errors
+      const errorMessage = errorData.error?.message || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+    
     yield* this.handleStreamResponse(response, body.model);
   }
   async completionNonStream(
