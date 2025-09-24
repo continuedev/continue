@@ -14,7 +14,7 @@ export const xAI: ModelProvider = {
       displayName: "Grok 2",
       contextLength: 131072,
       recommendedFor: ["chat"],
-      regex: /grok-2-/,
+      regex: /grok-2/,
     },
     {
       model: "grok-3-mini",
@@ -29,7 +29,7 @@ export const xAI: ModelProvider = {
       displayName: "Grok 3",
       contextLength: 131072,
       recommendedFor: ["chat"],
-      regex: /grok-3-/,
+      regex: /grok-3/,
     },
     {
       model: "grok-4-fast-reasoning",
