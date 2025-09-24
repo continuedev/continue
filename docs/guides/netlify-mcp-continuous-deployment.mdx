@@ -42,7 +42,7 @@ This cookbook teaches you to:
 - [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) configured
 - [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) (recommended)
 
-## Quick Start
+## Quick Setup
 
 <Info>
   The Netlify Development Rules bundle includes guardrails for:
@@ -52,6 +52,21 @@ This cookbook teaches you to:
   - Local development best practices
 
 </Info>
+For all options, first:
+<Steps>
+<Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+<Step title="Install Netlify CLI">
+
+  1. Install Netlify CLI: `npm i -g netlify-cli` 
+  2. Authenticate with Netlify:
+  `netlify login`
+  </Step>
+</Steps>
 
 ## Netlify Continuous AI Workflow Options
 
@@ -64,7 +79,6 @@ After completing **Quick Setup** above, you have two paths to get started:
 
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
-    **Perfect for:** Immediate results with optimized prompts and built-in debugging
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
@@ -91,28 +105,21 @@ After completing **Quick Setup** above, you have two paths to get started:
     </Steps>
 
     <Info>
-      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Netlify MCP integration and pre-tested prompts.
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Netlify MCP integration and pre-tested prompts. You can remix the agent later to customize it to your needs.
     </Info>
 
   </Tab>
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
-  </Step>
 
 <Step title="Configure Netlify MCP">
+  1. Authenticate with Netlify:
+  `netlify login`
+  2. Visit [Netlify MCP on Continue
+  Hub](https://hub.continue.dev/netlify/netlify-mcp)
+  3. Follow the configuration instructions for your editor
 
-  1. Install Netlify CLI: `npm i -g netlify-cli` 
-  2. Authenticate with Netlify:
-  `netlify login` 
-  3. Visit [Netlify MCP on Continue
-  Hub](https://hub.continue.dev/netlify/netlify-mcp) 
-  4. Follow the configuration instructions for your editor
-  
 </Step>
 
   <Step title="Add Development Rules">
@@ -134,7 +141,12 @@ After completing **Quick Setup** above, you have two paths to get started:
     ```
 
   </Step>
+
+ 
 </Steps>
+ <Info>
+    You're all set! Now you can use cn CLI to interact with Netlify using natural language prompts. Check out the examples below to get started.
+  </Info>
   </Tab>
 </Tabs>
 
@@ -600,7 +612,7 @@ Features many developers don't know Netlify offers:
   - Cache dynamically generated content
   - Perfect for large sites (10k+ pages)
   - Reduce build times dramatically
-  
+
 </Card>
 
   <Card title="Netlify Functions" icon="function">
