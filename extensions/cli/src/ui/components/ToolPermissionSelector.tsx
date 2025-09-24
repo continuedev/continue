@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from "ink";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
 
@@ -64,13 +64,13 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 }) => {
   const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [hasShownDangerousCommandWarningOnce] = useState(() => {
+    const prev = hasShownDangerousCommandWarning;
+    hasShownDangerousCommandWarning = true;
+    return prev;
+  });
   const showDynamicWarning =
-    hasDynamicEvaluation && !hasShownDangerousCommandWarning;
-  useEffect(() => {
-    if (showDynamicWarning) {
-      hasShownDangerousCommandWarning = true;
-    }
-  }, [showDynamicWarning]);
+    hasDynamicEvaluation && !hasShownDangerousCommandWarningOnce;
 
   useInput((input, key) => {
     if (key.return) {
