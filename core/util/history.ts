@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import { Session, SessionMetadata } from "../index.js";
+import { Session, BaseSessionMetadata } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
 
 import { NEW_SESSION_TITLE } from "./constants.js";
@@ -22,14 +22,14 @@ function safeParseArray<T>(
 }
 
 export class HistoryManager {
-  list(options: ListHistoryOptions): SessionMetadata[] {
+  list(options: ListHistoryOptions): BaseSessionMetadata[] {
     const filepath = getSessionsListPath();
     if (!fs.existsSync(filepath)) {
       return [];
     }
     const content = fs.readFileSync(filepath, "utf8");
 
-    let sessions = safeParseArray<SessionMetadata>(content) ?? [];
+    let sessions = safeParseArray<BaseSessionMetadata>(content) ?? [];
     sessions = sessions
       .filter((session: any) => {
         // Filter out old format
@@ -59,7 +59,7 @@ export class HistoryManager {
     const sessionsListFile = getSessionsListPath();
     const sessionsListRaw = fs.readFileSync(sessionsListFile, "utf-8");
     let sessionsList =
-      safeParseArray<SessionMetadata>(
+      safeParseArray<BaseSessionMetadata>(
         sessionsListRaw,
         "Error parsing sessions.json",
       ) ?? [];
@@ -118,7 +118,7 @@ export class HistoryManager {
     try {
       const rawSessionsList = fs.readFileSync(sessionsListFilePath, "utf-8");
 
-      let sessionsList: SessionMetadata[];
+      let sessionsList: BaseSessionMetadata[];
       try {
         sessionsList = JSON.parse(rawSessionsList);
       } catch (e) {
@@ -141,7 +141,7 @@ export class HistoryManager {
       }
 
       if (!found) {
-        const sessionMetadata: SessionMetadata = {
+        const sessionMetadata: BaseSessionMetadata = {
           sessionId: session.sessionId,
           title: session.title,
           dateCreated: String(Date.now()),

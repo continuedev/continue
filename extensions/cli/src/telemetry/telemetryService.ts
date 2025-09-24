@@ -498,9 +498,11 @@ class TelemetryService {
     success: boolean;
     durationMs: number;
     error?: string;
+    errorReason?: string;
     decision?: "accept" | "reject";
     source?: string;
     toolParameters?: string;
+    // modelName: string;
   }) {
     if (!this.isEnabled()) return;
 
@@ -517,6 +519,12 @@ class TelemetryService {
     if (options.source) attributes.source = options.source;
     if (options.toolParameters)
       attributes.tool_parameters = options.toolParameters;
+    if (options.errorReason) {
+      attributes.error_reason = options.errorReason;
+    }
+    if (options.error) {
+      attributes.error = options.error;
+    }
 
     // TODO: Implement OTLP logs export
     logger.debug("Tool result event", attributes);

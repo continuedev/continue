@@ -18,6 +18,7 @@ import {
   Tool,
 } from "../../";
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
+import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
@@ -155,6 +156,21 @@ export default async function doLoadConfig(options: {
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
 
+  // Convert invokable rules to slash commands
+  for (const rule of newConfig.rules) {
+    if (rule.invokable) {
+      try {
+        const slashCommand = convertRuleBlockToSlashCommand(rule);
+        (newConfig.slashCommands ??= []).push(slashCommand);
+      } catch (e) {
+        errors.push({
+          message: `Error converting invokable rule ${rule.name} to slash command: ${e instanceof Error ? e.message : e}`,
+          fatal: false,
+        });
+      }
+    }
+  }
+
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",
   );
@@ -187,7 +203,6 @@ export default async function doLoadConfig(options: {
   const mcpManager = MCPManagerSingleton.getInstance();
   const mcpServerStatuses = mcpManager.getStatuses();
 
-  // Slightly hacky just need connection's client to make slash command for now
   const serializableStatuses = mcpServerStatuses.map((server) => {
     const { client, ...rest } = server;
     return rest;

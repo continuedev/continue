@@ -305,7 +305,13 @@ export class TextBuffer {
     const timeSinceLastInput = now - this._lastInputTime;
 
     // If we're already in rapid input mode and this comes quickly, add to buffer
-    if (this._rapidInputBuffer.length > 0 && timeSinceLastInput < 100) {
+    // But only if it's a reasonably large chunk - small inputs are likely typing, not paste
+    // This prevents typed characters from being mixed into paste content during accumulation
+    if (
+      this._rapidInputBuffer.length > 0 &&
+      timeSinceLastInput < 200 &&
+      input.length >= 50
+    ) {
       this._rapidInputBuffer += input;
       this._lastInputTime = now;
 
@@ -323,8 +329,11 @@ export class TextBuffer {
 
     // Fallback paste detection: some terminals send large pastes as rapid chunks
     // instead of using bracketed paste mode. We detect this by timing between inputs.
-    // Only trigger for actually large chunks to avoid interfering with normal typing
-    if (input.length > RAPID_INPUT_THRESHOLD) {
+    // The >= 50 char threshold was restored to detect Terminal.app/Ghostty split pastes
+    if (
+      input.length > RAPID_INPUT_THRESHOLD ||
+      (input.length >= 50 && this._rapidInputBuffer.length === 0)
+    ) {
       this._rapidInputStartPos = this._cursor;
 
       // Accumulate chunks without inserting to avoid visual flicker
@@ -511,8 +520,7 @@ export class TextBuffer {
     }
 
     // Fallback: detect chunked paste operations
-    // Don't trigger rapid input detection for small inputs (e.g. single characters like "/" or "@")
-    if (input.length > 50 && this.handleRapidInput(input)) {
+    if (this.handleRapidInput(input)) {
       return true;
     }
 
