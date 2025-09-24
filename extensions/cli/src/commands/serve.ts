@@ -160,12 +160,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     storageOption: options.id,
     accessToken,
     syncSessionHistory,
-    getCompleteStateSnapshot: () => getCompleteStateSnapshot(
-      state.session,
-      state.isProcessing,
-      state.messageQueue.length,
-      state.pendingPermission,
-    ),
+    getCompleteStateSnapshot: () =>
+      getCompleteStateSnapshot(
+        state.session,
+        state.isProcessing,
+        state.messageQueue.length,
+        state.pendingPermission,
+      ),
     isActive: () => state.serverRunning,
   });
 
