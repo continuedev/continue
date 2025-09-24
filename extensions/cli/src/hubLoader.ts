@@ -4,6 +4,11 @@ import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
 /**
+ * Pattern to match valid hub slugs (owner/package format)
+ */
+const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+
+/**
  * Hub package type definitions
  */
 export type HubPackageType = "rule" | "mcp" | "model" | "prompt";
@@ -220,28 +225,23 @@ export const loadPromptFromHub = (slug: string) =>
  * Process a rule specification - supports file paths, hub slugs, or direct content
  */
 export async function processRule(ruleSpec: string): Promise<string> {
-  // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    ruleSpec.includes("/") &&
-    !ruleSpec.startsWith(".") &&
-    !ruleSpec.startsWith("/")
-  ) {
-    return await loadRuleFromHub(ruleSpec);
-  }
+  const trimmedRuleSpec = ruleSpec.trim();
+  const hasNewline = /[\r\n]/.test(ruleSpec);
 
-  // If it looks like a file path
-  if (
-    ruleSpec.startsWith(".") ||
-    ruleSpec.startsWith("/") ||
-    ruleSpec.includes("/") ||
-    ruleSpec.includes("\\") ||
-    /\.[a-zA-Z]+$/.test(ruleSpec) // Has file extension at the end
-  ) {
+  // If it looks like a file path (single line, typical path indicators)
+  const looksLikePath =
+    !hasNewline &&
+    (trimmedRuleSpec.startsWith(".") ||
+      trimmedRuleSpec.startsWith("/") ||
+      trimmedRuleSpec.includes("\\") ||
+      /\.[a-zA-Z]+$/.test(trimmedRuleSpec));
+
+  if (looksLikePath) {
     const fs = await import("fs");
     const path = await import("path");
 
     try {
-      const absolutePath = path.resolve(ruleSpec);
+      const absolutePath = path.resolve(trimmedRuleSpec);
       if (!fs.existsSync(absolutePath)) {
         throw new Error(`Rule file not found: ${ruleSpec}`);
       }
@@ -249,6 +249,23 @@ export async function processRule(ruleSpec: string): Promise<string> {
     } catch (error: any) {
       throw new Error(
         `Failed to read rule file "${ruleSpec}": ${error.message}`,
+      );
+    }
+  }
+
+  // Check if it might be a hub slug (contains "/" and is a single line)
+  if (!hasNewline && trimmedRuleSpec.includes("/")) {
+    const parts = trimmedRuleSpec.split("/");
+
+    // If it's exactly 2 parts and matches hub slug pattern, treat as hub slug
+    if (parts.length === 2 && HUB_SLUG_PATTERN.test(trimmedRuleSpec)) {
+      return await loadRuleFromHub(trimmedRuleSpec);
+    }
+
+    // If it has more than 2 parts, it's an invalid hub slug
+    if (parts.length > 2) {
+      throw new Error(
+        `Invalid hub slug format. Expected "owner/package", got: ${trimmedRuleSpec}`,
       );
     }
   }

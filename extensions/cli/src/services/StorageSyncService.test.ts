@@ -55,7 +55,7 @@ describe("StorageSyncService", () => {
       storageOption: undefined,
       accessToken: "token",
       syncSessionHistory: vi.fn(),
-      getSessionSnapshot: vi.fn(),
+      getCompleteStateSnapshot: vi.fn(),
     });
 
     expect(result).toBe(false);
@@ -69,7 +69,7 @@ describe("StorageSyncService", () => {
       storageOption: "   ",
       accessToken: "token",
       syncSessionHistory: vi.fn(),
-      getSessionSnapshot: vi.fn(),
+      getCompleteStateSnapshot: vi.fn(),
     });
 
     expect(result).toBe(false);
@@ -86,7 +86,7 @@ describe("StorageSyncService", () => {
       storageOption: "session-123",
       accessToken: null,
       syncSessionHistory: vi.fn(),
-      getSessionSnapshot: vi.fn(),
+      getCompleteStateSnapshot: vi.fn(),
     });
 
     expect(result).toBe(false);
@@ -98,7 +98,7 @@ describe("StorageSyncService", () => {
 
   it("starts syncing when presign succeeds", async () => {
     const syncSessionHistory = vi.fn();
-    const getSessionSnapshot = vi.fn().mockReturnValue({ foo: "bar" });
+    const getCompleteStateSnapshot = vi.fn().mockReturnValue({ foo: "bar" });
 
     fetchMock.mockResolvedValueOnce({
       ok: true,
@@ -114,13 +114,13 @@ describe("StorageSyncService", () => {
       storageOption: "session-123",
       accessToken: "token",
       syncSessionHistory,
-      getSessionSnapshot,
+      getCompleteStateSnapshot,
       isActive: () => true,
     });
 
     expect(result).toBe(true);
     expect(syncSessionHistory).toHaveBeenCalledTimes(1);
-    expect(getSessionSnapshot).toHaveBeenCalledTimes(1);
+    expect(getCompleteStateSnapshot).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     const [presignUrl, presignOptions] = fetchMock.mock.calls[0];
     expect(presignUrl).toBeInstanceOf(URL);
@@ -152,7 +152,7 @@ describe("StorageSyncService", () => {
       storageOption: "session-123",
       accessToken: "token",
       syncSessionHistory: vi.fn(),
-      getSessionSnapshot: vi.fn(),
+      getCompleteStateSnapshot: vi.fn(),
     });
 
     expect(result).toBe(false);
@@ -187,7 +187,7 @@ describe("StorageSyncService", () => {
       storageOption: "session-123",
       accessToken: "token",
       syncSessionHistory: vi.fn(),
-      getSessionSnapshot: vi.fn().mockReturnValue({}),
+      getCompleteStateSnapshot: vi.fn().mockReturnValue({}),
     });
 
     expect(result).toBe(true);
@@ -235,7 +235,7 @@ describe("StorageSyncService", () => {
 
   it("includes server-side encryption header when required by signed headers", async () => {
     const syncSessionHistory = vi.fn();
-    const getSessionSnapshot = vi.fn().mockReturnValue({ test: "data" });
+    const getCompleteStateSnapshot = vi.fn().mockReturnValue({ test: "data" });
 
     // Mock presign response with server-side encryption in signed headers
     const sessionUrlWithSSE =
@@ -256,7 +256,7 @@ describe("StorageSyncService", () => {
       storageOption: "session-123",
       accessToken: "token",
       syncSessionHistory,
-      getSessionSnapshot,
+      getCompleteStateSnapshot,
       isActive: () => true,
     });
 

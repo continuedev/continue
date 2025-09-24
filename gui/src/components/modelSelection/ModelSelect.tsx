@@ -5,17 +5,15 @@ import {
   CubeIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { CONFIG_ROUTES } from "../../util/navigation";
-import { ToolTip } from "../gui/Tooltip";
 import {
   Button,
   Listbox,
@@ -50,6 +48,15 @@ function modelSelectTitle(model: any): string {
     return model?.model;
   }
   return model?.class_name;
+}
+
+/**makeshift way to close the headlessui listbox due to absence of open state on the listbox */
+function closeDropDown(button: HTMLButtonElement | null) {
+  if (!button) return;
+  button.classList.add("hidden");
+  setTimeout(() => {
+    button.classList.remove("hidden");
+  });
 }
 
 function ModelOption({
@@ -117,7 +124,6 @@ function ModelSelect() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
   const isConfigLoading = useAppSelector((state) => state.config.loading);
-  const ideMessenger = useContext(IdeMessengerContext);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -201,10 +207,8 @@ function ModelSelect() {
     e.stopPropagation();
     e.preventDefault();
 
-    // Close the dropdown
-    if (buttonRef.current) {
-      buttonRef.current.click();
-    }
+    closeDropDown(buttonRef.current);
+
     dispatch(setShowDialog(true));
     dispatch(
       setDialogMessage(
@@ -221,10 +225,7 @@ function ModelSelect() {
     e.stopPropagation();
     e.preventDefault();
 
-    // Close the dropdown
-    if (buttonRef.current) {
-      buttonRef.current.click();
-    }
+    closeDropDown(buttonRef.current);
 
     navigate(CONFIG_ROUTES.MODELS);
   }
