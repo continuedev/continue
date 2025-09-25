@@ -186,7 +186,7 @@ export function converMcpServersJsonConfigFileToYamlBlocks(
   warnings: string[];
 } {
   const allWarnings: string[] = [];
-  const jsonEntries = Object.entries(jsonFile.mcpServers);
+  const jsonEntries = Object.entries(jsonFile.mcpServers ?? {});
   const yamlConfigs = jsonEntries.map(([name, config]) => {
     const { warnings, yamlConfig } = convertJsonMcpConfigToYamlMcpConfig(
       name,
