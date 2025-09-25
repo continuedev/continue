@@ -22,13 +22,27 @@ export const listFilesTool: Tool = {
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
+    // Resolve relative paths
+    const normalizedPath = path.normalize(args.dirpath);
+    const dirPath = path.resolve(process.cwd(), normalizedPath);
+
+    if (!fs.existsSync(dirPath)) {
+      throw new Error(`Directory does not exist: ${dirPath}`);
+    }
+
+    if (!fs.statSync(dirPath).isDirectory()) {
+      throw new Error(`Error: Path is not a directory: ${dirPath}`);
+    }
+
     return {
-      args,
+      args: {
+        dirpath: dirPath,
+      },
       preview: [
         {
           type: "text",
-          content: args.dirpath
-            ? `Will list files in: ${formatToolArgument(args.dirpath)}`
+          content: dirPath
+            ? `Will list files in: ${formatToolArgument(dirPath)}`
             : "Will list files in current directory",
         },
       ],
@@ -36,14 +50,6 @@ export const listFilesTool: Tool = {
   },
   run: async (args: { dirpath: string }): Promise<string> => {
     try {
-      if (!fs.existsSync(args.dirpath)) {
-        return `Error: Directory does not exist: ${args.dirpath}`;
-      }
-
-      if (!fs.statSync(args.dirpath).isDirectory()) {
-        return `Error: Path is not a directory: ${args.dirpath}`;
-      }
-
       const files = fs.readdirSync(args.dirpath);
       const fileDetails = files.map((file) => {
         const fullPath = path.join(args.dirpath, file);

@@ -18,6 +18,7 @@ import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
+import { CometAPIApi } from "./apis/CometAPI.js";
 import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
 dotenv.config();
@@ -69,6 +70,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new BedrockApi(config);
     case "cohere":
       return new CohereApi(config);
+    case "cometapi":
+      return new CometAPIApi(config);
     case "anthropic":
       return new AnthropicApi(config);
     case "gemini":
@@ -177,3 +180,10 @@ export {
 // export
 export type { BaseLlmApi } from "./apis/base.js";
 export type { LLMConfig } from "./types.js";
+
+export {
+  addCacheControlToLastTwoUserMessages,
+  getAnthropicErrorMessage,
+  getAnthropicHeaders,
+  getAnthropicMediaTypeFromDataUrl,
+} from "./apis/AnthropicUtils.js";
