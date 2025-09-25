@@ -5,7 +5,7 @@ keywords: [prompts, context, slash command]
 sidebarTitle: "Prompts"
 ---
 
-Prompts are included as user messages and especially useful as instructions for repetitive and/or complex tasks.
+Prompts are included as user messages and are especially useful as instructions for repetitive and/or complex tasks.
 
 ## Slash commands
 
@@ -21,7 +21,7 @@ invokable: true
 Explain that when `invokable` is set to `true`, a slash command becomes available in the IDE extensions and CLI
 ```
 
-These slash commands can be combined with additional instructions, including highlighted code, to provide additional context.
+These slash commands can be combined with other instructions, including highlighted code, to provide additional context.
 
 ## Example: `Create Supabase functions` prompt
 
@@ -74,18 +74,18 @@ If you are using Continue Hub, you can add it to your agent by selecting "Use Ru
 
 To use this prompt, you can open Chat / Agent / Edit, type <kbd>/</kbd>, select the prompt, and type out any additional instructions you'd like to add.
 
-## Using a prompt with `cn`
+## Using a prompt with `cn (TUI mode)`
 
-You can run this command to start [cn](../../guides/cli) with the [Create Supabase functions](http://hub.continue.dev/supabase/create-functions) prompt.
+You can run this command to start [cn](../../cli/overview) with the [Create Supabase functions](http://hub.continue.dev/supabase/create-functions) prompt.
 
 ```
 cn --prompt supabase/create-functions "I need a function that checks for the health status"
 ```
-Alternatively, you can start [cn](../../guides/cli) and then type <kbd>/</kbd> to manually invoke the prompt yourself.
+Alternatively, you can start [cn](../../cli/overview) and then type <kbd>/</kbd> to manually invoke the prompt yourself.
 
-## Using a prompt to kick off a Continuous AI workflow
+## Using a prompt to kick off a Continuous AI workflow with `cn (Headless mode)
 
-You can kick off Continuous AI workflows using a prompt with [cn](../../guides/cli).
+You can kick off Continuous AI workflows using a prompt with [cn](../../cli/overview) by adding the `-p` flag.
 
 For example, say you are building a SaaS application and must repeatedly create custom Supabase validation functions for each new feature that accepts user input. 
 
@@ -101,6 +101,6 @@ Here is a command that you could run whenever you have a new feature:
 
 <Info>You can see the entire `Create Supabase functions` prompt [here](http://hub.continue.dev/supabase/create-functions)</Info>
 
-When you run this workflow, [cn](../../guides/cli) will checkout your current branch, explore the new and existing code, and then draft a function for you.
+When you run this workflow, [cn](../../cli/overview) will checkout your current branch, explore the new and existing code, and then draft a function for you.
 
 You will then be able to review the implementation and improve it before you merge the new feature.
