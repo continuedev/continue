@@ -452,6 +452,14 @@ Unlike Google Analytics, Netlify Analytics:
 
 ## Automated Performance Checks
 
+### Add GitHub Secrets
+
+Navigate to **Repository Settings → Secrets and variables → Actions** and add:
+
+- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
+- `NETLIFY_SITE_ID`: Your Netlify site ID
+
 ### GitHub Actions Performance Guard
 
 Block PRs that degrade performance:
@@ -471,18 +479,28 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+
+      - name: Authenticate Continue CLI
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          cn auth login --api-key "$CONTINUE_API_KEY"
+          echo "✅ Continue CLI authenticated"
+
       - name: Deploy and Test Performance
         id: perf
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          npx @continuedev/cli@latest << 'EOF'
-          Deploy PR preview and run Lighthouse.
-          Compare scores with main branch.
-          Output JSON with score deltas.
-          EOF > performance.json
+          echo "🚀 Deploying PR preview and analyzing performance..."
+          cn -p "Deploy PR preview and run Lighthouse.
+                 Compare scores with main branch.
+                 Output JSON with score deltas." > performance.json
 
       - name: Comment Performance Results
         uses: actions/github-script@v7
