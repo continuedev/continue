@@ -44,7 +44,7 @@ import {
 function getSecureID(): string {
   // Adding a type declaration for the static property
   if (!(getSecureID as any).uuid) {
-    (getSecureID as any).uuid = crypto.randomUUID();
+    (getSecureID as any).uuid = uuidv4();
   }
   return `<!-- SID: ${(getSecureID as any).uuid} -->`;
 }

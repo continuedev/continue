@@ -65,7 +65,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-
 export class LLMError extends Error {
   constructor(
     message: string,
@@ -214,7 +213,7 @@ export abstract class BaseLLM implements ILLM {
       this.providerName === "continue-proxy"
         ? this.model?.split("/").pop() || this.model
         : this.model;
-    const llmInfo = findLlmInfo(modelSearchString);
+    const llmInfo = findLlmInfo(modelSearchString, this.underlyingProviderName);
 
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
@@ -558,12 +557,14 @@ export abstract class BaseLLM implements ILLM {
   private _formatChatMessage(msg: ChatMessage): string {
     let contentToShow = renderChatMessage(msg);
     if (msg.role === "assistant" && msg.toolCalls?.length) {
-      contentToShow += msg.toolCalls
-        ?.map(
-          (toolCall) =>
-            `${toolCall.function?.name}(${toolCall.function?.arguments})`,
-        )
-        .join("\n");
+      contentToShow +=
+        "\n" +
+        msg.toolCalls
+          ?.map(
+            (toolCall) =>
+              `${toolCall.function?.name}(${toolCall.function?.arguments})`,
+          )
+          .join("\n");
     }
 
     return `<${msg.role}>\n${contentToShow}\n\n`;

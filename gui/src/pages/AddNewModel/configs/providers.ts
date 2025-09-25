@@ -49,6 +49,65 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  cometapi: {
+    title: "CometAPI",
+    provider: "cometapi",
+    description: "500+ AI Model API,All In One API. Just In CometAPI",
+    longDescription:
+      "Unified Access to Leading AI Models, see [here](https://www.cometapi.com/?utm_source=continue&utm_medium=integration&utm_campaign=cometapi_integration&utm_content=continue_plugin) for more details.",
+    icon: "cometapi.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your CometAPI key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      // GPT, OpenAI family
+      models.cometapiGpt5ChatLatest,
+      models.cometapiGpt5Mini,
+      models.cometapiGpt5,
+      models.cometapiChatgpt4oLatest,
+      models.cometapiGpt41,
+      models.cometapiO4Mini,
+      models.cometapiO3Pro,
+      // Anthropic Claude family
+      models.cometapiClaudeOpus41,
+      models.cometapiClaudeOpus41Thinking,
+      models.cometapiClaudeSonnet4,
+      models.cometapiClaudeSonnet4Thinking,
+      models.cometapiClaude37SonnetLatest,
+      models.cometapiClaude35HaikuLatest,
+      // Google Gemini family
+      models.cometapiGemini25Pro,
+      models.cometapiGemini25Flash,
+      models.cometapiGemini25FlashLite,
+      models.cometapiGemini20Flash,
+      // xAI Grok family
+      models.cometapiGrok40709,
+      models.cometapiGrok3,
+      models.cometapiGrok3Mini,
+      // Deepseek family
+      models.cometapiDeepseekV31,
+      models.cometapiDeepseekR10528,
+      models.cometapiDeepseekChat,
+      models.cometapiDeepseekReasoner,
+      // Qwen family
+      models.cometapiQwen330BA3B,
+      models.cometapiQwen3CoderPlus,
+      //TODO: Need to wait for the improvement after the upgrade of the cometapi model list interface
+      // {
+      //   ...models.AUTODETECT,
+      //   params: { ...models.AUTODETECT.params, title: "CometAPI" },
+      // },
+    ],
+    apiKeyUrl: "https://api.cometapi.com/console/token",
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",
@@ -563,7 +622,14 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.grokBeta],
+    packages: [
+      models.grokCodeFast1,
+      models.grok4FastReasoning,
+      models.grok4FastNonReasoning,
+      models.grok4,
+      models.grok3,
+      models.grok3Mini,
+    ],
     apiKeyUrl: "https://console.x.ai/",
   },
   lemonade: {

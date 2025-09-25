@@ -48,9 +48,7 @@ export function SelectedAssistantButton({
           ) : (
             <>
               <AssistantIcon assistant={selectedProfile} size={iconSize} />
-              <span
-                className={`select-none truncate text-xs ${isSidebar && "hidden md:block"}`}
-              >
+              <span className={`xs:line-clamp-1 hidden select-none text-xs`}>
                 {selectedProfile.title}
               </span>
             </>

@@ -4,16 +4,27 @@ import {
   ChevronDownIcon,
   CircleStackIcon,
   CommandLineIcon,
+  EllipsisVerticalIcon,
   GlobeAltIcon,
+  PlayCircleIcon,
+  StopCircleIcon,
   UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { MCPServerStatus } from "core";
-import { useContext, useMemo, useState } from "react";
+import { MCPConnectionStatus, MCPServerStatus } from "core";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
-import { Button, Card, EmptyState } from "../../../components/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -27,14 +38,32 @@ interface MCPServerStatusProps {
   serverFromYaml?: NonNullable<ConfigYaml["mcpServers"]>[number];
 }
 
+const ServerStatusTooltip: Record<MCPConnectionStatus, string> = {
+  connected: "Active",
+  connecting: "Connecting",
+  "not-connected": "Inactive",
+  authenticating: "Authenticating",
+  error: "Error",
+};
+
+const ServerStatusColor: Record<MCPConnectionStatus, string> = {
+  connected: "bg-success",
+  connecting: "bg-warning",
+  "not-connected": "bg-description-muted",
+  authenticating: "bg-warning",
+  error: "bg-error",
+};
+
 function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
   }>({});
+  const [disconnectedMCPServers, setDisconnectedMCPServers] = useState<
+    string[]
+  >([]);
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
   const dispatch = useAppDispatch();
-
   const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
@@ -64,9 +93,35 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 
   const onRefresh = async () => {
     updateMCPServerStatus("connecting");
-    ideMessenger.post("mcp/reloadServer", {
+    await ideMessenger.request("mcp/reloadServer", {
       id: server.id,
     });
+    await fetchDisconectedMCPServers();
+  };
+
+  const onDisconnect = async () => {
+    updateMCPServerStatus("not-connected");
+    setDisconnectedMCPServers((prev) => [...prev, server.id]);
+    dispatch(
+      updateConfig({
+        ...config,
+        tools: config.tools.filter((tool) => tool.group !== server.id),
+      }),
+    );
+    await ideMessenger.request("mcp/disconnectServer", {
+      id: server.id,
+    });
+    await fetchDisconectedMCPServers();
+  };
+
+  const fetchDisconectedMCPServers = async () => {
+    const disconnectedServersData = await ideMessenger.request(
+      "mcp/getDisconnectedServers",
+      undefined,
+    );
+    if (disconnectedServersData.status === "success") {
+      setDisconnectedMCPServers(disconnectedServersData.content);
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -76,6 +131,8 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     }));
   };
 
+  useEffect(() => void fetchDisconectedMCPServers(), []);
+
   const ResourceRow = ({
     title,
     items,
@@ -83,7 +140,11 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     sectionKey,
   }: {
     title: string;
-    items: any[];
+    items:
+      | MCPServerStatus["tools"]
+      | MCPServerStatus["prompts"]
+      | MCPServerStatus["resources"]
+      | MCPServerStatus["resourceTemplates"];
     icon: React.ReactNode;
     sectionKey: string;
   }) => {
@@ -146,23 +207,17 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h3 className="my-0 text-sm font-medium">{server.name}</h3>
-              <div
-                className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                  server.status === "connected"
-                    ? "bg-success"
-                    : server.status === "connecting"
-                      ? "bg-warning"
-                      : server.status === "not-connected"
-                        ? "bg-description-muted"
-                        : "bg-error"
-                }`}
-              />
+              <ToolTip content={ServerStatusTooltip[server.status] ?? "Error"}>
+                <div
+                  className={`h-2 w-2 flex-shrink-0 rounded-full ${ServerStatusColor[server.status] ?? "bg-error"}`}
+                />
+              </ToolTip>
             </div>
           </div>
         </div>
 
         <div className="-mr-2.5 flex items-center gap-1">
-          {server.isProtectedResource && (
+          {server.isProtectedResource && server.status !== "connected" && (
             <ToolTip
               content={
                 server.status === "error"
@@ -182,7 +237,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 }
                 variant="ghost"
                 size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
                 disabled={server.status === "authenticating"}
               >
                 {server.status === "authenticating" ? (
@@ -193,27 +248,59 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               </Button>
             </ToolTip>
           )}
+          <Listbox>
+            <ListboxButton>
+              <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
+            </ListboxButton>
+            <ListboxOptions className="min-w-fit" anchor="bottom end">
+              {server.isProtectedResource && server.status === "connected" && (
+                <ListboxOption
+                  value="remove auth"
+                  onClick={onRemoveAuth}
+                  className="justify-start gap-x-1.5"
+                >
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Logout
+                </ListboxOption>
+              )}
 
-          <ToolTip content="Edit server configuration">
-            <div>
-              <EditBlockButton
-                blockType={"mcpServers"}
-                block={serverFromYaml}
-                sourceFile={server.sourceFile}
-              />
-            </div>
-          </ToolTip>
+              <ListboxOption
+                value="edit mcp"
+                className="justify-start gap-x-1.5"
+              >
+                <EditBlockButton
+                  blockType={"mcpServers"}
+                  block={serverFromYaml}
+                  sourceFile={server.sourceFile}
+                  className="h-3.5 w-3.5 text-inherit"
+                />
+                Edit
+              </ListboxOption>
 
-          <ToolTip content="Refresh server">
-            <Button
-              onClick={onRefresh}
-              variant="ghost"
-              size="sm"
-              className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-            >
-              <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
-            </Button>
-          </ToolTip>
+              {!disconnectedMCPServers.includes(server.name) && (
+                <ListboxOption
+                  value="disconnect"
+                  onClick={onDisconnect}
+                  className="justify-start gap-x-1.5"
+                >
+                  <StopCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
+                  Disconnect
+                </ListboxOption>
+              )}
+
+              <ListboxOption
+                value="reconnect"
+                onClick={onRefresh}
+                className="justify-start gap-x-1.5"
+              >
+                {disconnectedMCPServers.includes(server.name) ? (
+                  <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
+                ) : (
+                  <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+                )}
+                Reload
+              </ListboxOption>
+            </ListboxOptions>
+          </Listbox>
         </div>
       </div>
 
@@ -294,6 +381,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 
 function McpSubsection() {
   const currentOrg = useAppSelector(selectCurrentOrg);
+  const mode = useAppSelector((store) => store.session.mode);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
@@ -317,7 +405,7 @@ function McpSubsection() {
         .map((server) => [server.name, server]) ?? [],
     );
 
-    return (servers ?? []).map((doc) => ({
+    return (servers ?? []).map((doc: MCPServerStatus) => ({
       block: doc,
       blockFromYaml: yamlServersByName.get(doc.name),
     }));
@@ -348,6 +436,13 @@ function McpSubsection() {
         <Card>
           <EmptyState message="MCP servers are disabled in your organization" />
         </Card>
+      ) : mode === "chat" ? (
+        <Alert type="info" size="sm">
+          <span className="text-2xs italic">
+            All MCPs are disabled in Chat, switch to Plan or Agent mode to use
+            MCPs
+          </span>
+        </Alert>
       ) : mergedBlocks.length > 0 ? (
         mergedBlocks.map(({ block, blockFromYaml }, index) => (
           <div key={block.id}>

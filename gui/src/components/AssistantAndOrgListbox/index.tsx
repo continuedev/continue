@@ -150,7 +150,7 @@ export function AssistantAndOrgListbox({
         />
         <Transition>
           <ListboxOptions
-            className="max-h-32 -translate-x-1.5 overflow-y-auto pb-0"
+            className="max-h-32 scale-x-[97%] overflow-y-auto pb-0"
             style={{ zIndex: 200 }}
           >
             <div className="flex items-center justify-between px-1.5 py-1">
