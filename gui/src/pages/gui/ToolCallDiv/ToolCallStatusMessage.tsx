@@ -1,10 +1,8 @@
 import { Tool, ToolCallState } from "core";
-import { renderContextItems } from "core/util/messageContent";
 import * as Mustache from "mustache";
 import { useContext } from "react";
-import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getStatusIntro, toolCallStateToContextItems } from "./utils";
+import { getStatusIntro, handleToolCallClick, toolCallStateToContextItems } from "./utils";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -18,35 +16,12 @@ export function ToolCallStatusMessage({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleClick(event: React.MouseEvent) {
-    event.stopPropagation();
-    const contextItems = toolCallStateToContextItems(toolCallState);
-    if (contextItems.length === 1) {
-      // Single context item - open it directly
-      openContextItem(contextItems[0], ideMessenger);
-    } else if (contextItems.length > 1) {
-      // Multiple context items - create a combined virtual file
-      ideMessenger.post("showVirtualFile", {
-        name: "Tool Output",
-        content: renderContextItems(toolCallState.output!),
-      });
-    }
+    handleToolCallClick(toolCallState, ideMessenger, event);
   }
 
   function handleKeyDown(event: React.KeyboardEvent) {
     if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      event.stopPropagation();
-      const contextItems = toolCallStateToContextItems(toolCallState);
-      if (contextItems.length === 1) {
-        // Single context item - open it directly
-        openContextItem(contextItems[0], ideMessenger);
-      } else if (contextItems.length > 1) {
-        // Multiple context items - create a combined virtual file
-        ideMessenger.post("showVirtualFile", {
-          name: "Tool Output",
-          content: renderContextItems(toolCallState.output!),
-        });
-      }
+      handleToolCallClick(toolCallState, ideMessenger, event);
     }
   }
   if (!tool) return "Agent tool use";
