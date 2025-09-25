@@ -3,10 +3,10 @@ title: "FAQs"
 description: "Frequently asked questions about Continue"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
+<script type="application/ld+json" dangerouslySetInnerHTML={{
+  __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
   "name": "Continue AI Coding Assistant - Frequently Asked Questions",
   "description": "Find answers to common questions about Continue, including setup, troubleshooting, networking, and agent configuration",
   "url": "https://docs.continue.dev/faqs",
@@ -80,9 +80,9 @@ description: "Frequently asked questions about Continue"
         "text": "Remove the ~/.continue directory (~%USERPROFILE%\.continue on Windows), then uninstall and reinstall the extension."
       }
     }
-  ]
-}
-</script>
+    ]
+  })
+}} />
 
 ## Networking Issues
 

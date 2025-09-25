@@ -4,10 +4,10 @@ icon: book-open
 description: "Continue is an open source platform for building AI-powered coding assistants with customizable components for chat, autocomplete, edit, and agent workflows in VS Code and JetBrains IDEs"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
+<script type="application/ld+json" dangerouslySetInnerHTML={{
+  __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
   "name": "Continue",
   "description": "Open source AI-powered coding assistant with customizable components for chat, autocomplete, edit, and agent workflows in VS Code and JetBrains IDEs",
   "url": "https://continue.dev",
@@ -72,14 +72,14 @@ description: "Continue is an open source platform for building AI-powered coding
       "JetBrains integration",
       "CLI support"
     ]
-  }
-}
-</script>
+    }
+  })
+}} />
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
+<script type="application/ld+json" dangerouslySetInnerHTML={{
+  __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
   "name": "Continue Documentation",
   "description": "Complete guide to Continue, an open source AI-powered coding assistant with customizable components for chat, autocomplete, edit, and agent workflows",
   "url": "https://docs.continue.dev",
@@ -95,9 +95,9 @@ description: "Continue is an open source platform for building AI-powered coding
       "urlTemplate": "https://docs.continue.dev/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
-  }
-}
-</script>
+    }
+  })
+}} />
 
 <Frame>
   <img src="/images/intro-0c302b9c15b890c251b1ad04586c880f.png" />
