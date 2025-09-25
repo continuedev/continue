@@ -4,6 +4,7 @@ import { openContextItem } from "../../../components/mainInput/belowMainInput/Co
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 import { toolCallStateToContextItems } from "./utils";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
@@ -36,7 +37,7 @@ export function ToolCallDisplay({
   return (
     <div className="flex flex-col justify-center px-4">
       <div className="mb-2 flex flex-col">
-        <div className="flex flex-row items-center justify-between gap-1.5">
+        <div className="flex flex-row items-start justify-between gap-1.5">
           <div
             className={`flex min-w-0 flex-row items-center gap-2 transition-colors duration-200 ease-in-out ${
               isClickable ? "cursor-pointer hover:brightness-125" : ""
@@ -51,6 +52,9 @@ export function ToolCallDisplay({
             )}
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>
+          {!!toolCallState.output?.length && (
+            <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+          )}
         </div>
       </div>
       <div>{children}</div>
