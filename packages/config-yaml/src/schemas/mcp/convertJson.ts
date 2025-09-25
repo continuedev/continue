@@ -12,6 +12,38 @@ import type {
 } from "./json.js";
 
 /**
+ * Convert environment variable references from JSON format (${VAR}) to YAML format (${{ secrets.VAR }})
+ */
+export function convertJsonEnvToYamlEnv(
+  env: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!env) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(env).map(([key, value]) => [
+      key,
+      value.replace(/\$\{([^}]+)\}/g, "${{ secrets.$1 }}"),
+    ]),
+  );
+}
+
+/**
+ * Convert environment variable references from YAML format (${{ secrets.VAR }} or ${{ inputs.VAR }}) to JSON format (${VAR})
+ */
+export function convertYamlEnvToJsonEnv(
+  env: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!env) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(env).map(([key, value]) => [
+      key,
+      value.replace(/\$\{\{\s*(?:secrets|inputs)\.([^}\s]+)\s*\}\}/g, "${$1}"),
+    ]),
+  );
+}
+
+/**
  * Convert from JSON schema (used in Claude Desktop) to YAML schema (used in Continue)
  */
 export function convertJsonMcpConfigToYamlMcpConfig(
@@ -27,7 +59,7 @@ export function convertJsonMcpConfigToYamlMcpConfig(
   if ("command" in jsonConfig) {
     if (jsonConfig.envFile) {
       warnings.push(
-        `envFile is not supported in YAML schema for server "${name}". Environment variables from this file will not be used.`,
+        `envFile is not supported in Continue MCP config (server "${name}"). Environment variables from this file will not be used.`,
       );
     }
 
@@ -36,7 +68,7 @@ export function convertJsonMcpConfigToYamlMcpConfig(
       type: "stdio",
       command: jsonConfig.command,
       args: jsonConfig.args,
-      env: jsonConfig.env,
+      env: convertJsonEnvToYamlEnv(jsonConfig.env),
     };
     return {
       warnings,
@@ -110,7 +142,7 @@ export function convertYamlMcpConfigToJsonMcpConfig(yamlConfig: MCPServer): {
         type: "stdio",
         command,
         args,
-        env,
+        env: convertYamlEnvToJsonEnv(env),
       },
     };
   }

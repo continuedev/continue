@@ -612,4 +612,310 @@ describe("converMcpServersJsonConfigFileToYamlBlocks", () => {
       env: { PORT: "3000" },
     });
   });
+
+  test("handles environment variable templating in JSON file", () => {
+    const jsonFile: McpServersJsonConfigFile = {
+      mcpServers: {
+        "weather-server": {
+          command: "npx",
+          args: ["@example/weather-server"],
+          env: {
+            WEATHER_API_KEY: "${WEATHER_API_KEY_ENV_VAR}",
+            STATIC_VALUE: "production",
+            COMPLEX: "https://${API_HOST}:${API_PORT}/v1",
+          },
+        },
+      },
+    };
+
+    const result = converMcpServersJsonConfigFileToYamlBlocks(jsonFile);
+
+    expect(result.yamlConfigs).toHaveLength(1);
+    expect(result.yamlConfigs[0]).toEqual({
+      name: "weather-server",
+      type: "stdio",
+      command: "npx",
+      args: ["@example/weather-server"],
+      env: {
+        WEATHER_API_KEY: "${{ secrets.WEATHER_API_KEY_ENV_VAR }}",
+        STATIC_VALUE: "production",
+        COMPLEX: "https://${{ secrets.API_HOST }}:${{ secrets.API_PORT }}/v1",
+      },
+    });
+  });
+});
+
+describe("Environment variable conversion", () => {
+  describe("JSON to YAML conversion", () => {
+    test("converts ${VAR} to ${{ secrets.VAR }}", () => {
+      const jsonConfig: StdioMcpJsonConfig = {
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${WEATHER_API_KEY}",
+          PORT: "3000",
+          DEBUG: "${DEBUG_MODE}",
+        },
+      };
+
+      const result = convertJsonMcpConfigToYamlMcpConfig(
+        "test-server",
+        jsonConfig,
+      );
+
+      expect(result.yamlConfig).toEqual({
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${{ secrets.WEATHER_API_KEY }}",
+          PORT: "3000",
+          DEBUG: "${{ secrets.DEBUG_MODE }}",
+        },
+      });
+    });
+
+    test("handles multiple variables in one value", () => {
+      const jsonConfig: StdioMcpJsonConfig = {
+        command: "node",
+        env: {
+          CONNECTION_STRING:
+            "postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:5432/mydb",
+          API_URL: "https://${API_HOST}/v1/${API_VERSION}",
+        },
+      };
+
+      const result = convertJsonMcpConfigToYamlMcpConfig(
+        "test-server",
+        jsonConfig,
+      );
+
+      expect(result.yamlConfig).toEqual({
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          CONNECTION_STRING:
+            "postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@${{ secrets.DB_HOST }}:5432/mydb",
+          API_URL:
+            "https://${{ secrets.API_HOST }}/v1/${{ secrets.API_VERSION }}",
+        },
+      });
+    });
+
+    test("preserves non-template values", () => {
+      const jsonConfig: StdioMcpJsonConfig = {
+        command: "node",
+        env: {
+          STATIC_VALUE: "production",
+          MIXED: "prefix-${DYNAMIC}-suffix",
+          NUMBER: "8080",
+        },
+      };
+
+      const result = convertJsonMcpConfigToYamlMcpConfig(
+        "test-server",
+        jsonConfig,
+      );
+
+      expect(result.yamlConfig).toEqual({
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          STATIC_VALUE: "production",
+          MIXED: "prefix-${{ secrets.DYNAMIC }}-suffix",
+          NUMBER: "8080",
+        },
+      });
+    });
+  });
+
+  describe("YAML to JSON conversion", () => {
+    test("converts ${{ secrets.VAR }} to ${VAR}", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${{ secrets.WEATHER_API_KEY }}",
+          PORT: "3000",
+          DEBUG: "${{ secrets.DEBUG_MODE }}",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${WEATHER_API_KEY}",
+          PORT: "3000",
+          DEBUG: "${DEBUG_MODE}",
+        },
+      });
+    });
+
+    test("converts ${{ inputs.VAR }} to ${VAR}", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          USER_INPUT: "${{ inputs.USER_NAME }}",
+          API_KEY: "${{ inputs.API_KEY }}",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        env: {
+          USER_INPUT: "${USER_NAME}",
+          API_KEY: "${API_KEY}",
+        },
+      });
+    });
+
+    test("handles mixed secrets and inputs", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          SECRET_KEY: "${{ secrets.API_SECRET }}",
+          USER_INPUT: "${{ inputs.USER_NAME }}",
+          MIXED: "${{ secrets.PART1 }}-${{ inputs.PART2 }}",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        env: {
+          SECRET_KEY: "${API_SECRET}",
+          USER_INPUT: "${USER_NAME}",
+          MIXED: "${PART1}-${PART2}",
+        },
+      });
+    });
+
+    test("handles whitespace in templates", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          SPACED: "${{  secrets.VAR_WITH_SPACES  }}",
+          MIXED_SPACE: "${{ secrets.VAR1 }}-${{inputs.VAR2}}",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        env: {
+          SPACED: "${VAR_WITH_SPACES}",
+          MIXED_SPACE: "${VAR1}-${VAR2}",
+        },
+      });
+    });
+
+    test("handles multiple variables in one value", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          CONNECTION_STRING:
+            "postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@${{ secrets.DB_HOST }}:5432/mydb",
+          API_URL:
+            "https://${{ inputs.API_HOST }}/v1/${{ secrets.API_VERSION }}",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        env: {
+          CONNECTION_STRING:
+            "postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:5432/mydb",
+          API_URL: "https://${API_HOST}/v1/${API_VERSION}",
+        },
+      });
+    });
+
+    test("preserves non-template values", () => {
+      const yamlConfig: StdioMcpServer = {
+        name: "test-server",
+        type: "stdio",
+        command: "node",
+        env: {
+          STATIC_VALUE: "production",
+          MIXED: "prefix-${{ secrets.DYNAMIC }}-suffix",
+          NUMBER: "8080",
+        },
+      };
+
+      const result = convertYamlMcpConfigToJsonMcpConfig(yamlConfig);
+
+      expect(result.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        env: {
+          STATIC_VALUE: "production",
+          MIXED: "prefix-${DYNAMIC}-suffix",
+          NUMBER: "8080",
+        },
+      });
+    });
+  });
+
+  describe("Roundtrip conversion", () => {
+    test("JSON -> YAML -> JSON preserves values", () => {
+      const originalJson: StdioMcpJsonConfig = {
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${WEATHER_API_KEY}",
+          STATIC: "production",
+          COMPLEX: "prefix-${VAR1}-middle-${VAR2}-suffix",
+        },
+      };
+
+      // Convert to YAML
+      const yamlResult = convertJsonMcpConfigToYamlMcpConfig(
+        "test",
+        originalJson,
+      );
+
+      // Convert back to JSON
+      const jsonResult = convertYamlMcpConfigToJsonMcpConfig(
+        yamlResult.yamlConfig as StdioMcpServer,
+      );
+
+      expect(jsonResult.jsonConfig).toEqual({
+        type: "stdio",
+        command: "node",
+        args: ["server.js"],
+        env: {
+          API_KEY: "${WEATHER_API_KEY}",
+          STATIC: "production",
+          COMPLEX: "prefix-${VAR1}-middle-${VAR2}-suffix",
+        },
+      });
+    });
+  });
 });
