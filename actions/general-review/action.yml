@@ -23,7 +23,7 @@ runs:
       shell: bash
       env:
         # Only move the dangerous check to env to prevent shell injection
-        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-general-review') }}
+        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-review') }}
       run: |
         # Check if this action should run based on event type and user permissions
         SHOULD_RUN="false"
@@ -51,7 +51,7 @@ runs:
               echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
             fi
           else
-            echo "::notice::Skipping review - Comment does not contain @continue-general-review trigger, or is not on a PR"
+            echo "::notice::Skipping review - Comment does not contain @continue-review trigger, or is not on a PR"
           fi
         else
           echo "::notice::Skipping review - Unsupported event type: ${{ github.event_name }}"
@@ -278,7 +278,7 @@ runs:
             }
 
             // Add instructions for re-review
-            reviewContent += '\n\n---\n*💡 To request a new review, comment `@continue-general-review`*';
+            reviewContent += '\n\n---\n*💡 To request a new review, comment `@continue-review`*';
 
             // Create new comment
             await github.rest.issues.createComment({

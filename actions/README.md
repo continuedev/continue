@@ -11,7 +11,7 @@ This repository provides a GitHub Action for automated PR reviews:
 Provides high-level PR assessment with overall feedback and recommendations.
 
 - **Path:** `continuedev/continue/actions/general-review@main`
-- **Trigger:** `@continue-general-review`
+- **Trigger:** `@continue-review`
 - **Output:** Summary comment with strengths, issues, and recommendations
 
 ## Quick Start
@@ -94,7 +94,7 @@ The action can be triggered in two ways:
 
 Team members can trigger reviews by commenting on any pull request:
 
-- `@continue-general-review` - Triggers a general review
+- `@continue-review` - Triggers a review
 
 ## Review Output
 
