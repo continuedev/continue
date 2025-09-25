@@ -1,5 +1,5 @@
 import z from "zod";
-import { requestOptionsSchema } from "../../browser.js";
+import { requestOptionsSchema } from "../../schemas/models.js";
 
 const baseMcpServerSchema = z.object({
   name: z.string(),
