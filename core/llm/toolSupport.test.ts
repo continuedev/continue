@@ -280,6 +280,23 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("xAI", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["xAI"];
+
+    it("should return true for Grok-3 models", () => {
+      expect(supportsFn("grok-3")).toBe(true);
+      expect(supportsFn("grok-3-mini")).toBe(true);
+      expect(supportsFn("grok-3-fast")).toBe(true);
+    });
+
+    it("should return true for Grok-4 models", () => {
+      expect(supportsFn("grok-4")).toBe(true);
+      expect(supportsFn("grok-4-fast-non-reasoning")).toBe(true);
+      expect(supportsFn("grok-4-fast-reasoning")).toBe(true);
+      expect(supportsFn("Grok-4-Fast")).toBe(true);
+    });
+  });
+
   describe("novita", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["novita"];
 

@@ -1,0 +1,176 @@
+---
+title: "Continue CLI Quick Start"
+description: "Get hands-on experience with Continue CLI through practical examples and common use cases"
+sidebarTitle: "Quick Start"
+---
+
+Get hands-on experience with Continue CLI through practical development workflows.
+
+<Tabs>
+  <Tab title="TUI Mode">
+    TUI Mode (`cn` command) is for **large development tasks** that require
+    agentic workflows with human oversight. Perfect for complex refactors,
+    feature implementation, or one-off automation tasks that need monitoring and
+    iteration.
+  </Tab>
+  <Tab title="Headless Mode">
+    Headless Mode (`-p` flag) is for **reliable, repeatable tasks** that no
+    longer need constant supervision. Perfect for CI/CD pipelines, git hooks,
+    and automated workflows you've already tested and refined.
+  </Tab>
+</Tabs>
+
+## TUI Mode: Large Development Tasks
+
+Make sure you have [Continue CLI installed](/cli/install) and are in a project directory.
+
+### Example: Implementing a New Feature
+
+```bash
+# Navigate to your project directory
+cd your-awesome-project
+
+# Start TUI Mode for complex development work
+cn
+```
+
+**Example workflow for adding authentication:**
+
+```
+> I need to add JWT authentication to this Express app. Let me start by showing you the current structure.
+
+> @src/app.js @package.json Here's my current setup. Can you implement JWT auth with middleware, login/register routes, and user model?
+
+> [Agent analyzes codebase and implements auth system]
+> [You review changes, test, and provide feedback]
+> [Agent iterates based on your input until the feature is complete]
+```
+
+### Example: Complex Refactoring
+
+```bash
+cn
+```
+
+**Refactoring a monolithic component:**
+
+```
+> @src/components/Dashboard.jsx This component is 800 lines and does too much. Help me break it into smaller, reusable components.
+
+> [Agent analyzes component structure]
+> [Proposes component breakdown strategy]
+> [You approve approach]
+> [Agent implements the refactor with proper props and state management]
+> [You test and request adjustments]
+```
+
+### When to Use TUI Mode
+
+✅ **Large development tasks** that need oversight  
+✅ **Complex refactors** requiring multiple steps  
+✅ **New feature implementation** with unknowns  
+✅ **One-off automation tasks** you haven't done before  
+✅ **Debugging complex issues** that need exploration
+
+## Headless Mode: Automated Workflows
+
+Once you've refined a workflow in TUI Mode, convert it to Continuous AI for automation.
+
+### Example: From REPL → Continuous AI
+
+**Step 1: Develop in TUI Mode**
+
+```bash
+cn
+> @package.json @CHANGELOG.md Generate release notes for version 2.1.0
+> [Test and refine the prompt until it works perfectly]
+```
+
+**Step 2: Convert to Continuous AI**
+
+```bash
+# Now use the refined workflow in automation
+cn -p "Generate release notes for the current version based on package.json and recent commits"
+```
+
+### Common Continuous AI Workflows
+
+```bash
+# Git automation
+cn -p "Generate a conventional commit message for staged changes"
+cn -p "Review the last 3 commits for potential issues"
+
+# Code quality
+cn -p "Fix all TypeScript errors in the src/ directory"
+cn -p "Update outdated dependencies and fix breaking changes"
+
+# Documentation
+cn -p "@README.md Update documentation based on recent changes"
+cn -p "Generate API documentation from JSDoc comments"
+
+# CI/CD integration
+cn -p "Analyze test failures and create GitHub issue with findings"
+cn -p "Update version numbers and create release branch"
+```
+
+### When to Use Headless Mode
+
+✅ **Proven workflows** you've tested in TUI Mode  
+✅ **Repetitive tasks** that no longer need oversight  
+✅ **CI/CD automation** in pipelines  
+✅ **Git hooks** for automated checks  
+✅ **Scheduled tasks** that run unattended
+
+### Available Slash Commands
+
+Common slash commands available in CLI:
+
+- `/clear` - Clear the chat history
+- `/compact` - Summarize chat history into a compact form
+- `/config` - Switch configuration or organization
+- `/exit` - Exit the chat
+- `/fork` - Start a forked chat session from the current history
+- `/help` - Show help message
+- `/info` - Show session information
+- `/init` - Create an AGENTS.md file
+- `/login` - Authenticate with your account
+- `/logout` - Sign out of your current session
+- `/mcp` - Manage MCP server connections
+- `/model` - Switch between available chat models
+- `/resume` - Resume a previous chat session
+- `/whoami` - Check who you're currently logged in as
+
+<Info>Use `/help` to see all available commands.</Info>
+
+## The Development Workflow
+
+<Info>
+  **Recommended Approach**: Start complex tasks in TUI Mode to iterate and
+  refine your approach. Once you have a reliable workflow, convert it to
+  Headless Mode for automation.
+</Info>
+
+### Workflow Pattern
+
+1. **🔬 Experiment in TUI Mode**
+
+   - Try complex development tasks with human oversight
+   - Iterate on prompts and approaches until they work reliably
+   - Test edge cases and refine the agent's behavior
+
+2. **⚡ Automate with Continuous AI**
+   - Convert proven REPL workflows to single commands
+   - Deploy in CI/CD, git hooks, or scheduled tasks
+   - Run with confidence knowing the approach is tested
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Your First Workflow" href="/guides/posthog-github-continuous-ai">
+    Build an automated PostHog to GitHub issues workflow
+  </Card>
+
+  <Card title="Continuous AI Guide" href="/guides/continuous-ai">
+    Learn to build and deploy AI-powered development workflows
+  </Card>
+</CardGroup>

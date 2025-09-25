@@ -44,18 +44,82 @@ This cookbook teaches you to:
 
 ## Quick Setup
 
+<Info>
+  The Netlify Development Rules bundle includes guardrails for:
+  - Proper `.gitignore` configuration
+  - Function structure and placement
+  - Edge function constraints
+  - Local development best practices
+
+</Info>
+For all options, first:
 <Steps>
-  <Step title="Install Continue CLI">
+<Step title="Install Continue CLI">
     ```bash
     npm i -g @continuedev/cli
     ```
   </Step>
 
+<Step title="Install Netlify CLI">
+
+  1. Install Netlify CLI: `npm i -g netlify-cli` 
+  2. Authenticate with Netlify:
+  `netlify login`
+  </Step>
+</Steps>
+
+## Netlify Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built Netlify Continuous AI agent that includes
+  optimized prompts, rules, and the Netlify MCP for more consistent results.
+</Card>
+
+After completing **Quick Setup** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Netlify Continuous AI Agent](https://hub.continue.dev/continuedev/netlify-continuous-ai) on Continue Hub and click **"Install Agent"**
+
+        This agent includes:
+        - **Optimized prompts** for Netlify deployment and performance analysis
+        - **Built-in rules** for consistent formatting and error handling
+        - **Netlify MCP** for more reliable API interactions
+      </Step>
+
+      <Step title="Verify Your Setup">
+        The agent uses the Netlify MCP automatically and includes best practice rules for deployment and performance optimization.
+      </Step>
+
+      <Step title="Run Performance Analysis">
+        Navigate to your project directory and run:
+        ```bash
+        cn "Analyze my Netlify site's performance and optimize it for better Core Web Vitals."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Netlify MCP integration and pre-tested prompts. You can remix the agent later to customize it to your needs.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+<Steps>
+
 <Step title="Configure Netlify MCP">
-  1. Install Netlify CLI: `npm i -g netlify-cli` 2. Authenticate with Netlify:
-  `netlify login` 3. Visit [Netlify MCP on Continue
-  Hub](https://hub.continue.dev/netlify/netlify-mcp) 4. Follow the configuration
-  instructions for your editor
+  1. Authenticate with Netlify:
+  `netlify login`
+  2. Visit [Netlify MCP on Continue
+  Hub](https://hub.continue.dev/netlify/netlify-mcp)
+  3. Follow the configuration instructions for your editor
+
 </Step>
 
   <Step title="Add Development Rules">
@@ -77,13 +141,26 @@ This cookbook teaches you to:
     ```
 
   </Step>
-</Steps>
 
-<Info>
-  The Netlify Development Rules bundle includes guardrails for: - Proper
-  `.gitignore` configuration - Function structure and placement - Edge function
-  constraints - Local development best practices
-</Info>
+ 
+</Steps>
+ <Info>
+    You're all set! Now you can use cn CLI to interact with Netlify using natural language prompts. Check out the examples below to get started.
+  </Info>
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either: 
+      - **Continue CLI Pro Plan** with
+      the models add-on, OR 
+      - **Your own API keys** added to Continue Hub secrets
+      The agent will automatically detect and use your
+      configuration along with the Netlify MCP for deployment operations.
+
+</Accordion>
+
+---
 
 ## Performance Optimization Steps
 
@@ -375,6 +452,14 @@ Unlike Google Analytics, Netlify Analytics:
 
 ## Automated Performance Checks
 
+### Add GitHub Secrets
+
+Navigate to **Repository Settings → Secrets and variables → Actions** and add:
+
+- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
+- `NETLIFY_SITE_ID`: Your Netlify site ID
+
 ### GitHub Actions Performance Guard
 
 Block PRs that degrade performance:
@@ -394,17 +479,28 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+
+      - name: Authenticate Continue CLI
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          cn auth login --api-key "$CONTINUE_API_KEY"
+          echo "✅ Continue CLI authenticated"
+
       - name: Deploy and Test Performance
         id: perf
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          npx @continuedev/cli@latest << 'EOF'
-          Deploy PR preview and run Lighthouse.
-          Compare scores with main branch.
-          Output JSON with score deltas.
-          EOF > performance.json
+          echo "🚀 Deploying PR preview and analyzing performance..."
+          cn -p "Deploy PR preview and run Lighthouse.
+                 Compare scores with main branch.
+                 Output JSON with score deltas." > performance.json
 
       - name: Comment Performance Results
         uses: actions/github-script@v7
@@ -442,9 +538,11 @@ jobs:
 ```
 
 <Warning>
-  This workflow will: - **Block merge** if performance score drops >10 points -
-  **Warn** on any performance regression - **Celebrate** improvements with green
-  indicators
+  This workflow will: 
+  - **Block merge** if performance score drops >10 points 
+  - **Warn** on any performance regression 
+  - **Celebrate** improvements with green indicators
+
 </Warning>
 
 ## Performance Testing Locally
@@ -528,9 +626,12 @@ Features many developers don't know Netlify offers:
 
 <Card title="On-Demand Builders" icon="hammer">
   **[On-Demand
-  Builders](https://docs.netlify.com/configure-builds/on-demand-builders/)** -
-  Generate pages only when requested - Cache dynamically generated content -
-  Perfect for large sites (10k+ pages) - Reduce build times dramatically
+  Builders](https://docs.netlify.com/configure-builds/on-demand-builders/)** 
+  - Generate pages only when requested
+  - Cache dynamically generated content
+  - Perfect for large sites (10k+ pages)
+  - Reduce build times dramatically
+
 </Card>
 
   <Card title="Netlify Functions" icon="function">
