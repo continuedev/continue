@@ -16,22 +16,10 @@ export function ToolCallStatusMessage({
 }: ToolCallStatusMessageProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  function handleClick(event: React.MouseEvent) {
-    event.stopPropagation();
+  function handleClick() {
     const contextItems = toolCallStateToContextItems(toolCallState);
     if (contextItems.length > 0) {
       openContextItem(contextItems[0], ideMessenger);
-    }
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      event.stopPropagation();
-      const contextItems = toolCallStateToContextItems(toolCallState);
-      if (contextItems.length > 0) {
-        openContextItem(contextItems[0], ideMessenger);
-      }
     }
   }
   if (!tool) return "Agent tool use";
@@ -84,14 +72,10 @@ export function ToolCallStatusMessage({
   return (
     <div
       className={`text-description line-clamp-4 min-w-0 break-all transition-colors duration-200 ease-in-out ${
-        isClickable ? "cursor-pointer hover:brightness-125 focus:brightness-125 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded" : ""
+        isClickable ? "cursor-pointer hover:brightness-125" : ""
       }`}
       data-testid="tool-call-title"
       onClick={isClickable ? handleClick : undefined}
-      onKeyDown={isClickable ? handleKeyDown : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      role={isClickable ? "button" : undefined}
-      aria-label={isClickable ? "Click to view tool output" : undefined}
     >
       {`Continue ${intro} ${message}`}
     </div>
