@@ -6,7 +6,6 @@ import {
   ToolStatus,
 } from "core";
 import { ComponentType, SVGProps } from "react";
-import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 
@@ -109,27 +108,3 @@ export function toolCallCtxItemToCtxItemWithId(
   };
 }
 
-export function handleToolCallClick(
-  toolCallState: ToolCallState,
-  ideMessenger: any,
-  event?: React.MouseEvent | React.KeyboardEvent,
-) {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-
-  const contextItems = toolCallStateToContextItems(toolCallState);
-  if (contextItems.length === 1) {
-    // Single context item - open it directly (consistent with SimpleToolCallUI)
-    openContextItem(contextItems[0], ideMessenger);
-  } else if (contextItems.length > 1) {
-    // Multiple context items - show as combined virtual file
-    import("core/util/messageContent").then(({ renderContextItems }) => {
-      ideMessenger.post("showVirtualFile", {
-        name: "Tool Output",
-        content: renderContextItems(toolCallState.output!),
-      });
-    });
-  }
-}

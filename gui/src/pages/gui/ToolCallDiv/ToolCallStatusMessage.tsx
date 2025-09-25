@@ -1,8 +1,9 @@
 import { Tool, ToolCallState } from "core";
 import * as Mustache from "mustache";
 import { useContext } from "react";
+import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getStatusIntro, handleToolCallClick, toolCallStateToContextItems } from "./utils";
+import { getStatusIntro, toolCallStateToContextItems } from "./utils";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -16,12 +17,21 @@ export function ToolCallStatusMessage({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleClick(event: React.MouseEvent) {
-    handleToolCallClick(toolCallState, ideMessenger, event);
+    event.stopPropagation();
+    const contextItems = toolCallStateToContextItems(toolCallState);
+    if (contextItems.length > 0) {
+      openContextItem(contextItems[0], ideMessenger);
+    }
   }
 
   function handleKeyDown(event: React.KeyboardEvent) {
     if (event.key === "Enter" || event.key === " ") {
-      handleToolCallClick(toolCallState, ideMessenger, event);
+      event.preventDefault();
+      event.stopPropagation();
+      const contextItems = toolCallStateToContextItems(toolCallState);
+      if (contextItems.length > 0) {
+        openContextItem(contextItems[0], ideMessenger);
+      }
     }
   }
   if (!tool) return "Agent tool use";
