@@ -309,7 +309,9 @@ runs:
             if (fs.existsSync('code_review.md') && fs.statSync('code_review.md').size > 0) {
               reviewContent = fs.readFileSync('code_review.md', 'utf8');
             } else {
-              reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
+              // Build direct link to workflow logs
+              const workflowRunUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              reviewContent = `⚠️ AI review completed but no review output was generated.\n\n**Likely cause:** Expired CONTINUE_API_KEY or missing continuedev/review-bot assistant\n\n[📋 View workflow logs](${workflowRunUrl}) for details.`;
             }
             
             // Get PR number based on event type
