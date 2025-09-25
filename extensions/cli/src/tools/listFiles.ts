@@ -15,7 +15,8 @@ export const listFilesTool: Tool = {
     properties: {
       dirpath: {
         type: "string",
-        description: "The path to the directory to list",
+        description:
+          "The path to the directory to list. Can use relative paths but not outside cwd (i.e. .. is not allowed)",
       },
     },
   },
