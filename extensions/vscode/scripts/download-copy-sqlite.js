@@ -47,9 +47,8 @@ async function downloadSqlite(target, targetDir) {
     // node-sqlite3 doesn't have a pre-built binary for win32-arm64
     target === "win32-arm64"
       ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
-      : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
-          target
-        }.tar.gz`;
+      : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${target}.tar.gz`;
+
   await downloadFile(downloadUrl, targetDir);
 }
 
@@ -62,31 +61,10 @@ async function installAndCopySqlite(target) {
   fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
 }
 
-async function installAndCopyEsbuild(target) {
-  // Download and unzip esbuild
-  console.log("[info] Downloading pre-built esbuild binary");
-  rimrafSync("node_modules/@esbuild");
-  fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-  await downloadFile(
-    `https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    "node_modules/@esbuild/esbuild.zip",
-  );
-  execCmdSync("cd node_modules/@esbuild && unzip esbuild.zip");
-  fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-}
-
 process.on("message", (msg) => {
   const { operation, target } = msg.payload;
   if (operation === "sqlite") {
     installAndCopySqlite(target)
-      .then(() => process.send({ done: true }))
-      .catch((error) => {
-        console.error(error); // show the error in the parent process
-        process.send({ error: true });
-      });
-  }
-  if (operation === "esbuild") {
-    installAndCopyEsbuild(target)
       .then(() => process.send({ done: true }))
       .catch((error) => {
         console.error(error); // show the error in the parent process
@@ -118,31 +96,7 @@ async function copySqlite(target) {
   });
 }
 
-/**
- * @param {string} target the platform to build for
- */
-async function copyEsbuild(target) {
-  const child = fork(__filename, { stdio: "inherit", cwd: process.cwd() });
-  child.send({
-    payload: {
-      operation: "esbuild",
-      target,
-    },
-  });
-
-  return new Promise((resolve, reject) => {
-    child.on("message", (msg) => {
-      if (msg.error) {
-        reject();
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
 module.exports = {
   downloadSqlite,
   copySqlite,
-  copyEsbuild,
 };
