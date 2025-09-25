@@ -4,6 +4,7 @@ import {
   McpJsonConfig,
   mcpServerConfigFileSchema,
   mcpServersJsonSchema,
+  RequestOptions,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
 import ignore from "ignore";
@@ -24,6 +25,7 @@ import { getUriPathBasename, joinPathsToUri } from "../../../util/uri";
 export async function loadJsonMcpConfigs(
   ide: IDE,
   includeGlobal: boolean,
+  globalRequestOptions: RequestOptions | undefined = undefined,
 ): Promise<{
   mcpServers: InternalMcpOptions[];
   errors: ConfigValidationError[];
@@ -84,10 +86,14 @@ export async function loadJsonMcpConfigs(
     }),
   );
 
-  const validJsonConfigs: { name: string; mcpJson: McpJsonConfig }[] = [];
-  for (const file of jsonFiles) {
+  const validJsonConfigs: {
+    name: string;
+    mcpJson: McpJsonConfig;
+    uri: string;
+  }[] = [];
+  for (const { content, uri } of jsonFiles) {
     try {
-      const json = JSONC.parse(file.content);
+      const json = JSONC.parse(content);
       const claudeFileParsed = mcpServerConfigFileSchema.safeParse(json);
 
       // Try parsing as a file with mcpServers and multiple servers (claude-esque format)
@@ -97,6 +103,7 @@ export async function loadJsonMcpConfigs(
             ([name, mcpJson]) => ({
               name,
               mcpJson,
+              uri,
             }),
           ),
         );
@@ -107,27 +114,39 @@ export async function loadJsonMcpConfigs(
         if (singleConfigParsed.success) {
           validJsonConfigs.push({
             mcpJson: singleConfigParsed.data,
-            name: getUriPathBasename(file.uri).replace(".json", ""),
+            name: getUriPathBasename(uri).replace(".json", ""),
+            uri,
           });
         } else {
           errors.push({
             fatal: false,
-            message: `MCP JSON file at ${file.uri} doesn't match a supported MCP JSON configuration format`,
+            message: `MCP JSON file at ${uri} doesn't match a supported MCP JSON configuration format`,
           });
         }
       }
     } catch (e) {
       errors.push({
         fatal: false,
-        message: `Error parsing MCP JSON file at ${file.uri}: ${e instanceof Error ? e.message : String(e)}`,
+        message: `Error parsing MCP JSON file at ${uri}: ${e instanceof Error ? e.message : String(e)}`,
       });
     }
   }
 
   // Two levels of conversion for now.
-  const yamlConfigs = validJsonConfigs.map((c) =>
-    convertJsonMcpConfigToYamlMcpConfig(c.name, c.mcpJson),
-  );
+  const yamlConfigs = validJsonConfigs.map((c) => {
+    const { warnings, yamlConfig } = convertJsonMcpConfigToYamlMcpConfig(
+      c.name,
+      c.mcpJson,
+    );
+    return {
+      warnings,
+      yamlConfig: {
+        ...yamlConfig,
+        sourceFile: c.uri,
+      },
+    };
+  });
+
   const mcpServers = yamlConfigs.map((c) => {
     errors.push(
       ...c.warnings.map((warning) => ({
@@ -135,7 +154,10 @@ export async function loadJsonMcpConfigs(
         message: warning,
       })),
     );
-    return convertYamlMcpConfigToInternalMcpOptions(c.yamlConfig);
+    return convertYamlMcpConfigToInternalMcpOptions(
+      c.yamlConfig,
+      globalRequestOptions,
+    );
   });
   // Parse and convert files
   return {

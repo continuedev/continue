@@ -401,6 +401,7 @@ export async function configYamlToContinueConfig(options: {
     const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
       ide,
       true,
+      config.requestOptions,
     );
     localErrors.push(...jsonMcpErrors);
     mcpOptions.push(...mcpServers);

@@ -569,6 +569,7 @@ async function intermediateToFinalConfig({
     const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
       ide,
       true,
+      config.requestOptions,
     );
     errors.push(...jsonMcpErrors);
     mcpOptions.push(...mcpServers);
