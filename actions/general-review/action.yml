@@ -74,7 +74,7 @@ runs:
       if: env.SHOULD_RUN == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         # Get PR number based on event type
         if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -149,7 +149,6 @@ runs:
         CONTINUE_ORG: ${{ inputs.continue-org }}
         CONTINUE_CONFIG: ${{ inputs.continue-config }}
         GITHUB_TOKEN: ${{ github.token }}
-        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Running Continue CLI with prompt:"
         echo "=================================="
