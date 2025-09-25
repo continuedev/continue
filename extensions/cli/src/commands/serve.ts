@@ -25,6 +25,7 @@ import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
+import { runEnvironmentInstall } from "../environment/environmentHandler.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import {
@@ -54,6 +55,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+
+  // Run environment install script if available
+  try {
+    await runEnvironmentInstall();
+  } catch (error) {
+    console.error(
+      chalk.red("Failed to run environment install script:"),
+      formatError(error),
+    );
+  }
 
   // Initialize services with tool permission overrides
   const { permissionOverrides } = processCommandFlags(options);
