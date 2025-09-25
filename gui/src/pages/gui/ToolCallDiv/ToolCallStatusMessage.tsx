@@ -62,7 +62,7 @@ export function ToolCallStatusMessage({
     }
   }
 
-  const contextItems = toolCallStateToContextItems(toolCallState);
+  const contextItems = toolCallStateToContextItems(toolCallState).filter((item) => !item.hidden);
   const isClickable = contextItems.length > 0;
 
   return (
