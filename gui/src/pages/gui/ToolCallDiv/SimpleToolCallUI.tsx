@@ -2,12 +2,11 @@ import { Tool, ToolCallState } from "core";
 import { ComponentType, useContext, useMemo, useState } from "react";
 import {
   ContextItemsPeekItem,
-  openContextItem,
 } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToggleWithIcon } from "./ToggleWithIcon";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { toolCallStateToContextItems } from "./utils";
+import { handleToolCallClick, toolCallStateToContextItems } from "./utils";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
@@ -39,7 +38,7 @@ export function SimpleToolCallUI({
     if (isToggleable) {
       setOpen((prev) => !prev);
     } else if (isSingleItem) {
-      openContextItem(shownContextItems[0], ideMessenger);
+      handleToolCallClick(toolCallState, ideMessenger);
     }
   }
 
