@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
+import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -11,10 +12,10 @@ import {
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 
 export const callToolById = createAsyncThunk<
   void,
@@ -43,13 +44,14 @@ export const callToolById = createAsyncThunk<
     DEFAULT_TOOL_SETTING;
   const isAutoApproved = toolPolicy === "allowedWithoutPermission";
 
-  posthog.capture("gui_tool_call_decision", {
+  const selectedChatModel = selectSelectedChatModel(state);
+
+  posthog.capture("tool_call_decision", {
+    model: selectedChatModel,
     decision: isAutoApproved ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
     toolCallId: toolCallId,
   });
-
-  const selectedChatModel = selectSelectedChatModel(state);
 
   if (!selectedChatModel) {
     throw new Error("No model selected");
@@ -62,7 +64,7 @@ export const callToolById = createAsyncThunk<
   );
 
   let output: ContextItem[] | undefined = undefined;
-  let errorMessage: string | undefined = undefined;
+  let error: ContinueError | undefined = undefined;
   let streamResponse: boolean;
 
   // IMPORTANT:
@@ -79,14 +81,14 @@ export const callToolById = createAsyncThunk<
     const {
       output: clientToolOutput,
       respondImmediately,
-      errorMessage: clientToolError,
+      error: clientToolError,
     } = await callClientTool(toolCallState, {
       dispatch,
       ideMessenger: extra.ideMessenger,
       getState,
     });
     output = clientToolOutput;
-    errorMessage = clientToolError;
+    error = clientToolError;
     streamResponse = respondImmediately;
   } else {
     // Tool is called on core side
@@ -97,12 +99,17 @@ export const callToolById = createAsyncThunk<
       throw new Error(result.error);
     } else {
       output = result.content.contextItems;
-      errorMessage = result.content.errorMessage;
+      error = result.content.errorMessage
+        ? new ContinueError(
+            ContinueErrorReason.Unspecified,
+            result.content.errorMessage,
+          )
+        : undefined;
     }
     streamResponse = true;
   }
 
-  if (errorMessage) {
+  if (error) {
     dispatch(
       updateToolCallOutput({
         toolCallId,
@@ -111,7 +118,7 @@ export const callToolById = createAsyncThunk<
             icon: "problems",
             name: "Tool Call Error",
             description: "Tool Call Failed",
-            content: `${toolCallState.toolCall.function.name} failed with the message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
+            content: `${toolCallState.toolCall.function.name} failed with the message: ${error.message}\n\nPlease try something else or request further instructions.`,
             hidden: false,
           },
         ],
@@ -128,15 +135,16 @@ export const callToolById = createAsyncThunk<
 
   // Capture telemetry for tool call execution outcome with duration
   const duration_ms = Date.now() - startTime;
-  posthog.capture("gui_tool_call_outcome", {
-    succeeded: errorMessage === undefined,
+  posthog.capture("tool_call_outcome", {
+    model: selectedChatModel,
+    succeeded: !error,
     toolName: toolCallState.toolCall.function.name,
-    errorMessage: errorMessage,
+    errorReason: error?.reason,
     duration_ms: duration_ms,
   });
 
   if (streamResponse) {
-    if (errorMessage) {
+    if (error) {
       logToolUsage(toolCallState, false, false, extra.ideMessenger, output);
       dispatch(
         errorToolCall({

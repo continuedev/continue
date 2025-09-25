@@ -13,6 +13,7 @@ export class MCPManagerSingleton {
 
   public onConnectionsRefreshed?: () => void;
   public connections: Map<string, MCPConnection> = new Map();
+  private disconnectedServers: string[] = [];
 
   private abortController: AbortController = new AbortController();
 
@@ -23,6 +24,18 @@ export class MCPManagerSingleton {
       MCPManagerSingleton.instance = new MCPManagerSingleton();
     }
     return MCPManagerSingleton.instance;
+  }
+
+  addDisconnectedServer(serverId: string) {
+    this.disconnectedServers.push(serverId);
+  }
+  removeDisconnectedServer(serverId: string) {
+    this.disconnectedServers = this.disconnectedServers.filter(
+      (server) => server !== serverId,
+    );
+  }
+  getDisconnectedServers() {
+    return this.disconnectedServers;
   }
 
   createConnection(id: string, options: MCPOptions): MCPConnection {
@@ -163,9 +176,19 @@ export class MCPManagerSingleton {
       }),
       (async () => {
         await Promise.all(
-          Array.from(this.connections.values()).map(async (connection) => {
-            await connection.connectClient(force, this.abortController.signal);
-          }),
+          Array.from(this.connections.values())
+            .filter(
+              (connection) =>
+                !this.disconnectedServers.some(
+                  (s) => s === connection.options.id,
+                ),
+            )
+            .map(async (connection) => {
+              await connection.connectClient(
+                force,
+                this.abortController.signal,
+              );
+            }),
         );
         if (this.onConnectionsRefreshed) {
           this.onConnectionsRefreshed();

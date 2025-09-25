@@ -1,13 +1,7 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
 
-import {
-  AuthConfig,
-  getAccessToken,
-  getModelName,
-  getOrganizationId,
-} from "../auth/workos.js";
-import { getLlmApi } from "../config.js";
+import { AuthConfig, getModelName } from "../auth/workos.js";
+import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -89,31 +83,7 @@ export class ModelService
           name: (selectedModel as any).name || "unnamed",
         });
 
-        const accessToken = getAccessToken(authConfig);
-        const organizationId = getOrganizationId(authConfig);
-
-        const config: LLMConfig =
-          selectedModel.provider === "continue-proxy"
-            ? {
-                provider: selectedModel.provider,
-                requestOptions: selectedModel.requestOptions,
-                apiBase: selectedModel.apiBase,
-                apiKey: accessToken ?? undefined,
-                env: {
-                  apiKeyLocation: (selectedModel as any).apiKeyLocation,
-                  orgScopeId: organizationId,
-                  proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
-                },
-              }
-            : {
-                provider: selectedModel.provider as any,
-                apiKey: selectedModel.apiKey,
-                apiBase: selectedModel.apiBase,
-                requestOptions: selectedModel.requestOptions,
-                env: selectedModel.env,
-              };
-
-        const llmApi = constructLlmApi(config);
+        const llmApi = createLlmApi(selectedModel, authConfig);
 
         if (!llmApi) {
           throw new Error("Failed to initialize LLM with persisted model");
@@ -288,31 +258,7 @@ export class ModelService
     });
 
     try {
-      const accessToken = getAccessToken(authConfig);
-      const organizationId = getOrganizationId(authConfig);
-
-      const config: LLMConfig =
-        selectedModel.provider === "continue-proxy"
-          ? {
-              provider: selectedModel.provider,
-              requestOptions: selectedModel.requestOptions,
-              apiBase: selectedModel.apiBase,
-              apiKey: accessToken ?? undefined,
-              env: {
-                apiKeyLocation: (selectedModel as any).apiKeyLocation,
-                orgScopeId: organizationId,
-                proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
-              },
-            }
-          : {
-              provider: selectedModel.provider as any,
-              apiKey: selectedModel.apiKey,
-              apiBase: selectedModel.apiBase,
-              requestOptions: selectedModel.requestOptions,
-              env: selectedModel.env,
-            };
-
-      const llmApi = constructLlmApi(config);
+      const llmApi = createLlmApi(selectedModel, authConfig);
 
       if (!llmApi) {
         throw new Error("Failed to initialize LLM with selected model");

@@ -21,7 +21,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   transform: true,
   showWhateverWeHaveAtXMs: 300,
   // Experimental options: true = enabled, false = disabled, number = enabled w priority
-  experimental_includeClipboard: true,
+  experimental_includeClipboard: false,
   experimental_includeRecentlyVisitedRanges: true,
   experimental_includeRecentlyEditedRanges: true,
   experimental_includeDiff: true,

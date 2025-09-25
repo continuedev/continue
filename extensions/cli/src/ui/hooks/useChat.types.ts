@@ -15,6 +15,7 @@ export interface UseChatProps {
   additionalPrompts?: string[];
   onShowConfigSelector: () => void;
   onShowMCPSelector: () => void;
+  onShowUpdateSelector: () => void;
   onShowModelSelector?: () => void;
   onShowSessionSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
@@ -23,6 +24,8 @@ export interface UseChatProps {
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
+  onShowDiff?: (diffContent: string) => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 export interface AttachedFile {
@@ -57,6 +60,8 @@ export interface SlashCommandResult {
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
   openMcpSelector?: boolean;
+  openUpdateSelector?: boolean;
   openSessionSelector?: boolean;
   compact?: boolean;
+  diffContent?: string;
 }

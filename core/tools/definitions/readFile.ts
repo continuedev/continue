@@ -6,7 +6,7 @@ export const readFileTool: Tool = {
   displayTitle: "Read File",
   wouldLikeTo: "read {{{ filepath }}}",
   isCurrently: "reading {{{ filepath }}}",
-  hasAlready: "viewed {{{ filepath }}}",
+  hasAlready: "read {{{ filepath }}}",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
@@ -31,4 +31,5 @@ export const readFileTool: Tool = {
     exampleArgs: [["filepath", "path/to/the_file.txt"]],
   },
   defaultToolPolicy: "allowedWithoutPermission",
+  toolCallIcon: "DocumentIcon",
 };

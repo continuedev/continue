@@ -41,6 +41,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "update",
+    description: "Update the Continue CLI",
+    category: "system",
+  },
+  {
     name: "whoami",
     description: "Check who you're currently logged in as",
     category: "system",
@@ -65,7 +70,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "Manage MCP server connections",
     category: "system",
   },
-
+  {
+    name: "init",
+    description: "Create an AGENTS.md file",
+    category: "system",
+  },
   {
     name: "compact",
     description: "Summarize chat history into a compact form",
@@ -82,6 +91,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "title",
+    description: "Set the title for the current session",
+    category: "system",
+  },
+  {
     name: "exit",
     description: "Exit the chat",
     category: "system",
@@ -93,6 +107,16 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
   {
     name: "exit",
     description: "Exit the remote environment",
+    category: "system",
+  },
+  {
+    name: "diff",
+    description: "Show the current diff from the remote environment",
+    category: "system",
+  },
+  {
+    name: "apply",
+    description: "Apply the current diff to the local working tree",
     category: "system",
   },
 ];

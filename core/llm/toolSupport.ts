@@ -203,7 +203,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       if (
         model.toLowerCase().startsWith("meta-llama-3") ||
         model.toLowerCase().includes("llama-4") ||
-        model.toLowerCase().includes("deepseek")
+        model.toLowerCase().includes("deepseek") ||
+        model.toLowerCase().includes("gpt") ||
+        model.toLowerCase().includes("qwen")
       ) {
         return true;
       }
@@ -374,9 +376,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/o[134]/],
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
-    [/gpt/, /4/],
     [/gpt-5/],
-    [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
+    [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
   ];
   for (const combo of recs) {

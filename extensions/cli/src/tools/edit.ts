@@ -1,6 +1,10 @@
 import * as fs from "fs";
+import path from "path";
 
+import { validateSingleEdit } from "core/edit/searchAndReplace/findAndReplaceUtils.js";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace.js";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -8,15 +12,53 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
+import { EditOperation } from "./multiEdit.js";
 import { readFilesSet, readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
-export interface EditArgs {
+export function validateAndResolveFilePath(args: any): {
+  originalPath: string;
+  resolvedPath: string;
+} {
+  const { file_path } = args;
+
+  if (!file_path) {
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceMissingFilepath,
+      "file_path is required",
+    );
+  }
+
+  const absolutePath = path.isAbsolute(file_path)
+    ? file_path
+    : path.resolve(process.cwd(), file_path);
+
+  const resolvedPath = fs.realpathSync(absolutePath);
+
+  throwIfFileIsSecurityConcern(resolvedPath);
+
+  // Check if file exists
+  if (!fs.existsSync(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
+      `File ${file_path} does not exist`,
+    );
+  }
+
+  // Check if file has been read
+  if (!readFilesSet.has(resolvedPath)) {
+    throw new ContinueError(
+      ContinueErrorReason.EditToolFileNotRead,
+      `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
+    );
+  }
+
+  return { originalPath: file_path, resolvedPath: resolvedPath };
+}
+
+export interface EditArgs extends EditOperation {
   file_path: string;
-  old_string: string;
-  new_string: string;
-  replace_all?: boolean;
 }
 
 export const editTool: Tool = {
@@ -37,91 +79,45 @@ WARNINGS:
 - When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
 - The edit will FAIL if you have not recently used the \`${readFileTool.name}\` tool to view up-to-date file contents.`,
   parameters: {
-    file_path: {
-      type: "string",
-      description: "The absolute path to the file to modify",
-      required: true,
-    },
-    old_string: {
-      type: "string",
-      description:
-        "The text to replace - must be exact including whitespace/indentation",
-      required: true,
-    },
-    new_string: {
-      type: "string",
-      description:
-        "The text to replace it with (MUST be different from old_string)",
-      required: true,
-    },
-    replace_all: {
-      type: "boolean",
-      description: "Replace all occurences of old_string (default false)",
-      required: false,
+    type: "object",
+    required: ["file_path", "old_string", "new_string"],
+    properties: {
+      file_path: {
+        type: "string",
+        description:
+          "Absolute or relative path to the file to modify. Absolute preferred",
+      },
+      old_string: {
+        type: "string",
+        description:
+          "The text to replace - must be exact including whitespace/indentation",
+      },
+      new_string: {
+        type: "string",
+        description:
+          "The text to replace it with (MUST be different from old_string)",
+      },
+      replace_all: {
+        type: "boolean",
+        description: "Replace all occurrences of old_string (default false)",
+      },
     },
   },
   preprocess: async (args) => {
-    const {
-      file_path,
+    const { old_string, new_string, replace_all = false } = args as EditArgs;
+
+    const { resolvedPath } = validateAndResolveFilePath(args);
+
+    validateSingleEdit(old_string, new_string);
+
+    const oldContent = fs.readFileSync(resolvedPath, "utf-8");
+    const newContent = executeFindAndReplace(
+      oldContent,
       old_string,
       new_string,
-      replace_all = false,
-    } = args as EditArgs;
-
-    // Validate arguments
-    if (!file_path) {
-      throw new Error("file_path is required");
-    }
-
-    if (!old_string) {
-      throw new Error("old_string is required");
-    }
-    if (new_string === undefined) {
-      throw new Error("new_string is required");
-    }
-    if (old_string === new_string) {
-      throw new Error("old_string and new_string must be different");
-    }
-
-    const resolvedPath = fs.realpathSync(file_path);
-
-    // Check if file has been read
-    if (!readFilesSet.has(resolvedPath)) {
-      throw new Error(
-        `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
-      );
-    }
-
-    throwIfFileIsSecurityConcern(resolvedPath);
-
-    // Check if file exists
-    if (!fs.existsSync(resolvedPath)) {
-      throw new Error(`File ${file_path} does not exist`);
-    }
-
-    // Read current file content
-    const oldContent = fs.readFileSync(resolvedPath, "utf-8");
-
-    // Check if old_string exists in the file
-    if (!oldContent.includes(old_string)) {
-      throw new Error(`String not found in file: ${old_string}`);
-    }
-
-    let newContent: string;
-
-    if (replace_all) {
-      // Replace all occurrences
-      newContent = oldContent.split(old_string).join(new_string);
-    } else {
-      // Replace only the first occurrence
-      const occurrences = oldContent.split(old_string).length - 1;
-      if (occurrences > 1) {
-        throw new Error(
-          `String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-        );
-      }
-      newContent = oldContent.replace(old_string, new_string);
-    }
+      replace_all,
+      0,
+    );
 
     // Generate diff for preview
     const diff = generateDiff(oldContent, newContent, resolvedPath);
@@ -179,7 +175,11 @@ WARNINGS:
 
       return `Successfully edited ${args.resolvedPath}\nDiff:\n${diff}`;
     } catch (error) {
-      throw new Error(
+      if (error instanceof ContinueError) {
+        throw error;
+      }
+      throw new ContinueError(
+        ContinueErrorReason.FileWriteError,
         `Error: failed to edit ${args.resolvedPath}: ${
           error instanceof Error ? error.message : String(error)
         }`,
