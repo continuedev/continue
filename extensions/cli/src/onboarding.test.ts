@@ -197,7 +197,7 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
   });
 
   afterEach(() => {
-    if (originalEnv !== undefined) {
+    if (originalEnv) {
       process.env.CONTINUE_USE_BEDROCK = originalEnv;
     } else {
       delete process.env.CONTINUE_USE_BEDROCK;
@@ -236,11 +236,15 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
 
     try {
       await runOnboardingFlow(undefined, mockAuthConfig);
-      expect(mockConsoleLog).not.toHaveBeenCalledWith(
-        expect.stringContaining(
+
+      // Verify the Bedrock message was NOT called by checking all calls
+      const allCalls = mockConsoleLog.mock.calls.flat();
+      const hasBedrockMessage = allCalls.some((call) =>
+        String(call).includes(
           "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
         ),
       );
+      expect(hasBedrockMessage).toBe(false);
     } finally {
       process.stdin.isTTY = originalIsTTY;
     }
