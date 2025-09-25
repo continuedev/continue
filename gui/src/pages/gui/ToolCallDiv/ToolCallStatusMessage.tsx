@@ -63,11 +63,7 @@ export function ToolCallStatusMessage({
   }
 
   const contextItems = toolCallStateToContextItems(toolCallState);
-  const isClickable =
-    contextItems.length > 0 &&
-    (toolCallState.status === "done" ||
-      toolCallState.status === "canceled" ||
-      toolCallState.status === "errored");
+  const isClickable = contextItems.length > 0;
 
   return (
     <div
