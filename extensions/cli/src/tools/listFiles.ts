@@ -10,10 +10,13 @@ export const listFilesTool: Tool = {
   displayName: "List",
   description: "List files in a directory",
   parameters: {
-    dirpath: {
-      type: "string",
-      description: "The path to the directory to list",
-      required: true,
+    type: "object",
+    required: ["dirpath"],
+    properties: {
+      dirpath: {
+        type: "string",
+        description: "The path to the directory to list",
+      },
     },
   },
   readonly: true,

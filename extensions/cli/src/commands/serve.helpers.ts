@@ -119,9 +119,7 @@ export interface ServerState {
   model: any;
   isProcessing: boolean;
   lastActivity: number;
-  messageQueue: string[];
   currentAbortController: AbortController | null;
-  shouldInterrupt: boolean;
   serverRunning: boolean;
   pendingPermission: PendingPermission | null;
   systemMessage?: string;

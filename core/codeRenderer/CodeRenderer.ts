@@ -19,7 +19,7 @@ import {
   getSingletonHighlighter,
   Highlighter,
 } from "shiki";
-import { DiffLine } from "..";
+import { DiffChar, DiffLine } from "..";
 import { escapeForSVG, kebabOfThemeStr } from "../util/text";
 
 interface CodeRendererOptions {
@@ -228,6 +228,7 @@ export class CodeRenderer {
     options: ConversionOptions,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    newDiffChars: DiffChar[],
   ): Promise<Buffer> {
     const strokeWidth = 1;
     const highlightedCodeHtml = await this.highlightCode(
@@ -236,13 +237,14 @@ export class CodeRenderer {
       currLineOffsetFromTop,
       newDiffLines,
     );
-    // console.log(highlightedCodeHtml);
 
     const { guts, lineBackgrounds } = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
       options,
+      newDiffChars,
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
+    const borderColor = "#6b6b6b";
 
     const lines = code.split("\n");
     const actualHeight = lines.length * options.lineHeight;
@@ -256,12 +258,11 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="2" ry="2" width="${options.dimensions.width}" height="${actualHeight}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${strokeWidth}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
   </svg>`;
-    // console.log(svg);
 
     return Buffer.from(svg, "utf8");
   }
@@ -269,11 +270,56 @@ export class CodeRenderer {
   convertShikiHtmlToSvgGut(
     shikiHtml: string,
     options: ConversionOptions,
+    diffChars: DiffChar[],
   ): { guts: string; lineBackgrounds: string } {
     const dom = new JSDOM(shikiHtml);
     const document = dom.window.document;
 
     const lines = Array.from(document.querySelectorAll(".line"));
+
+    const additionSegmentsByLine = new Map<
+      number,
+      Array<{ start: number; end: number }>
+    >();
+
+    diffChars.forEach((diff) => {
+      if (
+        diff.type !== "new" ||
+        diff.newLineIndex === undefined ||
+        diff.newCharIndexInLine === undefined
+      ) {
+        return;
+      }
+
+      if (diff.char.includes("\n")) {
+        return;
+      }
+
+      const start = diff.newCharIndexInLine;
+      const end = start + diff.char.length;
+      const existing = additionSegmentsByLine.get(diff.newLineIndex) ?? [];
+      existing.push({ start, end });
+      additionSegmentsByLine.set(diff.newLineIndex, existing);
+    });
+
+    additionSegmentsByLine.forEach((segments, lineIndex) => {
+      segments.sort((a, b) => a.start - b.start);
+      const merged: Array<{ start: number; end: number }> = [];
+      segments.forEach((segment) => {
+        if (merged.length === 0) {
+          merged.push({ ...segment });
+          return;
+        }
+
+        const last = merged[merged.length - 1];
+        if (segment.start <= last.end) {
+          last.end = Math.max(last.end, segment.end);
+        } else {
+          merged.push({ ...segment });
+        }
+      });
+      additionSegmentsByLine.set(lineIndex, merged);
+    });
     const svgLines = lines.map((line, index) => {
       const spans = Array.from(line.childNodes)
         .map((node) => {
@@ -309,60 +355,37 @@ export class CodeRenderer {
       return `<text x="0" y="${y}" font-family="${options.fontFamily}" font-size="${options.fontSize.toString()}" xml:space="preserve" dominant-baseline="central" shape-rendering="crispEdges">${spans}</text>`;
     });
 
+    const estimatedCharWidth = options.fontSize * 0.6;
+    const additionFill = "rgba(40, 167, 69, 0.25)";
+
     const lineBackgrounds = lines
       .map((line, index) => {
         const classes = line?.getAttribute("class") || "";
-        const bgColor = classes.includes("highlighted")
-          ? this.editorLineHighlight
-          : classes.includes("diff add")
-            ? "rgba(255, 255, 0, 0.2)"
-            : this.editorBackground;
-
         const y = index * options.lineHeight;
-        const isFirst = index === 0;
-        const isLast = index === lines.length - 1;
-        const isSingleLine = isFirst && isLast;
-        const radius = 10;
+        const segments = additionSegmentsByLine.get(index) ?? [];
+        const backgrounds: string[] = [];
 
-        // Handle single line case (both first and last)
-        if (isSingleLine) {
-          return `<path d="M ${radius} ${y}
-         L ${options.dimensions.width - radius} ${y}
-         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
-         L ${options.dimensions.width} ${y + options.lineHeight - radius}
-         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width - radius} ${y + options.lineHeight}
-         L ${radius} ${y + options.lineHeight}
-         Q ${0} ${y + options.lineHeight} ${0} ${y + options.lineHeight - radius}
-         L ${0} ${y + radius}
-         Q ${0} ${y} ${radius} ${y}
-         Z"
-      fill="${bgColor}" />`;
+        if (classes.includes("highlighted")) {
+          backgrounds.push(
+            `<rect x="0" y="${y}" width="100%" height="${options.lineHeight}" fill="${this.editorLineHighlight}" shape-rendering="crispEdges" />`,
+          );
         }
 
-        // SVG notes:
-        // By default SVGs have anti-aliasing on.
-        // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
-        // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
-        return isFirst
-          ? `<path d="M ${0} ${y + options.lineHeight}
-         L ${0} ${y + radius}
-         Q ${0} ${y} ${radius} ${y}
-         L ${options.dimensions.width - radius} ${y}
-         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
-         L ${options.dimensions.width} ${y + options.lineHeight}
-         Z"
-      fill="${bgColor}" />`
-          : isLast
-            ? `<path d="M ${0} ${y}
-         L ${0} ${y + options.lineHeight - radius}
-         Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
-         L ${options.dimensions.width - radius} ${y + options.lineHeight}
-         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
-         L ${options.dimensions.width} ${y}
-         Z"
-      fill="${bgColor}" />`
-            : `<rect x="0" y="${y}" width="100%" height="${options.lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
+        segments.forEach(({ start, end }) => {
+          const widthInChars = Math.max(end - start, 0);
+          if (widthInChars <= 0) {
+            return;
+          }
+          const x = start * estimatedCharWidth;
+          const segmentWidth = widthInChars * estimatedCharWidth;
+          backgrounds.push(
+            `<rect x="${x}" y="${y}" width="${segmentWidth}" height="${options.lineHeight}" fill="${additionFill}" shape-rendering="crispEdges" />`,
+          );
+        });
+
+        return backgrounds.join("\n");
       })
+      .filter((bg) => bg.length > 0)
       .join("\n");
 
     return {
@@ -394,6 +417,7 @@ export class CodeRenderer {
     options: ConversionOptions,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    newDiffChars: DiffChar[],
   ): Promise<DataUri> {
     switch (options.imageType) {
       // case "png":
@@ -413,6 +437,7 @@ export class CodeRenderer {
           options,
           currLineOffsetFromTop,
           newDiffLines,
+          newDiffChars,
         );
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }

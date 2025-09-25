@@ -84,6 +84,9 @@ jobs:
           AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
           AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+          INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
 
   gui-checks:
     runs-on: ubuntu-latest
@@ -217,6 +220,8 @@ jobs:
           AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+          INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest

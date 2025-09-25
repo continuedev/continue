@@ -18,12 +18,13 @@ import {
   PromptLog,
   RuleWithSource,
   Session,
-  SessionMetadata,
+  BaseSessionMetadata,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -205,7 +206,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
-  allSessionMetadata: SessionMetadata[];
+  allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -686,7 +687,9 @@ export const sessionSlice = createSlice({
     },
     setAllSessionMetadata: (
       state,
-      { payload }: PayloadAction<SessionMetadata[]>,
+      {
+        payload,
+      }: PayloadAction<(BaseSessionMetadata | RemoteSessionMetadata)[]>,
     ) => {
       state.allSessionMetadata = payload;
     },
@@ -694,7 +697,7 @@ export const sessionSlice = createSlice({
     // These are for optimistic session metadata updates, especially for History page
     addSessionMetadata: (
       state,
-      { payload }: PayloadAction<SessionMetadata>,
+      { payload }: PayloadAction<BaseSessionMetadata>,
     ) => {
       state.allSessionMetadata = [...state.allSessionMetadata, payload];
     },
@@ -705,7 +708,7 @@ export const sessionSlice = createSlice({
       }: PayloadAction<
         {
           sessionId: string;
-        } & Partial<SessionMetadata>
+        } & Partial<BaseSessionMetadata>
       >,
     ) => {
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>

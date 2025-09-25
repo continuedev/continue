@@ -23,7 +23,10 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
 
 <Tabs>
   <Tab title="Hub">
-  [Voyage Rerank 2 Block](https://hub.continue.dev/voyageai/rerank-2)
+  ```yaml title="config.yaml"
+  models:
+    - uses: voyageai/rerank-2
+  ```
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
@@ -34,19 +37,6 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
       model: rerank-2
       roles:
         - rerank
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "voyage",
-        "params": {
-            "model": "rerank-2",
-            "apiKey": "<YOUR_VOYAGE_API_KEY>"
-        }
-    }
-  }
   ```
   </Tab>
 </Tabs>
@@ -71,19 +61,6 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
         - rerank
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "cohere",
-        "params": {
-          "model": "rerank-english-v3.0",
-          "apiKey": "<YOUR_COHERE_API_KEY>"
-        }
-    }
-  }
-  ```
-  </Tab>
 </Tabs>
 
 ### LLM
@@ -105,21 +82,9 @@ If you only have access to a single LLM, then you can use it as a reranker. This
         - rerank
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "llm",
-        "params": {
-            "modelTitle": "My Model Title"
-        }
-    }
-  }
-  ```
-  </Tab>
 </Tabs>
 
-The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
 
 ### Text Embeddings Inference
 
@@ -140,19 +105,6 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
         apiKey: <YOUR_TEI_API_KEY>
         roles:
           - rerank
-    ```
-    </Tab>
-    <Tab title="JSON">
-    ```json title="config.json"
-    {
-      "reranker": {
-        "name": "huggingface-tei",
-        "params": {
-          "apiBase": "http://localhost:8080",
-          "apiKey": "<YOUR_TEI_API_KEY>"
-        }
-      }
-    }
     ```
     </Tab>
 </Tabs>

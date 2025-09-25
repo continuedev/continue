@@ -330,9 +330,24 @@ export class ContinueCompletionProvider
 
       // Determine why this method was triggered.
       const isJumping = this.jumpManager.isJumpInProgress();
-      const chainExists = this.nextEditProvider.chainExists();
+      let chainExists = this.nextEditProvider.chainExists();
+      const processedCount = this.prefetchQueue.processedCount;
+      const unprocessedCount = this.prefetchQueue.unprocessedCount;
       console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
       this.prefetchQueue.peekThreeProcessed();
+
+      let resetChainInFullFileDiff = false;
+      if (
+        chainExists &&
+        this.usingFullFileDiff &&
+        processedCount === 0 &&
+        unprocessedCount === 0
+      ) {
+        // Skipping jump logic due to empty queues while using full file diff
+        await this.nextEditProvider.deleteChain();
+        chainExists = false;
+        resetChainInFullFileDiff = true;
+      }
 
       if (isJumping && chainExists) {
         // Case 2: Jumping (chain exists, jump was taken)
@@ -421,6 +436,7 @@ export class ContinueCompletionProvider
         }
       } else {
         // Case 1: Typing (chain does not exist).
+        // if resetChainInFullFileDiff is true then we are Rebuilding next edit chain after clearing empty queues in full file diff mode
         this.nextEditProvider.startChain();
 
         const input: AutocompleteInput = {
@@ -438,6 +454,15 @@ export class ContinueCompletionProvider
             signal,
             { withChain: false, usingFullFileDiff: this.usingFullFileDiff },
           );
+
+          if (
+            resetChainInFullFileDiff &&
+            (!outcome ||
+              (!outcome.completion && outcome.diffLines.length === 0))
+          ) {
+            // No next edit outcome after resetting chain; returning null
+            return null;
+          }
 
           // Start prefetching next edits if not using full file diff.
           // NOTE: this is better off not awaited. fire and forget.

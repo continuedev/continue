@@ -45,6 +45,76 @@ class IntelliJIDE(
     private val continuePluginService: ContinuePluginService,
 
     ) : IDE {
+    
+    // Security-focused ignore patterns - should always be excluded for security reasons
+    private val DEFAULT_SECURITY_IGNORE_FILETYPES = listOf(
+        // Environment and configuration files with secrets
+        "*.env", "*.env.*", ".env*", "config.json", "config.yaml", "config.yml",
+        "settings.json", "appsettings.json", "appsettings.*.json",
+        
+        // Certificate and key files
+        "*.key", "*.pem", "*.p12", "*.pfx", "*.crt", "*.cer", "*.jks",
+        "*.keystore", "*.truststore",
+        
+        // Database files that may contain sensitive data
+        "*.db", "*.sqlite", "*.sqlite3", "*.mdb", "*.accdb",
+        
+        // Credential and secret files
+        "*.secret", "*.secrets", "credentials", "credentials.*", "auth.json",
+        "token", "token.*", "*.token",
+        
+        // Backup files that might contain sensitive data
+        "*.bak", "*.backup", "*.old", "*.orig",
+        
+        // Docker secrets
+        "docker-compose.override.yml", "docker-compose.override.yaml",
+        
+        // SSH and GPG
+        "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "*.ppk", "*.gpg"
+    )
+    
+    private val DEFAULT_SECURITY_IGNORE_DIRS = listOf(
+        // Environment and configuration directories
+        ".env/", "env/",
+        
+        // Cloud provider credential directories
+        ".aws/", ".gcp/", ".azure/", ".kube/", ".docker/",
+        
+        // Secret directories
+        "secrets/", ".secrets/", "private/", ".private/", "certs/",
+        "certificates/", "keys/", ".ssh/", ".gnupg/", ".gpg/",
+        
+        // Temporary directories that might contain sensitive data
+        "tmp/secrets/", "temp/secrets/", ".tmp/"
+    )
+    
+    // Additional non-security patterns for general indexing exclusion
+    private val ADDITIONAL_SEARCH_IGNORE_FILETYPES = listOf(
+        "*.DS_Store", "*-lock.json", "*.lock", "*.log", "*.ttf", "*.png",
+        "*.jpg", "*.jpeg", "*.gif", "*.mp4", "*.svg", "*.ico", "*.pdf",
+        "*.zip", "*.gz", "*.tar", "*.dmg", "*.tgz", "*.rar", "*.7z",
+        "*.exe", "*.dll", "*.obj", "*.o", "*.o.d", "*.a", "*.lib",
+        "*.so", "*.dylib", "*.ncb", "*.sdf", "*.woff", "*.woff2",
+        "*.eot", "*.cur", "*.avi", "*.mpg", "*.mpeg", "*.mov", "*.mp3",
+        "*.mkv", "*.webm", "*.jar", "*.onnx", "*.parquet", "*.pqt",
+        "*.wav", "*.webp", "*.wasm", "*.plist", "*.profraw", "*.gcda",
+        "*.gcno", "go.sum", "*.gitignore", "*.gitkeep", "*.continueignore",
+        "*.csv", "*.uasset", "*.pdb", "*.bin", "*.pag", "*.swp", "*.jsonl"
+    )
+    
+    private val ADDITIONAL_SEARCH_IGNORE_DIRS = listOf(
+        ".git/", ".svn/", "node_modules/", "dist/", "build/", "Build/",
+        "target/", "out/", "bin/", ".pytest_cache/", ".vscode-test/",
+        "__pycache__/", "site-packages/", ".gradle/", ".mvn/", ".cache/",
+        "gems/", "vendor/", ".venv/", "venv/", ".vscode/", ".idea/", ".vs/",
+        ".continue/"
+    )
+    
+    // Combined patterns for use in ripgrep
+    private val DEFAULT_IGNORES = DEFAULT_SECURITY_IGNORE_FILETYPES + 
+                                DEFAULT_SECURITY_IGNORE_DIRS + 
+                                ADDITIONAL_SEARCH_IGNORE_FILETYPES + 
+                                ADDITIONAL_SEARCH_IGNORE_DIRS
 
     private val gitService = GitService(project, continuePluginService)
     private val fileUtils = FileUtils(project)
@@ -335,6 +405,9 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
+                // Create a single combined ignore pattern using glob brace expansion
+                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
+                
                 var commandArgs = mutableListOf<String>(
                     ripgrep,
                     "--files",
@@ -343,7 +416,9 @@ class IntelliJIDE(
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
-                    ".gitignore"
+                    ".gitignore",
+                    "--glob",
+                    "!{${defaultIgnorePattern}}" 
                 )
                 if (maxResults != null) {
                     commandArgs.add("--max-count")
@@ -370,6 +445,9 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
+                // Create a single combined ignore pattern for ripgrep
+                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
+                
                 val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
@@ -379,7 +457,9 @@ class IntelliJIDE(
                     ".gitignore",
                     "-C",
                     "2",
-                    "--heading"
+                    "--heading",
+                    "--glob",
+                    "!{${defaultIgnorePattern}}" // Exclude all default ignores using brace expansion
                 )
 
                 // Conditionally add maxResults flag
