@@ -1,9 +1,9 @@
 import {
-  claudeLikeConfigFileSchema,
+  claudeCodeLikeConfigFileSchema,
+  claudeDesktopLikeConfigFileSchema,
   ConfigValidationError,
   convertJsonMcpConfigToYamlMcpConfig,
   McpJsonConfig,
-  mcpServerConfigFileSchema,
   mcpServersJsonSchema,
   RequestOptions,
 } from "@continuedev/config-yaml";
@@ -97,24 +97,43 @@ export async function loadJsonMcpConfigs(
     try {
       const json = JSONC.parse(content);
       // Try parsing as a file with mcpServers and multiple servers (claude code/desktop-esque format)
-      const claudeCodeFileParsed = claudeLikeConfigFileSchema.safeParse(json);
+      const claudeCodeFileParsed =
+        claudeCodeLikeConfigFileSchema.safeParse(json);
       if (claudeCodeFileParsed.success) {
-        const projectServers = Object.values(
-          claudeCodeFileParsed.data.projects,
-        ).map((v) => v.mcpServers);
-        for (const mcpServers of projectServers) {
+        if (claudeCodeFileParsed.data.mcpServers) {
           validJsonConfigs.push(
-            ...Object.entries(mcpServers).map(([name, mcpJson]) => ({
-              name,
-              mcpJson,
-              uri,
-            })),
+            ...Object.entries(claudeCodeFileParsed.data.mcpServers).map(
+              ([name, mcpJson]) => ({
+                name,
+                mcpJson,
+                uri,
+              }),
+            ),
           );
+        }
+        if (claudeCodeFileParsed.data.projects) {
+          const projectServers = Object.values(
+            claudeCodeFileParsed.data.projects,
+          ).map((v) => v.mcpServers);
+          for (const mcpServers of projectServers) {
+            if (mcpServers) {
+              validJsonConfigs.push(
+                ...Object.entries(mcpServers).map(([name, mcpJson]) => ({
+                  name,
+                  mcpJson,
+                  uri,
+                })),
+              );
+            }
+          }
         }
       } else {
         const claudeDesktopFileParsed =
-          mcpServerConfigFileSchema.safeParse(json);
-        if (claudeDesktopFileParsed.success) {
+          claudeDesktopLikeConfigFileSchema.safeParse(json);
+        if (
+          claudeDesktopFileParsed.success &&
+          claudeDesktopFileParsed.data.mcpServers
+        ) {
           validJsonConfigs.push(
             ...Object.entries(claudeDesktopFileParsed.data.mcpServers).map(
               ([name, mcpJson]) => ({

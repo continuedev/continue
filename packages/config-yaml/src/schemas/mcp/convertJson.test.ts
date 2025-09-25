@@ -5,7 +5,7 @@ import {
 } from "./convertJson.js";
 import type { HttpMcpServer, SseMcpServer, StdioMcpServer } from "./index.js";
 import {
-  mcpServerConfigFileSchema,
+  claudeDesktopLikeConfigFileSchema,
   mcpServersJsonSchema,
   type HttpMcpJsonConfig,
   type McpServersJsonConfigFile,
@@ -565,7 +565,9 @@ describe("converMcpServersJsonConfigFileToYamlBlocks", () => {
         },
       },
     });
-    const parsed = mcpServerConfigFileSchema.parse(JSON.parse(jsonString));
+    const parsed = claudeDesktopLikeConfigFileSchema.parse(
+      JSON.parse(jsonString),
+    );
 
     const result = converMcpServersJsonConfigFileToYamlBlocks(parsed);
 
