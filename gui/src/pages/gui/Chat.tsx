@@ -441,11 +441,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >
