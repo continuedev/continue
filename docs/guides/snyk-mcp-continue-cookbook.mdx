@@ -152,10 +152,14 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Hub](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
+</Info>
+
+<Info>
   **Where to run these workflows:**
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for one-off commands
+  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
 
   **Test in Plan Mode First**: Before running security scans that might make
   changes, test your prompts in plan mode (see the [Plan Mode
