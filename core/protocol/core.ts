@@ -14,6 +14,7 @@ import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
+  BaseSessionMetadata,
   BrowserSerializedContinueConfig,
   ChatMessage,
   CompiledMessagesResult,
@@ -35,7 +36,6 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  BaseSessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -49,10 +49,7 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import {
-  FreeTrialStatus,
-  RemoteSessionMetadata,
-} from "../control-plane/client";
+import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 
@@ -311,11 +308,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
-  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
-  "controlPlane/getModelsAddOnUpgradeUrl": [
-    { vsCodeUriScheme?: string },
-    { url: string } | null,
-  ];
+  "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
