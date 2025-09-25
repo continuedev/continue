@@ -1,5 +1,5 @@
 import { Tool, ToolCallState } from "core";
-import * as Mustache from "mustache";
+import Mustache from "mustache";
 import { useContext } from "react";
 import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
