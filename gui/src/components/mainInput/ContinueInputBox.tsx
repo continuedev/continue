@@ -1,5 +1,10 @@
 import { Editor, JSONContent } from "@tiptap/react";
-import { ContextItemWithId, InputModifiers, RuleWithSource } from "core";
+import {
+  ContextItemWithId,
+  InputModifiers,
+  RuleWithSource,
+  SlashCommandSource,
+} from "core";
 import { memo, useMemo } from "react";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
@@ -38,12 +43,13 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "repo-map",
 ];
 
-const EDIT_ALLOWED_SLASH_COMMAND_SOURCES = [
+const EDIT_ALLOWED_SLASH_COMMAND_SOURCES: SlashCommandSource[] = [
   "yaml-prompt-block",
   "mcp-prompt",
   "prompt-file-v1",
   "prompt-file-v2",
   "invokable-rule",
+  "json-custom-command",
 ];
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
@@ -60,7 +66,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const filteredSlashCommands = useMemo(() => {
     if (isInEdit) {
       return availableSlashCommands.filter((cmd) =>
-        cmd.source ? EDIT_ALLOWED_SLASH_COMMAND_SOURCES.includes(cmd.source) : false
+        cmd.slashCommandSource
+          ? EDIT_ALLOWED_SLASH_COMMAND_SOURCES.includes(cmd.slashCommandSource)
+          : false,
       );
     }
     return availableSlashCommands;

@@ -1,4 +1,4 @@
-import { ContextProviderDescription } from "core";
+import { ContextProviderDescription, SlashCommandSource } from "core";
 
 export type ComboBoxItemType =
   | "contextProvider"
@@ -26,5 +26,5 @@ export interface ComboBoxItem {
   icon?: string;
   action?: () => void;
   subActions?: ComboBoxSubAction[];
-  source?: string;
+  slashCommandSource?: SlashCommandSource;
 }
