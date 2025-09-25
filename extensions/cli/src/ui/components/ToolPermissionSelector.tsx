@@ -64,13 +64,12 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 }) => {
   const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [hasShownDangerousCommandWarningOnce] = useState(() => {
-    const prev = hasShownDangerousCommandWarning;
-    hasShownDangerousCommandWarning = true;
-    return prev;
-  });
+  const [initialHasShownDangerousCommand] = useState(
+    hasShownDangerousCommandWarning,
+  );
+  hasShownDangerousCommandWarning = false;
   const showDynamicWarning =
-    hasDynamicEvaluation && !hasShownDangerousCommandWarningOnce;
+    hasDynamicEvaluation && !initialHasShownDangerousCommand;
 
   useInput((input, key) => {
     if (key.return) {
