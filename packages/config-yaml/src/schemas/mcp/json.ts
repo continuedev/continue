@@ -36,3 +36,15 @@ export const mcpServerConfigFileSchema = z.object({
 export type McpServersJsonConfigFile = z.infer<
   typeof mcpServerConfigFileSchema
 >;
+
+export const claudeLikeConfigFileSchema = z.object({
+  projects: z.record(
+    z.string(),
+    z.object({
+      mcpServers: mcpServersRecordSchema,
+    }),
+  ),
+});
+export type ClaudeLikeConfigFileSchema = z.infer<
+  typeof claudeLikeConfigFileSchema
+>;

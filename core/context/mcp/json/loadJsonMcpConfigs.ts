@@ -1,4 +1,5 @@
 import {
+  claudeLikeConfigFileSchema,
   ConfigValidationError,
   convertJsonMcpConfigToYamlMcpConfig,
   McpJsonConfig,
@@ -15,6 +16,7 @@ import {
   DEFAULT_IGNORE_FILETYPES,
 } from "../../../indexing/ignore";
 import { walkDir } from "../../../indexing/walkDir";
+import { deduplicateArray } from "../../../util";
 import { getGlobalFolderWithName } from "../../../util/paths";
 import { localPathToUri } from "../../../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../../../util/uri";
@@ -94,34 +96,49 @@ export async function loadJsonMcpConfigs(
   for (const { content, uri } of jsonFiles) {
     try {
       const json = JSONC.parse(content);
-      const claudeFileParsed = mcpServerConfigFileSchema.safeParse(json);
-
-      // Try parsing as a file with mcpServers and multiple servers (claude-esque format)
-      if (claudeFileParsed.success) {
-        validJsonConfigs.push(
-          ...Object.entries(claudeFileParsed.data.mcpServers).map(
-            ([name, mcpJson]) => ({
+      // Try parsing as a file with mcpServers and multiple servers (claude code/desktop-esque format)
+      const claudeCodeFileParsed = claudeLikeConfigFileSchema.safeParse(json);
+      if (claudeCodeFileParsed.success) {
+        const projectServers = Object.values(
+          claudeCodeFileParsed.data.projects,
+        ).map((v) => v.mcpServers);
+        for (const mcpServers of projectServers) {
+          validJsonConfigs.push(
+            ...Object.entries(mcpServers).map(([name, mcpJson]) => ({
               name,
               mcpJson,
               uri,
-            }),
-          ),
-        );
-        claudeFileParsed.data;
+            })),
+          );
+        }
       } else {
-        // Try parsing as single JSON file
-        const singleConfigParsed = mcpServersJsonSchema.safeParse(json);
-        if (singleConfigParsed.success) {
-          validJsonConfigs.push({
-            mcpJson: singleConfigParsed.data,
-            name: getUriPathBasename(uri).replace(".json", ""),
-            uri,
-          });
+        const claudeDesktopFileParsed =
+          mcpServerConfigFileSchema.safeParse(json);
+        if (claudeDesktopFileParsed.success) {
+          validJsonConfigs.push(
+            ...Object.entries(claudeDesktopFileParsed.data.mcpServers).map(
+              ([name, mcpJson]) => ({
+                name,
+                mcpJson,
+                uri,
+              }),
+            ),
+          );
         } else {
-          errors.push({
-            fatal: false,
-            message: `MCP JSON file at ${uri} doesn't match a supported MCP JSON configuration format`,
-          });
+          // Try parsing as single JSON file
+          const singleConfigParsed = mcpServersJsonSchema.safeParse(json);
+          if (singleConfigParsed.success) {
+            validJsonConfigs.push({
+              mcpJson: singleConfigParsed.data,
+              name: getUriPathBasename(uri).replace(".json", ""),
+              uri,
+            });
+          } else {
+            errors.push({
+              fatal: false,
+              message: `MCP JSON file at ${uri} doesn't match a supported MCP JSON configuration format`,
+            });
+          }
         }
       }
     } catch (e) {
@@ -132,8 +149,14 @@ export async function loadJsonMcpConfigs(
     }
   }
 
+  // De-duplicate
+  const deduplicatedJsonConfigs = deduplicateArray(
+    validJsonConfigs,
+    (a, b) => a.name === b.name,
+  );
+
   // Two levels of conversion for now.
-  const yamlConfigs = validJsonConfigs.map((c) => {
+  const yamlConfigs = deduplicatedJsonConfigs.map((c) => {
     const { warnings, yamlConfig } = convertJsonMcpConfigToYamlMcpConfig(
       c.name,
       c.mcpJson,
