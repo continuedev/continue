@@ -24,6 +24,11 @@
             ]
           },
           {
+            "group": "CLI",
+            "icon": "terminal",
+            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+          },
+          {
             "group": "Features",
             "icon": "star",
             "pages": [
@@ -230,6 +235,7 @@
             "pages": [
               "guides/overview",
               "guides/understanding-agents",
+              "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/continuous-ai",

@@ -213,7 +213,7 @@ export abstract class BaseLLM implements ILLM {
       this.providerName === "continue-proxy"
         ? this.model?.split("/").pop() || this.model
         : this.model;
-    const llmInfo = findLlmInfo(modelSearchString);
+    const llmInfo = findLlmInfo(modelSearchString, this.underlyingProviderName);
 
     const templateType =
       options.template ?? autodetectTemplateType(options.model);

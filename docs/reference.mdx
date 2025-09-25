@@ -1,136 +1,23 @@
 ---
 title: "config.yaml Reference"
-description: "Comprehensive guide to the config.yaml format used by Continue.dev for building custom coding agents. Learn how to define models, context providers, rules, prompts, and more using reusable blocks and YAML configuration."
+description: "Comprehensive guide to the config.yaml format used by Continue.dev for building custom coding agents. Learn how to define models, context providers, rules, prompts, and more using YAML configuration."
 ---
 
 ## Introduction
 
-Continue hub agents are defined using the `config.yaml` specification. Agents can be loaded from [the Hub](https://hub.continue.dev/explore/agents) or locally
+Continue Agents are defined using the `config.yaml` specification.
 
-- [Continue Hub](https://hub.continue.dev/explore/agents) - YAML is stored on the hub and automatically synced to the extension
+**Agents** are composed of models, rules, and tools (MCP servers).
 
-- Locally
-  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/agents`. The name of the file will be used as the display name of the agent, e.g. `My Agent.yaml`
-  - in your workspace in a `/.continue/agents` folder, with the same naming convention
+<Columns cols={2}>
+<Card title="Configuring Models, Rules, and Tools" icon="cube" href="/guides/configuring-models-rules-tools">
+Learn how to work with Continue's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
+</Card>
 
-<Info>
-  Config YAML replaces `config.json`, which is deprecated. View the **[Migration
-  Guide](/reference/yaml-migration)**.
-</Info>
-
-An agent is made up of:
-
-1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the agent
-2. **Block lists**, which are composable arrays of coding agent building blocks available to the agent, such as models, docs, and context providers.
-
-A block is a single standalone building block of a coding agents, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as agents (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
-
-Examples of blocks and agents can be found on the [Continue Hub](https://hub.continue.dev).
-
-Agents can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
-
-### Using Blocks
-
-Hub blocks and agents are identified with a slug in the format `owner-slug/block-or-agent-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
-
-Blocks can be imported into an agent by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
-
-For example, the following agent imports an Anthropic model and defines an Ollama DeepSeek one.
-
-Agent models section
-
-```yaml
-name: Team Agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: anthropic/claude-3.5-sonnet # an imported model block
-  - model: deepseek-reasoner # an explicit model block
-    provider: ollama
-```
-
-### Local Blocks
-
-It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all agents when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
-
-Place your YAML files in the following folders:
-
-Agents:
-
-- `.continue/agents` - for agents
-
-Blocks:
-
-- `.continue/rules` - for rules
-- `.continue/models` - for models
-- `.continue/prompts` - for prompts
-- `.continue/context` - for context providers
-- `.continue/docs` - for docs
-- `.continue/data` - for data
-- `.continue/mcpServers` - for MCP Servers
-
-You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
-
-<Info>
-Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
-
-- globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
-- per-workspace, from a `.env` file located at the root of the current workspace.
-
-</Info>
-
-### Inputs
-
-Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
-
-```yaml title="config.yaml"
-name: myprofile/custom-model
-version: 1.0.0
-schema: v1
-
-models:
-  - name: My Favorite Model
-    provider: anthropic
-    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
-    defaultCompletionOptions:
-      temperature: ${{ inputs.TEMP }}
-```
-
-Which can then be imported like this:
-
-```yaml title="config.yaml"
-name: myprofile/custom-agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: myprofile/custom-model
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
-      TEMP: 0.9
-```
-
-Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
-
-### Overrides
-
-Block properties can be also be directly overriden using `override`. For example:
-
-```yaml title="config.yaml"
-name: myprofile/custom-agent
-version: 1.0.0
-schema: v1
-
-models:
-  - uses: myprofile/custom-model
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
-      TEMP: 0.9
-    override:
-      roles:
-        - chat
-```
+<Card title="Understanding Agents" icon="robot" href="/guides/understanding-agents">
+Learn how to build and configure agents, understand their capabilities, and customize them for your development workflow.
+</Card>
+</Columns>
 
 ## Properties
 
@@ -566,3 +453,9 @@ models:
       maxPromptTokens: 1024
       onlyMyCode: true
 ```
+
+---
+
+## `config.json` Deprecation
+
+`config.yaml `replaces `config.json`, which is deprecated. View the **[Migration Guide](/reference/yaml-migration)** for help transitioning from the old format.
