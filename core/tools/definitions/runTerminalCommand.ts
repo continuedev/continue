@@ -33,14 +33,15 @@ function getPlatformCommandGuidance(): string {
     return `CRITICAL: Commands are executed via PowerShell. Use PowerShell syntax:
       - Multiple commands: Use semicolons (;) NOT && or ||
         Example: "cd folder; mkdir subfolder; ls"
-      - Create directories: Use comma-separated list
-        Example: "mkdir dir1, dir2, dir3"
-      - Path separators: Use forward slashes or backslashes, avoid ./
-        Example: "cd subfolder" not "cd ./subfolder"
+      - Create directories: Use comma-separated list or New-Item
+        Example: "mkdir dir1, dir2, dir3" or "New-Item -ItemType Directory dir1, dir2"
+      - Path navigation: Both "./" and relative paths work
+        Example: "cd subfolder" or "cd ./subfolder" both work
       - Environment variables: Use $env:VARIABLE
         Example: "echo $env:USERPROFILE"
-      - Common PowerShell commands work: cd, ls, pwd, mkdir, rm, cp, mv
-      - Avoid bash-specific syntax like && || > < | in complex expressions`;
+      - Common aliases work: cd, ls, pwd, mkdir, rm, cp, mv
+      - Native PowerShell: Get-ChildItem, New-Item, Remove-Item, Copy-Item, Move-Item
+      - Redirection works: > >> < | but prefer PowerShell cmdlets for complex operations`;
   } else {
     return `Commands are executed via ${getPreferredShell()}. Use standard Unix shell syntax:
       - Multiple commands: Use && or ; for chaining
@@ -71,7 +72,7 @@ export const runTerminalCommandTool: Tool = {
     name: BuiltInToolNames.RunTerminalCommand,
     description: `Run a terminal command in the current directory.\n${RUN_COMMAND_NOTES}`,
     parameters: {
-            type: "object",
+      type: "object",
       required: ["command"],
       properties: {
         command: {
@@ -95,7 +96,7 @@ export const runTerminalCommandTool: Tool = {
   ): ToolPolicy => {
     return evaluateTerminalCommandSecurity(
       basePolicy,
-            parsedArgs.command as string,
+      parsedArgs.command as string,
     );
   },
   systemMessageDescription: {
@@ -103,8 +104,8 @@ export const runTerminalCommandTool: Tool = {
 ${RUN_COMMAND_NOTES}
 You can also optionally include the waitForCompletion argument set to false to run the command in the background.      
 For example, to see the git log, you could respond with:`,
-    exampleArgs: os.platform() === "win32" 
-      ? [["command", "git log"], ["command", "cd src; ls; pwd"], ["command", "mkdir components, utils, types"]]
+    exampleArgs: os.platform() === "win32"
+      ? [["command", "git log"], ["command", "cd src; ls; pwd"], ["command", "mkdir components, utils, types"], ["command", "Get-ChildItem -Recurse *.js"]]
       : [["command", "git log"], ["command", "cd src && ls && pwd"], ["command", "mkdir components utils types"]],
   },
 };
