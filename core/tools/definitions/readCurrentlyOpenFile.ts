@@ -24,4 +24,5 @@ export const readCurrentlyOpenFileTool: Tool = {
     prefix: `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
 If the user is asking about a file and you don't see any code, use this to check the current file`,
   },
+  toolCallIcon: "DocumentTextIcon",
 };

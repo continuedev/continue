@@ -1,10 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  calculateLinesOfCodeDiff,
+  getLanguageFromFilePath,
+} from "../telemetry/utils.js";
 
 import { multiEditTool } from "./multiEdit.js";
 import { markFileAsRead } from "./readFile.js";
+import { generateDiff } from "./writeFile.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
@@ -15,6 +22,7 @@ vi.mock("../telemetry/utils.js", () => ({
 vi.mock("./writeFile.js", () => ({
   generateDiff: vi.fn().mockReturnValue("mocked diff"),
 }));
+
 vi.mock("fs", async () => {
   const actual = await vi.importActual("fs");
   return {
@@ -27,7 +35,7 @@ vi.mock("fs", async () => {
   };
 });
 
-describe("multiEditTool", () => {
+describe("multiEditTool CLI specific", () => {
   const testFilePath = "/tmp/test-multi-edit-file.txt";
   const originalContent = "Hello world\nThis is a test file\nGoodbye world";
 
@@ -38,13 +46,21 @@ describe("multiEditTool", () => {
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
     vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
+
+    // Setup utility mocks with proper return values
+    vi.mocked(calculateLinesOfCodeDiff).mockReturnValue({
+      added: 1,
+      removed: 0,
+    });
+    vi.mocked(getLanguageFromFilePath).mockReturnValue("javascript");
+    vi.mocked(generateDiff).mockReturnValue("mocked diff");
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("preprocess", () => {
+  describe("file system validation", () => {
     it("should throw error if file has not been read", async () => {
       const args = {
         file_path: testFilePath,
@@ -56,9 +72,9 @@ describe("multiEditTool", () => {
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `You must use the Read tool to read ${testFilePath} before editing it.`,
-      );
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.EditToolFileNotRead);
     });
 
     it("should throw error if file does not exist", async () => {
@@ -76,117 +92,31 @@ describe("multiEditTool", () => {
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `File ${nonExistentFile} does not exist`,
-      );
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileNotFound);
     });
 
-    it("should throw error if edits array is empty", async () => {
-      markFileAsRead(testFilePath);
-
+    it("should throw error if file_path is missing", async () => {
       const args = {
-        file_path: testFilePath,
-        edits: [],
-      };
-
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "edits array is required and must contain at least one edit",
-      );
-    });
-
-    it("should throw error if edit has missing old_string", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
         edits: [
           {
-            old_string: undefined as any,
-            new_string: "Hi there",
+            old_string: "Hello",
+            new_string: "Hi",
           },
         ],
       };
 
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: old_string is required",
+      const error = await multiEditTool.preprocess!(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(
+        ContinueErrorReason.FindAndReplaceMissingFilepath,
       );
     });
+  });
 
-    it("should throw error if edit has missing new_string", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "Hello world",
-            new_string: undefined as any,
-          },
-        ],
-      };
-
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: new_string is required",
-      );
-    });
-
-    it("should throw error if old_string and new_string are the same", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "Hello world",
-            new_string: "Hello world",
-          },
-        ],
-      };
-
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: old_string and new_string must be different",
-      );
-    });
-
-    it("should throw error if old_string is not found", async () => {
-      markFileAsRead(testFilePath);
-      vi.mocked(fs.readFileSync).mockReturnValue("Different content");
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "Not found",
-            new_string: "Hi there",
-          },
-        ],
-      };
-
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        'Edit 1: String not found in file: "Not found"',
-      );
-    });
-
-    it("should throw error if old_string appears multiple times and replace_all is false", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "world",
-            new_string: "universe",
-            replace_all: false,
-          },
-        ],
-      };
-
-      await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        'Edit 1: String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
-      );
-    });
-
-    it("should successfully preprocess single edit", async () => {
+  describe("preprocess CLI specific", () => {
+    it("should generate preview with diff", async () => {
       markFileAsRead(testFilePath);
 
       const args = {
@@ -201,119 +131,15 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.preprocess!(args);
 
-      expect(result.args).toEqual({
-        file_path: testFilePath,
-        newContent: "Hi there\nThis is a test file\nGoodbye world",
-        originalContent: originalContent,
-        isCreatingNewFile: false,
-        editCount: 1,
-      });
       expect(result.preview).toHaveLength(2);
       expect(result.preview?.[0]).toEqual({
         type: "text",
-        content: "Will apply 1 edit to modify /tmp/test-multi-edit-file.txt:",
+        content: "Will apply 1 edit to /tmp/test-multi-edit-file.txt:",
       });
       expect(result.preview?.[1]).toEqual({
         type: "diff",
         content: "mocked diff",
       });
-    });
-
-    it("should successfully preprocess multiple edits", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "Hello world",
-            new_string: "Hi there",
-          },
-          {
-            old_string: "Goodbye world",
-            new_string: "See you later",
-          },
-        ],
-      };
-
-      const result = await multiEditTool.preprocess!(args);
-
-      expect(result.args.newContent).toBe(
-        "Hi there\nThis is a test file\nSee you later",
-      );
-      expect(result.args.editCount).toBe(2);
-      expect(result.preview?.[0]?.content).toContain("Will apply 2 edits");
-    });
-
-    it("should successfully preprocess replace_all edit", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "world",
-            new_string: "universe",
-            replace_all: true,
-          },
-        ],
-      };
-
-      const result = await multiEditTool.preprocess!(args);
-
-      expect(result.args.newContent).toBe(
-        "Hello universe\nThis is a test file\nGoodbye universe",
-      );
-    });
-
-    it("should handle new file creation with empty old_string", async () => {
-      const newFilePath = "/tmp/new-file.txt";
-      vi.mocked(fs.existsSync).mockImplementation((path) => {
-        // Parent directory exists, but file doesn't
-        if (path === "/tmp") return true;
-        if (path === newFilePath) return false;
-        return true;
-      });
-
-      const args = {
-        file_path: newFilePath,
-        edits: [
-          {
-            old_string: "",
-            new_string: "New file content\nSecond line",
-          },
-        ],
-      };
-
-      const result = await multiEditTool.preprocess!(args);
-
-      expect(result.args.newContent).toBe("New file content\nSecond line");
-      expect(result.args.isCreatingNewFile).toBe(true);
-      expect(result.preview?.[0]?.content).toContain("create");
-    });
-
-    it("should apply edits sequentially", async () => {
-      markFileAsRead(testFilePath);
-
-      const args = {
-        file_path: testFilePath,
-        edits: [
-          {
-            old_string: "Hello world",
-            new_string: "Hi universe",
-          },
-          {
-            old_string: "Hi universe",
-            new_string: "Greetings cosmos",
-          },
-        ],
-      };
-
-      const result = await multiEditTool.preprocess!(args);
-
-      expect(result.args.newContent).toBe(
-        "Greetings cosmos\nThis is a test file\nGoodbye world",
-      );
     });
   });
 
@@ -324,7 +150,6 @@ describe("multiEditTool", () => {
         file_path: testFilePath,
         newContent,
         originalContent: originalContent,
-        isCreatingNewFile: false,
         editCount: 1,
       };
 
@@ -345,7 +170,6 @@ describe("multiEditTool", () => {
         file_path: testFilePath,
         newContent: "New content",
         originalContent: originalContent,
-        isCreatingNewFile: false,
         editCount: 3,
       };
 
@@ -353,22 +177,6 @@ describe("multiEditTool", () => {
 
       expect(result).toBe(
         `Successfully edited ${testFilePath} with 3 edits\nDiff:\nmocked diff`,
-      );
-    });
-
-    it("should return correct message for new file creation", async () => {
-      const args = {
-        file_path: "/tmp/new-file.txt",
-        newContent: "New file content",
-        originalContent: "",
-        isCreatingNewFile: true,
-        editCount: 1,
-      };
-
-      const result = await multiEditTool.run(args);
-
-      expect(result).toBe(
-        `Successfully created /tmp/new-file.txt with 1 edit\nDiff:\nmocked diff`,
       );
     });
 
@@ -381,13 +189,12 @@ describe("multiEditTool", () => {
         file_path: testFilePath,
         newContent: "new content",
         originalContent: originalContent,
-        isCreatingNewFile: false,
         editCount: 1,
       };
 
-      await expect(multiEditTool.run(args)).rejects.toThrow(
-        `Error: failed to edit ${testFilePath}: Write failed`,
-      );
+      const error = await multiEditTool.run(args).catch((e) => e);
+      expect(error).toBeInstanceOf(ContinueError);
+      expect(error.reason).toBe(ContinueErrorReason.FileWriteError);
     });
   });
 
@@ -473,34 +280,6 @@ describe("multiEditTool", () => {
 
       expect(result.args.file_path).toBe(absolutePath);
     });
-
-    it("should handle relative path for new file creation", async () => {
-      const relativePath = "new-file.txt";
-      const absolutePath = path.resolve(process.cwd(), relativePath);
-
-      vi.mocked(fs.existsSync).mockImplementation((path) => {
-        // Parent directory (cwd) exists, but file doesn't
-        if (path === process.cwd()) return true;
-        if (path === absolutePath) return false;
-        return true;
-      });
-
-      const args = {
-        file_path: relativePath,
-        edits: [
-          {
-            old_string: "",
-            new_string: "New file content",
-          },
-        ],
-      };
-
-      const result = await multiEditTool.preprocess!(args);
-
-      expect(result.args.file_path).toBe(absolutePath);
-      expect(result.args.newContent).toBe("New file content");
-      expect(result.args.isCreatingNewFile).toBe(true);
-    });
   });
 
   describe("markFileAsRead", () => {
@@ -518,7 +297,9 @@ describe("multiEditTool", () => {
       };
 
       const result = await multiEditTool.preprocess!(args);
-      expect(result.args.newContent).toContain("Hi there");
+      expect(result.args.newContent).toBe(
+        "Hi there\nThis is a test file\nGoodbye world",
+      );
     });
   });
 });

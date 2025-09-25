@@ -244,6 +244,7 @@ export class ApplyManager {
         newCode: text,
         toolCallId,
         rulesToInclude: undefined, // No rules for apply
+        isApply: true,
       });
     } else {
       // Non-streaming: accumulate LLM output, then apply via Myers diff
@@ -295,17 +296,23 @@ export class ApplyManager {
       const streamedLines: string[] = [];
 
       // Use streamDiffLines to get the LLM output
-      const stream = streamDiffLines({
-        highlighted: rangeContent,
-        prefix,
-        suffix,
+      const stream = streamDiffLines(
+        {
+          highlighted: rangeContent,
+          prefix,
+          suffix,
+          input: prompt,
+          language: getMarkdownLanguageTagForFile(fileUri),
+          type: "apply",
+          newCode,
+          includeRulesInSystemMessage: false,
+          modelTitle: llm.title ?? llm.model,
+        },
         llm,
-        rulesToInclude: undefined, // No rules for apply
-        input: prompt,
-        language: getMarkdownLanguageTagForFile(fileUri),
-        overridePrompt: undefined,
         abortController,
-      });
+        undefined,
+        undefined,
+      );
 
       // Accumulate all the streamed content
       for await (const line of stream) {

@@ -144,10 +144,13 @@ describe("fetchTool", () => {
     expect(fetchTool.readonly).toBe(true);
     expect(fetchTool.isBuiltIn).toBe(true);
     expect(fetchTool.parameters).toEqual({
-      url: {
-        type: "string",
-        description: "The URL to fetch content from",
-        required: true,
+      type: "object",
+      required: ["url"],
+      properties: {
+        url: {
+          type: "string",
+          description: "The URL to fetch content from",
+        },
       },
     });
   });

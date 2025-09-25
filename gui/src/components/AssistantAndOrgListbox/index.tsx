@@ -2,9 +2,7 @@ import {
   ArrowPathIcon,
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
-  PencilIcon,
   PlusIcon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
@@ -155,7 +153,7 @@ export function AssistantAndOrgListbox({
             className="max-h-32 -translate-x-1.5 overflow-y-auto pb-0"
             style={{ zIndex: 200 }}
           >
-            <div className="flex items-center justify-between p-2">
+            <div className="flex items-center justify-between px-1.5 py-1">
               <span className="text-description text-xs font-medium">
                 Agents
               </span>
@@ -193,7 +191,7 @@ export function AssistantAndOrgListbox({
             {shouldRenderOrgInfo && (
               <>
                 <Divider className="!mb-0.5 !mt-0" />
-                <div className="flex items-center justify-between p-2">
+                <div className="flex items-center justify-between px-1.5 py-1">
                   <span className="text-description text-xs font-medium">
                     Organizations
                   </span>
@@ -232,34 +230,6 @@ export function AssistantAndOrgListbox({
             {/* Settings Section */}
             {variant !== "sidebar" && (
               <div>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRulesConfig();
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
-                >
-                  <div className="flex w-full items-center">
-                    <PencilIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-2xs">Rules</span>
-                  </div>
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToolsConfig();
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
-                >
-                  <div className="flex w-full items-center">
-                    <WrenchScrewdriverIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-2xs">Tools</span>
-                  </div>
-                </Button>
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();

@@ -5,7 +5,6 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
-import * as readlineSync from "readline-sync";
 
 import { processPromptOrRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
@@ -16,6 +15,7 @@ import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,
 } from "./util/apiKeyValidation.js";
+import { question, questionWithChoices } from "./util/prompt.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
@@ -97,22 +97,24 @@ async function runOnboardingFlow(
   console.log(chalk.white("1. ⏩ Log in with Continue"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
 
-  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "), {
-    limit: ["1", "2", ""],
-    limitMessage: chalk.dim("Please enter 1 or 2"),
-  });
+  const choice = await questionWithChoices(
+    chalk.yellow("\nEnter choice (1): "),
+    ["1", "2", ""],
+    "1",
+    chalk.dim("Please enter 1 or 2"),
+  );
 
   if (choice === "1" || choice === "") {
     const newAuthConfig = await login();
 
-    const result = await initialize(newAuthConfig, undefined);
+    const { ensureOrganization } = await import("./auth/workos.js");
+    const finalAuthConfig = await ensureOrganization(newAuthConfig);
+
+    const result = await initialize(finalAuthConfig, undefined);
     return { ...result, wasOnboarded: true };
   } else if (choice === "2") {
-    const apiKey = readlineSync.question(
+    const apiKey = await question(
       chalk.white("\nEnter your Anthropic API key: "),
-      {
-        hideEchoBack: true,
-      },
     );
 
     if (!isValidAnthropicApiKey(apiKey)) {
