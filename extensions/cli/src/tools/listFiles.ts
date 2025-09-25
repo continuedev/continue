@@ -15,23 +15,15 @@ export const listFilesTool: Tool = {
     properties: {
       dirpath: {
         type: "string",
-        description:
-          "The path to the directory to list. Can use relative paths but not outside cwd (i.e. .. is not allowed)",
+        description: "The path to the directory to list",
       },
     },
   },
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
-    // Prevent "../"
-    const normalizedPath = path.normalize(args.dirpath);
-    if (normalizedPath.includes("..")) {
-      throw new Error(
-        'For security reasons, cannot use "../" in dirPath. Stay within the project.',
-      );
-    }
-
     // Resolve relative paths
+    const normalizedPath = path.normalize(args.dirpath);
     const dirPath = path.resolve(process.cwd(), normalizedPath);
 
     if (!fs.existsSync(dirPath)) {
