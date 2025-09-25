@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, Session, BaseSessionMetadata } from "core";
+import { BaseSessionMetadata, ChatMessage, Session } from "core";
 import { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
@@ -67,11 +67,7 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
     dispatch(deleteSessionMetadata(id)); // optimistic
     const state = getState();
     if (id === state.session.id) {
-      await dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
+      await dispatch(loadLastSession());
     }
     const result = await extra.ideMessenger.request("history/delete", { id });
     if (result.status === "error") {
@@ -146,19 +142,9 @@ export const loadRemoteSession = createAsyncThunk<
   },
 );
 
-export const loadLastSession = createAsyncThunk<
-  void,
-  {
-    saveCurrentSession: boolean;
-  },
-  ThunkApiType
->(
+export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
   "session/loadLast",
-  async ({ saveCurrentSession }, { extra, dispatch, getState }) => {
-    const state = getState();
-
-    if (state.session.id && saveCurrentSession) {
-    }
+  async (_, { extra, dispatch, getState }) => {
     const lastSessionId = getState().session.lastSessionId;
 
     if (!lastSessionId) {
