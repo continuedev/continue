@@ -20,9 +20,74 @@ Before starting, ensure you have:
 - [Snyk account](https://snyk.io/) (free tier works)
 - A local project to scan for vulnerabilities
 
+For all options, first:
 <Steps>
+<Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+<Step title="Add Your Project to Snyk">
+
+  1. Sign up for a Snyk account at [snyk.io](https://snyk.io/)
+  2. Create a new project in Snyk by importing your code repository (Git 
+  provider or manual upload)
+  </Step>
+</Steps>
+ <Warning>
+  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
+  </Warning>
+
+## Snyk Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built Snyk Continuous AI agent that includes
+  the Snyk MCP and optimized security scanning workflows for more consistent results.
+</Card>
+
+
+After ensuring you meet the **Prerequisites** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    <Steps>
+      <Step title="Load the Pre-Built Agent">
+        Navigate to your project directory and run:
+        ```bash
+        cn --config continuedev/snyk-continuous-ai
+        ```
+
+        This agent includes:
+        - **Snyk MCP** pre-configured and ready to use
+        - **Security-focused rules** for best practices
+      </Step>
+
+      <Step title="Run Your First Security Scan">
+        Start with a comprehensive security scan:
+        ```bash
+         # TUI mode
+        cn -p "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** The pre-built agent provides consistent security scanning workflows and handles MCP configuration automatically, making it easier to get started with AI-powered security scanning.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+<Steps>
+  <Step title="Create a New Agent via the Continue Hub">
+    Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+    </Step>
+
   <Step title="Connect Snyk MCP via Continue Hub">
-    Visit the [Snyk MCP on Continue Hub](https://hub.continue.dev/snyk/snyk-mcp) and click **Install** to add it to your Continue account.
+    Visit the [Snyk MCP on Continue Hub](https://hub.continue.dev/snyk/snyk-mcp) and click **Install** to add it to the agent you created in the step above.
 
     This will add Snyk MCP to your agent's available tools. The Hub listing automatically configures the MCP command:
     ```bash
@@ -31,7 +96,7 @@ Before starting, ensure you have:
 
     <Tip>
       **Alternative installation methods:**
-      1. **Quick CLI install**: `cn -p --mcp snyk/snyk-mcp`
+      1. **Quick CLI install**: `cn --mcp snyk/snyk-mcp`
       2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
 
       Once installed, Snyk MCP tools become available to your Continue agent for all prompts.
@@ -59,35 +124,42 @@ Before starting, ensure you have:
 
   </Step>
 
-  <Step title="Authenticate with Snyk">
-    Use this prompt with your Continue agent to set up authentication:
-
-    ```
-    Check Snyk auth status. If not authenticated, authenticate me and confirm my org context.
-    ```
-
-    Or use the Continue CLI:
+  <Step title="Run Your First Security Scan">
+    Start with a comprehensive security scan:
     ```bash
-    cn -p "Check Snyk auth status. If not authenticated, authenticate me and confirm my org context."
+    # TUI mode
+    cn "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity."
     ```
-
-    <Tip>
-      A browser window will open for Snyk login. After authenticating, approve
-      the request to trust your project folder when prompted.
-    </Tip>
-
   </Step>
 </Steps>
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either: 
+      - **Continue CLI Pro Plan** with the models add-on, OR 
+      - **Your own API keys** added to Continue Hub secrets (same as manual setup)
+      
+    The agent will automatically detect and use your configuration along with the pre-configured Snyk MCP for security scanning operations.
+
+</Accordion>
+
+---
 
 ## Security Scanning Recipes
 
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Hub](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
+</Info>
+
+<Info>
   **Where to run these workflows:**
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for one-off commands
+  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
 
   **Test in Plan Mode First**: Before running security scans that might make
   changes, test your prompts in plan mode (see the [Plan Mode
@@ -101,14 +173,14 @@ Now you can use natural language prompts to run comprehensive security scans. Th
 <Card title="Static Application Security Testing" icon="code">
   Scan your source code for security vulnerabilities and code quality issues.
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Run a Snyk Code scan on this repo with severity threshold medium.
 Summarize issues with file:line. Propose minimal diffs for the top 3
 and rerun to verify.
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify."
 ```
@@ -120,14 +192,14 @@ cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summari
 <Card title="Software Composition Analysis" icon="cube">
   Check open source dependencies for known vulnerabilities.
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Run Snyk Open Source on this repo (include dev deps).
 Summarize vulnerable paths and propose a minimal-risk upgrade plan.
 Re-test after the plan (dry run).
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)."
 ```
@@ -139,13 +211,13 @@ cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerabl
 <Card title="IaC Security" icon="cloud">
   Scan Terraform, CloudFormation, and Kubernetes configs for misconfigurations.
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Scan ./infra with Snyk IaC. Report high/critical misconfigs
 with exact files/lines. Provide code changes and re-scan to confirm.
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm."
 ```
@@ -157,14 +229,14 @@ cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact fi
 <Card title="Container Security" icon="docker">
   Analyze Docker images for vulnerabilities in base images and packages.
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Scan image my-api:latest. Exclude base image vulns.
 Print dependency tree. Recommend a safer base image or upgrades.
 Re-test after the change (dry run).
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)."
 ```
@@ -176,13 +248,13 @@ cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree
 <Card title="Changed Files Only" icon="code-branch">
   Focus scanning on modified files to catch issues before merging.
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Scan only files changed since origin/main with Snyk Code.
 Block if new high issues would be introduced. Show deltas.
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas."
 ```
@@ -194,12 +266,12 @@ cn -p "Scan only files changed since origin/main with Snyk Code. Block if new hi
 <Card title="Snyk Learn Integration" icon="graduation-cap">
   Access security education resources based on identified vulnerabilities ([CWE](https://cwe.mitre.org/)).
 
-**Example prompt:**
+**TUI Mode Prompt:**
 ```
 Open Snyk Learn lessons related to the top CWE(s) from this scan.
 ```
 
-**Using Continue CLI:**
+**Headless Mode Prompt:**
 ```bash
 cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan."
 ```
@@ -208,7 +280,7 @@ cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan."
 
 ## Continuous Security with GitHub Actions
 
-This example demonstrates a **Continuous AI workflow** where security scanning runs automatically in your CI/CD pipeline using Continue CLI in headless mode (`cn -p`) with Snyk MCP.
+This example demonstrates a **Continuous AI workflow** where security scanning runs automatically in your CI/CD pipeline Headless Mode Prompt in headless mode (`cn -p`) with Snyk MCP.
 
 ### Add GitHub Secrets
 
@@ -249,8 +321,10 @@ jobs:
           echo "✅ Continue CLI installed"
 
       - name: Authenticate Continue CLI
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          cn auth login --api-key "${{ secrets.CONTINUE_API_KEY }}"
+          cn auth login --api-key "$CONTINUE_API_KEY"
           echo "✅ Continue CLI authenticated"
 
       - name: Run Security Scans
