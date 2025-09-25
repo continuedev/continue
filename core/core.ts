@@ -879,7 +879,7 @@ export class Core {
       );
       if (colocatedRulesUris) {
         const rulesCache = CodebaseRulesCache.getInstance();
-        Promise.all(
+        void Promise.all(
           colocatedRulesUris.map((uri) => rulesCache.update(this.ide, uri)),
         ).then(() => {
           void this.configHandler.reloadConfig("Codebase rule file created");
@@ -911,7 +911,7 @@ export class Core {
 
       if (colocatedRulesUris) {
         const rulesCache = CodebaseRulesCache.getInstance();
-        Promise.all(
+        void Promise.all(
           colocatedRulesUris.map((uri) => rulesCache.remove(uri)),
         ).then(() => {
           void this.configHandler.reloadConfig("Codebase rule file deleted");
