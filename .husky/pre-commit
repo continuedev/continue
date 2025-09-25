@@ -1,1 +1,1 @@
-npx lint-staged --no-install
+npx lint-staged
