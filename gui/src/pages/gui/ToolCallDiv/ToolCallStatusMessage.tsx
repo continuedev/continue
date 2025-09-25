@@ -11,7 +11,6 @@ export function ToolCallStatusMessage({
   tool,
   toolCallState,
 }: ToolCallStatusMessageProps) {
-
   if (!tool) return "Agent tool use";
 
   const toolName = tool.displayTitle ?? tool.function.name;
