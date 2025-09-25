@@ -476,6 +476,7 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
           npx @continuedev/cli@latest << 'EOF'
           Deploy PR preview and run Lighthouse.
