@@ -70,7 +70,8 @@
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
     },
-    screenshot: "https://docs.continue.dev/images/intro-0c302b9c15b890c251b1ad04586c880f.png",
+    screenshot:
+      "https://docs.continue.dev/images/intro-0c302b9c15b890c251b1ad04586c880f.png",
     featureList: [
       "AI-powered code chat",
       "Intelligent autocomplete",
