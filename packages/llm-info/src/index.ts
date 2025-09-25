@@ -31,7 +31,19 @@ export const allLlms: LlmInfo[] = allModelProviders.flatMap((provider) =>
   provider.models.map((model) => ({ ...model, provider: provider.id })),
 );
 
-export function findLlmInfo(model: string): LlmInfo | undefined {
+export function findLlmInfo(
+  model: string,
+  preferProviderId?: string,
+): LlmInfo | undefined {
+  if (preferProviderId) {
+    const provider = allModelProviders.find((p) => p.id === preferProviderId);
+    const info = provider?.models.find((llm) =>
+      llm.regex ? llm.regex.test(model) : llm.model === model,
+    );
+    if (info) {
+      return info;
+    }
+  }
   return allLlms.find((llm) =>
     llm.regex ? llm.regex.test(model) : llm.model === model,
   );
