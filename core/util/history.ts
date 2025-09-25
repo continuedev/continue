@@ -94,6 +94,7 @@ export class HistoryManager {
         title: NEW_SESSION_TITLE,
         workspaceDirectory: "",
         sessionId: sessionId,
+        initiatedByUserAgent: undefined, // Backward compatibility
       };
     }
   }
@@ -107,6 +108,7 @@ export class HistoryManager {
       title: session.title,
       workspaceDirectory: session.workspaceDirectory,
       history: session.history,
+      initiatedByUserAgent: session.initiatedByUserAgent,
     };
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
@@ -135,18 +137,20 @@ export class HistoryManager {
         if (sessionMetadata.sessionId === session.sessionId) {
           sessionMetadata.title = session.title;
           sessionMetadata.workspaceDirectory = session.workspaceDirectory;
+          sessionMetadata.initiatedByUserAgent = session.initiatedByUserAgent;
           found = true;
           break;
         }
       }
 
       if (!found) {
-        const sessionMetadata: BaseSessionMetadata = {
-          sessionId: session.sessionId,
-          title: session.title,
-          dateCreated: String(Date.now()),
-          workspaceDirectory: session.workspaceDirectory,
-        };
+              const sessionMetadata: BaseSessionMetadata = {
+        sessionId: session.sessionId,
+        title: session.title,
+        dateCreated: String(Date.now()),
+        workspaceDirectory: session.workspaceDirectory,
+        initiatedByUserAgent: session.initiatedByUserAgent,
+      };
         sessionsList.push(sessionMetadata);
       }
 

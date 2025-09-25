@@ -92,12 +92,13 @@ class SessionManager {
         ? process.env.CONTINUE_CLI_TEST_SESSION_ID
         : uuidv4();
 
-      this.currentSession = {
-        sessionId,
-        title: DEFAULT_SESSION_TITLE,
-        workspaceDirectory: process.cwd(),
-        history: [],
-      };
+          this.currentSession = {
+      sessionId,
+      title: DEFAULT_SESSION_TITLE,
+      workspaceDirectory: process.cwd(),
+      history: [],
+      initiatedByUserAgent: "cli",
+    };
     }
     return this.currentSession;
   }
@@ -243,6 +244,7 @@ export function createSession(history: ChatHistoryItem[] = []): Session {
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    initiatedByUserAgent: "cli",
   };
   SessionManager.getInstance().setSession(session);
   return session;
@@ -322,6 +324,7 @@ function getSessionMetadataWithPreview(
       dateCreated: stats.birthtime.toISOString(),
       workspaceDirectory: sessionData.workspaceDirectory || "",
       firstUserMessage,
+      initiatedByUserAgent: sessionData.initiatedByUserAgent,
     };
   } catch (error) {
     logger.error(`Error reading session file ${filePath}:`, error);
@@ -478,6 +481,7 @@ export function startNewSession(history: ChatHistoryItem[] = []): Session {
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    initiatedByUserAgent: "cli",
   };
 
   manager.setSession(newSession);

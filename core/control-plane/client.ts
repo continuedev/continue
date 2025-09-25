@@ -380,6 +380,7 @@ export class ControlPlaneClient {
           workspaceDirectory: "",
           isRemote: true,
           remoteId: agent.id,
+          initiatedByUserAgent: "cli", // Remote sessions are CLI-initiated
         }),
       );
     } catch (e) {

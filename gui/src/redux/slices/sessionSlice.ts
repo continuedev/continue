@@ -674,6 +674,8 @@ export const sessionSlice = createSlice({
         state.history = [];
         state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
+        // New sessions created in the extension default to extension user agent
+        // This will be overridden if loading an existing session with different value
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {

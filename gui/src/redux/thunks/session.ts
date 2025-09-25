@@ -251,6 +251,7 @@ export const saveCurrentSession = createAsyncThunk<
       title,
       workspaceDirectory: window.workspacePaths?.[0] || "",
       history: state.session.history,
+      initiatedByUserAgent: "extension",
     };
 
     const result = await dispatch(updateSession(session));

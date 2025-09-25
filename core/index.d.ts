@@ -270,6 +270,7 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
+  initiatedByUserAgent?: "cli" | "extension";
 }
 
 export interface BaseSessionMetadata {
@@ -277,6 +278,7 @@ export interface BaseSessionMetadata {
   title: string;
   dateCreated: string;
   workspaceDirectory: string;
+  initiatedByUserAgent?: "cli" | "extension";
 }
 
 export interface RangeInFile {
