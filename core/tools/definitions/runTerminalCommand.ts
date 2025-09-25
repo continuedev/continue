@@ -1,10 +1,10 @@
-import os from "os";
-import { Tool } from "../..";
-import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 import {
   evaluateTerminalCommandSecurity,
   ToolPolicy,
 } from "@continuedev/terminal-security";
+import os from "os";
+import { Tool } from "../..";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 /**
  * Get the preferred shell for the current platform
@@ -23,7 +23,35 @@ function getPreferredShell(): string {
   }
 }
 
-const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform()} and ${os.arch()} and shell ${getPreferredShell()}.`;
+/**
+ * Get platform-specific command syntax guidance
+ */
+function getPlatformCommandGuidance(): string {
+  const platform = os.platform();
+  
+  if (platform === "win32") {
+    return `CRITICAL: Commands are executed via PowerShell. Use PowerShell syntax:
+      - Multiple commands: Use semicolons (;) NOT && or ||
+        Example: "cd folder; mkdir subfolder; ls"
+      - Create directories: Use comma-separated list
+        Example: "mkdir dir1, dir2, dir3"
+      - Path separators: Use forward slashes or backslashes, avoid ./
+        Example: "cd subfolder" not "cd ./subfolder"
+      - Environment variables: Use $env:VARIABLE
+        Example: "echo $env:USERPROFILE"
+      - Common PowerShell commands work: cd, ls, pwd, mkdir, rm, cp, mv
+      - Avoid bash-specific syntax like && || > < | in complex expressions`;
+  } else {
+    return `Commands are executed via ${getPreferredShell()}. Use standard Unix shell syntax:
+      - Multiple commands: Use && or ; for chaining
+      - Paths: Use forward slashes and ./ for relative paths
+      - Environment variables: Use $VARIABLE`;
+  }
+}
+
+const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform()} and ${os.arch()} and shell ${getPreferredShell()}.
+
+${getPlatformCommandGuidance()}`;
 
 const RUN_COMMAND_NOTES = `The shell is not stateful and will not remember any previous commands.\
       When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
@@ -43,13 +71,14 @@ export const runTerminalCommandTool: Tool = {
     name: BuiltInToolNames.RunTerminalCommand,
     description: `Run a terminal command in the current directory.\n${RUN_COMMAND_NOTES}`,
     parameters: {
-      type: "object",
+            type: "object",
       required: ["command"],
       properties: {
         command: {
           type: "string",
-          description:
-            "The command to run. This will be passed directly into the IDE shell.",
+          description: os.platform() === "win32" 
+            ? "The PowerShell command to run. Use PowerShell syntax (semicolons for multiple commands, comma-separated mkdir args, etc.)"
+            : "The shell command to run. This will be passed directly into the shell.",
         },
         waitForCompletion: {
           type: "boolean",
@@ -66,7 +95,7 @@ export const runTerminalCommandTool: Tool = {
   ): ToolPolicy => {
     return evaluateTerminalCommandSecurity(
       basePolicy,
-      parsedArgs.command as string,
+            parsedArgs.command as string,
     );
   },
   systemMessageDescription: {
@@ -74,6 +103,8 @@ export const runTerminalCommandTool: Tool = {
 ${RUN_COMMAND_NOTES}
 You can also optionally include the waitForCompletion argument set to false to run the command in the background.      
 For example, to see the git log, you could respond with:`,
-    exampleArgs: [["command", "git log"]],
+    exampleArgs: os.platform() === "win32" 
+      ? [["command", "git log"], ["command", "cd src; ls; pwd"], ["command", "mkdir components, utils, types"]]
+      : [["command", "git log"], ["command", "cd src && ls && pwd"], ["command", "mkdir components utils types"]],
   },
 };
