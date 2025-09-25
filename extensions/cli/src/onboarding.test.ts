@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { AuthConfig } from "./auth/workos.js";
 import { runNormalFlow } from "./onboarding.js";
@@ -157,6 +157,92 @@ name: "Incomplete Config"
         error instanceof Error ? error.message : String(error);
       // This should NOT have our "Failed to load config from" prefix
       expect(errorMessage).not.toMatch(/^Failed to load config from "/);
+    }
+  });
+});
+
+// Separate describe block with its own mocking for BEDROCK tests
+describe("CONTINUE_USE_BEDROCK environment variable", () => {
+  const mockConsoleLog = vi.fn();
+  let mockAuthConfig: AuthConfig;
+  const originalEnv = process.env.CONTINUE_USE_BEDROCK;
+
+  // Mock initialize for these tests only
+  const mockInitialize = vi.fn().mockResolvedValue({
+    config: { name: "test-config", models: [], rules: [] },
+    llmApi: {},
+    model: { name: "test-model" },
+    mcpService: {},
+    apiClient: {},
+  });
+
+  beforeEach(() => {
+    mockConsoleLog.mockClear();
+    mockInitialize.mockClear();
+
+    // Spy on console.log for these tests
+    vi.spyOn(console, "log").mockImplementation(mockConsoleLog);
+
+    // Mock the config module
+    vi.doMock("./config.js", () => ({ initialize: mockInitialize }));
+
+    mockAuthConfig = {
+      userId: "test-user",
+      userEmail: "test@example.com",
+      accessToken: "test-token",
+      refreshToken: "test-refresh",
+      expiresAt: Date.now() + 3600000,
+      organizationId: "test-org",
+    };
+  });
+
+  afterEach(() => {
+    if (originalEnv !== undefined) {
+      process.env.CONTINUE_USE_BEDROCK = originalEnv;
+    } else {
+      delete process.env.CONTINUE_USE_BEDROCK;
+    }
+    vi.restoreAllMocks();
+    vi.doUnmock("./config.js");
+  });
+
+  test("should bypass interactive options when CONTINUE_USE_BEDROCK=1", async () => {
+    process.env.CONTINUE_USE_BEDROCK = "1";
+
+    // Re-import to get the mocked version
+    vi.resetModules();
+    const { runOnboardingFlow } = await import("./onboarding.js");
+
+    const result = await runOnboardingFlow(undefined, mockAuthConfig);
+
+    expect(result.wasOnboarded).toBe(true);
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+      ),
+    );
+  });
+
+  test("should not bypass when CONTINUE_USE_BEDROCK is not '1'", async () => {
+    process.env.CONTINUE_USE_BEDROCK = "0";
+
+    // Re-import to get the mocked version
+    vi.resetModules();
+    const { runOnboardingFlow } = await import("./onboarding.js");
+
+    // Mock non-interactive environment to avoid hanging
+    const originalIsTTY = process.stdin.isTTY;
+    process.stdin.isTTY = false;
+
+    try {
+      await runOnboardingFlow(undefined, mockAuthConfig);
+      expect(mockConsoleLog).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+        ),
+      );
+    } finally {
+      process.stdin.isTTY = originalIsTTY;
     }
   });
 });
