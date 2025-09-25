@@ -185,24 +185,22 @@ export function FindAndReplaceDisplay({
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;
     if (status) {
-      if (status === "canceled" || status === "errored" || status === "done") {
-        return (
-          <div
-            className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
-            onClick={(e) => {
-              if (toolCallState.output) {
-                e.stopPropagation();
-                ideMessenger.post("showVirtualFile", {
-                  name: "Edit output",
-                  content: renderContextItems(toolCallState.output),
-                });
-              }
-            }}
-          >
-            {getStatusIcon(toolCallState.status)}
-          </div>
-        );
-      }
+      return (
+        <div
+          className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+          onClick={(e) => {
+            if (toolCallState.output) {
+              e.stopPropagation();
+              ideMessenger.post("showVirtualFile", {
+                name: "Edit output",
+                content: renderContextItems(toolCallState.output),
+              });
+            }
+          }}
+        >
+          {getStatusIcon(status)}
+        </div>
+      );
     }
   }, [toolCallState?.status, toolCallState?.output]);
 
