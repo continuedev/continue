@@ -4,64 +4,19 @@ GitHub Actions that provide automated code reviews for pull requests using Conti
 
 ## Available Actions
 
-This repository provides two GitHub Actions for different review styles:
+This repository provides a GitHub Action for automated PR reviews:
 
-### 1. General Review Action
+### General Review Action
 
 Provides high-level PR assessment with overall feedback and recommendations.
 
-- **Path:** `continuedev/continue/actions/general-review@<commit-sha>`
+- **Path:** `continuedev/continue/actions/general-review@main`
 - **Trigger:** `@continue-general-review`
 - **Output:** Summary comment with strengths, issues, and recommendations
 
-### 2. Detailed Review Action
-
-Provides line-by-line inline comments on specific code changes.
-
-- **Path:** `continuedev/continue/actions/detailed-review@<commit-sha>`
-- **Trigger:** `@continue-detailed-review`
-- **Output:** Inline review comments on specific lines of code
-
 ## Quick Start
 
-### Using Both Actions Together
-
-```yaml
-name: PR Reviews
-on:
-  pull_request:
-    types: [opened, ready_for_review]
-  issue_comment:
-    types: [created]
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-
-jobs:
-  general-review:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: continuedev/continue/actions/general-review@<commit-sha>
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "your-org-name"
-          continue-config: "your-org-name/review-bot"
-
-  detailed-review:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: continuedev/continue/actions/detailed-review@<commit-sha>
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "your-org-name"
-          continue-config: "your-org-name/review-bot"
-```
-
-### General Review Only
+### Setting up General Review
 
 ```yaml
 name: PR General Review
@@ -81,34 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: continuedev/continue/actions/general-review@<commit-sha>
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "your-org-name"
-          continue-config: "your-org-name/review-bot"
-```
-
-### Detailed Review Only
-
-```yaml
-name: PR Detailed Review
-on:
-  pull_request:
-    types: [opened, ready_for_review]
-  issue_comment:
-    types: [created]
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: continuedev/continue/actions/detailed-review@<commit-sha>
+      - uses: continuedev/continue/actions/general-review@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "your-org-name"
@@ -117,7 +45,7 @@ jobs:
 
 ## Inputs
 
-Both actions accept the same inputs:
+The action accepts the following inputs:
 
 | Input              | Description                            | Required |
 | ------------------ | -------------------------------------- | -------- |
@@ -155,7 +83,7 @@ The workflow requires these permissions:
 
 ## Triggering Reviews
 
-Both actions can be triggered in two ways:
+The action can be triggered in two ways:
 
 ### Automatic Triggers
 
@@ -167,11 +95,8 @@ Both actions can be triggered in two ways:
 Team members can trigger reviews by commenting on any pull request:
 
 - `@continue-general-review` - Triggers a general review
-- `@continue-detailed-review` - Triggers a detailed inline review
 
-## Review Outputs
-
-### General Review Output
+## Review Output
 
 The general review provides a structured comment that includes:
 
@@ -180,18 +105,7 @@ The general review provides a structured comment that includes:
 - **Suggestions**: Improvement recommendations
 - **Overall Assessment**: Final recommendation (APPROVE, REQUEST_CHANGES, or COMMENT)
 
-### Detailed Review Output
-
-The detailed review provides:
-
-- **Inline Comments**: Specific feedback on individual lines of code
-- **Position Markers**: Comments appear directly on the changed lines
-- **Review Summary**: Overall assessment of the changes
-- **Actionable Feedback**: Specific suggestions for each issue found
-
 ## How It Works
-
-### General Review Process
 
 1. Checks out repository code
 2. Fetches PR diff using GitHub CLI
@@ -199,27 +113,16 @@ The detailed review provides:
 4. Runs Continue CLI with specified configuration
 5. Posts review as a PR comment
 
-### Detailed Review Process
-
-1. Checks out repository code
-2. Fetches PR diff with GitHub API positions
-3. Annotates diff with position markers
-4. Generates inline review prompt
-5. Runs Continue CLI for detailed analysis
-6. Posts inline comments using GitHub's review API
-
 ## Versioning
 
-We recommend using a specific commit SHA for stability and predictability:
+We recommend using the main branch:
 
-- `@<commit-sha>` - Pins to a specific commit for maximum stability (recommended)
-- `@main` - Uses the latest code from the main branch (for bleeding edge)
-- `@v1` - Uses a version tag when available
+- `@main` - Uses the latest code from the main branch
 
 Example:
 
 ```yaml
-uses: continuedev/continue/actions/general-review@64bda6b2b3dac1037e9895dbee4ce1d35565e1fe
+uses: continuedev/continue/actions/general-review@main
 ```
 
 ## Troubleshooting
@@ -235,12 +138,6 @@ uses: continuedev/continue/actions/general-review@64bda6b2b3dac1037e9895dbee4ce1
 - Check the action logs for any errors
 - Verify your Continue configuration is correct
 - Ensure your Continue API key is valid
-
-### Inline comments not appearing (Detailed Review)
-
-- Check that the PR has a valid diff
-- Verify GitHub API permissions are correct
-- Review action logs for position calculation errors
 
 ## Support
 
