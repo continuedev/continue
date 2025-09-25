@@ -1,9 +1,10 @@
 import { Tool, ToolCallState } from "core";
 import { renderContextItems } from "core/util/messageContent";
-import Mustache from "mustache";
+import * as Mustache from "mustache";
 import { useContext } from "react";
+import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getStatusIntro } from "./utils";
+import { getStatusIntro, toolCallStateToContextItems } from "./utils";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -16,12 +17,36 @@ export function ToolCallStatusMessage({
 }: ToolCallStatusMessageProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  function handleClick() {
-    if (toolCallState.output) {
+  function handleClick(event: React.MouseEvent) {
+    event.stopPropagation();
+    const contextItems = toolCallStateToContextItems(toolCallState);
+    if (contextItems.length === 1) {
+      // Single context item - open it directly
+      openContextItem(contextItems[0], ideMessenger);
+    } else if (contextItems.length > 1) {
+      // Multiple context items - create a combined virtual file
       ideMessenger.post("showVirtualFile", {
         name: "Tool Output",
-        content: renderContextItems(toolCallState.output),
+        content: renderContextItems(toolCallState.output!),
       });
+    }
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      event.stopPropagation();
+      const contextItems = toolCallStateToContextItems(toolCallState);
+      if (contextItems.length === 1) {
+        // Single context item - open it directly
+        openContextItem(contextItems[0], ideMessenger);
+      } else if (contextItems.length > 1) {
+        // Multiple context items - create a combined virtual file
+        ideMessenger.post("showVirtualFile", {
+          name: "Tool Output",
+          content: renderContextItems(toolCallState.output!),
+        });
+      }
     }
   }
   if (!tool) return "Agent tool use";
@@ -64,8 +89,9 @@ export function ToolCallStatusMessage({
     }
   }
 
+  const contextItems = toolCallStateToContextItems(toolCallState);
   const isClickable =
-    toolCallState.output &&
+    contextItems.length > 0 &&
     (toolCallState.status === "done" ||
       toolCallState.status === "canceled" ||
       toolCallState.status === "errored");
@@ -73,10 +99,14 @@ export function ToolCallStatusMessage({
   return (
     <div
       className={`text-description line-clamp-4 min-w-0 break-all transition-colors duration-200 ease-in-out ${
-        isClickable ? "cursor-pointer hover:brightness-125" : ""
+        isClickable ? "cursor-pointer hover:brightness-125 focus:brightness-125 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded" : ""
       }`}
       data-testid="tool-call-title"
       onClick={isClickable ? handleClick : undefined}
+      onKeyDown={isClickable ? handleKeyDown : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      role={isClickable ? "button" : undefined}
+      aria-label={isClickable ? "Click to view tool output" : undefined}
     >
       {`Continue ${intro} ${message}`}
     </div>
