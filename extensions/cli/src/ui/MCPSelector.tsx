@@ -328,14 +328,24 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
             const { color: statusColor, statusText } =
               getServerStatusDisplay(serverInfo);
-            const { command, args } = serverInfo.config;
-            let cmd = command ? quote([command, ...(args ?? [])]) : "";
-            cmd = cmd.replace(/\$\{\{.*\}\}/, "(secret)");
+
+            let configText = "";
+            if ("command" in serverInfo.config) {
+              const { command, args } = serverInfo.config;
+              const cmd = command ? quote([command, ...(args ?? [])]) : "";
+              if (cmd) {
+                configText = ` • Command: ${cmd}`;
+              }
+            } else {
+              const { url } = serverInfo.config;
+              configText = ` • URL: ${url}`;
+            }
+            configText = configText.replace(/\$\{\{.*\}\}/, "(secret)");
 
             return (
               <Text color="dim">
                 Status: <Text color={statusColor}>{statusText}</Text>
-                {cmd && ` • Command: ${cmd}`}
+                {configText}
               </Text>
             );
           })()}
