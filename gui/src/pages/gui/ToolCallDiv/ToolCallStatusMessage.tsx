@@ -17,11 +17,11 @@ export function ToolCallStatusMessage({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleClick() {
-    const contextItems = toolCallStateToContextItems(toolCallState);
     if (contextItems.length > 0) {
       openContextItem(contextItems[0], ideMessenger);
     }
   }
+
   if (!tool) return "Agent tool use";
 
   const toolName = tool.displayTitle ?? tool.function.name;
