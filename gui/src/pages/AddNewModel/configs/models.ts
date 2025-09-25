@@ -1585,14 +1585,83 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
-  grokBeta: {
-    title: "Grok Beta",
-    description: "Generative artificial intelligence chatbot developed by xAI.",
-    refUrl: "",
+  grokCodeFast1: {
+    title: "Grok Code Fast 1",
+    description:
+      "A speedy and economical reasoning model that excels at agentic coding",
+    refUrl: "https://docs.x.ai/docs/models/grok-code-fast-1",
     params: {
-      title: "Grok Beta",
-      model: "grok-beta",
-      contextLength: 128_000,
+      title: "Grok Code Fast 1",
+      model: "grok-code-fast-1",
+      contextLength: 256000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4FastReasoning: {
+    title: "Grok 4 Fast Reasoning",
+    description: "xAI's latest advancement in cost-efficient reasoning models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-reasoning",
+    params: {
+      title: "Grok 4 Fast Reasoning",
+      model: "grok-4-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4FastNonReasoning: {
+    title: "Grok 4 Fast Non-Reasoning",
+    description: "xAI's latest advancement in cost-efficient models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-non-reasoning",
+    params: {
+      title: "Grok 4 Fast Non-Reasoning",
+      model: "grok-4-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok4: {
+    title: "Grok 4",
+    description:
+      "xAI's latest and greatest flagship model, offering strong performance in natural language, math and reasoning.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4",
+    params: {
+      title: "Grok 4",
+      model: "grok-4",
+      contextLength: 256_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok3: {
+    title: "Grok 3",
+    description:
+      "Excels at enterprise use cases like data extraction, coding, and text summarization",
+    refUrl: "https://docs.x.ai/docs/models/grok-3",
+    params: {
+      title: "Grok 3",
+      model: "grok-3",
+      contextLength: 131_072,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI", "askSage"],
+    isOpenSource: false,
+  },
+  grok3Mini: {
+    title: "Grok 3 Mini",
+    description:
+      "A lightweight model that thinks before responding. Fast, smart, and great for logic-based tasks that do not require deep domain knowledge.",
+    refUrl: "https://docs.x.ai/docs/models/grok-3-mini",
+    params: {
+      title: "Grok 3 Mini",
+      model: "grok-3-mini",
+      contextLength: 131_072,
     },
     icon: "xAI.png",
     providerOptions: ["xAI", "askSage"],
@@ -1834,6 +1903,382 @@ export const models: { [key: string]: ModelPackage } = {
       model: "AUTODETECT",
     } as any,
     providerOptions: [],
+    isOpenSource: false,
+  },
+
+  // CometAPI Models
+
+  // GPT series models via CometAPI
+  cometapiGpt5ChatLatest: {
+    title: "GPT-5 Chat Latest",
+    description:
+      "GPT-5 Chat Latest via CometAPI - OpenAI's most advanced conversational model.",
+    params: {
+      model: "gpt-5-chat-latest",
+      contextLength: 400_000,
+      title: "GPT-5 Chat Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt5Mini: {
+    title: "GPT-5 Mini",
+    description:
+      "GPT-5 Mini via CometAPI - compact version of GPT-5 optimized for efficiency.",
+    params: {
+      model: "gpt-5-mini",
+      contextLength: 400_000,
+      title: "GPT-5 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt5: {
+    title: "GPT-5",
+    description:
+      "GPT-5 via CometAPI - OpenAI's flagship model with advanced reasoning capabilities.",
+    params: {
+      model: "gpt-5",
+      contextLength: 200_000,
+      title: "GPT-5",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiChatgpt4oLatest: {
+    title: "ChatGPT-4o Latest",
+    description:
+      "ChatGPT-4o Latest via CometAPI - latest version of GPT-4o with enhanced capabilities.",
+    params: {
+      model: "chatgpt-4o-latest",
+      contextLength: 128_000,
+      title: "ChatGPT-4o Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt41: {
+    title: "GPT-4.1",
+    description:
+      "GPT-4.1 via CometAPI - enhanced version of GPT-4.1 with improved reasoning.",
+    params: {
+      model: "gpt-4.1",
+      contextLength: 100_000,
+      title: "GPT-4.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiO4Mini: {
+    title: "O4 Mini",
+    description:
+      "O4 Mini via CometAPI - OpenAI's reasoning model optimized for efficiency.",
+    params: {
+      model: "o4-mini-2025-04-16",
+      contextLength: 200_000,
+      title: "O4 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiO3Pro: {
+    title: "O3 Pro",
+    description:
+      "O3 Pro via CometAPI - advanced reasoning model with enhanced problem-solving capabilities.",
+    params: {
+      model: "o3-pro-2025-06-10",
+      contextLength: 200_000,
+      title: "O3 Pro",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Claude series models via CometAPI
+  cometapiClaudeOpus41: {
+    title: "Claude Opus 4.1",
+    description:
+      "Claude Opus 4.1 via CometAPI - Anthropic's most capable model with advanced reasoning.",
+    params: {
+      model: "claude-opus-4-1-20250805",
+      contextLength: 200_000,
+      title: "Claude Opus 4.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeOpus41Thinking: {
+    title: "Claude Opus 4.1 Thinking",
+    description:
+      "Claude Opus 4.1 Thinking via CometAPI - version with enhanced thinking capabilities.",
+    params: {
+      model: "claude-opus-4-1-20250805-thinking",
+      contextLength: 200_000,
+      title: "Claude Opus 4.1 Thinking",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeSonnet4: {
+    title: "Claude Sonnet 4",
+    description:
+      "Claude Sonnet 4 via CometAPI - balanced performance and efficiency from Anthropic.",
+    params: {
+      model: "claude-sonnet-4-20250514",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeSonnet4Thinking: {
+    title: "Claude Sonnet 4 Thinking",
+    description:
+      "Claude Sonnet 4 Thinking via CometAPI - version with enhanced reasoning capabilities.",
+    params: {
+      model: "claude-sonnet-4-20250514-thinking",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4 Thinking",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaude37SonnetLatest: {
+    title: "Claude 3.7 Sonnet Latest",
+    description:
+      "Claude 3.7 Sonnet Latest via CometAPI - latest version of Claude 3.7 Sonnet.",
+    params: {
+      model: "claude-3-7-sonnet-latest",
+      contextLength: 200_000,
+      title: "Claude 3.7 Sonnet Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaude35HaikuLatest: {
+    title: "Claude 3.5 Haiku Latest",
+    description:
+      "Claude 3.5 Haiku Latest via CometAPI - fast and efficient model from Anthropic.",
+    params: {
+      model: "claude-3-5-haiku-latest",
+      contextLength: 200_000,
+      title: "Claude 3.5 Haiku Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Gemini series models via CometAPI
+  cometapiGemini25Pro: {
+    title: "Gemini 2.5 Pro",
+    description:
+      "Gemini 2.5 Pro via CometAPI - Google's advanced multimodal model with enhanced capabilities.",
+    params: {
+      model: "gemini-2.5-pro",
+      contextLength: 1_000_000,
+      title: "Gemini 2.5 Pro",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini25Flash: {
+    title: "Gemini 2.5 Flash",
+    description:
+      "Gemini 2.5 Flash via CometAPI - optimized for speed and efficiency.",
+    params: {
+      model: "gemini-2.5-flash",
+      contextLength: 1_000_000,
+      title: "Gemini 2.5 Flash",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini25FlashLite: {
+    title: "Gemini 2.5 Flash Lite",
+    description:
+      "Gemini 2.5 Flash Lite via CometAPI - lightweight version for faster responses.",
+    params: {
+      model: "gemini-2.5-flash-lite",
+      contextLength: 8_000,
+      title: "Gemini 2.5 Flash Lite",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini20Flash: {
+    title: "Gemini 2.0 Flash",
+    description:
+      "Gemini 2.0 Flash via CometAPI - Google's powerful workhorse model with low latency.",
+    params: {
+      model: "gemini-2.0-flash",
+      contextLength: 32_000,
+      title: "Gemini 2.0 Flash",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Grok series models via CometAPI
+  cometapiGrok40709: {
+    title: "Grok 4",
+    description:
+      "Grok 4 via CometAPI - xAI's advanced model with real-time information access.",
+    params: {
+      model: "grok-4-0709",
+      contextLength: 256_000,
+      title: "Grok 4",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGrok3: {
+    title: "Grok 3",
+    description: "Grok 3 via CometAPI - powerful reasoning model from xAI.",
+    params: {
+      model: "grok-3",
+      contextLength: 128_000,
+      title: "Grok 3",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGrok3Mini: {
+    title: "Grok 3 Mini",
+    description: "Grok 3 Mini via CometAPI - efficient version of Grok 3.",
+    params: {
+      model: "grok-3-mini",
+      contextLength: 128_000,
+      title: "Grok 3 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // DeepSeek series models via CometAPI (additional)
+  cometapiDeepseekV31: {
+    title: "DeepSeek V3.1",
+    description:
+      "DeepSeek V3.1 via CometAPI - enhanced version with improved performance.",
+    params: {
+      model: "deepseek-v3.1",
+      contextLength: 128_000,
+      title: "DeepSeek V3.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekR10528: {
+    title: "DeepSeek R1",
+    description:
+      "DeepSeek R1 via CometAPI - reasoning model with enhanced problem-solving capabilities.",
+    params: {
+      model: "deepseek-r1-0528",
+      contextLength: 64_000,
+      title: "DeepSeek R1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekChat: {
+    title: "DeepSeek Chat",
+    description:
+      "DeepSeek Chat via CometAPI - optimized for conversational AI tasks.",
+    params: {
+      model: "deepseek-chat",
+      contextLength: 64_000,
+      title: "DeepSeek Chat",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekReasoner: {
+    title: "DeepSeek Reasoner",
+    description:
+      "DeepSeek Reasoner via CometAPI - specialized model for complex reasoning tasks.",
+    params: {
+      model: "deepseek-reasoner",
+      contextLength: 64_000,
+      title: "DeepSeek Reasoner",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Qwen series models via CometAPI
+  cometapiQwen330BA3B: {
+    title: "Qwen 3 30B A3B",
+    description:
+      "Qwen 3 30B A3B via CometAPI - Alibaba's advanced language model with 30B parameters.",
+    params: {
+      model: "qwen3-30b-a3b",
+      contextLength: 128_000,
+      title: "Qwen 3 30B A3B",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiQwen3CoderPlus: {
+    title: "Qwen 3 Coder Plus",
+    description:
+      "Qwen 3 Coder Plus via CometAPI - specialized coding model from Alibaba.",
+    params: {
+      model: "qwen3-coder-plus-2025-07-22",
+      contextLength: 262_000,
+      title: "Qwen 3 Coder Plus",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
     isOpenSource: false,
   },
 };

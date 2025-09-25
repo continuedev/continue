@@ -1,29 +1,35 @@
+import {
+  Tool as AnthropicTool,
+  ContentBlockParam,
+  MessageCreateParams,
+  MessageParam,
+  RawContentBlockDeltaEvent,
+  RawContentBlockStartEvent,
+  RawMessageDeltaEvent,
+  RawMessageStartEvent,
+  RawMessageStreamEvent,
+  ToolUseBlock,
+} from "@anthropic-ai/sdk/resources/messages.mjs";
 import { streamSse } from "@continuedev/fetch";
+import {
+  addCacheControlToLastTwoUserMessages,
+  getAnthropicErrorMessage,
+  getAnthropicHeaders,
+  getAnthropicMediaTypeFromDataUrl,
+} from "@continuedev/openai-adapters";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
+  MessageContent,
+  Tool,
+  ToolCallDelta,
   Usage,
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
-
-const errorMessages = {
-  invalid_request_error:
-    "There was an issue with the format or content of your request.",
-  authentication_error: "There's an issue with your API key.",
-  permission_error:
-    "Your API key does not have permission to use the specified resource.",
-  not_found_error: "The requested resource was not found.",
-  request_too_large:
-    "Request exceeds the maximum allowed number of bytes (32 MB limit).",
-  rate_limit_error: "Your account has hit a rate limit.",
-  api_error:
-    "An unexpected error has occurred internal to Anthropic's systems.",
-  overloaded_error:
-    "Anthropic's API is temporarily overloaded. Please check their status page: https://status.anthropic.com/#past-incidents",
-};
 
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
@@ -36,8 +42,21 @@ class Anthropic extends BaseLLM {
     apiBase: "https://api.anthropic.com/v1/",
   };
 
-  public convertArgs(options: CompletionOptions) {
-    // should be public for use within VertexAI
+  private convertToolToAnthropicTool(tool: Tool): AnthropicTool {
+    return {
+      name: tool.function.name,
+      description: tool.function.description,
+      input_schema: (tool.function.parameters as AnthropicTool.InputSchema) ?? {
+        // TODO unsafe tool.function.parameters casting
+        type: "object",
+      },
+    };
+  }
+
+  // Public for use within VertexAI
+  public convertArgs(
+    options: CompletionOptions,
+  ): Omit<MessageCreateParams, "messages"> {
     const finalOptions = {
       top_k: options.topK,
       top_p: options.topP,
@@ -46,20 +65,17 @@ class Anthropic extends BaseLLM {
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
-      tools: options.tools?.map((tool) => ({
-        name: tool.function.name,
-        description: tool.function.description,
-        input_schema: tool.function.parameters,
-      })),
+      tools: options.tools?.map(this.convertToolToAnthropicTool),
       thinking: options.reasoning
         ? {
-            type: "enabled",
-            budget_tokens: options.reasoningBudgetTokens,
+            type: "enabled" as const,
+            budget_tokens:
+              options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
           }
         : undefined,
       tool_choice: options.toolChoice
         ? {
-            type: "tool",
+            type: "tool" as const,
             name: options.toolChoice.function.name,
           }
         : undefined,
@@ -68,138 +84,146 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
-  private buildTextPart(text: string, addCaching: boolean) {
-    const part: any = {
-      type: "text",
-      text,
-    };
-    if (addCaching) {
-      part.cache_control = { type: "ephemeral" };
+  private convertMessageContentToBlocks(
+    content: MessageContent,
+  ): ContentBlockParam[] {
+    if (typeof content === "string") {
+      return [
+        {
+          type: "text",
+          text: content,
+        },
+      ];
     }
-    return part;
+    return content.map((part) => {
+      if (part.type === "text") {
+        return {
+          type: "text",
+          text: part.text,
+        };
+      }
+      return {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
+          data: part.imageUrl.url.split(",")[1],
+        },
+      };
+    });
   }
 
-  private convertMessage(message: ChatMessage, addCaching: boolean): any {
-    if (message.role === "tool") {
+  private convertToolCallsToBlocks(
+    toolCall: ToolCallDelta,
+  ): ToolUseBlock | undefined {
+    const toolCallId = toolCall.id;
+    const toolName = toolCall.function?.name;
+    if (toolCallId && toolName) {
       return {
-        role: "user",
-        content: [
+        type: "tool_use",
+        id: toolCallId,
+        name: toolName,
+        input: safeParseToolCallArgs(toolCall),
+      };
+    }
+  }
+
+  private getContentBlocksFromChatMessage(
+    message: ChatMessage,
+  ): ContentBlockParam[] {
+    switch (message.role) {
+      // One tool message = one tool_result block
+      case "tool":
+        return [
           {
             type: "tool_result",
             tool_use_id: message.toolCallId,
             content: renderChatMessage(message) || undefined,
           },
-        ],
-      };
-    } else if (message.role === "assistant" && message.toolCalls) {
-      const parts: any[] = [];
-      if (message.content) {
+        ];
+      case "user":
+        return this.convertMessageContentToBlocks(message.content);
+      case "thinking":
+        if (message.redactedThinking) {
+          return [
+            {
+              type: "redacted_thinking",
+              data: message.redactedThinking,
+            },
+          ];
+        }
         if (typeof message.content === "string") {
-          parts.push(this.buildTextPart(message.content, addCaching));
-        } else if (message.content.length > 0) {
-          const textContent = message.content.filter((p) => p.type === "text");
-          const textParts = textContent.map((part, idx) => {
-            const cache = idx === textContent.length - 1 && addCaching;
-            return this.buildTextPart(part.text, cache);
-          });
-          parts.push(...textParts);
+          return [
+            {
+              type: "thinking",
+              thinking: message.content,
+              signature: message.signature ?? "", // TODO - unsafe signature
+            },
+          ];
         }
-      }
-      parts.push(
-        ...message.toolCalls.map((toolCall) => ({
-          type: "tool_use",
-          id: toolCall.id,
-          name: toolCall.function?.name,
-          input: safeParseToolCallArgs(toolCall),
-        })),
-      );
-      return {
-        role: "assistant",
-        content: parts,
-      };
-    } else if (message.role === "thinking" && !message.redactedThinking) {
-      return {
-        role: "assistant",
-        content: [
-          {
-            type: "thinking",
-            thinking: message.content,
-            signature: message.signature,
-          },
-        ],
-      };
-    } else if (message.role === "thinking" && message.redactedThinking) {
-      return {
-        role: "assistant",
-        content: [
-          {
-            type: "redacted_thinking",
-            data: message.redactedThinking,
-          },
-        ],
-      };
-    }
-
-    if (typeof message.content === "string") {
-      var chatMessage = {
-        role: message.role,
-        content: [
-          {
-            type: "text",
-            text: message.content,
-            ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
-          },
-        ],
-      };
-      return chatMessage;
-    }
-
-    return {
-      role: message.role,
-      content: message.content.map((part, contentIdx) => {
-        if (part.type === "text") {
-          const newpart = {
-            ...part,
-            // If multiple text parts, only add cache_control to the last one
-            ...(addCaching && contentIdx === message.content.length - 1
-              ? { cache_control: { type: "ephemeral" } }
-              : {}),
-          };
-          return newpart;
+        const textParts = message.content.filter((p) => p.type === "text");
+        return textParts.map((part) => ({
+          type: "thinking",
+          thinking: part.text,
+          signature: message.signature ?? "", // TODO - unsafe signature
+        }));
+      case "assistant":
+        const blocks: ContentBlockParam[] = this.convertMessageContentToBlocks(
+          message.content,
+        );
+        // If any tool calls are present, always put them last
+        // Loses order vs what was originally sent, but they typically come last
+        for (const toolCall of message.toolCalls ?? []) {
+          const block = this.convertToolCallsToBlocks(toolCall);
+          if (block) {
+            blocks.push(block);
+          }
         }
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
-          },
-        };
-      }),
-    };
+        return blocks;
+      // system, etc.
+      default:
+        return [];
+    }
   }
 
-  public convertMessages(msgs: ChatMessage[]): any[] {
-    // should be public for use within VertexAI
-    const filteredmessages = msgs.filter((m) => m.role !== "system");
-    const lastTwoUserMsgIndices = filteredmessages
-      .map((msg, index) => (msg.role === "user" ? index : -1))
-      .filter((index) => index !== -1)
-      .slice(-2);
+  public convertMessages(
+    msgs: ChatMessage[],
+    cachePrompt: boolean,
+  ): MessageParam[] {
+    const nonSystemMessages = msgs.filter((m) => m.role !== "system");
 
-    const messages = filteredmessages.map((message, filteredMsgIdx) => {
-      // Add cache_control parameter to the last two user messages
-      // The second-to-last because it retrieves potentially already cached contents,
-      // The last one because we want it cached for later retrieval.
-      // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-      const addCaching =
-        this.cacheBehavior?.cacheConversation &&
-        lastTwoUserMsgIndices.includes(filteredMsgIdx);
+    const convertedMessages: MessageParam[] = [];
+    let currentRole: "user" | "assistant" | undefined = undefined;
+    let currentParts: ContentBlockParam[] = [];
 
-      const chatMessage = this.convertMessage(message, !!addCaching);
-      return chatMessage;
-    });
-    return messages;
+    const flushCurrentMessage = () => {
+      if (currentRole && currentParts.length > 0) {
+        convertedMessages.push({
+          role: currentRole,
+          content: currentParts,
+        });
+        currentParts = [];
+      }
+    };
+
+    for (const message of nonSystemMessages) {
+      const newRole =
+        message.role === "user" || message.role === "tool"
+          ? "user"
+          : "assistant";
+      if (currentRole !== newRole) {
+        flushCurrentMessage();
+        currentRole = newRole;
+      }
+      currentParts.push(...this.getContentBlocksFromChatMessage(message));
+    }
+    flushCurrentMessage();
+
+    if (cachePrompt) {
+      addCacheControlToLastTwoUserMessages(convertedMessages);
+    }
+
+    return convertedMessages;
   }
 
   protected async *_streamComplete(
@@ -224,12 +248,7 @@ class Anthropic extends BaseLLM {
     if (!response.ok) {
       const json = await response.json();
       if (json.type === "error") {
-        if (json.error?.type in errorMessages) {
-          throw new Error(
-            errorMessages[json.error.type as keyof typeof errorMessages],
-          );
-        }
-        throw new Error(json.message);
+        throw new Error(getAnthropicErrorMessage(json));
       }
       throw new Error(
         `Anthropic API sent back ${response.status}: ${JSON.stringify(json)}`,
@@ -237,17 +256,17 @@ class Anthropic extends BaseLLM {
     }
 
     if (stream === false) {
-      const data = await response.json();
-      const cost = data.usage
+      const json = await response.json();
+      const cost = json.usage
         ? {
-            inputTokens: data.usage.input_tokens,
-            outputTokens: data.usage.output_tokens,
-            totalTokens: data.usage.input_tokens + data.usage.output_tokens,
+            inputTokens: json.usage.input_tokens,
+            outputTokens: json.usage.output_tokens,
+            totalTokens: json.usage.input_tokens + json.usage.output_tokens,
           }
         : {};
       yield {
         role: "assistant",
-        content: data.content[0].text,
+        content: json.content[0].text,
         ...(Object.keys(cost).length > 0 ? { cost } : {}),
       };
       return;
@@ -264,51 +283,59 @@ class Anthropic extends BaseLLM {
       },
     };
 
-    for await (const value of streamSse(response)) {
+    for await (const event of streamSse(response)) {
       // https://docs.anthropic.com/en/api/messages-streaming#event-types
-      switch (value.type) {
+      const rawEvent = event as RawMessageStreamEvent;
+      switch (event.type) {
         case "message_start":
           // Capture initial usage information
-          usage.promptTokens = value.message.usage.input_tokens;
+          const startEvent = rawEvent as RawMessageStartEvent;
+          usage.promptTokens = startEvent.message.usage.input_tokens;
           usage.promptTokensDetails!.cachedTokens =
-            value.message.usage.cache_read_input_tokens;
+            startEvent.message.usage.cache_read_input_tokens ?? undefined;
           usage.promptTokensDetails!.cacheWriteTokens =
-            value.message.usage.cache_creation_input_tokens;
+            startEvent.message.usage.cache_creation_input_tokens ?? undefined;
           break;
         case "message_delta":
           // Update usage information during streaming
-          if (value.usage) {
-            usage.completionTokens = value.usage.output_tokens;
+          const deltaEvent = rawEvent as RawMessageDeltaEvent;
+          if (deltaEvent.usage) {
+            usage.completionTokens = deltaEvent.usage.output_tokens;
           }
           break;
         case "content_block_start":
-          if (value.content_block.type === "tool_use") {
-            lastToolUseId = value.content_block.id;
-            lastToolUseName = value.content_block.name;
+          const blockStartEvent = rawEvent as RawContentBlockStartEvent;
+          if (blockStartEvent.content_block.type === "tool_use") {
+            lastToolUseId = blockStartEvent.content_block.id;
+            lastToolUseName = blockStartEvent.content_block.name;
           }
           // handle redacted thinking
-          if (value.content_block.type === "redacted_thinking") {
+          if (blockStartEvent.content_block.type === "redacted_thinking") {
             yield {
               role: "thinking",
               content: "",
-              redactedThinking: value.content_block.data,
+              redactedThinking: blockStartEvent.content_block.data,
             };
           }
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
-          switch (value.delta.type) {
+          const blockDeltaEvent = rawEvent as RawContentBlockDeltaEvent;
+          switch (blockDeltaEvent.delta.type) {
             case "text_delta":
-              yield { role: "assistant", content: value.delta.text };
+              yield { role: "assistant", content: blockDeltaEvent.delta.text };
               break;
             case "thinking_delta":
-              yield { role: "thinking", content: value.delta.thinking };
+              yield {
+                role: "thinking",
+                content: blockDeltaEvent.delta.thinking,
+              };
               break;
             case "signature_delta":
               yield {
                 role: "thinking",
                 content: "",
-                signature: value.delta.signature,
+                signature: blockDeltaEvent.delta.signature,
               };
               break;
             case "input_json_delta":
@@ -324,7 +351,7 @@ class Anthropic extends BaseLLM {
                     type: "function",
                     function: {
                       name: lastToolUseName,
-                      arguments: value.delta.partial_json,
+                      arguments: blockDeltaEvent.delta.partial_json,
                     },
                   },
                 ],
@@ -365,32 +392,35 @@ class Anthropic extends BaseLLM {
     const shouldCacheSystemMessage = !!(
       this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
+    const shouldCachePrompt = !!(
+      this.cacheBehavior?.cacheConversation ||
+      this.completionOptions.promptCaching
+    );
 
-    const msgs = this.convertMessages(messages);
+    const msgs = this.convertMessages(messages, shouldCachePrompt);
+    const headers = getAnthropicHeaders(
+      this.apiKey,
+      shouldCacheSystemMessage || shouldCachePrompt,
+    );
+
+    const body: MessageCreateParams = {
+      ...this.convertArgs(options),
+      messages: msgs,
+      system: shouldCacheSystemMessage
+        ? [
+            {
+              type: "text",
+              text: systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
+        : systemMessage,
+    };
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
-      },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
+      headers,
+      body: JSON.stringify(body),
       signal,
     });
 

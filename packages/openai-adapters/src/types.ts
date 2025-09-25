@@ -116,6 +116,11 @@ export const CohereConfigSchema = OpenAIConfigSchema.extend({
 });
 export type CohereConfig = z.infer<typeof CohereConfigSchema>;
 
+export const CometAPIConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("cometapi"),
+});
+export type CometAPIConfig = z.infer<typeof CometAPIConfigSchema>;
+
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
   env: z
@@ -197,5 +202,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   VertexAIConfigSchema,
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
+  CometAPIConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

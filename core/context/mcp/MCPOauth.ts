@@ -12,7 +12,7 @@ import { IDE, MCPServerStatus, SSEOptions } from "../..";
 
 import http from "http";
 import url from "url";
-import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
 // Use a Map to support concurrent authentications for different servers
@@ -249,7 +249,7 @@ export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
   await authProvider.ensureRedirectUrl();
 
   // Generate a unique state parameter for this auth flow
-  const state = crypto.randomUUID();
+  const state = uuidv4();
 
   // Store context for this specific server with state
   authenticatingContexts.set(mcpServerUrl, {
