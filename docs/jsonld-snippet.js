@@ -25,7 +25,7 @@
   const title = document.title;
   const description =
     document.querySelector('meta[name="description"]')?.content ||
-    "Continue AI coding assistant documentation";
+    "Continue AI coding agent documentation";
 
   let jsonLD = {
     ...baseData,

@@ -10,7 +10,7 @@
     "@type": "Organization",
     name: "Continue",
     description:
-      "Open source AI-powered coding assistant with customizable components for chat, autocomplete, edit, and agent workflows in VS Code and JetBrains IDEs",
+      "Open source AI-powered coding agent with customizable components for chat, autocomplete, edit, and agent workflows in VS Code and JetBrains IDEs",
     url: "https://continue.dev",
     logo: {
       "@type": "ImageObject",
@@ -32,9 +32,9 @@
     },
     offers: {
       "@type": "Offer",
-      name: "Continue AI Coding Assistant",
+      name: "Continue AI Coding Agent",
       description:
-        "Free open source AI coding assistant with premium team and enterprise features",
+        "Free open source AI coding agent with premium team and enterprise features",
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
@@ -50,7 +50,7 @@
     applicationCategory: "DeveloperApplication",
     operatingSystem: ["Windows", "macOS", "Linux"],
     description:
-      "Open source AI-powered coding assistant with customizable components for chat, autocomplete, edit, and agent workflows",
+      "Open source AI-powered coding agent with customizable components for chat, autocomplete, edit, and agent workflows",
     url: "https://continue.dev",
     downloadUrl: [
       "https://marketplace.visualstudio.com/items?itemName=Continue.continue",
@@ -166,7 +166,7 @@
         about: {
           "@type": "SoftwareApplication",
           name: "Continue",
-          description: "AI-powered coding assistant",
+          description: "AI-powered coding agent",
         },
         step: extractHowToSteps(),
       };
