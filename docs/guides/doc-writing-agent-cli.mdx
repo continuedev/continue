@@ -1,0 +1,232 @@
+---
+title: "Automating Documentation Updates with Continue CLI"
+sidebarTitle: "Automating Documentation Updates with Continue CLI"
+description: "
+---
+# Automating Documentation Updates with Continue CLI
+
+This user guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Continue CLI, either as part of your local workflow or as part of a GitHub workflow.
+
+This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyze changes and generate the necessary documentation, and commit and push the changes. The goal is to keep the workflow as simple as possible by using straightforward shell commands, Continue CLI prompts, and basic git operations.
+
+## Why use Continue CLI for documentation?
+
+Continue CLI provides an easy way to define an AI agent with rules that understand your codebase and documentation, can analyze git diffs, search files, and generate or edit content. The agent can read and search files, explore the project, and access the Git history. You can restrict what the agent can do in the repository like which files can be edited.
+
+## Prerequisites
+
+To try this out, you will need:
+
+1. **Node.js 18 or higher**. Continue CLI is published as an npm package; the docs note that Node 18 \+ is required and show that you can install it globally using `npm i -g @continuedev/cli`
+
+2. **A Continue account and API key**. Headless mode requires authentication. According to the CLI guide, you set the environment variable `CONTINUE_API_KEY` with a personal or organisation API key, and the CLI will run in headless mode without interactive login. Get your API key from the Continue hub.
+
+3. **A project with code and documentation for the solution,** or you can leverage an open-source project to experiment with.
+
+# Documentation Generation Workflow
+
+## Overview
+
+The general high-level workflow this guide follows for generating documentation is the following:
+
+
+1. Set up Job and Validate Environment
+2. Set up the context of the repository and the branch to analyze changes in
+3. Do the Git based Change Analysis and output it into a separate file, we later use this as a `--prompt` input to the `cn` command
+4. Create a new Branch for the documentation creation following the format `{original-branch}-docs-update-{timestamp}`
+5. AI Documentation Generation with Change Analysis as context `--prompt` input
+   1. The agent analyzes changes and identifies new functionality
+   2. The agent creates or updates documentation to reflect changes
+   3. **Tip:**
+      1. Use an Agent configuration with rules specific for documentation writing in your project and fine tune it to work for you
+6. Commit & Push Changes
+   1. Only `git add` the directory where the documentation files are located
+   2. Push the documentation branch to origin
+7. Output Completion Summary
+8. Clean Up Job
+
+## Implementation
+
+### In a GitHub Workflow
+
+In this example of a GitHub workflow, you kick it off manually and provide a few inputs:
+
+- **repository:** The repository you are operating on
+- **branch\_name:**  The name of the branch you have code changes on and want to generate documentation for
+
+This workflow is helpful if you have been working on code changes in a branch and want to be able to kick off docs generation for it, then maybe raise a PR into your working Branch, before you raise a PR to your upstream repository.
+
+```
+name: Generate Docs for Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository (owner/repo)'
+        required: true
+        default: 'owner/repo'
+      branch_name:
+        description: 'Branch name to generate docs for'
+        required: true
+
+jobs:
+  write-docs:
+    runs-on: ubuntu-latest
+    name: Write Documentation for Branch
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+    steps:
+
+    - name: Checkout fork repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.inputs.repository || 'owner/repo' }}
+        token: ${{ secrets.GH_PAT }}
+        fetch-depth: 0  # Full history needed for sync
+
+    - name: Setup git configuration
+      run: |
+        git config user.name "github-actions[doc-writer-bot]"
+        git config user.email "yourname@email.com"
+
+    - name: Checkout target branch
+      run: |
+        git fetch origin ${{ github.event.inputs.branch_name }}
+        git checkout ${{ github.event.inputs.branch_name }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Continue CLI
+      run: |
+        echo "Installing Continue CLI..."
+        npm i -g @continuedev/cli
+
+    - name: Verify Continue CLI installation
+      run: |
+        echo "Checking Continue CLI version..."
+        cn --version || exit 1
+
+    - name: Set branch name
+      id: branch
+      run: |
+        BRANCH_NAME="${{ github.event.inputs.branch_name }}-docs-update-$(date +%Y-%m-%d-%H-%M-%S)"
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        echo "Branch name: $BRANCH_NAME"
+
+    - name: Generate git diff context
+      run: |
+        echo "Git changes:" > context.txt
+        git diff origin/main..HEAD --stat >> context.txt
+        echo -e "\n\nFile list:" >> context.txt
+        git diff origin/main..HEAD >> context.txt
+        echo "Generated context file:"
+        cat context.txt
+
+    - name: Create documentation branch
+      run: |
+        echo "Creating branch: ${{ steps.branch.outputs.branch_name }}"
+        git checkout -b "${{ steps.branch.outputs.branch_name }}"
+
+    - name: Generate documentation with Continue CLI
+      run: |
+        echo "Running Continue agent to generate documentation..."
+        cn --config <continue-user>/<agent-config> \
+           --auto \
+           --allow Write \
+           -p \
+           --prompt ./context.txt \
+           "Analyze the provided git diff and identify any new functionality introduced. Summarise the new features in a few sentences. Then search the existing documentation in the site docs/ directory to determine whether these features are already documented in a way that enables users to use them. If documentation is missing or incomplete, create or modify Markdown files under the site diretory (without changing any code) to add clear explanations, usage instructions and examples for the new features in the same style and format as the existing documentation. Finally, print a brief summary of the documentation changes you made."
+
+    - name: Clean up temporary files
+      run: rm -f context.txt
+
+    - name: Commit and push documentation changes
+      run: |
+        echo "Review git status..."
+        git status
+
+        echo "Adding files edited in site directory to git..."
+        git add site/
+
+        echo "Committing changes..."
+        git commit -s -m "docs: update for new functionality from branch ${{ github.event.inputs.branch_name }}"
+
+        echo "Pushing changes to origin..."
+        git push --set-upstream origin "${{ steps.branch.outputs.branch_name }}"
+
+```
+
+### On your local machine
+
+When using the Continue CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
+
+**Example of the section of a shell script interacting with the Continue CLI to generate documentation for the code changes in a branch:**
+
+```shell
+# code snippet
+# The script below shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
+
+# Generate git diff context
+echo "Generating git diff context..."
+echo "Git changes:" > context.txt
+git diff "$BASE_BRANCH..$COMPARE_BRANCH" --stat >> context.txt
+echo -e "\n\nFile list:" >> context.txt
+git diff "$BASE_BRANCH..$COMPARE_BRANCH" >> context.txt
+echo "Generated context file:"
+cat context.txt
+
+# Create documentation branch
+echo "Creating branch: $DOCS_BRANCH_NAME"
+git checkout -b "$DOCS_BRANCH_NAME"
+
+# Generate documentation with Continue CLI
+echo "Running Continue agent to generate documentation..."
+cn --config <continue-user>/<agent-config> \
+   --auto \
+   --allow Write \
+   -p \
+   --prompt ./context.txt \
+   "Analyze the provided git diff and identify any new functionality introduced. Summarise the new features in a few sentences. Then search the existing documentation in the site docs/ directory to determine whether these features are already documented in a way that enables users to use them. If documentation is missing or incomplete, create or modify Markdown files under the site diretory (without changing any code) to add clear explanations, usage instructions and examples for the new features in the same style and format as the existing documentation. Finally, print a brief summary of the documentation changes you made."
+
+# Clean up temporary files
+echo "Cleaning up temporary files..."
+rm -f context.txt
+
+# Commit and push documentation changes
+echo "Reviewing git status..."
+git status
+
+# Only adding files that have been added and modified in the site directory
+echo "Adding files edited in site directory to git..."
+git add site/
+
+if git diff --cached --quiet; then
+    echo "No documentation changes to commit"
+else
+    echo "Committing changes..."
+    git commit -s -m "docs: update for new functionality from branch $BRANCH_NAME"
+
+    echo "Pushing changes to origin..."
+    git push --set-upstream origin "$DOCS_BRANCH_NAME"
+
+    echo "Documentation branch created and pushed: $DOCS_BRANCH_NAME"
+fi
+```
+
+##
+
+## Enhancement Ideas
+
+* Add a Change Analysis Agent Step for Better Documentation Writing Output
+  * Define a specific Agent for analyzing the changes and generating a prompt specifically for what type of updates and changes should be made, that can then be used as input to a specialized documentation writing agent
+* Generate Documentation when new Code is Merged
+  * Create a GitHub workflow in your repository that follows up to generate documentation and raise a documentation PR when new features are merged to ensure coverage of documentation
+* Identify Missing Documentation and Generate Docs
+  * Instead of generating docs for new changes, what about creating an agent that can go through older merged PRs to see if the feature is still there and if the feature is covered in the documentation? And if it isn’t covered, generate it and raise a PR.
+* Add a Copy Edit Agent after the Docs Generation Agent
+  * For finetuning the writing and best practices, you can add a step after the docs generation to ask a agent you specialized defined as a Copy Edit agent to enhance the writing of your documentation. Ideas to include in the prompt for guidance include “Use short sentences and simple words”
