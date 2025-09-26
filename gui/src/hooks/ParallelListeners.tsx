@@ -102,6 +102,15 @@ function ParallelListeners() {
       );
       if (result.status === "success") {
         await handleConfigUpdate(true, result.content);
+
+        // (hub) config has not yet loaded - will be updated via configUpdate
+        if (
+          result.content.profileId === null &&
+          result.content.result.configLoadInterrupted
+        ) {
+          dispatch(setConfigLoading(true));
+          return;
+        }
       }
       dispatch(setConfigLoading(false));
     }
