@@ -23,8 +23,6 @@ export function SelectedAssistantButton({
   const buttonPadding = isSidebar ? "px-2 py-1.5" : "px-0 py-0.5";
   const buttonStyle = isSidebar ? {} : { fontSize: fontSize(-3) };
 
-  console.log("debug1 config loading", configLoading);
-
   return (
     <ListboxButton
       data-testid="assistant-select-button"
