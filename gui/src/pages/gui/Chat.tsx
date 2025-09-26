@@ -114,8 +114,8 @@ export function Chat() {
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-  const [sessionLastLoading, setLastSessionLoading] = useState(false);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
@@ -431,21 +431,12 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    if (sessionLastLoading) return;
-                    setLastSessionLoading(true);
                     await dispatch(loadLastSession());
-                    setLastSessionLoading(false);
                   }}
                   className="flex items-center gap-2"
                 >
-                  {sessionLastLoading ? (
-                    <em>loading last session...</em>
-                  ) : (
-                    <>
-                      <ArrowLeftIcon className="h-3 w-3" />
-                      <span className="text-xs">Last Session</span>
-                    </>
-                  )}
+                  <ArrowLeftIcon className="h-3 w-3" />
+                  <span className="text-xs">Last Session</span>
                 </NewSessionButton>
               )}
             </div>
