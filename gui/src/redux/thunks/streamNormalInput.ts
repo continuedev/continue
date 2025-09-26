@@ -29,6 +29,7 @@ import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
@@ -105,6 +106,8 @@ async function handleToolCallExecution(
 ): Promise<boolean> {
   // Return whether all tools were auto-approved
   const newState = getState();
+  const autoAcceptEditToolDiffs =
+    newState.config.config.ui?.autoAcceptEditToolDiffs;
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
 
@@ -166,6 +169,18 @@ async function handleToolCallExecution(
             tools: newState.config.config.tools,
           }),
         );
+        if (
+          [
+            BuiltInToolNames.EditExistingFile,
+            BuiltInToolNames.SingleFindAndReplace,
+            BuiltInToolNames.MultiEdit,
+          ].includes(
+            toolCallState.toolCall.function.name as BuiltInToolNames,
+          ) &&
+          autoAcceptEditToolDiffs
+        ) {
+          return true;
+        }
         return policy === "allowedWithoutPermission";
       }
     }),
