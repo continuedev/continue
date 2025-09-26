@@ -111,29 +111,24 @@ export async function loadJsonMcpConfigs(
             ),
           );
         }
-        if (claudeCodeFileParsed.data.projects) {
-          const projectServers = Object.values(
-            claudeCodeFileParsed.data.projects,
-          ).map((v) => v.mcpServers);
-          for (const mcpServers of projectServers) {
-            if (mcpServers) {
-              validJsonConfigs.push(
-                ...Object.entries(mcpServers).map(([name, mcpJson]) => ({
-                  name,
-                  mcpJson,
-                  uri,
-                })),
-              );
-            }
+        const projectServers = Object.values(
+          claudeCodeFileParsed.data.projects,
+        ).map((v) => v.mcpServers);
+        for (const mcpServers of projectServers) {
+          if (mcpServers) {
+            validJsonConfigs.push(
+              ...Object.entries(mcpServers).map(([name, mcpJson]) => ({
+                name,
+                mcpJson,
+                uri,
+              })),
+            );
           }
         }
       } else {
         const claudeDesktopFileParsed =
           claudeDesktopLikeConfigFileSchema.safeParse(json);
-        if (
-          claudeDesktopFileParsed.success &&
-          claudeDesktopFileParsed.data.mcpServers
-        ) {
+        if (claudeDesktopFileParsed.success) {
           validJsonConfigs.push(
             ...Object.entries(claudeDesktopFileParsed.data.mcpServers).map(
               ([name, mcpJson]) => ({
