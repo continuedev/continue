@@ -1,0 +1,21 @@
+{
+  "name": "cn",
+  "system_setup_commands": [
+    "npm i -g @continuedev/cli@latest",
+    "sudo apt update",
+    "sudo apt install -y ripgrep"
+  ],
+  "launch_parameters": {
+    "launch_commands": ["bash"],
+    "resource_size_request": "X_SMALL",
+    "keep_alive_time_seconds": 3600,
+    "available_ports": [8080],
+    "architecture": "x86_64"
+  },
+  "is_public": true,
+  "metadata": {
+    "description": "Continue CLI (cn) - AI-powered coding assistant",
+    "created_by": "continuedev-ci",
+    "tags": ["ai", "coding", "cli", "assistant"]
+  }
+}
