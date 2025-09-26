@@ -220,3 +220,40 @@ jobs:
           # Mark the original beta release as superseded
           gh release edit "v${{ steps.find_beta.outputs.beta_version }}" \
             --notes "This beta version has been promoted to stable as v${{ steps.final_version.outputs.stable_version }}."
+
+      - name: Publish Blueprint to Runloop
+        env:
+          RUNLOOP_API_KEY: ${{ secrets.RUNLOOP_API_KEY }}
+        run: |
+          echo "Publishing blueprint 'cn' to Runloop API for version ${{ steps.final_version.outputs.stable_version }}"
+
+          # Use blueprint configuration from template file
+          cp .github/workflows/runloop-blueprint-template.json blueprint.json
+
+          # Publish to Runloop API
+          response=$(curl -X POST "https://api.runloop.ai/v1/blueprints" \
+            -H "Authorization: Bearer $RUNLOOP_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @blueprint.json \
+            -w "%{http_code}" \
+            -s)
+
+          http_code=$(echo "$response" | tail -c 4)
+          response_body=$(echo "$response" | head -c -4)
+
+          if [[ "$http_code" == "200" ]] || [[ "$http_code" == "201" ]]; then
+            echo "✅ Successfully published blueprint to Runloop API"
+            echo "Response: $response_body"
+            
+            # Extract blueprint ID if available
+            blueprint_id=$(echo "$response_body" | jq -r '.id // empty')
+            if [[ -n "$blueprint_id" ]]; then
+              echo "Blueprint ID: $blueprint_id"
+              echo "blueprint_id=$blueprint_id" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ Failed to publish blueprint to Runloop API"
+            echo "HTTP Code: $http_code"
+            echo "Response: $response_body"
+            exit 1
+          fi

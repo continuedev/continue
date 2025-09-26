@@ -239,7 +239,6 @@
               "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/continuous-ai",
-              "guides/snyk-mcp-continue-cookbook",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
@@ -254,6 +253,7 @@
             "icon": "book-open-cover",
             "pages": [
               "guides/posthog-github-continuous-ai",
+              "guides/snyk-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment"
             ]
           }
