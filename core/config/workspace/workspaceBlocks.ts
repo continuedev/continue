@@ -2,6 +2,7 @@ import {
   BlockType,
   ConfigYaml,
   createRuleMarkdown,
+  createPromptMarkdown,
   RULE_FILE_EXTENSION,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
@@ -83,7 +84,10 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
 }
 
 function getFileExtension(blockType: BlockType): string {
-  return blockType === "rules" ? RULE_FILE_EXTENSION : "yaml";
+  if (blockType === "rules" || blockType === "prompts") {
+    return "md";
+  }
+  return "yaml";
 }
 
 export function getFileContent(blockType: BlockType): string {
@@ -91,6 +95,15 @@ export function getFileContent(blockType: BlockType): string {
     return createRuleMarkdown("New Rule", "Your rule content", {
       description: "A description of your rule",
     });
+  } else if (blockType === "prompts") {
+    return createPromptMarkdown(
+      "New prompt",
+      "Please write a thorough suite of unit tests for this code, making sure to cover all relevant edge cases",
+      {
+        description: "New prompt",
+        invokable: true,
+      },
+    );
   } else {
     return YAML.stringify(getContentsForNewBlock(blockType));
   }
