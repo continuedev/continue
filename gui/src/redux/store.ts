@@ -35,7 +35,6 @@ const rootReducer = combineReducers({
 const saveSubsetFilters = [
   createFilter("session", [
     "id",
-    "lastSessionId",
     "title",
 
     // Persist edit mode in case closes in middle
