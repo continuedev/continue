@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.3.12",
+  "version": "1.3.13",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -373,6 +373,12 @@
         "category": "Continue",
         "title": "Generate Rule",
         "group": "Continue"
+      },
+      {
+        "command": "continue.openInNewWindow",
+        "category": "Continue",
+        "title": "Open in new window",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -444,6 +450,12 @@
         "key": "ctrl+shift+r"
       },
       {
+        "command": "continue.openInNewWindow",
+        "mac": "cmd+k cmd+m",
+        "key": "ctrl+k ctrl+m",
+        "when": "!terminalFocus"
+      },
+      {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
@@ -512,6 +524,9 @@
         },
         {
           "command": "continue.generateRule"
+        },
+        {
+          "command": "continue.openInNewWindow"
         }
       ],
       "editor/context": [

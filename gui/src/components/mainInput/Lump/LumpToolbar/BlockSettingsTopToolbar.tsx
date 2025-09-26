@@ -73,7 +73,7 @@ export function BlockSettingsTopToolbar() {
   };
 
   return (
-    <div className="flex flex-1 items-center justify-between gap-1.5">
+    <div className="flex flex-1 items-center justify-between gap-3">
       <div className="flex items-center gap-1">
         {shouldShowError && (
           <ToolTip delayShow={700} content="View configuration errors">

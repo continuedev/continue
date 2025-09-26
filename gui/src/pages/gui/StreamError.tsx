@@ -288,10 +288,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: GITHUB_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", GITHUB_LINK);
             }}
           >
             <GithubIcon className="h-5 w-5" />
@@ -300,10 +297,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: DISCORD_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", DISCORD_LINK);
             }}
           >
             <DiscordIcon className="h-5 w-5" />
