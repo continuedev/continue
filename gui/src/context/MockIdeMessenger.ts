@@ -92,6 +92,9 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     ],
   },
+  "tools/preprocessArgs": {
+    preprocessedArgs: undefined,
+  },
   "llm/compileChat": {
     compiledChatMessages: [],
     didPrune: false,

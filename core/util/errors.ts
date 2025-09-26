@@ -27,6 +27,7 @@ export enum ContinueErrorReason {
   FindAndReplaceMissingOldString = "find_and_replace_missing_old_string",
   FindAndReplaceNonFirstEmptyOldString = "find_and_replace_non_first_empty_old_string",
   FindAndReplaceMissingNewString = "find_and_replace_missing_new_string",
+  FindAndReplaceInvalidReplaceAll = "find_and_replace_invalid_replace_all",
   FindAndReplaceOldStringNotFound = "find_and_replace_old_string_not_found",
   FindAndReplaceMultipleOccurrences = "find_and_replace_multiple_occurrences",
   FindAndReplaceMissingFilepath = "find_and_replace_missing_filepath",

@@ -34,7 +34,7 @@ export function validateSingleEdit(
   }
   if (replaceAll !== undefined && typeof replaceAll !== "boolean") {
     throw new ContinueError(
-      ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+      ContinueErrorReason.FindAndReplaceInvalidReplaceAll,
       `${context}replace_all must be a valid boolean`,
     );
   }

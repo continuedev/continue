@@ -2,17 +2,15 @@ import { EditOperation } from "../../tools/definitions/multiEdit";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { validateSingleEdit } from "./findAndReplaceUtils";
 
-export interface MultiEditValidationResult {
-  edits: EditOperation[];
-}
-
 /**
  * Validates multi-edit arguments and all edits in a single pass
  * @param args - The arguments object containing the edits array
  * @returns Validated edits array
  * @throws ContinueError if validation fails
  */
-export function validateMultiEdit(args: unknown): MultiEditValidationResult {
+export function validateMultiEdit(args: unknown): {
+  edits: EditOperation[];
+} {
   if (typeof args !== "object" || !args || !("edits" in args)) {
     throw new ContinueError(
       ContinueErrorReason.MultiEditEditsArrayRequired,

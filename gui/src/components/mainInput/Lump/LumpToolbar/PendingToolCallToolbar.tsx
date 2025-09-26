@@ -24,7 +24,7 @@ export function PendingToolCallToolbar() {
   }
 
   const handleAccept = (toolCallId: string) => {
-    void dispatch(callToolById({ toolCallId }));
+    void dispatch(callToolById({ id: toolCallId }));
   };
 
   const handleReject = (toolCallId: string) => {
