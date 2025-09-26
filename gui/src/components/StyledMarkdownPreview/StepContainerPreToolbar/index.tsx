@@ -44,6 +44,9 @@ export interface StepContainerPreToolbarProps {
   collapsible?: boolean;
 }
 
+export const DANGEROUS_COMMAND_WARNING_MESSAGE =
+  "Potentially dangerous command";
+
 export function StepContainerPreToolbar({
   showToolCallStatusIcon,
   codeBlockContent,
@@ -338,7 +341,7 @@ export function StepContainerPreToolbar({
       {securityWarning && (
         <div className="bg-warning/10 border-warning/30 text-warning flex items-center gap-2 border-b px-2 py-1.5 text-sm">
           <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
-          <span>Potentially dangerous command</span>
+          <span>{DANGEROUS_COMMAND_WARNING_MESSAGE}</span>
         </div>
       )}
       <div
