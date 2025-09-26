@@ -213,46 +213,54 @@ context:
 
 ### `rules`
 
-List of rules that the LLM should follow. These are concatenated into the system message for all [Agent](/features/agent/quick-start), [Chat](/features/chat/quick-start), and [Edit](/features/edit/quick-start) requests. See the [rules deep dive](/customize/deep-dives/rules) for details.
+Rules are concatenated into the system message for all [Agent](/features/agent/quick-start), [Chat](/features/chat/quick-start), and [Edit](/features/edit/quick-start) requests. 
 
-Explicit rules can either be simple text or an object with the following properties:
+Confiugration example:
 
-- `name` (**required**): A display name/title for the rule
-- `rule` (**required**): The text content of the rule
-- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
-
-```yaml title="config.yaml"l
+```yaml title="config.yaml"
 rules:
-  - Always annotate Python functions with their parameter and return types
-  - name: TypeScript best practices
-    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
-    globs: "**/*.{ts,tsx}"
-  - name: TypeScript test patterns
-    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
-    globs:
-      - "src/**/*.test.ts"
-      - "tests/**/*.ts"
-  - uses: myprofile/my-mood-setter
-    with:
-      TONE: concise
+  - uses: sanity/sanity-opinionated # rules file stored on Continue Hub
+  - uses: file://user/Desktop/rules.md # rules file stored on local computer
 ```
+
+Rules file example:
+
+```md title="rules.md"
+---
+name: Pirate rule
+---
+
+Talk like a pirate
+```
+
+See the [rules deep dive](/customize/deep-dives/rules) for more details.
 
 ---
 
 ### `prompts`
 
-A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
+Prompts can be invoked with a <kbd>/</kbd> command.
+
+Configuration example:
 
 ```yaml title="config.yaml"
 prompts:
-  - name: check
-    description: Check for mistakes in my code
-    prompt: |
-      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
-        - Syntax errors
-        - Logic errors
-        - Security vulnerabilities
+  - uses: supabase/create-functions # prompts file stored on Continue Hub 
+  - uses: file://user/Desktop/prompts.md # prompts file stored on local computer
 ```
+
+Prompts file example:
+
+```md title="prompts.md"
+---
+name: Make pirate comments
+invokable: true
+---
+
+Rewrite all comments in the active file to talk like a pirate
+```
+
+See the [prompts deep dive](/customize/deep-dives/prompts) for more details.
 
 ---
 
