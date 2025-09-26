@@ -91,7 +91,7 @@ export function ModelsSection() {
             <span>
               Used in Chat, Plan, Agent mode (
               <a
-                href="https://docs.continue.dev/features/chat/quick-start hover:text-inherit"
+                href="https://docs.continue.dev/features/chat/quick-start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"
