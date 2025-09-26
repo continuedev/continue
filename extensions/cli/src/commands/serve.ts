@@ -3,6 +3,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
+import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -25,7 +26,6 @@ import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
-import { runEnvironmentInstall } from "../environment/environmentHandler.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import {
@@ -56,15 +56,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
 
-  // Run environment install script if available
-  try {
-    await runEnvironmentInstall();
-  } catch (error) {
-    console.error(
-      chalk.red("Failed to run environment install script:"),
-      formatError(error),
-    );
-  }
+  // Environment install script will be deferred until after server startup to avoid blocking
 
   // Initialize services with tool permission overrides
   const { permissionOverrides } = processCommandFlags(options);
@@ -358,6 +350,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`,
       ),
     );
+
+    // Run environment install script after server startup
+    runEnvironmentInstallSafe();
 
     // If initial prompt provided, queue it for processing
     if (actualPrompt) {

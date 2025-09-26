@@ -1,8 +1,11 @@
-import { execSync } from "child_process";
+import { exec } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
+import { promisify } from "util";
 
 import chalk from "chalk";
+
+const execAsync = promisify(exec);
 
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
@@ -46,6 +49,7 @@ function findEnvironmentFile(): EnvironmentConfig | null {
 
 /**
  * Runs the install script from environment.json if present
+ * Now runs asynchronously to avoid blocking server startup
  */
 export async function runEnvironmentInstall(): Promise<void> {
   const environmentConfig = findEnvironmentFile();
@@ -63,8 +67,7 @@ export async function runEnvironmentInstall(): Promise<void> {
   );
 
   try {
-    execSync(installScript, {
-      stdio: "inherit",
+    await execAsync(installScript, {
       cwd: process.cwd(),
       encoding: "utf-8",
     });
@@ -76,6 +79,38 @@ export async function runEnvironmentInstall(): Promise<void> {
     logger.error(`Environment install script failed: ${formatError(error)}`);
     throw new Error(
       `Failed to run environment install script: ${formatError(error)}`,
+    );
+  }
+}
+
+/**
+ * Runs the install script from environment.json if present, with error handling
+ * This version doesn't throw errors to avoid blocking server startup
+ */
+export async function runEnvironmentInstallSafe(): Promise<void> {
+  const environmentConfig = findEnvironmentFile();
+
+  if (!environmentConfig || !environmentConfig.install) {
+    logger.debug("No environment install script to run");
+    return;
+  }
+
+  logger.debug(
+    chalk.blue("Running environment install script in background..."),
+  );
+
+  try {
+    await runEnvironmentInstall();
+    logger.debug(
+      chalk.green("✓ Environment install script completed successfully"),
+    );
+  } catch (error) {
+    logger.error(
+      chalk.yellow("Warning: Environment install script failed:"),
+      formatError(error),
+    );
+    logger.error(
+      chalk.dim("Server will continue to run without the install script."),
     );
   }
 }
