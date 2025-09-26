@@ -145,7 +145,14 @@ export const loadRemoteSession = createAsyncThunk<
 export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
   "session/loadLast",
   async (_, { extra, dispatch, getState }) => {
-    const lastSessionId = getState().session.lastSessionId;
+    let lastSessionId = getState().session.lastSessionId;
+
+    const lastSessionResult = await extra.ideMessenger.request("history/list", {
+      limit: 1,
+    });
+    if (lastSessionResult.status === "success") {
+      lastSessionId = lastSessionResult.content.at(0)?.sessionId;
+    }
 
     if (!lastSessionId) {
       dispatch(newSession());
