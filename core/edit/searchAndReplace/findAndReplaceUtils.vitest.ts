@@ -6,39 +6,69 @@ describe("validateSingleEdit", () => {
   describe("valid inputs", () => {
     it("should not throw for valid non-empty strings", () => {
       expect(() => {
-        validateSingleEdit("old", "new");
+        validateSingleEdit("old", "new", undefined);
       }).not.toThrow();
     });
 
     it("should allow empty old_string for file creation", () => {
       expect(() => {
-        validateSingleEdit("", "new content");
+        validateSingleEdit("", "new content", undefined);
       }).not.toThrow();
     });
 
     it("should allow empty new_string for deletion", () => {
       expect(() => {
-        validateSingleEdit("delete me", "");
+        validateSingleEdit("delete me", "", undefined);
       }).not.toThrow();
     });
 
     it("should allow multiline strings", () => {
       expect(() => {
-        validateSingleEdit("line1\nline2", "newline1\nnewline2");
+        validateSingleEdit("line1\nline2", "newline1\nnewline2", undefined);
       }).not.toThrow();
     });
 
     it("should allow special characters", () => {
       expect(() => {
-        validateSingleEdit("/[a-z]+/g", "/[A-Z]+/g");
+        validateSingleEdit("/[a-z]+/g", "/[A-Z]+/g", undefined);
       }).not.toThrow();
+    });
+
+    it("should allow replaceAll as true", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", true);
+      }).not.toThrow();
+    });
+
+    it("should allow replaceAll as false", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", false);
+      }).not.toThrow();
+    });
+
+    it("should return validated values including replaceAll", () => {
+      const result = validateSingleEdit("old", "new", true);
+      expect(result).toEqual({
+        oldString: "old",
+        newString: "new",
+        replaceAll: true,
+      });
+    });
+
+    it("should return validated values with replaceAll undefined", () => {
+      const result = validateSingleEdit("old", "new", undefined);
+      expect(result).toEqual({
+        oldString: "old",
+        newString: "new",
+        replaceAll: undefined,
+      });
     });
   });
 
   describe("invalid inputs", () => {
     it("should throw error when old_string is null", () => {
       expect(() => {
-        validateSingleEdit(null as any, "new");
+        validateSingleEdit(null as any, "new", undefined);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingOldString,
@@ -48,7 +78,7 @@ describe("validateSingleEdit", () => {
 
     it("should throw error when old_string is undefined", () => {
       expect(() => {
-        validateSingleEdit(undefined as any, "new");
+        validateSingleEdit(undefined as any, "new", undefined);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingOldString,
@@ -58,7 +88,7 @@ describe("validateSingleEdit", () => {
 
     it("should throw error when new_string is undefined", () => {
       expect(() => {
-        validateSingleEdit("old", undefined as any);
+        validateSingleEdit("old", undefined as any, undefined);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingNewString,
@@ -68,7 +98,7 @@ describe("validateSingleEdit", () => {
 
     it("should throw error when old_string and new_string are identical", () => {
       expect(() => {
-        validateSingleEdit("same", "same");
+        validateSingleEdit("same", "same", undefined);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
@@ -78,7 +108,37 @@ describe("validateSingleEdit", () => {
 
     it("should throw error when both are empty strings", () => {
       expect(() => {
-        validateSingleEdit("", "");
+        validateSingleEdit("", "", undefined);
+      }).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
+      );
+    });
+
+    it("should throw error when replaceAll is not a boolean", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", "invalid" as any);
+      }).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
+      );
+    });
+
+    it("should throw error when replaceAll is null", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", null as any);
+      }).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
+      );
+    });
+
+    it("should throw error when replaceAll is a number", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", 1 as any);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
@@ -90,7 +150,7 @@ describe("validateSingleEdit", () => {
   describe("error messages with context", () => {
     it("should include edit number in error messages when index provided", () => {
       expect(() => {
-        validateSingleEdit(null as any, "new", 2);
+        validateSingleEdit(null as any, "new", undefined, 2);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingOldString,
@@ -100,7 +160,7 @@ describe("validateSingleEdit", () => {
 
     it("should include edit number for new_string errors", () => {
       expect(() => {
-        validateSingleEdit("old", undefined as any, 0);
+        validateSingleEdit("old", undefined as any, undefined, 0);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingNewString,
@@ -110,7 +170,17 @@ describe("validateSingleEdit", () => {
 
     it("should include edit number for identical strings error", () => {
       expect(() => {
-        validateSingleEdit("same", "same", 4);
+        validateSingleEdit("same", "same", undefined, 4);
+      }).toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
+      );
+    });
+
+    it("should include edit number for replaceAll validation error", () => {
+      expect(() => {
+        validateSingleEdit("old", "new", "invalid" as any, 3);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
@@ -120,7 +190,7 @@ describe("validateSingleEdit", () => {
 
     it("should not include context when index not provided", () => {
       expect(() => {
-        validateSingleEdit("same", "same");
+        validateSingleEdit("same", "same", undefined);
       }).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,

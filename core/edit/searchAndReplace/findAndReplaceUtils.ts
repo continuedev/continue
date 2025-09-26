@@ -7,22 +7,23 @@ export const FOUND_MULTIPLE_FIND_STRINGS_ERROR =
  * Validates a single edit operation
  */
 export function validateSingleEdit(
-  oldString: string,
-  newString: string,
+  oldString: unknown,
+  newString: unknown,
+  replaceAll: unknown,
   index?: number,
-): void {
+): { oldString: string; newString: string; replaceAll?: boolean } {
   const context = index !== undefined ? `edit at index ${index}: ` : "";
 
-  if (!oldString && oldString !== "") {
+  if (oldString === undefined || typeof oldString !== "string") {
     throw new ContinueError(
       ContinueErrorReason.FindAndReplaceMissingOldString,
-      `${context}old_string is required`,
+      `${context}string old_string is required`,
     );
   }
-  if (newString === undefined) {
+  if (newString === undefined || typeof newString !== "string") {
     throw new ContinueError(
       ContinueErrorReason.FindAndReplaceMissingNewString,
-      `${context}new_string is required`,
+      `${context}string new_string is required`,
     );
   }
   if (oldString === newString) {
@@ -31,6 +32,13 @@ export function validateSingleEdit(
       `${context}old_string and new_string must be different`,
     );
   }
+  if (replaceAll !== undefined && typeof replaceAll !== "boolean") {
+    throw new ContinueError(
+      ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+      `${context}replace_all must be a valid boolean`,
+    );
+  }
+  return { oldString, newString, replaceAll };
 }
 
 export function trimEmptyLines({

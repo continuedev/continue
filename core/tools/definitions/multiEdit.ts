@@ -1,4 +1,7 @@
 import { Tool } from "../..";
+import { validateMultiEdit } from "../../edit/searchAndReplace/multiEditValidation";
+import { executeMultiFindAndReplace } from "../../edit/searchAndReplace/performReplace";
+import { validateSearchAndReplaceFilepath } from "../../edit/searchAndReplace/validateArgs";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 import { NO_PARALLEL_TOOL_CALLING_INSTRUCTION } from "./editFile";
 import { singleFindAndReplaceTool } from "./singleFindAndReplace";
@@ -108,4 +111,24 @@ WARNINGS:
     ],
   },
   defaultToolPolicy: "allowedWithPermission",
+  preprocessArgs: async (args, extras) => {
+    const { edits } = validateMultiEdit(args);
+    const fileUri = await validateSearchAndReplaceFilepath(
+      args.filepath,
+      extras.ide,
+    );
+
+    const editingFileContents = await extras.ide.readFile(fileUri);
+    const newFileContents = executeMultiFindAndReplace(
+      editingFileContents,
+      edits,
+    );
+
+    return {
+      ...args,
+      fileUri,
+      editingFileContents,
+      newFileContents,
+    };
+  },
 };

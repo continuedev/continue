@@ -41,17 +41,25 @@ export function findAllCurToolCalls(
   chatHistory: RootState["session"]["history"],
 ): ToolCallState[] {
   // Find the most recent assistant message that has tool call states
+  let seenAssistantMessage = false;
+  let passedAssistantMessage = false;
   for (let i = chatHistory.length - 1; i >= 0; i--) {
     const item = chatHistory[i];
-    if (
-      item.message.role === "assistant" &&
-      item.toolCallStates &&
-      item.toolCallStates.length > 0
-    ) {
-      return item.toolCallStates;
+    if (item.message.role === "user") {
+      return [];
+    }
+    if (item.message.role === "assistant" || item.message.role === "thinking") {
+      seenAssistantMessage = true;
+      if (item.toolCallStates && item.toolCallStates.length > 0) {
+        return item.toolCallStates;
+      }
+    } else if (seenAssistantMessage) {
+      passedAssistantMessage = true;
+    }
+    if (passedAssistantMessage) {
+      return [];
     }
   }
-
   return [];
 }
 

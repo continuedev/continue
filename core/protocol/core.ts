@@ -14,6 +14,7 @@ import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
+  BaseSessionMetadata,
   BrowserSerializedContinueConfig,
   ChatMessage,
   CompiledMessagesResult,
@@ -35,7 +36,6 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  BaseSessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -307,6 +307,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tools/evaluatePolicy": [
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
     { policy: ToolPolicy; displayValue?: string },
+  ];
+  "tools/preprocessArgs": [
+    { toolName: string; args: Record<string, unknown> },
+    { preprocessedArgs?: Record<string, unknown> },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
