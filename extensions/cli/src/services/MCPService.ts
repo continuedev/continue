@@ -372,7 +372,7 @@ export class MCPService
       } else if (serverConfig.type === "streamable-http") {
         const transport = this.constructHttpTransport(serverConfig);
         await client.connect(transport, {});
-      } else {
+      } else if (!serverConfig.type) {
         try {
           const transport = this.constructHttpTransport(serverConfig);
           await client.connect(transport, {});
@@ -392,6 +392,8 @@ export class MCPService
             );
           }
         }
+      } else {
+        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
       }
     }
 

@@ -221,7 +221,7 @@ class MCPConnection {
                   );
                   await this.client.connect(transport, {});
                   this.transport = transport;
-                } else {
+                } else if (!this.options.type) {
                   try {
                     const transport = this.constructHttpTransport({
                       ...this.options,
@@ -243,6 +243,10 @@ class MCPConnection {
                       );
                     }
                   }
+                } else {
+                  throw new Error(
+                    `Unsupported transport type: ${this.options.type}`,
+                  );
                 }
               }
 
