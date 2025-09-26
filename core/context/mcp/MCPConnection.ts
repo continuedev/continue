@@ -361,24 +361,27 @@ class MCPConnection {
   ): Promise<Transport> {
     switch (options.transport.type) {
       case "stdio":
-        const env: Record<string, string> = options.transport.env
-          ? { ...options.transport.env }
-          : {};
+        const processEnv: Record<string, string> = Object.fromEntries(
+          Object.entries(process.env).filter(([_, v]) => v !== undefined) as [
+            string,
+            string,
+          ][],
+        );
 
-        if (process.env.PATH !== undefined) {
-          // Set the initial PATH from process.env
-          env.PATH = process.env.PATH;
+        const env = {
+          ...processEnv,
+          ...(options.transport.env ?? {}),
+        };
 
-          // For non-Windows platforms, try to get the PATH from user shell
-          if (process.platform !== "win32") {
-            try {
-              const shellEnvPath = await getEnvPathFromUserShell();
-              if (shellEnvPath && shellEnvPath !== process.env.PATH) {
-                env.PATH = shellEnvPath;
-              }
-            } catch (err) {
-              console.error("Error getting PATH:", err);
+        // For non-Windows platforms, try to get the PATH from user shell
+        if (process.platform !== "win32") {
+          try {
+            const shellEnvPath = await getEnvPathFromUserShell();
+            if (shellEnvPath && shellEnvPath !== process.env.PATH) {
+              env.PATH = shellEnvPath;
             }
+          } catch (err) {
+            console.error("Error getting PATH:", err);
           }
         }
 
