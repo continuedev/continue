@@ -287,9 +287,7 @@ echo "Done"`;
     it("should display full warning message", () => {
       renderComponent({ codeBlockContent: "sudo rm -rf /" });
 
-      const expectedMessage =
-        "This code contains potentially dangerous commands. Please review and understand the code before running.";
-      const warning = screen.getByText(expectedMessage);
+      const warning = screen.getByText(DANGEROUS_COMMAND_WARNING_MESSAGE);
       expect(warning).toBeInTheDocument();
     });
   });
