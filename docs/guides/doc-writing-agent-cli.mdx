@@ -1,62 +1,112 @@
 ---
 title: "Automating Documentation Updates with Continue CLI"
 sidebarTitle: "Automating Documentation Updates with Continue CLI"
-description: "
+description: "Learn how to create automated documentation generation workflows using Continue CLI. Set up AI agents to analyze code changes and generate or update documentation automatically in GitHub workflows or local development."
 ---
 # Automating Documentation Updates with Continue CLI
 
-This user guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Continue CLI, either as part of your local workflow or as part of a GitHub workflow.
+This guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Continue CLI, either as part of your local workflow or as part of a GitHub workflow.
 
 This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyze changes and generate the necessary documentation, and commit and push the changes. The goal is to keep the workflow as simple as possible by using straightforward shell commands, Continue CLI prompts, and basic git operations.
 
-## Why use Continue CLI for documentation?
+## Why Use Continue CLI for Documentation?
 
-Continue CLI provides an easy way to define an AI agent with rules that understand your codebase and documentation, can analyze git diffs, search files, and generate or edit content. The agent can read and search files, explore the project, and access the Git history. You can restrict what the agent can do in the repository like which files can be edited.
+<CardGroup cols={2}>
+  <Card title="Intelligent Analysis" icon="brain">
+    AI agents understand your codebase and documentation patterns, analyzing git diffs to identify what needs documenting.
+  </Card>
+
+  <Card title="Automated Workflows" icon="robot">
+    Integrate seamlessly into CI/CD pipelines or local development workflows with minimal setup.
+  </Card>
+
+  <Card title="Contextual Understanding" icon="files">
+    Agents can read files, explore projects, and access Git history to generate accurate, relevant documentation.
+  </Card>
+
+  <Card title="Controlled Permissions" icon="shield">
+    Restrict agent actions to specific files and operations, ensuring safe automated documentation updates.
+  </Card>
+</CardGroup>
 
 ## Prerequisites
 
-To try this out, you will need:
+<CardGroup cols={1}>
+  <Card title="Node.js 18+" icon="node-js">
+    Continue CLI requires Node.js 18 or higher. Install globally with:
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Card>
 
-1. **Node.js 18 or higher**. Continue CLI is published as an npm package; the docs note that Node 18 \+ is required and show that you can install it globally using `npm i -g @continuedev/cli`
+  <Card title="Continue API Key" icon="key">
+    Get your API key from [Continue Hub](https://hub.continue.dev/settings/api-keys) and set:
+    ```bash
+    export CONTINUE_API_KEY=your_key_here
+    ```
+    <Info>
+    You can use the Continue CLI in headless mode without interactive login by setting the `CONTINUE_API_KEY` environment variable.
+    </Info>
+  </Card>
 
-2. **A Continue account and API key**. Headless mode requires authentication. According to the CLI guide, you set the environment variable `CONTINUE_API_KEY` with a personal or organisation API key, and the CLI will run in headless mode without interactive login. Get your API key from the Continue hub.
-
-3. **A project with code and documentation for the solution,** or you can leverage an open-source project to experiment with.
+  <Card title="Git Repository" icon="code">
+    A project with code and documentation, or use an open-source project to experiment with the workflow.
+  </Card>
+</CardGroup>
 
 # Documentation Generation Workflow
 
-## Overview
+## Workflow Overview
 
-The general high-level workflow this guide follows for generating documentation is the following:
+The documentation generation process follows these sequential steps:
+
+<Steps>
+  <Step title="Environment Setup">
+    Validate environment, install Continue CLI, and set up authentication with API keys.
+  </Step>
+
+  <Step title="Change Analysis">
+    Generate git diff context and analyze code changes between branches to identify new functionality.
+  </Step>
+
+  <Step title="Branch Creation">
+    Create a dedicated documentation branch following the pattern `{original-branch}-docs-update-{timestamp}`.
+  </Step>
+
+  <Step title="AI Documentation Generation">
+    Use Continue CLI with custom rules to analyze changes and generate or update documentation files.
+    <Tip>
+    Use an agent configuration with rules specific for documentation writing in your project and fine-tune it to work for your team's standards.
+    </Tip>
+  </Step>
+
+  <Step title="Review & Commit">
+    Review generated documentation, commit changes to the docs directory, and push to origin.
+  </Step>
+
+  <Step title="Cleanup">
+    Remove temporary files and output completion summary with branch information.
+  </Step>
+</Steps>
 
 
-1. Set up Job and Validate Environment
-2. Set up the context of the repository and the branch to analyze changes in
-3. Do the Git based Change Analysis and output it into a separate file, we later use this as a `--prompt` input to the `cn` command
-4. Create a new Branch for the documentation creation following the format `{original-branch}-docs-update-{timestamp}`
-5. AI Documentation Generation with Change Analysis as context `--prompt` input
-   1. The agent analyzes changes and identifies new functionality
-   2. The agent creates or updates documentation to reflect changes
-   3. **Tip:**
-      1. Use an Agent configuration with rules specific for documentation writing in your project and fine tune it to work for you
-6. Commit & Push Changes
-   1. Only `git add` the directory where the documentation files are located
-   2. Push the documentation branch to origin
-7. Output Completion Summary
-8. Clean Up Job
 
 ## Implementation
 
-### In a GitHub Workflow
+<Tabs>
+  <Tab title="GitHub Workflow">
 
-In this example of a GitHub workflow, you kick it off manually and provide a few inputs:
+### GitHub Actions Implementation
 
-- **repository:** The repository you are operating on
-- **branch\_name:**  The name of the branch you have code changes on and want to generate documentation for
+<Info>
+This example uses a manual workflow dispatch that requires two inputs: the repository name and the branch containing your code changes. This is helpful when you want to generate documentation for a feature branch before creating a pull request.
+</Info>
 
-This workflow is helpful if you have been working on code changes in a branch and want to be able to kick off docs generation for it, then maybe raise a PR into your working Branch, before you raise a PR to your upstream repository.
+**Required Inputs:**
+- **repository:** The repository you are operating on (format: `owner/repo`)
+- **branch_name:** The name of the branch you have code changes on and want to generate documentation for
 
-```
+```yaml title=".github/workflows/generate-docs.yml"
 name: Generate Docs for Branch
 
 on:
@@ -161,14 +211,21 @@ jobs:
 
 ```
 
-### On your local machine
+  </Tab>
+  <Tab title="Local Development">
+
+### Local Development Implementation
+
+<Warning>
+Make sure to set your `CONTINUE_API_KEY` environment variable before running local scripts to enable headless mode.
+</Warning>
 
 When using the Continue CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
 
-**Example of the section of a shell script interacting with the Continue CLI to generate documentation for the code changes in a branch:**
+**Example shell script for generating documentation:**
 
-```shell
-# code snippet
+```bash title="generate-docs.sh"
+#!/bin/bash
 # The script below shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
 
 # Generate git diff context
@@ -218,15 +275,49 @@ else
 fi
 ```
 
-##
+  </Tab>
+</Tabs>
 
 ## Enhancement Ideas
 
-* Add a Change Analysis Agent Step for Better Documentation Writing Output
-  * Define a specific Agent for analyzing the changes and generating a prompt specifically for what type of updates and changes should be made, that can then be used as input to a specialized documentation writing agent
-* Generate Documentation when new Code is Merged
-  * Create a GitHub workflow in your repository that follows up to generate documentation and raise a documentation PR when new features are merged to ensure coverage of documentation
-* Identify Missing Documentation and Generate Docs
-  * Instead of generating docs for new changes, what about creating an agent that can go through older merged PRs to see if the feature is still there and if the feature is covered in the documentation? And if it isn’t covered, generate it and raise a PR.
-* Add a Copy Edit Agent after the Docs Generation Agent
-  * For finetuning the writing and best practices, you can add a step after the docs generation to ask a agent you specialized defined as a Copy Edit agent to enhance the writing of your documentation. Ideas to include in the prompt for guidance include “Use short sentences and simple words”
+The workflow above is a basic example and can be enhanced in various ways to fit your needs. Here are some ideas:
+
+<CardGroup cols={2}>
+  <Card title="Change Analysis Agent" icon="magnifying-glass">
+    Define a specialized agent for analyzing changes and generating targeted prompts for documentation writers, improving output quality.
+  </Card>
+
+  <Card title="Auto-Documentation on Merge" icon="code-compare">
+    Create GitHub workflows that automatically generate documentation PRs when new features are merged to main.
+  </Card>
+
+  <Card title="Documentation Gap Analysis" icon="clipboard">
+    Build an agent that reviews older merged PRs to identify undocumented features and generates missing documentation.
+  </Card>
+
+  <Card title="Copy Editor Agent" icon="pencil">
+    Add a post-processing agent to enhance writing quality with rules like "use short sentences and simple words."
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Ready to implement automated documentation with Continue CLI? Here are some helpful resources to get you started:
+
+<CardGroup cols={2}>
+  <Card title="Continue CLI Guide" icon="terminal" href="/guides/cli">
+    Learn the fundamentals of using Continue CLI for automated coding tasks and headless workflows.
+  </Card>
+
+  <Card title="Understanding Agents" icon="robot" href="/guides/understanding-agents">
+    Discover how to configure and customize AI agents for your specific documentation needs.
+  </Card>
+
+  <Card title="Video: Leverage AI to help with your docs" icon="video" href="https://www.youtube.com/watch?v=rJ2taa8OLvY">
+    Checkout this video from Tetrate about using Continue Agents to help with writing your docs.
+  </Card>
+
+  <Card title="Continue Hub" icon="hub" href="https://hub.continue.dev">
+    Browse pre-built agents and configurations from the Continue community.
+  </Card>
+</CardGroup>
