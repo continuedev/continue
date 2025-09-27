@@ -1,6 +1,23 @@
-import { logger } from "src/util/logger.js";
+import {
+  ApiRequestError,
+  AuthenticationRequiredError,
+  post,
+} from "../util/apiClient.js";
+import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
+
+/**
+ * Extract the agent ID from the --id command line flag
+ */
+function getAgentIdFromArgs(): string | undefined {
+  const args = process.argv;
+  const idIndex = args.indexOf("--id");
+  if (idIndex !== -1 && idIndex + 1 < args.length) {
+    return args[idIndex + 1];
+  }
+  return undefined;
+}
 
 export const statusTool: Tool = {
   name: "Status",
@@ -27,7 +44,35 @@ You should use this tool to notify the user whenever the state of your work chan
   readonly: true,
   isBuiltIn: true,
   run: async (args: { status: string }): Promise<string> => {
-    logger.info(`Status: ${args.status}`);
-    return `Status set: ${args.status}`;
+    try {
+      // Get agent ID from --id flag
+      const agentId = getAgentIdFromArgs();
+      if (!agentId) {
+        const errorMessage =
+          "Agent ID is required. Please use the --id flag with cn serve.";
+        logger.error(errorMessage);
+        return `Error: ${errorMessage}`;
+      }
+
+      // Call the API endpoint using shared client
+      await post(`agents/${agentId}/status`, { status: args.status });
+
+      logger.info(`Status: ${args.status}`);
+      return `Status set: ${args.status}`;
+    } catch (error) {
+      if (error instanceof AuthenticationRequiredError) {
+        logger.error(error.message);
+        return "Error: Authentication required";
+      }
+
+      if (error instanceof ApiRequestError) {
+        return `Error setting status: ${error.status} ${error.response || error.statusText}`;
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(`Error setting status: ${errorMessage}`);
+      return `Error setting status: ${errorMessage}`;
+    }
   },
 };
