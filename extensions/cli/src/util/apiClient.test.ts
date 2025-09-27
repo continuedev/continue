@@ -59,9 +59,10 @@ describe("apiClient", () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
+        statusText: "OK",
         headers: { get: vi.fn().mockReturnValue("application/json") },
         json: vi.fn().mockResolvedValue({ data: "test" }),
-      } as Response);
+      } as unknown as Response);
 
       const result = await makeAuthenticatedRequest("test-endpoint", {
         method: "POST",
@@ -91,9 +92,10 @@ describe("apiClient", () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
+        statusText: "OK",
         headers: { get: vi.fn().mockReturnValue("text/plain") },
         text: vi.fn().mockResolvedValue("plain text response"),
-      } as Response);
+      } as unknown as Response);
 
       const result = await makeAuthenticatedRequest("test-endpoint");
 
@@ -121,8 +123,9 @@ describe("apiClient", () => {
         ok: false,
         status: 404,
         statusText: "Not Found",
+        headers: { get: vi.fn() },
         text: vi.fn().mockResolvedValue("Resource not found"),
-      } as Response);
+      } as unknown as Response);
 
       await expect(makeAuthenticatedRequest("test-endpoint")).rejects.toThrow(
         ApiRequestError,
@@ -141,9 +144,10 @@ describe("apiClient", () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
+        statusText: "OK",
         headers: { get: vi.fn().mockReturnValue("application/json") },
         json: vi.fn().mockResolvedValue({ success: true }),
-      } as Response);
+      } as unknown as Response);
 
       await makeAuthenticatedRequest("test-endpoint", {
         method: "POST",
@@ -162,9 +166,10 @@ describe("apiClient", () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
+        statusText: "OK",
         headers: { get: vi.fn().mockReturnValue("application/json") },
         json: vi.fn().mockResolvedValue({}),
-      } as Response);
+      } as unknown as Response);
 
       await makeAuthenticatedRequest("test-endpoint", {
         headers: { "Custom-Header": "custom-value" },
@@ -188,9 +193,10 @@ describe("apiClient", () => {
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
+        statusText: "OK",
         headers: { get: vi.fn().mockReturnValue("application/json") },
         json: vi.fn().mockResolvedValue({ success: true }),
-      } as Response);
+      } as unknown as Response);
     });
 
     test("get method should make GET request", async () => {
