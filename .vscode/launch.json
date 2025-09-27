@@ -18,7 +18,7 @@
       ],
       "pauseForSourceMap": false,
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
-      "preLaunchTask": "vscode-extension:build-with-packages",
+      "preLaunchTask": "vscode-extension:build-without-watch",
       "env": {
         // "CONTROL_PLANE_ENV": "local",
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
