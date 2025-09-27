@@ -278,6 +278,10 @@ addCommonOptions(
     "Connect directly to the specified URL instead of creating a new remote environment",
   )
   .option(
+    "--id <id>",
+    "Connect to an existing remote agent by id and establish a tunnel",
+  )
+  .option(
     "--idempotency-key <key>",
     "Idempotency key for session management - allows resuming existing sessions",
   )

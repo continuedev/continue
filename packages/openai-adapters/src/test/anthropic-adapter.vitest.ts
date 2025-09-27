@@ -50,7 +50,17 @@ describe("Anthropic Adapter Tests", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          messages: [{ role: "user", content: "hello" }],
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "hello",
+                },
+              ],
+            },
+          ],
           system: undefined,
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 32000,
@@ -104,7 +114,17 @@ describe("Anthropic Adapter Tests", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          messages: [{ role: "user", content: "hello" }],
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "hello",
+                },
+              ],
+            },
+          ],
           system: undefined,
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 32000,
@@ -159,7 +179,17 @@ describe("Anthropic Adapter Tests", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          messages: [{ role: "user", content: "hello" }],
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "hello",
+                },
+              ],
+            },
+          ],
           system: [
             {
               type: "text",

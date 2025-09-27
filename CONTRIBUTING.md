@@ -252,7 +252,7 @@ add it with the following steps:
 3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array
    in [core/llm/autodetect.ts](./core/llm/autodetect.ts).
 4. Add a documentation page for your provider in [
-   `docs/docs/customize/model-providers/more`](./docs/docs/customize/model-providers/more). This should show an example
+   `docs/customize/model-providers/more`](./docs/customize/model-providers/more). This should show an example
    of configuring your provider in `config.yaml` and explain what options are available.
 
 ### Adding Models

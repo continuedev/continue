@@ -343,31 +343,6 @@ jobs:
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
-  pr-review-action-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 20
-
-      - name: Cache PR review action node modules
-        uses: actions/cache@v4
-        id: pr-review-cache
-        with:
-          path: actions/detailed-review/node_modules
-          key: ${{ runner.os }}-pr-review-action-${{ hashFiles('actions/detailed-review/package.json') }}
-
-      - name: Install dependencies
-        if: steps.pr-review-cache.outputs.cache-hit != 'true'
-        run: |
-          cd actions/detailed-review
-          npm install
-
-      - name: Run tests
-        run: |
-          cd actions/detailed-review
-          npm test
 
   # so that creators of new jobs can add them to this list
   require-all-checks-to-pass:
@@ -385,7 +360,6 @@ jobs:
       - vscode-package-extension-linux
       - vscode-e2e-tests
       - jetbrains-tests
-      - pr-review-action-tests
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed

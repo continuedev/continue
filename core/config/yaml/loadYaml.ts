@@ -15,7 +15,14 @@ import {
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
+import {
+  ContinueConfig,
+  IDE,
+  IdeInfo,
+  IdeSettings,
+  ILLMLogger,
+  InternalMcpOptions,
+} from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
@@ -25,6 +32,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
@@ -34,7 +42,10 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-import { convertYamlRuleToContinueRule } from "./yamlToContinueConfig";
+import {
+  convertYamlMcpConfigToInternalMcpOptions,
+  convertYamlRuleToContinueRule,
+} from "./yamlToContinueConfig";
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
@@ -227,17 +238,19 @@ export async function configYamlToContinueConfig(options: {
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
-    const mcpArgVariables =
-      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
+    if ("args" in mcpServer) {
+      const mcpArgVariables =
+        mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
 
-    if (mcpArgVariables.length === 0) {
-      return;
+      if (mcpArgVariables.length === 0) {
+        return;
+      }
+
+      localErrors.push({
+        fatal: false,
+        message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
+      });
     }
-
-    localErrors.push({
-      fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-    });
   });
 
   // Prompt files -
@@ -381,25 +394,18 @@ export async function configYamlToContinueConfig(options: {
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    mcpManager.setConnections(
-      (config.mcpServers ?? []).map((server) => ({
-        id: server.name,
-        name: server.name,
-        sourceFile: server.sourceFile,
-        transport: {
-          type: "stdio",
-          args: [],
-          requestOptions: mergeConfigYamlRequestOptions(
-            server.requestOptions,
-            config.requestOptions,
-          ),
-          ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-        },
-        timeout: server.connectionTimeout,
-      })),
-      false,
-      { ide },
+    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+      (server) =>
+        convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
     );
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
+    );
+    localErrors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false, { ide });
   }
 
   return { config: continueConfig, errors: localErrors };
