@@ -12,16 +12,17 @@ import {
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callToolById = createAsyncThunk<
   void,
-  { toolCallId: string },
+  { id: string; isAuto?: boolean },
   ThunkApiType
->("chat/callTool", async ({ toolCallId }, { dispatch, extra, getState }) => {
+>("chat/callTool", async ({ id, isAuto }, { dispatch, extra, getState }) => {
+  const toolCallId = id; // just so new isAuto param doesn't make an unreviewable diff bc of prettier
+
   const state = getState();
   const toolCallState = findToolCallById(state.session.history, toolCallId);
   if (!toolCallState) {
@@ -36,19 +37,11 @@ export const callToolById = createAsyncThunk<
   // Track tool call acceptance and start timing
   const startTime = Date.now();
 
-  // Check if this is an auto-approved tool
-  const toolSettings = state.ui.toolSettings;
-  const toolPolicy =
-    toolSettings[toolCallState.toolCall.function.name] ??
-    toolCallState.tool?.defaultToolPolicy ??
-    DEFAULT_TOOL_SETTING;
-  const isAutoApproved = toolPolicy === "allowedWithoutPermission";
-
   const selectedChatModel = selectSelectedChatModel(state);
 
   posthog.capture("tool_call_decision", {
     model: selectedChatModel,
-    decision: isAutoApproved ? "auto_accept" : "accept",
+    decision: isAuto ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
     toolCallId: toolCallId,
   });

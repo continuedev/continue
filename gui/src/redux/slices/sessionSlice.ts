@@ -9,6 +9,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
   AssistantChatMessage,
+  BaseSessionMetadata,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -18,7 +19,6 @@ import {
   PromptLog,
   RuleWithSource,
   Session,
-  BaseSessionMetadata,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
@@ -51,7 +51,11 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 function filterMultipleEditToolCalls(
   toolCalls: ToolCallDelta[],
 ): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile];
+  const editToolNames = [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
+  ];
   let hasSeenEditTool = false;
 
   return toolCalls.filter((toolCall) => {

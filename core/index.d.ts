@@ -1097,6 +1097,12 @@ export interface Tool {
   };
   defaultToolPolicy?: ToolPolicy;
   toolCallIcon?: string;
+  preprocessArgs?: (
+    args: Record<string, unknown>,
+    extras: {
+      ide: IDE;
+    },
+  ) => Promise<Record<string, unknown>>;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,

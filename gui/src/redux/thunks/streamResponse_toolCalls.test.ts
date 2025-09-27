@@ -2557,7 +2557,7 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Simulate user clicking "Accept" on the tool call
     const approvalResult = await mockStoreWithApproval.dispatch(
-      callToolById({ toolCallId: "tool-approval-flow-1" }) as any,
+      callToolById({ id: "tool-approval-flow-1" }) as any,
     );
 
     // Verify tool execution completed successfully

@@ -46,7 +46,11 @@ describe("multiEditImpl GUI specific", () => {
   describe("filepath validation", () => {
     it("should throw if filepath is missing", async () => {
       await expect(
-        multiEditImpl({ edits: [] }, "id", mockExtras),
+        multiEditImpl(
+          { edits: [{ old_string: "old", new_string: "new" }] },
+          "id",
+          mockExtras,
+        ),
       ).rejects.toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceMissingFilepath,
@@ -102,29 +106,6 @@ describe("multiEditImpl GUI specific", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "Hi world",
-        filepath: "file:///dir/test/file.txt",
-        isSearchAndReplace: true,
-      });
-    });
-
-    it("should use editingFileContents if provided instead of reading file", async () => {
-      const editingContents = "Custom content";
-
-      await multiEditImpl(
-        {
-          filepath: "file.txt",
-          edits: [{ old_string: "content", new_string: "text" }],
-          editingFileContents: editingContents,
-        },
-        "id",
-        mockExtras,
-      );
-
-      expect(mockExtras.ideMessenger.ide.readFile).not.toHaveBeenCalled();
-      expect(mockApplyForEditTool).toHaveBeenCalledWith({
-        streamId: "test-uuid",
-        toolCallId: "id",
-        text: "Custom text",
         filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });

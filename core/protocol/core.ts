@@ -318,6 +318,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
     { policy: ToolPolicy; displayValue?: string },
   ];
+  "tools/preprocessArgs": [
+    { toolName: string; args: Record<string, unknown> },
+    { preprocessedArgs?: Record<string, unknown> },
+  ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];

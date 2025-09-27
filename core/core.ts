@@ -1104,7 +1104,6 @@ export class Core {
 
         const tool = config.tools.find((t) => t.function.name === toolName);
         if (!tool) {
-          // Tool not found, return base policy
           return { policy: basePolicy };
         }
 
@@ -1114,16 +1113,31 @@ export class Core {
           displayValue = args.command as string;
         }
 
-        // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
           const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
           return { policy: evaluatedPolicy, displayValue };
         }
-
-        // Otherwise return base policy unchanged
         return { policy: basePolicy, displayValue };
       },
     );
+
+    on("tools/preprocessArgs", async ({ data: { toolName, args } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
+      const tool = config?.tools.find((t) => t.function.name === toolName);
+      if (!tool) {
+        throw new Error(`Tool ${toolName} not found`);
+      }
+      const preprocessedArgs = await tool.preprocessArgs?.(args, {
+        ide: this.ide,
+      });
+      return {
+        preprocessedArgs,
+      };
+    });
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
