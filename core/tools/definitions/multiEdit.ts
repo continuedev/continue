@@ -1,7 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 import { NO_PARALLEL_TOOL_CALLING_INSTRUCTION } from "./editFile";
-import { singleFindAndReplaceTool } from "./singleFindAndReplace";
 
 export interface EditOperation {
   old_string: string;
@@ -25,8 +24,7 @@ export const multiEditTool: Tool = {
   isInstant: false,
   function: {
     name: BuiltInToolNames.MultiEdit,
-    description: `This is a tool for making multiple edits to a single file in one operation. It is built on top of the ${singleFindAndReplaceTool.function.name} and allows you to perform multiple find-and-replace operations efficiently. 
-Prefer this tool over the ${singleFindAndReplaceTool.function.name} tool when you need to make multiple edits to the same file.
+    description: `Use this tool to make multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently. 
 
 To make multiple edits to a file, provide the following:
 1. filepath: The path to the file to modify, RELATIVE to the project/workspace root (verify the directory path is correct)
@@ -36,6 +34,7 @@ To make multiple edits to a file, provide the following:
    - replace_all: Replace all occurrences of old_string. This parameter is optional and defaults to false.
 
 IMPORTANT:
+- Files may be modified between tool calls by users, linters, etc, so always make all edits in one tool call where possible. For example, do not only edit imports if there are other changes in the file, as unused imports may be removed by a linter between tool calls.
 - All edits are applied in sequence, in the order they are provided
 - Each edit operates on the result of the previous edit, so plan your edits carefully to avoid conflicts between sequential operations
 - Edits are atomic - all edits must be valid for the operation to succeed - if any edit fails, none will be applied
