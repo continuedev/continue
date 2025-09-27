@@ -1,3 +1,4 @@
+import { evaluateTerminalCommandSecurity } from "@continuedev/terminal-security";
 import {
   ChevronDownIcon,
   ExclamationTriangleIcon,
@@ -25,7 +26,6 @@ import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
-import { evaluateTerminalCommandSecurity } from "@continuedev/terminal-security";
 
 export interface StepContainerPreToolbarProps {
   showToolCallStatusIcon?: boolean;
@@ -43,6 +43,9 @@ export interface StepContainerPreToolbarProps {
   disableManualApply?: boolean;
   collapsible?: boolean;
 }
+
+export const DANGEROUS_COMMAND_WARNING_MESSAGE =
+  "Potentially dangerous command";
 
 export function StepContainerPreToolbar({
   showToolCallStatusIcon,
@@ -338,10 +341,7 @@ export function StepContainerPreToolbar({
       {securityWarning && (
         <div className="bg-warning/10 border-warning/30 text-warning flex items-center gap-2 border-b px-2 py-1.5 text-sm">
           <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
-          <span>
-            This code contains potentially dangerous commands. Please review and
-            understand the code before running.
-          </span>
+          <span>{DANGEROUS_COMMAND_WARNING_MESSAGE}</span>
         </div>
       )}
       <div
