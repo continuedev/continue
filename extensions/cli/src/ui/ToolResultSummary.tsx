@@ -72,28 +72,59 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   // Handle terminal command output specially
   if (toolName === "Bash") {
-    const isStderr = content.startsWith("Stderr:");
-    const actualOutput = isStderr ? content.slice(7).trim() : content;
-    const outputLines = actualOutput.split("\n");
+    // Parse the combined stdout + stderr output
+    // Format is either:
+    // - just stdout
+    // - stdout + "\nStderr: " + stderr
+    const allLines = content.split("\n");
+    const totalLines = allLines.length;
 
-    if (outputLines.length <= MAX_BASH_OUTPUT_LINES) {
-      // Show actual output for MAX_BASH_OUTPUT_LINES lines or fewer
-      return (
-        <Box flexDirection="column">
-          <Box>
-            <Text color="dim">⎿ </Text>
-            <Text color="dim"> Terminal output:</Text>
+    if (totalLines <= MAX_BASH_OUTPUT_LINES) {
+      // Show full output for MAX_BASH_OUTPUT_LINES lines or fewer
+      // Parse out stdout and stderr sections for proper coloring
+      const stderrIndex = content.indexOf("\nStderr: ");
+      if (stderrIndex !== -1) {
+        const stdout = content.slice(0, stderrIndex);
+        const stderr = content.slice(stderrIndex + 9); // Skip "\nStderr: "
+        return (
+          <Box flexDirection="column">
+            <Box>
+              <Text color="dim">⎿ </Text>
+              <Text color="dim"> Terminal output:</Text>
+            </Box>
+            <Box paddingLeft={2} flexDirection="column">
+              {stdout && (
+                <Text color="white">
+                  {stdout.trimEnd()}
+                </Text>
+              )}
+              {stderr && (
+                <Text color="red">
+                  Stderr: {stderr.trimEnd()}
+                </Text>
+              )}
+            </Box>
           </Box>
-          <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>
-              {actualOutput.trimEnd()}
-            </Text>
+        );
+      } else {
+        // Only stdout
+        return (
+          <Box flexDirection="column">
+            <Box>
+              <Text color="dim">⎿ </Text>
+              <Text color="dim"> Terminal output:</Text>
+            </Box>
+            <Box paddingLeft={2}>
+              <Text color="white">
+                {content.trimEnd()}
+              </Text>
+            </Box>
           </Box>
-        </Box>
-      );
+        );
+      }
     } else {
-      // Show first MAX_BASH_OUTPUT_LINES lines with ellipsis for more lines
-      const firstLines = outputLines.slice(0, MAX_BASH_OUTPUT_LINES).join("\n");
+      // Show first MAX_BASH_OUTPUT_LINES lines with truncation indicator
+      const firstLines = allLines.slice(0, MAX_BASH_OUTPUT_LINES).join("\n");
       return (
         <Box flexDirection="column">
           <Box>
@@ -101,13 +132,13 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="dim"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>
+            <Text color="white">
               {firstLines.trimEnd()}
             </Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color="dim">
-              ... +{outputLines.length - MAX_BASH_OUTPUT_LINES} lines
+              ... +{totalLines - MAX_BASH_OUTPUT_LINES} lines
             </Text>
           </Box>
         </Box>
