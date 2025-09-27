@@ -1,9 +1,13 @@
 import chalk from "chalk";
 
-import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
 import { env } from "../env.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
+import {
+  ApiRequestError,
+  AuthenticationRequiredError,
+  post,
+} from "../util/apiClient.js";
 import { gracefulExit } from "../util/exit.js";
 import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
@@ -28,12 +32,6 @@ type AgentCreationResponse = TunnelResponse & {
   id: string;
 };
 
-class AuthenticationRequiredError extends Error {
-  constructor() {
-    super("Not authenticated. Please run 'cn login' first.");
-  }
-}
-
 export async function remote(
   prompt: string | undefined,
   options: RemoteCommandOptions = {},
@@ -46,19 +44,12 @@ export async function remote(
       return;
     }
 
-    const accessToken = requireAccessToken();
-
     if (options.id) {
-      await connectExistingAgent(
-        options.id,
-        accessToken,
-        actualPrompt,
-        options.start,
-      );
+      await connectExistingAgent(options.id, actualPrompt, options.start);
       return;
     }
 
-    await createAndConnectRemoteEnvironment(accessToken, actualPrompt, options);
+    await createAndConnectRemoteEnvironment(actualPrompt, options);
   } catch (error) {
     await handleRemoteError(error);
   }
@@ -99,29 +90,12 @@ async function connectToRemoteUrl(
   await launchRemoteTUI(remoteUrl, prompt);
 }
 
-function requireAccessToken(): string {
-  const authConfig = loadAuthConfig();
-
-  if (!authConfig) {
-    throw new AuthenticationRequiredError();
-  }
-
-  const accessToken = getAccessToken(authConfig);
-
-  if (!accessToken) {
-    throw new AuthenticationRequiredError();
-  }
-
-  return accessToken;
-}
-
 async function connectExistingAgent(
   agentId: string,
-  accessToken: string,
   prompt: string | undefined,
   startOnly?: boolean,
 ) {
-  const tunnel = await fetchAgentTunnel(agentId, accessToken);
+  const tunnel = await fetchAgentTunnel(agentId);
 
   if (startOnly) {
     printStartJson({
@@ -142,29 +116,23 @@ async function connectExistingAgent(
 }
 
 async function createAndConnectRemoteEnvironment(
-  accessToken: string,
   prompt: string | undefined,
   options: RemoteCommandOptions,
 ) {
   const requestBody = buildAgentRequestBody(options, prompt);
 
-  const response = await fetch(new URL("agents", env.apiBase), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to create remote environment: ${response.status} ${errorText}`,
-    );
+  let result: AgentCreationResponse;
+  try {
+    const response = await post<AgentCreationResponse>("agents", requestBody);
+    result = response.data;
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new Error(
+        `Failed to create remote environment: ${error.status} ${error.response || error.statusText}`,
+      );
+    }
+    throw error;
   }
-
-  const result = (await response.json()) as AgentCreationResponse;
 
   if (options.start) {
     printStartJson({
@@ -216,26 +184,18 @@ function buildAgentRequestBody(
   return body;
 }
 
-async function fetchAgentTunnel(agentId: string, accessToken: string) {
-  const response = await fetch(
-    new URL(`agents/${agentId}/tunnel`, env.apiBase),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to create tunnel for agent ${agentId}: ${response.status} ${errorText}`,
-    );
+async function fetchAgentTunnel(agentId: string) {
+  try {
+    const response = await post<TunnelResponse>(`agents/${agentId}/tunnel`);
+    return response.data;
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new Error(
+        `Failed to create tunnel for agent ${agentId}: ${error.status} ${error.response || error.statusText}`,
+      );
+    }
+    throw error;
   }
-
-  return (await response.json()) as TunnelResponse;
 }
 
 async function launchRemoteTUI(remoteUrl: string, prompt: string | undefined) {
