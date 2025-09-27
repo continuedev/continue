@@ -15,11 +15,11 @@ import { streamThunkWrapper } from "./streamThunkWrapper";
  * Determines if we should continue streaming based on tool call completion status.
  */
 function areAllToolsDoneStreaming(
-  assistantMessage: ChatHistoryItemWithMessageId | undefined,
+  assistantMessage: ChatHistoryItemWithMessageId,
   continueAfterToolRejection: boolean | undefined,
 ): boolean {
   // This might occur because of race conditions, if so, the tools are completed
-  if (!assistantMessage?.toolCallStates) {
+  if (!assistantMessage.toolCallStates) {
     return true;
   }
 
@@ -74,14 +74,17 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         );
 
         if (
+          assistantMessage &&
           areAllToolsDoneStreaming(
             assistantMessage,
             state.config.config.ui?.continueAfterToolRejection,
           )
         ) {
+          count++;
           unwrapResult(await dispatch(streamNormalInput({})));
         }
       }),
     );
   },
 );
+let count = 0;

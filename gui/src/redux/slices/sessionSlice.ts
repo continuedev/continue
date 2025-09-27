@@ -232,7 +232,7 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
-const initialState: SessionState = {
+export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
@@ -254,7 +254,7 @@ const initialState: SessionState = {
 
 export const sessionSlice = createSlice({
   name: "session",
-  initialState,
+  initialState: INITIAL_SESSION_STATE,
   reducers: {
     addPromptCompletionPair: (
       state,

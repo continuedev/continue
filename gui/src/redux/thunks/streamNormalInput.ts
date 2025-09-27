@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions, ModelDescription } from "core";
+import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -23,7 +23,6 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import { renderContextItems } from "core/util/messageContent";
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
@@ -32,6 +31,7 @@ import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import { evaluateToolPolicies } from "./evaluateToolPolicies";
 import { preprocessToolCalls } from "./preprocessToolCallArgs";
+import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 /**
  * Builds completion options with reasoning configuration based on session state and model capabilities.
@@ -279,16 +279,17 @@ export const streamNormalInput = createAsyncThunk<
           }),
         );
       } else {
+        console.log(
+          "HERE",
+          state4.session.history.map((h) => h.toolCallStates?.[0]?.output),
+          originalToolCalls.length,
+        );
         // All failed - stream on
-        for (const { output, toolCallId } of originalToolCalls) {
-          const newMessage: ChatMessage = {
-            role: "tool",
-            content: output ? renderContextItems(output) : "",
-            toolCallId,
-          };
-          dispatch(streamUpdate([newMessage]));
+        for (const { toolCallId } of originalToolCalls) {
+          unwrapResult(
+            await dispatch(streamResponseAfterToolCall({ toolCallId })),
+          );
         }
-        unwrapResult(await dispatch(streamNormalInput({})));
       }
     }
   },

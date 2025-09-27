@@ -1,23 +1,63 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { copyOf } from "core/util";
 import { vi } from "vitest";
-import configReducer from "../../redux/slices/configSlice";
-import editModeStateReducer from "../../redux/slices/editState";
-import indexingReducer from "../../redux/slices/indexingSlice";
-import { profilesReducer } from "../../redux/slices/profilesSlice";
-import sessionReducer from "../../redux/slices/sessionSlice";
-import tabsReducer from "../../redux/slices/tabsSlice";
-import uiReducer from "../../redux/slices/uiSlice";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import configReducer, {
+  INITIAL_CONFIG_SLICE,
+} from "../../redux/slices/configSlice";
+import editModeStateReducer, {
+  INITIAL_EDIT_STATE,
+} from "../../redux/slices/editState";
+import indexingReducer, {
+  INITIAL_INDEXING_STATE,
+} from "../../redux/slices/indexingSlice";
+import {
+  INITIAL_PROFILES_STATE,
+  profilesReducer,
+} from "../../redux/slices/profilesSlice";
+import sessionReducer, {
+  INITIAL_SESSION_STATE,
+} from "../../redux/slices/sessionSlice";
+import tabsReducer, { INITIAL_TABS_STATE } from "../../redux/slices/tabsSlice";
+import uiReducer, { DEFAULT_UI_SLICE } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 
-export const createMockStore = (initialState?: Partial<RootState>) => {
-  const mockIdeMessenger = {
-    request: vi.fn(),
-    post: vi.fn(),
-    respond: vi.fn(),
-    streamRequest: vi.fn(),
-    llmStreamChat: vi.fn(),
-    ide: {} as any,
+// TODO remove non-serializable streamAborter, causes headaches
+export const getEmptyRootState: () => RootState = () => {
+  const withoutSession: Omit<RootState, "session"> = {
+    config: INITIAL_CONFIG_SLICE,
+    ui: DEFAULT_UI_SLICE,
+    editModeState: INITIAL_EDIT_STATE,
+    indexing: INITIAL_INDEXING_STATE,
+    profiles: INITIAL_PROFILES_STATE,
+    tabs: INITIAL_TABS_STATE,
   };
+  const { streamAborter, ...serializableSession } = INITIAL_SESSION_STATE;
+  const sessionCopy = copyOf(serializableSession) as Omit<
+    RootState["session"],
+    "streamAborter"
+  >;
+  const withoutSessionCopy = copyOf(withoutSession) as Omit<
+    RootState,
+    "session"
+  >;
+  return {
+    ...withoutSessionCopy,
+    session: {
+      ...sessionCopy,
+      streamAborter: new AbortController(),
+    },
+  };
+};
+
+export const createMockStore = (
+  initialState?: Partial<RootState>,
+): ReturnType<typeof configureStore> & {
+  mockIdeMessenger: MockIdeMessenger;
+  getActions: () => any[];
+  clearActions: () => void;
+} => {
+  const mockIdeMessenger = new MockIdeMessenger();
 
   const store = configureStore({
     reducer: {
@@ -30,85 +70,9 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
       profiles: profilesReducer,
     },
     preloadedState: {
-      session: {
-        history: [],
-        title: "",
-        id: "",
-        lastSessionId: undefined,
-        mode: "chat",
-        isStreaming: false,
-        streamAborter: new AbortController(),
-        hasReasoningEnabled: false,
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-        ...initialState?.session,
-      },
-      ui: {
-        showDialog: false,
-        dialogMessage: null,
-        toolSettings: {},
-        ruleSettings: {},
-        ...initialState?.ui,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-        ...initialState?.editModeState,
-      },
-      config: {
-        config: {
-          models: [],
-          tabAutocompleteModel: undefined,
-          tools: [],
-          rules: [],
-          selectedModelByRole: {
-            chat: null,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          ...initialState?.config?.config,
-        },
-        lastSelectedModelByRole: {},
-        loading: false,
-        configError: undefined,
-        ...initialState?.config,
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-        ...initialState?.indexing,
-      },
-      tabs: {
-        tabsItems: [],
-        ...initialState?.tabs,
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
-        ...initialState?.profiles,
-      },
-    } as RootState,
+      ...getEmptyRootState(),
+      ...initialState,
+    },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {
@@ -141,11 +105,13 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
     }
     actions.push(action);
     return originalDispatch(action);
-  }) as any;
-
-  (store as any).getActions = () => actions;
-  (store as any).clearActions = () => actions.splice(0, actions.length);
+  });
 
   // Expose mockIdeMessenger so tests can configure it
-  return { ...store, mockIdeMessenger };
+  return {
+    ...store,
+    mockIdeMessenger,
+    getActions: () => actions,
+    clearActions: () => actions.splice(0, actions.length),
+  };
 };

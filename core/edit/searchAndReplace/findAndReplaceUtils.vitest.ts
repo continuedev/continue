@@ -121,7 +121,7 @@ describe("validateSingleEdit", () => {
         validateSingleEdit("old", "new", "invalid" as any);
       }).toThrowError(
         expect.objectContaining({
-          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+          reason: ContinueErrorReason.FindAndReplaceInvalidReplaceAll,
         }),
       );
     });
@@ -131,7 +131,7 @@ describe("validateSingleEdit", () => {
         validateSingleEdit("old", "new", null as any);
       }).toThrowError(
         expect.objectContaining({
-          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+          reason: ContinueErrorReason.FindAndReplaceInvalidReplaceAll,
         }),
       );
     });
@@ -141,7 +141,7 @@ describe("validateSingleEdit", () => {
         validateSingleEdit("old", "new", 1 as any);
       }).toThrowError(
         expect.objectContaining({
-          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+          reason: ContinueErrorReason.FindAndReplaceInvalidReplaceAll,
         }),
       );
     });
@@ -183,7 +183,7 @@ describe("validateSingleEdit", () => {
         validateSingleEdit("old", "new", "invalid" as any, 3);
       }).toThrowError(
         expect.objectContaining({
-          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+          reason: ContinueErrorReason.FindAndReplaceInvalidReplaceAll,
         }),
       );
     });

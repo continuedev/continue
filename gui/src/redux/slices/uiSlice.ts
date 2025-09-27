@@ -1,7 +1,7 @@
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RuleWithSource, Tool } from "core";
-import { ToolPolicy } from "@continuedev/terminal-security";
-import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
+import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -32,26 +32,27 @@ type UIState = {
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 export const DEFAULT_RULE_SETTING: RulePolicy = "on";
+export const DEFAULT_UI_SLICE: UIState = {
+  showDialog: false,
+  dialogMessage: "",
+  dialogEntryOn: false,
+  onboardingCard: defaultOnboardingCardState,
+  isExploreDialogOpen:
+    getLocalStorage(LocalStorageKey.IsExploreDialogOpen) ?? false,
+  hasDismissedExploreDialog:
+    getLocalStorage(LocalStorageKey.HasDismissedExploreDialog) ?? false,
+  shouldAddFileForEditing: false,
+  ttsActive: false,
+  toolSettings: {},
+  toolGroupSettings: {
+    [BUILT_IN_GROUP_NAME]: "include",
+  },
+  ruleSettings: {},
+};
 
 export const uiSlice = createSlice({
   name: "ui",
-  initialState: {
-    showDialog: false,
-    dialogMessage: "",
-    dialogEntryOn: false,
-    onboardingCard: defaultOnboardingCardState,
-    isExploreDialogOpen: getLocalStorage(LocalStorageKey.IsExploreDialogOpen),
-    hasDismissedExploreDialog: getLocalStorage(
-      LocalStorageKey.HasDismissedExploreDialog,
-    ),
-    shouldAddFileForEditing: false,
-    ttsActive: false,
-    toolSettings: {},
-    toolGroupSettings: {
-      [BUILT_IN_GROUP_NAME]: "include",
-    },
-    ruleSettings: {},
-  } as UIState,
+  initialState: DEFAULT_UI_SLICE,
   reducers: {
     setOnboardingCard: (
       state,

@@ -31,21 +31,16 @@ async function evaluateToolPolicy(
   // Use already parsed arguments
   const parsedArgs = toolCallState.parsedArgs || {};
 
-  let result;
-  try {
-    result = await ideMessenger.request("tools/evaluatePolicy", {
-      toolName: toolCallState.toolCall.function.name,
-      basePolicy,
-      args: parsedArgs,
-    });
-  } catch (error) {
-    // If request fails, return disabled
-    return { policy: "disabled", toolCallState };
-  }
+  const toolName = toolCallState.toolCall.function.name;
+  const result = await ideMessenger.request("tools/evaluatePolicy", {
+    toolName,
+    basePolicy,
+    args: parsedArgs,
+  });
 
   // Evaluate the policy dynamically
-  if (!result || result.status === "error") {
-    // If evaluation fails, treat as disabled
+  if (result.status === "error") {
+    console.error(`Error evaluating tool policy for ${toolName}`, result.error);
     return { policy: "disabled", toolCallState };
   }
 

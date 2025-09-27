@@ -36,6 +36,7 @@ describe("DocsIndexingStatus", () => {
       mockIdeMessengerSetup(mockIdeMessenger);
     } else {
       mockIdeMessenger.request.mockResolvedValue({
+        done: true,
         status: "success",
         content: ["page1.html", "page2.html"],
       });

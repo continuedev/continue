@@ -1080,7 +1080,6 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-
   displayTitle: string;
   wouldLikeTo?: string;
   isCurrently?: string;
