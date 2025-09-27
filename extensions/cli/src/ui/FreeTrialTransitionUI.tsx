@@ -176,7 +176,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
     if (selectedOption === 1) {
       // Option 1: Open models setup page
       setCurrentStep("processing");
-      const modelsUrl = new URL("setup-models", env.appUrl).toString();
+      const modelsUrl = new URL("settings/billing", env.appUrl).toString();
       setWasModelsSetup(true); // Track that user went through models setup
 
       try {
