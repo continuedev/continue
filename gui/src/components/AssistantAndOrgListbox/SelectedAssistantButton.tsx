@@ -33,9 +33,7 @@ export function SelectedAssistantButton({
         className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
-          {selectedProfile === null ? (
-            "Create your first agent"
-          ) : configLoading ? (
+          {configLoading ? (
             <span className="text-description flex flex-row items-center">
               <ArrowPathIcon
                 className={cn(
@@ -45,6 +43,8 @@ export function SelectedAssistantButton({
               />
               Loading
             </span>
+          ) : selectedProfile === null ? (
+            "Create your first agent"
           ) : (
             <>
               <AssistantIcon assistant={selectedProfile} size={iconSize} />
