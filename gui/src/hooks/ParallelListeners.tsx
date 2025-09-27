@@ -22,7 +22,10 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
-import { refreshSessionMetadata } from "../redux/thunks/session";
+import {
+  loadLastSession,
+  refreshSessionMetadata,
+} from "../redux/thunks/session";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import {
   setDocumentStylesFromLocalStorage,
@@ -238,6 +241,10 @@ function ParallelListeners() {
 
   useEffect(() => {
     migrateLocalStorage(dispatch);
+  }, []);
+
+  useEffect(() => {
+    void dispatch(loadLastSession());
   }, []);
 
   return <></>;

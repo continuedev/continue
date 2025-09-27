@@ -43,14 +43,14 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { useStore } from "react-redux";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
-import { useStore } from "react-redux";
-import { RootState } from "../../redux/store";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -431,11 +431,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >
