@@ -24,6 +24,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -649,6 +650,16 @@ export const sessionSlice = createSlice({
             lastMessage.role === "assistant"
           ) {
             handleStreamingToolCallUpdates(message, lastItem);
+          }
+          if (
+            message.role === "thinking" &&
+            message.reasoning_details &&
+            lastMessage.role === "thinking"
+          ) {
+            lastMessage.reasoning_details = mergeReasoningDetails(
+              lastMessage.reasoning_details,
+              message.reasoning_details,
+            );
           }
         }
       }
