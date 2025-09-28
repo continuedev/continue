@@ -1865,11 +1865,11 @@ export interface CompiledMessagesResult {
   contextPercentage: number;
 }
 
-export interface AddToEditPayload {
-  data: AddToEditPayload[];
+export interface AddToChatPayload {
+  data: AddToChatPayloadItem[];
 }
 
-interface AddToEditPayload {
+interface AddToChatPayloadItem {
   type: "file" | "folder";
   fullPath: string;
   name: string;

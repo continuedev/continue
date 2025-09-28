@@ -200,7 +200,7 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener(
-    "addToEdit",
+    "addToChat",
     async (data) => {
       if (!editor) return;
       let chain = editor.chain();
