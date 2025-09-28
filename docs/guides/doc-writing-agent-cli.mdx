@@ -105,6 +105,11 @@ This example uses a manual workflow dispatch that requires two inputs: the repos
 **Required Inputs:**
 - **repository:** The repository you are operating on (format: `owner/repo`)
 - **branch_name:** The name of the branch you have code changes on and want to generate documentation for
+- **continue_config:** The Continue agent configuration to use
+  - Consider setting a default value if you have a default config your'd like to use
+- **continue_org:** The Continue org to use
+  - Consider setting a default value if you have a default org your'd like to use
+
 
 ```yaml title=".github/workflows/generate-docs.yml"
 name: Generate Docs for Branch
@@ -119,6 +124,16 @@ on:
       branch_name:
         description: 'Branch name to generate docs for'
         required: true
+      continue_config:
+        description: 'Continue agent configuration to use'
+        required: true
+        # Set a default value if you have a default config your'd like to use
+        # default: 'agent-config-name'
+      continue_org:
+        description: 'Continue org to use'
+        required: true
+        # Set a default value if you have a default org your'd like to use
+        # default: 'your-org-name'
 
 jobs:
   write-docs:
@@ -126,6 +141,8 @@ jobs:
     name: Write Documentation for Branch
     env:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      CONTINUE_ORG: ${{ github.event.inputs.continue_org }}
+      CONTINUE_CONFIG: ${{ github.event.inputs.continue_config }}
 
     steps:
 
@@ -222,8 +239,18 @@ Make sure to set your `CONTINUE_API_KEY` environment variable before running loc
 
 When using the Continue CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
 
-**Example shell script for generating documentation:**
+The below shell script snippet shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
 
+For the example snippet below to work you will need to set the following variables:
+- `CONTINUE_ORG`
+- `CONTINUE_CONFIG`
+- `BASE_BRANCH`
+- `COMPARE_BRANCH`
+- `DOCS_BRANCH_NAME`
+
+For example you can either set these as environment variables or as command line arguments to be used by the script.
+
+**Example shell script snippet for generating documentation**
 ```bash title="generate-docs.sh"
 #!/bin/bash
 # The script below shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
@@ -243,7 +270,7 @@ git checkout -b "$DOCS_BRANCH_NAME"
 
 # Generate documentation with Continue CLI
 echo "Running Continue agent to generate documentation..."
-cn --config <continue-user>/<agent-config> \
+cn -config "$CONTINUE_ORG/$CONTINUE_CONFIG" \
    --auto \
    --allow Write \
    -p \
@@ -317,7 +344,7 @@ Ready to implement automated documentation with Continue CLI? Here are some help
     Checkout this video from Tetrate about using Continue Agents to help with writing your docs.
   </Card>
 
-  <Card title="Continue Hub" icon="hub" href="https://hub.continue.dev">
+  <Card title="Continue Hub" icon="users" href="https://hub.continue.dev">
     Browse pre-built agents and configurations from the Continue community.
   </Card>
 </CardGroup>
