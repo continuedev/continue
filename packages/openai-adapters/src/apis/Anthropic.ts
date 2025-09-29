@@ -199,7 +199,14 @@ export class AnthropicApi implements BaseLlmApi {
               source: {
                 type: "base64",
                 media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
-                data: dataUrl.split(",")[1],
+                data: (() => {
+                  const urlParts = dataUrl.split(",");
+                  if (urlParts.length < 2) {
+                    throw new Error("Invalid data URL format: missing comma separator");
+                  }
+                  const [, ...base64Parts] = urlParts;
+                  return base64Parts.join(",");
+                })(),
               },
             });
           }

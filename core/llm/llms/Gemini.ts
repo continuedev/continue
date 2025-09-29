@@ -191,7 +191,14 @@ class Gemini extends BaseLLM {
       : {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
+            data: (() => {
+              const urlParts = part.imageUrl.url.split(",");
+              if (urlParts.length < 2) {
+                throw new Error("Invalid data URL format: missing comma separator");
+              }
+              const [, ...base64Parts] = urlParts;
+              return base64Parts.join(",");
+            })(),
           },
         };
   }

@@ -303,7 +303,15 @@ class Ollama extends BaseLLM implements ModelInstaller {
       const images: string[] = [];
       message.content.forEach((part) => {
         if (part.type === "imageUrl" && part.imageUrl) {
-          const image = part.imageUrl?.url.split(",").at(-1);
+          const image = (() => {
+            if (!part.imageUrl?.url) return undefined;
+            const urlParts = part.imageUrl.url.split(",");
+            if (urlParts.length < 2) {
+              throw new Error("Invalid data URL format: missing comma separator");
+            }
+            const [, ...base64Parts] = urlParts;
+            return base64Parts.join(",");
+          })();
           if (image) {
             images.push(image);
           }

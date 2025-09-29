@@ -546,7 +546,12 @@ class Bedrock extends BaseLLM {
           blocks.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
           try {
-            const [mimeType, base64Data] = part.imageUrl.url.split(",");
+            const urlParts = part.imageUrl.url.split(",");
+            if(urlParts.length < 2) {
+              throw new Error("Invalid data URL format: missing comma separator");
+            }
+            const [mimeType, ...base64Parts] = urlParts;
+            const base64Data = base64Parts.join(",");
             const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
             if (
               format === ImageFormat.JPEG ||
