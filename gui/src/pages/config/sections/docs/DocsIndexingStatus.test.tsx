@@ -35,11 +35,10 @@ describe("DocsIndexingStatus", () => {
     if (mockIdeMessengerSetup) {
       mockIdeMessengerSetup(mockIdeMessenger);
     } else {
-      mockIdeMessenger.request.mockResolvedValue({
-        done: true,
-        status: "success",
-        content: ["page1.html", "page2.html"],
-      });
+      mockIdeMessenger.responses["docs/getIndexedPages"] = [
+        "page1.html",
+        "page2.html",
+      ];
     }
 
     const result = await act(async () =>

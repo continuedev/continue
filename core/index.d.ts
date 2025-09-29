@@ -1754,7 +1754,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  tools: Tool[];
+  tools: Omit<Tool, "preprocessArgs", "evaluatePolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   usePlatform: boolean;
