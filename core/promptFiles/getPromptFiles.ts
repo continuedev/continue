@@ -131,7 +131,7 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  // Also read from ~/.continue/.prompts
+  // Also read from ~/.continue/prompts
   promptFiles.push(...readAllGlobalPromptFiles());
 
   // Add hardcoded init prompt

@@ -411,10 +411,7 @@ export class Core {
     });
 
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(
-        msg.data.profileId,
-        msg.data?.element,
-      );
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -483,20 +480,13 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
-      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
     });
-    on("mcp/disconnectServer", async (msg) => {
-      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
-        msg.data.id,
+    on("mcp/setServerEnabled", async (msg) => {
+      const { id, enabled } = msg.data;
+      await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
+      await this.configHandler.reloadConfig(
+        `MCP Server ${enabled ? "enabled" : "disabled"}`,
       );
-      if (!mcpConnection)
-        throw new Error(`MCP connection with id ${msg.data.id} not found`);
-      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
-      await mcpConnection.disconnect();
-      await this.configHandler.refreshAll("MCP Servers disconnected");
-    });
-    on("mcp/getDisconnectedServers", async (_msg) => {
-      return MCPManagerSingleton.getInstance().getDisconnectedServers();
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;

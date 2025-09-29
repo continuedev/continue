@@ -44,7 +44,6 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
         // File doesn't exist or can't be read, continue to next file
       }
     }
-
     if (agentFileFound) {
       break; // Use agent file from first workspace that has one
     }

@@ -11,6 +11,5 @@ export function convertCustomCommandToSlashCommand(
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
     source: "json-custom-command",
-    promptFile: customCommand.sourceFile, // TODO refactor promptFile to align with sourceFile
-  };
+    sourceFile: customCommand.sourceFile,
 }

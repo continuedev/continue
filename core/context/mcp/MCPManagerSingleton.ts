@@ -8,7 +8,6 @@ export class MCPManagerSingleton {
 
   public onConnectionsRefreshed?: () => void;
   public connections: Map<string, MCPConnection> = new Map();
-  private disconnectedServers: string[] = [];
 
   private abortController: AbortController = new AbortController();
 
@@ -21,16 +20,16 @@ export class MCPManagerSingleton {
     return MCPManagerSingleton.instance;
   }
 
-  addDisconnectedServer(serverId: string) {
-    this.disconnectedServers.push(serverId);
-  }
-  removeDisconnectedServer(serverId: string) {
-    this.disconnectedServers = this.disconnectedServers.filter(
-      (server) => server !== serverId,
-    );
-  }
-  getDisconnectedServers() {
-    return this.disconnectedServers;
+  async setEnabled(serverId: string, enabled: boolean) {
+    const conn = this.connections.get(serverId);
+    if (conn) {
+      if (enabled) {
+        conn.status = "not-connected";
+        await this.refreshConnection(serverId);
+      } else {
+        await conn.disconnect(true);
+      }
+    }
   }
 
   createConnection(id: string, options: InternalMcpOptions): MCPConnection {
@@ -45,15 +44,6 @@ export class MCPManagerSingleton {
 
   getConnection(id: string) {
     return this.connections.get(id);
-  }
-
-  async removeConnection(id: string) {
-    const connection = this.connections.get(id);
-    if (connection) {
-      await connection.client.close();
-    }
-
-    this.connections.delete(id);
   }
 
   async shutdown() {
@@ -169,19 +159,9 @@ export class MCPManagerSingleton {
       }),
       (async () => {
         await Promise.all(
-          Array.from(this.connections.values())
-            .filter(
-              (connection) =>
-                !this.disconnectedServers.some(
-                  (s) => s === connection.options.id,
-                ),
-            )
-            .map(async (connection) => {
-              await connection.connectClient(
-                force,
-                this.abortController.signal,
-              );
-            }),
+          Array.from(this.connections.values()).map(async (connection) => {
+            await connection.connectClient(force, this.abortController.signal);
+          }),
         );
         if (this.onConnectionsRefreshed) {
           this.onConnectionsRefreshed();

@@ -117,10 +117,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [
-    { profileId: string | undefined; element?: { sourceFile?: string } },
-    void,
-  ];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -147,8 +144,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
-  "mcp/disconnectServer": [{ id: string }, void];
-  "mcp/getDisconnectedServers": [undefined, string[]];
+  "mcp/setServerEnabled": [{ id: string; enabled: boolean }, void];
   "mcp/getPrompt": [
     {
       serverName: string;

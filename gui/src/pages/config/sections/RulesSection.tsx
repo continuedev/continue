@@ -22,6 +22,7 @@ import { getRuleDisplayName } from "core/llm/rules/rules-utils";
 import { useContext, useMemo } from "react";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
+import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
 import { Card, EmptyState, useFontSize } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
@@ -80,8 +81,7 @@ function PromptRow({
     }
   };
 
-  const canEdit =
-    prompt.promptFile && !prompt.promptFile.startsWith("builtin:");
+  const canEdit = prompt.sourceFile && prompt.source !== "built-in";
 
   return (
     <div
@@ -136,27 +136,16 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const isDisabled = policy === "off";
 
+  const editBlock = useEditBlock();
   const handleOpen = async () => {
-    if (rule.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${rule.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else if (rule.ruleFile) {
-      ideMessenger.post("openFile", {
-        path: rule.ruleFile,
-      });
-    } else if (
+    if (
       rule.source === "default-chat" ||
       rule.source === "default-plan" ||
       rule.source === "default-agent"
     ) {
       ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
     } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (rule as any).sourceFile },
-      });
+      editBlock(rule?.slug, rule?.ruleFile);
     }
   };
 
@@ -268,22 +257,10 @@ function PromptsSubSection() {
     (state) => state.config.config.slashCommands ?? [],
   );
 
+  const editBlock = useEditBlock();
+
   const handleEdit = (prompt: PromptCommandWithSlug) => {
-    if (prompt.promptFile) {
-      ideMessenger.post("openFile", {
-        path: prompt.promptFile,
-      });
-    } else if (prompt.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${prompt.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (prompt as any).sourceFile },
-      });
-    }
+    editBlock(prompt.slug, prompt.sourceFile);
   };
 
   const handleAddPrompt = () => {
@@ -310,7 +287,7 @@ function PromptsSubSection() {
       let index = 0;
       for (const commandWithSlug of promptsWithSlug) {
         // skip for local prompt files
-        if (commandWithSlug.promptFile) continue;
+        if (commandWithSlug.sourceFile) continue;
 
         const yamlPrompt = parsedPrompts[index];
         if (yamlPrompt) {

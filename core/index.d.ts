@@ -918,7 +918,8 @@ export interface SlashCommand extends SlashCommandDescription {
 export interface SlashCommandWithSource extends SlashCommandDescription {
   run?: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>; // Optional - only needed for legacy
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   overrideSystemMessage?: string;
 }
 
@@ -936,7 +937,8 @@ export type SlashCommandSource =
 export interface SlashCommandDescWithSource extends SlashCommandDescription {
   isLegacy: boolean; // Maps to if slashcommand.run exists
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   mcpServerName?: string;
   mcpArgs?: MCPPromptArgs;
 }
@@ -1273,6 +1275,7 @@ export type TransportOptions =
   | StreamableHTTPOptions;
 
 export type MCPConnectionStatus =
+  | "disabled"
   | "connecting"
   | "connected"
   | "error"
