@@ -1,11 +1,11 @@
 ---
-title: "Building Data Pipelines with dlt Hub MCP and Continue"
+title: "Building Data Pipelines with dlt MCP and Continue"
 description: "Set up an AI-powered data engineering workflow that helps you develop, debug, and inspect dlt data pipelines using natural language commands."
-sidebarTitle: "dlt Hub Data Pipelines with Continue"
+sidebarTitle: "dlt Data Pipelines with Continue"
 ---
 
 <Card title="What You'll Build" icon="database">
-  An AI-powered data pipeline development system that uses Continue's AI agent with dlt Hub
+  An AI-powered data pipeline development system that uses Continue's AI agent with dlt
   MCP to inspect pipeline execution, retrieve schemas, analyze datasets, and debug load errors - all through simple natural language prompts
 </Card>
 
@@ -37,11 +37,11 @@ For all options, first:
   To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
   </Warning>
 
-## dlt Hub MCP Workflow Options
+## dlt MCP Workflow Options
 
 <Card title="🚀 Fastest Path to Success" icon="zap">
-  Skip the manual setup and use our pre-built dlt Assistant agent that includes
-  the dlt Hub MCP and optimized data pipeline workflows for more consistent results.
+  Skip the manual setup and use our pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) that includes
+  the dlt MCP and optimized data pipeline workflows for more consistent results.
 </Card>
 
 
@@ -57,7 +57,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         ```
 
         This agent includes:
-        - **dlt Hub MCP** pre-configured and ready to use
+        - **dlt MCP** pre-configured and ready to use
         - **Pipeline-focused rules** for data engineering best practices
       </Step>
 
@@ -73,7 +73,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Steps>
 
     <Info>
-      **Why Use the Agent?** The pre-built agent provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering.
+      **Why Use the Agent?** The pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering.
     </Info>
 
   </Tab>
@@ -84,17 +84,17 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
     </Step>
 
-  <Step title="Connect dlt Hub MCP via Continue Hub">
-    Visit the [dlt Hub MCP on Continue Hub](https://hub.continue.dev/dlthub/dlt-mcp) and click **Install** to add it to the agent you created in the step above.
+  <Step title="Connect dlt MCP via Continue Hub">
+    Visit the [dlt MCP on Continue Hub](https://hub.continue.dev/dlthub/dlt-mcp) and click **Install** to add it to the agent you created in the step above.
 
-    This will add dlt Hub MCP to your agent's available tools. The Hub listing automatically configures the MCP command.
+    This will add dlt MCP to your agent's available tools. The Hub listing automatically configures the MCP command.
 
     <Tip>
       **Alternative installation methods:**
       1. **Quick CLI install**: `cn --mcp dlthub/dlt-mcp`
       2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
 
-      Once installed, dlt Hub MCP tools become available to your Continue agent for all prompts.
+      Once installed, dlt MCP tools become available to your Continue agent for all prompts.
     </Tip>
 
     <Info>
@@ -117,39 +117,39 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use the pre-built agent, you need either:
+    To use the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant), you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** added to Continue Hub secrets (same as manual setup)
 
-    The agent will automatically detect and use your configuration along with the pre-configured dlt Hub MCP for pipeline operations.
+    The agent will automatically detect and use your configuration along with the pre-configured dlt MCP for pipeline operations.
 
 </Accordion>
 
 ---
 
-## dlt Hub MCP vs dlt+ MCP
+## dlt MCP vs dlt+ MCP
 
 <Card title="Understanding the Difference" icon="info-circle">
-  **dlt Hub MCP** is focused on local pipeline development and inspection. It provides tools to:
+  **dlt MCP** is focused on local pipeline development and inspection. It provides tools to:
   - Inspect pipeline execution and load information
   - Retrieve schema metadata from your local pipelines
   - Query dataset records from destination databases
   - Analyze load errors, timings, and file sizes
 
-  **dlt+ MCP** extends these capabilities with cloud-based features for production deployments:
+  **[dlt+ MCP](https://hub.continue.dev/dlthub/dlt-plus-mcp)** extends these capabilities with cloud-based features for production deployments:
   - Connect to dlt+ Projects and manage deployments
   - Monitor pipeline runs across multiple environments
   - Access centralized logging and observability
   - Collaborate with team members on pipeline development
 
-  For local development and getting started, **dlt Hub MCP** is the right choice. Consider **dlt+ MCP** when you need production deployment features and team collaboration.
+  For local development and getting started, **[dlt MCP](https://hub.continue.dev/dlthub/dlt-mcp)** is the right choice. Consider **[dlt+ MCP](https://hub.continue.dev/dlthub/dlt-plus-mcp)** when you need production deployment features and team collaboration.
 </Card>
 
 ---
 
 ## Pipeline Development Recipes
 
-Now you can use natural language prompts to develop and debug your dlt pipelines. The Continue agent automatically calls the appropriate dlt Hub MCP tools.
+Now you can use natural language prompts to develop and debug your dlt pipelines. The Continue agent automatically calls the appropriate dlt MCP tools.
 
 <Info>
 You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Hub](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
@@ -277,7 +277,7 @@ cn -p "Check if my pipeline schema has evolved since the last run. Show me what 
 
 ## Continuous Data Pipelines with GitHub Actions
 
-This example demonstrates a **Continuous AI workflow** where data pipeline validation runs automatically in your CI/CD pipeline in headless mode (`cn -p`) with dlt Hub MCP.
+This example demonstrates a **Continuous AI workflow** where data pipeline validation runs automatically in your CI/CD pipeline in headless mode using the [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant).
 
 ### Add GitHub Secrets
 
@@ -286,12 +286,16 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
 - Any required database credentials for your destination
 
+<Info>
+  The workflow uses the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) with `--config dlthub/dlt-assistant`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations.
+</Info>
+
 ### Create Workflow File
 
 Create `.github/workflows/dlt-pipeline-validation.yml` in your repository:
 
 ```yaml
-name: Data Pipeline Validation with dlt Hub MCP
+name: Data Pipeline Validation with dlt MCP
 
 on:
   pull_request:
@@ -328,29 +332,31 @@ jobs:
           npm install -g @continuedev/cli
           echo "✅ Continue CLI installed"
 
-      - name: Authenticate Continue CLI
+      - name: Validate Pipeline Schema
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          cn auth login --api-key "$CONTINUE_API_KEY"
-          echo "✅ Continue CLI authenticated"
-
-      - name: Validate Pipeline Schema
-        run: |
           echo "🔍 Validating pipeline schema..."
-          cn -p "Inspect the pipeline schema and verify all required tables
+          cn --config dlthub/dlt-assistant \
+             -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes."
 
       - name: Check Pipeline Health
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
           echo "📊 Checking pipeline health..."
-          cn -p "Analyze the last pipeline run for errors or warnings.
+          cn --config dlthub/dlt-assistant \
+             -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention."
 
       - name: Generate Pipeline Report
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         if: always()
         run: |
-          cn -p "Generate a markdown report summarizing:
+          cn --config dlthub/dlt-assistant \
+             -p "Generate a markdown report summarizing:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings
                  - Performance metrics (timing, file sizes)
@@ -367,7 +373,7 @@ jobs:
 ```
 
 <Info>
-  The dlt Hub MCP works with your local pipeline state. Make sure your CI environment
+  The dlt MCP works with your local pipeline state. Make sure your CI environment
   has access to the necessary pipeline configuration and credentials.
 </Info>
 
@@ -423,7 +429,7 @@ Test the connection and report any issues."
 
 <Check>
   **Verification Steps:**
-  - dlt Hub MCP is installed via [Continue Hub](https://hub.continue.dev/dlthub/dlt-mcp)
+  - dlt MCP is installed via [Continue Hub](https://hub.continue.dev/dlthub/dlt-mcp)
   - Pipeline directory is accessible
   - Destination database credentials are configured
   - Pipeline has been run at least once
@@ -474,6 +480,6 @@ After completing this guide, you have a complete **AI-powered data pipeline deve
     icon="puzzle-piece"
     href="https://dlthub.com/blog/deep-dive-assistants-mcp-continue"
   >
-    Deep dive into dlt Hub MCP integration
+    Deep dive into dlt MCP integration
   </Card>
 </CardGroup>
