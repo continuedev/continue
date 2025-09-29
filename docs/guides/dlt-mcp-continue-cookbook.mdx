@@ -292,6 +292,8 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 
 ### Create Workflow File
 
+This workflow automatically validates your dlt data pipelines on pull requests using the Continue CLI in [headless mode](/cli/overview#headless-mode%3A-production-automation). It inspects pipeline schemas, checks for errors, and posts a summary report as a PR comment. The workflow can also be triggered manually via `workflow_dispatch`.
+
 Create `.github/workflows/dlt-pipeline-validation.yml` in your repository:
 
 ```yaml
@@ -300,14 +302,13 @@ name: Data Pipeline Validation with dlt MCP
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
-  schedule:
-    - cron: "0 8 * * *" # Daily at 8 AM UTC
+  workflow_dispatch:
 
 jobs:
   validate-pipeline:
     runs-on: ubuntu-latest
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -333,8 +334,6 @@ jobs:
           echo "✅ Continue CLI installed"
 
       - name: Validate Pipeline Schema
-        env:
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
           echo "🔍 Validating pipeline schema..."
           cn --config dlthub/dlt-assistant \
@@ -342,8 +341,6 @@ jobs:
                  and columns are present. Flag any missing or unexpected changes."
 
       - name: Check Pipeline Health
-        env:
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
           echo "📊 Checking pipeline health..."
           cn --config dlthub/dlt-assistant \
@@ -351,10 +348,9 @@ jobs:
                  Report any issues that need attention."
 
       - name: Comment Pipeline Report on PR
-        env:
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: always() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REPORT=$(cn --config dlthub/dlt-assistant \
              -p "Generate a concise summary (200 words or less) of:
