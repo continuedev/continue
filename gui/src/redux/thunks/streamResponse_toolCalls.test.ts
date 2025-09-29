@@ -2030,7 +2030,7 @@ describe("streamResponseThunk - tool calls", () => {
       );
     });
 
-    it("should respect disabled policy", async () => {
+    it.only("should respect disabled policy", async () => {
       const initialState = getRootStateWithClaude();
       initialState.session.history = [
         {
@@ -2039,7 +2039,7 @@ describe("streamResponseThunk - tool calls", () => {
         },
       ];
       initialState.ui.toolSettings = {
-        [terminalName]: "disabled", // Tool is disabled
+        [terminalName]: "allowedWithPermission", // Tool is disabled
       };
       initialState.config.config.tools = [grepTool];
       const mockStore = createMockStore(initialState);
@@ -2056,8 +2056,8 @@ describe("streamResponseThunk - tool calls", () => {
       mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
         data,
       ) => {
+        numCalls++;
         if (numCalls < 2) {
-          numCalls++;
           return {
             policy: "disabled",
           };
@@ -2234,7 +2234,7 @@ describe("streamResponseThunk - tool calls", () => {
       );
     });
 
-    it.only("should properly handle disabled commands and show error status", async () => {
+    it("should properly handle disabled commands and show error status", async () => {
       // Setup store with runTerminalCommand tool
       const initialState = getRootStateWithClaude();
       initialState.config.config.tools = [terminalTool];
