@@ -1,11 +1,13 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest } from "../permissions/types.js";
 import { services } from "../services/index.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { calculateTokenCost } from "../telemetry/utils.js";
 import {
@@ -64,7 +66,11 @@ export function handleHeadlessPermission(
     `If you don't want the tool to be included, use --exclude ${toolName}.`,
   );
 
-  process.exit(1);
+  // Use graceful exit to flush telemetry even in headless denial
+  // Note: We purposely trigger an async exit without awaiting in this sync path
+  import("../util/exit.js").then(({ gracefulExit }) => gracefulExit(1));
+  // Throw to satisfy the never return type; process will exit shortly
+  throw new Error("Exiting due to headless permission requirement");
 }
 
 // Helper function to request user permission
@@ -286,6 +292,17 @@ export function recordStreamTelemetry(options: {
     costUsd: cost,
   });
 
+  // Mirror core metrics to PostHog for product analytics
+  try {
+    posthogService.capture("apiRequest", {
+      model: model.model,
+      durationMs: totalDuration,
+      inputTokens,
+      outputTokens,
+      costUsd: cost,
+    });
+  } catch {}
+
   return cost;
 }
 
@@ -338,6 +355,11 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
+      const errorReason =
+        error instanceof ContinueError
+          ? error.reason
+          : ContinueErrorReason.Unknown;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -352,6 +374,15 @@ export async function preprocessStreamedToolCalls(
         success: false,
         durationMs: duration,
         error: errorMessage,
+        errorReason,
+        // modelName, TODO
+      });
+      void posthogService.capture("tool_call_outcome", {
+        succeeded: false,
+        toolName: toolCall.name,
+        errorReason,
+        duration_ms: duration,
+        // model: options.modelName, TODO
       });
 
       // Add error to chat history

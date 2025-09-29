@@ -1,5 +1,5 @@
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import Alert from "../../components/gui/Alert";
@@ -14,16 +14,10 @@ function ConfigPage() {
   useNavigationListener();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("settings");
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get("tab") || "settings";
+  });
   const { session, organizations } = useAuth();
-
-  // Set initial tab from URL parameter
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   const allTabs = getAllTabs();
   const shouldRenderOrgInfo =

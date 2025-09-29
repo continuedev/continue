@@ -5,16 +5,15 @@ import { getMCPToolName } from "./mcpToolName";
 const createMcpServer = (name: string): MCPServerStatus => ({
   name,
   errors: [],
+  infos: [],
   prompts: [],
   tools: [],
   resources: [],
   resourceTemplates: [],
   status: "connected",
   id: "",
-  transport: {
-    type: "sse",
-    url: "",
-  },
+  type: "sse",
+  url: "",
   isProtectedResource: false,
 });
 

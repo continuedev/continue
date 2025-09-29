@@ -78,7 +78,7 @@ describe("remote command", () => {
     await remote("test prompt", { idempotencyKey: testIdempotencyKey });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -96,7 +96,7 @@ describe("remote command", () => {
     await remote("test prompt", {});
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -145,6 +145,77 @@ describe("remote command", () => {
     expect(mockConsoleLog).not.toHaveBeenCalled();
   });
 
+  it("should fetch tunnel and connect when id option is provided", async () => {
+    const agentId = "agent-789";
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ url: "ws://tunnel-url.com", port: 9090 }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: "test-agent-id",
+          url: "ws://test-url.com",
+          port: 8080,
+        }),
+      });
+
+    await remote("test prompt", { id: agentId });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL(`agents/${agentId}/tunnel`, mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+      }),
+    );
+
+    expect(mockStartRemoteTUIChat.startRemoteTUIChat).toHaveBeenCalledWith(
+      "ws://tunnel-url.com",
+      "test prompt",
+    );
+  });
+
+  it("should output JSON without starting TUI when using --id with --start", async () => {
+    const agentId = "agent-456";
+    const tunnelResponse = { url: "ws://existing-tunnel.com", port: 7070 };
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => tunnelResponse,
+    });
+
+    await remote("test prompt", { id: agentId, start: true });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL(`agents/${agentId}/tunnel`, mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+      }),
+    );
+
+    expect(mockStartRemoteTUIChat.startRemoteTUIChat).not.toHaveBeenCalled();
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      JSON.stringify({
+        status: "success",
+        message: "Remote agent tunnel connection details",
+        url: tunnelResponse.url,
+        containerPort: tunnelResponse.port,
+        agentId,
+        mode: "existing_agent",
+      }),
+    );
+  });
+
   it("should handle proper request body structure with all fields", async () => {
     const testIdempotencyKey = "structured-test-key";
 
@@ -190,7 +261,7 @@ describe("remote command", () => {
     await remote("test prompt", { branch: testBranch });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -206,7 +277,7 @@ describe("remote command", () => {
     await remote("test prompt", {});
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -236,7 +307,72 @@ describe("remote command", () => {
       prompt: "test prompt",
       idempotencyKey: testIdempotencyKey,
       branchName: testBranch,
+      agent: undefined,
+      config: undefined,
     });
+  });
+
+  it("should include config in request body when config option is provided", async () => {
+    const testConfig = "test-config-path";
+
+    await remote("test prompt", { config: testConfig });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents", mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: expect.stringContaining(`"config":"${testConfig}"`),
+      }),
+    );
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents", mockEnv.env.apiBase),
+      expect.objectContaining({
+        body: expect.stringContaining(`"agent":"${testConfig}"`),
+      }),
+    );
+  });
+
+  it("should handle proper request body structure with config field", async () => {
+    const testConfig = "my-agent-config";
+    const testIdempotencyKey = "test-with-config";
+
+    await remote("test prompt", {
+      config: testConfig,
+      idempotencyKey: testIdempotencyKey,
+    });
+
+    const fetchCall = mockFetch.mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+
+    expect(requestBody).toEqual({
+      repoUrl: "https://github.com/user/test-repo.git",
+      name: expect.stringMatching(/^devbox-\d+$/),
+      prompt: "test prompt",
+      idempotencyKey: testIdempotencyKey,
+      agent: testConfig,
+      config: testConfig,
+    });
+  });
+
+  it("should not include config in request body when config option is not provided", async () => {
+    await remote("test prompt", {});
+
+    const fetchCall = mockFetch.mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+
+    expect(requestBody).toEqual({
+      repoUrl: "https://github.com/user/test-repo.git",
+      name: expect.stringMatching(/^devbox-\d+$/),
+      prompt: "test prompt",
+      agent: undefined,
+      config: undefined,
+    });
+    expect(requestBody).not.toHaveProperty("idempotencyKey");
   });
 
   describe("start mode (-s / --start flag)", () => {
@@ -267,7 +403,7 @@ describe("remote command", () => {
 
       // Should make POST request to create environment
       expect(mockFetch).toHaveBeenCalledWith(
-        new URL("agents/devboxes", mockEnv.env.apiBase),
+        new URL("agents", mockEnv.env.apiBase),
         expect.objectContaining({
           method: "POST",
           headers: {

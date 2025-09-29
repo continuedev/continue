@@ -12,6 +12,7 @@ import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { StorageSyncService } from "./StorageSyncService.js";
 import { systemMessageService } from "./SystemMessageService.js";
 import {
   ApiClientServiceState,
@@ -21,6 +22,7 @@ import {
   ServiceInitOptions,
   ServiceInitResult,
 } from "./types.js";
+import { UpdateService } from "./UpdateService.js";
 
 // Service instances
 const authService = new AuthService();
@@ -31,6 +33,8 @@ const mcpService = new MCPService();
 const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
 const chatHistoryService = new ChatHistoryService();
+const updateService = new UpdateService();
+const storageSyncService = new StorageSyncService();
 
 /**
  * Initialize all services and register them with the service container
@@ -129,6 +133,12 @@ export async function initializeServices(
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.UPDATE,
+    () => updateService.initialize(),
     [], // No dependencies
   );
 
@@ -244,6 +254,12 @@ export async function initializeServices(
   );
 
   serviceContainer.register(
+    SERVICE_NAMES.STORAGE_SYNC,
+    () => storageSyncService.initialize(),
+    [],
+  );
+
+  serviceContainer.register(
     SERVICE_NAMES.CHAT_HISTORY,
     () => chatHistoryService.initialize(undefined, initOptions.headless),
     [], // No dependencies for now, but could depend on SESSION in future
@@ -283,17 +299,9 @@ export function reloadService(serviceName: string) {
  * Check if all core services are ready
  */
 export function areServicesReady(): boolean {
-  return [
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-    SERVICE_NAMES.AUTH,
-    SERVICE_NAMES.API_CLIENT,
-    SERVICE_NAMES.CONFIG,
-    SERVICE_NAMES.MODEL,
-    SERVICE_NAMES.MCP,
-    SERVICE_NAMES.FILE_INDEX,
-    SERVICE_NAMES.RESOURCE_MONITORING,
-    SERVICE_NAMES.CHAT_HISTORY,
-  ].every((name) => serviceContainer.isReady(name));
+  return Object.values(SERVICE_NAMES).every((name) =>
+    serviceContainer.isReady(name),
+  );
 }
 
 /**
@@ -317,6 +325,8 @@ export const services = {
   resourceMonitoring: resourceMonitoringService,
   systemMessage: systemMessageService,
   chatHistory: chatHistoryService,
+  updateService: updateService,
+  storageSync: storageSyncService,
 } as const;
 
 // Export the service container for advanced usage

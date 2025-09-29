@@ -535,7 +535,9 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
@@ -563,18 +565,25 @@ describe("streamResponseThunk - tool calls", () => {
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify telemetry events for auto-approved tool execution
-    expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_decision", {
-      decision: "auto_accept",
-      toolName: "search_codebase",
-      toolCallId: "tool-call-1",
-    });
+    // Use partial matching to allow additional fields (e.g. model) in payload
+    expect(mockPosthog.capture).toHaveBeenCalledWith(
+      "tool_call_decision",
+      expect.objectContaining({
+        decision: "auto_accept",
+        toolName: "search_codebase",
+        toolCallId: "tool-call-1",
+      }),
+    );
 
-    expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_outcome", {
-      succeeded: true,
-      toolName: "search_codebase",
-      errorMessage: undefined,
-      duration_ms: expect.any(Number),
-    });
+    expect(mockPosthog.capture).toHaveBeenCalledWith(
+      "tool_call_outcome",
+      expect.objectContaining({
+        succeeded: true,
+        toolName: "search_codebase",
+        errorReason: undefined,
+        duration_ms: expect.any(Number),
+      }),
+    );
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState();
@@ -1217,13 +1226,17 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
     expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
@@ -1877,13 +1890,17 @@ describe("streamResponseThunk - tool calls", () => {
             ],
           },
         ],
-        options: {},
+        options: {
+          reasoning: false,
+        },
       },
     );
 
     expect(mockIdeMessengerManual.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {},
+        completionOptions: {
+          reasoning: false,
+        },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
@@ -2800,18 +2817,25 @@ describe("streamResponseThunk - tool calls", () => {
     ]);
 
     // Verify telemetry events for manual approval flow
-    expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_decision", {
-      decision: "accept",
-      toolName: "search_codebase",
-      toolCallId: "tool-approval-flow-1",
-    });
+    // Use partial matching to allow additional fields (e.g. model) in payload
+    expect(mockPosthog.capture).toHaveBeenCalledWith(
+      "tool_call_decision",
+      expect.objectContaining({
+        decision: "accept",
+        toolName: "search_codebase",
+        toolCallId: "tool-approval-flow-1",
+      }),
+    );
 
-    expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_outcome", {
-      succeeded: true,
-      toolName: "search_codebase",
-      errorMessage: undefined,
-      duration_ms: expect.any(Number),
-    });
+    expect(mockPosthog.capture).toHaveBeenCalledWith(
+      "tool_call_outcome",
+      expect.objectContaining({
+        succeeded: true,
+        toolName: "search_codebase",
+        errorReason: undefined,
+        duration_ms: expect.any(Number),
+      }),
+    );
 
     // Verify IDE messenger calls for tool execution
     expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith(

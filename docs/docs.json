@@ -24,6 +24,11 @@
             ]
           },
           {
+            "group": "CLI",
+            "icon": "terminal",
+            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+          },
+          {
             "group": "Features",
             "icon": "star",
             "pages": [
@@ -231,15 +236,27 @@
             "pages": [
               "guides/overview",
               "guides/understanding-agents",
+              "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/doc-writing-agent-cli",
               "guides/continuous-ai",
+              "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/instinct",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
               "guides/how-to-self-host-a-model"
+            ]
+          },
+          {
+            "group": "Cookbooks",
+            "icon": "book-open-cover",
+            "pages": [
+              "guides/posthog-github-continuous-ai",
+              "guides/snyk-mcp-continue-cookbook",
+              "guides/netlify-mcp-continuous-deployment"
             ]
           }
         ]
@@ -353,10 +370,6 @@
     {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/agents/intro"
     },
     {
       "source": "/customize",

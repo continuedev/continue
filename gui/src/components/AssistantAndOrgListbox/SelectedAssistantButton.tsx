@@ -20,13 +20,13 @@ export function SelectedAssistantButton({
 
   const isSidebar = variant === "sidebar";
   const iconSize = isSidebar ? "h-4 w-4" : "h-3 w-3";
-  const buttonPadding = isSidebar ? "px-2 py-2" : "px-0 py-0";
+  const buttonPadding = isSidebar ? "px-2 py-1.5" : "px-0 py-0.5";
   const buttonStyle = isSidebar ? {} : { fontSize: fontSize(-3) };
 
   return (
     <ListboxButton
       data-testid="assistant-select-button"
-      className={`text-description overflow-hidden border-none bg-transparent !py-1.5 hover:brightness-110 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
+      className={`text-description overflow-hidden border-none bg-transparent hover:brightness-110 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
       style={buttonStyle}
     >
       <div
@@ -48,9 +48,7 @@ export function SelectedAssistantButton({
           ) : (
             <>
               <AssistantIcon assistant={selectedProfile} size={iconSize} />
-              <span
-                className={`select-none truncate text-xs ${isSidebar && "hidden md:block"}`}
-              >
+              <span className={`xs:line-clamp-1 hidden select-none text-xs`}>
                 {selectedProfile.title}
               </span>
             </>

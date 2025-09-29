@@ -1,10 +1,12 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import { trimEmptyLines } from "core/edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
 import { diffLines } from "diff";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { ApplyActions } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ApplyActions";
 import { FileInfo } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/FileInfo";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -13,7 +15,6 @@ import {
   selectApplyStateByToolCallId,
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
-import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
@@ -30,7 +31,7 @@ const MAX_SAME_LINES = 2;
 
 function EllipsisLine() {
   return (
-    <div className="text-description-muted px-3 py-1 text-center font-mono">
+    <div className="text-description-muted px-3 py-1 text-left font-mono">
       ⋯
     </div>
   );
@@ -68,6 +69,19 @@ function DiffLines({
   );
 }
 
+function DiffStats({ added, removed }: { added: number; removed: number }) {
+  if (added === 0 && removed === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-1 font-mono text-xs">
+      {added > 0 && <span className="text-success">+{added}</span>}
+      {removed > 0 && <span className="text-error">-{removed}</span>}
+    </div>
+  );
+}
+
 export function FindAndReplaceDisplay({
   fileUri,
   relativeFilePath,
@@ -77,8 +91,6 @@ export function FindAndReplaceDisplay({
   historyIndex,
 }: FindAndReplaceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
-  const [diffWidth, setDiffWidth] = useState<number | undefined>(undefined);
-  const diffDivRef = useRef<HTMLDivElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
   const applyState: ApplyState | undefined = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, toolCallId),
@@ -105,7 +117,10 @@ export function FindAndReplaceDisplay({
     if (editingFileContents) {
       return editingFileContents;
     }
-    return edits?.map((edit) => edit.old_string ?? "").join("\n");
+    if (Array.isArray(edits)) {
+      return edits.map((edit) => edit.old_string ?? "").join("\n");
+    }
+    return "";
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
@@ -122,11 +137,11 @@ export function FindAndReplaceDisplay({
           new_string: newString,
           replace_all: replaceAll,
         } = edits[i];
-        newContent = performFindAndReplace(
+        newContent = executeFindAndReplace(
           newContent,
           oldString,
           newString,
-          replaceAll,
+          !!replaceAll,
           i,
         );
       }
@@ -143,27 +158,49 @@ export function FindAndReplaceDisplay({
     }
   }, [currentFileContent, edits]);
 
+  const diffStats = useMemo(() => {
+    if (!diffResult?.diff) {
+      return { added: 0, removed: 0 };
+    }
+
+    let added = 0;
+    let removed = 0;
+
+    diffResult.diff.forEach((part) => {
+      const lines = part.value.split("\n");
+      // Exclude empty line at the end (similar to DiffLines component logic)
+      const lineCount =
+        lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
+
+      if (part.added) {
+        added += lineCount;
+      } else if (part.removed) {
+        removed += lineCount;
+      }
+    });
+
+    return { added, removed };
+  }, [diffResult?.diff]);
+
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;
     if (status) {
-      if (status === "canceled" || status === "errored" || status === "done") {
-        return (
-          <div
-            className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
-            onClick={(e) => {
-              if (toolCallState.output) {
-                e.stopPropagation();
-                ideMessenger.post("showVirtualFile", {
-                  name: "Edit output",
-                  content: renderContextItems(toolCallState.output),
-                });
-              }
-            }}
-          >
-            {getStatusIcon(toolCallState.status)}
-          </div>
-        );
-      }
+      return (
+        <div
+          className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+          onClick={(e) => {
+            if (toolCallState.output) {
+              e.stopPropagation();
+              ideMessenger.post("showVirtualFile", {
+                name: "Edit output",
+                content: renderContextItems(toolCallState.output),
+              });
+            }
+          }}
+        >
+          {getStatusIcon(status)}
+        </div>
+      );
     }
   }, [toolCallState?.status, toolCallState?.output]);
 
@@ -176,24 +213,27 @@ export function FindAndReplaceDisplay({
           setIsExpanded(!showContent);
         }}
       >
-        <div className="flex max-w-[50%] flex-row items-center text-xs">
-          {statusIcon}
-          <ChevronDownIcon
-            data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
-              showContent ? "rotate-0" : "-rotate-90"
-            }`}
-          />
-          <FileInfo
-            filepath={displayName || "..."}
-            onClick={(e) => {
-              if (!fileUri) {
-                return;
-              }
-              e.stopPropagation();
-              ideMessenger.post("openFile", { path: fileUri });
-            }}
-          />
+        <div className="flex min-w-0 flex-1 flex-row items-center gap-2 text-xs">
+          <div className="flex min-w-0 flex-row items-center">
+            {statusIcon}
+            <ChevronDownIcon
+              data-testid="toggle-find-and-replace-diff"
+              className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
+                showContent ? "rotate-0" : "-rotate-90"
+              }`}
+            />
+            <FileInfo
+              filepath={displayName || "..."}
+              onClick={(e) => {
+                if (!fileUri) {
+                  return;
+                }
+                e.stopPropagation();
+                ideMessenger.post("openFile", { path: fileUri });
+              }}
+            />
+          </div>
+          <DiffStats added={diffStats.added} removed={diffStats.removed} />
         </div>
 
         {applyState && (
@@ -220,10 +260,10 @@ export function FindAndReplaceDisplay({
   );
 
   if (diffResult?.error) {
-    return renderContainer(
-      <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong>
-      </div>,
+    return (
+      <div className="text-description mt-2 px-3">
+        The searched string was not found in the file
+      </div>
     );
   }
 
@@ -238,22 +278,12 @@ export function FindAndReplaceDisplay({
     );
   }
 
-  useEffect(() => {
-    if (!diffDivRef.current) return;
-    const newWidth =
-      diffDivRef.current?.scrollWidth ??
-      diffDivRef.current?.getBoundingClientRect().width;
-    setDiffWidth(newWidth ? Math.ceil(newWidth) : undefined);
-  }, [isExpanded]);
-
   return renderContainer(
     <div
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
-      ref={diffDivRef}
     >
       <pre
-        className={`bg-editor m-0 text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
-        style={{ width: diffWidth ? `${diffWidth}px` : "100%" }}
+        className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
         {diffResult.diff?.map((part, index) => {
           if (part.removed) {
@@ -285,14 +315,16 @@ export function FindAndReplaceDisplay({
             const showMiddleEllipses =
               !isFirst && !isLast && lines.length > MAX_SAME_LINES * 2 + 1;
 
-            const startLines = showStartEllipsis
+            let startLines = showStartEllipsis
               ? lines.slice(-MAX_SAME_LINES)
               : showMiddleEllipses || showEndEllipsis
                 ? lines.slice(0, MAX_SAME_LINES)
                 : lines;
-            const endLines = showMiddleEllipses
+            startLines = trimEmptyLines({ lines: startLines, fromEnd: false });
+            let endLines = showMiddleEllipses
               ? lines.slice(-MAX_SAME_LINES)
               : [];
+            endLines = trimEmptyLines({ lines: endLines, fromEnd: true });
 
             return (
               <div key={index}>

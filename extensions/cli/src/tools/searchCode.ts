@@ -14,20 +14,21 @@ export const searchCodeTool: Tool = {
   displayName: "Search",
   description: "Search the codebase using ripgrep (rg) for a specific pattern",
   parameters: {
-    pattern: {
-      type: "string",
-      description: "The search pattern to look for",
-      required: true,
-    },
-    path: {
-      type: "string",
-      description: "The path to search in (defaults to current directory)",
-      required: false,
-    },
-    file_pattern: {
-      type: "string",
-      description: "Optional file pattern to filter results (e.g., '*.ts')",
-      required: false,
+    type: "object",
+    required: ["pattern"],
+    properties: {
+      pattern: {
+        type: "string",
+        description: "The search pattern to look for",
+      },
+      path: {
+        type: "string",
+        description: "The path to search in (defaults to current directory)",
+      },
+      file_pattern: {
+        type: "string",
+        description: "Optional file pattern to filter results (e.g., '*.ts')",
+      },
     },
   },
   readonly: true,

@@ -3,10 +3,11 @@
  * This file intercepts console and stdout/stderr to prevent dependency logging
  */
 
+import { isHeadlessMode as checkIsHeadlessMode } from "./util/cli.js";
+
 // Check if we're in headless mode by looking at process arguments
 // We need to do this before any imports to catch early logging
-const args = process.argv.slice(2);
-const isHeadlessMode = args.includes("-p") || args.includes("--print");
+const isHeadlessMode = checkIsHeadlessMode();
 
 // Store original methods before ANY dependencies can use them
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);

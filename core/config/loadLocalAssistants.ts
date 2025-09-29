@@ -1,3 +1,4 @@
+import { BLOCK_TYPES } from "@continuedev/config-yaml";
 import ignore from "ignore";
 import * as URI from "uri-js";
 import { IDE } from "..";
@@ -6,12 +7,32 @@ import {
   DEFAULT_IGNORE_FILETYPES,
 } from "../indexing/ignore";
 import { walkDir } from "../indexing/walkDir";
+import { RULES_MARKDOWN_FILENAME } from "../llm/rules/constants";
 import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
-import { joinPathsToUri } from "../util/uri";
+import { getUriPathBasename, joinPathsToUri } from "../util/uri";
+import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
+export function isContinueConfigRelatedUri(uri: string): boolean {
+  return (
+    uri.endsWith(".continuerc.json") ||
+    uri.endsWith(".prompt") ||
+    uri.endsWith("AGENTS.md") ||
+    uri.endsWith("AGENT.md") ||
+    uri.endsWith("CLAUDE.md") ||
+    uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+    (uri.includes(".continue") &&
+      (uri.endsWith(".yaml") ||
+        uri.endsWith(".yml") ||
+        uri.endsWith(".json"))) ||
+    [...BLOCK_TYPES, "agents", "assistants"].some((blockType) =>
+      uri.includes(`.continue/${blockType}`),
+    )
+  );
+}
 
-export function isLocalDefinitionFile(uri: string): boolean {
-  if (!uri.endsWith(".yaml") && !uri.endsWith(".yml") && !uri.endsWith(".md")) {
+export function isContinueAgentConfigFile(uri: string): boolean {
+  const isYaml = uri.endsWith(".yaml") || uri.endsWith(".yml");
+  if (!isYaml) {
     return false;
   }
 
@@ -20,6 +41,10 @@ export function isLocalDefinitionFile(uri: string): boolean {
     normalizedUri.includes(`/.continue/agents/`) ||
     normalizedUri.includes(`/.continue/assistants/`)
   );
+}
+
+export function isColocatedRulesFile(uri: string): boolean {
+  return getUriPathBasename(uri) === RULES_MARKDOWN_FILENAME;
 }
 
 async function getDefinitionFilesInDir(

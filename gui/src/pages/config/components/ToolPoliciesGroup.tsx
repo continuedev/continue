@@ -5,7 +5,6 @@ import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
 import { useAppDispatch } from "../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
-import { fontSize } from "../../../util";
 import { ToolPolicyItem } from "./ToolPolicyItem";
 
 interface ToolPoliciesGroupProps {
@@ -58,12 +57,7 @@ export function ToolPoliciesGroup({
                   : `Enable all tools in ${groupName} group`
             }
           >
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                dispatch(toggleToolGroupSetting(groupName));
-              }}
-            >
+            <div>
               <ToggleSwitch
                 isToggled={isGroupEnabled}
                 onToggle={() => dispatch(toggleToolGroupSetting(groupName))}

@@ -13,6 +13,13 @@ vi.mock("../../index.js", () => ({
   setExitMessageCallback: vi.fn(),
 }));
 
+// Mock git utility functions
+vi.mock("../../util/git.js", () => ({
+  isGitRepo: vi.fn(() => false),
+  getGitRemoteUrl: vi.fn(() => null),
+  getGitBranch: vi.fn(() => null),
+}));
+
 describe("BottomStatusBar Ctrl+C message", () => {
   const defaultProps: BottomStatusBarProps = {
     currentMode: "normal" as const,

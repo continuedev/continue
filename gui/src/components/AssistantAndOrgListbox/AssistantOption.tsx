@@ -1,4 +1,7 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +51,7 @@ export function AssistantOption({
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
-      className={selected ? "bg-list-active text-list-active-foreground" : ""}
+      className={`group ${selected ? "bg-list-active text-list-active-foreground" : ""}`}
     >
       <div className="flex w-full items-center justify-between gap-10 py-0.5">
         <div className="flex w-full items-center gap-3">
@@ -62,6 +65,20 @@ export function AssistantOption({
           </span>
         </div>
         <div className="flex flex-row items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              ideMessenger.post("config/openProfile", {
+                profileId: profile.id,
+              });
+              onClick(); // Close the listbox
+            }}
+          >
+            <Cog6ToothIcon className="h-3.5 w-3.5" />
+          </Button>
           {profile.errors && profile.errors?.length > 0 && (
             <ToolTip content="View errors">
               <Button

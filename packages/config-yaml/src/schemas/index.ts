@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
+import { mcpServerSchema, partialMcpServerSchema } from "./mcp/index.js";
 import {
   modelSchema,
   partialModelSchema,
@@ -13,22 +14,7 @@ export const contextSchema = z.object({
   params: z.any().optional(),
 });
 
-// TODO: This should be a discriminated union by type
-const mcpServerSchema = z.object({
-  name: z.string(),
-  command: z.string().optional(),
-  type: z.enum(["sse", "stdio", "streamable-http"]).optional(),
-  url: z.string().optional(),
-  faviconUrl: z.string().optional(),
-  args: z.array(z.string()).optional(),
-  env: z.record(z.string()).optional(),
-  cwd: z.string().optional(),
-  connectionTimeout: z.number().gt(0).optional(),
-  requestOptions: requestOptionsSchema.optional(),
-  sourceFile: z.string().optional(),
-});
-
-export type MCPServer = z.infer<typeof mcpServerSchema>;
+export { MCPServer } from "./mcp/index.js";
 
 const promptSchema = z.object({
   name: z.string(),
@@ -57,6 +43,7 @@ const ruleObjectSchema = z.object({
   globs: z.union([z.string(), z.array(z.string())]).optional(),
   regex: z.union([z.string(), z.array(z.string())]).optional(),
   alwaysApply: z.boolean().optional(),
+  invokable: z.boolean().optional(),
   sourceFile: z.string().optional(), //TODO refactor RuleWithSource.ruleFile to align with sourceFile
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
@@ -116,6 +103,7 @@ export const baseConfigYamlSchema = z.object({
   schema: z.string().optional(),
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
   env: envRecord.optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 const modelsUsesSchema = z
@@ -137,7 +125,18 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   context: z.array(blockOrSchema(contextSchema)).optional(),
   data: z.array(blockOrSchema(dataSchema)).optional(),
-  mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
+  mcpServers: z
+    .array(
+      z.union([
+        mcpServerSchema,
+        z.object({
+          uses: defaultUsesSchema,
+          with: z.record(z.string()).optional(),
+          override: partialMcpServerSchema.optional(),
+        }),
+      ]),
+    )
+    .optional(),
   rules: z
     .array(
       z.union([
@@ -261,6 +260,7 @@ export const configSchema = z.object({
   api_base: z.string().optional(),
   api_key: z.string().optional(),
   env: envRecord.optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
