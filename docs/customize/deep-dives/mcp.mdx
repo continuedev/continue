@@ -27,12 +27,14 @@ explore available MCP server blocks
 
 ## Quick Start: How to Set Up Your First MCP Server
 
-Below is a quick example of setting up a new MCP server for use in your agent:
+Below is a quick example of setting up a new MCP server for use in your agent. You can use either YAML or JSON configuration files:
 
 1. Create a folder called `.continue/mcpServers` at the top level of your workspace
-2. Add a file called `playwright-mcp.yaml` to this folder.
-3. Write the following contents to `playwright-mcp.yaml` and save.
+2. Add a file called `playwright-mcp.yaml` (or `playwright-mcp.json`) to this folder.
+3. Write the following contents to your configuration file and save.
 
+<Tabs>
+  <Tab title="YAML">
 ```yaml title=".continue/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
@@ -43,6 +45,16 @@ mcpServers:
     args:
       - "@playwright/mcp@latest"
 ```
+  </Tab>
+  <Tab title="JSON">
+```json title=".continue/mcpServers/playwright-mcp.json"
+{
+  "command": "npx",
+  "args": ["@playwright/mcp@latest"]
+}
+```
+  </Tab>
+</Tabs>
 
 Now test your MCP server by prompting the following command:
 
@@ -59,6 +71,57 @@ The result will be a generated file called `hn.txt` in the current working direc
 You can set up an MCP server to search the Continue documentation directly from your agent. This is particularly useful for getting help with Continue configuration and features.
 
 For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
+
+## How to Configure MCP Servers with JSON Files
+
+In addition to YAML configuration, you can now configure MCP servers using JSON files. This feature allows you to use Claude-style MCP configurations and provides lower friction when migrating from other tools.
+
+### JSON Configuration Options
+
+You can create JSON configuration files in the `.continue/mcpServers` folder in two formats:
+
+#### Single MCP Server Configuration
+
+Create a JSON file where the filename becomes the server name:
+
+```json title=".continue/mcpServers/my-server.json"
+{
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-sqlite"],
+  "env": {
+    "DATABASE_PATH": "${DATABASE_PATH}"
+  }
+}
+```
+
+#### Claude-style MCP Server Configuration
+
+Create a JSON file with multiple servers using the `mcpServers` format:
+
+```json title=".continue/mcpServers/claude-style.json"
+{
+  "mcpServers": {
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite"],
+      "env": {
+        "DATABASE_PATH": "${DATABASE_PATH}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+### Environment Variable Templating
+
+JSON configurations support environment variable templating using the `${VAR_NAME}` syntax, which is automatically converted to Continue's `${{ secrets.VAR_NAME }}` format internally.
 
 ## How to Configure MCP Servers
 
