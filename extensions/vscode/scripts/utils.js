@@ -198,13 +198,7 @@ async function copyNodeModules() {
   // Copy node_modules for pre-built binaries
   process.chdir(path.join(continueDir, "extensions", "vscode"));
 
-  const NODE_MODULES_TO_COPY = [
-    "esbuild",
-    "@esbuild",
-    "@lancedb",
-    "@vscode/ripgrep",
-    "workerpool",
-  ];
+  const NODE_MODULES_TO_COPY = ["@lancedb", "@vscode/ripgrep", "workerpool"];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -230,80 +224,7 @@ async function copyNodeModules() {
     ),
   );
 
-  // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmdirSync(`out/node_modules/esbuild/bin`, { recursive: true });
-
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
-}
-
-// async function downloadEsbuildBinary(isGhAction, isArm, target) {
-//   process.chdir(path.join(continueDir, "extensions", "vscode"));
-
-//   if (isGhAction && isArm) {
-//     // Download and unzip esbuild
-//     console.log("[info] Downloading pre-built esbuild binary");
-//     rimrafSync("node_modules/@esbuild");
-//     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-//     execCmdSync(
-//       `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-//     );
-//     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-//     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-//   } else {
-//     // Download esbuild from npm in tmp and copy over
-//     console.log("npm installing esbuild binary");
-//     await installNodeModuleInTempDirAndCopyToCurrent(
-//       "esbuild@0.17.19",
-//       "@esbuild",
-//     );
-//   }
-// }
-
-async function downloadEsbuildBinary(target) {
-  console.log("[info] Downloading pre-built esbuild binary");
-  rimrafSync("out/node_modules/@esbuild");
-  fs.mkdirSync(`out/node_modules/@esbuild/${target}/bin`, { recursive: true });
-  fs.mkdirSync(`out/tmp`, { recursive: true });
-  const downloadUrl = {
-    "darwin-arm64":
-      "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.19.tgz",
-    "linux-arm64":
-      "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.17.19.tgz",
-    "win32-arm64":
-      "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.17.19.tgz",
-    "linux-x64":
-      "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz",
-    "darwin-x64":
-      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.17.19.tgz",
-    "win32-x64":
-      "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz",
-  }[target];
-  execCmdSync(`curl -L -o out/tmp/esbuild.tgz ${downloadUrl}`);
-  execCmdSync("cd out/tmp && tar -xvzf esbuild.tgz");
-  // Copy the installed package back to the current directory
-  let tmpPath = "out/tmp/package/bin";
-  let outPath = `out/node_modules/@esbuild/${target}/bin`;
-  if (target.startsWith("win")) {
-    tmpPath = "out/tmp/package";
-    outPath = `out/node_modules/@esbuild/${target}`;
-  }
-
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(tmpPath),
-      path.join(outPath),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.error(`[error] Error copying esbuild package`, error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
-  rimrafSync("out/tmp");
 }
 
 async function downloadSqliteBinary(target) {
@@ -477,7 +398,6 @@ module.exports = {
   copyTreeSitterWasms,
   copyTreeSitterTagQryFiles,
   copyNodeModules,
-  downloadEsbuildBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,

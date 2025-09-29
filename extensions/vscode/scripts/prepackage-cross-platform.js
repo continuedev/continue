@@ -22,7 +22,6 @@ const {
   copyTreeSitterWasms,
   copyTreeSitterTagQryFiles,
   copyNodeModules,
-  downloadEsbuildBinary,
   downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
@@ -116,12 +115,6 @@ async function package(target, os, arch, exe) {
     lancePackageToInstall,
     "@lancedb",
   );
-  // *** esbuild ***
-  // await installNodeModuleInTempDirAndCopyToCurrent(
-  //   "esbuild@0.17.19",
-  //   "@esbuild",
-  // );
-  await downloadEsbuildBinary(target);
 
   // *** sqlite ***
   await downloadSqliteBinary(target);
@@ -187,19 +180,11 @@ async function package(target, os, arch, exe) {
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
-    }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
         ? "win32-x64-msvc"
         : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
-    `out/node_modules/esbuild/lib/main.js`,
   ]);
 }
 
