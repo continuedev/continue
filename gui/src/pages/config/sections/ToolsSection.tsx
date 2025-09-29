@@ -326,24 +326,37 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
           }
           sectionKey={`${server.id}-tools`}
         />
-
-        <ResourceRow
-          title="Prompts"
-          items={server.prompts}
-          icon={
-            <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
-          }
-          sectionKey={`${server.id}-prompts`}
-        />
-
-        <ResourceRow
-          title="Resources"
-          items={[...server.resources, ...server.resourceTemplates]}
-          icon={
-            <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
-          }
-          sectionKey={`${server.id}-resources`}
-        />
+        {server.prompts.length > 0 && (
+          <ResourceRow
+            title="Prompts"
+            items={server.prompts}
+            icon={
+              <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
+            }
+            sectionKey={`${server.id}-prompts`}
+          />
+        )}
+        {server.prompts.length > 0 && (
+          <ResourceRow
+            title="Prompts"
+            items={server.prompts}
+            icon={
+              <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
+            }
+            sectionKey={`${server.id}-prompts`}
+          />
+        )}
+        {(server.resources.length > 0 ||
+          server.resourceTemplates.length > 0) && (
+          <ResourceRow
+            title="Resources"
+            items={[...server.resources, ...server.resourceTemplates]}
+            icon={
+              <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
+            }
+            sectionKey={`${server.id}-resources`}
+          />
+        )}
       </div>
 
       {/* Error display below expandable section */}
