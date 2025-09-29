@@ -261,7 +261,7 @@ async function downloadRipgrepBinary(target) {
   console.log("[info] Downloading pre-built ripgrep binary");
   rimrafSync("node_modules/@vscode/ripgrep/bin");
   fs.mkdirSync("node_modules/@vscode/ripgrep/bin", { recursive: true });
-  4;
+
   const downloadUrl = {
     "darwin-arm64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
