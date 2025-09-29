@@ -83,7 +83,8 @@
               "customization/models",
               "customization/mcp-tools",
               "customization/rules",
-              "customization/prompts"
+              "customization/prompts",
+              "customization/settings"
             ]
           },
           {
