@@ -145,7 +145,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     ) {
       ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
     } else {
-      editBlock(rule?.slug, rule?.ruleFile);
+      editBlock(rule?.slug, rule?.sourceFile);
     }
   };
 

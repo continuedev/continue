@@ -9,7 +9,7 @@ describe("convertRuleBlockToSlashCommand", () => {
       rule: "Review this code for best practices",
       description: "Performs a code review",
       source: "rules-block",
-      ruleFile: "/path/to/rules.yaml",
+      sourceFile: "/path/to/rules.yaml",
       invokable: true,
     };
 

@@ -37,9 +37,9 @@ export class CodebaseRulesCache {
     const ruleWithSource: RuleWithSource = {
       ...rule,
       source: "colocated-markdown",
-      ruleFile: uri,
+      sourceFile: uri,
     };
-    const matchIdx = this.rules.findIndex((r) => r.ruleFile === uri);
+    const matchIdx = this.rules.findIndex((r) => r.sourceFile === uri);
     if (matchIdx === -1) {
       this.rules.push(ruleWithSource);
     } else {
@@ -47,7 +47,7 @@ export class CodebaseRulesCache {
     }
   }
   remove(uri: string) {
-    this.rules = this.rules.filter((r) => r.ruleFile !== uri);
+    this.rules = this.rules.filter((r) => r.sourceFile !== uri);
   }
 }
 
@@ -87,7 +87,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
         rules.push({
           ...rule,
           source: "colocated-markdown",
-          ruleFile: filePath,
+          sourceFile: filePath,
         });
       } catch (e) {
         errors.push({

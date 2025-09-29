@@ -12,4 +12,5 @@ export function convertCustomCommandToSlashCommand(
     prompt: customCommand.prompt,
     source: "json-custom-command",
     sourceFile: customCommand.sourceFile,
+  };
 }

@@ -55,27 +55,27 @@ describe("loadCodebaseRules", () => {
       name: "General Rules",
       rule: "Follow coding standards",
       source: "colocated-markdown",
-      ruleFile: "src/rules.md",
+      sourceFile: "src/rules.md",
     },
     "src/redux/rules.md": {
       name: "Redux Rules",
       rule: "Use Redux Toolkit",
       globs: "**/*.{ts,tsx}",
       source: "colocated-markdown",
-      ruleFile: "src/redux/rules.md",
+      sourceFile: "src/redux/rules.md",
     },
     "src/components/rules.md": {
       name: "Component Rules",
       rule: "Use functional components",
       globs: ["**/*.tsx", "**/*.jsx"],
       source: "colocated-markdown",
-      ruleFile: "src/components/rules.md",
+      sourceFile: "src/components/rules.md",
     },
     ".continue/rules.md": {
       name: "Global Rules",
       rule: "Follow project guidelines",
       source: "colocated-markdown",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
     },
   };
 

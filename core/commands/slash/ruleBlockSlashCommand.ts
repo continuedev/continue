@@ -10,7 +10,7 @@ export function convertRuleBlockToSlashCommand(
     description: rule.description ?? "",
     prompt: rule.rule,
     source: "invokable-rule",
-    sourceFile: rule.ruleFile,
+    sourceFile: rule.sourceFile,
     slug: rule.slug,
   };
 }

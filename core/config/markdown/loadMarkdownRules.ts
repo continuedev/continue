@@ -35,7 +35,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
         rules.push({
           ...rule,
           source: "agent-file",
-          ruleFile: agentFilePath,
+          sourceFile: agentFilePath,
           alwaysApply: true,
         });
         agentFileFound = true;
@@ -71,7 +71,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
           uriType: "file",
           fileUri: relativePathOrBasename,
         });
-        rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
+        rules.push({ ...rule, source: "rules-block", sourceFile: file.path });
       } catch (e) {
         errors.push({
           fatal: false,

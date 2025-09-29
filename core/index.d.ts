@@ -1852,7 +1852,7 @@ export interface RuleWithSource {
   regex?: string | string[];
   rule: string;
   description?: string;
-  ruleFile?: string;
+  sourceFile?: string;
   alwaysApply?: boolean;
   invokable?: boolean;
 }

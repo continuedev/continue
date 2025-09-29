@@ -27,14 +27,14 @@ export function getRuleSourceDisplayName(rule: RuleWithSource): string {
     case "model-options-chat":
       return "Base System Chat Message";
     case "agent-file":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
+      if (rule.sourceFile) {
+        return getLastNPathParts(rule.sourceFile, 2);
       } else {
         return "Agent file";
       }
     case "colocated-markdown":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
+      if (rule.sourceFile) {
+        return getLastNPathParts(rule.sourceFile, 2);
       } else {
         return "rules.md";
       }

@@ -25,7 +25,7 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       globs: rule.globs,
       name: rule.name,
       description: rule.description,
-      ruleFile: rule.sourceFile,
+      sourceFile: rule.sourceFile,
       alwaysApply: rule.alwaysApply,
       invokable: rule.invokable ?? false,
     };
