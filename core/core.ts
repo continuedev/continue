@@ -484,9 +484,6 @@ export class Core {
     on("mcp/setServerEnabled", async (msg) => {
       const { id, enabled } = msg.data;
       await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
-      await this.configHandler.reloadConfig(
-        `MCP Server ${enabled ? "enabled" : "disabled"}`,
-      );
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;

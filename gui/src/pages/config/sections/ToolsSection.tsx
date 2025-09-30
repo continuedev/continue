@@ -112,13 +112,20 @@ function MCPServerPreview({
 
   const onRefresh = async () => {
     updateMCPServerStatus("connecting");
-    await ideMessenger.request("mcp/reloadServer", {
-      id: server.id,
-    });
+    if (server.status === "disabled") {
+      await ideMessenger.request("mcp/setServerEnabled", {
+        id: server.id,
+        enabled: true,
+      });
+    } else {
+      await ideMessenger.request("mcp/reloadServer", {
+        id: server.id,
+      });
+    }
   };
 
   const onDisconnect = async () => {
-    updateMCPServerStatus("not-connected");
+    updateMCPServerStatus("disabled");
     dispatch(
       updateConfig({
         ...config,
