@@ -310,7 +310,10 @@ export const sessionSlice = createSlice({
           // Cancel any tool calls that are dangling and generated
           if (message.toolCallStates) {
             message.toolCallStates.forEach((toolCallState) => {
-              if (toolCallState.status === "generated") {
+              if (
+                toolCallState.status === "generated" ||
+                toolCallState.status === "generating"
+              ) {
                 toolCallState.status = "canceled";
               }
             });

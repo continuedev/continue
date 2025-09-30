@@ -44,22 +44,8 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     "file:///Users/user/workspace1",
     "file:///Users/user/workspace2",
   ],
-  "history/list": [
-    // {
-    //   title: "Session 1",
-    //   sessionId: "session-1",
-    //   dateCreated: new Date().toString(),
-    //   workspaceDirectory: "/tmp",
-    // },
-    // {
-    //   title: "Remote Agent",
-    //   sessionId: "remote-agent-123",
-    //   dateCreated: new Date().toString(),
-    //   workspaceDirectory: "",
-    //   isRemote: true,
-    //   remoteId: "agent-123",
-    // },
-  ],
+  "history/list": [],
+  "docs/getIndexedPages": [],
   "history/save": undefined,
   getControlPlaneSessionInfo: {
     AUTH_TYPE: AuthType.WorkOsStaging,

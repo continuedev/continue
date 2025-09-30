@@ -52,12 +52,13 @@ export const getEmptyRootState: () => RootState = () => {
 
 export const createMockStore = (
   initialState?: Partial<RootState>,
+  mockMessenger?: MockIdeMessenger,
 ): ReturnType<typeof configureStore> & {
   mockIdeMessenger: MockIdeMessenger;
   getActions: () => any[];
   clearActions: () => void;
 } => {
-  const mockIdeMessenger = new MockIdeMessenger();
+  const mockIdeMessenger = mockMessenger ?? new MockIdeMessenger();
 
   const store = configureStore({
     reducer: {

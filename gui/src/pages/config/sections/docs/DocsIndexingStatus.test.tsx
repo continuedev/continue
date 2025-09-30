@@ -10,6 +10,7 @@ import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { MockIdeMessenger } from "../../../../context/MockIdeMessenger";
 import { createMockStore } from "../../../../util/test/mockStore";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
@@ -27,19 +28,12 @@ describe("DocsIndexingStatus", () => {
   const renderComponent = async (
     props: any = {},
     storeState = {},
-    mockIdeMessengerSetup?: (mock: any) => void,
+    mockMessenger?: MockIdeMessenger,
   ) => {
-    const { mockIdeMessenger, ...store } = createMockStore(storeState);
-
-    // Configure the mockIdeMessenger for this test
-    if (mockIdeMessengerSetup) {
-      mockIdeMessengerSetup(mockIdeMessenger);
-    } else {
-      mockIdeMessenger.responses["docs/getIndexedPages"] = [
-        "page1.html",
-        "page2.html",
-      ];
-    }
+    const { mockIdeMessenger, ...store } = createMockStore(
+      storeState,
+      mockMessenger,
+    );
 
     const result = await act(async () =>
       render(
@@ -127,11 +121,16 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    const { mockIdeMessenger } = await renderComponent({}, storeState);
+    const { mockIdeMessenger } = await renderComponent(
+      {},
+      storeState,
+      new MockIdeMessenger(),
+    );
+    const postSpy = vi.spyOn(mockIdeMessenger, "post");
     const stopButton = screen.getByTestId("stop-indexing");
     fireEvent.click(stopButton);
 
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith("indexing/abort", {
+    expect(postSpy).toHaveBeenCalledWith("indexing/abort", {
       type: "docs",
       id: "https://example.com",
     });
@@ -171,10 +170,11 @@ describe("DocsIndexingStatus", () => {
     };
 
     const { mockIdeMessenger } = await renderComponent({}, storeState);
+    const postSpy = vi.spyOn(mockIdeMessenger, "post");
     const reindexButton = screen.getByTestId("reindex-docs");
     fireEvent.click(reindexButton);
 
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith("indexing/reindex", {
+    expect(postSpy).toHaveBeenCalledWith("indexing/reindex", {
       type: "docs",
       id: "https://example.com",
     });
@@ -195,13 +195,11 @@ describe("DocsIndexingStatus", () => {
     };
 
     const { mockIdeMessenger } = await renderComponent({}, storeState);
+    const postSpy = vi.spyOn(mockIdeMessenger, "post");
     const titleElement = screen.getByText("Example Docs");
     fireEvent.click(titleElement);
 
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith(
-      "openUrl",
-      "https://example.com/docs",
-    );
+    expect(postSpy).toHaveBeenCalledWith("openUrl", "https://example.com/docs");
   });
 
   it("fetches indexed pages when status becomes complete", async () => {
@@ -218,15 +216,13 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    const { mockIdeMessenger } = await renderComponent({}, storeState);
-
+    const mockMessenger = new MockIdeMessenger();
+    const spy = vi.spyOn(mockMessenger, "request");
+    await renderComponent({}, storeState, mockMessenger);
     await waitFor(() => {
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-        "docs/getIndexedPages",
-        {
-          startUrl: "https://example.com",
-        },
-      );
+      expect(spy).toHaveBeenCalledWith("docs/getIndexedPages", {
+        startUrl: "https://example.com",
+      });
     });
   });
 
@@ -244,12 +240,13 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    await renderComponent({}, storeState, (mockIdeMessenger) => {
-      mockIdeMessenger.request.mockResolvedValue({
-        status: "success",
-        content: ["page1.html", "page2.html", "page3.html"],
-      });
-    });
+    const mockMessenger = new MockIdeMessenger();
+    mockMessenger.responses["docs/getIndexedPages"] = [
+      "page1.html",
+      "page2.html",
+      "page3.html",
+    ];
+    await renderComponent({}, storeState, mockMessenger);
 
     await waitFor(() => {
       expect(screen.getByText("3 pages indexed")).toBeInTheDocument();
@@ -270,12 +267,9 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    await renderComponent({}, storeState, (mockIdeMessenger) => {
-      mockIdeMessenger.request.mockResolvedValue({
-        status: "success",
-        content: ["page1.html"],
-      });
-    });
+    const mockMessenger = new MockIdeMessenger();
+    mockMessenger.responses["docs/getIndexedPages"] = ["page1.html"];
+    await renderComponent({}, storeState, mockMessenger);
 
     await waitFor(() => {
       expect(screen.getByText("1 page indexed")).toBeInTheDocument();
@@ -317,12 +311,11 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    await renderComponent({}, storeState, (mockIdeMessenger) => {
-      mockIdeMessenger.request.mockResolvedValue({
-        status: "error",
-        error: "Failed to fetch pages",
-      });
-    });
+    const mockMessenger = new MockIdeMessenger();
+    mockMessenger.responseHandlers["docs/getIndexedPages"] = async (data) => {
+      throw new Error("Failed to fetch pages");
+    };
+    await renderComponent({}, storeState, mockMessenger);
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -357,10 +350,12 @@ describe("DocsIndexingStatus", () => {
       },
     };
 
-    await renderComponent({}, storeState, (mockIdeMessenger) => {
-      // Mock a delayed response to keep in loading state
-      mockIdeMessenger.request.mockImplementation(() => new Promise(() => {}));
-    });
+    const mockMessenger = new MockIdeMessenger();
+    mockMessenger.responseHandlers["docs/getIndexedPages"] = async (data) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return [];
+    };
+    await renderComponent({}, storeState, mockMessenger);
 
     expect(screen.getByText("Loading site info...")).toBeInTheDocument();
   });
