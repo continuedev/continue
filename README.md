@@ -4,7 +4,7 @@
 
 </div>
 
-<h1 align="center">Continue</h1>
+<h1 align="center">✨ Continue 🚀</h1>
 
 <div align="center">
 
