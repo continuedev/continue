@@ -36,11 +36,11 @@ function areAllToolsDoneStreaming(
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
-  { toolCallId: string },
+  { toolCallId: string; depth?: number },
   ThunkApiType
 >(
   "chat/streamAfterToolCall",
-  async ({ toolCallId }, { dispatch, getState }) => {
+  async ({ toolCallId, depth = 0 }, { dispatch, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
@@ -80,11 +80,9 @@ export const streamResponseAfterToolCall = createAsyncThunk<
             state.config.config.ui?.continueAfterToolRejection,
           )
         ) {
-          count++;
-          unwrapResult(await dispatch(streamNormalInput({})));
+          unwrapResult(await dispatch(streamNormalInput({ depth: depth + 1 })));
         }
       }),
     );
   },
 );
-let count = 0;

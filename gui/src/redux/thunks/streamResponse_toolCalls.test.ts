@@ -4,11 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
 import { streamResponseThunk } from "./streamResponse";
 
-// Mock external dependencies only - let selectors run naturally
-// Removed: modelSupportsNativeTools - let it run naturally
-
-// Removed: addSystemMessageToolsToSystemMessage - let it run naturally
-
 // Mock system message construction to keep test readable
 vi.mock("../util/getBaseSystemMessage", () => ({
   getBaseSystemMessage: vi.fn(),
@@ -16,9 +11,6 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
-// Removed: shouldAutoEnableSystemMessageTools - let it run naturally
-
-// Additional mocks for streamResponseThunk
 vi.mock("posthog-js", () => ({
   default: {
     capture: vi.fn(),
@@ -1113,7 +1105,6 @@ describe("streamResponseThunk - tool calls", () => {
     const mockIdeMessengerApproval = mockStoreWithApproval.mockIdeMessenger;
     // Setup successful compilation
 
-    const requestSpy = vi.spyOn(mockIdeMessengerApproval, "request");
     mockIdeMessengerApproval.responses["llm/compileChat"] = {
       compiledChatMessages: [
         {
@@ -1205,6 +1196,7 @@ describe("streamResponseThunk - tool calls", () => {
       }
     });
     mockIdeMessengerApproval.llmStreamChat = mockChat;
+    const requestSpy = vi.spyOn(mockIdeMessengerApproval, "request");
 
     // Track isStreaming state changes throughout the entire test
     const streamingStateChanges: boolean[] = [];
@@ -1514,7 +1506,7 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Simulate user clicking "Accept" on the tool call
     const approvalResult = await mockStoreWithApproval.dispatch(
-      callToolById({ id: "tool-approval-flow-1" }) as any,
+      callToolById({ toolCallId: "tool-approval-flow-1" }) as any,
     );
 
     // Verify tool execution completed successfully
@@ -1526,7 +1518,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/callTool/pending",
         meta: {
-          arg: { id: "tool-approval-flow-1" },
+          arg: { toolCallId: "tool-approval-flow-1" },
           requestId: expect.any(String),
           requestStatus: "pending",
         },
@@ -1560,6 +1552,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "chat/streamAfterToolCall/pending",
         meta: {
           arg: {
+            depth: 1,
             toolCallId: "tool-approval-flow-1",
           },
           requestId: expect.any(String),
@@ -1594,7 +1587,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/streamNormalInput/pending",
         meta: {
-          arg: {},
+          arg: { depth: 2 },
           requestId: expect.any(String),
           requestStatus: "pending",
         },
@@ -1652,7 +1645,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/streamNormalInput/fulfilled",
         meta: {
-          arg: {},
+          arg: { depth: 2 },
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
@@ -1756,6 +1749,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "chat/streamAfterToolCall/fulfilled",
         meta: {
           arg: {
+            depth: 1,
             toolCallId: "tool-approval-flow-1",
           },
           requestId: expect.any(String),
@@ -1766,7 +1760,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/callTool/fulfilled",
         meta: {
-          arg: { id: "tool-approval-flow-1" },
+          arg: { toolCallId: "tool-approval-flow-1" },
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
@@ -1796,19 +1790,16 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     // Verify IDE messenger calls for tool execution
-    expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith(
-      "tools/call",
-      {
-        toolCall: {
-          id: "tool-approval-flow-1",
-          type: "function",
-          function: {
-            name: grepName,
-            arguments: JSON.stringify({ query: "test function" }),
-          },
+    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-approval-flow-1",
+        type: "function",
+        function: {
+          name: grepName,
+          arguments: JSON.stringify({ query: "test function" }),
         },
       },
-    );
+    });
 
     // Verify second streaming call was made for continuation
     expect(streamCallCount).toBe(2);
@@ -1954,7 +1945,6 @@ describe("streamResponseThunk - tool calls", () => {
       const mockStore = createMockStore(initialState);
 
       const mockIdeMessenger = mockStore.mockIdeMessenger;
-      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
       mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
         data,
       ) => {
@@ -1978,13 +1968,14 @@ describe("streamResponseThunk - tool calls", () => {
         PromptLog
       > {
         yield [{ role: "assistant", content: "I'll run the echo command." }];
+        const toolId = `tool-echo-${Date.now()}`;
         yield [
           {
             role: "assistant",
             content: "",
             toolCalls: [
               {
-                id: "tool-echo-1",
+                id: toolId,
                 type: "function",
                 function: {
                   name: terminalName,
@@ -2004,6 +1995,7 @@ describe("streamResponseThunk - tool calls", () => {
 
       const mockChat = vi.fn().mockReturnValue(mockStreamWithEcho());
       mockIdeMessenger.llmStreamChat = mockChat;
+      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
 
       // Execute thunk
       await mockStore.dispatch(
@@ -2011,26 +2003,25 @@ describe("streamResponseThunk - tool calls", () => {
           editorState: mockEditorState,
           modifiers: mockModifiers,
         }) as any,
-      );
-
-      // Just verify the call was made with correct params
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-        "tools/evaluatePolicy",
-        expect.objectContaining({
-          toolName: terminalName,
-          basePolicy: "allowedWithoutPermission",
-          args: { command: "echo hello" },
-        }),
-      );
+      ),
+        // Just verify the call was made with correct params
+        expect(requestSpy).toHaveBeenCalledWith(
+          "tools/evaluatePolicy",
+          expect.objectContaining({
+            toolName: terminalName,
+            basePolicy: "allowedWithoutPermission",
+            args: { command: "echo hello" },
+          }),
+        );
 
       // Verify tool wasn't auto-executed (policy changed to require permission)
-      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+      expect(requestSpy).not.toHaveBeenCalledWith(
         "tools/call",
         expect.any(Object),
       );
     });
 
-    it.only("should respect disabled policy", async () => {
+    it("should respect disabled policy", async () => {
       const initialState = getRootStateWithClaude();
       initialState.session.history = [
         {
@@ -2039,25 +2030,31 @@ describe("streamResponseThunk - tool calls", () => {
         },
       ];
       initialState.ui.toolSettings = {
-        [terminalName]: "allowedWithPermission", // Tool is disabled
+        [terminalName]: "allowedWithPermission",
       };
-      initialState.config.config.tools = [grepTool];
+      initialState.config.config.tools = [terminalTool];
       const mockStore = createMockStore(initialState);
       const mockIdeMessenger = mockStore.mockIdeMessenger;
       const requestSpy = vi.spyOn(mockIdeMessenger, "request");
-      // Simple mock - just return disabled policy
 
-      mockIdeMessenger.responses["llm/compileChat"] = {
-        compiledChatMessages: [{ role: "user", content: "Run ls" }],
-        didPrune: false,
-        contextPercentage: 0.5,
+      // Simple mock - just return disabled policy
+      mockIdeMessenger.responseHandlers["llm/compileChat"] = async (data) => {
+        const history = (mockStore.getState() as RootState).session.history;
+        return {
+          compiledChatMessages: [
+            ...history.map((i) => i.message),
+            { role: "user", content: "Run ls" },
+          ],
+          didPrune: false,
+          contextPercentage: 0.5,
+        };
       };
       let numCalls = 0;
       mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
         data,
       ) => {
         numCalls++;
-        if (numCalls < 2) {
+        if (numCalls <= 1) {
           return {
             policy: "disabled",
           };
@@ -2071,13 +2068,14 @@ describe("streamResponseThunk - tool calls", () => {
         PromptLog
       > {
         yield [{ role: "assistant", content: "I'll list the files." }];
+        const id = `tool-ls-${(() => Date.now())()}`;
         yield [
           {
             role: "assistant",
             content: "",
             toolCalls: [
               {
-                id: "tool-ls-1",
+                id,
                 type: "function",
                 function: {
                   name: terminalName,
@@ -2095,7 +2093,7 @@ describe("streamResponseThunk - tool calls", () => {
         };
       }
 
-      const mockChat = vi.fn().mockReturnValue(mockStreamWithLs());
+      const mockChat = vi.fn().mockImplementation(() => mockStreamWithLs());
       mockIdeMessenger.llmStreamChat = mockChat;
 
       // Execute thunk
@@ -2104,23 +2102,25 @@ describe("streamResponseThunk - tool calls", () => {
           editorState: mockEditorState,
           modifiers: mockModifiers,
         }) as any,
-      );
+      ),
+        // Verify tools/evaluatePolicy was called
+        expect(requestSpy).toHaveBeenCalledWith(
+          "tools/evaluatePolicy",
+          expect.objectContaining({
+            toolName: terminalName,
+            basePolicy: "allowedWithPermission",
+            args: { command: "ls" },
+          }),
+        );
 
-      // Verify tools/evaluatePolicy was called
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-        "tools/evaluatePolicy",
-        expect.objectContaining({
-          toolName: terminalName,
-          basePolicy: "disabled",
-          args: { command: "ls" },
-        }),
-      );
-
-      // Tool should NOT be executed since it's disabled
-      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+      // Tool should NOT be executed since it's disabled by policy
+      expect(requestSpy).not.toHaveBeenCalledWith(
         "tools/call",
         expect.any(Object),
       );
+
+      const state = mockStore.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
 
     it("should handle evaluation errors gracefully", async () => {
@@ -2152,7 +2152,7 @@ describe("streamResponseThunk - tool calls", () => {
       requestSpy.mockImplementation(async (endpoint, data) => {
         if (endpoint === "tools/evaluatePolicy") {
           numCalls++;
-          if (numCalls < 2) {
+          if (numCalls <= 1) {
             // Simulate evaluation error
             return {
               done: true as const,
@@ -2169,17 +2169,18 @@ describe("streamResponseThunk - tool calls", () => {
             };
           }
         }
-        if (endpoint === "llm/compileChat") {
+        mockIdeMessenger.responseHandlers["llm/compileChat"] = async (data) => {
+          const history = (mockStore.getState() as RootState).session.history;
           return {
-            done: true,
-            status: "success",
-            content: {
-              compiledChatMessages: [{ role: "user", content: "Do something" }],
-              didPrune: false,
-              contextPercentage: 0.5,
-            },
+            compiledChatMessages: [
+              ...history.map((i) => i.message),
+              { role: "user", content: "Do something" },
+            ],
+            didPrune: false,
+            contextPercentage: 0.5,
           };
-        }
+        };
+
         return new MockIdeMessenger().request(endpoint, data);
       });
 
@@ -2213,7 +2214,7 @@ describe("streamResponseThunk - tool calls", () => {
         };
       }
 
-      const mockChat = vi.fn().mockReturnValue(mockStreamWithTool());
+      const mockChat = vi.fn().mockImplementation(() => mockStreamWithTool());
       mockIdeMessenger.llmStreamChat = mockChat;
 
       // Execute thunk - should handle error gracefully
@@ -2232,6 +2233,9 @@ describe("streamResponseThunk - tool calls", () => {
         "tools/call",
         expect.any(Object),
       );
+
+      const state = mockStore.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
 
     it("should properly handle disabled commands and show error status", async () => {
@@ -2246,15 +2250,28 @@ describe("streamResponseThunk - tool calls", () => {
       const mockTerminalIdeMessenger =
         mockStoreWithTerminalTool.mockIdeMessenger;
 
-      mockTerminalIdeMessenger.responses["llm/compileChat"] = {
-        compiledChatMessages: [{ role: "user", content: "Run eval command" }],
-        didPrune: false,
-        contextPercentage: 0.9,
+      mockTerminalIdeMessenger.responseHandlers["llm/compileChat"] = async (
+        data,
+      ) => {
+        const history = (mockStoreWithTerminalTool.getState() as RootState)
+          .session.history;
+        return {
+          compiledChatMessages: [
+            ...history.map((i) => i.message),
+            { role: "user", content: "Run eval command" },
+          ],
+          didPrune: false,
+          contextPercentage: 0.9,
+        };
       };
+
+      let numCalls = 0;
       mockTerminalIdeMessenger.responseHandlers["tools/evaluatePolicy"] =
         async (data) => {
           const args = data.args || {};
+          numCalls++;
           if (
+            numCalls <= 1 &&
             args.command &&
             typeof args.command === "string" &&
             args.command.includes("eval")
@@ -2298,7 +2315,7 @@ describe("streamResponseThunk - tool calls", () => {
 
       mockTerminalIdeMessenger.llmStreamChat = vi
         .fn()
-        .mockReturnValue(mockStreamWithEvalCommand());
+        .mockImplementation(() => mockStreamWithEvalCommand());
       const requestSpy = vi.spyOn(mockTerminalIdeMessenger, "request");
 
       // Execute thunk
@@ -2335,6 +2352,9 @@ describe("streamResponseThunk - tool calls", () => {
         (call) => call[0] === "tools/call",
       );
       expect(toolCallRequests).toHaveLength(0);
+
+      const state = mockStoreWithTerminalTool.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
   });
 });

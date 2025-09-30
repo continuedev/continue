@@ -35,7 +35,6 @@ export const streamResponseThunk = createAsyncThunk<
         if (!selectedChatModel) {
           throw new Error("No chat model selected");
         }
-
         dispatch(
           submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
         );

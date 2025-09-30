@@ -18,10 +18,10 @@ import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callToolById = createAsyncThunk<
   void,
-  { id: string; isAuto?: boolean },
+  { toolCallId: string; isAutoApproved?: boolean; depth?: number },
   ThunkApiType
->("chat/callTool", async ({ id, isAuto }, { dispatch, extra, getState }) => {
-  const toolCallId = id; // just so new isAuto param doesn't make an unreviewable diff bc of prettier
+>("chat/callTool", async (inputs, { dispatch, extra, getState }) => {
+  const { toolCallId, isAutoApproved, depth = 0 } = inputs;
 
   const state = getState();
   const toolCallState = findToolCallById(state.session.history, toolCallId);
@@ -41,7 +41,7 @@ export const callToolById = createAsyncThunk<
 
   posthog.capture("tool_call_decision", {
     model: selectedChatModel,
-    decision: isAuto ? "auto_accept" : "accept",
+    decision: isAutoApproved ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
     toolCallId: toolCallId,
   });
@@ -157,6 +157,7 @@ export const callToolById = createAsyncThunk<
     const wrapped = await dispatch(
       streamResponseAfterToolCall({
         toolCallId,
+        depth: depth + 1,
       }),
     );
     unwrapResult(wrapped);

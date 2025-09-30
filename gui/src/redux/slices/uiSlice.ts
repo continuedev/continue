@@ -18,7 +18,7 @@ export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 
 type UIState = {
   showDialog: boolean;
-  dialogMessage: string | JSX.Element | undefined;
+  dialogMessage: JSX.Element | undefined;
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
   isExploreDialogOpen: boolean;
@@ -34,7 +34,7 @@ export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 export const DEFAULT_RULE_SETTING: RulePolicy = "on";
 export const DEFAULT_UI_SLICE: UIState = {
   showDialog: false,
-  dialogMessage: "",
+  dialogMessage: undefined,
   dialogEntryOn: false,
   onboardingCard: defaultOnboardingCardState,
   isExploreDialogOpen:

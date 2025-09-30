@@ -69,11 +69,20 @@ export const streamNormalInput = createAsyncThunk<
   void,
   {
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
+    depth?: number;
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
+  async (
+    { legacySlashCommandData, depth = 0 },
+    { dispatch, extra, getState },
+  ) => {
+    if (process.env.NODE_ENV === "test" && depth > 50) {
+      const message = `Max stream depth of ${50} reached in test`;
+      console.error(message, JSON.stringify(getState(), null, 2));
+      throw new Error(message);
+    }
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -225,10 +234,12 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
+
     // Tool call sequence:
     // 1. Mark generating tool calls as generated
     const state1 = getState();
     const originalToolCalls = selectCurrentToolCalls(state1);
+
     const generatingCalls = originalToolCalls.filter(
       (tc) => tc.status === "generating",
     );
@@ -248,6 +259,7 @@ export const streamNormalInput = createAsyncThunk<
 
     // 3. Security check: evaluate updated policies based on args
     const state3 = getState();
+
     const generatedCalls3 = selectPendingToolCalls(state3);
     const toolPolicies = state3.ui.toolSettings;
     const policies = await evaluateToolPolicies(
@@ -267,6 +279,7 @@ export const streamNormalInput = createAsyncThunk<
     if (originalToolCalls.length === 0 || anyRequireApproval) {
       dispatch(setInactive());
     } else {
+      // auto stream cases increase thunk depth by 1
       const state4 = getState();
       const generatedCalls4 = selectPendingToolCalls(state4);
       if (generatedCalls4.length > 0) {
@@ -274,20 +287,23 @@ export const streamNormalInput = createAsyncThunk<
         await Promise.all(
           generatedCalls4.map(async ({ toolCallId }) => {
             unwrapResult(
-              await dispatch(callToolById({ id: toolCallId, isAuto: true })),
+              await dispatch(
+                callToolById({
+                  toolCallId,
+                  isAutoApproved: true,
+                  depth: depth + 1,
+                }),
+              ),
             );
           }),
         );
       } else {
-        console.log(
-          "HERE",
-          state4.session.history.map((h) => h.toolCallStates?.[0]?.output),
-          originalToolCalls.length,
-        );
         // All failed - stream on
         for (const { toolCallId } of originalToolCalls) {
           unwrapResult(
-            await dispatch(streamResponseAfterToolCall({ toolCallId })),
+            await dispatch(
+              streamResponseAfterToolCall({ toolCallId, depth: depth + 1 }),
+            ),
           );
         }
       }

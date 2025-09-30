@@ -131,7 +131,9 @@ export function LumpToolbar() {
         event.preventDefault();
         event.stopPropagation();
 
-        void dispatch(callToolById({ id: firstPendingToolCall.toolCallId }));
+        void dispatch(
+          callToolById({ toolCallId: firstPendingToolCall.toolCallId }),
+        );
       } else if (isCancelToolCallShortcut(event, jetbrains)) {
         event.preventDefault();
         event.stopPropagation();
