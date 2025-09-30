@@ -15,6 +15,7 @@ export * from "./modelName.js";
 export * from "./schemas/data/index.js";
 export * from "./schemas/index.js";
 export * from "./schemas/mcp/convertJson.js";
+export * from "./schemas/mcp/index.js";
 export * from "./schemas/mcp/json.js";
 export * from "./schemas/models.js";
 export * from "./schemas/policy.js";

@@ -14,8 +14,6 @@ export const contextSchema = z.object({
   params: z.any().optional(),
 });
 
-export { MCPServer } from "./mcp/index.js";
-
 const promptSchema = z.object({
   name: z.string(),
   description: z.string().optional(),

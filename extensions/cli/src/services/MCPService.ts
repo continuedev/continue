@@ -1,16 +1,20 @@
+import {
+  HttpMcpServer,
+  SseMcpServer,
+  StdioMcpServer,
+} from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import {
-  HttpMcpServer,
-  SseMcpServer,
-  StdioMcpServer,
-} from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
+import {
+  renderMcpServerSecrets,
+  validateMcpServerSecretsRendered,
+} from "./mcpSecretRenderer.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
@@ -208,20 +212,37 @@ export class MCPService
   }
 
   private async connectServer(serverConfig: MCPServerConfig) {
+    // First render secrets from environment variables
+    const renderedConfig = renderMcpServerSecrets(serverConfig);
+
+    // Validate that all secrets were rendered
+    const validation = validateMcpServerSecretsRendered(renderedConfig);
+
     const connection: ServerConnection = {
-      config: serverConfig,
+      config: renderedConfig,
       client: null,
       prompts: [],
       tools: [],
       status: "connecting",
       warnings: [],
     };
-    const serverName = serverConfig.name;
+    const serverName = renderedConfig.name;
+
+    // Add warnings for unrendered secrets
+    if (!validation.isValid) {
+      const warningMsg = `Unrendered secrets found: ${validation.unrenderedSecrets.join(", ")}`;
+      connection.warnings.push(warningMsg);
+      logger.warn("MCP server has unrendered secrets", {
+        name: serverName,
+        unrenderedSecrets: validation.unrenderedSecrets,
+      });
+    }
+
     this.connections.set(serverName, connection);
     this.updateState();
 
     try {
-      const client = await this.getConnectedClient(serverConfig);
+      const client = await this.getConnectedClient(renderedConfig);
 
       connection.client = client;
       connection.status = "connected";

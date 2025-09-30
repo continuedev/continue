@@ -78,26 +78,24 @@ server block to your [config file](./configuration.md):
         - "-y"
         - "mcp-sqlite"
         - "/path/to/your/database.db"
-
-````
-</Tab>
-<Tab title="JSON">
-```json title="config.json"
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/path/to/your/database.db"]
-        }
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/path/to/your/database.db"]
+          }
       }
-    ]
+      ]
+    }
   }
-}
-````
-
+  ```
   </Tab>
 </Tabs>
 
@@ -179,3 +177,94 @@ mcpServers:
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
 ```
+
+#### Environment Variable Secret Resolution
+
+<Info>
+
+  When using Continue CLI with MCP servers, secrets are automatically resolved from your local environment variables. This provides a secure way to use sensitive data without hardcoding it in your configuration.
+
+</Info>
+
+For Continue CLI users, `${{ secrets.SECRET_NAME }}` template variables in your MCP server configuration will be automatically replaced with values from `process.env.SECRET_NAME`. This works in **all string values** of your MCP server configuration, including:
+
+<Warning>
+
+  Secret templating only works in **values**, not in object **keys**. For example, `headers: { "Authorization": "Bearer ${{ secrets.TOKEN }}" }` works, but `headers: { "${{ secrets.HEADER_NAME }}": "value" }` does not.
+
+</Warning>
+
+**For STDIO servers (`command` type):**
+- `command` - The executable command
+- `args` - Array of command arguments  
+- `env` - Environment variable values (secrets in keys are not supported)
+- `cwd` - Working directory path
+
+**For HTTP-based servers (`sse` and `streamable-http` types):**
+- `url` - The server endpoint URL
+- `requestOptions.headers` - HTTP header values (secrets in keys are not supported)
+- All other `requestOptions` fields that are strings
+
+**For all server types:**
+- `name` - Server display name
+- `faviconUrl` - Icon URL
+- Any other string fields in the configuration
+
+**Example with environment variables:**
+
+```yaml
+mcpServers:
+  # STDIO server example with secrets in various fields
+  - name: ${{ secrets.SERVER_NAME }}  # Server name from env
+    command: ${{ secrets.CUSTOM_COMMAND }}  # Command from env
+    args:
+      - server.js
+      - --api-key
+      - ${{ secrets.API_KEY }}  # Command argument
+      - --config-path
+      - ${{ secrets.CONFIG_PATH }}  # File path
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}  # Env variable value
+      CUSTOM_SECRET: ${{ secrets.ENV_SECRET }}  # Another env var value
+      LOG_LEVEL: info  # Regular value (no templating)
+    cwd: ${{ secrets.WORKING_DIR }}  # Working directory
+    
+  # HTTP server example with secrets in URL and headers
+  - name: Remote API Server
+    type: sse
+    url: ${{ secrets.API_BASE_URL }}/mcp  # URL with secret
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.AUTH_TOKEN }}  # Header value
+        X-Custom-Value: ${{ secrets.CUSTOM_HEADER_VALUE }}  # Another header value
+        X-User-ID: ${{ secrets.USER_ID }}  # Another header
+        Content-Type: application/json  # Regular header
+```
+
+**Setting environment variables:**
+
+```bash
+# Set environment variables before running Continue CLI
+export SERVER_NAME="My Custom Server"
+export CUSTOM_COMMAND="node"
+export API_KEY="your-secret-api-key"
+export CONFIG_PATH="/path/to/config.json"
+export DATABASE_URL="postgresql://user:pass@host:5432/db"
+export ENV_SECRET="custom-env-value"
+export WORKING_DIR="/app/workspace"
+export API_BASE_URL="https://api.example.com"
+export AUTH_TOKEN="bearer-token-123"
+export CUSTOM_HEADER_VALUE="custom-header-value"
+export USER_ID="user123"
+
+# Then run Continue CLI - secrets will be automatically resolved
+continue
+```
+
+**Validation and warnings:**
+
+- If an environment variable is not found, the original template variable is preserved (e.g., `${{ secrets.MISSING_KEY }}`)
+- The CLI will display warnings for any unrendered secrets to help with debugging
+- All secret resolution happens at connection time, ensuring fresh values on server restarts
+
+This approach provides a secure way to manage secrets locally while maintaining compatibility with the template variable syntax used in Continue Hub configurations.
