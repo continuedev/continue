@@ -99,7 +99,7 @@ describe("prompt utilities", () => {
       expect(result).toBe(userInput);
     });
 
-    it.skip("should handle SIGINT (Ctrl+C) by exiting process", async () => {
+    it("should handle SIGINT (Ctrl+C) by exiting process", async () => {
       const promptText = "Enter something: ";
       let sigintHandler: (() => void) | null = null;
 
@@ -126,6 +126,35 @@ describe("prompt utilities", () => {
       // The promise should reject when SIGINT is triggered
       await expect(question(promptText)).rejects.toThrow("Process exit");
       expect(processExitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it("should restore original SIGINT listeners after completing", async () => {
+      const promptText = "Enter something: ";
+      const userInput = "test";
+
+      // Add a mock SIGINT listener before calling question
+      const originalHandler = vi.fn();
+      process.on("SIGINT", originalHandler);
+
+      // Track initial listener count
+      const initialListeners = process.listeners("SIGINT").length;
+
+      mockInterface.question.mockImplementation(
+        (prompt: string, callback: (answer: string) => void) => {
+          setTimeout(() => callback(userInput), 0);
+        },
+      );
+
+      const result = await question(promptText);
+
+      // Check that the original listener is still there after completion
+      const finalListeners = process.listeners("SIGINT");
+      expect(finalListeners.length).toBe(initialListeners);
+      expect(finalListeners).toContain(originalHandler);
+      expect(result).toBe(userInput);
+
+      // Clean up
+      process.removeListener("SIGINT", originalHandler);
     });
   });
 
