@@ -4,6 +4,7 @@
  * an appropriate error message is displayed suggesting the --auto flag
  */
 import * as http from "http";
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
