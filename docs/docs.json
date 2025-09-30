@@ -95,7 +95,7 @@
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["faqs", "troubleshooting"]
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
       },
