@@ -10,13 +10,15 @@ description: "Welcome to the Continue documentation! We're excited that you want
 
 1. **Node.js** (v20 or higher)
 2. **Git** for version control
+3. **GitHub CLI** - Install from [cli.github.com](https://cli.github.com/)
 
 ### Setup Steps
 
 1. **Fork and clone the repository**
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/continue.git
+   # Fork the repository (this will also clone it locally)
+   gh repo fork continuedev/continue
    cd continue/docs
    ```
 
@@ -278,17 +280,23 @@ const example = "Hello, Continue!";
    git commit -m "docs: describe your changes"
    ```
 
-3. **Push to your fork**
+3. **Push and create a Pull Request**
 
    ```bash
+   # Push to your fork and create a PR
    git push origin docs/your-feature-name
+   gh pr create --web
    ```
 
-4. **Create a Pull Request**
-   - Go to the Continue repository
-   - Click "New Pull Request"
-   - Provide a clear description of your changes
-   - Reference any related issues
+<Tip>
+
+  The `gh pr create` command will automatically:
+  - Push your branch to your fork
+  - Create a pull request to the main repository
+  - Allow you to add a title, description, and reference issues
+  - Open the PR in your browser if using `--web`
+
+</Tip>
 
 ## 💡 Tips for Success
 
