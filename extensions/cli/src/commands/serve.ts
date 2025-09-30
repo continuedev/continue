@@ -2,6 +2,8 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
@@ -42,6 +44,8 @@ interface ServeOptions extends ExtendedCommandOptions {
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+  await posthogService.capture("sessionStart", {});
+
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
   if (!prompt) {

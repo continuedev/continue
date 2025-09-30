@@ -1251,7 +1251,6 @@ export interface StdioOptions {
   args: string[];
   env?: Record<string, string>;
   cwd?: string;
-  requestOptions?: RequestOptions;
 }
 
 export interface WebSocketOptions {
@@ -1277,15 +1276,6 @@ export type TransportOptions =
   | WebSocketOptions
   | SSEOptions
   | StreamableHTTPOptions;
-
-export interface MCPOptions {
-  name: string;
-  id: string;
-  transport: TransportOptions;
-  faviconUrl?: string;
-  timeout?: number;
-  requestOptions?: RequestOptions;
-}
 
 export type MCPConnectionStatus =
   | "connecting"
@@ -1334,18 +1324,55 @@ export interface MCPTool {
   };
 }
 
-export interface MCPServerStatus extends MCPOptions {
+type BaseInternalMCPOptions = {
+  id: string;
+  name: string;
+  faviconUrl?: string;
+  timeout?: number;
+  requestOptions?: RequestOptions;
+  sourceFile?: string;
+};
+
+export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
+  type?: "stdio";
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+};
+
+export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
+  type?: "streamable-http";
+  url: string;
+};
+
+export type InternalSseMcpOptions = BaseInternalMCPOptions & {
+  type?: "sse";
+  url: string;
+};
+
+export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
+  type: "websocket"; // websocket requires explicit type
+  url: string;
+};
+
+export type InternalMcpOptions =
+  | InternalStdioMcpOptions
+  | InternalStreamableHttpMcpOptions
+  | InternalSseMcpOptions
+  | InternalWebsocketMcpOptions;
+
+export type MCPServerStatus = InternalMcpOptions & {
   status: MCPConnectionStatus;
   errors: string[];
   infos: string[];
   isProtectedResource: boolean;
-
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
   resourceTemplates: MCPResourceTemplate[];
   sourceFile?: string;
-}
+};
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";

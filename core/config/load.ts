@@ -6,6 +6,7 @@ import path from "path";
 import {
   ConfigResult,
   ConfigValidationError,
+  mergeConfigYamlRequestOptions,
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
@@ -25,6 +26,7 @@ import {
   IdeType,
   ILLM,
   ILLMLogger,
+  InternalMcpOptions,
   LLMOptions,
   ModelDescription,
   RerankerDescription,
@@ -57,6 +59,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
+import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import { PolicySingleton } from "../control-plane/PolicySingleton";
 import { getBaseToolDefinitions, serializeTool } from "../tools";
@@ -550,17 +553,27 @@ async function intermediateToFinalConfig({
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    mcpManager.setConnections(
-      (config.experimental?.modelContextProtocolServers ?? []).map(
-        (server, index) => ({
-          id: `continue-mcp-server-${index + 1}`,
-          name: `MCP Server`,
-          ...server,
-          requestOptions: config.requestOptions,
-        }),
+    const mcpOptions: InternalMcpOptions[] = (
+      config.experimental?.modelContextProtocolServers ?? []
+    ).map((server, index) => ({
+      id: `continue-mcp-server-${index + 1}`,
+      name: `MCP Server`,
+      requestOptions: mergeConfigYamlRequestOptions(
+        server.transport.type !== "stdio"
+          ? server.transport.requestOptions
+          : undefined,
+        config.requestOptions,
       ),
-      false,
+      ...server.transport,
+    }));
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
     );
+    errors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false);
   }
 
   // Handle experimental modelRole config values for apply and edit

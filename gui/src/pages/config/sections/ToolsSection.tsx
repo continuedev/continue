@@ -82,13 +82,23 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   };
 
   const onAuthenticate = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/startAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/startAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRemoveAuth = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/removeAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/removeAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRefresh = async () => {
@@ -217,37 +227,39 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
 
         <div className="-mr-2.5 flex items-center gap-1">
-          {server.isProtectedResource && server.status !== "connected" && (
-            <ToolTip
-              content={
-                server.status === "error"
-                  ? "Authenticate"
-                  : server.status === "authenticating"
-                    ? "Authenticating..."
-                    : "Remove authentication"
-              }
-            >
-              <Button
-                onClick={
+          {server.isProtectedResource &&
+            "url" in server &&
+            server.status !== "connected" && (
+              <ToolTip
+                content={
                   server.status === "error"
-                    ? onAuthenticate
+                    ? "Authenticate"
                     : server.status === "authenticating"
-                      ? undefined
-                      : onRemoveAuth
+                      ? "Authenticating..."
+                      : "Remove authentication"
                 }
-                variant="ghost"
-                size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
-                disabled={server.status === "authenticating"}
               >
-                {server.status === "authenticating" ? (
-                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
-                ) : (
-                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
-                )}
-              </Button>
-            </ToolTip>
-          )}
+                <Button
+                  onClick={
+                    server.status === "error"
+                      ? onAuthenticate
+                      : server.status === "authenticating"
+                        ? undefined
+                        : onRemoveAuth
+                  }
+                  variant="ghost"
+                  size="sm"
+                  className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
+                  disabled={server.status === "authenticating"}
+                >
+                  {server.status === "authenticating" ? (
+                    <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
+                  ) : (
+                    <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
+                  )}
+                </Button>
+              </ToolTip>
+            )}
           <Listbox>
             <ListboxButton>
               <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />

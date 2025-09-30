@@ -88,7 +88,8 @@
               "customization/models",
               "customization/mcp-tools",
               "customization/rules",
-              "customization/prompts"
+              "customization/prompts",
+              "customization/settings"
             ]
           },
           {
@@ -238,6 +239,7 @@
               "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/doc-writing-agent-cli",
               "guides/continuous-ai",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
