@@ -1,9 +1,7 @@
-import { glob, GlobOptionsWithFileTypesFalse } from "glob";
+import { fdir } from "fdir";
+import { AsyncFzf, FzfResultItem } from "fzf";
 
-import { FILE_IGNORE_PATTERNS, FILE_PATTERNS } from "../util/filePatterns.js";
-import { getFileWatcher } from "../util/fileWatcher.js";
-import { isGitRepo } from "../util/git.js";
-import { isInHomeDirectory } from "../util/isInHomeDirectory.js";
+import { FILE_IGNORE_PATTERNS } from "../util/filePatterns.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -12,6 +10,7 @@ import { serviceContainer } from "./ServiceContainer.js";
 export interface FileItem {
   path: string;
   displayName: string;
+  positions?: Set<number>;
 }
 
 export interface FileIndexServiceState {
@@ -21,9 +20,79 @@ export interface FileIndexServiceState {
 }
 
 export class FileIndexService extends BaseService<FileIndexServiceState> {
-  private fileSet = new Set<string>();
-  private fileWatcherInitialized = false;
-  private fileWatcherUnsubscribe: (() => void) | null = null;
+  private fzf: AsyncFzf<FileItem[]> | null = null;
+
+  // Helper to check if a file should be included based on FILE_PATTERNS
+  private shouldIncludeFile(filePath: string): boolean {
+    const fileName = filePath.split("/").pop()?.toLowerCase() || "";
+    const ext = fileName.split(".").pop();
+
+    // Check if file matches any of the original FILE_PATTERNS
+    const supportedExtensions = [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "py",
+      "java",
+      "cpp",
+      "c",
+      "h",
+      "hpp",
+      "cs",
+      "go",
+      "rs",
+      "rb",
+      "php",
+      "swift",
+      "kt",
+      "scala",
+      "md",
+      "json",
+      "yaml",
+      "yml",
+      "xml",
+      "html",
+      "css",
+      "scss",
+      "sass",
+      "less",
+      "sql",
+      "sh",
+      "dockerfile",
+      "makefile",
+      "cmake",
+      "gradle",
+      "toml",
+      "ini",
+      "env",
+      "txt",
+      "log",
+    ];
+
+    // Check extension match
+    if (ext && supportedExtensions.includes(ext)) {
+      return true;
+    }
+
+    // Check special file patterns
+    if (
+      fileName.startsWith("readme") ||
+      fileName.startsWith("license") ||
+      fileName.startsWith("changelog") ||
+      fileName === "package.json" ||
+      fileName === "cargo.toml" ||
+      fileName === "pyproject.toml" ||
+      fileName === "composer.json" ||
+      fileName === "gemfile" ||
+      fileName === ".gitignore" ||
+      fileName.startsWith(".env")
+    ) {
+      return true;
+    }
+
+    return false;
+  }
 
   constructor() {
     super("FileIndexService", {
@@ -35,23 +104,11 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
 
   async doInitialize(): Promise<FileIndexServiceState> {
     await this.performFullIndex();
-    this.setupFileWatcher();
     return this.getState();
   }
 
   async cleanup(): Promise<void> {
-    if (this.fileWatcherUnsubscribe) {
-      this.fileWatcherUnsubscribe();
-      this.fileWatcherUnsubscribe = null;
-    }
-
-    // Stop the file watcher to prevent resource leaks
-    if (this.fileWatcherInitialized) {
-      const watcher = getFileWatcher();
-      watcher.stopWatching();
-    }
-
-    this.fileWatcherInitialized = false;
+    // No cleanup needed - no file watchers or subscriptions
   }
 
   /**
@@ -65,37 +122,74 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     serviceContainer.set("fileIndex", currentState);
   }
 
-  private async performFullIndex(): Promise<void> {
+  private async performFullIndex(
+    bypassTimeout: boolean = false,
+  ): Promise<void> {
     this.setState({ isIndexing: true, error: null });
 
     try {
-      const inGitRepo = isGitRepo();
+      const currentDir = process.cwd();
+      logger.debug(`Starting file index in directory: ${currentDir}`);
 
-      if (isInHomeDirectory()) {
-        this.setState({
-          isIndexing: false,
-          error: "Skipping full index as in home directory",
+      // Create file indexing promise
+      const fileIndexPromise = new fdir()
+        .withFullPaths()
+        .withRelativePaths()
+        .filter((path) => {
+          // Use the helper function that implements original FILE_PATTERNS logic
+          return this.shouldIncludeFile(path);
+        })
+        .exclude((dirName) => {
+          // Exclude directories based on FILE_IGNORE_PATTERNS
+          for (const pattern of FILE_IGNORE_PATTERNS) {
+            if (pattern.startsWith("**/") && pattern.endsWith("/**")) {
+              const excludeDirName = pattern.slice(3, -3);
+              if (dirName === excludeDirName) {
+                return true;
+              }
+            }
+          }
+          return false;
+        })
+        .crawl(currentDir)
+        .withPromise();
+
+      let allFiles: string[];
+
+      if (bypassTimeout) {
+        // Manual refresh - wait for completion regardless of time
+        allFiles = await fileIndexPromise;
+      } else {
+        // Automatic indexing - race against 1-second timeout
+        const timeoutPromise = new Promise<"timeout">((resolve) => {
+          setTimeout(() => {
+            resolve("timeout");
+          }, 1000);
         });
-        return;
+
+        const result = await Promise.race([fileIndexPromise, timeoutPromise]);
+
+        if (result === "timeout") {
+          this.setState({
+            files: [],
+            isIndexing: false,
+            error: "directory-too-large",
+          });
+          return;
+        }
+
+        allFiles = result as string[];
       }
 
-      const allMatches = await this.throttledGlob(FILE_PATTERNS, {
-        maxDepth: inGitRepo ? 15 : 3,
-        ignore: FILE_IGNORE_PATTERNS,
-        dot: true,
-        absolute: false,
-      });
-
-      const uniqueFiles = [...new Set(allMatches)];
-      this.fileSet.clear();
-      uniqueFiles.forEach((file) => this.fileSet.add(file));
-
-      const files = uniqueFiles.map((path) => ({
+      const fileItems = allFiles.map((path) => ({
         path,
         displayName: path,
       }));
 
-      this.setState({ files, isIndexing: false });
+      this.rebuildFzf(fileItems);
+      this.setState({ files: fileItems, isIndexing: false });
+
+      logger.debug(`Indexed ${fileItems.length} files`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -104,116 +198,10 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     }
   }
 
-  private setupFileWatcher(): void {
-    if (this.fileWatcherInitialized) {
-      return;
-    }
-
-    // Only enable file watching in git repositories
-    // Outside git repos (like home directory), file watching causes performance issues
-    // and provides little value since files change less predictably
-    const inGitRepo = isGitRepo();
-    if (!inGitRepo) {
-      logger.debug("Skipping file watcher: not in a git repository");
-      return;
-    }
-
-    this.fileWatcherInitialized = true;
-    const watcher = getFileWatcher();
-
-    // Start watching the current directory
-    watcher.startWatching();
-
-    // Set up callback for incremental updates
-    this.fileWatcherUnsubscribe = watcher.onChange(() => {
-      this.handleFileSystemChange();
-    });
-  }
-
-  private async handleFileSystemChange(): Promise<void> {
-    try {
-      // Get current files from file system
-      const inGitRepo = isGitRepo();
-      const allMatches = await this.throttledGlob(FILE_PATTERNS, {
-        maxDepth: inGitRepo ? 15 : 3,
-        ignore: FILE_IGNORE_PATTERNS,
-        dot: true,
-        absolute: false,
-      });
-
-      const currentFiles = new Set(allMatches);
-      const previousFiles = this.fileSet;
-
-      // Find added and removed files
-      const addedFiles = [...currentFiles].filter(
-        (file) => !previousFiles.has(file),
-      );
-      const removedFiles = [...previousFiles].filter(
-        (file) => !currentFiles.has(file),
-      );
-
-      // Only update if there are actual changes
-      if (addedFiles.length > 0 || removedFiles.length > 0) {
-        // Update internal file set
-        this.fileSet = currentFiles;
-
-        // Create new files array
-        const files = [...currentFiles].map((path) => ({
-          path,
-          displayName: path,
-        }));
-
-        this.setState({ files });
-      }
-    } catch (error) {
-      logger.error("Error handling file system change:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.setState({ error: errorMessage });
-    }
-  }
-
-  private async throttledGlob(
-    patterns: string[],
-    options: GlobOptionsWithFileTypesFalse,
-    batchSize = 100,
-    delay = 20,
-  ): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
-      const allMatches: string[] = [];
-      let processed = 0;
-      let streamEnded = false;
-
-      const globStream = glob.stream(patterns, options);
-
-      globStream.on("data", (file: string) => {
-        allMatches.push(file);
-        processed++;
-
-        if (processed % batchSize === 0) {
-          if (streamEnded) {
-            return;
-          }
-          globStream.pause();
-
-          setTimeout(() => {
-            if (streamEnded) {
-              return;
-            }
-            globStream.resume();
-          }, delay);
-        }
-      });
-
-      globStream.on("end", () => {
-        streamEnded = true;
-        resolve(allMatches);
-      });
-
-      globStream.on("error", (err) => {
-        streamEnded = true;
-        reject(err);
-      });
+  private rebuildFzf(files: FileItem[]): void {
+    this.fzf = new AsyncFzf(files, {
+      selector: (item: FileItem) => item.path,
+      casing: "case-insensitive",
     });
   }
 
@@ -230,11 +218,14 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     return this.getState().error;
   }
 
-  public async refreshIndex(): Promise<void> {
-    await this.performFullIndex();
+  public async refreshIndex(bypassTimeout: boolean = false): Promise<void> {
+    await this.performFullIndex(bypassTimeout);
   }
 
-  public filterFiles(filterText: string, limit: number = 10): FileItem[] {
+  public async filterFiles(
+    filterText: string,
+    limit: number = 10,
+  ): Promise<FileItem[]> {
     const files = this.getFiles();
 
     if (filterText.length === 0) {
@@ -248,36 +239,16 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
         .slice(0, limit);
     }
 
-    const lowerFilter = filterText.toLowerCase();
+    // Use fzf for fuzzy search
+    if (!this.fzf) {
+      this.rebuildFzf(files);
+    }
 
-    return files
-      .filter((file) => {
-        return (
-          file.displayName.toLowerCase().includes(lowerFilter) ||
-          file.path.toLowerCase().includes(lowerFilter)
-        );
-      })
-      .sort((a, b) => {
-        const aFileName = a.path.split("/").pop() || a.path;
-        const bFileName = b.path.split("/").pop() || b.path;
-
-        // Prioritize exact matches in file name
-        const aNameMatch = aFileName.toLowerCase().includes(lowerFilter);
-        const bNameMatch = bFileName.toLowerCase().includes(lowerFilter);
-
-        if (aNameMatch && !bNameMatch) return -1;
-        if (!aNameMatch && bNameMatch) return 1;
-
-        // Then prioritize files that start with the filter
-        const aStartsWith = aFileName.toLowerCase().startsWith(lowerFilter);
-        const bStartsWith = bFileName.toLowerCase().startsWith(lowerFilter);
-
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-
-        // Finally, sort by file name
-        return aFileName.localeCompare(bFileName);
-      })
-      .slice(0, limit);
+    const results = await this.fzf!.find(filterText);
+    return results.slice(0, limit).map((entry: FzfResultItem<FileItem>) => ({
+      path: entry.item.path,
+      displayName: entry.item.displayName,
+      positions: entry.positions,
+    }));
   }
 }

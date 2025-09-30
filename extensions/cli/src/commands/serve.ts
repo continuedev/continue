@@ -1,11 +1,11 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
-import { getAssistantSlug } from "../auth/workos.js";
+import { posthogService } from "src/telemetry/posthogService.js";
+
+import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
+import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -19,11 +19,13 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession } from "../session.js";
+import { createSession, getCompleteStateSnapshot } from "../session.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { gracefulExit } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
+import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
@@ -33,15 +35,17 @@ import {
   type ServerState,
 } from "./serve.helpers.js";
 
-const execAsync = promisify(exec);
-
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  /** Storage identifier for remote sync */
+  id?: string;
 }
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+  await posthogService.capture("sessionStart", {});
+
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
   if (!prompt) {
@@ -55,6 +59,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+
+  // Environment install script will be deferred until after server startup to avoid blocking
 
   // Initialize services with tool permission overrides
   const { permissionOverrides } = processCommandFlags(options);
@@ -86,6 +92,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   if (authState.organizationId) {
     telemetryService.updateOrganization(authState.organizationId);
   }
+  const accessToken = getAccessToken(authState.authConfig);
 
   // Log configuration information
   const organizationId = authState.organizationId || "personal";
@@ -139,11 +146,41 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model,
     isProcessing: false,
     lastActivity: Date.now(),
-    messageQueue: [],
     currentAbortController: null,
-    shouldInterrupt: false,
     serverRunning: true,
     pendingPermission: null,
+  };
+
+  const syncSessionHistory = () => {
+    try {
+      state.session.history = services.chatHistory.getHistory();
+    } catch (e) {
+      logger.debug(
+        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
+      );
+    }
+  };
+
+  const storageSyncService = services.storageSync;
+  let storageSyncActive = await storageSyncService.startFromOptions({
+    storageOption: options.id,
+    accessToken,
+    syncSessionHistory,
+    getCompleteStateSnapshot: () =>
+      getCompleteStateSnapshot(
+        state.session,
+        state.isProcessing,
+        messageQueue.getQueueLength(),
+        state.pendingPermission,
+      ),
+    isActive: () => state.serverRunning,
+  });
+
+  const stopStorageSync = () => {
+    if (storageSyncActive) {
+      storageSyncService.stop();
+      storageSyncActive = false;
+    }
   };
 
   // Record session start
@@ -156,20 +193,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
-    // Ensure session history reflects ChatHistoryService state
-    try {
-      state.session.history = services.chatHistory.getHistory();
-    } catch (e) {
-      logger.debug(
-        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
-      );
-    }
-    res.json({
-      session: state.session, // Return session directly instead of converting
-      isProcessing: state.isProcessing,
-      messageQueueLength: state.messageQueue.length,
-      pendingPermission: state.pendingPermission,
-    });
+    syncSessionHistory();
+    const stateSnapshot = getCompleteStateSnapshot(
+      state.session,
+      state.isProcessing,
+      messageQueue.getQueueLength(),
+      state.pendingPermission,
+    );
+    res.json(stateSnapshot);
   });
 
   // POST /message - Queue a message and potentially interrupt
@@ -182,17 +213,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Queue the message
-    state.messageQueue.push(message);
-
-    // If currently processing, set interrupt flag
-    if (state.isProcessing && state.currentAbortController) {
-      state.shouldInterrupt = true;
-    }
+    await messageQueue.enqueueMessage(message);
 
     res.json({
       queued: true,
-      position: state.messageQueue.length,
-      willInterrupt: state.shouldInterrupt,
+      position: messageQueue.getQueueLength(),
     });
 
     // Process messages if not already processing
@@ -239,34 +264,25 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     state.lastActivity = Date.now();
 
     try {
-      // First check if we're in a git repository
-      await execAsync("git rev-parse --git-dir");
+      const diffResult = await getGitDiffSnapshot();
 
-      // Get the diff against main branch
-      const { stdout } = await execAsync("git diff main");
-
-      res.json({
-        diff: stdout,
-      });
-    } catch (error: any) {
-      // Git diff returns exit code 1 when there are differences, which is normal
-      if (error.code === 1 && error.stdout) {
-        res.json({
-          diff: error.stdout,
-        });
-      } else if (error.code === 128) {
-        // Handle case where we're not in a git repo or main branch doesn't exist
+      if (!diffResult.repoFound) {
         res.status(404).json({
           error: "Not in a git repository or main branch doesn't exist",
           diff: "",
         });
-      } else {
-        logger.error(`Git diff error: ${formatError(error)}`);
-        res.status(500).json({
-          error: `Failed to get git diff: ${formatError(error)}`,
-          diff: "",
-        });
+        return;
       }
+
+      res.json({
+        diff: diffResult.diff,
+      });
+    } catch (error) {
+      logger.error(`Git diff error: ${formatError(error)}`);
+      res.status(500).json({
+        error: `Failed to get git diff: ${formatError(error)}`,
+        diff: "",
+      });
     }
   });
 
@@ -287,14 +303,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
     // Set server running flag to false to stop processing
     state.serverRunning = false;
+    stopStorageSync();
 
     // Abort any current processing
     if (state.currentAbortController) {
       state.currentAbortController.abort();
     }
-
-    // Clear the message queue
-    state.messageQueue = [];
 
     // Clean up intervals
     if (inactivityChecker) {
@@ -315,7 +329,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, () => {
+  const server = app.listen(port, async () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
@@ -341,10 +355,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       ),
     );
 
+    // Run environment install script after server startup
+    runEnvironmentInstallSafe();
+
     // If initial prompt provided, queue it for processing
     if (actualPrompt) {
       console.log(chalk.dim("\nProcessing initial prompt..."));
-      state.messageQueue.push(actualPrompt);
+      await messageQueue.enqueueMessage(actualPrompt);
       processMessages(state, llmApi);
     }
   });
@@ -372,11 +389,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   async function processMessages(state: ServerState, llmApi: any) {
-    while (state.messageQueue.length > 0 && state.serverRunning) {
-      const userMessage = state.messageQueue.shift()!;
+    let processedMessage = false;
+    while (state.serverRunning) {
+      const queuedMessage = messageQueue.getNextMessage();
+      if (!queuedMessage) {
+        break;
+      }
+
+      const userMessage = queuedMessage.message;
       state.isProcessing = true;
-      state.shouldInterrupt = false;
       state.lastActivity = Date.now();
+      processedMessage = true;
 
       // Add user message via ChatHistoryService (single source of truth)
       try {
@@ -398,7 +421,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           state,
           llmApi,
           state.currentAbortController,
-          () => state.shouldInterrupt,
+          () => false,
         );
 
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
@@ -427,6 +450,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         state.isProcessing = false;
       }
     }
+
+    if (
+      processedMessage &&
+      state.serverRunning &&
+      messageQueue.getQueueLength() === 0
+    ) {
+      await storageSyncService.markAgentStatusUnread();
+    }
   }
 
   // Check for inactivity and shutdown
@@ -438,6 +469,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         ),
       );
       state.serverRunning = false;
+      stopStorageSync();
       server.close(() => {
         telemetryService.stopActiveTime();
         gracefulExit(0).catch((err) => {
@@ -456,6 +488,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   process.on("SIGINT", () => {
     console.log(chalk.yellow("\nShutting down server..."));
     state.serverRunning = false;
+    stopStorageSync();
     if (inactivityChecker) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;

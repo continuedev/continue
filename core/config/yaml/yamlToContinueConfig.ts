@@ -1,5 +1,16 @@
-import { MCPServer, Rule } from "@continuedev/config-yaml";
-import { ExperimentalMCPOptions, RuleWithSource } from "../..";
+import {
+  MCPServer,
+  mergeConfigYamlRequestOptions,
+  RequestOptions,
+  Rule,
+} from "@continuedev/config-yaml";
+import {
+  InternalMcpOptions,
+  InternalSseMcpOptions,
+  InternalStdioMcpOptions,
+  InternalStreamableHttpMcpOptions,
+  RuleWithSource,
+} from "../..";
 
 export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   if (typeof rule === "string") {
@@ -16,22 +27,48 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       description: rule.description,
       ruleFile: rule.sourceFile,
       alwaysApply: rule.alwaysApply,
-      invokable: rule.invokable,
+      invokable: rule.invokable ?? false,
     };
   }
 }
 
-export function convertYamlMcpToContinueMcp(
-  server: MCPServer,
-): ExperimentalMCPOptions {
-  return {
-    transport: {
-      type: "stdio",
-      command: server.command,
-      args: server.args ?? [],
-      env: server.env,
-      cwd: server.cwd,
-    } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
-    timeout: server.connectionTimeout,
+export function convertYamlMcpConfigToInternalMcpOptions(
+  config: MCPServer,
+  globalRequestOptions?: RequestOptions,
+): InternalMcpOptions {
+  const { connectionTimeout, faviconUrl, name, sourceFile } = config;
+  const shared = {
+    id: name,
+    name,
+    faviconUrl: faviconUrl,
+    timeout: connectionTimeout,
+    sourceFile,
   };
+  // Stdio
+  if ("command" in config) {
+    const { args, command, cwd, env, type } = config;
+    const stdioOptions: InternalStdioMcpOptions = {
+      type,
+      command,
+      args,
+      cwd,
+      env,
+      ...shared,
+    };
+    return stdioOptions;
+  }
+  // HTTP/SSE
+  const { type, url, requestOptions } = config;
+  const httpSseConfig:
+    | InternalStreamableHttpMcpOptions
+    | InternalSseMcpOptions = {
+    type,
+    url,
+    requestOptions: mergeConfigYamlRequestOptions(
+      requestOptions,
+      globalRequestOptions,
+    ),
+    ...shared,
+  };
+  return httpSseConfig;
 }

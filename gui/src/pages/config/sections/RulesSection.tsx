@@ -4,7 +4,6 @@ import {
   BookmarkIcon as BookmarkOutline,
   EyeIcon,
   PencilIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import {
@@ -19,11 +18,12 @@ import {
   DEFAULT_PLAN_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
+import { getRuleDisplayName } from "core/llm/rules/rules-utils";
 import { useContext, useMemo } from "react";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
-import { Button, Card, EmptyState, useFontSize } from "../../../components/ui";
+import { Card, EmptyState, useFontSize } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
@@ -167,27 +167,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   };
 
   const title = useMemo(() => {
-    if (rule.name) {
-      return rule.name;
-    } else {
-      if (rule.source === ".continuerules") {
-        return "Project rules";
-      } else if (rule.source === "default-chat") {
-        return "Default chat system message";
-      } else if (rule.source === "default-agent") {
-        return "Default agent system message";
-      } else if (rule.source === "json-systemMessage") {
-        return "JSON systemMessage)";
-      } else if (rule.source === "model-options-agent") {
-        return "Base System Agent Message";
-      } else if (rule.source === "model-options-plan") {
-        return "Base System Plan Message";
-      } else if (rule.source === "model-options-chat") {
-        return "Base System Chat Message";
-      } else {
-        return "Agent rule";
-      }
-    }
+    return getRuleDisplayName(rule);
   }, [rule]);
 
   function onClickExpand() {

@@ -1,4 +1,4 @@
-import { Box } from "ink";
+import { Box, Text } from "ink";
 import React, {
   useCallback,
   useEffect,
@@ -14,6 +14,7 @@ import {
   ConfigServiceState,
   MCPServiceState,
   ModelServiceState,
+  UpdateServiceState,
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
@@ -93,7 +94,8 @@ function useTUIChatServices(remoteUrl?: string) {
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    update: UpdateServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient", "update"]);
 
   return { services, allServicesReady, isRemoteMode };
 }
@@ -179,6 +181,30 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setStaticRefreshTrigger,
   );
 
+  // State for diff content overlay
+  const [diffContent, setDiffContent] = useState<string>("");
+
+  // State for temporary status message
+  const [statusMessage, setStatusMessage] = useState<string>("");
+
+  // Handler to show diff overlay
+  const handleShowDiff = useCallback(
+    (content: string) => {
+      setDiffContent(content);
+      navigateTo("diff");
+    },
+    [navigateTo],
+  );
+
+  // Handler to show temporary status message
+  const handleShowStatusMessage = useCallback((message: string) => {
+    setStatusMessage(message);
+    // Clear after 3 seconds
+    setTimeout(() => {
+      setStatusMessage("");
+    }, 3000);
+  }, []);
+
   const {
     chatHistory,
     setChatHistory,
@@ -207,6 +233,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
+    onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
@@ -214,6 +241,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    onShowDiff: handleShowDiff,
+    onShowStatusMessage: handleShowStatusMessage,
   });
 
   // Update ref after useChat returns
@@ -309,6 +338,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
           loadingColor="grey"
         />
 
+        {/* Temporary status message */}
+        {statusMessage && (
+          <Box paddingX={1} paddingY={0}>
+            <Text color="green">{statusMessage}</Text>
+          </Box>
+        )}
+
         {/* All screen-specific content */}
         <ScreenContent
           isScreenActive={isScreenActive}
@@ -332,6 +368,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
           onImageInClipboardChange={setHasImageInClipboard}
+          diffContent={diffContent}
         />
 
         {/* Resource debug bar - only in verbose mode */}

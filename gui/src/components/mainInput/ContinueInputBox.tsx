@@ -1,6 +1,11 @@
 import { Editor, JSONContent } from "@tiptap/react";
-import { ContextItemWithId, InputModifiers, RuleWithSource } from "core";
-import { useMemo } from "react";
+import {
+  ContextItemWithId,
+  InputModifiers,
+  RuleWithSource,
+  SlashCommandSource,
+} from "core";
+import { memo, useMemo } from "react";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
@@ -38,6 +43,15 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "repo-map",
 ];
 
+const EDIT_ALLOWED_SLASH_COMMAND_SOURCES: SlashCommandSource[] = [
+  "yaml-prompt-block",
+  "mcp-prompt",
+  "prompt-file-v1",
+  "prompt-file-v2",
+  "invokable-rule",
+  "json-custom-command",
+];
+
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
@@ -50,7 +64,14 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = useMemo(() => {
-    return isInEdit ? [] : availableSlashCommands;
+    if (isInEdit) {
+      return availableSlashCommands.filter((cmd) =>
+        cmd.slashCommandSource
+          ? EDIT_ALLOWED_SLASH_COMMAND_SOURCES.includes(cmd.slashCommandSource)
+          : false,
+      );
+    }
+    return availableSlashCommands;
   }, [isInEdit, availableSlashCommands]);
 
   const filteredContextProviders = useMemo(() => {
@@ -69,16 +90,20 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const historyKey = isInEdit ? "edit" : "chat";
   const placeholder = isInEdit ? "Edit selected code" : undefined;
 
-  const toolbarOptions: ToolbarOptions = isInEdit
-    ? {
+  const toolbarOptions: ToolbarOptions = useMemo(() => {
+    if (isInEdit) {
+      return {
         hideAddContext: false,
         hideImageUpload: false,
         hideUseCodebase: true,
         hideSelectModel: false,
         enterText:
           editModeState.applyState.status === "done" ? "Retry" : "Edit",
-      }
-    : {};
+      } as ToolbarOptions;
+    }
+    // Stable empty object to avoid re-renders from identity changes
+    return {} as ToolbarOptions;
+  }, [isInEdit, editModeState.applyState.status]);
 
   const { appliedRules = [], contextItems = [] } = props;
 
@@ -123,4 +148,4 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
 }
 
-export default ContinueInputBox;
+export default memo(ContinueInputBox);

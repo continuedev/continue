@@ -8,11 +8,14 @@ export const writeChecklistTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   parameters: {
-    checklist: {
-      type: "string",
-      description:
-        "The complete checklist in markdown format using - [ ] for incomplete tasks and - [x] for completed tasks. Avoid headers and additional content unless specifically being used to group checkboxes. Try to keep the list short, and make each item specific and actionable.",
-      required: true,
+    type: "object",
+    required: ["checklist"],
+    properties: {
+      checklist: {
+        type: "string",
+        description:
+          "The complete checklist in markdown format using - [ ] for incomplete tasks and - [x] for completed tasks. Avoid headers and additional content unless specifically being used to group checkboxes. Try to keep the list short, and make each item specific and actionable.",
+      },
     },
   },
   preprocess: async (args: { checklist: string }) => {

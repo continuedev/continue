@@ -10,7 +10,7 @@ import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getCurrentSession } from "./session.js";
+import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
@@ -18,6 +18,8 @@ import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
+  remoteUrl?: string,
+  options?: { isRemoteMode?: boolean },
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -48,12 +50,10 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  Type ${chalk.cyan("/")} to see available slash commands`,
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
-  posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
 }
 
 async function handleLogin() {
-  posthogService.capture("useSlashCommand", { name: "login" });
   try {
     const newAuthState = await services.auth.login();
     await reloadService(SERVICE_NAMES.AUTH);
@@ -79,7 +79,6 @@ async function handleLogin() {
 }
 
 async function handleLogout() {
-  posthogService.capture("useSlashCommand", { name: "logout" });
   try {
     await services.auth.logout();
     return {
@@ -95,7 +94,6 @@ async function handleLogout() {
 }
 
 function handleWhoami() {
-  posthogService.capture("useSlashCommand", { name: "whoami" });
   if (isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
@@ -118,8 +116,6 @@ function handleWhoami() {
 }
 
 async function handleFork() {
-  posthogService.capture("useSlashCommand", { name: "fork" });
-
   try {
     const currentSession = getCurrentSession();
     const forkCommand = `cn --fork ${currentSession.sessionId}`;
@@ -145,18 +141,42 @@ async function handleFork() {
   }
 }
 
+function handleTitle(args: string[]) {
+  posthogService.capture("useSlashCommand", { name: "title" });
+
+  const title = args.join(" ").trim();
+  if (!title) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a title. Usage: /title <your title>",
+      ),
+    };
+  }
+
+  try {
+    updateSessionTitle(title);
+    return {
+      exit: false,
+      output: chalk.green(`Session title updated to: "${title}"`),
+    };
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to update title: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
-    posthogService.capture("useSlashCommand", { name: "clear" });
     return { clear: true, output: "Chat history cleared" };
   },
   exit: () => {
-    posthogService.capture("useSlashCommand", { name: "exit" });
     return { exit: true, output: "Goodbye!" };
   },
   config: () => {
-    posthogService.capture("useSlashCommand", { name: "config" });
     return { openConfigSelector: true };
   },
   login: handleLogin,
@@ -165,38 +185,30 @@ const commandHandlers: Record<string, CommandHandler> = {
   info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
-    posthogService.capture("useSlashCommand", { name: "compact" });
     return { compact: true };
   },
   mcp: () => {
-    posthogService.capture("useSlashCommand", { name: "mcp" });
     return { openMcpSelector: true };
   },
   resume: () => {
-    posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
   },
   fork: handleFork,
+  title: handleTitle,
   init: (args, assistant) => {
     posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
+  },
+  update: () => {
+    return { openUpdateSelector: true };
   },
 };
 
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-): Promise<{
-  output?: string;
-  exit?: boolean;
-  newInput?: string;
-  clear?: boolean;
-  openConfigSelector?: boolean;
-  openModelSelector?: boolean;
-  openMCPSelector?: boolean;
-  openSessionSelector?: boolean;
-  compact?: boolean;
-} | null> {
+  options?: { remoteUrl?: string; isRemoteMode?: boolean },
+): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
     return null;
@@ -209,7 +221,7 @@ export async function handleSlashCommands(
 
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant);
+    return await handler(args, assistant, options?.remoteUrl, options);
   }
 
   // Check for custom assistant prompts
@@ -222,7 +234,9 @@ export async function handleSlashCommands(
   }
 
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant);
+  const allCommands = getAllSlashCommands(assistant, {
+    isRemoteMode: options?.isRemoteMode,
+  });
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );
