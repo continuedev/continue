@@ -27,14 +27,12 @@ explore available MCP server blocks
 
 ## Quick Start: How to Set Up Your First MCP Server
 
-Below is a quick example of setting up a new MCP server for use in your agent. You can use either YAML or JSON configuration files:
+Below is a quick example of setting up a new MCP server for use in your agent:
 
 1. Create a folder called `.continue/mcpServers` at the top level of your workspace
-2. Add a file called `playwright-mcp.yaml` (or `playwright-mcp.json`) to this folder.
-3. Write the following contents to your configuration file and save.
+2. Add a file called `playwright-mcp.yaml` to this folder
+3. Write the following contents and save
 
-<Tabs>
-  <Tab title="YAML">
 ```yaml title=".continue/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
@@ -45,16 +43,6 @@ mcpServers:
     args:
       - "@playwright/mcp@latest"
 ```
-  </Tab>
-  <Tab title="JSON">
-```json title=".continue/mcpServers/playwright-mcp.json"
-{
-  "command": "npx",
-  "args": ["@playwright/mcp@latest"]
-}
-```
-  </Tab>
-</Tabs>
 
 Now test your MCP server by prompting the following command:
 
@@ -74,7 +62,9 @@ For complete setup instructions, troubleshooting, and usage examples, see the [C
 
 ## Using `.mcp.json` from Claude, Cursor, Cline, etc
 
-If you have an existing `.mcp.json` file from Claude, Cursor, Cline, or any other agent that supports the spec, copy it into your `.continue/mcpServers` directory and Continue will automatically pick it up.
+<Info>
+If you're coming from another tool that uses `.mcp.json` configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers` directory and Continue will automatically pick them up.
+</Info>
 
 ## How to Configure MCP Servers
 
@@ -84,38 +74,15 @@ quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
 block](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
 server block to your [config file](./configuration.md):
 
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  mcpServers:
-    - name: SQLite MCP
-      command: npx
-      args:
-        - "-y"
-        - "mcp-sqlite"
-        - "/path/to/your/database.db"
-
-````
-</Tab>
-<Tab title="JSON">
-```json title="config.json"
-{
-  "mcpServers": [
-    {
-      "name": "SQLite MCP",
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-sqlite",
-        "/path/to/your/database.db"
-      ]
-    }
-  ]
-}
-````
-
-  </Tab>
-</Tabs>
+```yaml title="config.yaml"
+mcpServers:
+  - name: SQLite MCP
+    command: npx
+    args:
+      - "-y"
+      - "mcp-sqlite"
+      - "/path/to/your/database.db"
+```
 
 ### How to Configure MCP Server Properties
 
