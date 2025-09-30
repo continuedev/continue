@@ -14,6 +14,7 @@ interface StaticChatContentProps {
   config?: AssistantUnrolled;
   model?: ModelConfig;
   mcpService?: MCPService;
+  organizationName?: string;
   chatHistory: ChatHistoryItem[];
   queuedMessages?: QueuedMessage[];
   renderMessage: (
@@ -29,6 +30,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   config,
   model,
   mcpService,
+  organizationName,
   chatHistory,
   queuedMessages = [],
   renderMessage,
@@ -96,6 +98,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
           config={config}
           model={model}
           mcpService={mcpService}
+          organizationName={organizationName}
         />,
       );
     }
@@ -129,6 +132,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     config,
     model,
     mcpService,
+    organizationName,
     processedChatHistory,
     renderMessage,
   ]);
