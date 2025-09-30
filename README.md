@@ -1,8 +1,8 @@
-<div align="center">
+<DIV ALIGN="CENTER">
 
-![continue logo](media/readme.png)
+![CONTINUE LOGO](MEDIA/README.PNG)
 
-</div>
+</DIV>
 
 <h1 align="center">Continue</h1>
 
