@@ -167,6 +167,12 @@ You can add prompts to your agent's configuration for easy access in future sess
   shows you what the agent will do without executing it.
 </Info>
 
+<Info>
+
+  **About the --auto flag**: The `--auto` flag enables tools to run continuously without manual confirmation. This is essential for headless mode where the agent needs to execute multiple tools automatically to complete tasks like pipeline inspection, schema retrieval, and error analysis.
+
+</Info>
+
 ### Pipeline Inspection
 
 <Card title="Inspect Pipeline Execution" icon="magnifying-glass">
@@ -180,7 +186,7 @@ Show me the timing breakdown and file sizes for each table.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Inspect my dlt pipeline execution and provide a summary of the load info. Show me the timing breakdown and file sizes for each table."
+cn -p "Inspect my dlt pipeline execution and provide a summary of the load info. Show me the timing breakdown and file sizes for each table." --auto
 ```
 
 </Card>
@@ -198,7 +204,7 @@ data types, and any constraints.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Show me the schema for my users table including all columns, data types, and any constraints."
+cn -p "Show me the schema for my users table including all columns, data types, and any constraints." --auto
 ```
 
 </Card>
@@ -216,7 +222,7 @@ the distribution of order statuses.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Get the last 10 records from my orders table and show me the distribution of order statuses."
+cn -p "Get the last 10 records from my orders table and show me the distribution of order statuses." --auto
 ```
 
 </Card>
@@ -234,7 +240,7 @@ explain what went wrong and suggest fixes.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Check for any load errors in my last pipeline run. If there are errors, explain what went wrong and suggest fixes."
+cn -p "Check for any load errors in my last pipeline run. If there are errors, explain what went wrong and suggest fixes." --auto
 ```
 
 </Card>
@@ -252,7 +258,7 @@ JSONPlaceholder API users endpoint into DuckDB.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholder API users endpoint into DuckDB."
+cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholder API users endpoint into DuckDB." --auto
 ```
 
 </Card>
@@ -270,7 +276,7 @@ Show me what columns were added or modified.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Check if my pipeline schema has evolved since the last run. Show me what columns were added or modified."
+cn -p "Check if my pipeline schema has evolved since the last run. Show me what columns were added or modified." --auto
 ```
 
 </Card>
@@ -338,14 +344,16 @@ jobs:
           echo "🔍 Validating pipeline schema..."
           cn --config dlthub/dlt-assistant \
              -p "Inspect the pipeline schema and verify all required tables
-                 and columns are present. Flag any missing or unexpected changes."
+                 and columns are present. Flag any missing or unexpected changes." \
+             --auto
 
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
           cn --config dlthub/dlt-assistant \
              -p "Analyze the last pipeline run for errors or warnings.
-                 Report any issues that need attention."
+                 Report any issues that need attention." \
+             --auto
 
       - name: Comment Pipeline Report on PR
         if: always() && github.event_name == 'pull_request'
@@ -357,7 +365,8 @@ jobs:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings
                  - Performance metrics (timing, file sizes)
-                 - Recommended improvements")
+                 - Recommended improvements" \
+             --auto)
 
           gh pr comment ${{ github.event.pull_request.number }} --body "$REPORT"
 ```
