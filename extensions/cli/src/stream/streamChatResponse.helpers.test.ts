@@ -13,6 +13,7 @@ describe("streamChatResponse.helpers", () => {
         name: "Write",
         arguments: { filepath: "test.txt", content: "hello" },
         argumentsStr: '{"filepath":"test.txt","content":"hello"}',
+        startNotified: false,
         tool: {
           name: "Write",
           displayName: "Write",
@@ -21,7 +22,8 @@ describe("streamChatResponse.helpers", () => {
             type: "object",
             properties: {},
           },
-          function: vi.fn(),
+          run: vi.fn(),
+          isBuiltIn: true,
         },
       };
 
