@@ -190,54 +190,59 @@ For Continue CLI users, `${{ secrets.SECRET_NAME }}` template variables in your 
 
 <Warning>
 
-  Secret templating only works in **values**, not in object **keys**. For example, `headers: { "Authorization": "Bearer ${{ secrets.TOKEN }}" }` works, but `headers: { "${{ secrets.HEADER_NAME }}": "value" }` does not.
+  Secret templating has important limitations:
+  - Only works in **values**, not in object **keys**
+  - Only works in specific **allowed fields** (see list below)
+  - Does NOT work in `name`, `command`, `cwd`, `faviconUrl`, or other configuration fields
+  
+  For example: `headers: { "Authorization": "Bearer ${{ secrets.TOKEN }}" }` works, but `name: "${{ secrets.SERVER_NAME }}"` does not.
 
 </Warning>
 
 **For STDIO servers (`command` type):**
-- `command` - The executable command
 - `args` - Array of command arguments  
 - `env` - Environment variable values (secrets in keys are not supported)
-- `cwd` - Working directory path
 
 **For HTTP-based servers (`sse` and `streamable-http` types):**
 - `url` - The server endpoint URL
 - `requestOptions.headers` - HTTP header values (secrets in keys are not supported)
-- All other `requestOptions` fields that are strings
 
-**For all server types:**
+**Restricted fields (secrets are NOT rendered):**
 - `name` - Server display name
+- `command` - The executable command (STDIO servers)
+- `cwd` - Working directory path (STDIO servers)
 - `faviconUrl` - Icon URL
-- Any other string fields in the configuration
+- `type` - Server type
+- Any other fields not explicitly listed above
 
 **Example with environment variables:**
 
 ```yaml
 mcpServers:
-  # STDIO server example with secrets in various fields
-  - name: ${{ secrets.SERVER_NAME }}  # Server name from env
-    command: ${{ secrets.CUSTOM_COMMAND }}  # Command from env
+  # STDIO server example with secrets in allowed fields only
+  - name: My Server  # Static name (secrets not supported here)
+    command: node  # Static command (secrets not supported here)
     args:
       - server.js
       - --api-key
-      - ${{ secrets.API_KEY }}  # Command argument
+      - ${{ secrets.API_KEY }}  # ✅ Secrets work in args
       - --config-path
-      - ${{ secrets.CONFIG_PATH }}  # File path
+      - ${{ secrets.CONFIG_PATH }}  # ✅ Secrets work in args
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}  # Env variable value
-      CUSTOM_SECRET: ${{ secrets.ENV_SECRET }}  # Another env var value
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}  # ✅ Secrets work in env values
+      CUSTOM_SECRET: ${{ secrets.ENV_SECRET }}  # ✅ Secrets work in env values
       LOG_LEVEL: info  # Regular value (no templating)
-    cwd: ${{ secrets.WORKING_DIR }}  # Working directory
+    # cwd: ${{ secrets.WORKING_DIR }}  # ❌ Secrets NOT supported in cwd
     
-  # HTTP server example with secrets in URL and headers
-  - name: Remote API Server
+  # HTTP server example with secrets in allowed fields only
+  - name: Remote API Server  # Static name (secrets not supported here)
     type: sse
-    url: ${{ secrets.API_BASE_URL }}/mcp  # URL with secret
+    url: ${{ secrets.API_BASE_URL }}/mcp  # ✅ Secrets work in URL
     requestOptions:
       headers:
-        Authorization: Bearer ${{ secrets.AUTH_TOKEN }}  # Header value
-        X-Custom-Value: ${{ secrets.CUSTOM_HEADER_VALUE }}  # Another header value
-        X-User-ID: ${{ secrets.USER_ID }}  # Another header
+        Authorization: Bearer ${{ secrets.AUTH_TOKEN }}  # ✅ Secrets work in header values
+        X-Custom-Value: ${{ secrets.CUSTOM_HEADER_VALUE }}  # ✅ Secrets work in header values
+        X-User-ID: ${{ secrets.USER_ID }}  # ✅ Secrets work in header values
         Content-Type: application/json  # Regular header
 ```
 
@@ -245,13 +250,11 @@ mcpServers:
 
 ```bash
 # Set environment variables before running Continue CLI
-export SERVER_NAME="My Custom Server"
-export CUSTOM_COMMAND="node"
+# Only set environment variables for fields that support secrets
 export API_KEY="your-secret-api-key"
 export CONFIG_PATH="/path/to/config.json"
 export DATABASE_URL="postgresql://user:pass@host:5432/db"
 export ENV_SECRET="custom-env-value"
-export WORKING_DIR="/app/workspace"
 export API_BASE_URL="https://api.example.com"
 export AUTH_TOKEN="bearer-token-123"
 export CUSTOM_HEADER_VALUE="custom-header-value"

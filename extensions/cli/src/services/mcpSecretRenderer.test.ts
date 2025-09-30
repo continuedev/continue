@@ -142,41 +142,45 @@ describe("mcpSecretRenderer", () => {
   });
 
   describe("renderMcpServerSecrets", () => {
-    it("should render secrets in STDIO MCP server", () => {
+    it("should render secrets only in allowed fields for STDIO server", () => {
       process.env.API_KEY = "key123";
       process.env.SECRET_PATH = "/path/to/secret";
+      process.env.SERVER_NAME = "rendered-name";
+      process.env.CUSTOM_CMD = "custom-command";
 
       const server: StdioMcpServer = {
-        name: "test-stdio",
-        command: "node",
-        args: ["server.js", "--token", "${{ secrets.API_KEY }}"],
+        name: "${{ secrets.SERVER_NAME }}", // Should NOT be rendered
+        command: "${{ secrets.CUSTOM_CMD }}", // Should NOT be rendered
+        args: ["server.js", "--token", "${{ secrets.API_KEY }}"], // Should be rendered
         env: {
-          SECRET_FILE: "${{ secrets.SECRET_PATH }}",
+          SECRET_FILE: "${{ secrets.SECRET_PATH }}", // Should be rendered
           NODE_ENV: "production",
         },
       };
 
       const result = renderMcpServerSecrets(server);
       expect(result).toEqual({
-        name: "test-stdio",
-        command: "node",
-        args: ["server.js", "--token", "key123"],
+        name: "${{ secrets.SERVER_NAME }}", // Unchanged
+        command: "${{ secrets.CUSTOM_CMD }}", // Unchanged
+        args: ["server.js", "--token", "key123"], // Rendered
         env: {
-          SECRET_FILE: "/path/to/secret",
+          SECRET_FILE: "/path/to/secret", // Rendered
           NODE_ENV: "production",
         },
       });
     });
 
-    it("should render secrets in SSE MCP server", () => {
+    it("should render secrets only in allowed fields for SSE server", () => {
       process.env.AUTH_TOKEN = "auth123";
+      process.env.API_URL = "https://secret-api.com";
+      process.env.SERVER_NAME = "rendered-name";
 
       const server: SseMcpServer = {
-        name: "test-sse",
-        url: "https://api.example.com/mcp",
+        name: "${{ secrets.SERVER_NAME }}", // Should NOT be rendered
+        url: "${{ secrets.API_URL }}/mcp", // Should be rendered
         requestOptions: {
           headers: {
-            Authorization: "Bearer ${{ secrets.AUTH_TOKEN }}",
+            Authorization: "Bearer ${{ secrets.AUTH_TOKEN }}", // Should be rendered
             "User-Agent": "continue-cli",
           },
         },
@@ -184,11 +188,11 @@ describe("mcpSecretRenderer", () => {
 
       const result = renderMcpServerSecrets(server);
       expect(result).toEqual({
-        name: "test-sse",
-        url: "https://api.example.com/mcp",
+        name: "${{ secrets.SERVER_NAME }}", // Unchanged
+        url: "https://secret-api.com/mcp", // Rendered
         requestOptions: {
           headers: {
-            Authorization: "Bearer auth123",
+            Authorization: "Bearer auth123", // Rendered
             "User-Agent": "continue-cli",
           },
         },
@@ -204,6 +208,33 @@ describe("mcpSecretRenderer", () => {
 
       const result = renderMcpServerSecrets(server);
       expect(result).toEqual(server);
+    });
+
+    it("should not render secrets in restricted fields", () => {
+      process.env.SERVER_NAME = "secret-name";
+      process.env.CUSTOM_COMMAND = "secret-command";
+      process.env.WORKING_DIR = "/secret/path";
+      process.env.FAVICON_URL = "https://secret.com/favicon.ico";
+      process.env.API_KEY = "secret-key";
+
+      const server: StdioMcpServer = {
+        name: "${{ secrets.SERVER_NAME }}",
+        command: "${{ secrets.CUSTOM_COMMAND }}",
+        cwd: "${{ secrets.WORKING_DIR }}",
+        faviconUrl: "${{ secrets.FAVICON_URL }}",
+        args: ["--token", "${{ secrets.API_KEY }}"], // This SHOULD be rendered
+      };
+
+      const result = renderMcpServerSecrets(server) as StdioMcpServer;
+
+      // Restricted fields should remain unchanged
+      expect(result.name).toBe("${{ secrets.SERVER_NAME }}");
+      expect(result.command).toBe("${{ secrets.CUSTOM_COMMAND }}");
+      expect(result.cwd).toBe("${{ secrets.WORKING_DIR }}");
+      expect(result.faviconUrl).toBe("${{ secrets.FAVICON_URL }}");
+
+      // Allowed fields should be rendered
+      expect(result.args).toEqual(["--token", "secret-key"]);
     });
   });
 
@@ -331,67 +362,70 @@ describe("mcpSecretRenderer", () => {
     it("should handle complex nested structures", () => {
       const server: StdioMcpServer = {
         name: "test",
-        command: "${{ secrets.COMMAND }}",
-        args: ["${{ secrets.ARG1 }}", "normal-arg"],
+        command: "${{ secrets.COMMAND }}", // Not validated
+        args: ["${{ secrets.ARG1 }}", "normal-arg"], // Validated
         env: {
-          SECRET1: "${{ secrets.SECRET1 }}",
-          SECRET2: "${{ secrets.SECRET2 }}",
+          SECRET1: "${{ secrets.SECRET1 }}", // Validated
+          SECRET2: "${{ secrets.SECRET2 }}", // Validated
           NORMAL: "normal-value",
         },
       };
 
       const result = validateMcpServerSecretsRendered(server);
       expect(result.isValid).toBe(false);
-      expect(result.unrenderedSecrets).toHaveLength(4);
-      expect(result.unrenderedSecrets).toContain("COMMAND");
+      expect(result.unrenderedSecrets).toHaveLength(3); // Only args and env are validated
+      expect(result.unrenderedSecrets).not.toContain("COMMAND"); // Command is not validated
       expect(result.unrenderedSecrets).toContain("ARG1");
       expect(result.unrenderedSecrets).toContain("SECRET1");
       expect(result.unrenderedSecrets).toContain("SECRET2");
     });
 
-    it("should handle all documented secret locations", () => {
+    it("should handle all allowed secret locations for STDIO server", () => {
       const server: StdioMcpServer = {
-        name: "${{ secrets.SERVER_NAME }}",
-        command: "${{ secrets.CUSTOM_COMMAND }}",
+        name: "${{ secrets.SERVER_NAME }}", // Not rendered
+        command: "${{ secrets.CUSTOM_COMMAND }}", // Not rendered
         args: [
           "server.js",
           "--token",
-          "${{ secrets.API_KEY }}",
+          "${{ secrets.API_KEY }}", // Rendered
           "--config",
-          "${{ secrets.CONFIG_PATH }}",
+          "${{ secrets.CONFIG_PATH }}", // Rendered
         ],
         env: {
-          DATABASE_URL: "${{ secrets.DATABASE_URL }}",
-          CUSTOM_SECRET: "${{ secrets.ENV_SECRET }}", // Secret in value
+          DATABASE_URL: "${{ secrets.DATABASE_URL }}", // Rendered
+          CUSTOM_SECRET: "${{ secrets.ENV_SECRET }}", // Rendered
           LOG_LEVEL: "info", // No secret
         },
-        cwd: "${{ secrets.WORKING_DIR }}",
-        faviconUrl: "${{ secrets.ICON_URL }}",
+        cwd: "${{ secrets.WORKING_DIR }}", // Not rendered
+        faviconUrl: "${{ secrets.ICON_URL }}", // Not rendered
       };
 
       const result = validateMcpServerSecretsRendered(server);
       expect(result.isValid).toBe(false);
-      expect(result.unrenderedSecrets).toContain("SERVER_NAME");
-      expect(result.unrenderedSecrets).toContain("CUSTOM_COMMAND");
+      // Only secrets in args and env should be detected
       expect(result.unrenderedSecrets).toContain("API_KEY");
       expect(result.unrenderedSecrets).toContain("CONFIG_PATH");
       expect(result.unrenderedSecrets).toContain("DATABASE_URL");
       expect(result.unrenderedSecrets).toContain("ENV_SECRET");
-      expect(result.unrenderedSecrets).toContain("WORKING_DIR");
-      expect(result.unrenderedSecrets).toContain("ICON_URL");
+      // These should NOT be detected (not in allowed fields)
+      expect(result.unrenderedSecrets).not.toContain("SERVER_NAME");
+      expect(result.unrenderedSecrets).not.toContain("CUSTOM_COMMAND");
+      expect(result.unrenderedSecrets).not.toContain("WORKING_DIR");
+      expect(result.unrenderedSecrets).not.toContain("ICON_URL");
+      expect(result.unrenderedSecrets).toHaveLength(4);
     });
 
-    it("should handle HTTP server with all documented secret locations", () => {
+    it("should handle HTTP server with all allowed secret locations", () => {
       const server: SseMcpServer = {
-        name: "${{ secrets.SERVER_NAME }}",
-        url: "${{ secrets.API_BASE_URL }}/mcp",
+        name: "${{ secrets.SERVER_NAME }}", // Not rendered
+        url: "${{ secrets.API_BASE_URL }}/mcp", // Rendered
         type: "sse",
-        faviconUrl: "${{ secrets.ICON_URL }}",
+        faviconUrl: "${{ secrets.ICON_URL }}", // Not rendered
         requestOptions: {
           headers: {
-            Authorization: "Bearer ${{ secrets.AUTH_TOKEN }}",
-            "X-Custom-Value": "${{ secrets.CUSTOM_HEADER_VALUE }}", // Secret in value
-            "X-User-ID": "${{ secrets.USER_ID }}",
+            Authorization: "Bearer ${{ secrets.AUTH_TOKEN }}", // Rendered
+            "X-Custom-Value": "${{ secrets.CUSTOM_HEADER_VALUE }}", // Rendered
+            "X-User-ID": "${{ secrets.USER_ID }}", // Rendered
             "Content-Type": "application/json", // No secret
           },
         },
@@ -399,12 +433,15 @@ describe("mcpSecretRenderer", () => {
 
       const result = validateMcpServerSecretsRendered(server);
       expect(result.isValid).toBe(false);
-      expect(result.unrenderedSecrets).toContain("SERVER_NAME");
+      // Only secrets in url and headers should be detected
       expect(result.unrenderedSecrets).toContain("API_BASE_URL");
-      expect(result.unrenderedSecrets).toContain("ICON_URL");
       expect(result.unrenderedSecrets).toContain("AUTH_TOKEN");
       expect(result.unrenderedSecrets).toContain("CUSTOM_HEADER_VALUE");
       expect(result.unrenderedSecrets).toContain("USER_ID");
+      // These should NOT be detected (not in allowed fields)
+      expect(result.unrenderedSecrets).not.toContain("SERVER_NAME");
+      expect(result.unrenderedSecrets).not.toContain("ICON_URL");
+      expect(result.unrenderedSecrets).toHaveLength(4);
     });
   });
 });

@@ -1,9 +1,7 @@
 import {
   fillTemplateVariables,
   getTemplateVariables,
-  HttpMcpServer,
   MCPServer,
-  SseMcpServer,
   StdioMcpServer,
 } from "@continuedev/config-yaml";
 import { logger } from "../util/logger.js";
@@ -41,26 +39,46 @@ export function renderSecretsFromEnv(templatedString: string): string {
 }
 
 /**
- * Recursively renders secrets in an object structure
+ * Renders secrets only in allowed fields of MCP server configuration
  */
-function renderSecretsInObject(obj: unknown): unknown {
-  if (typeof obj === "string") {
-    return renderSecretsFromEnv(obj);
-  }
+function renderMcpServerSecretsSelectively(serverConfig: MCPServer): MCPServer {
+  const result = { ...serverConfig };
 
-  if (Array.isArray(obj)) {
-    return obj.map(renderSecretsInObject);
-  }
+  if ("command" in result) {
+    // STDIO server - only render secrets in args and env
+    const stdioConfig = result as StdioMcpServer;
 
-  if (obj && typeof obj === "object") {
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
-      result[key] = renderSecretsInObject(value);
+    if (stdioConfig.args) {
+      stdioConfig.args = stdioConfig.args.map((arg) =>
+        typeof arg === "string" ? renderSecretsFromEnv(arg) : arg,
+      );
     }
-    return result;
+
+    if (stdioConfig.env) {
+      const renderedEnv: Record<string, string> = {};
+      for (const [key, value] of Object.entries(stdioConfig.env)) {
+        renderedEnv[key] = renderSecretsFromEnv(value);
+      }
+      stdioConfig.env = renderedEnv;
+    }
+  } else {
+    // SSE/HTTP server - only render secrets in url and headers
+    const httpConfig = result;
+
+    httpConfig.url = renderSecretsFromEnv(httpConfig.url);
+
+    if (httpConfig.requestOptions?.headers) {
+      const renderedHeaders: Record<string, string> = {};
+      for (const [key, value] of Object.entries(
+        httpConfig.requestOptions.headers,
+      )) {
+        renderedHeaders[key] = renderSecretsFromEnv(value);
+      }
+      httpConfig.requestOptions.headers = renderedHeaders;
+    }
   }
 
-  return obj;
+  return result;
 }
 
 /**
@@ -100,20 +118,19 @@ export function renderMcpServerEnv(
 }
 
 /**
- * Renders all secrets in an MCP server configuration from process.env
+ * Renders secrets in allowed fields of an MCP server configuration from process.env
  */
 export function renderMcpServerSecrets(serverConfig: MCPServer): MCPServer {
-  const rendered = renderSecretsInObject(serverConfig) as MCPServer;
+  const rendered = renderMcpServerSecretsSelectively(serverConfig);
 
   // Log which secrets were processed
   const allSecrets = new Set<string>();
 
   if ("command" in rendered) {
-    // STDIO server
+    // STDIO server - only check args and env
     const stdioConfig = rendered as StdioMcpServer;
 
-    // Check command and args
-    getSecretVariables(stdioConfig.command).forEach((s) => allSecrets.add(s));
+    // Check args
     stdioConfig.args?.forEach((arg) => {
       getSecretVariables(arg).forEach((s) => allSecrets.add(s));
     });
@@ -125,8 +142,8 @@ export function renderMcpServerSecrets(serverConfig: MCPServer): MCPServer {
       });
     }
   } else {
-    // SSE/HTTP server
-    const httpConfig = rendered as SseMcpServer | HttpMcpServer;
+    // SSE/HTTP server - only check URL and headers
+    const httpConfig = rendered;
 
     // Check URL
     getSecretVariables(httpConfig.url).forEach((s) => allSecrets.add(s));
@@ -173,7 +190,7 @@ export function hasUnrenderedSecrets(value: string): boolean {
 }
 
 /**
- * Validates that all secrets in MCP server config have been rendered
+ * Validates that all secrets in allowed MCP server config fields have been rendered
  */
 export function validateMcpServerSecretsRendered(serverConfig: MCPServer): {
   isValid: boolean;
@@ -189,17 +206,33 @@ export function validateMcpServerSecretsRendered(serverConfig: MCPServer): {
     }
   }
 
-  function checkObject(obj: unknown) {
-    if (typeof obj === "string") {
-      checkValue(obj);
-    } else if (Array.isArray(obj)) {
-      obj.forEach(checkObject);
-    } else if (obj && typeof obj === "object") {
-      Object.values(obj).forEach(checkObject);
+  if ("command" in serverConfig) {
+    // STDIO server - only check args and env
+    const stdioConfig = serverConfig as StdioMcpServer;
+
+    stdioConfig.args?.forEach((arg) => {
+      if (typeof arg === "string") {
+        checkValue(arg);
+      }
+    });
+
+    if (stdioConfig.env) {
+      Object.values(stdioConfig.env).forEach((value) => {
+        checkValue(value);
+      });
+    }
+  } else {
+    // SSE/HTTP server - only check URL and headers
+    const httpConfig = serverConfig;
+
+    checkValue(httpConfig.url);
+
+    if (httpConfig.requestOptions?.headers) {
+      Object.values(httpConfig.requestOptions.headers).forEach((value) => {
+        checkValue(value);
+      });
     }
   }
-
-  checkObject(serverConfig);
 
   return {
     isValid: unrenderedSecrets.size === 0,
