@@ -5,6 +5,7 @@ import type { ChatCompletionTool } from "openai/resources.mjs";
 
 import { filterExcludedTools } from "../permissions/index.js";
 import {
+  getService,
   getServiceSync,
   MCPServiceState,
   MCPTool,
@@ -182,21 +183,35 @@ export async function getAllTools() {
 
   let mcpTools: MCPTool[] = [];
   let mcpToolNames: string[] = [];
-  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
-  if (mcpServiceResult.state === "ready") {
-    mcpTools = mcpServiceResult?.value?.tools ?? [];
-    mcpToolNames = mcpTools.map((t) => t.name);
-  } else {
-    // MCP is lazy
-    // throw new Error("MCP Service not initialized");
-  }
 
-  const allToolNames = [...builtinToolNames, ...mcpToolNames];
-
-  // Check if the ToolPermissionService is ready
+  // Check if we're in headless mode
   const permissionsServiceResult = getServiceSync<ToolPermissionServiceState>(
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
+  const isHeadless = permissionsServiceResult.value?.isHeadless ?? false;
+
+  // In headless mode, wait for MCP service to be ready
+  // In TUI mode, allow lazy loading
+  let mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
+
+  if (isHeadless && mcpServiceResult.state !== "ready") {
+    logger.debug("Waiting for MCP service to be ready in headless mode");
+    try {
+      const mcpState = await getService<MCPServiceState>(SERVICE_NAMES.MCP);
+      mcpTools = mcpState?.tools ?? [];
+      mcpToolNames = mcpTools.map((t) => t.name);
+    } catch (error) {
+      logger.warn("Failed to wait for MCP service in headless mode", error);
+    }
+  } else if (mcpServiceResult.state === "ready") {
+    mcpTools = mcpServiceResult?.value?.tools ?? [];
+    mcpToolNames = mcpTools.map((t) => t.name);
+  } else {
+    // MCP service not ready in TUI mode - allow lazy loading
+    logger.debug("MCP service not ready, continuing without MCP tools");
+  }
+
+  const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
   let allowedToolNames: string[];
   if (
