@@ -1,0 +1,6 @@
+Test file for CON-4143
+
+This is a simple test file created to demonstrate the functionality
+requested in the Linear issue CON-4143.
+
+Created by Continue AI assistant.
