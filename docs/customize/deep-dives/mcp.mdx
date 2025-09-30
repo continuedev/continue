@@ -100,17 +100,17 @@ server block to your [config file](./configuration.md):
 <Tab title="JSON">
 ```json title="config.json"
 {
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/path/to/your/database.db"]
-        }
-      }
-    ]
-  }
+  "mcpServers": [
+    {
+      "name": "SQLite MCP",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-sqlite",
+        "/path/to/your/database.db"
+      ]
+    }
+  ]
 }
 ````
 
