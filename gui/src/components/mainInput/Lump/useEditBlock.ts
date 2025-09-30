@@ -17,7 +17,17 @@ export function useEditBlock() {
       ideMessenger.post("openFile", {
         path: sourceFile,
       });
-    } else if (selectedProfile?.fullSlug) {
+    } else if (
+      selectedProfile?.profileType === "local" &&
+      selectedProfile?.uri
+    ) {
+      ideMessenger.post("openFile", {
+        path: selectedProfile.uri,
+      });
+    } else if (
+      selectedProfile?.fullSlug.ownerSlug &&
+      selectedProfile?.fullSlug.packageSlug
+    ) {
       ideMessenger.post("controlPlane/openUrl", {
         path: `${selectedProfile.fullSlug.ownerSlug}/${selectedProfile.fullSlug.packageSlug}/new-version`,
         orgSlug: undefined,
@@ -51,23 +61,6 @@ export function useEditDoc() {
       editBlock(undefined, docConfig.sourceFile);
     } else {
       editBlock(docConfig.uses, undefined);
-    }
-  };
-}
-
-export function useEditMcp() {
-  const editBlock = useEditBlock();
-  return (
-    mcpConfig?: { uses?: string } | { name: string; sourceFile?: string },
-  ) => {
-    if (!mcpConfig) {
-      editBlock(undefined, undefined);
-      return;
-    }
-    if ("name" in mcpConfig) {
-      editBlock(undefined, mcpConfig.sourceFile);
-    } else {
-      editBlock(mcpConfig.uses, undefined);
     }
   };
 }

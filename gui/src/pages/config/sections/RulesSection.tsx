@@ -81,7 +81,7 @@ function PromptRow({
     }
   };
 
-  const canEdit = prompt.sourceFile && prompt.source !== "built-in";
+  const canEdit = prompt.source !== "built-in";
 
   return (
     <div
@@ -100,11 +100,13 @@ function PromptRow({
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <PencilIcon
-          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125 ${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
-          onClick={canEdit ? handleEditClick : undefined}
-          aria-disabled={!canEdit}
-        />
+        {canEdit && (
+          <PencilIcon
+            className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125`}
+            onClick={canEdit ? handleEditClick : undefined}
+            aria-disabled={!canEdit}
+          />
+        )}
         <div
           onClick={handleBookmarkClick}
           className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"

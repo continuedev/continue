@@ -48,12 +48,12 @@ export function convertYamlMcpConfigToInternalMcpOptions(
   if ("command" in config) {
     const { args, command, cwd, env, type } = config;
     const stdioOptions: InternalStdioMcpOptions = {
+      ...shared,
       type,
       command,
       args,
       cwd,
       env,
-      ...shared,
     };
     return stdioOptions;
   }
@@ -62,13 +62,13 @@ export function convertYamlMcpConfigToInternalMcpOptions(
   const httpSseConfig:
     | InternalStreamableHttpMcpOptions
     | InternalSseMcpOptions = {
+    ...shared,
     type,
     url,
     requestOptions: mergeConfigYamlRequestOptions(
       requestOptions,
       globalRequestOptions,
     ),
-    ...shared,
   };
   return httpSseConfig;
 }

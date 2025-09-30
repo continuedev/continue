@@ -16,7 +16,7 @@ import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { useContext, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import { useEditMcp } from "../../../components/mainInput/Lump/useEditBlock";
+import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
 import {
   Button,
   Card,
@@ -70,7 +70,7 @@ function MCPServerPreview({
   }>({});
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
-  const editMcp = useEditMcp();
+  const editBlock = useEditBlock();
 
   const dispatch = useAppDispatch();
   const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
@@ -274,7 +274,14 @@ function MCPServerPreview({
               <ListboxOption
                 value="edit mcp"
                 className="justify-start gap-x-1.5"
-                onClick={() => editMcp(serverFromYaml)}
+                onClick={() =>
+                  editBlock(
+                    serverFromYaml && "uses" in serverFromYaml
+                      ? serverFromYaml.uses
+                      : undefined,
+                    server.sourceFile,
+                  )
+                }
               >
                 <PencilIcon
                   className={
