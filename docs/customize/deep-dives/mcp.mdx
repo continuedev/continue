@@ -72,56 +72,9 @@ You can set up an MCP server to search the Continue documentation directly from 
 
 For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
 
-## How to Configure MCP Servers with JSON Files
+## Using `.mcp.json` from Claude, Cursor, Cline, etc
 
-In addition to YAML configuration, you can now configure MCP servers using JSON files. This feature allows you to use Claude-style MCP configurations and provides lower friction when migrating from other tools.
-
-### JSON Configuration Options
-
-You can create JSON configuration files in the `.continue/mcpServers` folder in two formats:
-
-#### Single MCP Server Configuration
-
-Create a JSON file where the filename becomes the server name:
-
-```json title=".continue/mcpServers/my-server.json"
-{
-  "command": "npx",
-  "args": ["-y", "@modelcontextprotocol/server-sqlite"],
-  "env": {
-    "DATABASE_PATH": "${DATABASE_PATH}"
-  }
-}
-```
-
-#### Claude-style MCP Server Configuration
-
-Create a JSON file with multiple servers using the `mcpServers` format:
-
-```json title=".continue/mcpServers/claude-style.json"
-{
-  "mcpServers": {
-    "sqlite": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sqlite"],
-      "env": {
-        "DATABASE_PATH": "${DATABASE_PATH}"
-      }
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
-    }
-  }
-}
-```
-
-### Environment Variable Templating
-
-JSON configurations support environment variable templating using the `${VAR_NAME}` syntax, which is automatically converted to Continue's `${{ secrets.VAR_NAME }}` format internally.
+If you have an existing `.mcp.json` file from Claude, Cursor, Cline, or any other agent that supports the spec, copy it into your `.continue/mcpServers` directory and Continue will automatically pick it up.
 
 ## How to Configure MCP Servers
 
