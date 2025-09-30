@@ -17,6 +17,7 @@ describe("streamChatResponse.helpers", () => {
         tool: {
           name: "Write",
           displayName: "Write",
+
           description: "Write to a file",
           parameters: {
             type: "object",
