@@ -806,12 +806,15 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
     return;
   }
 
-  const ok = await handleEsbuildInstallation(ide, ideType);
-  if (!ok) {
-    // esbuild not available → we already showed a friendly message; skip building
-    return;
+  // Only bother with esbuild if config.ts is actually customized
+  if (currentContent.trim() !== DEFAULT_CONFIG_TS_CONTENTS.trim()) {
+    const ok = await handleEsbuildInstallation(ide, ideType);
+    if (!ok) {
+      // esbuild not available → we already showed a friendly message; skip building
+      return;
+    }
+    await tryBuildConfigTs();
   }
-  await tryBuildConfigTs();
 
   return readConfigJs();
 }
