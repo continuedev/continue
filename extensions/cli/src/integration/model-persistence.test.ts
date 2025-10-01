@@ -143,6 +143,8 @@ describe("Model Persistence Integration", () => {
     // Clear GlobalContext first
     persistModelName(null);
 
+    // Capture original value to restore after test
+    const originalApiKey = process.env.CONTINUE_API_KEY;
     // Set environment variable
     process.env.CONTINUE_API_KEY = "test-api-key";
 
@@ -153,8 +155,12 @@ describe("Model Persistence Integration", () => {
     const loadedConfig = loadAuthConfig();
     expect(getModelName(loadedConfig)).toBeNull();
 
-    // Cleanup
-    delete process.env.CONTINUE_API_KEY;
+    // Restore original value
+    if (originalApiKey !== undefined) {
+      process.env.CONTINUE_API_KEY = originalApiKey;
+    } else {
+      delete process.env.CONTINUE_API_KEY;
+    }
   });
 
   test("should persist model name in auth.json file with correct format", () => {

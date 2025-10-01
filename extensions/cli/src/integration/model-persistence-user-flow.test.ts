@@ -12,9 +12,8 @@ import {
   saveAuthConfig,
 } from "../auth/workos.js";
 import * as config from "../config.js";
-import { ModelService } from "../services/ModelService.js";
 import { AuthService } from "../services/AuthService.js";
-import { serviceContainer, SERVICE_NAMES } from "../services/index.js";
+import { ModelService } from "../services/ModelService.js";
 
 // Mock the config module
 vi.mock("../config.js");
@@ -101,7 +100,7 @@ describe("Model Persistence User Flow", () => {
 
     // Initialize ModelService (what happens on CLI start)
     const modelService = new ModelService();
-    let state = await modelService.initialize(mockAssistant, mockAuthConfig);
+    const state = await modelService.initialize(mockAssistant, mockAuthConfig);
     console.log("2. Initial model:", state.model?.name);
     expect(state.model?.name).toBe("GPT-4");
 

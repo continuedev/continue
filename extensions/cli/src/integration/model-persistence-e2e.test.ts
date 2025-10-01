@@ -12,9 +12,9 @@ import {
   saveAuthConfig,
   updateModelName,
 } from "../auth/workos.js";
-import { persistModelName } from "../util/modelPersistence.js";
 import * as config from "../config.js";
 import { ModelService } from "../services/ModelService.js";
+import { persistModelName } from "../util/modelPersistence.js";
 
 // Mock the config module
 vi.mock("../config.js");

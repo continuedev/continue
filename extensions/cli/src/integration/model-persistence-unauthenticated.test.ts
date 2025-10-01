@@ -208,6 +208,8 @@ describe("Model Persistence for Unauthenticated Users", () => {
     updateModelName(null);
     expect(getPersistedModelName()).toBeNull();
 
+    // Capture original value to restore after test
+    const originalApiKey = process.env.CONTINUE_API_KEY;
     process.env.CONTINUE_API_KEY = "test-api-key";
 
     updateModelName("Claude 3.5 Sonnet");
@@ -215,7 +217,12 @@ describe("Model Persistence for Unauthenticated Users", () => {
     // Should not be saved to GlobalContext
     expect(getPersistedModelName()).toBeNull();
 
-    delete process.env.CONTINUE_API_KEY;
+    // Restore original value
+    if (originalApiKey !== undefined) {
+      process.env.CONTINUE_API_KEY = originalApiKey;
+    } else {
+      delete process.env.CONTINUE_API_KEY;
+    }
   });
 
   test("should work across config changes for logged-out users", async () => {
