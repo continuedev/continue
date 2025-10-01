@@ -218,10 +218,10 @@ describe("Model Persistence for Unauthenticated Users", () => {
     expect(getPersistedModelName()).toBeNull();
 
     // Restore original value
-    if (originalApiKey !== undefined) {
-      process.env.CONTINUE_API_KEY = originalApiKey;
-    } else {
+    if (originalApiKey === undefined) {
       delete process.env.CONTINUE_API_KEY;
+    } else {
+      process.env.CONTINUE_API_KEY = originalApiKey;
     }
   });
 

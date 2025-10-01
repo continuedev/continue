@@ -156,10 +156,10 @@ describe("Model Persistence Integration", () => {
     expect(getModelName(loadedConfig)).toBeNull();
 
     // Restore original value
-    if (originalApiKey !== undefined) {
-      process.env.CONTINUE_API_KEY = originalApiKey;
-    } else {
+    if (originalApiKey === undefined) {
       delete process.env.CONTINUE_API_KEY;
+    } else {
+      process.env.CONTINUE_API_KEY = originalApiKey;
     }
   });
 
