@@ -4,7 +4,7 @@ import {
   serviceContainer,
   services,
 } from "../../services/index.js";
-import { ModelServiceState } from "../../services/types.js";
+import { AuthServiceState, ModelServiceState } from "../../services/types.js";
 import { useNavigation } from "../context/NavigationContext.js";
 
 interface ModelOption {
@@ -46,8 +46,17 @@ export function useModelSelector({
       );
 
       // Persist the model choice using the actual model name
+      // and update the auth service state to reflect the change
       if (modelInfo?.name) {
-        updateModelName(modelInfo.name);
+        const updatedAuthConfig = updateModelName(modelInfo.name);
+
+        // Update the AUTH service state in the container with the new config
+        // This ensures that when MODEL service is reloaded, it gets the updated auth config
+        const currentAuthState = services.auth.getState();
+        serviceContainer.set<AuthServiceState>(SERVICE_NAMES.AUTH, {
+          ...currentAuthState,
+          authConfig: updatedAuthConfig,
+        });
       }
 
       onMessage({
