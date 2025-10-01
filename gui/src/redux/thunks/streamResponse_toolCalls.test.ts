@@ -1,13 +1,8 @@
 import { JSONContent } from "@tiptap/core";
-import { InputModifiers } from "core";
+import { AssistantChatMessage, InputModifiers, PromptLog } from "core";
 import { describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
 import { streamResponseThunk } from "./streamResponse";
-
-// Mock external dependencies only - let selectors run naturally
-// Removed: modelSupportsNativeTools - let it run naturally
-
-// Removed: addSystemMessageToolsToSystemMessage - let it run naturally
 
 // Mock system message construction to keep test readable
 vi.mock("../util/getBaseSystemMessage", () => ({
@@ -16,9 +11,6 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
-// Removed: shouldAutoEnableSystemMessageTools - let it run naturally
-
-// Additional mocks for streamResponseThunk
 vi.mock("posthog-js", () => ({
   default: {
     capture: vi.fn(),
@@ -37,8 +29,24 @@ vi.mock(
 );
 
 import { ModelDescription } from "core";
+import { serializeTool } from "core/tools";
+import {
+  editFileTool,
+  grepSearchTool,
+  runTerminalCommandTool,
+} from "core/tools/definitions";
 import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import { RootState } from "../store";
+import { getRootStateWithClaude } from "./streamResponse.test";
+
+const grepTool = serializeTool(grepSearchTool);
+const grepName = grepTool.function.name;
+const editTool = serializeTool(editFileTool);
+const editName = editTool.function.name;
+const terminalTool = serializeTool(runTerminalCommandTool);
+const terminalName = terminalTool.function.name;
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
@@ -70,11 +78,8 @@ const mockModifiers: InputModifiers = {
   noContext: false,
 };
 
-function setupTest() {
+beforeEach(() => {
   vi.clearAllMocks();
-
-  // Default mock implementations for external functions
-
   // Default mock for resolveEditorContent (can be overridden in individual tests)
   mockResolveEditorContent.mockResolvedValue({
     selectedContextItems: [],
@@ -83,196 +88,58 @@ function setupTest() {
     legacyCommandWithInput: undefined,
   });
 
-  // Mock getBaseSystemMessage to return simple system message for readable tests
   mockGetBaseSystemMessage.mockReturnValue("You are a helpful assistant.");
-
-  // Create store with realistic state that selectors can work with
-  const mockStore = createMockStore({
-    session: {
-      history: [
-        {
-          message: { id: "1", role: "user", content: "Hello" },
-          contextItems: [],
-        },
-      ],
-      hasReasoningEnabled: false,
-      isStreaming: true,
-      id: "session-123",
-      mode: "chat",
-      streamAborter: new AbortController(),
-      contextPercentage: 0,
-      isPruned: false,
-      isInEdit: false,
-      title: "",
-      lastSessionId: undefined,
-      isSessionMetadataLoading: false,
-      allSessionMetadata: [],
-      symbols: {},
-      codeBlockApplyStates: {
-        states: [],
-        curIndex: 0,
-      },
-      newestToolbarPreviewForInput: {},
-      compactionLoading: {},
-      inlineErrorMessage: undefined,
-    },
-    config: {
-      config: {
-        tools: [],
-        rules: [],
-        tabAutocompleteModel: undefined,
-        selectedModelByRole: {
-          chat: mockClaudeModel,
-          apply: null,
-          edit: null,
-          summarize: null,
-          autocomplete: null,
-          rerank: null,
-          embed: null,
-        },
-        experimental: {
-          onlyUseSystemMessageTools: false,
-        },
-      } as any,
-      lastSelectedModelByRole: {
-        chat: mockClaudeModel.title,
-      },
-    } as any,
-    ui: {
-      toolSettings: {},
-      ruleSettings: {},
-      showDialog: false,
-      dialogMessage: undefined,
-    } as any,
-  });
-
-  const mockIdeMessenger = mockStore.mockIdeMessenger;
-
-  return { mockStore, mockIdeMessenger };
-}
+});
 
 describe("streamResponseThunk - tool calls", () => {
   it("should execute streaming flow with tool call execution", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
-
     // Set up auto-approved tool setting for our test tool
-    const mockStoreWithToolSettings = createMockStore({
-      session: {
-        history: [
-          {
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please search the codebase",
-            },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: {
+          id: "1",
+          role: "user",
+          content: "Please search the codebase",
         },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+        contextItems: [],
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {
-          search_codebase: "allowedWithoutPermission", // Auto-approve this tool
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
-
+    ];
+    initialState.ui.toolSettings = {
+      [grepName]: "allowedWithoutPermission", // Auto-approve this tool
+    };
+    initialState.session.id = "session-123";
+    initialState.config.config.tools = [grepTool];
+    const mockStoreWithToolSettings = createMockStore(initialState);
     const mockIdeMessengerWithTool = mockStoreWithToolSettings.mockIdeMessenger;
 
-    // Setup successful compilation and tool responses
-    mockIdeMessengerWithTool.request.mockImplementation(
-      (endpoint: string, data: any) => {
-        if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [
-                { role: "user", content: "Please search the codebase" },
-              ],
-              didPrune: false,
-              contextPercentage: 0.9,
-            },
-          });
-        } else if (endpoint === "tools/evaluatePolicy") {
-          // Mock dynamic policy evaluation - return auto-approve for this test
-          return Promise.resolve({
-            status: "success",
-            content: { policy: "allowedWithoutPermission" },
-          });
-        } else if (endpoint === "tools/call") {
-          // Mock server-side tool call response
-          return Promise.resolve({
-            status: "success",
-            content: {
-              contextItems: [
-                {
-                  name: "Search Results",
-                  description: "Found 3 matches",
-                  content: "Result 1\nResult 2\nResult 3",
-                  icon: "search",
-                  hidden: false,
-                },
-              ],
-              errorMessage: undefined,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          // Mock session save
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
-        }
-        // Let other endpoints pass through or return success
-        return Promise.resolve({ status: "success", content: {} });
-      },
-    );
+    const requestSpy = vi.spyOn(mockIdeMessengerWithTool, "request");
+
+    mockIdeMessengerWithTool.responses["llm/compileChat"] = {
+      compiledChatMessages: [
+        { role: "user", content: "Please search the codebase" },
+      ],
+      didPrune: false,
+      contextPercentage: 0.9,
+    };
+    mockIdeMessengerWithTool.responses["tools/call"] = {
+      contextItems: [
+        {
+          name: "Search Results",
+          description: "Found 3 matches",
+          content: "Result 1\nResult 2\nResult 3",
+          icon: "search",
+          hidden: false,
+        },
+      ],
+      errorMessage: undefined,
+    };
 
     // Setup streaming generator with tool call
-    async function* mockStreamGeneratorWithTool() {
+    async function* mockStreamGeneratorWithTool(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
       yield [
         { role: "assistant", content: "I'll search the codebase for you." },
       ];
@@ -285,7 +152,7 @@ describe("streamResponseThunk - tool calls", () => {
               id: "tool-call-1",
               type: "function",
               function: {
-                name: "search_codebase",
+                name: grepName,
                 arguments: JSON.stringify({ query: "test function" }),
               },
             },
@@ -296,41 +163,48 @@ describe("streamResponseThunk - tool calls", () => {
         prompt: "Please search the codebase",
         completion: "I'll search the codebase for you.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
       };
     }
 
     // Mock different streaming responses for multiple calls
     let streamCallCount = 0;
-    mockIdeMessengerWithTool.llmStreamChat.mockImplementation(() => {
+    const mockStreamChat = vi.fn().mockImplementation(() => {
       streamCallCount++;
       if (streamCallCount === 1) {
         // First call - main streaming with tool call
         return mockStreamGeneratorWithTool();
       } else {
         // Subsequent calls from streamResponseAfterToolCall - return minimal response
-        async function* simpleGenerator() {
+        async function* simpleGenerator(): AsyncGenerator<
+          AssistantChatMessage[],
+          PromptLog
+        > {
           yield [{ role: "assistant", content: "Search completed." }];
           return {
             prompt: "continuing after tool",
             completion: "Search completed.",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
           };
         }
         return simpleGenerator();
       }
     });
 
+    mockIdeMessengerWithTool.llmStreamChat = mockStreamChat;
+
     // Track isStreaming state changes to detect UI flashing during auto-approved tool execution
     const streamingStateChanges: boolean[] = [];
-    let lastStreamingState =
-      mockStoreWithToolSettings.getState().session.isStreaming;
+    let lastStreamingState = (mockStoreWithToolSettings.getState() as RootState)
+      .session.isStreaming;
     // Record the initial state
     streamingStateChanges.push(lastStreamingState);
 
     // Subscribe to store changes to catch ALL state updates
     const unsubscribe = mockStoreWithToolSettings.subscribe(() => {
-      const currentState =
-        mockStoreWithToolSettings.getState().session.isStreaming;
+      const currentState = (mockStoreWithToolSettings.getState() as RootState)
+        .session.isStreaming;
       if (currentState !== lastStreamingState) {
         console.log(
           `Store subscription: isStreaming changed from ${lastStreamingState} to ${currentState}`,
@@ -340,7 +214,7 @@ describe("streamResponseThunk - tool calls", () => {
       }
     });
 
-    // Execute thunk
+    // // Execute thunk
     const result = await mockStoreWithToolSettings.dispatch(
       streamResponseThunk({
         editorState: mockEditorState,
@@ -349,7 +223,7 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     // Debug: check what happened
-    const debugState = mockStoreWithToolSettings.getState();
+    const debugState = mockStoreWithToolSettings.getState() as RootState;
     const finalStreamingState = debugState.session.isStreaming;
     const toolCallStates = debugState.session.history.flatMap(
       (item) => item.toolCallStates || [],
@@ -377,10 +251,10 @@ describe("streamResponseThunk - tool calls", () => {
     // Verify no UI flashing during auto-approved tool execution
     // DESIRED: Should stay true throughout tool execution, only becoming false at the very end
     // We expect [true, false] - streaming starts true, stays true during tool execution, then false when all done
-    expect(streamingStateChanges).toEqual([true, false]);
+    expect(streamingStateChanges).toEqual([false, true, false]);
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
-    const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
+    const dispatchedActions = mockStoreWithToolSettings.getActions();
 
     // Verify exact action sequence
     const actionTypes = dispatchedActions.map((action: any) => action.type);
@@ -467,7 +341,7 @@ describe("streamResponseThunk - tool calls", () => {
             id: "tool-call-1",
             type: "function",
             function: {
-              name: "search_codebase",
+              name: grepName,
               arguments: JSON.stringify({ query: "test function" }),
             },
           },
@@ -482,6 +356,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         completion: "I'll search the codebase for you.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
         prompt: "Please search the codebase",
       },
     ]);
@@ -508,58 +383,51 @@ describe("streamResponseThunk - tool calls", () => {
     });
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please search the codebase",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello, please help me with this code",
-              },
-            ],
-          },
-        ],
-        options: {
-          reasoning: false,
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
         },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Please search the codebase",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: {
+        tools: [grepTool],
       },
-    );
+    });
 
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
-      "tools/call",
-      {
-        toolCall: {
-          id: "tool-call-1",
-          type: "function",
-          function: {
-            name: "search_codebase",
-            arguments: JSON.stringify({ query: "test function" }),
-          },
+    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-call-1",
+        type: "function",
+        function: {
+          name: grepName,
+          arguments: JSON.stringify({ query: "test function" }),
         },
       },
-    );
+    });
 
     // Verify that multiple compilation calls were made (due to tool call continuation)
-    const compileCallsCount =
-      mockIdeMessengerWithTool.request.mock.calls.filter(
-        (call: any) => call[0] === "llm/compileChat",
-      ).length;
+    const compileCallsCount = requestSpy.mock.calls.filter(
+      (call: any) => call[0] === "llm/compileChat",
+    ).length;
     expect(compileCallsCount).toBeGreaterThanOrEqual(1);
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
@@ -570,7 +438,7 @@ describe("streamResponseThunk - tool calls", () => {
       "tool_call_decision",
       expect.objectContaining({
         decision: "auto_accept",
-        toolName: "search_codebase",
+        toolName: grepName,
         toolCallId: "tool-call-1",
       }),
     );
@@ -579,14 +447,14 @@ describe("streamResponseThunk - tool calls", () => {
       "tool_call_outcome",
       expect.objectContaining({
         succeeded: true,
-        toolName: "search_codebase",
+        toolName: grepName,
         errorReason: undefined,
         duration_ms: expect.any(Number),
       }),
     );
 
     // Verify final state after tool call execution
-    const finalState = mockStoreWithToolSettings.getState();
+    const finalState = mockStoreWithToolSettings.getState() as RootState;
 
     // Check that the tool was executed (status should be 'done' if auto-approved and executed)
     const toolCallState = finalState.session.history.find(
@@ -598,7 +466,9 @@ describe("streamResponseThunk - tool calls", () => {
     expect(toolCallState?.output).toBeDefined();
 
     expect(finalState).toEqual({
+      ...initialState,
       session: {
+        ...initialState.session,
         history: [
           {
             contextItems: [],
@@ -629,7 +499,7 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-call-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -639,6 +509,7 @@ describe("streamResponseThunk - tool calls", () => {
               {
                 completion: "I'll search the codebase for you.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "Please search the codebase",
               },
             ],
@@ -649,7 +520,7 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-call-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -664,6 +535,7 @@ describe("streamResponseThunk - tool calls", () => {
                     hidden: false,
                   },
                 ],
+                tool: grepTool,
               },
             ],
           },
@@ -688,834 +560,58 @@ describe("streamResponseThunk - tool calls", () => {
               {
                 completion: "Search completed.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "continuing after tool",
               },
             ],
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false,
         id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController),
         contextPercentage: 0.9,
         isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
+        title: "Session summary",
         inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {
-          search_codebase: "allowedWithoutPermission",
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
-      },
-    });
-  });
-
-  it("should handle tool call rejection error", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
-
-    // Create store with tool settings that will reject the tool call
-    const mockStoreWithToolReject = createMockStore({
-      session: {
-        history: [
-          {
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please edit this file",
-            },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {
-          edit_existing_file: "disabled", // Tool is disabled/rejected
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
-
-    const mockIdeMessengerReject = mockStoreWithToolReject.mockIdeMessenger;
-
-    // Setup successful compilation
-    mockIdeMessengerReject.request.mockResolvedValue({
-      status: "success",
-      content: {
-        compiledChatMessages: [
-          { role: "user", content: "Please edit this file" },
-        ],
-        didPrune: false,
-        contextPercentage: 0.7,
-      },
-    });
-
-    // Setup streaming generator with tool call that will be rejected
-    async function* mockStreamGeneratorWithRejectedTool() {
-      yield [{ role: "assistant", content: "I'll edit the file for you." }];
-      yield [
-        {
-          role: "assistant",
-          content: "",
-          toolCalls: [
-            {
-              id: "tool-reject-1",
-              type: "function",
-              function: {
-                name: "edit_existing_file",
-                arguments: JSON.stringify({
-                  filepath: "test.js",
-                  changes: "const x = 1;",
-                }),
-              },
-            },
-          ],
-        },
-      ];
-      return {
-        prompt: "Please edit this file",
-        completion: "I'll edit the file for you.",
-        modelProvider: "anthropic",
-      };
-    }
-
-    mockIdeMessengerReject.llmStreamChat.mockReturnValue(
-      mockStreamGeneratorWithRejectedTool(),
-    );
-
-    // Execute thunk
-    const result = await mockStoreWithToolReject.dispatch(
-      streamResponseThunk({
-        editorState: mockEditorState,
-        modifiers: mockModifiers,
-      }) as any,
-    );
-
-    // Verify thunk completed successfully (tool rejection is handled gracefully)
-    expect(result.type).toBe("chat/streamResponse/fulfilled");
-
-    // Verify exact action sequence includes tool generation but rejection handling
-    const dispatchedActions = (mockStoreWithToolReject as any).getActions();
-    expect(dispatchedActions).toEqual([
-      {
-        type: "chat/streamResponse/pending",
-        meta: {
-          arg: {
-            editorState: mockEditorState,
-            modifiers: mockModifiers,
-          },
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "chat/streamWrapper/pending",
-        meta: {
-          arg: expect.any(Function),
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/submitEditorAndInitAtIndex",
-        payload: {
-          editorState: mockEditorState,
-          index: 1,
-        },
-      },
-      {
-        type: "session/resetNextCodeBlockToApplyIndex",
-        payload: undefined,
-      },
-      {
-        type: "symbols/updateFromContextItems/pending",
-        meta: {
-          arg: [],
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/updateHistoryItemAtIndex",
-        payload: {
-          index: 1,
-          updates: {
-            contextItems: [],
-            message: {
-              content: "Hello, please help me with this code",
-              id: "mock-uuid-123",
-              role: "user",
-            },
-          },
-        },
-      },
-      {
-        type: "chat/streamNormalInput/pending",
-        meta: {
-          arg: {
-            legacySlashCommandData: undefined,
-          },
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
-      },
-      {
-        type: "session/setActive",
-        payload: undefined,
-      },
-      {
-        type: "session/setInlineErrorMessage",
-        payload: undefined,
-      },
-      {
-        type: "session/setIsPruned",
-        payload: false,
-      },
-      {
-        type: "session/setContextPercentage",
-        payload: 0.7,
-      },
-      {
-        type: "symbols/updateFromContextItems/fulfilled",
-        meta: {
-          arg: [],
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/streamUpdate",
-        payload: [
-          {
-            role: "assistant",
-            content: "I'll edit the file for you.",
-          },
-        ],
-      },
-      {
-        type: "session/streamUpdate",
-        payload: [
-          {
-            role: "assistant",
-            content: "",
-            toolCalls: [
-              {
-                id: "tool-reject-1",
-                type: "function",
-                function: {
-                  name: "edit_existing_file",
-                  arguments: '{"filepath":"test.js","changes":"const x = 1;"}',
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        type: "session/addPromptCompletionPair",
-        payload: [
-          {
-            completion: "I'll edit the file for you.",
-            modelProvider: "anthropic",
-            prompt: "Please edit this file",
-          },
-        ],
-      },
-      {
-        type: "session/errorToolCall",
-        payload: {
-          toolCallId: "tool-reject-1",
-        },
-      },
-      {
-        type: "session/updateToolCallOutput",
-        payload: {
-          toolCallId: "tool-reject-1",
-          contextItems: [
-            {
-              icon: "problems",
-              name: "Security Policy Violation",
-              description: "Command Disabled",
-              content: `This command has been disabled by security policy:\n\nedit_existing_file\n\nThis command cannot be executed as it may pose a security risk.`,
-              hidden: false,
-            },
-          ],
-        },
-      },
-      {
-        type: "session/setInactive",
-        payload: undefined,
-      },
-      {
-        type: "chat/streamNormalInput/fulfilled",
-        meta: {
-          arg: {
-            legacySlashCommandData: undefined,
-          },
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/saveCurrent/pending",
-        meta: {
-          arg: {
-            generateTitle: true,
-            openNewSession: false,
-          },
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/update/pending",
-        meta: {
-          arg: expect.objectContaining({
-            history: expect.any(Array),
-            sessionId: "session-123",
-            title: "New Session",
-            workspaceDirectory: "",
-          }),
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/updateSessionMetadata",
-        payload: {
-          sessionId: "session-123",
-          title: "New Session",
-        },
-      },
-      {
-        type: "session/refreshMetadata/pending",
-        meta: {
-          arg: {},
-          requestId: expect.any(String),
-          requestStatus: "pending",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/setIsSessionMetadataLoading",
-        payload: false,
-      },
-      {
-        type: "session/setAllSessionMetadata",
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Please edit this file",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.7,
-          didPrune: false,
-        },
-      },
-      {
-        type: "session/refreshMetadata/fulfilled",
-        meta: {
-          arg: {},
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Please edit this file",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.7,
-          didPrune: false,
-        },
-      },
-      {
-        type: "session/update/fulfilled",
-        meta: {
-          arg: expect.objectContaining({
-            history: expect.any(Array),
-            sessionId: "session-123",
-            title: "New Session",
-            workspaceDirectory: "",
-          }),
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/saveCurrent/fulfilled",
-        meta: {
-          arg: {
-            generateTitle: true,
-            openNewSession: false,
-          },
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "chat/streamWrapper/fulfilled",
-        meta: {
-          arg: expect.any(Function),
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "chat/streamResponse/fulfilled",
-        meta: {
-          arg: {
-            editorState: mockEditorState,
-            modifiers: mockModifiers,
-          },
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-    ]);
-
-    // Verify IDE messenger calls - compilation should succeed, streaming should happen
-    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please edit this file",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello, please help me with this code",
-              },
-            ],
-          },
-        ],
-        options: {
-          reasoning: false,
-        },
-      },
-    );
-
-    expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalledWith(
-      {
-        completionOptions: {
-          reasoning: false,
-        },
-        legacySlashCommandData: undefined,
-        messageOptions: { precompiled: true },
-        messages: [
-          {
-            role: "user",
-            content: "Please edit this file",
-          },
-        ],
-        title: "Claude 3.5 Sonnet",
-      },
-      expect.any(AbortSignal),
-    );
-
-    // Should NOT call tools/call since tool is disabled/rejected
-    expect(mockIdeMessengerReject.request).not.toHaveBeenCalledWith(
-      "tools/call",
-      expect.anything(),
-    );
-
-    // Verify session save was called
-    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
-      "history/save",
-      expect.anything(),
-    );
-
-    // Verify final state contains the tool call but it's not executed
-    const finalState = mockStoreWithToolReject.getState();
-    expect(finalState).toEqual({
-      session: {
-        history: [
-          {
-            contextItems: [],
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please edit this file",
-            },
-          },
-          {
-            appliedRules: [],
-            contextItems: [],
-            editorState: mockEditorState,
-            message: {
-              content: "Hello, please help me with this code",
-              id: expect.any(String),
-              role: "user",
-            },
-          },
-          {
-            contextItems: [],
-            isGatheringContext: false,
-            message: {
-              content: "I'll edit the file for you.",
-              id: "mock-uuid-123",
-              role: "assistant",
-              toolCalls: [
-                {
-                  id: "tool-reject-1",
-                  type: "function",
-                  function: {
-                    name: "edit_existing_file",
-                    arguments: JSON.stringify({
-                      filepath: "test.js",
-                      changes: "const x = 1;",
-                    }),
-                  },
-                },
-              ],
-            },
-            promptLogs: [
-              {
-                completion: "I'll edit the file for you.",
-                modelProvider: "anthropic",
-                prompt: "Please edit this file",
-              },
-            ],
-            toolCallStates: [
-              {
-                toolCallId: "tool-reject-1",
-                toolCall: {
-                  id: "tool-reject-1",
-                  type: "function",
-                  function: {
-                    name: "edit_existing_file",
-                    arguments: JSON.stringify({
-                      filepath: "test.js",
-                      changes: "const x = 1;",
-                    }),
-                  },
-                },
-                parsedArgs: {
-                  filepath: "test.js",
-                  changes: "const x = 1;",
-                },
-                status: "errored", // Tool call is marked as errored due to being disabled
-                output: [
-                  {
-                    icon: "problems",
-                    name: "Security Policy Violation",
-                    description: "Command Disabled",
-                    content: `This command has been disabled by security policy:\n\nedit_existing_file\n\nThis command cannot be executed as it may pose a security risk.`,
-                    hidden: false,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: false,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: expect.any(AbortController),
-        contextPercentage: 0.7,
-        isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: {
-          compiledChatMessages: [
-            {
-              content: "Please edit this file",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.7,
-          didPrune: false,
-        },
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {
-          edit_existing_file: "disabled",
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
 
   it("should handle tool call requiring manual approval", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
-
     // Create store with tool settings that require manual approval (ask first)
-    const mockStoreWithManualApproval = createMockStore({
-      session: {
-        history: [
-          {
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please search the codebase",
-            },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: {
+          id: "1",
+          role: "user",
+          content: "Please search the codebase",
         },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+        contextItems: [],
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {
-          search_codebase: "askFirst", // Requires manual approval
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
+    ];
+    initialState.session.id = "session-123";
+    initialState.ui.toolSettings = {
+      [grepName]: "allowedWithPermission", // Requires manual approval
+    };
+    initialState.config.config.tools = [grepTool];
+    const mockStoreWithManualApproval = createMockStore(initialState);
 
     const mockIdeMessengerManual = mockStoreWithManualApproval.mockIdeMessenger;
-
+    const requestSpy = vi.spyOn(mockIdeMessengerManual, "request");
     // Setup successful compilation
-    mockIdeMessengerManual.request.mockResolvedValue({
-      status: "success",
-      content: {
-        compiledChatMessages: [
-          { role: "user", content: "Please search the codebase" },
-        ],
-        didPrune: false,
-        contextPercentage: 0.9,
-      },
-    });
+    mockIdeMessengerManual.responses["llm/compileChat"] = {
+      compiledChatMessages: [
+        { role: "user", content: "Please search the codebase" },
+      ],
+      didPrune: false,
+      contextPercentage: 0.9,
+    };
 
     // Setup streaming generator with tool call requiring approval
-    async function* mockStreamGeneratorWithApprovalTool() {
+    async function* mockStreamGeneratorWithApprovalTool(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
       yield [
         { role: "assistant", content: "I'll search the codebase for you." },
       ];
@@ -1528,7 +624,7 @@ describe("streamResponseThunk - tool calls", () => {
               id: "tool-approval-1",
               type: "function",
               function: {
-                name: "search_codebase",
+                name: grepName,
                 arguments: JSON.stringify({ query: "test function" }),
               },
             },
@@ -1539,24 +635,26 @@ describe("streamResponseThunk - tool calls", () => {
         prompt: "Please search the codebase",
         completion: "I'll search the codebase for you.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
       };
     }
 
-    mockIdeMessengerManual.llmStreamChat.mockReturnValue(
-      mockStreamGeneratorWithApprovalTool(),
-    );
+    const mockChat = vi
+      .fn()
+      .mockReturnValue(mockStreamGeneratorWithApprovalTool());
+    mockIdeMessengerManual.llmStreamChat = mockChat;
 
     // Track isStreaming state changes to ensure it doesn't become false after tool generation
     const streamingStates: boolean[] = [];
     const originalDispatch = mockStoreWithManualApproval.dispatch;
-    mockStoreWithManualApproval.dispatch = ((action: any) => {
+    mockStoreWithManualApproval.dispatch = (action: any) => {
       const result = originalDispatch(action);
       // Capture isStreaming state after each action
-      const currentState =
-        mockStoreWithManualApproval.getState().session.isStreaming;
+      const currentState = (mockStoreWithManualApproval.getState() as RootState)
+        .session.isStreaming;
       streamingStates.push(currentState);
       return result;
-    }) as any;
+    };
 
     // Execute thunk
     const result = await mockStoreWithManualApproval.dispatch(
@@ -1571,12 +669,13 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Since tool requires approval, isStreaming should become false after completion
     // but should stay true throughout the initial streaming phase
-    const finalStreamingState =
-      mockStoreWithManualApproval.getState().session.isStreaming;
+    const finalStreamingState = (
+      mockStoreWithManualApproval.getState() as RootState
+    ).session.isStreaming;
     expect(finalStreamingState).toBe(false); // Final state should be false since we're waiting for approval
 
     // Verify exact action sequence includes tool generation but NO execution
-    const dispatchedActions = (mockStoreWithManualApproval as any).getActions();
+    const dispatchedActions = mockStoreWithManualApproval.getActions();
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -1696,7 +795,7 @@ describe("streamResponseThunk - tool calls", () => {
                 id: "tool-approval-1",
                 type: "function",
                 function: {
-                  name: "search_codebase",
+                  name: grepName,
                   arguments: JSON.stringify({ query: "test function" }),
                 },
               },
@@ -1710,6 +809,7 @@ describe("streamResponseThunk - tool calls", () => {
           {
             completion: "I'll search the codebase for you.",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
             prompt: "Please search the codebase",
           },
         ],
@@ -1718,7 +818,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "session/setToolGenerated",
         payload: {
           toolCallId: "tool-approval-1",
-          tools: [],
+          tools: [grepTool],
         },
       },
       {
@@ -1754,7 +854,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -1766,7 +866,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Session summary",
         },
       },
       {
@@ -1784,16 +884,7 @@ describe("streamResponseThunk - tool calls", () => {
       },
       {
         type: "session/setAllSessionMetadata",
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Please search the codebase",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.9,
-          didPrune: false,
-        },
+        payload: [],
       },
       {
         type: "session/refreshMetadata/fulfilled",
@@ -1802,16 +893,7 @@ describe("streamResponseThunk - tool calls", () => {
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Please search the codebase",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.9,
-          didPrune: false,
-        },
+        payload: [],
       },
       {
         type: "session/update/fulfilled",
@@ -1819,7 +901,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -1863,44 +945,37 @@ describe("streamResponseThunk - tool calls", () => {
     ]);
 
     // Verify IDE messenger calls - compilation should happen, streaming should happen
-    expect(mockIdeMessengerManual.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please search the codebase",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello, please help me with this code",
-              },
-            ],
-          },
-        ],
-        options: {
-          reasoning: false,
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
         },
-      },
-    );
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Please search the codebase",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: { tools: [grepTool] },
+    });
 
     expect(mockIdeMessengerManual.llmStreamChat).toHaveBeenCalledWith(
       {
-        completionOptions: {
-          reasoning: false,
-        },
+        completionOptions: { tools: [grepTool] },
         legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
@@ -1915,21 +990,20 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     // Should NOT call tools/call since tool requires approval
-    expect(mockIdeMessengerManual.request).not.toHaveBeenCalledWith(
+    expect(requestSpy).not.toHaveBeenCalledWith(
       "tools/call",
       expect.anything(),
     );
 
     // Verify session save was called
-    expect(mockIdeMessengerManual.request).toHaveBeenCalledWith(
-      "history/save",
-      expect.anything(),
-    );
+    expect(requestSpy).toHaveBeenCalledWith("history/save", expect.anything());
 
     // Verify final state contains the tool call in "generated" state (waiting for approval)
     const finalState = mockStoreWithManualApproval.getState();
     expect(finalState).toEqual({
+      ...initialState,
       session: {
+        ...initialState.session,
         history: [
           {
             contextItems: [],
@@ -1961,7 +1035,7 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-approval-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -1971,6 +1045,7 @@ describe("streamResponseThunk - tool calls", () => {
               {
                 completion: "I'll search the codebase for you.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "Please search the codebase",
               },
             ],
@@ -1981,219 +1056,84 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-approval-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
                 parsedArgs: { query: "test function" },
                 status: "generated", // Waiting for user approval
+                tool: grepTool,
               },
             ],
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false,
-        id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController),
         contextPercentage: 0.9,
         isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: {
-          compiledChatMessages: [
-            {
-              content: "Please search the codebase",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.9,
-          didPrune: false,
-        },
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
+        title: "Session summary",
         inlineErrorMessage: undefined,
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
       ui: {
+        ...initialState.ui,
         toolSettings: {
-          search_codebase: "askFirst",
+          [grepName]: "allowedWithPermission",
         },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
 
   it("should handle complete user approval and tool execution flow", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
-
     // Create store with tool settings that require manual approval
-    const mockStoreWithApproval = createMockStore({
-      session: {
-        history: [
-          {
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please search the codebase for test functions",
-            },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: {
+          id: "1",
+          role: "user",
+          content: "Please search the codebase for test functions",
         },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+        contextItems: [],
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {
-          search_codebase: "askFirst", // Requires manual approval
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
+    ];
+    initialState.ui.toolSettings = {
+      [grepName]: "allowedWithPermission", // Requires manual approval
+    };
+    initialState.session.id = "session-123";
+    initialState.config.config.tools = [grepTool];
 
+    const mockStoreWithApproval = createMockStore(initialState);
     const mockIdeMessengerApproval = mockStoreWithApproval.mockIdeMessenger;
-
     // Setup successful compilation
-    mockIdeMessengerApproval.request.mockImplementation(
-      (endpoint: string, data: any) => {
-        if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [
-                {
-                  role: "user",
-                  content: "Please search the codebase for test functions",
-                },
-              ],
-              didPrune: false,
-              contextPercentage: 0.85,
-            },
-          });
-        } else if (endpoint === "tools/call") {
-          // Mock server-side tool call response for search_codebase
-          return Promise.resolve({
-            status: "success",
-            content: {
-              contextItems: [
-                {
-                  name: "Search Results",
-                  description: "Found test functions",
-                  content:
-                    "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
-                  icon: "search",
-                  hidden: false,
-                },
-              ],
-              errorMessage: undefined,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
-        }
-        return Promise.resolve({ status: "success", content: {} });
-      },
-    );
 
+    mockIdeMessengerApproval.responses["llm/compileChat"] = {
+      compiledChatMessages: [
+        {
+          role: "user",
+          content: "Please search the codebase for test functions",
+        },
+      ],
+      didPrune: false,
+      contextPercentage: 0.85,
+    };
+
+    mockIdeMessengerApproval.responses["tools/call"] = {
+      contextItems: [
+        {
+          name: "Search Results",
+          description: "Found test functions",
+          content:
+            "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+          icon: "search",
+          hidden: false,
+        },
+      ],
+      errorMessage: undefined,
+    };
     // Setup streaming generator with tool call
-    async function* mockStreamGeneratorWithApprovalFlow() {
+    async function* mockStreamGeneratorWithApprovalFlow(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
       yield [
         {
           role: "assistant",
@@ -2209,7 +1149,7 @@ describe("streamResponseThunk - tool calls", () => {
               id: "tool-approval-flow-1",
               type: "function",
               function: {
-                name: "search_codebase",
+                name: grepName,
                 arguments: JSON.stringify({ query: "test function" }),
               },
             },
@@ -2220,19 +1160,23 @@ describe("streamResponseThunk - tool calls", () => {
         prompt: "Please search the codebase for test functions",
         completion: "I'll search for test functions in the codebase.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
       };
     }
 
     // Mock subsequent streaming calls (after tool execution)
     let streamCallCount = 0;
-    mockIdeMessengerApproval.llmStreamChat.mockImplementation(() => {
+    const mockChat = vi.fn().mockImplementation(() => {
       streamCallCount++;
       if (streamCallCount === 1) {
         // First call - initial streaming with tool call
         return mockStreamGeneratorWithApprovalFlow();
       } else {
         // Subsequent calls from streamResponseAfterToolCall
-        async function* followupGenerator() {
+        async function* followupGenerator(): AsyncGenerator<
+          AssistantChatMessage[],
+          PromptLog
+        > {
           yield [
             {
               role: "assistant",
@@ -2245,28 +1189,32 @@ describe("streamResponseThunk - tool calls", () => {
             completion:
               "I found several test functions in your codebase. Here are the main ones I discovered...",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
           };
         }
         return followupGenerator();
       }
     });
+    mockIdeMessengerApproval.llmStreamChat = mockChat;
+    const requestSpy = vi.spyOn(mockIdeMessengerApproval, "request");
 
     // Track isStreaming state changes throughout the entire test
     const streamingStateChanges: boolean[] = [];
-    let lastStreamingState =
-      mockStoreWithApproval.getState().session.isStreaming;
+    let lastStreamingState = (mockStoreWithApproval.getState() as RootState)
+      .session.isStreaming;
     const originalDispatch = mockStoreWithApproval.dispatch;
-    mockStoreWithApproval.dispatch = ((action: any) => {
+    mockStoreWithApproval.dispatch = (action: any) => {
       const result = originalDispatch(action);
-      const currentStreamingState =
-        mockStoreWithApproval.getState().session.isStreaming;
+      const currentStreamingState = (
+        mockStoreWithApproval.getState() as RootState
+      ).session.isStreaming;
       // Only record when the state actually changes
       if (currentStreamingState !== lastStreamingState) {
         streamingStateChanges.push(currentStreamingState);
         lastStreamingState = currentStreamingState;
       }
       return result;
-    }) as any;
+    };
 
     // Execute initial thunk - this should generate the tool call but not execute it
     const initialResult = await mockStoreWithApproval.dispatch(
@@ -2280,7 +1228,7 @@ describe("streamResponseThunk - tool calls", () => {
     expect(initialResult.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact initial action sequence by comparing action types
-    const initialActions = (mockStoreWithApproval as any).getActions();
+    const initialActions = mockStoreWithApproval.getActions();
 
     expect(initialActions).toEqual([
       {
@@ -2401,7 +1349,7 @@ describe("streamResponseThunk - tool calls", () => {
                 id: "tool-approval-flow-1",
                 type: "function",
                 function: {
-                  name: "search_codebase",
+                  name: grepName,
                   arguments: JSON.stringify({ query: "test function" }),
                 },
               },
@@ -2415,6 +1363,7 @@ describe("streamResponseThunk - tool calls", () => {
           {
             completion: "I'll search for test functions in the codebase.",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
             prompt: "Please search the codebase for test functions",
           },
         ],
@@ -2423,7 +1372,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "session/setToolGenerated",
         payload: {
           toolCallId: "tool-approval-flow-1",
-          tools: [],
+          tools: [grepTool],
         },
       },
       {
@@ -2459,7 +1408,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -2471,7 +1420,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Session summary",
         },
       },
       {
@@ -2506,7 +1455,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -2550,7 +1499,7 @@ describe("streamResponseThunk - tool calls", () => {
     ]);
 
     // Clear the actions array to track only the approval flow
-    (mockStoreWithApproval as any).clearActions();
+    mockStoreWithApproval.clearActions();
 
     // Import the callToolById thunk to simulate user approval
     const { callToolById } = await import("./callToolById");
@@ -2564,7 +1513,7 @@ describe("streamResponseThunk - tool calls", () => {
     expect(approvalResult.type).toBe("chat/callTool/fulfilled");
 
     // Verify exact approval flow actions
-    const approvalActions = (mockStoreWithApproval as any).getActions();
+    const approvalActions = mockStoreWithApproval.getActions();
     expect(approvalActions).toEqual([
       {
         type: "chat/callTool/pending",
@@ -2603,6 +1552,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "chat/streamAfterToolCall/pending",
         meta: {
           arg: {
+            depth: 1,
             toolCallId: "tool-approval-flow-1",
           },
           requestId: expect.any(String),
@@ -2637,7 +1587,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/streamNormalInput/pending",
         meta: {
-          arg: {},
+          arg: { depth: 2 },
           requestId: expect.any(String),
           requestStatus: "pending",
         },
@@ -2683,6 +1633,7 @@ describe("streamResponseThunk - tool calls", () => {
             completion:
               "I found several test functions in your codebase. Here are the main ones I discovered...",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
             prompt: "continuing after tool execution",
           },
         ],
@@ -2694,7 +1645,7 @@ describe("streamResponseThunk - tool calls", () => {
       {
         type: "chat/streamNormalInput/fulfilled",
         meta: {
-          arg: {},
+          arg: { depth: 2 },
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
@@ -2718,7 +1669,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -2730,7 +1681,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Session summary",
         },
       },
       {
@@ -2765,7 +1716,7 @@ describe("streamResponseThunk - tool calls", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -2798,6 +1749,7 @@ describe("streamResponseThunk - tool calls", () => {
         type: "chat/streamAfterToolCall/fulfilled",
         meta: {
           arg: {
+            depth: 1,
             toolCallId: "tool-approval-flow-1",
           },
           requestId: expect.any(String),
@@ -2822,7 +1774,7 @@ describe("streamResponseThunk - tool calls", () => {
       "tool_call_decision",
       expect.objectContaining({
         decision: "accept",
-        toolName: "search_codebase",
+        toolName: grepName,
         toolCallId: "tool-approval-flow-1",
       }),
     );
@@ -2831,26 +1783,23 @@ describe("streamResponseThunk - tool calls", () => {
       "tool_call_outcome",
       expect.objectContaining({
         succeeded: true,
-        toolName: "search_codebase",
+        toolName: grepName,
         errorReason: undefined,
         duration_ms: expect.any(Number),
       }),
     );
 
     // Verify IDE messenger calls for tool execution
-    expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith(
-      "tools/call",
-      {
-        toolCall: {
-          id: "tool-approval-flow-1",
-          type: "function",
-          function: {
-            name: "search_codebase",
-            arguments: JSON.stringify({ query: "test function" }),
-          },
+    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-approval-flow-1",
+        type: "function",
+        function: {
+          name: grepName,
+          arguments: JSON.stringify({ query: "test function" }),
         },
       },
-    );
+    });
 
     // Verify second streaming call was made for continuation
     expect(streamCallCount).toBe(2);
@@ -2858,7 +1807,10 @@ describe("streamResponseThunk - tool calls", () => {
     // Verify final state shows completed tool call and follow-up response
     const finalState = mockStoreWithApproval.getState();
     expect(finalState).toEqual({
+      ...initialState,
       session: {
+        ...initialState.session,
+        title: "Session summary",
         history: [
           {
             contextItems: [],
@@ -2890,7 +1842,7 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-approval-flow-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -2900,6 +1852,7 @@ describe("streamResponseThunk - tool calls", () => {
               {
                 completion: "I'll search for test functions in the codebase.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "Please search the codebase for test functions",
               },
             ],
@@ -2910,7 +1863,7 @@ describe("streamResponseThunk - tool calls", () => {
                   id: "tool-approval-flow-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -2926,6 +1879,7 @@ describe("streamResponseThunk - tool calls", () => {
                     hidden: false,
                   },
                 ],
+                tool: grepTool,
               },
             ],
           },
@@ -2953,201 +1907,78 @@ describe("streamResponseThunk - tool calls", () => {
                 completion:
                   "I found several test functions in your codebase. Here are the main ones I discovered...",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "continuing after tool execution",
               },
             ],
           },
         ],
-        hasReasoningEnabled: false,
         isStreaming: false, // Inactive after complete flow
         id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController),
         contextPercentage: 0.85,
-        isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
         inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
+        isPruned: false,
       },
       ui: {
+        ...initialState.ui,
         toolSettings: {
-          search_codebase: "askFirst",
+          [grepName]: "allowedWithPermission",
         },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
 
   describe("dynamic policy evaluation", () => {
     it("should call tools/evaluatePolicy with correct parameters", async () => {
-      const mockStore = createMockStore({
-        session: {
-          history: [
-            {
-              message: { id: "1", role: "user", content: "Run echo hello" },
-              contextItems: [],
-            },
-          ],
-          hasReasoningEnabled: false,
-          isStreaming: true,
-          id: "session-123",
-          mode: "chat",
-          streamAborter: new AbortController(),
-          contextPercentage: 0,
-          isPruned: false,
-          isInEdit: false,
-          title: "",
-          lastSessionId: undefined,
-          isSessionMetadataLoading: false,
-          allSessionMetadata: [],
-          symbols: {},
-          codeBlockApplyStates: {
-            states: [],
-            curIndex: 0,
-          },
-          newestToolbarPreviewForInput: {},
-          compactionLoading: {},
-          inlineErrorMessage: undefined,
+      const initialState = getRootStateWithClaude();
+      initialState.session.history = [
+        {
+          message: { id: "1", role: "user", content: "Run echo hello" },
+          contextItems: [],
         },
-        config: {
-          config: {
-            tools: [],
-            rules: [],
-            tabAutocompleteModel: undefined,
-            selectedModelByRole: {
-              chat: mockClaudeModel,
-              apply: null,
-              edit: null,
-              summarize: null,
-              autocomplete: null,
-              rerank: null,
-              embed: null,
-            },
-            experimental: {
-              onlyUseSystemMessageTools: false,
-            },
-          } as any,
-          lastSelectedModelByRole: {
-            chat: mockClaudeModel.title,
-          },
-        } as any,
-        ui: {
-          toolSettings: {
-            run_terminal_command: "allowedWithoutPermission",
-          },
-          ruleSettings: {},
-          showDialog: false,
-          dialogMessage: undefined,
-        } as any,
-      } as any);
+      ];
+      initialState.ui.toolSettings = {
+        [terminalName]: "allowedWithoutPermission",
+      };
+      initialState.config.config.tools = [grepTool];
+      const mockStore = createMockStore(initialState);
 
       const mockIdeMessenger = mockStore.mockIdeMessenger;
-
-      // Simple mock - just return a different policy for testing
-      mockIdeMessenger.request.mockImplementation(
-        (endpoint: string, data: any) => {
-          if (endpoint === "tools/evaluatePolicy") {
-            // For this test, simulate that echo commands require permission
-            if (data.args.command?.toLowerCase().startsWith("echo")) {
-              return Promise.resolve({
-                status: "success",
-                content: { policy: "allowedWithPermission" },
-              });
-            }
-            return Promise.resolve({
-              status: "success",
-              content: { policy: data.basePolicy },
-            });
-          } else if (endpoint === "llm/compileChat") {
-            return Promise.resolve({
-              status: "success",
-              content: {
-                compiledChatMessages: [
-                  { role: "user", content: "Run echo hello" },
-                ],
-                didPrune: false,
-                contextPercentage: 0.5,
-              },
-            });
-          } else if (endpoint === "history/save") {
-            return Promise.resolve({ status: "success" });
-          } else if (endpoint === "history/list") {
-            return Promise.resolve({ status: "success", content: [] });
-          }
-          return Promise.resolve({ status: "success", content: {} });
-        },
-      );
-
+      mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
+        data,
+      ) => {
+        if (
+          "command" in data.args &&
+          typeof data.args.command === "string" &&
+          data.args.command?.toLowerCase().startsWith("echo")
+        ) {
+          return { policy: "allowedWithPermission" };
+        }
+        return { policy: data.basePolicy };
+      };
+      mockIdeMessenger.responses["llm/compileChat"] = {
+        compiledChatMessages: [{ role: "user", content: "Run echo hello" }],
+        didPrune: false,
+        contextPercentage: 0.5,
+      };
       // Setup streaming with echo command (should require permission despite auto-approve base)
-      async function* mockStreamWithEcho() {
+      async function* mockStreamWithEcho(): AsyncGenerator<
+        AssistantChatMessage[],
+        PromptLog
+      > {
         yield [{ role: "assistant", content: "I'll run the echo command." }];
+        const toolId = `tool-echo-${Date.now()}`;
         yield [
           {
             role: "assistant",
             content: "",
             toolCalls: [
               {
-                id: "tool-echo-1",
+                id: toolId,
                 type: "function",
                 function: {
-                  name: "run_terminal_command",
+                  name: terminalName,
                   arguments: JSON.stringify({ command: "echo hello" }),
                 },
               },
@@ -3158,10 +1989,13 @@ describe("streamResponseThunk - tool calls", () => {
           prompt: "Run echo hello",
           completion: "I'll run the echo command.",
           modelProvider: "anthropic",
+          modelTitle: "Claude 3.5 Sonnet",
         };
       }
 
-      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithEcho());
+      const mockChat = vi.fn().mockReturnValue(mockStreamWithEcho());
+      mockIdeMessenger.llmStreamChat = mockChat;
+      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
 
       // Execute thunk
       await mockStore.dispatch(
@@ -3169,129 +2003,82 @@ describe("streamResponseThunk - tool calls", () => {
           editorState: mockEditorState,
           modifiers: mockModifiers,
         }) as any,
-      );
-
-      // Just verify the call was made with correct params
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-        "tools/evaluatePolicy",
-        expect.objectContaining({
-          toolName: "run_terminal_command",
-          basePolicy: "allowedWithoutPermission",
-          args: { command: "echo hello" },
-        }),
-      );
+      ),
+        // Just verify the call was made with correct params
+        expect(requestSpy).toHaveBeenCalledWith(
+          "tools/evaluatePolicy",
+          expect.objectContaining({
+            toolName: terminalName,
+            basePolicy: "allowedWithoutPermission",
+            args: { command: "echo hello" },
+          }),
+        );
 
       // Verify tool wasn't auto-executed (policy changed to require permission)
-      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+      expect(requestSpy).not.toHaveBeenCalledWith(
         "tools/call",
         expect.any(Object),
       );
     });
 
     it("should respect disabled policy", async () => {
-      const mockStore = createMockStore({
-        session: {
-          history: [
-            {
-              message: { id: "1", role: "user", content: "Run ls" },
-              contextItems: [],
-            },
-          ],
-          hasReasoningEnabled: false,
-          isStreaming: true,
-          id: "session-123",
-          mode: "chat",
-          streamAborter: new AbortController(),
-          contextPercentage: 0,
-          isPruned: false,
-          isInEdit: false,
-          title: "",
-          lastSessionId: undefined,
-          isSessionMetadataLoading: false,
-          allSessionMetadata: [],
-          symbols: {},
-          codeBlockApplyStates: {
-            states: [],
-            curIndex: 0,
-          },
-          newestToolbarPreviewForInput: {},
-          compactionLoading: {},
-          inlineErrorMessage: undefined,
+      const initialState = getRootStateWithClaude();
+      initialState.session.history = [
+        {
+          message: { id: "1", role: "user", content: "Run ls" },
+          contextItems: [],
         },
-        config: {
-          config: {
-            tools: [],
-            rules: [],
-            tabAutocompleteModel: undefined,
-            selectedModelByRole: {
-              chat: mockClaudeModel,
-              apply: null,
-              edit: null,
-              summarize: null,
-              autocomplete: null,
-              rerank: null,
-              embed: null,
-            },
-            experimental: {
-              onlyUseSystemMessageTools: false,
-            },
-          } as any,
-          lastSelectedModelByRole: {
-            chat: mockClaudeModel.title,
-          },
-        } as any,
-        ui: {
-          toolSettings: {
-            run_terminal_command: "disabled", // Tool is disabled
-          },
-          ruleSettings: {},
-          showDialog: false,
-          dialogMessage: undefined,
-        } as any,
-      } as any);
-
+      ];
+      initialState.ui.toolSettings = {
+        [terminalName]: "allowedWithPermission",
+      };
+      initialState.config.config.tools = [terminalTool];
+      const mockStore = createMockStore(initialState);
       const mockIdeMessenger = mockStore.mockIdeMessenger;
+      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
 
       // Simple mock - just return disabled policy
-      mockIdeMessenger.request.mockImplementation(
-        (endpoint: string, data: any) => {
-          if (endpoint === "tools/evaluatePolicy") {
-            // Backend should respect disabled state
-            return Promise.resolve({
-              status: "success",
-              content: { policy: "disabled" },
-            });
-          } else if (endpoint === "llm/compileChat") {
-            return Promise.resolve({
-              status: "success",
-              content: {
-                compiledChatMessages: [{ role: "user", content: "Run ls" }],
-                didPrune: false,
-                contextPercentage: 0.5,
-              },
-            });
-          } else if (endpoint === "history/save") {
-            return Promise.resolve({ status: "success" });
-          } else if (endpoint === "history/list") {
-            return Promise.resolve({ status: "success", content: [] });
-          }
-          return Promise.resolve({ status: "success", content: {} });
-        },
-      );
-
-      // Setup streaming with regular command
-      async function* mockStreamWithLs() {
+      mockIdeMessenger.responseHandlers["llm/compileChat"] = async (data) => {
+        const history = (mockStore.getState() as RootState).session.history;
+        return {
+          compiledChatMessages: [
+            ...history.map((i) => i.message),
+            { role: "user", content: "Run ls" },
+          ],
+          didPrune: false,
+          contextPercentage: 0.5,
+        };
+      };
+      let numCalls = 0;
+      mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
+        data,
+      ) => {
+        numCalls++;
+        if (numCalls <= 1) {
+          return {
+            policy: "disabled",
+          };
+        }
+        return {
+          policy: "allowedWithPermission",
+        };
+      };
+      async function* mockStreamWithLs(): AsyncGenerator<
+        AssistantChatMessage[],
+        PromptLog
+      > {
         yield [{ role: "assistant", content: "I'll list the files." }];
+        const id = `tool-ls-${(() => Date.now())()}`;
         yield [
           {
             role: "assistant",
             content: "",
             toolCalls: [
               {
-                id: "tool-ls-1",
+                id,
                 type: "function",
                 function: {
-                  name: "run_terminal_command",
+                  name: terminalName,
                   arguments: JSON.stringify({ command: "ls" }),
                 },
               },
@@ -3302,10 +2089,12 @@ describe("streamResponseThunk - tool calls", () => {
           prompt: "Run ls",
           completion: "I'll list the files.",
           modelProvider: "anthropic",
+          modelTitle: "Claude 3.5 Sonnet",
         };
       }
 
-      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithLs());
+      const mockChat = vi.fn().mockImplementation(() => mockStreamWithLs());
+      mockIdeMessenger.llmStreamChat = mockChat;
 
       // Execute thunk
       await mockStore.dispatch(
@@ -3313,116 +2102,93 @@ describe("streamResponseThunk - tool calls", () => {
           editorState: mockEditorState,
           modifiers: mockModifiers,
         }) as any,
-      );
+      ),
+        // Verify tools/evaluatePolicy was called
+        expect(requestSpy).toHaveBeenCalledWith(
+          "tools/evaluatePolicy",
+          expect.objectContaining({
+            toolName: terminalName,
+            basePolicy: "allowedWithPermission",
+            args: { command: "ls" },
+          }),
+        );
 
-      // Verify tools/evaluatePolicy was called
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-        "tools/evaluatePolicy",
-        expect.objectContaining({
-          toolName: "run_terminal_command",
-          basePolicy: "disabled",
-          args: { command: "ls" },
-        }),
-      );
-
-      // Tool should NOT be executed since it's disabled
-      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+      // Tool should NOT be executed since it's disabled by policy
+      expect(requestSpy).not.toHaveBeenCalledWith(
         "tools/call",
         expect.any(Object),
       );
+
+      const state = mockStore.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
 
     it("should handle evaluation errors gracefully", async () => {
-      const mockStore = createMockStore({
-        session: {
-          history: [
-            {
-              message: { id: "1", role: "user", content: "Do something" },
-              contextItems: [],
-            },
-          ],
-          hasReasoningEnabled: false,
-          isStreaming: true,
-          id: "session-123",
-          mode: "chat",
-          streamAborter: new AbortController(),
-          contextPercentage: 0,
-          isPruned: false,
-          isInEdit: false,
-          title: "",
-          lastSessionId: undefined,
-          isSessionMetadataLoading: false,
-          allSessionMetadata: [],
-          symbols: {},
-          codeBlockApplyStates: {
-            states: [],
-            curIndex: 0,
-          },
-          newestToolbarPreviewForInput: {},
-          compactionLoading: {},
-          inlineErrorMessage: undefined,
+      const initialState = getRootStateWithClaude();
+      initialState.session.history = [
+        {
+          message: { id: "1", role: "user", content: "Do something" },
+          contextItems: [],
         },
-        config: {
-          config: {
-            tools: [],
-            rules: [],
-            tabAutocompleteModel: undefined,
-            selectedModelByRole: {
-              chat: mockClaudeModel,
-              apply: null,
-              edit: null,
-              summarize: null,
-              autocomplete: null,
-              rerank: null,
-              embed: null,
-            },
-            experimental: {
-              onlyUseSystemMessageTools: false,
-            },
-          } as any,
-          lastSelectedModelByRole: {
-            chat: mockClaudeModel.title,
-          },
-        } as any,
-        ui: {
-          toolSettings: {
-            some_tool: "allowedWithoutPermission",
-          },
-          ruleSettings: {},
-          showDialog: false,
-          dialogMessage: undefined,
-        } as any,
-      } as any);
+      ];
+      const someTool = {
+        ...grepTool,
+        function: {
+          ...grepTool.function,
+          name: "some_tool",
+        },
+      };
+      initialState.config.config.tools = [someTool];
+      initialState.ui.toolSettings = {
+        some_tool: "allowedWithoutPermission",
+      };
 
+      const mockStore = createMockStore(initialState);
       const mockIdeMessenger = mockStore.mockIdeMessenger;
 
       // Mock evaluation failure
-      mockIdeMessenger.request.mockImplementation((endpoint: string) => {
+      let numCalls = 0;
+      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+      requestSpy.mockImplementation(async (endpoint, data) => {
         if (endpoint === "tools/evaluatePolicy") {
-          // Simulate evaluation error
-          return Promise.resolve({
-            status: "error",
-            error: "Failed to evaluate policy",
-          });
-        } else if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [{ role: "user", content: "Do something" }],
-              didPrune: false,
-              contextPercentage: 0.5,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
+          numCalls++;
+          if (numCalls <= 1) {
+            // Simulate evaluation error
+            return {
+              done: true as const,
+              status: "error",
+              error: "Failed to evaluate policy",
+            };
+          } else {
+            return {
+              done: true as const,
+              status: "success",
+              content: {
+                policy: "allowedWithPermission",
+              },
+            };
+          }
         }
-        return Promise.resolve({ status: "success", content: {} });
+        mockIdeMessenger.responseHandlers["llm/compileChat"] = async (data) => {
+          const history = (mockStore.getState() as RootState).session.history;
+          return {
+            compiledChatMessages: [
+              ...history.map((i) => i.message),
+              { role: "user", content: "Do something" },
+            ],
+            didPrune: false,
+            contextPercentage: 0.5,
+          };
+        };
+
+        return new MockIdeMessenger().request(endpoint, data);
       });
 
       // Setup streaming with tool call
-      async function* mockStreamWithTool() {
+      async function* mockStreamWithTool(): AsyncGenerator<
+        AssistantChatMessage[],
+        PromptLog
+      > {
         yield [{ role: "assistant", content: "I'll help you." }];
         yield [
           {
@@ -3444,10 +2210,12 @@ describe("streamResponseThunk - tool calls", () => {
           prompt: "Do something",
           completion: "I'll help you.",
           modelProvider: "anthropic",
+          modelTitle: "Claude 3.5 Sonnet",
         };
       }
 
-      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithTool());
+      const mockChat = vi.fn().mockImplementation(() => mockStreamWithTool());
+      mockIdeMessenger.llmStreamChat = mockChat;
 
       // Execute thunk - should handle error gracefully
       const result = await mockStore.dispatch(
@@ -3465,92 +2233,59 @@ describe("streamResponseThunk - tool calls", () => {
         "tools/call",
         expect.any(Object),
       );
+
+      const state = mockStore.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
 
     it("should properly handle disabled commands and show error status", async () => {
-      const { mockStore, mockIdeMessenger } = setupTest();
-
       // Setup store with runTerminalCommand tool
-      const mockStoreWithTerminalTool = createMockStore({
-        ...mockStore.getState(),
-        config: {
-          ...mockStore.getState().config,
-          config: {
-            ...mockStore.getState().config.config,
-            tools: [
-              {
-                type: "function",
-                displayTitle: "Run Terminal Command",
-                function: {
-                  name: "runTerminalCommand",
-                  description: "Execute a terminal command",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      command: {
-                        type: "string",
-                        description: "The command to execute",
-                      },
-                    },
-                    required: ["command"],
-                  },
-                },
-                defaultToolPolicy: "allowedWithPermission",
-                readonly: false,
-                group: "code",
-              },
-            ],
-          },
-        },
-        ui: {
-          ...mockStore.getState().ui,
-          toolSettings: {
-            runTerminalCommand: "allowedWithPermission",
-          },
-        },
-      });
+      const initialState = getRootStateWithClaude();
+      initialState.config.config.tools = [terminalTool];
+      initialState.ui.toolSettings = {
+        runTerminalCommand: "allowedWithPermission",
+      };
+      const mockStoreWithTerminalTool = createMockStore(initialState);
 
       const mockTerminalIdeMessenger =
         mockStoreWithTerminalTool.mockIdeMessenger;
 
-      // Setup compilation and policy evaluation responses
-      mockTerminalIdeMessenger.request.mockImplementation(
-        (endpoint: string, data: any) => {
-          if (endpoint === "llm/compileChat") {
-            return Promise.resolve({
-              status: "success",
-              content: {
-                compiledChatMessages: [
-                  { role: "user", content: "Run eval command" },
-                ],
-                didPrune: false,
-                contextPercentage: 0.9,
-              },
-            });
-          } else if (endpoint === "tools/evaluatePolicy") {
-            // Return disabled for eval command
-            const args = data.args || {};
-            if (args.command && args.command.includes("eval")) {
-              return Promise.resolve({
-                status: "success",
-                content: { policy: "disabled" },
-              });
-            }
-            return Promise.resolve({
-              status: "success",
-              content: { policy: "allowedWithPermission" },
-            });
-          } else if (endpoint === "history/save") {
-            return Promise.resolve({ status: "success" });
-          } else if (endpoint === "history/list") {
-            return Promise.resolve({ status: "success", content: [] });
+      mockTerminalIdeMessenger.responseHandlers["llm/compileChat"] = async (
+        data,
+      ) => {
+        const history = (mockStoreWithTerminalTool.getState() as RootState)
+          .session.history;
+        return {
+          compiledChatMessages: [
+            ...history.map((i) => i.message),
+            { role: "user", content: "Run eval command" },
+          ],
+          didPrune: false,
+          contextPercentage: 0.9,
+        };
+      };
+
+      let numCalls = 0;
+      mockTerminalIdeMessenger.responseHandlers["tools/evaluatePolicy"] =
+        async (data) => {
+          const args = data.args || {};
+          numCalls++;
+          if (
+            numCalls <= 1 &&
+            args.command &&
+            typeof args.command === "string" &&
+            args.command.includes("eval")
+          ) {
+            return { policy: "disabled" };
           }
-          return Promise.resolve({ status: "success", content: {} });
-        },
-      );
+          return { policy: "allowedWithPermission" };
+        };
 
       // Setup streaming with eval command tool call
-      async function* mockStreamWithEvalCommand() {
+      async function* mockStreamWithEvalCommand(): AsyncGenerator<
+        AssistantChatMessage[],
+        PromptLog
+      > {
         yield [
           { role: "assistant", content: "I'll run the eval command for you." },
         ];
@@ -3574,12 +2309,14 @@ describe("streamResponseThunk - tool calls", () => {
           prompt: "Run eval command",
           completion: "I'll run the eval command for you.",
           modelProvider: "anthropic",
+          modelTitle: "Claude 3.5 Sonnet",
         };
       }
 
-      mockTerminalIdeMessenger.llmStreamChat.mockReturnValue(
-        mockStreamWithEvalCommand(),
-      );
+      mockTerminalIdeMessenger.llmStreamChat = vi
+        .fn()
+        .mockImplementation(() => mockStreamWithEvalCommand());
+      const requestSpy = vi.spyOn(mockTerminalIdeMessenger, "request");
 
       // Execute thunk
       await mockStoreWithTerminalTool.dispatch(
@@ -3590,7 +2327,7 @@ describe("streamResponseThunk - tool calls", () => {
       );
 
       // Get final state
-      const finalState = mockStoreWithTerminalTool.getState();
+      const finalState = mockStoreWithTerminalTool.getState() as RootState;
       const toolCallStates = finalState.session.history.flatMap(
         (item) => item.toolCallStates || [],
       );
@@ -3611,11 +2348,13 @@ describe("streamResponseThunk - tool calls", () => {
       expect(errorOutput?.content).toContain("disabled");
 
       // Verify the command was NOT executed (no tool/call request)
-      const toolCallRequests =
-        mockTerminalIdeMessenger.request.mock.calls.filter(
-          (call) => call[0] === "tools/call",
-        );
+      const toolCallRequests = requestSpy.mock.calls.filter(
+        (call) => call[0] === "tools/call",
+      );
       expect(toolCallRequests).toHaveLength(0);
+
+      const state = mockStoreWithTerminalTool.getState() as RootState;
+      expect(state.ui.dialogMessage).toBeUndefined();
     });
   });
 });

@@ -35,7 +35,6 @@ export const streamResponseThunk = createAsyncThunk<
         if (!selectedChatModel) {
           throw new Error("No chat model selected");
         }
-
         dispatch(
           submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
         );
@@ -44,13 +43,6 @@ export const streamResponseThunk = createAsyncThunk<
 
         const defaultContextProviders =
           state.config.config.experimental?.defaultContext ?? [];
-
-        if (!selectedChatModel) {
-          console.error(
-            "gatherContext thunk: Cannot gather context, no model selected",
-          );
-          throw new Error("No chat model selected");
-        }
 
         // Resolve context providers and construct new history
         const {

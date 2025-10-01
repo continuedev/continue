@@ -8,7 +8,7 @@ export type IndexingState = {
   };
 };
 
-const initialState: IndexingState = {
+export const INITIAL_INDEXING_STATE: IndexingState = {
   indexing: {
     statuses: {},
     hiddenChatPeekTypes: {
@@ -19,7 +19,7 @@ const initialState: IndexingState = {
 
 export const indexingSlice = createSlice({
   name: "indexing",
-  initialState,
+  initialState: INITIAL_INDEXING_STATE,
   reducers: {
     updateIndexingStatus: (
       state,

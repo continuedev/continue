@@ -8,11 +8,13 @@ vi.mock("../env.js");
 vi.mock("../telemetry/telemetryService.js");
 vi.mock("../ui/index.js");
 vi.mock("../util/git.js");
+vi.mock("../util/exit.js");
 
 const mockWorkos = vi.mocked(await import("../auth/workos.js"));
 const mockEnv = vi.mocked(await import("../env.js"));
 const mockGit = vi.mocked(await import("../util/git.js"));
 const mockStartRemoteTUIChat = vi.mocked(await import("../ui/index.js"));
+const mockExit = vi.mocked(await import("../util/exit.js"));
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -62,6 +64,10 @@ describe("remote command", () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
+      headers: {
+        get: (name: string) =>
+          name === "content-type" ? "application/json" : null,
+      },
       json: async () => ({
         id: "test-agent-id",
         url: "ws://test-url.com",
@@ -70,6 +76,9 @@ describe("remote command", () => {
     });
 
     mockStartRemoteTUIChat.startRemoteTUIChat.mockResolvedValue({} as any);
+
+    // Mock gracefulExit to prevent process.exit during tests
+    mockExit.gracefulExit.mockResolvedValue(undefined);
   });
 
   it("should include idempotency key in request body when provided", async () => {
@@ -151,10 +160,18 @@ describe("remote command", () => {
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
+        headers: {
+          get: (name: string) =>
+            name === "content-type" ? "application/json" : null,
+        },
         json: async () => ({ url: "ws://tunnel-url.com", port: 9090 }),
       })
       .mockResolvedValue({
         ok: true,
+        headers: {
+          get: (name: string) =>
+            name === "content-type" ? "application/json" : null,
+        },
         json: async () => ({
           id: "test-agent-id",
           url: "ws://test-url.com",
@@ -187,6 +204,10 @@ describe("remote command", () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
+      headers: {
+        get: (name: string) =>
+          name === "content-type" ? "application/json" : null,
+      },
       json: async () => tunnelResponse,
     });
 

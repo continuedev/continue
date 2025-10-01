@@ -186,7 +186,7 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "agents",
+                "group": "Agents",
                 "icon": "robot",
                 "pages": [
                   "hub/agents/intro",
@@ -222,6 +222,11 @@
                   "hub/secrets/secret-resolution"
                 ]
               },
+              {
+                "group": "Workflows",
+                "icon": "cloud",
+                "pages": ["hub/workflows/intro"]
+              },
               "hub/sharing",
               "hub/source-control"
             ]
@@ -256,6 +261,7 @@
             "pages": [
               "guides/posthog-github-continuous-ai",
               "guides/snyk-mcp-continue-cookbook",
+              "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment"
             ]
           }

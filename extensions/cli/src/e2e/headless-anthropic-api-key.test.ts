@@ -115,7 +115,7 @@ models:
 
     if (configExists) {
       const configContent = await fs.readFile(configPath, "utf-8");
-      expect(configContent).toContain("anthropic/claude-4-sonnet");
+      expect(configContent).toContain("anthropic/claude-sonnet-4-5");
       expect(configContent).toContain(
         "ANTHROPIC_API_KEY: TEST-test-invalid-key-format",
       );
