@@ -21,11 +21,13 @@ interface UseModelSelectorProps {
     messageType: "system";
   }) => void;
   onModelSwitch?: () => void;
+  onRefreshUI?: () => void;
 }
 
 export function useModelSelector({
   onMessage,
   onModelSwitch,
+  onRefreshUI,
 }: UseModelSelectorProps) {
   const { closeCurrentScreen } = useNavigation();
 
@@ -57,6 +59,11 @@ export function useModelSelector({
       // Trigger any additional actions after model switch
       if (onModelSwitch) {
         onModelSwitch();
+      }
+
+      // Force UI refresh to update the IntroMessage with new model
+      if (onRefreshUI) {
+        onRefreshUI();
       }
     } catch (error: any) {
       onMessage({
