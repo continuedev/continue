@@ -12,7 +12,10 @@ import {
 } from "../auth/workos.js";
 import * as config from "../config.js";
 import { ModelService } from "../services/ModelService.js";
-import { getPersistedModelName } from "../util/modelPersistence.js";
+import {
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
 
 // Mock the config module
 vi.mock("../config.js");
@@ -32,7 +35,6 @@ describe("Model Persistence for Unauthenticated Users", () => {
     process.env.CONTINUE_GLOBAL_DIR = testDir;
 
     // Clear GlobalContext for clean test state
-    const { persistModelName } = require("../util/modelPersistence.js");
     persistModelName(null);
 
     mockAssistant = {
