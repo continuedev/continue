@@ -77,6 +77,7 @@ block](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a lo
 server block to your [config file](./configuration.md):
 
 ```yaml title="config.yaml"
+# ...
 mcpServers:
   - name: SQLite MCP
     command: npx
@@ -84,7 +85,12 @@ mcpServers:
       - "-y"
       - "mcp-sqlite"
       - "/path/to/your/database.db"
+# ...
 ```
+
+<Note>
+When creating a standalone block file in `.continue/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
+</Note>
 
 ### How to Configure MCP Server Properties
 
@@ -105,10 +111,12 @@ MCP now supports remote server connections through HTTP-based transports, expand
 For real-time streaming communication, use the SSE transport:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: sse
     url: https://....
+# ...
 ```
 
 #### How to Use Standard Input/Output (`stdio`)
@@ -116,6 +124,7 @@ mcpServers:
 For local MCP servers that communicate via standard input and output:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: stdio
@@ -123,6 +132,7 @@ mcpServers:
     args:
       - "@modelcontextprotocol/server-sqlite"
       - "/path/to/your/database.db"
+# ...
 ```
 
 #### How to Use Streamable HTTP Transport
@@ -130,10 +140,12 @@ mcpServers:
 For standard HTTP-based communication with streaming capabilities:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: streamable-http
     url: https://....
+# ...
 ```
 
 These remote transport options allow you to connect to MCP servers hosted on remote infrastructure, enabling more flexible deployment architectures and shared server resources across multiple clients.
@@ -146,6 +158,7 @@ With some MCP servers you will need to use API keys or other secrets. You can le
 as well as access hosted secrets in the Continue Hub. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
 
 ```yaml
+# ...
 mcpServers:
   - name: Supabase MCP
     command: npx
@@ -163,4 +176,5 @@ mcpServers:
       - "@modelcontextprotocol/server-github"
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+# ...
 ```
