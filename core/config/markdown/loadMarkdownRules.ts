@@ -64,13 +64,18 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Process each markdown file
     for (const file of mdFiles) {
       try {
-        const { relativePathOrBasename } = findUriInDirs(
+        const { relativePathOrBasename, foundInDir } = findUriInDirs(
           file.path,
           await ide.getWorkspaceDirs(),
         );
+
+        // For global rules, use the full path
+        // For workspace rules, use the relative path
+        const fileUri = foundInDir ? relativePathOrBasename : file.path;
+
         const rule = markdownToRule(file.content, {
           uriType: "file",
-          fileUri: relativePathOrBasename,
+          fileUri: fileUri,
         });
         rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
       } catch (e) {
