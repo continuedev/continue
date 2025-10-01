@@ -63,7 +63,10 @@ import {
   setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
+import {
+  createNewGlobalRuleFile,
+  createNewWorkspaceBlockFile,
+} from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
@@ -408,6 +411,17 @@ export class Core {
       await this.configHandler.reloadConfig(
         "Local block created (config/addLocalWorkspaceBlock message)",
       );
+    });
+
+    on("config/addGlobalRule", async (msg) => {
+      try {
+        await createNewGlobalRuleFile(this.ide);
+        await this.configHandler.reloadConfig(
+          "Global rule created (config/addGlobalRule message)",
+        );
+      } catch (error) {
+        throw error;
+      }
     });
 
     on("config/openProfile", async (msg) => {
@@ -812,7 +826,6 @@ export class Core {
       if (data?.shouldClearIndexes) {
         await this.codeBaseIndexer.clearIndexes();
       }
-
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });

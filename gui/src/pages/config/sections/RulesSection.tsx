@@ -19,7 +19,8 @@ import {
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { getRuleDisplayName } from "core/llm/rules/rules-utils";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
+import { DropdownButton } from "../../../components/DropdownButton";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
 import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
@@ -173,8 +174,8 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
-  const smallFont = useFontSize(-2);
-  const tinyFont = useFontSize(-3);
+  const smallFont = fontSize(-2);
+  const tinyFont = fontSize(-3);
   return (
     <div
       className={`border-border flex flex-col rounded-sm px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
@@ -386,24 +387,41 @@ function addDefaultSystemMessage(
   }
 }
 
+// Define dropdown options for global rules
+const globalRulesOptions = [
+  { value: "workspace", label: "Current workspace" },
+  { value: "global", label: "Global" },
+];
+
 function RulesSubSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
   const ideMessenger = useContext(IdeMessengerContext);
   const isLocal = selectedProfile?.profileType === "local";
+  const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
 
-  const handleAddRule = () => {
+  const handleAddRule = (mode?: string) => {
+    const currentMode = mode || globalRulesMode;
     if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "rules",
-      });
+      if (currentMode === "global") {
+        void ideMessenger.request("config/addGlobalRule", undefined);
+      } else {
+        void ideMessenger.request("config/addLocalWorkspaceBlock", {
+          blockType: "rules",
+        });
+      }
     } else {
       void ideMessenger.request("controlPlane/openUrl", {
         path: "?type=rules",
         orgSlug: undefined,
       });
     }
+  };
+
+  const handleOptionClick = (value: string) => {
+    setGlobalRulesMode(value);
+    handleAddRule(value);
   };
 
   const sortedRules: RuleWithSource[] = useMemo(() => {
@@ -448,12 +466,22 @@ function RulesSubSection() {
 
   return (
     <div>
-      <ConfigHeader
-        title="Rules"
-        variant="sm"
-        onAddClick={handleAddRule}
-        addButtonTooltip="Add rule"
-      />
+      {isLocal ? (
+        <DropdownButton
+          title="Rules"
+          variant="sm"
+          options={globalRulesOptions}
+          onOptionClick={handleOptionClick}
+          addButtonTooltip="Add rules"
+        />
+      ) : (
+        <ConfigHeader
+          title="Rules"
+          variant="sm"
+          onAddClick={() => handleAddRule()}
+          addButtonTooltip="Add rules"
+        />
+      )}
 
       <Card>
         {sortedRules.length > 0 ? (
