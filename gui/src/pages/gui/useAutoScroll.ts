@@ -49,7 +49,7 @@ export const useAutoScroll = (
         mutation.addedNodes.forEach((node) => {
           if (node instanceof Element) {
             // Observe the newly added element and all its descendants
-            const elementsToObserve = [node, ...node.querySelectorAll('*')];
+            const elementsToObserve = [node, ...node.querySelectorAll("*")];
             elementsToObserve.forEach((el) => {
               resizeObserver.observe(el);
             });
@@ -61,19 +61,19 @@ export const useAutoScroll = (
     const observeAllElements = (container: Element) => {
       // Observe the container itself
       resizeObserver.observe(container);
-      
+
       // Observe all existing descendants (not just direct children)
-      const allElements = container.querySelectorAll('*');
+      const allElements = container.querySelectorAll("*");
       allElements.forEach((element) => {
         resizeObserver.observe(element);
       });
     };
 
     ref.current.addEventListener("scroll", handleScroll);
-    
+
     // Observe all existing elements
     observeAllElements(ref.current);
-    
+
     // Start watching for new elements
     mutationObserver.observe(ref.current, {
       childList: true,
