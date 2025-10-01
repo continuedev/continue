@@ -24,6 +24,11 @@
             ]
           },
           {
+            "group": "CLI",
+            "icon": "terminal",
+            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+          },
+          {
             "group": "Features",
             "icon": "star",
             "pages": [
@@ -83,13 +88,14 @@
               "customization/models",
               "customization/mcp-tools",
               "customization/rules",
-              "customization/prompts"
+              "customization/prompts",
+              "customization/settings"
             ]
           },
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["faqs", "troubleshooting"]
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
       },
@@ -230,10 +236,11 @@
             "pages": [
               "guides/overview",
               "guides/understanding-agents",
+              "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/doc-writing-agent-cli",
               "guides/continuous-ai",
-              "guides/snyk-mcp-continue-cookbook",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
@@ -248,6 +255,8 @@
             "icon": "book-open-cover",
             "pages": [
               "guides/posthog-github-continuous-ai",
+              "guides/snyk-mcp-continue-cookbook",
+              "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment"
             ]
           }

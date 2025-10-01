@@ -5,7 +5,7 @@ import node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
-import { isHeadlessMode } from "../util/cli.js";
+import { isHeadlessMode, isServe } from "../util/cli.js";
 import { isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
@@ -95,6 +95,7 @@ export class PosthogService {
         ideType: "cli",
         isHeadless: isHeadlessMode(),
         isGitHubCI: isGitHubActions(),
+        isServe: isServe(),
       };
       const payload = {
         distinctId: this.uniqueId,

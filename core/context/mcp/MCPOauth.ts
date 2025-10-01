@@ -8,22 +8,20 @@ import {
   OAuthTokens,
   OAuthTokensSchema,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
-import { IDE, MCPServerStatus, SSEOptions } from "../..";
+import { IDE } from "../..";
 
 import http from "http";
 import url from "url";
-import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
 // Use a Map to support concurrent authentications for different servers
-const authenticatingContexts = new Map<
-  string,
-  {
-    authenticatingServer: MCPServerStatus;
-    ide: IDE;
-    state?: string;
-  }
->();
+interface MCPOauthContext {
+  serverId: string;
+  ide: IDE;
+  state?: string;
+}
+const authenticatingContexts = new Map<string, MCPOauthContext>();
 
 // Map state parameters to server URLs for OAuth callback matching
 const stateToServerUrl = new Map<string, string>();
@@ -242,32 +240,31 @@ export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
  * checks if the authentication is already done for the current server
  * if not, starts the authentication process by opening a webpage url
  */
-export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
-  const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
-  const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
+export async function performAuth(serverId: string, url: string, ide: IDE) {
+  const authProvider = new MCPConnectionOauthProvider(url, ide);
   // Ensure redirect URL is ready before starting auth
   await authProvider.ensureRedirectUrl();
 
   // Generate a unique state parameter for this auth flow
-  const state = crypto.randomUUID();
+  const state = uuidv4();
 
   // Store context for this specific server with state
-  authenticatingContexts.set(mcpServerUrl, {
-    authenticatingServer: mcpServer,
+  authenticatingContexts.set(url, {
+    serverId,
     ide,
     state,
   });
 
   // Map state to server URL for callback matching
-  stateToServerUrl.set(state, mcpServerUrl);
+  stateToServerUrl.set(state, url);
 
   try {
     return await auth(authProvider, {
-      serverUrl: mcpServerUrl,
+      serverUrl: url,
     });
   } catch (error) {
     // Clean up on error
-    authenticatingContexts.delete(mcpServerUrl);
+    authenticatingContexts.delete(url);
     stateToServerUrl.delete(state);
     throw error;
   }
@@ -278,9 +275,7 @@ export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
  */
 async function handleMCPOauthCode(authorizationCode: string, state?: string) {
   let serverUrl: string | undefined;
-  let context:
-    | { authenticatingServer: MCPServerStatus; ide: IDE; state?: string }
-    | undefined;
+  let context: MCPOauthContext | undefined;
 
   if (state) {
     // Use state parameter to find the correct server
@@ -301,7 +296,7 @@ async function handleMCPOauthCode(authorizationCode: string, state?: string) {
     return;
   }
 
-  const { ide, authenticatingServer } = context;
+  const { ide, serverId } = context;
 
   try {
     if (!serverUrl) {
@@ -331,9 +326,7 @@ async function handleMCPOauthCode(authorizationCode: string, state?: string) {
 
     if (authStatus === "AUTHORIZED") {
       const { MCPManagerSingleton } = await import("./MCPManagerSingleton"); // put dynamic import to avoid cyclic imports
-      await MCPManagerSingleton.getInstance().refreshConnection(
-        authenticatingServer.id,
-      );
+      await MCPManagerSingleton.getInstance().refreshConnection(serverId);
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -350,8 +343,7 @@ async function handleMCPOauthCode(authorizationCode: string, state?: string) {
   }
 }
 
-export function removeMCPAuth(mcpServer: MCPServerStatus, ide: IDE) {
-  const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
-  const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
+export function removeMCPAuth(url: string, ide: IDE) {
+  const authProvider = new MCPConnectionOauthProvider(url, ide);
   authProvider.clear();
 }
