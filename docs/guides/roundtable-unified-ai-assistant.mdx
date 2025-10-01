@@ -1,204 +1,246 @@
----
-title: "Roundtable MCP Server - Unified AI Assistant Management"
-description: "Enhance your Continue workflow with Roundtable MCP Server for unified AI assistant management and conversation routing"
-keywords: [mcp, ai assistant, multi-model, conversation management, agent, claude, openai, gemini]
----
+| title | description | sidebarTitle |
+|-------|-------------|--------------|
+| Roundtable MCP: Unified AI Workflow | Build an intelligent AI routing system with Continue CLI and Roundtable MCP Server | Roundtable MCP |
 
-# Roundtable MCP Server - Unified AI Assistant Management
+# Roundtable MCP: Unified AI Workflow
 
-The [Roundtable MCP Server](https://github.com/InsightFactory/roundtable) provides a unified interface for managing multiple AI assistants and routing conversations intelligently within your Continue workflow. This integration enables seamless switching between different AI models and conversation contexts while maintaining conversation history and context.
+Build an intelligent AI routing system that automatically selects the optimal AI model for each coding task using Continue CLI and Roundtable MCP Server.
 
-## Overview
+## What You'll Build
 
-Roundtable acts as a meta-assistant that orchestrates conversations across multiple AI providers (Claude, OpenAI, Gemini, etc.) and provides intelligent conversation routing based on task complexity, model capabilities, and user preferences. When integrated with Continue, it enhances your coding workflow by:
+By the end of this guide, you'll have a unified AI workflow that:
 
-- **Unified AI Access**: Single interface to multiple AI assistants
-- **Intelligent Routing**: Automatic model selection based on task type
-- **Conversation Management**: Seamless context switching and history
-- **Zero Configuration**: Ready-to-use with sensible defaults
-- **Continue Integration**: Works seamlessly with Continue's agent mode
+- **Automatically routes coding tasks** to the most appropriate AI model (Claude for architecture, GPT-4 for creative tasks, etc.)
+- **Maintains conversation context** across different AI providers seamlessly
+- **Optimizes cost and performance** by using the right model for each task type
+- **Integrates natively with Continue CLI** for streamlined development workflows
+- **Provides zero-configuration setup** with intelligent defaults for immediate productivity
 
-## Why Use Roundtable with Continue?
+## Prerequisites
 
-Continue's powerful agent mode becomes even more effective when combined with Roundtable's unified AI management:
+Before starting, ensure you have:
 
-1. **Enhanced Model Selection**: Automatically route coding tasks to the most appropriate AI model
-2. **Workflow Optimization**: Maintain conversation context across different AI assistants
-3. **Development Efficiency**: Reduce cognitive overhead of manually switching between AI tools
-4. **Consistent Experience**: Unified interface regardless of underlying AI provider
+- **Continue CLI installed** ([installation guide](https://continue.dev/docs/quickstart))
+- **Node.js 18+** for package management
+- **API keys** for your preferred AI providers:
+  - Anthropic API key (for Claude)
+  - OpenAI API key (for GPT models)
+  - Google API key (for Gemini, optional)
 
-## Quick Start
+## Quick Start vs Manual Setup
 
-### Prerequisites
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-- Node.js 18+ installed
-- Continue configured with agent mode
-- API keys for desired AI providers (Claude, OpenAI, etc.)
+<Tabs>
+<TabItem label="Quick Start">
 
-### Installation
-
-1. Install Roundtable MCP Server:
+Get up and running with Roundtable MCP in under 5 minutes:
 
 ```bash
-npm install -g @insightfactory/roundtable-mcp
+# Install Roundtable MCP Server
+npm install -g roundtable-ai
+
+# Initialize with Continue CLI
+continue mcp add roundtable
+
+# Configure your API keys
+continue config set ANTHROPIC_API_KEY your_claude_key_here
+continue config set OPENAI_API_KEY your_openai_key_here
+
+# Start using intelligent routing
+continue chat "Route this to the best model for code review"
 ```
 
-2. Create a `.continue/mcpServers` folder in your workspace:
+</TabItem>
+<TabItem label="Manual Setup">
 
-```bash
-mkdir -p .continue/mcpServers
-```
+For custom configurations and advanced setups:
 
-3. Create `roundtable.yaml` in the mcpServers folder:
-
-```yaml title=".continue/mcpServers/roundtable.yaml"
-name: Roundtable Unified AI Assistant
-version: 1.0.0
-schema: v1
-mcpServers:
-  - name: Roundtable
-    command: roundtable-mcp
-    args:
-      - --port
-      - "3000"
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-```
-
-### Configuration
-
-Configure your AI provider credentials in your environment or Continue's secret management:
-
-```bash
-# Add to your .env file
-ANTHROPIC_API_KEY=your_claude_key_here
-OPENAI_API_KEY=your_openai_key_here
-GOOGLE_API_KEY=your_gemini_key_here
-```
-
-## Usage Examples
-
-### Basic AI Assistant Management
-
-Once configured, you can use Roundtable through Continue's agent mode:
-
-```
-@roundtable route this conversation to the best model for code review
-```
-
-### Intelligent Task Routing
-
-Roundtable automatically selects the appropriate AI model based on your request:
-
-```
-# Complex architectural question -> Routes to Claude
-"Help me design a microservices architecture for this e-commerce platform"
-
-# Quick code completion -> Routes to faster model
-"Complete this function signature"
-
-# Creative naming -> Routes to GPT-4
-"Suggest creative variable names for this machine learning pipeline"
-```
-
-### Conversation Context Management
-
-Maintain conversation history across different AI models:
-
-```
-@roundtable continue the previous conversation about database optimization with the architecture specialist
-```
-
-## Advanced Configuration
-
-### Custom Routing Rules
-
-Configure custom routing rules based on your preferences:
-
-```yaml title=".continue/mcpServers/roundtable.yaml"
-name: Roundtable Unified AI Assistant
-version: 1.0.0
-schema: v1
-mcpServers:
-  - name: Roundtable
-    command: roundtable-mcp
-    args:
-      - --config
-      - "/path/to/roundtable-config.json"
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-```
-
-### Integration with Continue's Features
-
-Roundtable works seamlessly with Continue's existing features:
-
-- **Agent Mode**: Enhanced with multi-model routing
-- **Chat**: Unified conversation interface
-- **Edit**: Model selection based on edit complexity
-- **Autocomplete**: Intelligent provider switching
-
-## Benefits for Development Teams
-
-### Enhanced Productivity
-
-- **Reduced Context Switching**: Stay in Continue while accessing multiple AI assistants
-- **Optimal Model Selection**: Always use the right AI for the task
-- **Conversation Continuity**: Maintain context across sessions and models
-
-### Cost Optimization
-
-- **Smart Routing**: Use cost-effective models for simple tasks
-- **Usage Analytics**: Track which models are most effective for different tasks
-- **Budget Management**: Set usage limits and preferences per model
-
-### Team Collaboration
-
-- **Shared Configurations**: Team-wide routing rules and preferences
-- **Conversation History**: Shareable conversation contexts
-- **Model Performance**: Team insights into model effectiveness
-
-## Troubleshooting
-
-### Common Issues
-
-1. **MCP Server Not Starting**
+1. **Install the MCP Server**:
    ```bash
-   # Verify installation
-   npm list -g @insightfactory/roundtable-mcp
-
-   # Check logs
-   tail -f ~/.continue/logs/roundtable.log
+   npm install -g roundtable-ai
    ```
 
-2. **API Key Issues**
+2. **Configure Continue MCP Settings**:
    ```bash
-   # Verify environment variables
-   echo $ANTHROPIC_API_KEY
-   echo $OPENAI_API_KEY
+   continue config edit
    ```
 
-3. **Routing Not Working**
-   - Ensure agent mode is enabled in Continue
-   - Check that MCP server is properly configured
-   - Verify network connectivity
+3. **Add Roundtable to your Continue configuration**:
+   ```json
+   {
+     "mcpServers": {
+       "roundtable": {
+         "command": "roundtable-mcp",
+         "args": ["--port", "3000"],
+         "env": {
+           "ANTHROPIC_API_KEY": "your_claude_key_here",
+           "OPENAI_API_KEY": "your_openai_key_here"
+         }
+       }
+     }
+   }
+   ```
 
-### Getting Help
+4. **Restart Continue** to load the new MCP server:
+   ```bash
+   continue restart
+   ```
 
-- **Documentation**: [Roundtable GitHub Repository](https://github.com/InsightFactory/roundtable)
-- **Issues**: Report bugs and feature requests on GitHub
-- **Community**: Join discussions in Continue's Discord
+</TabItem>
+</Tabs>
+
+## Workflow Implementation
+
+### Step 1: Verify MCP Integration
+
+Confirm Roundtable is properly integrated with Continue:
+
+```bash
+# Check MCP server status
+continue mcp status
+
+# Test the connection
+continue chat "@roundtable health check"
+```
+
+### Step 2: Configure Intelligent Routing
+
+Set up routing rules based on your development needs:
+
+```bash
+# Configure routing preferences
+continue chat "@roundtable configure routing rules for:
+- Code review -> Claude
+- Quick completions -> GPT-3.5-turbo
+- Architecture discussions -> Claude
+- Creative naming -> GPT-4"
+```
+
+### Step 3: Enable Workflow Automation
+
+Integrate routing into your Continue CLI workflow:
+
+```bash
+# Automatic routing based on task type
+continue edit --route-optimal "refactor this function for better performance"
+
+# Context-aware conversations
+continue chat --continue-context "@roundtable discuss database optimization strategies"
+
+# Project-specific routing
+continue workspace configure --mcp-routing roundtable
+```
+
+## Advanced Continue CLI Integration
+
+### Intelligent Code Review Workflow
+
+```bash
+# Route code review to specialized models
+continue review --route "@roundtable analyze this PR for:
+- Security vulnerabilities -> Claude
+- Performance issues -> GPT-4
+- Code style -> CodeLlama"
+```
+
+### Multi-Model Architecture Discussions
+
+```bash
+# Long-form architectural conversations
+continue chat --session architecture "@roundtable
+Let's design a microservices architecture.
+Route complex design questions to Claude and
+implementation details to GPT-4."
+```
+
+### Automated Task Routing
+
+```bash
+# Set up automatic routing based on file types
+continue config set routing.rules '{
+  "*.test.js": "claude",
+  "*.md": "gpt-4",
+  "*.py": "claude",
+  "architecture/*": "claude"
+}'
+```
+
+## What You've Built
+
+Your AI workflow now features:
+
+- **Intelligent Task Routing**: Automatically selects Claude for complex architectural decisions, GPT-4 for creative tasks, and faster models for simple completions
+- **Seamless Continue Integration**: Works natively with `continue chat`, `continue edit`, and `continue review` commands
+- **Context Preservation**: Maintains conversation history across different AI models within Continue sessions
+- **Cost-Optimized Operations**: Uses appropriate models for each task type, reducing API costs while maximizing effectiveness
+- **Zero-Configuration Intelligence**: Learns from your patterns and automatically improves routing decisions
+
+This system positions you in the **"Intelligent AI Orchestration"** tier of the Continuous AI maturity model - where AI selection becomes automatic and context-aware.
+
+## Security Best Practices
+
+### API Key Management with Continue
+
+```bash
+# Store keys securely using Continue's built-in secrets management
+continue secrets set ANTHROPIC_API_KEY
+continue secrets set OPENAI_API_KEY
+
+# Verify secure storage
+continue secrets list
+```
+
+### Conversation Privacy
+
+```bash
+# Enable conversation encryption
+continue config set encryption.enabled true
+
+# Set retention policies
+continue config set conversation.retention 30days
+```
+
+## Advanced Prompts for Continue CLI
+
+### Code Architecture Review
+```bash
+continue chat "@roundtable analyze this codebase architecture and route specialized questions:
+- Database design decisions to Claude
+- Performance optimization to GPT-4
+- Security review to specialized security model"
+```
+
+### Multi-Language Development
+```bash
+continue workspace analyze --route-by-language "@roundtable
+Route Python questions to Claude,
+JavaScript to GPT-4, and
+DevOps questions to appropriate specialists"
+```
+
+### Team Collaboration Workflows
+```bash
+continue team configure --shared-routing "@roundtable
+Set up team-wide routing rules:
+- Junior dev questions -> patient, detailed responses
+- Senior dev questions -> concise, technical responses
+- Architecture decisions -> Claude with full context"
+```
 
 ## Next Steps
 
-After setting up Roundtable with Continue:
+Expand your intelligent AI workflow:
 
-1. **Explore Routing**: Experiment with different query types to see model selection
-2. **Customize Rules**: Set up custom routing rules for your workflow
-3. **Team Setup**: Configure organization-wide preferences
-4. **Monitor Usage**: Track which models work best for different tasks
+1. **Explore Continue Extensions**: Add domain-specific routing for your tech stack
+2. **Team Standardization**: Share routing configurations across your development team
+3. **Custom Model Integration**: Add specialized models for your specific domain (DevOps, ML, etc.)
+4. **Workflow Automation**: Integrate with Continue's task automation features
+5. **Performance Monitoring**: Use Continue's analytics to optimize routing decisions
 
-The combination of Continue's powerful IDE integration and Roundtable's unified AI management creates a seamless development experience that adapts to your needs while maintaining the context and continuity essential for effective coding workflows.
+## Resources
+
+- [Continue CLI Documentation](https://continue.dev/docs)
+- [Roundtable MCP Server Repository](https://github.com/askbudi/roundtable)
+- [Model Context Protocol Specification](https://spec.modelcontextprotocol.io)
+- [Continue Discord Community](https://discord.gg/continue)
