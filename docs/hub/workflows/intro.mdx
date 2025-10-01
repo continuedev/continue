@@ -26,6 +26,66 @@ To run your first workflow
 2. Connect with your GitHub account
 3. Enter the prompt for your agent
 
+## Example Workflow Tasks
+
+Here are some example tasks you can try with your workflows:
+
+<AccordionGroup>
+  <Accordion title="Bug Fixes & Code Quality">
+    
+    - "Fix the TypeError in api/users.ts where the user object might be undefined"
+    - "Add null checks to all database query results in the services/ directory"
+    - "Fix all ESLint warnings in the components folder"
+    - "Update deprecated React lifecycle methods to hooks in legacy components"
+    
+  </Accordion>
+
+  <Accordion title="Feature Development">
+    
+    - "Create a new REST endpoint for user profile updates with validation and error handling"
+    - "Add pagination to the products list page with previous/next buttons"
+    - "Implement dark mode toggle using Tailwind CSS classes across all pages"
+    - "Add unit tests for the authentication service using Jest"
+    
+  </Accordion>
+
+  <Accordion title="Security & Compliance">
+    
+    - "Scan the codebase for hardcoded API keys and move them to environment variables"
+    - "Add input sanitization to all user-facing form fields"
+    - "Update all npm packages with known security vulnerabilities"
+    - "Implement rate limiting on the /api/login endpoint"
+    
+  </Accordion>
+
+  <Accordion title="Documentation & Boilerplate">
+    
+    - "Add JSDoc comments to all exported functions in the utils/ directory"
+    - "Create a README.md for the new payment-processing module with setup instructions"
+    - "Generate TypeScript interfaces for all API response schemas"
+    - "Add error handling boilerplate to all async functions missing try-catch blocks"
+    
+  </Accordion>
+
+  <Accordion title="Investigation & Analysis">
+    
+    - "Investigate why the login API is returning 500 errors intermittently and suggest fixes"
+    - "Analyze the performance bottleneck in the data processing pipeline"
+    - "Review the database schema for the orders table and suggest optimizations"
+    - "Find all TODO comments related to authentication and create a summary"
+    
+  </Accordion>
+
+  <Accordion title="Refactoring">
+    
+    - "Extract the repeated validation logic in controllers into a shared utility function"
+    - "Convert all class components in src/legacy to functional components with hooks"
+    - "Rename all instances of 'userId' to 'accountId' across the codebase"
+    - "Split the 500-line UserService.ts into smaller, single-responsibility services"
+    
+  </Accordion>
+</AccordionGroup>
+
 ## How to use background agents
 
 The practice of using background agents, which we call Continuous AI, requires practice and forethought to set up the right guiderails and habits to fit your development workflow, much like learning to work with a larger engineering team. We are constantly sharing our learnings on the [Continuous AI Blog](https://blog.continue.dev), but these few high-level tips are a great way to quickly become successful with workflows:
