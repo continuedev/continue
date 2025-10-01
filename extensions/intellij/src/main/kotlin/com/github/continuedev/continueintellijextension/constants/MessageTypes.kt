@@ -144,6 +144,7 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "tools/evaluatePolicy",
+            "tools/preprocessArgs",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",

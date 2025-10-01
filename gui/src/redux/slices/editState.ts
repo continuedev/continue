@@ -18,7 +18,7 @@ export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
   status: "not-started",
 };
 
-const initialState: EditState = {
+export const INITIAL_EDIT_STATE: EditState = {
   applyState: INITIAL_EDIT_APPLY_STATE,
   codeToEdit: [],
   returnToMode: "chat",
@@ -28,7 +28,7 @@ const initialState: EditState = {
 
 export const editStateSlice = createSlice({
   name: "editState",
-  initialState,
+  initialState: INITIAL_EDIT_STATE,
   reducers: {
     setReturnToModeAfterEdit: (
       state,
