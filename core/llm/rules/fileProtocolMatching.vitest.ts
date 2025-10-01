@@ -8,7 +8,7 @@ describe("File Path Protocol Matching", () => {
     name: "Rule with file:// protocol",
     rule: "This is a test rule",
     source: "rules-block",
-    ruleFile: "file:///Users/user/project/nested-folder/rules.md",
+    sourceFile: "file:///Users/user/project/nested-folder/rules.md",
   };
 
   it("should match relative paths with file:// protocol paths", () => {

@@ -12,13 +12,12 @@ import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../util/uri";
 import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
+import { SUPPORTED_AGENT_FILES } from "./markdown";
 export function isContinueConfigRelatedUri(uri: string): boolean {
   return (
     uri.endsWith(".continuerc.json") ||
     uri.endsWith(".prompt") ||
-    uri.endsWith("AGENTS.md") ||
-    uri.endsWith("AGENT.md") ||
-    uri.endsWith("CLAUDE.md") ||
+    !!SUPPORTED_AGENT_FILES.find((file) => uri.endsWith(`/${file}`)) ||
     uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
     (uri.includes(".continue") &&
       (uri.endsWith(".yaml") ||

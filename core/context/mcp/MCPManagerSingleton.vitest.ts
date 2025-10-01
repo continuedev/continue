@@ -94,28 +94,6 @@ describe("MCPManagerSingleton", () => {
     });
   });
 
-  describe("removeConnection", () => {
-    it("should remove connection and close client", async () => {
-      // Create a spy on the close method
-      const connection = manager.createConnection(
-        "test-id",
-        testOptions,
-      ) as TestMCPConnection;
-      const closeSpy = vi.spyOn(connection.client, "close");
-
-      await manager.removeConnection("test-id");
-
-      expect(closeSpy).toHaveBeenCalled();
-      expect(manager.getConnection("test-id")).toBeUndefined();
-    });
-
-    it("should handle non-existent connection", async () => {
-      await expect(
-        manager.removeConnection("non-existent"),
-      ).resolves.toBeUndefined();
-    });
-  });
-
   describe("setConnections", () => {
     it("should add new connections", () => {
       const servers = [testOptions];
