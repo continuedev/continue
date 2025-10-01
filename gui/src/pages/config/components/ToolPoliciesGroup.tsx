@@ -31,7 +31,7 @@ export function ToolPoliciesGroup({
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const tools = useMemo(() => {
     return availableTools.filter((t) => t.group === groupName);
-  }, [availableTools]);
+  }, [availableTools, groupName]);
 
   const toolGroupSettings = useAppSelector(
     (state) => state.ui.toolGroupSettings,

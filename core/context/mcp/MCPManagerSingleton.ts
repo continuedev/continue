@@ -27,7 +27,11 @@ export class MCPManagerSingleton {
         conn.status = "not-connected";
         await this.refreshConnection(serverId);
       } else {
-        await conn.disconnect(true);
+        try {
+          await conn.disconnect(true);
+        } catch (e) {
+          console.error(`Error disconnecting from MCP server ${serverId}`, e);
+        }
       }
     }
   }

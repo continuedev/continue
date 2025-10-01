@@ -25,7 +25,7 @@ export function useEditBlock() {
         path: selectedProfile.uri,
       });
     } else if (
-      selectedProfile?.fullSlug.ownerSlug &&
+      selectedProfile?.fullSlug?.ownerSlug &&
       selectedProfile?.fullSlug.packageSlug
     ) {
       ideMessenger.post("controlPlane/openUrl", {

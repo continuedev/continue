@@ -22,7 +22,7 @@ class RulesContextProvider extends BaseContextProvider {
   // This is only used within this class. Worst case if there are exact duplicates is that one always calls the other, but this is an extreme edge case
   // Can eventually pull in more metadata, but this is experimental
   private getIdFromRule(rule: RuleWithSource): string {
-    return rule.sourceFile ?? rule.slug ?? rule.name ?? rule.rule;
+    return rule.slug ?? rule.sourceFile ?? rule.name ?? rule.rule;
   }
 
   private getNameFromRule(rule: RuleWithSource): string {
