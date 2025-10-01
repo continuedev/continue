@@ -1080,7 +1080,6 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-
   displayTitle: string;
   wouldLikeTo?: string;
   isCurrently?: string;
@@ -1097,6 +1096,12 @@ export interface Tool {
   };
   defaultToolPolicy?: ToolPolicy;
   toolCallIcon?: string;
+  preprocessArgs?: (
+    args: Record<string, unknown>,
+    extras: {
+      ide: IDE;
+    },
+  ) => Promise<Record<string, unknown>>;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
@@ -1776,7 +1781,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  tools: Tool[];
+  tools: Omit<Tool, "preprocessArgs", "evaluatePolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   usePlatform: boolean;

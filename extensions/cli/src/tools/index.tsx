@@ -23,6 +23,7 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
@@ -68,6 +69,11 @@ function getDynamicTools(): Tool[] {
     }
   } catch {
     // Service not ready yet, no dynamic tools
+  }
+
+  // Add beta status tool if --beta-status-tool flag is present
+  if (process.argv.includes("--beta-status-tool")) {
+    dynamicTools.push(statusTool);
   }
 
   return dynamicTools;

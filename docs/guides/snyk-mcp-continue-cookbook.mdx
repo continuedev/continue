@@ -33,8 +33,18 @@ For all options, first:
   1. Sign up for a Snyk account at [snyk.io](https://snyk.io/)
   2. Create a new project in Snyk by importing your code repository (Git 
   provider or manual upload)
+  3. Install and authenticate the Snyk CLI locally:
+     ```bash
+     npm install -g snyk
+     snyk auth
+     ```
+     This will open your browser to authenticate with your Snyk account.
   </Step>
 </Steps>
+
+<Note>
+  **Important**: The Snyk MCP requires the Snyk CLI to be authenticated locally. Run `snyk auth` to authenticate before using the Continue agent with Snyk MCP.
+</Note>
  <Warning>
   To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
   </Warning>
@@ -66,8 +76,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Run Your First Security Scan">
         Start with a comprehensive security scan:
         ```bash
-         # TUI mode
-        cn -p "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity."
+         # Headless mode
+        cn -p "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity." --auto
         ```
 
         That's it! The agent handles everything automatically.
@@ -159,7 +169,7 @@ You can add prompts to your agent's configuration for easy access in future sess
   **Where to run these workflows:**
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+  - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for headless commands
 
   **Test in Plan Mode First**: Before running security scans that might make
   changes, test your prompts in plan mode (see the [Plan Mode
@@ -182,7 +192,7 @@ and rerun to verify.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify."
+cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify." --auto
 ```
 
 </Card>
@@ -201,7 +211,7 @@ Re-test after the plan (dry run).
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)."
+cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)." --auto
 ```
 
 </Card>
@@ -219,7 +229,7 @@ with exact files/lines. Provide code changes and re-scan to confirm.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm."
+cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm." --auto
 ```
 
 </Card>
@@ -238,7 +248,7 @@ Re-test after the change (dry run).
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)."
+cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)." --auto
 ```
 
 </Card>
@@ -256,7 +266,7 @@ Block if new high issues would be introduced. Show deltas.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas."
+cn -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas." --auto
 ```
 
 </Card>
@@ -273,35 +283,38 @@ Open Snyk Learn lessons related to the top CWE(s) from this scan.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan."
+cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan." --auto
 ```
 
 </Card>
 
 ## Continuous Security with GitHub Actions
 
-This example demonstrates a **Continuous AI workflow** where security scanning runs automatically in your CI/CD pipeline Headless Mode Prompt in headless mode (`cn -p`) with Snyk MCP.
+This example demonstrates a **Continuous AI workflow** where security scanning runs automatically on pull requests, generates AI-powered mitigation suggestions, and posts them as PR comments.
+
+<Info>
+
+  **About the --auto flag**: The `--auto` flag enables tools to run continuously without manual confirmation. This is essential for headless mode where the agent needs to execute multiple tools automatically to complete tasks like security scanning, vulnerability analysis, and fix validation.
+
+</Info>
 
 ### Add GitHub Secrets
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
 - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `SNYK_TOKEN`: Your Snyk authentication token from [app.snyk.io/account](https://app.snyk.io/account)
 
 ### Create Workflow File
 
 Create `.github/workflows/snyk-security.yml` in your repository:
 
 ```yaml
-name: Security Scanning with Snyk MCP
+name: Snyk Security Scanning
 
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
-  schedule:
-    - cron: "0 8 * * *" # Daily at 8 AM UTC
 
 jobs:
   security-scan:
@@ -309,55 +322,259 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for git diff
+
+      - name: Get Changed Files
+        id: changed-files
+        run: |
+          echo "📝 Getting changed files since main branch..."
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | tr '\n' ' ')
+          echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "Changed files: $CHANGED_FILES"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
+
+      - name: Install Snyk CLI
+        run: |
+          npm install -g snyk
+          echo "✅ Snyk CLI installed"
 
       - name: Install Continue CLI
         run: |
           npm install -g @continuedev/cli
           echo "✅ Continue CLI installed"
 
-      - name: Authenticate Continue CLI
-        env:
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      - name: Validate Secrets
         run: |
-          cn auth login --api-key "$CONTINUE_API_KEY"
-          echo "✅ Continue CLI authenticated"
+          if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
+            echo "❌ Error: SNYK_TOKEN secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CONTINUE_API_KEY }}" ]; then
+            echo "⚠️ Warning: CONTINUE_API_KEY not set - AI mitigation suggestions will be skipped"
+          fi
+          echo "✅ Required secrets validated"
+
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk auth "$SNYK_TOKEN"
+          echo "✅ Snyk authenticated"
 
       - name: Run Security Scans
+        id: security-scan
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
         run: |
-          echo "🔍 Running code vulnerability scan..."
-          cn -p "Run Snyk Code scan with severity high on this repo.
-                 Fail if any high issues are present."
+          SCAN_FAILED=0
+
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "🔍 Running targeted scan on changed files..."
+            echo "Changed files: $CHANGED_FILES"
+            FILE_ARGS=""
+            for file in $CHANGED_FILES; do
+              if [[ "$file" =~ \.(js|jsx|ts|tsx|py|java|go|rb)$ ]]; then
+                FILE_ARGS="$FILE_ARGS --file=$file"
+              fi
+            done
+
+            if [ -n "$FILE_ARGS" ]; then
+              echo "🔍 Running Snyk Code scan on changed files..."
+              snyk code test $FILE_ARGS --severity-threshold=high --json > snyk-code-results.json || {
+                echo "❌ Snyk Code found high severity issues in changed files"
+                SCAN_FAILED=1
+              }
+            else
+              echo "⚠️ No scannable code files changed, skipping Snyk Code scan"
+              echo '{"runs": [{"results": []}]}' > snyk-code-results.json
+            fi
+          else
+            echo "⚠️ No changed files detected, creating empty results"
+            echo '{"runs": [{"results": []}]}' > snyk-code-results.json
+          fi
 
           echo "📦 Checking dependencies..."
-          cn -p "Run Snyk Open Source on this repo.
-                 Fail on fixable high issues."
+          snyk test --severity-threshold=high --json > snyk-oss-results.json || {
+            echo "❌ Snyk Open Source found high severity issues"
+            SCAN_FAILED=1
+          }
+
+          if [ $SCAN_FAILED -eq 1 ]; then
+            echo "scan_status=failed" >> $GITHUB_OUTPUT
+            echo "⚠️ Scans completed with issues - continuing to generate mitigation suggestions"
+          else
+            echo "scan_status=passed" >> $GITHUB_OUTPUT
+            echo "✅ All security scans passed"
+          fi
+
+      - name: Generate AI Mitigation Suggestions
+        if: always() && steps.security-scan.outputs.scan_status == 'failed'
+        continue-on-error: true
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          echo "🤖 Generating AI-powered mitigation suggestions..."
+
+          # Create a summary of findings for Continue CLI
+          FINDINGS_SUMMARY=$(cat snyk-code-results.json snyk-oss-results.json | jq -r '
+            if .runs then
+              .runs[0].results[] | "Code Issue: \(.message.text) in \(.locations[0].physicalLocation.artifactLocation.uri) (Severity: \(.level))"
+            elif .vulnerabilities then
+              .vulnerabilities[] | "Dependency Issue: \(.title) in \(.packageName)@\(.version) (Severity: \(.severity))"
+            else
+              empty
+            end
+          ' | head -20)
+
+          if [ -n "$FINDINGS_SUMMARY" ]; then
+            echo "📋 Security findings to analyze:"
+            echo "$FINDINGS_SUMMARY"
+            echo ""
+
+            # Use Continue CLI to generate mitigation suggestions
+            PROMPT="Analyze these Snyk security findings and provide specific, actionable mitigation steps for each issue. Focus on: 1) Root cause, 2) Immediate fix, 3) Long-term prevention. Findings: $FINDINGS_SUMMARY. Provide clear, prioritized recommendations."
+
+            cn --config continuedev/snyk-continuous-ai -p "$PROMPT" --auto > mitigation-suggestions.md || {
+              echo "⚠️ Warning: Could not generate AI suggestions"
+              exit 0
+            }
+
+            if [ -f mitigation-suggestions.md ]; then
+              echo "✅ AI mitigation suggestions generated"
+              echo ""
+              echo "--- Mitigation Suggestions ---"
+              cat mitigation-suggestions.md
+            fi
+          else
+            echo "⚠️ No findings to analyze"
+          fi
+
+      - name: Post Mitigation Summary to PR
+        if: steps.security-scan.outputs.scan_status == 'failed' && hashFiles('mitigation-suggestions.md') != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f mitigation-suggestions.md ]; then
+            echo "💬 Posting mitigation summary to PR..."
+
+            # Create PR comment with mitigation suggestions
+            cat > pr-comment.md <<'EOF'
+          ## 🛡️ Snyk Mitigation Summary
+
+          Snyk has identified security issues in this PR. Here are AI-generated mitigation recommendations:
+
+          EOF
+
+            cat mitigation-suggestions.md >> pr-comment.md
+
+            cat >> pr-comment.md <<EOF
+
+          ---
+          **Scan Details:**
+          - 📊 Full report available in workflow artifacts
+          - 🔍 Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for complete details
+          - 🤖 Generated with Continue CLI + Snyk
+
+          _This is an automated security analysis. Please review and address the findings before merging._
+          EOF
+
+            gh pr comment ${{ github.event.pull_request.number }} --body-file pr-comment.md
+
+            echo "✅ Mitigation summary posted to PR"
+          else
+            echo "⚠️ No mitigation suggestions file found"
+          fi
 
       - name: Generate Security Report
         if: always()
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          cn -p "Generate a markdown security report summarizing:
-                 - Total vulnerabilities by severity
-                 - Top 3 critical issues (if any)
-                 - Recommended next steps
-                 Save to security-report.md"
+          echo "📊 Generating security report..."
+          {
+            echo "# Security Scan Report"
+            echo ""
+            echo "**Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+            echo "**Branch:** ${{ github.ref_name }}"
+            echo "**Commit:** ${{ github.sha }}"
+            echo "**Status:** ${{ steps.security-scan.outputs.scan_status }}"
+            echo ""
+
+            echo "## Snyk Code Scan Results"
+            if [ -f snyk-code-results.json ]; then
+              jq -r '.runs[0].results[] | "- **\(.level | ascii_upcase)**: \(.message.text) in \(.locations[0].physicalLocation.artifactLocation.uri)"' snyk-code-results.json || echo "No code issues found"
+            else
+              echo "No scan results available"
+            fi
+            echo ""
+
+            echo "## Snyk Open Source Scan Results"
+            if [ -f snyk-oss-results.json ]; then
+              jq -r '.vulnerabilities[] | "- **\(.severity | ascii_upcase)**: \(.title) (\(.packageName)@\(.version))"' snyk-oss-results.json || echo "No dependency issues found"
+            else
+              echo "No scan results available"
+            fi
+            echo ""
+
+            if [ -f mitigation-suggestions.md ]; then
+              echo "## AI-Powered Mitigation Suggestions"
+              echo ""
+              cat mitigation-suggestions.md
+            fi
+          } > scan-results.md
+
+          if [ -f scan-results.md ]; then
+            echo "✅ Security report generated successfully"
+            cat scan-results.md
+          else
+            echo "⚠️ Warning: scan-results.md was not created"
+          fi
 
       - name: Upload Security Report
-        uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
-          name: security-report-${{ github.run_number }}
-          path: security-report.md
-          retention-days: 30
+          name: security-scan-results
+          path: |
+            scan-results.md
+            snyk-code-results.json
+            snyk-oss-results.json
+            mitigation-suggestions.md
+          if-no-files-found: warn
+
+      - name: Fail if Security Issues Found
+        if: steps.security-scan.outputs.scan_status == 'failed'
+        run: |
+          echo "❌ Security scan failed - high severity issues found"
+          echo "📋 Review the security report artifact for details and mitigation suggestions"
+          exit 1
 ```
 
 <Info>
-  The Snyk MCP authentication is handled through Continue Hub. No need to manage
-  Snyk tokens directly in CI - the agent manages authentication.
+  **About SNYK_TOKEN**: The workflow uses the SNYK_TOKEN in two ways:
+  1. **Direct Snyk CLI authentication** - Authenticates the Snyk CLI for running scans
+  2. **Continue CLI access** - Available as an environment variable when Continue generates AI mitigation suggestions
+
+  The `cn` agent automatically uses the SNYK_TOKEN when needed for Snyk MCP operations.
+</Info>
+
+<Info>
+  This workflow demonstrates several advanced features:
+  - **Changed Files Detection**: Only scans files modified in the PR
+  - **AI Mitigation**: Uses Continue CLI to generate actionable mitigation steps
+  - **PR Comments**: Automatically posts mitigation suggestions as PR comments
+  - **Comprehensive Reporting**: Generates detailed security reports with artifacts
 </Info>
 
 ## Security Guardrails

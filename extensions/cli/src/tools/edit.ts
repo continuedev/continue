@@ -104,18 +104,22 @@ WARNINGS:
     },
   },
   preprocess: async (args) => {
-    const { old_string, new_string, replace_all = false } = args as EditArgs;
+    const { old_string, new_string, replace_all } = args as EditArgs;
 
     const { resolvedPath } = validateAndResolveFilePath(args);
 
-    validateSingleEdit(old_string, new_string);
+    const { oldString, newString, replaceAll } = validateSingleEdit(
+      old_string,
+      new_string,
+      replace_all,
+    );
 
     const oldContent = fs.readFileSync(resolvedPath, "utf-8");
     const newContent = executeFindAndReplace(
       oldContent,
-      old_string,
-      new_string,
-      replace_all,
+      oldString,
+      newString,
+      replaceAll ?? false,
       0,
     );
 
