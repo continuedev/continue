@@ -315,12 +315,23 @@ For each unresolved Sentry error with 'critical' or 'high' severity:
 
 ## Step 4: Set Up Continuous Monitoring with GitHub Actions
 
-Automate error monitoring to run daily and create issues for new critical errors:
+Automate error monitoring with the [Sentry Release GitHub Action](https://docs.sentry.io/product/releases/setup/release-automation/github-actions/) and Continue CLI to create comprehensive, AI-powered issue descriptions:
+
+<Tip>
+  **Why Combine Sentry Releases with Continue CLI?**
+  - **Release Tracking**: Associate errors with specific deployments
+  - **AI-Powered Analysis**: Continue CLI generates detailed issue descriptions with root cause analysis
+  - **Better Context**: Link errors to commits and pull requests
+  - **Automated Workflows**: Create issues with full stack traces and suggested fixes
+</Tip>
 
 ```yaml
 name: Sentry Error Monitoring
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # Run every 6 hours
     - cron: "0 */6 * * *"
@@ -331,10 +342,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+
+      # Create Sentry release for better error tracking
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
 
       - name: Install Continue CLI
         run: |
@@ -351,31 +374,56 @@ jobs:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
           echo "🔍 Analyzing Sentry errors..."
-          cn -p "Using Sentry MCP, analyze errors from the past 6 hours:
+          
+          # Use Continue CLI to analyze errors and generate comprehensive issue descriptions
+          cn -p "Using Sentry MCP, analyze errors from the past 6 hours for project $SENTRY_PROJECT:
                  1. Filter for unresolved errors with high or critical severity
                  2. Group similar errors to avoid duplicates
                  3. For each unique critical error:
+                    - Generate a comprehensive issue description including:
+                      * Error summary with frequency and user impact metrics
+                      * Full stack trace with highlighted problem areas
+                      * Environment details (browser, OS, release version)
+                      * Link to Sentry issue dashboard
+                      * Root cause analysis using AI
+                      * Step-by-step reproduction if available
+                      * Suggested fix with code examples
+                      * Related errors or patterns
                     - Check if a GitHub issue already exists for this error
-                    - If not, create a new issue with full analysis
-                    - Use gh CLI: gh issue create --title 'title' --body 'body' --label 'bug,sentry,critical'
-                 4. Output summary with created issue URLs
+                    - If not, create a new issue with the generated description
+                    - Use gh CLI: gh issue create --title '[Sentry] [Error Type]: Brief description' --body 'AI-generated comprehensive analysis' --label 'bug,sentry,critical,needs-investigation'
+                    - Link the GitHub issue back to Sentry
+                 4. Generate a summary report with:
+                    - Total errors analyzed
+                    - New issues created with URLs
+                    - Errors skipped (already tracked)
+                    - Release correlation if available
 
                  Sentry Organization: $SENTRY_ORG
+                 Project: $SENTRY_PROJECT
                  Only process errors not already tracked in GitHub."
 
-      - name: Comment on workflow run
+      - name: Post workflow summary
         if: always()
         run: |
-          echo "✅ Sentry monitoring complete. Check step output for created issues."
+          echo "## 📊 Sentry Error Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Workflow completed at $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the 'Analyze Sentry Errors' step above for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Number of errors analyzed" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub issues created" >> $GITHUB_STEP_SUMMARY
+          echo "- Errors already tracked" >> $GITHUB_STEP_SUMMARY
 ```
 
 <Warning>
   **Required GitHub Secrets**:
   - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
-  - `SENTRY_AUTH_TOKEN`: Your Sentry User Auth Token
+  - `SENTRY_AUTH_TOKEN`: Your Sentry User Auth Token (needs scopes: `org:read`, `project:read`, `event:read`)
   - `SENTRY_ORG`: Your Sentry organization slug
+  - `SENTRY_PROJECT`: Your Sentry project slug
   - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
 
   Add these at: **Repository Settings → Secrets and variables → Actions**
@@ -384,10 +432,13 @@ jobs:
 <Info>
   **Workflow Best Practices**:
   - Run every 6 hours to catch critical errors quickly
+  - Create Sentry releases on push to track error-to-deployment correlation
+  - Use Continue CLI to generate comprehensive, AI-powered issue descriptions
   - Use duplicate detection to avoid creating multiple issues for the same error
   - Filter by severity to focus on high-impact issues
   - Include full error context and suggested fixes in issues
   - Tag issues with appropriate labels for team routing
+  - Link GitHub issues back to Sentry for bidirectional tracking
 </Info>
 
 ## What You've Built
