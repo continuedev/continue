@@ -29,7 +29,7 @@ export class ConfigEnhancer {
     let enhancedConfig = { ...config };
 
     // Add workflow rules/mcp servers if present
-    let options = { ..._options };
+    const options = { ..._options };
     const workflowState = await serviceContainer.get<WorkflowServiceState>(
       SERVICE_NAMES.WORKFLOW,
     );

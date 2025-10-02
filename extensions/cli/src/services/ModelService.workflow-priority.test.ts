@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
+
 import { ModelService } from "./ModelService.js";
 import { WorkflowServiceState } from "./types.js";
 

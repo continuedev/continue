@@ -9,10 +9,9 @@ import {
 } from "../permissions/types.js";
 import { logger } from "../util/logger.js";
 
+import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
-
-import { BaseService } from "./BaseService.js";
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
@@ -39,54 +38,52 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   /**
    * Generate workflow-specific policies if a workflow is active
    */
-  private generateWorkflowPolicies(): ToolPermissionPolicy[] {
-    try {
-      const workflowResult = serviceContainer.getSync<WorkflowServiceState>(
-        SERVICE_NAMES.WORKFLOW,
-      );
-
-      if (!workflowResult?.value?.workflowFile?.tools) {
-        return [];
-      }
-
-      const workflowState = workflowResult.value;
-
-      const parsedTools = parseWorkflowTools(workflowState.workflowFile.tools);
-      const policies: ToolPermissionPolicy[] = [];
-
-      if (parsedTools.allBuiltIn) {
-        policies.push({ tool: "*", permission: "allow" });
-        policies.push({ tool: "mcp:*", permission: "exclude" });
-      } else {
-        policies.push({ tool: "*", permission: "exclude" });
-      }
-
-      for (const toolRef of parsedTools.tools) {
-        if (toolRef.mcpServer) {
-          if (toolRef.toolName) {
-            policies.push({
-              tool: `mcp:${toolRef.mcpServer}:${toolRef.toolName}`,
-              permission: "allow",
-            });
-          } else {
-            policies.push({
-              tool: `mcp:${toolRef.mcpServer}:*`,
-              permission: "allow",
-            });
-          }
-        } else if (toolRef.toolName) {
-          policies.push({ tool: toolRef.toolName, permission: "allow" });
-        }
-      }
-
-      if (policies.length > 0) {
-        logger.debug(`Generated ${policies.length} workflow tool policies`);
-      }
-
-      return policies;
-    } catch (error) {
-      return [];
+  private generateWorkflowPolicies(): undefined | ToolPermissionPolicy[] {
+    const workflowResult = serviceContainer.getSync<WorkflowServiceState>(
+      SERVICE_NAMES.WORKFLOW,
+    );
+    if (!workflowResult?.value?.workflowFile?.tools) {
+      return undefined;
     }
+
+    const parsedTools = parseWorkflowTools(
+      workflowResult.value.workflowFile.tools,
+    );
+    if (parsedTools.tools.length === 0) {
+      return undefined;
+    }
+    const policies: ToolPermissionPolicy[] = [];
+
+    if (parsedTools.allBuiltIn) {
+      policies.push({ tool: "*", permission: "allow" });
+      policies.push({ tool: "mcp:*", permission: "exclude" });
+    } else {
+      policies.push({ tool: "*", permission: "exclude" });
+    }
+
+    for (const toolRef of parsedTools.tools) {
+      if (toolRef.mcpServer) {
+        if (toolRef.toolName) {
+          policies.push({
+            tool: `mcp:${toolRef.mcpServer}:${toolRef.toolName}`,
+            permission: "allow",
+          });
+        } else {
+          policies.push({
+            tool: `mcp:${toolRef.mcpServer}:*`,
+            permission: "allow",
+          });
+        }
+      } else if (toolRef.toolName) {
+        policies.push({ tool: toolRef.toolName, permission: "allow" });
+      }
+    }
+
+    if (policies.length > 0) {
+      logger.debug(`Generated ${policies.length} workflow tool policies`);
+    }
+
+    return policies;
   }
 
   /**
@@ -116,7 +113,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
           { tool: "Grep", permission: "allow" },
           { tool: "WebFetch", permission: "allow" },
           { tool: "WebSearch", permission: "allow" },
-          // Allow MCP tools (assume they're read-only by nature)
+          // Allow MCP tools (no way to know if they're read only but shouldn't disable mcp usage in plan)
           { tool: "mcp:*", permission: "allow" },
           // Default: exclude everything else to ensure no writes
           { tool: "*", permission: "exclude" },
@@ -156,16 +153,16 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
-    // Generate mode-specific policies first (highest priority)
-    const modePolicies = this.generateModePolicies();
-
-    // Generate workflow-specific policies (second priority)
     const workflowPolicies = this.generateWorkflowPolicies();
+    const modePolicies = this.generateModePolicies();
 
     // For plan and auto modes, use ONLY mode policies (absolute override)
     // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
-    if (
+    if (workflowPolicies) {
+      // Workflow policies take full precedence on init
+      allPolicies = workflowPolicies;
+    } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto"
     ) {
@@ -178,7 +175,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
         useDefaults: true,
       });
-      allPolicies = [...modePolicies, ...workflowPolicies, ...compiledPolicies];
+      allPolicies = [...modePolicies, ...compiledPolicies];
     }
 
     this.setState({
@@ -186,7 +183,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-      workflowPolicyCount: workflowPolicies.length,
+      workflowPolicyCount: (workflowPolicies ?? []).length,
     });
 
     (this as any).isInitialized = true;

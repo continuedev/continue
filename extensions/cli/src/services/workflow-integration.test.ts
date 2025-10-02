@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 
 import { ConfigEnhancer } from "../configEnhancer.js";
+
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { ToolPermissionService } from "./ToolPermissionService.js";

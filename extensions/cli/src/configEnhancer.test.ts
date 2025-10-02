@@ -18,6 +18,24 @@ vi.mock("./hubLoader.js", () => ({
   modelProcessor: {},
 }));
 
+// Mock the service container to provide empty workflow state
+vi.mock("./services/ServiceContainer.js", () => ({
+  serviceContainer: {
+    get: vi.fn(() =>
+      Promise.resolve({
+        workflowFile: null,
+        workflow: null,
+      }),
+    ),
+  },
+}));
+
+vi.mock("./services/types.js", () => ({
+  SERVICE_NAMES: {
+    WORKFLOW: "workflow",
+  },
+}));
+
 describe("ConfigEnhancer", () => {
   let enhancer: ConfigEnhancer;
   let mockConfig: any;
@@ -198,5 +216,44 @@ describe("ConfigEnhancer", () => {
       name: "Existing-MCP",
       command: "existing-mcp",
     });
+  });
+
+  it("should handle workflow integration gracefully when no workflow", async () => {
+    // The mocked service container returns null workflow state
+    const options: BaseCommandOptions = {
+      rule: ["test-rule"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // Should work normally when no workflow is active
+    expect(config.rules).toEqual(["test-rule"]);
+  });
+
+  it("should handle workflow integration when workflow is active", async () => {
+    // Mock service container to return active workflow
+    const { serviceContainer } = await import("./services/ServiceContainer.js");
+    (serviceContainer.get as any).mockResolvedValueOnce({
+      workflowFile: {
+        name: "Test Workflow",
+        prompt: "You are a test assistant",
+        rules: "Always be helpful",
+        model: "gpt-4",
+        tools: "bash,read",
+      },
+      workflow: "owner/test-workflow",
+    });
+
+    const options: BaseCommandOptions = {
+      rule: ["user-rule"],
+      prompt: ["user-prompt"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // Should have both workflow and user rules
+    expect(config.rules).toHaveLength(2);
+    expect(config.rules?.[0]).toBe("Always be helpful"); // Workflow rule first
+    expect(config.rules?.[1]).toBe("user-rule"); // User rule second
   });
 });
