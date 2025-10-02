@@ -28,64 +28,62 @@ export class ConfigEnhancer {
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
 
-    // Get workflow options and spread them inline
+    // Add workflow rules/mcp servers if present
     let options = { ..._options };
-    try {
-      const workflowState = await serviceContainer.get<WorkflowServiceState>(
-        SERVICE_NAMES.WORKFLOW,
-      );
+    const workflowState = await serviceContainer.get<WorkflowServiceState>(
+      SERVICE_NAMES.WORKFLOW,
+    );
 
-      if (workflowState.workflowFile) {
-        // Add workflow rules if present
-        if (workflowState.workflowFile.rules) {
-          options.rule = [
-            workflowState.workflowFile.rules,
-            ...(options.rule || []),
-          ];
-          logger.debug(`Added workflow rules from ${workflowState.workflow}`);
-        }
+    if (workflowState.workflowFile) {
+      if (workflowState.workflowFile.rules) {
+        options.rule = [
+          workflowState.workflowFile.rules,
+          ...(options.rule || []),
+        ];
+      }
 
-        // Add workflow MCP servers if present
-        if (workflowState.workflowFile.tools) {
-          const parsedTools = parseWorkflowTools(
-            workflowState.workflowFile.tools,
-          );
-          if (parsedTools.mcpServers.length > 0) {
-            options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
-            logger.debug(
-              `Added ${parsedTools.mcpServers.length} workflow MCP servers`,
-            );
-          }
-        }
-
-        // Add workflow model if present (lower priority than --model flag)
-        if (workflowState.workflowFile.model && !options.model?.length) {
-          options.model = [workflowState.workflowFile.model];
-          logger.debug(
-            `Added workflow model: ${workflowState.workflowFile.model}`,
-          );
+      if (workflowState.workflowFile.tools) {
+        const parsedTools = parseWorkflowTools(
+          workflowState.workflowFile.tools,
+        );
+        if (parsedTools.mcpServers.length > 0) {
+          options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
         }
       }
-    } catch (error: any) {
-      logger.debug(`Workflow service not available: ${error.message}`);
+
+      // Add workflow model if present (lower priority than --model flag)
+      if (workflowState.workflowFile.model && !options.model?.length) {
+        options.model = [workflowState.workflowFile.model];
+        logger.debug(
+          `Added workflow model: ${workflowState.workflowFile.model}`,
+        );
+      }
+
+      // Add workflow prompt as prefix
+      if (workflowState.workflowFile.prompt) {
+        options.prompt = [
+          workflowState.workflowFile.prompt,
+          ...(options.prompt || []),
+        ];
+        logger.debug(
+          `Added workflow prompt as prefix: ${workflowState.workflowFile.prompt.substring(0, 100)}...`,
+        );
+      }
     }
 
-    // Apply rules
+    // Inject resolved items into config
     if (options.rule && options.rule.length > 0) {
       enhancedConfig = await this.injectRules(enhancedConfig, options.rule);
     }
 
-    // Apply MCPs
     if (options.mcp && options.mcp.length > 0) {
       enhancedConfig = await this.injectMcps(enhancedConfig, options.mcp);
     }
 
-    // Apply models
     if (options.model && options.model.length > 0) {
       enhancedConfig = await this.injectModels(enhancedConfig, options.model);
     }
 
-    // Apply prompts
     if (options.prompt && options.prompt.length > 0) {
       enhancedConfig = await this.injectPrompts(enhancedConfig, options.prompt);
     }
@@ -183,14 +181,17 @@ export class ConfigEnhancer {
 
   /**
    * Inject prompts into the configuration
+   * Note: Prompts are processed at runtime via processAndCombinePrompts(),
+   * not injected into the config. This method exists for consistency with
+   * other injection methods but doesn't modify the config.
    */
   private async injectPrompts(
     config: AssistantUnrolled,
     prompts: string[],
   ): Promise<AssistantUnrolled> {
-    // For prompts, we'll need a different approach since they become slash commands
-    // This is a placeholder implementation
-    logger.debug("Prompt injection not yet implemented", { prompts });
+    // Prompts are handled at runtime by processAndCombinePrompts in chat.ts
+    // They don't need to be injected into the configuration
+    logger.debug("Prompts will be processed at runtime", { prompts });
     return config;
   }
 }

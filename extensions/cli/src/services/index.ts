@@ -21,6 +21,7 @@ import {
   SERVICE_NAMES,
   ServiceInitOptions,
   ServiceInitResult,
+  WorkflowServiceState,
 } from "./types.js";
 import { UpdateService } from "./UpdateService.js";
 import { WorkflowService } from "./WorkflowService.js";
@@ -214,18 +215,23 @@ export async function initializeServices(
   serviceContainer.register(
     SERVICE_NAMES.MODEL,
     async () => {
-      const [configState, authState] = await Promise.all([
+      const [configState, authState, workflowState] = await Promise.all([
         serviceContainer.get<ConfigServiceState>(SERVICE_NAMES.CONFIG),
         serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
+        serviceContainer.get<WorkflowServiceState>(SERVICE_NAMES.WORKFLOW),
       ]);
 
       if (!configState.config) {
         throw new Error("Config not available");
       }
 
-      return modelService.initialize(configState.config, authState.authConfig);
+      return modelService.initialize(
+        configState.config,
+        authState.authConfig,
+        workflowState,
+      );
     },
-    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH], // Depends on config and auth
+    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH, SERVICE_NAMES.WORKFLOW], // Depends on config, auth, and workflow
   );
 
   serviceContainer.register(
