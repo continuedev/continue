@@ -15,7 +15,7 @@ sidebarTitle: "Notion with Continue"
 
 ## What You'll Learn
 
-- Connect the [Notion MCP](https://developers.notion.com/docs/mcp/) to Continue
+- Connect the [Notion MCP](https://hub.continue.dev/notion/notion-mcp) to Continue
 - Securely add both Notion and Continue API keys as Hub secrets
 - Use a pre-built agent (`continuedev/notion-continuous-ai`) for instant productivity
 - Issue advanced prompts to automate docs, tasks, and reporting
@@ -101,9 +101,9 @@ Before starting, ensure you have:
         ```
 
         This agent includes:
-        - **Pre-installed Notion MCP** (`npx -y @notionhq/mcp-remote https://mcp.notion.com/sse`)
-        - **Opinionized rules** for doc generation & task updates
-        - **Sample prompts** for docs, tasks, retros, reports
+        - **Pre-installed Notion MCP** for seamless integration
+        - **Developer-focused rules** for technical documentation
+        - **Code-aware prompts** that understand your repository structure
       </Step>
 
       <Step title="Run Your First Prompt">
@@ -165,36 +165,39 @@ Before starting, ensure you have:
 Now you can use natural language prompts to automate Notion. The Continue agent automatically calls the appropriate Notion MCP tools.
 
 <CardGroup cols={2}>
-  <Card title="Generate Meeting Notes" icon="users">
+  <Card title="API Documentation" icon="code">
     **Prompt:**
     ```
-    Summarize today's stand-up notes from Slack and create a
-    new page titled "Stand-up 2024-06-20" in the Meetings database.
+    Generate API documentation for all endpoints in src/api/routes
+    with request/response schemas. Create a page in the
+    Technical Docs database with authentication requirements.
     ```
   </Card>
   
-  <Card title="Sync Issue Tracker" icon="list-checks">
+  <Card title="Sprint Planning from Code" icon="list-checks">
     **Prompt:**
     ```
-    For all incomplete tasks in the Sprint Board database
-    with status = "In Progress" older than 7 days, move
-    them to status = "Blocked" and tag the owner.
+    Scan the codebase for TODO and FIXME comments. Create tasks
+    in the Engineering Backlog database with code context,
+    file paths, and estimated complexity.
     ```
   </Card>
   
-  <Card title="Create Release Notes" icon="rocket">
+  <Card title="Launch Week Orchestration" icon="rocket">
     **Prompt:**
     ```
-    Draft release notes for version 2.1 from commits since tag v2.0.
-    Save as a page in the Release Notes database and @mention @marketing.
+    Review commits since last release and my Launch Ideas notes.
+    Generate a Launch Week page with: feature announcements,
+    daily checklists, draft X/LinkedIn posts, and demo scripts.
     ```
   </Card>
   
-  <Card title="Create PRD" icon="file-plus">
+  <Card title="RFC from Discussion" icon="comments">
     **Prompt:**
     ```
-    Create a PRD outline for the new payment flow and save it
-    to my Product Specs database.
+    Turn our Slack architecture discussion from #eng-design into
+    a proper RFC. Include problem statement, proposed solution,
+    alternatives considered, and implementation timeline.
     ```
   </Card>
 </CardGroup>
@@ -208,35 +211,37 @@ Now you can use natural language prompts to automate Notion. The Continue agent 
 Combine Notion with other MCPs for powerful automation:
 
 <CardGroup cols={2}>
-  <Card title="Notion + Slack" icon="comments">
-    ```
-    "Check the #standup channel for today's updates,
-    then create a summary page in Notion's Team Updates
-    database with key blockers highlighted."
-    ```
-  </Card>
-  
   <Card title="Notion + GitHub" icon="github">
     ```
-    "Create a sprint retrospective page analyzing
-    closed issues from the last 2 weeks, categorize
-    by type, and suggest process improvements."
+    "Analyze all merged PRs this sprint, extract feature
+    descriptions and breaking changes, then create a
+    technical changelog in Notion with links to PRs."
     ```
   </Card>
   
-  <Card title="Notion + Linear" icon="chart-line">
+  <Card title="Notion + PostHog" icon="chart-bar">
     ```
-    "Sync all 'In Progress' Linear issues to the
-    Notion Sprint Board, updating status and assignee
-    fields to match."
+    "Pull feature adoption metrics from PostHog for our last
+    release. Create a product insights page with usage graphs,
+    user segments, and recommendations for improvements."
+    ```
+    See the [PostHog Analytics Guide](/guides/posthog-github-continuous-ai)
+  </Card>
+  
+  <Card title="Code Review Insights" icon="magnifying-glass">
+    **🎯 Outside the Box:**
+    ```
+    "Analyze my code review comments from the past month.
+    Create a 'Personal Code Review Patterns' page highlighting
+    what I catch most often and blind spots to improve."
     ```
   </Card>
   
-  <Card title="Notion + Analytics" icon="chart-bar">
+  <Card title="Notion + Linear" icon="list">
     ```
-    "Analyze this week's user metrics and create
-    a product insights page with recommendations
-    for the next sprint planning session."
+    "Sync Linear issues tagged 'customer-reported' to Notion's
+    Customer Feedback database. Add impact scores based on
+    number of duplicate reports and affected users."
     ```
   </Card>
 </CardGroup>
