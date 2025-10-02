@@ -16,7 +16,7 @@ import { SERVICE_NAMES, WorkflowServiceState } from "./services/types.js";
 import { logger } from "./util/logger.js";
 
 /**
- * Enhances a configuration by injecting additional components from CLI flags and workflow
+ * Enhances a configuration by injecting additional components from CLI flags
  */
 export class ConfigEnhancer {
   /**
@@ -27,119 +27,88 @@ export class ConfigEnhancer {
     options: BaseCommandOptions,
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
-
-    // Apply workflow components first (highest priority)
-    enhancedConfig = await this.injectWorkflowRules(enhancedConfig);
-    enhancedConfig = await this.injectWorkflowMcpServers(enhancedConfig);
+    const workflowOptions = await this.addWorkflowOptions(options);
 
     // Apply rules
-    if (options.rule && options.rule.length > 0) {
-      enhancedConfig = await this.injectRules(enhancedConfig, options.rule);
+    if (workflowOptions.rule && workflowOptions.rule.length > 0) {
+      enhancedConfig = await this.injectRules(
+        enhancedConfig,
+        workflowOptions.rule,
+      );
     }
 
     // Apply MCPs
-    if (options.mcp && options.mcp.length > 0) {
-      enhancedConfig = await this.injectMcps(enhancedConfig, options.mcp);
+    if (workflowOptions.mcp && workflowOptions.mcp.length > 0) {
+      enhancedConfig = await this.injectMcps(
+        enhancedConfig,
+        workflowOptions.mcp,
+      );
     }
 
     // Apply models
-    if (options.model && options.model.length > 0) {
-      enhancedConfig = await this.injectModels(enhancedConfig, options.model);
+    if (workflowOptions.model && workflowOptions.model.length > 0) {
+      enhancedConfig = await this.injectModels(
+        enhancedConfig,
+        workflowOptions.model,
+      );
     }
 
     // Apply prompts
-    if (options.prompt && options.prompt.length > 0) {
-      enhancedConfig = await this.injectPrompts(enhancedConfig, options.prompt);
+    if (workflowOptions.prompt && workflowOptions.prompt.length > 0) {
+      enhancedConfig = await this.injectPrompts(
+        enhancedConfig,
+        workflowOptions.prompt,
+      );
     }
 
     return enhancedConfig;
   }
 
   /**
-   * Inject workflow rules if a workflow is active
+   * Add workflow rules and MCPs to options if workflow is active
    */
-  private async injectWorkflowRules(
-    config: AssistantUnrolled,
-  ): Promise<AssistantUnrolled> {
+  private async addWorkflowOptions(
+    options: BaseCommandOptions,
+  ): Promise<BaseCommandOptions> {
     try {
       const workflowState = await serviceContainer.get<WorkflowServiceState>(
         SERVICE_NAMES.WORKFLOW,
       );
 
-      if (!workflowState.isActive || !workflowState.workflowFile?.rules) {
-        return config;
+      if (!workflowState.workflowFile) {
+        return options;
       }
 
-      const workflowRules = workflowState.workflowFile.rules;
-      const processedContent = await processRule(workflowRules);
-      const workflowSlug = workflowState.workflow;
+      const enhancedOptions = { ...options };
 
-      const workflowRule: Rule = {
-        name: `workflow:${workflowSlug}`,
-        rule: processedContent,
-      };
+      // Add workflow rules if present
+      if (workflowState.workflowFile.rules) {
+        const existingRules = enhancedOptions.rule || [];
+        enhancedOptions.rule = [
+          workflowState.workflowFile.rules,
+          ...existingRules,
+        ];
+        logger.debug(`Added workflow rules from ${workflowState.workflow}`);
+      }
 
-      const modifiedConfig = { ...config };
-      const existingRules = modifiedConfig.rules || [];
-      modifiedConfig.rules = [workflowRule, ...existingRules];
+      // Add workflow MCP servers if present
+      if (workflowState.workflowFile.tools) {
+        const parsedTools = parseWorkflowTools(
+          workflowState.workflowFile.tools,
+        );
+        if (parsedTools.mcpServers.length > 0) {
+          const existingMcps = enhancedOptions.mcp || [];
+          enhancedOptions.mcp = [...parsedTools.mcpServers, ...existingMcps];
+          logger.debug(
+            `Added ${parsedTools.mcpServers.length} workflow MCP servers`,
+          );
+        }
+      }
 
-      logger.debug(`Injected workflow rules from ${workflowSlug}`);
-      return modifiedConfig;
+      return enhancedOptions;
     } catch (error: any) {
       logger.debug(`Workflow service not available: ${error.message}`);
-      return config;
-    }
-  }
-
-  /**
-   * Inject workflow MCP servers if a workflow has tools
-   */
-  private async injectWorkflowMcpServers(
-    config: AssistantUnrolled,
-  ): Promise<AssistantUnrolled> {
-    try {
-      const workflowState = await serviceContainer.get<WorkflowServiceState>(
-        SERVICE_NAMES.WORKFLOW,
-      );
-
-      if (!workflowState.isActive || !workflowState.workflowFile?.tools) {
-        return config;
-      }
-
-      const parsedTools = parseWorkflowTools(workflowState.workflowFile.tools);
-      if (parsedTools.mcpServers.length === 0) {
-        return config;
-      }
-
-      const processedMcps = await loadPackagesFromHub(
-        parsedTools.mcpServers,
-        mcpProcessor,
-      );
-      const modifiedConfig = { ...config };
-      const existingMcpServers = (modifiedConfig as any).mcpServers || [];
-
-      // Deduplicate MCP servers by checking if they already exist
-      const existingServerNames = new Set(
-        existingMcpServers.map((server: any) => server.name || server.slug),
-      );
-
-      const newMcpServers = processedMcps.filter((server: any) => {
-        const serverName = server.name || server.slug;
-        return !existingServerNames.has(serverName);
-      });
-
-      if (newMcpServers.length > 0) {
-        (modifiedConfig as any).mcpServers = [
-          ...newMcpServers,
-          ...existingMcpServers,
-        ];
-        logger.debug(`Injected ${newMcpServers.length} workflow MCP servers`);
-      }
-
-      return modifiedConfig;
-    } catch (error: any) {
-      logger.debug(`Failed to inject workflow MCP servers: ${error.message}`);
-      return config;
+      return options;
     }
   }
 
@@ -244,3 +213,8 @@ export class ConfigEnhancer {
     return config;
   }
 }
+
+/**
+ * Global config enhancer instance
+ */
+export const configEnhancer = new ConfigEnhancer();

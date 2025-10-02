@@ -27,7 +27,6 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
     super("WorkflowService", {
       workflowFile: null,
       workflow: null,
-      isActive: false,
     });
   }
 
@@ -44,7 +43,6 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
       return {
         workflowFile: null,
         workflow: null,
-        isActive: false,
       };
     }
 
@@ -64,14 +62,12 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
       return {
         workflowFile,
         workflow,
-        isActive: true,
       };
     } catch (error: any) {
       logger.error("Failed to initialize WorkflowService:", error);
       return {
         workflowFile: null,
         workflow: null,
-        isActive: false,
       };
     }
   }

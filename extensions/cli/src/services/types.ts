@@ -121,7 +121,6 @@ export interface StorageSyncServiceState {
 export interface WorkflowServiceState {
   workflowFile: any | null;
   workflow: string | null;
-  isActive: boolean;
 }
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";

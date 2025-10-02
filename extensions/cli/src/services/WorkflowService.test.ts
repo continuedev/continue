@@ -37,7 +37,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         workflow: null,
-        isActive: false,
       });
     });
 
@@ -47,7 +46,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         workflow: null,
-        isActive: false,
       });
     });
 
@@ -57,7 +55,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         workflow: null,
-        isActive: false,
       });
 
       // Should not call loadPackageFromHub with invalid slug
@@ -70,7 +67,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         workflow: null,
-        isActive: false,
       });
 
       expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
@@ -93,7 +89,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
         workflow: "owner/package",
-        isActive: true,
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -110,7 +105,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         workflow: null,
-        isActive: false,
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -132,7 +126,6 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
         workflow: "owner/minimal",
-        isActive: true,
       });
     });
   });
@@ -156,7 +149,6 @@ describe("WorkflowService", () => {
       const state = service.getState();
       expect(state.workflowFile?.name).toBe("Test Workflow");
       expect(state.workflow).toBe("owner/package");
-      expect(state.isActive).toBe(true);
       expect(state.workflowFile?.model).toBe("gpt-4");
       expect(state.workflowFile?.tools).toBe("bash,read,write");
       expect(state.workflowFile?.rules).toBe("Be helpful");
@@ -173,7 +165,6 @@ describe("WorkflowService", () => {
       const state = service.getState();
       expect(state.workflowFile).toBeNull();
       expect(state.workflow).toBeNull();
-      expect(state.isActive).toBe(false);
     });
   });
 
@@ -192,7 +183,6 @@ describe("WorkflowService", () => {
       expect(state.workflowFile?.tools).toBeUndefined();
       expect(state.workflowFile?.rules).toBeUndefined();
       expect(state.workflowFile?.prompt).toBe("Simple prompt");
-      expect(state.isActive).toBe(true);
     });
 
     it("should handle workflow with empty prompt", async () => {
@@ -208,7 +198,6 @@ describe("WorkflowService", () => {
       const state = service.getState();
       expect(state.workflowFile?.model).toBe("gpt-3.5-turbo");
       expect(state.workflowFile?.prompt).toBe("");
-      expect(state.isActive).toBe(true);
     });
   });
 });

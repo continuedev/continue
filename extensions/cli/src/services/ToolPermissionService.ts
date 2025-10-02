@@ -18,9 +18,9 @@ export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
   isHeadless: boolean;
-  modePolicyCount?: number;
+  modePolicyCount?: number; // Track how many policies are from mode vs other sources
   workflowPolicyCount?: number;
-  originalPolicies?: ToolPermissions;
+  originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
 
 /**
@@ -45,7 +45,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         SERVICE_NAMES.WORKFLOW,
       );
 
-      if (!workflowState.isActive || !workflowState.workflowFile?.tools) {
+      if (!workflowState.workflowFile?.tools) {
         return [];
       }
 
@@ -348,6 +348,8 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
     );
 
+    // Update the service container with the new state
+    // Import here to avoid circular dependencies
     try {
       serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.getState());
       logger.debug("Updated service container with reloaded permissions");

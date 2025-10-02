@@ -55,16 +55,26 @@ export class ModelService
 
     this.assistant = assistant;
     this.authConfig = authConfig;
-
-    this.availableModels = await this.filterAvailableModels(assistant);
+    this.availableModels = (assistant.models?.filter(
+      (model) =>
+        model && (model.roles?.includes("chat") || model.roles === undefined),
+    ) || []) as ModelConfig[];
 
     const workflowModel = await this.getWorkflowModelName();
     if (workflowModel) {
       logger.debug("Workflow specifies model", { workflowModel });
-      const selectedModel = this.availableModels[0];
-      if (!selectedModel) {
-        throw new Error("No workflow model available after filtering");
-      }
+
+      // Check if workflow model exists in available models
+      const workflowModelConfig = this.availableModels.find(
+        (model) => (model as any).name === workflowModel,
+      );
+
+      const selectedModel =
+        workflowModelConfig ||
+        ({
+          provider: "openai",
+          name: workflowModel,
+        } as ModelConfig);
 
       const llmApi = createLlmApi(selectedModel, authConfig);
       if (!llmApi) {
@@ -121,8 +131,8 @@ export class ModelService
         };
       }
     } else {
-      const modifiedAssistant = { ...assistant, models: this.availableModels };
-      const [llmApi, model] = getLlmApi(modifiedAssistant, authConfig);
+      // Use default model selection
+      const [llmApi, model] = getLlmApi(assistant, authConfig);
       return {
         llmApi,
         model,
@@ -207,7 +217,19 @@ export class ModelService
     name: string;
     index: number;
   }> {
-    return this.availableModels.map((model, index) => ({
+    // Get assistant from state to ensure we have the latest data
+    const { assistant } = this.getState();
+    if (!assistant || !assistant.models) {
+      return [];
+    }
+
+    // Filter for chat models
+    const chatModels = (assistant.models.filter(
+      (model) =>
+        model && (model.roles?.includes("chat") || model.roles === undefined),
+    ) || []) as ModelConfig[];
+
+    return chatModels.map((model, index) => ({
       provider: model.provider,
       name: (model as any).name || (model as any).model || "unnamed",
       index,
@@ -353,43 +375,9 @@ export class ModelService
       const workflowState = await serviceContainer.get<WorkflowServiceState>(
         SERVICE_NAMES.WORKFLOW,
       );
-      return workflowState.isActive
-        ? workflowState.workflowFile?.model
-        : undefined;
+      return workflowState.workflowFile?.model;
     } catch (error) {
       return undefined;
     }
-  }
-
-  /**
-   * Filter available models based on workflow constraints
-   */
-  private async filterAvailableModels(
-    assistant: AssistantUnrolled,
-  ): Promise<ModelConfig[]> {
-    const baseModels = (assistant.models?.filter(
-      (model) =>
-        model && (model.roles?.includes("chat") || model.roles === undefined),
-    ) || []) as ModelConfig[];
-
-    const workflowModel = await this.getWorkflowModelName();
-    if (workflowModel) {
-      const workflowModelConfig = baseModels.find(
-        (model) => (model as any).name === workflowModel,
-      );
-
-      if (workflowModelConfig) {
-        return [workflowModelConfig];
-      } else {
-        const workflowModelConfig: ModelConfig = {
-          provider: "openai",
-          name: workflowModel,
-        } as any;
-
-        return [workflowModelConfig];
-      }
-    }
-
-    return baseModels;
   }
 }
