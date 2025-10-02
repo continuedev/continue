@@ -74,21 +74,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       </>
     ) : null;
 
-  const renderMcpServers = () =>
-    (config?.mcpServers?.length ?? 0) > 0 ? (
-      <>
-        <Text bold color="blue">
-          MCP Servers:
-        </Text>
-        {config?.mcpServers?.map((server: any, index: number) => (
-          <Text key={index}>
-            - <Text color="white">{server?.name}</Text>
-          </Text>
-        ))}
-        <Text> </Text>
-      </>
-    ) : null;
-
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
       {/* ASCII Art */}
@@ -131,7 +116,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       {renderMcpPrompts()}
       {renderRules()}
-      {renderMcpServers()}
     </Box>
   );
 };

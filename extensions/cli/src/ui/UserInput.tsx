@@ -6,12 +6,16 @@ import React, { useCallback, useState } from "react";
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
-import type { FileIndexServiceState } from "../services/FileIndexService.js";
+import type {
+  FileIndexServiceState,
+  MCPServiceState,
+} from "../services/types.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
+import { MCPStatusIndicator } from "./components/MCPStatusIndicator.js";
 import { FileSearchUI } from "./FileSearchUI.js";
 import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
@@ -167,10 +171,11 @@ const UserInput: React.FC<UserInputProps> = ({
   >([]);
   const { exit } = useApp();
 
-  // Get file index service state for reactive updates (unused but needed for service initialization)
-  useServices<{
+  // Get file index and MCP service states for reactive updates
+  const { services: localServices } = useServices<{
     fileIndex: FileIndexServiceState;
-  }>(["fileIndex"]);
+    mcp: MCPServiceState;
+  }>(["fileIndex", "mcp"]);
 
   const getSlashCommands = () => {
     if (assistant || isRemoteMode) {
@@ -851,6 +856,14 @@ const UserInput: React.FC<UserInputProps> = ({
         onSelect={selectFile}
         onFilesUpdated={setCurrentFiles}
       />
+
+      {/* MCP Status Indicator - positioned beneath input borders */}
+      {!hideNormalUI && !isRemoteMode && (
+        <MCPStatusIndicator
+          mcpService={localServices.mcp?.mcpService}
+          visible={inputMode}
+        />
+      )}
     </Box>
   );
 };
