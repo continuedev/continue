@@ -1,11 +1,14 @@
 import path from "path";
-import { DEFAULT_PROMPTS_FOLDER_V1 } from ".";
+import {
+  DEFAULT_PROMPTS_FOLDER_V1,
+  DEFAULT_PROMPTS_FOLDER_V2,
+  DEFAULT_RULES_FOLDER,
+  RULES_DIR_NAME,
+} from ".";
 import { IDE } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { getContinueGlobalPath, readAllGlobalPromptFiles } from "../util/paths";
 import { joinPathsToUri } from "../util/uri";
-
-export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
 
 export async function getPromptFilesFromDir(
   ide: IDE,
@@ -41,7 +44,7 @@ export async function getAllPromptFiles(
   const workspaceDirs = await ide.getWorkspaceDirs();
   let promptFiles: { path: string; content: string }[] = [];
 
-  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2, ".continue/rules"];
+  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2, DEFAULT_RULES_FOLDER];
   if (checkV1DefaultFolder) {
     dirsToCheck.push(DEFAULT_PROMPTS_FOLDER_V1);
   }
@@ -60,10 +63,10 @@ export async function getAllPromptFiles(
   // Also read from ~/.continue/prompts and ~/.continue/rules
   promptFiles.push(...readAllGlobalPromptFiles());
 
-  const globalRulesPath = readAllGlobalPromptFiles(
-    path.join(getContinueGlobalPath(), "rules"),
+  const promptFilesFromRulesDirectory = readAllGlobalPromptFiles(
+    path.join(getContinueGlobalPath(), RULES_DIR_NAME),
   );
-  promptFiles.push(...globalRulesPath);
+  promptFiles.push(...promptFilesFromRulesDirectory);
 
   return await Promise.all(
     promptFiles.map(async (file) => {
