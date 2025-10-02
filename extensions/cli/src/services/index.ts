@@ -23,6 +23,7 @@ import {
   ServiceInitResult,
 } from "./types.js";
 import { UpdateService } from "./UpdateService.js";
+import { WorkflowService } from "./WorkflowService.js";
 
 // Service instances
 const authService = new AuthService();
@@ -35,6 +36,7 @@ const resourceMonitoringService = new ResourceMonitoringService();
 const chatHistoryService = new ChatHistoryService();
 const updateService = new UpdateService();
 const storageSyncService = new StorageSyncService();
+const workflowService = new WorkflowService();
 
 /**
  * Initialize all services and register them with the service container
@@ -265,6 +267,12 @@ export async function initializeServices(
     [], // No dependencies for now, but could depend on SESSION in future
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.WORKFLOW,
+    () => workflowService.initialize(commandOptions.workflow),
+    [],
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -327,6 +335,7 @@ export const services = {
   chatHistory: chatHistoryService,
   updateService: updateService,
   storageSync: storageSyncService,
+  workflow: workflowService,
 } as const;
 
 // Export the service container for advanced usage

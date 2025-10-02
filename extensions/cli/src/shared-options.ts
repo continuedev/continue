@@ -83,6 +83,10 @@ export function addCommonOptions(command: Command): Command {
         return array;
       },
       [] as string[],
+    )
+    .option(
+      "--workflow <slug>",
+      "Load workflow from the hub (slug in format 'owner/package')",
     );
 }
 
@@ -106,6 +110,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "allow",
     "ask",
     "exclude",
+    "workflow",
   ];
 
   for (const optName of inheritableOptions) {

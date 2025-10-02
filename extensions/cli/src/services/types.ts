@@ -118,6 +118,12 @@ export interface StorageSyncServiceState {
   lastError?: string | null;
 }
 
+export interface WorkflowServiceState {
+  workflowFile: any | null;
+  workflow: string | null;
+  isActive: boolean;
+}
+
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 
@@ -137,6 +143,7 @@ export const SERVICE_NAMES = {
   CHAT_HISTORY: "chatHistory",
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
+  WORKFLOW: "workflow",
 } as const;
 
 /**

@@ -7,10 +7,12 @@ import {
   modelProcessor,
   processRule,
 } from "./hubLoader.js";
+import { serviceContainer } from "./services/ServiceContainer.js";
+import { SERVICE_NAMES, WorkflowServiceState } from "./services/types.js";
 import { logger } from "./util/logger.js";
 
 /**
- * Enhances a configuration by injecting additional components from CLI flags
+ * Enhances a configuration by injecting additional components from CLI flags and workflow
  */
 export class ConfigEnhancer {
   /**
@@ -21,6 +23,9 @@ export class ConfigEnhancer {
     options: BaseCommandOptions,
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
+
+    // Apply workflow rules first (highest priority)
+    enhancedConfig = await this.injectWorkflowRules(enhancedConfig);
 
     // Apply rules
     if (options.rule && options.rule.length > 0) {
@@ -43,6 +48,42 @@ export class ConfigEnhancer {
     }
 
     return enhancedConfig;
+  }
+
+  /**
+   * Inject workflow rules if a workflow is active
+   */
+  private async injectWorkflowRules(
+    config: AssistantUnrolled,
+  ): Promise<AssistantUnrolled> {
+    try {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      if (!workflowState.isActive || !workflowState.workflowFile?.rules) {
+        return config;
+      }
+
+      const workflowRules = workflowState.workflowFile.rules;
+      const processedContent = await processRule(workflowRules);
+      const workflowSlug = workflowState.workflow;
+
+      const workflowRule: Rule = {
+        name: `workflow:${workflowSlug}`,
+        rule: processedContent,
+      };
+
+      const modifiedConfig = { ...config };
+      const existingRules = modifiedConfig.rules || [];
+      modifiedConfig.rules = [workflowRule, ...existingRules];
+
+      logger.debug(`Injected workflow rules from ${workflowSlug}`);
+      return modifiedConfig;
+    } catch (error: any) {
+      logger.debug(`Workflow service not available: ${error.message}`);
+      return config;
+    }
   }
 
   /**

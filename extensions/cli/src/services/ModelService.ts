@@ -5,7 +5,12 @@ import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { ModelServiceState } from "./types.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import {
+  ModelServiceState,
+  SERVICE_NAMES,
+  WorkflowServiceState,
+} from "./types.js";
 
 /**
  * Service for managing LLM and model state
@@ -50,10 +55,29 @@ export class ModelService
 
     this.assistant = assistant;
     this.authConfig = authConfig;
-    this.availableModels = (assistant.models?.filter(
-      (model) =>
-        model && (model.roles?.includes("chat") || model.roles === undefined),
-    ) || []) as ModelConfig[];
+
+    this.availableModels = await this.filterAvailableModels(assistant);
+
+    const workflowModel = await this.getWorkflowModelName();
+    if (workflowModel) {
+      logger.debug("Workflow specifies model", { workflowModel });
+      const selectedModel = this.availableModels[0];
+      if (!selectedModel) {
+        throw new Error("No workflow model available after filtering");
+      }
+
+      const llmApi = createLlmApi(selectedModel, authConfig);
+      if (!llmApi) {
+        throw new Error("Failed to initialize LLM with workflow model");
+      }
+
+      return {
+        llmApi,
+        model: selectedModel,
+        assistant,
+        authConfig,
+      };
+    }
 
     // Check if we have a persisted model name and use it if valid
     const persistedModelName = getModelName(authConfig);
@@ -97,8 +121,8 @@ export class ModelService
         };
       }
     } else {
-      // Use default model selection
-      const [llmApi, model] = getLlmApi(assistant, authConfig);
+      const modifiedAssistant = { ...assistant, models: this.availableModels };
+      const [llmApi, model] = getLlmApi(modifiedAssistant, authConfig);
       return {
         llmApi,
         model,
@@ -183,19 +207,7 @@ export class ModelService
     name: string;
     index: number;
   }> {
-    // Get assistant from state to ensure we have the latest data
-    const { assistant } = this.getState();
-    if (!assistant || !assistant.models) {
-      return [];
-    }
-
-    // Filter for chat models
-    const chatModels = (assistant.models.filter(
-      (model) =>
-        model && (model.roles?.includes("chat") || model.roles === undefined),
-    ) || []) as ModelConfig[];
-
-    return chatModels.map((model, index) => ({
+    return this.availableModels.map((model, index) => ({
       provider: model.provider,
       name: (model as any).name || (model as any).model || "unnamed",
       index,
@@ -331,5 +343,53 @@ export class ModelService
 
       return nameMatches;
     });
+  }
+
+  /**
+   * Get workflow model name if workflow is active
+   */
+  private async getWorkflowModelName(): Promise<string | undefined> {
+    try {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+      return workflowState.isActive
+        ? workflowState.workflowFile?.model
+        : undefined;
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  /**
+   * Filter available models based on workflow constraints
+   */
+  private async filterAvailableModels(
+    assistant: AssistantUnrolled,
+  ): Promise<ModelConfig[]> {
+    const baseModels = (assistant.models?.filter(
+      (model) =>
+        model && (model.roles?.includes("chat") || model.roles === undefined),
+    ) || []) as ModelConfig[];
+
+    const workflowModel = await this.getWorkflowModelName();
+    if (workflowModel) {
+      const workflowModelConfig = baseModels.find(
+        (model) => (model as any).name === workflowModel,
+      );
+
+      if (workflowModelConfig) {
+        return [workflowModelConfig];
+      } else {
+        const workflowModelConfig: ModelConfig = {
+          provider: "openai",
+          name: workflowModel,
+        } as any;
+
+        return [workflowModelConfig];
+      }
+    }
+
+    return baseModels;
   }
 }
