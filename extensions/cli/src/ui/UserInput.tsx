@@ -6,9 +6,9 @@ import React, { useCallback, useState } from "react";
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
-import type { FileIndexServiceState } from "../services/types.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
+import type { FileIndexServiceState } from "../services/types.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
