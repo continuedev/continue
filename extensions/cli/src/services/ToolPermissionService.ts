@@ -39,15 +39,17 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   /**
    * Generate workflow-specific policies if a workflow is active
    */
-  private async generateWorkflowPolicies(): Promise<ToolPermissionPolicy[]> {
+  private generateWorkflowPolicies(): ToolPermissionPolicy[] {
     try {
-      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+      const workflowResult = serviceContainer.getSync<WorkflowServiceState>(
         SERVICE_NAMES.WORKFLOW,
       );
 
-      if (!workflowState.workflowFile?.tools) {
+      if (!workflowResult?.value?.workflowFile?.tools) {
         return [];
       }
+
+      const workflowState = workflowResult.value;
 
       const parsedTools = parseWorkflowTools(workflowState.workflowFile.tools);
       const policies: ToolPermissionPolicy[] = [];
@@ -75,6 +77,10 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         } else if (toolRef.toolName) {
           policies.push({ tool: toolRef.toolName, permission: "allow" });
         }
+      }
+
+      if (policies.length > 0) {
+        logger.debug(`Generated ${policies.length} workflow tool policies`);
       }
 
       return policies;
@@ -153,6 +159,9 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     // Generate mode-specific policies first (highest priority)
     const modePolicies = this.generateModePolicies();
 
+    // Generate workflow-specific policies (second priority)
+    const workflowPolicies = this.generateWorkflowPolicies();
+
     // For plan and auto modes, use ONLY mode policies (absolute override)
     // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
@@ -163,13 +172,13 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       // Absolute override: ignore all user configuration
       allPolicies = modePolicies;
     } else {
-      // Normal mode: combine mode policies with user configuration
+      // Normal mode: combine mode policies, workflow policies, and user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
         useDefaults: true,
       });
-      allPolicies = [...modePolicies, ...compiledPolicies];
+      allPolicies = [...modePolicies, ...workflowPolicies, ...compiledPolicies];
     }
 
     this.setState({
@@ -177,13 +186,10 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-      workflowPolicyCount: 0,
+      workflowPolicyCount: workflowPolicies.length,
     });
 
     (this as any).isInitialized = true;
-
-    // Apply workflow policies asynchronously after initialization
-    this.applyWorkflowPoliciesAsync();
 
     return this.getState();
   }
@@ -358,42 +364,6 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         "Failed to update service container after permission reload",
         { error },
       );
-    }
-  }
-
-  /**
-   * Apply workflow policies asynchronously
-   */
-  private async applyWorkflowPoliciesAsync(): Promise<void> {
-    try {
-      const workflowPolicies = await this.generateWorkflowPolicies();
-
-      if (workflowPolicies.length > 0) {
-        const currentState = this.getState();
-        const existingPolicies = currentState.permissions.policies;
-        const modePolicyCount = currentState.modePolicyCount || 0;
-
-        // Insert workflow policies after mode policies but before other policies
-        const nonModePolicies = existingPolicies.slice(modePolicyCount);
-        const modePolicies = existingPolicies.slice(0, modePolicyCount);
-
-        const allPolicies = [
-          ...modePolicies,
-          ...workflowPolicies,
-          ...nonModePolicies,
-        ];
-
-        this.setState({
-          permissions: { policies: allPolicies },
-          workflowPolicyCount: workflowPolicies.length,
-        });
-
-        logger.debug(
-          `Applied ${workflowPolicies.length} workflow tool policies`,
-        );
-      }
-    } catch (error: any) {
-      logger.debug(`Failed to apply workflow policies: ${error.message}`);
     }
   }
 

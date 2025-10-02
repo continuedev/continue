@@ -121,7 +121,6 @@ describe("Workflow Integration Tests", () => {
       await workflowService.initialize("owner/workflow");
 
       const workflowState = workflowService.getState();
-      expect(workflowState.isActive).toBe(true);
       expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
 
       // Initialize model service - it should use the workflow model
@@ -144,7 +143,7 @@ describe("Workflow Integration Tests", () => {
       await workflowService.initialize();
 
       const workflowState = workflowService.getState();
-      expect(workflowState.isActive).toBe(false);
+      expect(workflowState.workflowFile).toBeNull();
 
       // Initialize model service - it should use regular model selection
       await modelService.initialize(
@@ -285,7 +284,7 @@ describe("Workflow Integration Tests", () => {
       await workflowService.initialize("owner/workflow");
 
       const workflowState = workflowService.getState();
-      expect(workflowState.isActive).toBe(false);
+      expect(workflowState.workflowFile).toBeNull();
 
       // Model service should work normally
       await modelService.initialize(
