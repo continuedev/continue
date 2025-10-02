@@ -1,7 +1,7 @@
 ---
 title: "Automated Error Analysis with Sentry MCP"
 description: "Build an AI-powered error monitoring workflow that analyzes Sentry issues, identifies patterns, and creates actionable GitHub issues automatically."
-sidebarTitle: "Sentry Error Monitoring with Continue CLI"
+sidebarTitle: "Automated Error Analysis with Sentry MCP"
 ---
 
 <Card title="What You'll Build" icon="bug">
@@ -12,9 +12,9 @@ sidebarTitle: "Sentry Error Monitoring with Continue CLI"
 
 This cookbook teaches you to:
 
-- Use [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) to access [issues](https://docs.sentry.io/product/issues/), [performance data](https://docs.sentry.io/product/performance/), and [release tracking](https://docs.sentry.io/product/releases/)
+- Use [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) to access [issues](https://docs.sentry.io/product/issues/)
 - Analyze error patterns and stack traces with AI
-- Leverage [Sentry's Seer AI](https://docs.sentry.io/product/ai-in-sentry/seer/) for intelligent issue analysis
+
 - Automatically create GitHub issues with root cause analysis
 - Set up continuous error monitoring with GitHub Actions
 
@@ -116,7 +116,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
   **How Sentry MCP Works**:
   - Connects to your Sentry organization via OAuth
   - Provides tools for accessing issues, projects, teams, and DSNs
-  - Integrates with [Sentry's Seer AI](https://docs.sentry.io/product/ai-in-sentry/seer/) for intelligent analysis
+
   - Supports both hosted (`https://mcp.sentry.dev`) and self-hosted Sentry instances
 </Info>
 
@@ -136,7 +136,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
         This provides:
         - **Automatic authentication** via OAuth flow
         - **Access to all Sentry tools**: issues, projects, teams, DSNs
-        - **Seer AI integration** for intelligent error analysis
+
       </Step>
 
       <Step title="Run Error Analysis">
@@ -150,7 +150,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
     </Steps>
 
     <Info>
-      **Why Use Sentry MCP?** Direct integration with Sentry's API provides more reliable error data access and enables AI-powered analysis through Seer.
+      **Why Use Sentry MCP?** Direct integration with Sentry's API provides more reliable error data access and enables AI-powered analysis.
     </Info>
 
   </Tab>
@@ -174,7 +174,6 @@ First, you'll need to gather your Sentry and GitHub API credentials.
         Use this prompt template with Continue CLI to analyze Sentry errors:
 
         ```bash
-        # In cn TUI mode:
         "Analyze Sentry errors from the past 24 hours:
         - Group errors by root cause
         - Identify the top 5 most critical issues by frequency and impact
@@ -264,8 +263,7 @@ Use Continue CLI to perform intelligent error analysis:
   - **Issues**: Search and analyze error issues
   - **Teams**: Manage team assignments
   - **DSNs**: Retrieve project DSN configurations
-  - **Seer Integration**: Leverage [Sentry's AI](https://docs.sentry.io/product/ai-in-sentry/seer/) for intelligent analysis
-  - **Release Management**: Track errors by release version
+
 </Info>
 
 ## Step 3: Automate GitHub Issue Creation
@@ -275,7 +273,7 @@ Create actionable GitHub issues from Sentry errors:
 ```bash
 # In cn TUI mode:
 "For each unresolved Sentry error with 'critical' or 'high' severity:
-1. Analyze the error using Sentry MCP and Seer AI
+1. Analyze the error using Sentry MCP
 2. Create a GitHub issue with gh CLI:
    - Title: '🐛 [Sentry] [Error Type]: Brief description'
    - Body with:
@@ -379,7 +377,7 @@ After completing this guide, you have a complete **Sentry-powered error monitori
 
 - **Monitors production errors** - Automatically fetches and analyzes Sentry issues every 6 hours
 
-- **Identifies critical bugs** - Uses AI and Sentry's Seer to spot high-impact errors
+- **Identifies critical bugs** - Uses AI to spot high-impact errors
 
 - **Creates actionable tasks** - Generates GitHub issues with root cause analysis and suggested fixes
 
@@ -446,7 +444,7 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 ## Next Steps
 
-- Explore [Sentry's Seer AI](https://docs.sentry.io/product/ai-in-sentry/seer/) for enhanced error analysis
+
 - Set up [Sentry performance monitoring](https://docs.sentry.io/product/performance/)
 - Configure [Sentry release tracking](https://docs.sentry.io/product/releases/) for deployment correlation
 - Integrate [Slack MCP](https://hub.continue.dev/slack/slack-mcp) for error alerts
@@ -459,7 +457,7 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 - [Sentry Issues Guide](https://docs.sentry.io/product/issues/)
 - [Sentry Performance Monitoring](https://docs.sentry.io/product/performance/)
 - [Sentry Release Tracking](https://docs.sentry.io/product/releases/)
-- [Sentry Seer AI](https://docs.sentry.io/product/ai-in-sentry/seer/)
+
 - [Sentry MCP GitHub Repository](https://github.com/getsentry/sentry-mcp)
 - [GitHub CLI Documentation](https://cli.github.com/)
 - [Continue CLI Guide](https://docs.continue.dev/guides/cli)
