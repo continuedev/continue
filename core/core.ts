@@ -929,7 +929,7 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
-      console.log("deleteChain called from files/closed");
+      console.debug("deleteChain called from files/closed");
       await NextEditProvider.getInstance().deleteChain();
 
       try {

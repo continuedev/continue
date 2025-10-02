@@ -50,6 +50,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   completionId: string;
   gitRepo?: string;
   uniqueId: string;
+  requestId?: string;
   timestamp: number;
 
   // New for Next Edit.
