@@ -330,7 +330,7 @@ export class SelectionChangeManager {
       return false;
     }
 
-    console.log(
+    console.debug(
       "defaultFallbackHandler: deleteChain called from onDidChangeTextEditorSelection",
     );
     await NextEditProvider.getInstance().deleteChain();

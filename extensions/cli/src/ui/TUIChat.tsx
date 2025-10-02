@@ -264,6 +264,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     configPath,
     setChatHistory,
     handleClear,
+    setStaticRefreshTrigger,
   );
 
   // Session selection handler

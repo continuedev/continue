@@ -93,6 +93,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
+  "config/addGlobalRule": [undefined, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
@@ -117,10 +118,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [
-    { profileId: string | undefined; element?: { sourceFile?: string } },
-    void,
-  ];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -147,8 +145,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
-  "mcp/disconnectServer": [{ id: string }, void];
-  "mcp/getDisconnectedServers": [undefined, string[]];
+  "mcp/setServerEnabled": [{ id: string; enabled: boolean }, void];
   "mcp/getPrompt": [
     {
       serverName: string;

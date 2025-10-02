@@ -186,7 +186,7 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "agents",
+                "group": "Agents",
                 "icon": "robot",
                 "pages": [
                   "hub/agents/intro",
@@ -221,6 +221,11 @@
                   "hub/secrets/secret-types",
                   "hub/secrets/secret-resolution"
                 ]
+              },
+              {
+                "group": "Workflows",
+                "icon": "cloud",
+                "pages": ["hub/workflows/intro"]
               },
               "hub/sharing",
               "hub/source-control"

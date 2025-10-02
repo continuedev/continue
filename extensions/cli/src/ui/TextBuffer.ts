@@ -137,6 +137,38 @@ export class TextBuffer {
     }
   }
 
+  private deleteLineBackward(): void {
+    if (this._cursor === 0) {
+      return;
+    }
+
+    const lastNewline = this._text.lastIndexOf("\n", this._cursor - 1);
+    const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+
+    if (lineStart === this._cursor) {
+      return;
+    }
+
+    this._text =
+      this._text.slice(0, lineStart) + this._text.slice(this._cursor);
+    this._cursor = lineStart;
+  }
+
+  private deleteLineForward(): void {
+    if (this._cursor >= this._text.length) {
+      return;
+    }
+
+    const nextNewline = this._text.indexOf("\n", this._cursor);
+    const lineEnd = nextNewline === -1 ? this._text.length : nextNewline;
+
+    if (lineEnd === this._cursor) {
+      return;
+    }
+
+    this._text = this._text.slice(0, this._cursor) + this._text.slice(lineEnd);
+  }
+
   moveToStart(): void {
     this._cursor = 0;
   }
@@ -402,13 +434,10 @@ export class TextBuffer {
         this.moveToEnd();
         return true;
       case "u":
-        // Delete from cursor to start of line
-        this._text = this._text.slice(this._cursor);
-        this._cursor = 0;
+        this.deleteLineBackward();
         return true;
       case "k":
-        // Delete from cursor to end of line
-        this._text = this._text.slice(0, this._cursor);
+        this.deleteLineForward();
         return true;
       case "w":
         this.deleteWordBackward();
@@ -422,8 +451,12 @@ export class TextBuffer {
   }
 
   private handleMetaKey(input: string, key: Key): boolean {
-    if (key.backspace || key.delete) {
-      this.deleteWordBackward();
+    if (key.backspace) {
+      this.deleteLineBackward();
+      return true;
+    }
+    if (key.delete) {
+      this.deleteLineForward();
       return true;
     }
     if (key.leftArrow) {

@@ -79,7 +79,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   },
   {
     provider: "gemini",
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-2.5-pro",
     apiKey: process.env.GEMINI_API_KEY!,
     roles: ["chat"],
     options: {

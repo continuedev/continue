@@ -52,6 +52,38 @@ function isBlank(completion: string): boolean {
   return completion.trim().length === 0;
 }
 
+/**
+ * Removes markdown code block delimiters from completion.
+ * Removes the first line if it starts with "```" and the last line if it is exactly "```".
+ */
+function removeBackticks(completion: string): string {
+  const lines = completion.split("\n");
+
+  if (lines.length === 0) {
+    return completion;
+  }
+
+  let startIdx = 0;
+  let endIdx = lines.length;
+
+  // Remove first line if it starts with ```
+  if (lines[0].trimStart().startsWith("```")) {
+    startIdx = 1;
+  }
+
+  // Remove last line if it is exactly ```
+  if (lines.length > startIdx && lines[lines.length - 1].trim() === "```") {
+    endIdx = lines.length - 1;
+  }
+
+  // If we removed lines, return the modified completion
+  if (startIdx > 0 || endIdx < lines.length) {
+    return lines.slice(startIdx, endIdx).join("\n");
+  }
+
+  return completion;
+}
+
 export function postprocessCompletion({
   completion,
   llm,
@@ -155,6 +187,9 @@ export function postprocessCompletion({
   if (prefix.endsWith(" ") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
+
+  // Remove markdown code block delimiters
+  completion = removeBackticks(completion);
 
   return completion;
 }

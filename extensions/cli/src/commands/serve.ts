@@ -259,6 +259,32 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     });
   });
 
+  // POST /pause - Pause the current agent run (like pressing escape in TUI)
+  app.post("/pause", async (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    // Check if there's anything to pause
+    if (!state.isProcessing) {
+      return res.json({
+        success: false,
+        message: "No active processing to pause",
+      });
+    }
+
+    // Abort the current processing
+    if (state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
+
+    // Set isProcessing to false
+    state.isProcessing = false;
+
+    res.json({
+      success: true,
+      message: "Agent run paused",
+    });
+  });
+
   // GET /diff - Return git diff against main branch
   app.get("/diff", async (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
@@ -343,6 +369,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         "  POST /permission - Approve/reject tool (body: { requestId, approved })",
       ),
     );
+    console.log(chalk.dim("  POST /pause      - Pause the current agent run"));
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),
     );
