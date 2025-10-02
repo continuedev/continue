@@ -11,6 +11,7 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import {
   GeminiChatContent,
@@ -191,14 +192,7 @@ class Gemini extends BaseLLM {
       : {
           inlineData: {
             mimeType: "image/jpeg",
-            data: (() => {
-              const urlParts = part.imageUrl.url.split(",");
-              if (urlParts.length < 2) {
-                throw new Error("Invalid data URL format: missing comma separator");
-              }
-              const [, ...base64Parts] = urlParts;
-              return base64Parts.join(",");
-            })(),
+            data: part.imageUrl?.url ? extractBase64FromDataUrl(part.imageUrl.url) : ""
           },
         };
   }

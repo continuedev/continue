@@ -30,7 +30,9 @@ import {
 } from "openai/resources/index";
 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+
 import { fromStatic } from "@aws-sdk/token-providers";
+import { parseDataUrl } from "../../../../core/util/url.js";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
@@ -135,12 +137,9 @@ export class BedrockApi implements BaseLlmApi {
       case "image_url":
       default:
         try {
-          const urlParts = (part as ChatCompletionContentPartImage).image_url.url.split(",");
-          if(urlParts.length < 2) {
-            throw new Error("Invalid data URL format: missing comma separator");
-          }
-          const [mimeType, ...base64Parts] = urlParts;
-          const base64Data = base64Parts.join(",");
+          const { mimeType, base64Data } = parseDataUrl(
+            (part as ChatCompletionContentPartImage).image_url.url,
+          );
           const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
           if (
             format === ImageFormat.JPEG ||

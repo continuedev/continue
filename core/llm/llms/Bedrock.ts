@@ -21,6 +21,7 @@ import type { CompletionOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
@@ -546,12 +547,7 @@ class Bedrock extends BaseLLM {
           blocks.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
           try {
-            const urlParts = part.imageUrl.url.split(",");
-            if(urlParts.length < 2) {
-              throw new Error("Invalid data URL format: missing comma separator");
-            }
-            const [mimeType, ...base64Parts] = urlParts;
-            const base64Data = base64Parts.join(",");
+            const { mimeType, base64Data } = parseDataUrl(part.imageUrl.url);
             const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
             if (
               format === ImageFormat.JPEG ||

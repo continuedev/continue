@@ -33,6 +33,7 @@ import {
   usageChatChunk,
 } from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
+import { extractBase64FromDataUrl } from "../../../../core/util/url.js"
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
   CACHING_STRATEGIES,
@@ -199,14 +200,7 @@ export class AnthropicApi implements BaseLlmApi {
               source: {
                 type: "base64",
                 media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
-                data: (() => {
-                  const urlParts = dataUrl.split(",");
-                  if (urlParts.length < 2) {
-                    throw new Error("Invalid data URL format: missing comma separator");
-                  }
-                  const [, ...base64Parts] = urlParts;
-                  return base64Parts.join(",");
-                })(),
+                data: extractBase64FromDataUrl(dataUrl);
               },
             });
           }
