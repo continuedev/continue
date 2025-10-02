@@ -257,6 +257,10 @@ export class NextEditLoggingService {
     accepted: boolean,
   ): Promise<void> {
     try {
+      if (!Telemetry.client) {
+        return;
+      }
+
       const controlPlaneEnv = getControlPlaneEnvSync("production");
       await fetchwithRequestOptions(
         new URL("model-proxy/v1/feedback", controlPlaneEnv.CONTROL_PLANE_URL),
