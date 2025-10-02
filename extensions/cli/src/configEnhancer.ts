@@ -24,92 +24,73 @@ export class ConfigEnhancer {
    */
   async enhanceConfig(
     config: AssistantUnrolled,
-    options: BaseCommandOptions,
+    _options: BaseCommandOptions,
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
-    const workflowOptions = await this.addWorkflowOptions(options);
 
-    // Apply rules
-    if (workflowOptions.rule && workflowOptions.rule.length > 0) {
-      enhancedConfig = await this.injectRules(
-        enhancedConfig,
-        workflowOptions.rule,
-      );
-    }
-
-    // Apply MCPs
-    if (workflowOptions.mcp && workflowOptions.mcp.length > 0) {
-      enhancedConfig = await this.injectMcps(
-        enhancedConfig,
-        workflowOptions.mcp,
-      );
-    }
-
-    // Apply models
-    if (workflowOptions.model && workflowOptions.model.length > 0) {
-      enhancedConfig = await this.injectModels(
-        enhancedConfig,
-        workflowOptions.model,
-      );
-    }
-
-    // Apply prompts
-    if (workflowOptions.prompt && workflowOptions.prompt.length > 0) {
-      enhancedConfig = await this.injectPrompts(
-        enhancedConfig,
-        workflowOptions.prompt,
-      );
-    }
-
-    return enhancedConfig;
-  }
-
-  /**
-   * Add workflow rules and MCPs to options if workflow is active
-   */
-  private async addWorkflowOptions(
-    options: BaseCommandOptions,
-  ): Promise<BaseCommandOptions> {
+    // Get workflow options and spread them inline
+    let options = { ..._options };
     try {
       const workflowState = await serviceContainer.get<WorkflowServiceState>(
         SERVICE_NAMES.WORKFLOW,
       );
 
-      if (!workflowState.workflowFile) {
-        return options;
-      }
+      if (workflowState.workflowFile) {
+        // Add workflow rules if present
+        if (workflowState.workflowFile.rules) {
+          options.rule = [
+            workflowState.workflowFile.rules,
+            ...(options.rule || []),
+          ];
+          logger.debug(`Added workflow rules from ${workflowState.workflow}`);
+        }
 
-      const enhancedOptions = { ...options };
+        // Add workflow MCP servers if present
+        if (workflowState.workflowFile.tools) {
+          const parsedTools = parseWorkflowTools(
+            workflowState.workflowFile.tools,
+          );
+          if (parsedTools.mcpServers.length > 0) {
+            options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
+            logger.debug(
+              `Added ${parsedTools.mcpServers.length} workflow MCP servers`,
+            );
+          }
+        }
 
-      // Add workflow rules if present
-      if (workflowState.workflowFile.rules) {
-        const existingRules = enhancedOptions.rule || [];
-        enhancedOptions.rule = [
-          workflowState.workflowFile.rules,
-          ...existingRules,
-        ];
-        logger.debug(`Added workflow rules from ${workflowState.workflow}`);
-      }
-
-      // Add workflow MCP servers if present
-      if (workflowState.workflowFile.tools) {
-        const parsedTools = parseWorkflowTools(
-          workflowState.workflowFile.tools,
-        );
-        if (parsedTools.mcpServers.length > 0) {
-          const existingMcps = enhancedOptions.mcp || [];
-          enhancedOptions.mcp = [...parsedTools.mcpServers, ...existingMcps];
+        // Add workflow model if present (lower priority than --model flag)
+        if (workflowState.workflowFile.model && !options.model?.length) {
+          options.model = [workflowState.workflowFile.model];
           logger.debug(
-            `Added ${parsedTools.mcpServers.length} workflow MCP servers`,
+            `Added workflow model: ${workflowState.workflowFile.model}`,
           );
         }
       }
-
-      return enhancedOptions;
     } catch (error: any) {
       logger.debug(`Workflow service not available: ${error.message}`);
-      return options;
     }
+
+    // Apply rules
+    if (options.rule && options.rule.length > 0) {
+      enhancedConfig = await this.injectRules(enhancedConfig, options.rule);
+    }
+
+    // Apply MCPs
+    if (options.mcp && options.mcp.length > 0) {
+      enhancedConfig = await this.injectMcps(enhancedConfig, options.mcp);
+    }
+
+    // Apply models
+    if (options.model && options.model.length > 0) {
+      enhancedConfig = await this.injectModels(enhancedConfig, options.model);
+    }
+
+    // Apply prompts
+    if (options.prompt && options.prompt.length > 0) {
+      enhancedConfig = await this.injectPrompts(enhancedConfig, options.prompt);
+    }
+
+    return enhancedConfig;
   }
 
   /**

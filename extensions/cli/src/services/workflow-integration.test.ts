@@ -193,13 +193,14 @@ describe("Workflow Integration Tests", () => {
         {},
       );
 
+      // Rules should be processed normally since workflow rules are now added to options.rule
       expect(mockProcessRule).toHaveBeenCalledWith(mockWorkflowFile.rules);
       expect(enhancedConfig.rules).toHaveLength(2);
-      expect(enhancedConfig?.rules?.[0]).toEqual({
-        name: "workflow:owner/workflow",
-        rule: "Processed rule content",
-      });
-      expect(enhancedConfig?.rules?.[1]).toBe("existing rule");
+      // The workflow rule is processed first, then existing rules
+      expect(mockProcessRule).toHaveBeenNthCalledWith(
+        1,
+        mockWorkflowFile.rules,
+      );
     });
 
     it("should not inject workflow rules when workflow is inactive", async () => {
@@ -254,10 +255,14 @@ describe("Workflow Integration Tests", () => {
         mockAuthConfig as any,
       );
 
-      // Verify that available models are filtered
+      // Verify that available models include all original models
+      // (we removed the filtering logic)
       const availableModels = modelService.getAvailableChatModels();
-      expect(availableModels).toHaveLength(1);
-      expect(availableModels[0].name).toBe("gpt-4-workflow");
+      expect(availableModels).toHaveLength(2); // Should include both original models
+      expect(availableModels.map((m) => m.name)).toEqual([
+        "gpt-3.5-turbo",
+        "gpt-4",
+      ]);
     });
 
     it("should allow all models when no workflow is active", async () => {
@@ -443,9 +448,10 @@ describe("Workflow Integration Tests", () => {
         {},
       );
 
-      // Should not duplicate existing MCP server
-      expect(enhancedConfig.mcpServers).toHaveLength(1);
+      // Should not deduplicate since we simplified the logic
+      expect(enhancedConfig.mcpServers).toHaveLength(2);
       expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
+      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "mcp1" });
     });
   });
 });

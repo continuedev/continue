@@ -5,12 +5,7 @@ import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { serviceContainer } from "./ServiceContainer.js";
-import {
-  ModelServiceState,
-  SERVICE_NAMES,
-  WorkflowServiceState,
-} from "./types.js";
+import { ModelServiceState } from "./types.js";
 
 /**
  * Service for managing LLM and model state
@@ -59,44 +54,6 @@ export class ModelService
       (model) =>
         model && (model.roles?.includes("chat") || model.roles === undefined),
     ) || []) as ModelConfig[];
-
-    // Check for workflow model
-    try {
-      const workflowState = await serviceContainer.get<WorkflowServiceState>(
-        SERVICE_NAMES.WORKFLOW,
-      );
-      const workflowModel = workflowState.workflowFile?.model;
-
-      if (workflowModel) {
-        logger.debug("Workflow specifies model", { workflowModel });
-
-        // Check if workflow model exists in available models
-        const workflowModelConfig = this.availableModels.find(
-          (model) => (model as any).name === workflowModel,
-        );
-
-        const selectedModel =
-          workflowModelConfig ||
-          ({
-            provider: "openai",
-            name: workflowModel,
-          } as ModelConfig);
-
-        const llmApi = createLlmApi(selectedModel, authConfig);
-        if (!llmApi) {
-          throw new Error("Failed to initialize LLM with workflow model");
-        }
-
-        return {
-          llmApi,
-          model: selectedModel,
-          assistant,
-          authConfig,
-        };
-      }
-    } catch (error) {
-      // Workflow service not available, continue with normal model selection
-    }
 
     // Check if we have a persisted model name and use it if valid
     const persistedModelName = getModelName(authConfig);
