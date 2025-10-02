@@ -1,0 +1,35 @@
+<Steps>
+  <Step title="Create a New Agent via the Continue Hub">
+    Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+    </Step>
+
+  <Step title="Connect {{service_name}} MCP via Continue Hub">
+    Visit the [{{service_name}} MCP on Continue Hub]({{mcp_hub_url}}) and click **Install** to add it to the agent you created in the step above.
+
+    This will add {{service_name}} MCP to your agent's available tools. {{mcp_installation_details}}
+
+    <Tip>
+      **Alternative installation methods:**
+      1. **Quick CLI install**: `cn --mcp {{mcp_install_command}}`
+      2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
+
+      Once installed, {{service_name}} MCP tools become available to your Continue agent for all prompts.
+    </Tip>
+
+    <Info>
+      {{mcp_auth_info}}
+    </Info>
+
+  </Step>
+
+  <Step title="{{manual_setup_step_title}}">
+    {{manual_setup_step_content}}
+
+    {{manual_setup_additional_info}}
+
+  </Step>
+
+  <Step title="Run Your First {{task_type}}">
+    {{manual_first_task}}
+  </Step>
+</Steps>

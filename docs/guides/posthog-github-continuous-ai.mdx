@@ -9,50 +9,23 @@ sidebarTitle: "PostHog Analytics with Continue CLI"
   issues with the GitHub CLI.
 </Card>
 
-## What You'll Learn
+<Snippet file="cookbook-what-youll-learn.mdx" variables={{
+  "tool_name": "PostHog MCP",
+  "primary_function": "query analytics, errors, and feature flags",
+  "skill_1": "Analyze user behavior patterns with AI",
+  "skill_2": "Automatically create GitHub issues using GitHub CLI",
+  "skill_3": "Set up continuous monitoring with GitHub Actions"
+}} />
 
-This cookbook teaches you to:
-
-- Use [PostHog MCP](https://posthog.com/docs/model-context-protocol) to query [analytics](https://posthog.com/docs/web-analytics), [errors](https://posthog.com/docs/error-tracking), and [feature flags](https://posthog.com/docs/feature-flags)
-- Analyze user behavior patterns with AI
-- Automatically create GitHub issues using GitHub CLI
-- Set up continuous monitoring with GitHub Actions
-
-## Prerequisites
-
-Before starting, ensure you have:
-
-- GitHub repository where you want to create issues
-- [PostHog account](https://posthog.com) with [session recordings enabled](https://posthog.com/docs/session-replay/installation) and data collecting
-- Node.js 18+ installed locally
-- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
-- [GitHub CLI](https://cli.github.com/) installed (`gh` command)
-
-<Steps>
-  <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
-  </Step>
-  
-  <Step title="Set up Continue CLI Account & API Key">
-        1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
-        2. Sign up or log in to your Continue account
-        3. Navigate to your organization settings
-        4. Click **"API Keys"** and then **"+ New API Key"** 
-        5. Copy the API key immediately (you won't see it again!)
-        6. Login to the CLI: `cn login`
-  </Step>
-
-  <Step title="Add Required Secrets to Continue CLI">
-    Continue CLI will securely store your API keys as secrets that can be referenced in prompts.
-  </Step>
-</Steps>
-
-<Tip>
-  Continue CLI handles the complex API interactions - you just need to provide
-  the right prompts!
-</Tip>
+<Snippet file="cookbook-prerequisites.mdx" variables={{
+  "primary_requirement": "GitHub repository where you want to create issues",
+  "service_account": "[PostHog account](https://posthog.com) with [session recordings enabled](https://posthog.com/docs/session-replay/installation) and data collecting",
+  "service_plan": "free tier",
+  "additional_tool": "[GitHub CLI](https://cli.github.com/)",
+  "installation_command": "`gh` command",
+  "setup_step_title": "Add Required Secrets to Continue CLI",
+  "setup_step_content": "Continue CLI will securely store your API keys as secrets that can be referenced in prompts."
+}} />
 
 ## Step 1: Set Up Your Credentials
 
