@@ -96,7 +96,7 @@ export class NextEditLoggingService {
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
       if (outcome.requestId) {
-        this.logAcceptReject(outcome.requestId, true);
+        void this.logAcceptReject(outcome.requestId, true);
       }
       this._outcomes.delete(completionId);
       return outcome;
@@ -117,7 +117,7 @@ export class NextEditLoggingService {
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
       if (outcome.requestId) {
-        this.logAcceptReject(outcome.requestId, false);
+        void this.logAcceptReject(outcome.requestId, false);
       }
       this._outcomes.delete(completionId);
       return outcome;
