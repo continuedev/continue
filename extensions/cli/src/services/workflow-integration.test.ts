@@ -114,8 +114,9 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
-      expect(workflowService.isWorkflowActive()).toBe(true);
-      expect(workflowService.getWorkflowModel()).toBe("gpt-4-workflow");
+      const workflowState = workflowService.getState();
+      expect(workflowState.isActive).toBe(true);
+      expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
 
       // Initialize model service - it should use the workflow model
       await modelService.initialize(
@@ -136,7 +137,8 @@ describe("Workflow Integration Tests", () => {
       // Initialize workflow service without workflow
       await workflowService.initialize();
 
-      expect(workflowService.isWorkflowActive()).toBe(false);
+      const workflowState = workflowService.getState();
+      expect(workflowState.isActive).toBe(false);
 
       // Initialize model service - it should use regular model selection
       await modelService.initialize(
@@ -276,7 +278,8 @@ describe("Workflow Integration Tests", () => {
 
       await workflowService.initialize("owner/workflow");
 
-      expect(workflowService.isWorkflowActive()).toBe(false);
+      const workflowState = workflowService.getState();
+      expect(workflowState.isActive).toBe(false);
 
       // Model service should work normally
       await modelService.initialize(
@@ -332,15 +335,16 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
-      expect(workflowService.getWorkflowModel()).toBe("gpt-4-workflow");
-      expect(workflowService.getWorkflowTools()).toBe("bash,read,write");
-      expect(workflowService.getWorkflowRules()).toBe(
+      const workflowState = workflowService.getState();
+      expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
+      expect(workflowState.workflowFile?.tools).toBe("bash,read,write");
+      expect(workflowState.workflowFile?.rules).toBe(
         "Always be helpful and concise",
       );
-      expect(workflowService.getWorkflowPrompt()).toBe(
+      expect(workflowState.workflowFile?.prompt).toBe(
         "You are a workflow assistant.",
       );
-      expect(workflowService.getWorkflow()).toBe("owner/workflow");
+      expect(workflowState.workflow).toBe("owner/workflow");
     });
 
     it("should handle partial workflow data", async () => {
@@ -354,10 +358,11 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(partialWorkflow);
       await workflowService.initialize("owner/partial");
 
-      expect(workflowService.getWorkflowModel()).toBe("gpt-3.5-turbo");
-      expect(workflowService.getWorkflowTools()).toBeUndefined();
-      expect(workflowService.getWorkflowRules()).toBeUndefined();
-      expect(workflowService.getWorkflowPrompt()).toBe("Partial prompt");
+      const workflowState = workflowService.getState();
+      expect(workflowState.workflowFile?.model).toBe("gpt-3.5-turbo");
+      expect(workflowState.workflowFile?.tools).toBeUndefined();
+      expect(workflowState.workflowFile?.rules).toBeUndefined();
+      expect(workflowState.workflowFile?.prompt).toBe("Partial prompt");
     });
   });
 });

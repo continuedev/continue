@@ -152,81 +152,28 @@ describe("WorkflowService", () => {
       await service.initialize("owner/package");
     });
 
-    it("should return workflow file", () => {
-      const workflowFile = service.getWorkflowFile();
-      expect(workflowFile?.name).toBe("Test Workflow");
-    });
-
-    it("should return workflow slug", () => {
-      const workflow = service.getWorkflow();
-      expect(workflow).toBe("owner/package");
-    });
-
-    it("should return active status", () => {
-      const isActive = service.isWorkflowActive();
-      expect(isActive).toBe(true);
-    });
-
-    it("should return workflow model", () => {
-      const model = service.getWorkflowModel();
-      expect(model).toBe("gpt-4");
-    });
-
-    it("should return workflow tools", () => {
-      const tools = service.getWorkflowTools();
-      expect(tools).toBe("bash,read,write");
-    });
-
-    it("should return workflow rules", () => {
-      const rules = service.getWorkflowRules();
-      expect(rules).toBe("Be helpful");
-    });
-
-    it("should return workflow prompt", () => {
-      const prompt = service.getWorkflowPrompt();
-      expect(prompt).toBe("You are a helpful assistant.");
+    it("should return workflow state", () => {
+      const state = service.getState();
+      expect(state.workflowFile?.name).toBe("Test Workflow");
+      expect(state.workflow).toBe("owner/package");
+      expect(state.isActive).toBe(true);
+      expect(state.workflowFile?.model).toBe("gpt-4");
+      expect(state.workflowFile?.tools).toBe("bash,read,write");
+      expect(state.workflowFile?.rules).toBe("Be helpful");
+      expect(state.workflowFile?.prompt).toBe("You are a helpful assistant.");
     });
   });
 
-  describe("inactive workflow state getters", () => {
+  describe("inactive workflow state", () => {
     beforeEach(() => {
-      // Initialize with no workflow
       service.initialize();
     });
 
-    it("should return null for workflow file when inactive", () => {
-      const workflowFile = service.getWorkflowFile();
-      expect(workflowFile).toBeNull();
-    });
-
-    it("should return null for workflow when inactive", () => {
-      const workflow = service.getWorkflow();
-      expect(workflow).toBeNull();
-    });
-
-    it("should return false for active status when inactive", () => {
-      const isActive = service.isWorkflowActive();
-      expect(isActive).toBe(false);
-    });
-
-    it("should return undefined for model when inactive", () => {
-      const model = service.getWorkflowModel();
-      expect(model).toBeUndefined();
-    });
-
-    it("should return undefined for tools when inactive", () => {
-      const tools = service.getWorkflowTools();
-      expect(tools).toBeUndefined();
-    });
-
-    it("should return undefined for rules when inactive", () => {
-      const rules = service.getWorkflowRules();
-      expect(rules).toBeUndefined();
-    });
-
-    it("should return undefined for prompt when inactive", () => {
-      const prompt = service.getWorkflowPrompt();
-      expect(prompt).toBeUndefined();
+    it("should return inactive state when no workflow", () => {
+      const state = service.getState();
+      expect(state.workflowFile).toBeNull();
+      expect(state.workflow).toBeNull();
+      expect(state.isActive).toBe(false);
     });
   });
 
@@ -240,11 +187,12 @@ describe("WorkflowService", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await service.initialize("owner/simple");
 
-      expect(service.getWorkflowModel()).toBeUndefined();
-      expect(service.getWorkflowTools()).toBeUndefined();
-      expect(service.getWorkflowRules()).toBeUndefined();
-      expect(service.getWorkflowPrompt()).toBe("Simple prompt");
-      expect(service.isWorkflowActive()).toBe(true);
+      const state = service.getState();
+      expect(state.workflowFile?.model).toBeUndefined();
+      expect(state.workflowFile?.tools).toBeUndefined();
+      expect(state.workflowFile?.rules).toBeUndefined();
+      expect(state.workflowFile?.prompt).toBe("Simple prompt");
+      expect(state.isActive).toBe(true);
     });
 
     it("should handle workflow with empty prompt", async () => {
@@ -257,9 +205,10 @@ describe("WorkflowService", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await service.initialize("owner/empty");
 
-      expect(service.getWorkflowModel()).toBe("gpt-3.5-turbo");
-      expect(service.getWorkflowPrompt()).toBe("");
-      expect(service.isWorkflowActive()).toBe(true);
+      const state = service.getState();
+      expect(state.workflowFile?.model).toBe("gpt-3.5-turbo");
+      expect(state.workflowFile?.prompt).toBe("");
+      expect(state.isActive).toBe(true);
     });
   });
 });
