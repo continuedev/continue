@@ -1,22 +1,8 @@
-import { parseWorkflowFile, WorkflowFile } from "@continuedev/config-yaml";
-
-import { HubPackageProcessor, loadPackageFromHub } from "../hubLoader.js";
+import { loadPackageFromHub, workflowProcessor } from "../hubLoader.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
 import { WorkflowServiceState } from "./types.js";
-
-/**
- * Workflow processor - handles markdown workflow files
- */
-export const workflowProcessor: HubPackageProcessor<WorkflowFile> = {
-  type: "prompt",
-  expectedFileExtensions: [".md"],
-  parseContent: (content: string) => parseWorkflowFile(content),
-  validateContent: (workflowFile: WorkflowFile) => {
-    return !!workflowFile.name;
-  },
-};
 
 /**
  * Service for managing workflow state
@@ -26,48 +12,43 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
   constructor() {
     super("WorkflowService", {
       workflowFile: null,
-      workflow: null,
+      slug: null,
     });
   }
 
   /**
    * Initialize the workflow service with a workflow slug
    */
-  async doInitialize(workflow?: string): Promise<WorkflowServiceState> {
-    logger.debug("WorkflowService.doInitialize called", {
-      hasWorkflow: !!workflow,
-      workflow,
-    });
-
-    if (!workflow) {
+  async doInitialize(workflowSlug?: string): Promise<WorkflowServiceState> {
+    if (!workflowSlug) {
       return {
         workflowFile: null,
-        workflow: null,
+        slug: null,
       };
     }
 
     try {
-      const parts = workflow.split("/");
+      const parts = workflowSlug.split("/");
       if (parts.length !== 2) {
         throw new Error(
-          `Invalid workflow slug format. Expected "owner/package", got: ${workflow}`,
+          `Invalid workflow slug format. Expected "owner/package", got: ${workflowSlug}`,
         );
       }
 
       const workflowFile = await loadPackageFromHub(
-        workflow,
+        workflowSlug,
         workflowProcessor,
       );
 
       return {
         workflowFile,
-        workflow,
+        slug: workflowSlug,
       };
     } catch (error: any) {
       logger.error("Failed to initialize WorkflowService:", error);
       return {
         workflowFile: null,
-        workflow: null,
+        slug: null,
       };
     }
   }

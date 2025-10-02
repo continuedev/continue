@@ -5,7 +5,7 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
-import { processPromptOrRule } from "./args.js";
+import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { modeService } from "./services/ModeService.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
@@ -153,7 +153,7 @@ export async function constructSystemMessage(
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {
-        const processedRule = await processPromptOrRule(ruleSpec);
+        const processedRule = await processRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
         console.warn(

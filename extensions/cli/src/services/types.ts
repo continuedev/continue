@@ -1,4 +1,8 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  ModelConfig,
+  WorkflowFile,
+} from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { AssistantConfig } from "@continuedev/sdk";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
@@ -119,8 +123,8 @@ export interface StorageSyncServiceState {
 }
 
 export interface WorkflowServiceState {
-  workflowFile: any | null;
-  workflow: string | null;
+  workflowFile: WorkflowFile | null;
+  slug: string | null;
 }
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";

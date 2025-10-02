@@ -11,9 +11,9 @@ vi.mock("./services/ServiceContainer.js", () => ({
   },
 }));
 
-// Mock processPromptOrRule to avoid file system operations in tests
-vi.mock("./args.js", () => ({
-  processPromptOrRule: vi
+// Mock processRule to avoid file system operations in tests
+vi.mock("./hubLoader.js", () => ({
+  processRule: vi
     .fn()
     .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));

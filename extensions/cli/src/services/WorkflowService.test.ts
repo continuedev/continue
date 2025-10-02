@@ -1,11 +1,18 @@
-import { vi } from "vitest";
+import { Mock, vi } from "vitest";
 
-import { WorkflowService, workflowProcessor } from "./WorkflowService.js";
+import { workflowProcessor } from "../hubLoader.js";
+import { WorkflowService } from "./WorkflowService.js";
 
 // Mock the hubLoader module
 vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
   HubPackageProcessor: vi.fn(),
+  workflowProcessor: {
+    type: "workflow",
+    expectedFileExtensions: [".md"],
+    parseContent: vi.fn(),
+    validateContent: vi.fn(),
+  },
 }));
 
 // Mock the logger
@@ -36,7 +43,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       });
     });
 
@@ -45,7 +52,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       });
     });
 
@@ -54,7 +61,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       });
 
       // Should not call loadPackageFromHub with invalid slug
@@ -66,7 +73,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       });
 
       expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
@@ -88,7 +95,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
-        workflow: "owner/package",
+        slug: "owner/package",
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -104,7 +111,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -125,7 +132,7 @@ describe("WorkflowService", () => {
 
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
-        workflow: "owner/minimal",
+        slug: "owner/minimal",
       });
     });
   });
@@ -148,7 +155,7 @@ describe("WorkflowService", () => {
     it("should return workflow state", () => {
       const state = service.getState();
       expect(state.workflowFile?.name).toBe("Test Workflow");
-      expect(state.workflow).toBe("owner/package");
+      expect(state.slug).toBe("owner/package");
       expect(state.workflowFile?.model).toBe("gpt-4");
       expect(state.workflowFile?.tools).toBe("bash,read,write");
       expect(state.workflowFile?.rules).toBe("Be helpful");
@@ -164,7 +171,7 @@ describe("WorkflowService", () => {
     it("should return inactive state when no workflow", () => {
       const state = service.getState();
       expect(state.workflowFile).toBeNull();
-      expect(state.workflow).toBeNull();
+      expect(state.slug).toBeNull();
     });
   });
 
@@ -204,7 +211,7 @@ describe("WorkflowService", () => {
 
 describe("workflowProcessor", () => {
   it("should have correct type and extensions", () => {
-    expect(workflowProcessor.type).toBe("prompt");
+    expect(workflowProcessor.type).toBe("workflow");
     expect(workflowProcessor.expectedFileExtensions).toEqual([".md"]);
   });
 
@@ -215,6 +222,15 @@ model: gpt-4
 tools: bash,read
 ---
 You are a helpful assistant.`;
+
+    // Set up the mock to return expected result
+    const expectedResult = {
+      name: "Test Workflow",
+      model: "gpt-4",
+      tools: "bash,read",
+      prompt: "You are a helpful assistant.",
+    };
+    (workflowProcessor.parseContent as Mock).mockReturnValue(expectedResult);
 
     const result = workflowProcessor.parseContent(content, "test.md");
     expect(result).toEqual({
@@ -236,6 +252,11 @@ You are a helpful assistant.`;
       // Missing name
     };
 
+    // Set up mock validation responses
+    (workflowProcessor.validateContent as Mock)
+      .mockReturnValueOnce(true) // For valid workflow
+      .mockReturnValueOnce(false); // For invalid workflow
+
     expect(workflowProcessor.validateContent?.(validWorkflow)).toBe(true);
     expect(workflowProcessor.validateContent?.(invalidWorkflow as any)).toBe(
       false,
@@ -247,6 +268,9 @@ You are a helpful assistant.`;
       name: "",
       prompt: "Test prompt",
     };
+
+    // Mock validation to return false for empty name
+    (workflowProcessor.validateContent as Mock).mockReturnValue(false);
 
     expect(workflowProcessor.validateContent?.(invalidWorkflow)).toBe(false);
   });

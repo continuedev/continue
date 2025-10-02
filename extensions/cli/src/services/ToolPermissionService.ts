@@ -169,7 +169,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       // Absolute override: ignore all user configuration
       allPolicies = modePolicies;
     } else {
-      // Normal mode: combine mode policies, workflow policies, and user configuration
+      // Normal mode: combine mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml

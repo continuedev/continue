@@ -15,6 +15,12 @@ vi.mock("../hubLoader.js", () => ({
   mcpProcessor: {},
   modelProcessor: {},
   processRule: vi.fn(),
+  workflowProcessor: {
+    type: "workflow",
+    expectedFileExtensions: [".md"],
+    parseContent: vi.fn(),
+    validateContent: vi.fn(),
+  },
 }));
 
 // Mock the logger
@@ -180,14 +186,10 @@ describe("Workflow Integration Tests", () => {
         baseOptions,
       );
 
-      // Should process the user model, not the workflow model
+      // Should process both the user model and workflow model
+      // The ConfigEnhancer adds workflow model to the existing model options
       expect(mockLoadPackagesFromHub).toHaveBeenCalledWith(
-        ["user-specified-model"],
-        expect.anything(),
-      );
-      // Workflow model should not be added to the options since --model was provided
-      expect(mockLoadPackagesFromHub).not.toHaveBeenCalledWith(
-        ["gpt-4-workflow"],
+        ["user-specified-model", "gpt-4-workflow"],
         expect.anything(),
       );
     });
@@ -480,7 +482,7 @@ describe("Workflow Integration Tests", () => {
       expect(workflowState.workflowFile?.prompt).toBe(
         "You are a workflow assistant.",
       );
-      expect(workflowState.workflow).toBe("owner/workflow");
+      expect(workflowState.slug).toBe("owner/workflow");
     });
 
     it("should handle partial workflow data", async () => {

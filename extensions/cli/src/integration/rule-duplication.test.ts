@@ -25,7 +25,7 @@ vi.mock("../services/ServiceContainer.js", () => ({
     get: vi.fn(() =>
       Promise.resolve({
         workflowFile: null,
-        workflow: null,
+        slug: null,
       }),
     ),
   },

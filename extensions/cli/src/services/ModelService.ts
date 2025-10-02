@@ -5,7 +5,7 @@ import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { ModelServiceState } from "./types.js";
+import { ModelServiceState, WorkflowServiceState } from "./types.js";
 
 /**
  * Service for managing LLM and model state
@@ -41,10 +41,7 @@ export class ModelService
   async doInitialize(
     assistant: AssistantUnrolled,
     authConfig: AuthConfig,
-    workflowServiceState?: {
-      workflowFile: any | null;
-      workflow: string | null;
-    },
+    workflowServiceState?: WorkflowServiceState,
   ): Promise<ModelServiceState> {
     logger.debug("ModelService.doInitialize called", {
       hasAssistant: !!assistant,
@@ -66,10 +63,6 @@ export class ModelService
     if (workflowServiceState?.workflowFile?.model) {
       preferredModelName = workflowServiceState.workflowFile.model;
       modelSource = "workflow";
-      logger.debug("Found workflow model preference", {
-        workflowModel: preferredModelName,
-        workflowName: workflowServiceState.workflowFile.name,
-      });
     } else {
       // Fall back to persisted model name if no workflow model
       preferredModelName = getModelName(authConfig);
@@ -87,14 +80,6 @@ export class ModelService
       });
       if (modelIndex === -1) {
         // Preferred model not found, use default model selection
-        logger.debug(
-          `Preferred model "${preferredModelName}" from ${modelSource} not found, using default model`,
-          {
-            preferredModelName,
-            modelSource,
-            availableModels: this.availableModels.length,
-          },
-        );
         const [llmApi, model] = getLlmApi(assistant, authConfig);
         return {
           llmApi,

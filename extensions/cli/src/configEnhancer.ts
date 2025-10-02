@@ -30,44 +30,34 @@ export class ConfigEnhancer {
 
     // Add workflow rules/mcp servers if present
     const options = { ..._options };
-    const workflowState = await serviceContainer.get<WorkflowServiceState>(
+    const { workflowFile } = await serviceContainer.get<WorkflowServiceState>(
       SERVICE_NAMES.WORKFLOW,
     );
 
-    if (workflowState.workflowFile) {
-      if (workflowState.workflowFile.rules) {
+    if (workflowFile) {
+      const { rules, model, tools, prompt } = workflowFile;
+      if (rules) {
         options.rule = [
-          workflowState.workflowFile.rules,
+          ...rules.split(",").filter(Boolean),
           ...(options.rule || []),
         ];
       }
 
-      if (workflowState.workflowFile.tools) {
-        const parsedTools = parseWorkflowTools(
-          workflowState.workflowFile.tools,
-        );
+      if (tools) {
+        const parsedTools = parseWorkflowTools(tools);
         if (parsedTools.mcpServers.length > 0) {
           options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
         }
       }
 
-      // Add workflow model if present (lower priority than --model flag)
-      if (workflowState.workflowFile.model && !options.model?.length) {
-        options.model = [workflowState.workflowFile.model];
-        logger.debug(
-          `Added workflow model: ${workflowState.workflowFile.model}`,
-        );
+      // Note that --model takes precedence over workflow model
+      if (model) {
+        options.model = [...(options.model ?? []), model];
       }
 
       // Add workflow prompt as prefix
-      if (workflowState.workflowFile.prompt) {
-        options.prompt = [
-          workflowState.workflowFile.prompt,
-          ...(options.prompt || []),
-        ];
-        logger.debug(
-          `Added workflow prompt as prefix: ${workflowState.workflowFile.prompt.substring(0, 100)}...`,
-        );
+      if (prompt) {
+        options.prompt = [prompt, ...(options.prompt || [])];
       }
     }
 

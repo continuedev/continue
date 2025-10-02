@@ -1,5 +1,4 @@
-import { processPromptOrRule } from "../args.js";
-
+import { processRule } from "../hubLoader.js";
 import { logger } from "./logger.js";
 
 /**
@@ -20,7 +19,7 @@ export async function processAndCombinePrompts(
 
   for (const promptSpec of additionalPrompts) {
     try {
-      const processed = await processPromptOrRule(promptSpec);
+      const processed = await processRule(promptSpec);
       processedPrompts.push(processed);
     } catch (error: any) {
       logger.warn(`Failed to process prompt "${promptSpec}": ${error.message}`);
