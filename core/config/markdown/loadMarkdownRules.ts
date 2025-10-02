@@ -61,7 +61,11 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     try {
       const markdownFiles = await getAllDotContinueDefinitionFiles(
         ide,
-        { includeGlobal: true, includeWorkspace: true, fileExtType: "markdown" },
+        {
+          includeGlobal: true,
+          includeWorkspace: true,
+          fileExtType: "markdown",
+        },
         dirName,
       );
 
