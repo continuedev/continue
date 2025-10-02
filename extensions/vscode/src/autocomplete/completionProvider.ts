@@ -333,7 +333,7 @@ export class ContinueCompletionProvider
       let chainExists = this.nextEditProvider.chainExists();
       const processedCount = this.prefetchQueue.processedCount;
       const unprocessedCount = this.prefetchQueue.unprocessedCount;
-      console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
+      console.debug("isJumping:", isJumping, "/ chainExists:", chainExists);
       this.prefetchQueue.peekThreeProcessed();
 
       let resetChainInFullFileDiff = false;

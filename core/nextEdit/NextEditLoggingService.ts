@@ -1,5 +1,7 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+import { getControlPlaneEnvSync } from "../control-plane/env";
 import { DataLogger } from "../data/log";
 import { Telemetry } from "../util/posthog";
 import { NextEditOutcome } from "./types";
@@ -93,6 +95,8 @@ export class NextEditLoggingService {
       outcome.accepted = true;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
+      this.logAcceptReject(completionId, true);
+      console.log("YES");
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -111,6 +115,8 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
+      this.logAcceptReject(completionId, false);
+      console.log("NO");
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -244,5 +250,27 @@ export class NextEditLoggingService {
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
     void Telemetry.capture("nextEditOutcome", outcome, true);
+  }
+
+  private async logAcceptReject(
+    requestId: string,
+    accepted: boolean,
+  ): Promise<void> {
+    try {
+      const controlPlaneEnv = getControlPlaneEnvSync("production");
+      await fetchwithRequestOptions(
+        new URL("model-proxy/v1/feedback", controlPlaneEnv.CONTROL_PLANE_URL),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requestId,
+            accepted,
+          }),
+        },
+      );
+    } catch (error) {}
   }
 }

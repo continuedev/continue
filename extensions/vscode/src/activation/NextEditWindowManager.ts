@@ -165,7 +165,7 @@ export class NextEditWindowManager {
   private constructor() {
     this.theme = getThemeString();
 
-    console.log(
+    console.debug(
       "Next Edit Theme initialized:",
       this.theme
         ? `Theme exists: ${JSON.stringify(this.theme)}`

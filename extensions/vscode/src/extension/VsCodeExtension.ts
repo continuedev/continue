@@ -232,7 +232,9 @@ export class VsCodeExtension {
           timeSinceLastDocChange < this.ARBITRARY_TYPING_DELAY &&
           !NextEditWindowManager.getInstance().hasAccepted()
         ) {
-          console.log("VsCodeExtension: typing in progress, preserving chain");
+          console.debug(
+            "VsCodeExtension: typing in progress, preserving chain",
+          );
           return true;
         }
 
@@ -519,7 +521,6 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidOpenTextDocument(async (event) => {
-      console.log("onDidOpenTextDocument");
       const ast = await getAst(event.fileName, event.getText());
       if (ast) {
         DocumentHistoryTracker.getInstance().addDocument(
