@@ -8,7 +8,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 export const SUPPORTED_AGENT_FILES = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
 /**
- * Loads rules from markdown files in the .continue/rules directory
+ * Loads rules from markdown files in the .continue/rules and .continue/prompts directories
  * and agent files (AGENTS.md, AGENT.md, CLAUDE.md) at workspace root
  */
 export async function loadMarkdownRules(ide: IDE): Promise<{
@@ -53,37 +53,41 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     }
   }
 
-  try {
-    // Get all .md files from .continue/rules
-    const markdownFiles = await getAllDotContinueDefinitionFiles(
-      ide,
-      { includeGlobal: true, includeWorkspace: true, fileExtType: "markdown" },
-      "rules",
-    );
+  // Load markdown files from both .continue/rules and .continue/prompts
+  const dirsToCheck = ["rules", "prompts"];
 
-    // Filter to just .md files
-    const mdFiles = markdownFiles.filter((file) => file.path.endsWith(".md"));
+  for (const dirName of dirsToCheck) {
+    try {
+      const markdownFiles = await getAllDotContinueDefinitionFiles(
+        ide,
+        { includeGlobal: true, includeWorkspace: true, fileExtType: "markdown" },
+        dirName,
+      );
 
-    // Process each markdown file
-    for (const file of mdFiles) {
-      try {
-        const rule = markdownToRule(file.content, {
-          uriType: "file",
-          fileUri: file.path,
-        });
-        rules.push({ ...rule, source: "rules-block", sourceFile: file.path });
-      } catch (e) {
-        errors.push({
-          fatal: false,
-          message: `Failed to parse markdown rule file ${file.path}: ${e instanceof Error ? e.message : e}`,
-        });
+      // Filter to just .md files
+      const mdFiles = markdownFiles.filter((file) => file.path.endsWith(".md"));
+
+      // Process each markdown file
+      for (const file of mdFiles) {
+        try {
+          const rule = markdownToRule(file.content, {
+            uriType: "file",
+            fileUri: file.path,
+          });
+          rules.push({ ...rule, source: "rules-block", sourceFile: file.path });
+        } catch (e) {
+          errors.push({
+            fatal: false,
+            message: `Failed to parse markdown rule file ${file.path}: ${e instanceof Error ? e.message : e}`,
+          });
+        }
       }
+    } catch (e) {
+      errors.push({
+        fatal: false,
+        message: `Error loading markdown rule files from ${dirName}: ${e instanceof Error ? e.message : e}`,
+      });
     }
-  } catch (e) {
-    errors.push({
-      fatal: false,
-      message: `Error loading markdown rule files: ${e instanceof Error ? e.message : e}`,
-    });
   }
 
   return { rules, errors };
