@@ -54,6 +54,26 @@ Before starting, ensure you have:
 First, you'll need to gather your Sentry and GitHub API credentials.
 
 <Tabs>
+  <Tab title="Configure Sentry MCP">
+
+    <Tip>
+      See [Sentry MCP Documentation](https://docs.sentry.io/product/sentry-mcp/) for detailed configuration options
+    </Tip>
+
+    The Sentry MCP supports multiple configuration methods. For Continue CLI, OAuth is recommended:
+
+    **Option 1: OAuth Configuration (Recommended)**
+
+    The Sentry MCP will prompt for OAuth authentication when first used. Simply follow the authorization flow.
+
+    **Option 2: STDIO Mode with Auth Token**
+
+    For local development, you can use STDIO mode:
+    ```bash
+    npx @sentry/mcp-server@latest --access-token=YOUR_SENTRY_TOKEN --host=sentry.io
+    ```
+
+  </Tab>
   <Tab title="Sentry API Credentials">
     You'll need a **Sentry User Auth Token** to access issues and error data:
 
@@ -85,26 +105,6 @@ First, you'll need to gather your Sentry and GitHub API credentials.
     2. Run `gh auth login` and follow the prompts
     3. Choose authentication method (browser or token)
     4. Grant necessary permissions when prompted (`issues:write` is **required** for creating issues)
-
-  </Tab>
-  <Tab title="Configure Sentry MCP">
-
-    <Tip>
-      See [Sentry MCP Documentation](https://docs.sentry.io/product/sentry-mcp/) for detailed configuration options
-    </Tip>
-
-    The Sentry MCP supports multiple configuration methods. For Continue CLI, OAuth is recommended:
-
-    **Option 1: OAuth Configuration (Recommended)**
-
-    The Sentry MCP will prompt for OAuth authentication when first used. Simply follow the authorization flow.
-
-    **Option 2: STDIO Mode with Auth Token**
-
-    For local development, you can use STDIO mode:
-    ```bash
-    npx @sentry/mcp-server@latest --access-token=YOUR_SENTRY_TOKEN --host=sentry.io
-    ```
 
   </Tab>
 </Tabs>
