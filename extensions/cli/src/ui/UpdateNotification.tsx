@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 
 import { useServices } from "../hooks/useService.js";
 import {
+  MCPServiceState,
   SERVICE_NAMES,
   UpdateServiceState,
   UpdateStatus,
@@ -20,9 +21,23 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
 
   const { services } = useServices<{
     update: UpdateServiceState;
-  }>([SERVICE_NAMES.UPDATE]);
+    mcp: MCPServiceState;
+  }>([SERVICE_NAMES.UPDATE, SERVICE_NAMES.MCP]);
 
   const color = useMemo(() => {
+    // Check for failed MCP servers first - show yellow warning
+    if (!isRemoteMode && columns > 60 && services.mcp?.mcpService) {
+      const state = services.mcp.mcpService.getState();
+      const failedServers = state.connections.filter(
+        (connection) => connection.status === "error",
+      );
+
+      if (failedServers.length > 0) {
+        return "yellow";
+      }
+    }
+
+    // Fallback to update status colors
     switch (services.update?.status) {
       case UpdateStatus.UPDATING:
       case UpdateStatus.CHECKING:
@@ -34,15 +49,42 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
       default:
         return "dim";
     }
-  }, [services.update?.status]);
+  }, [
+    services.update?.status,
+    services.mcp?.mcpService,
+    columns,
+    isRemoteMode,
+  ]);
 
   const text = useMemo(() => {
+    // Check for failed MCP servers first - only show on wide screens (>60 columns)
+    if (!isRemoteMode && columns > 60 && services.mcp?.mcpService) {
+      const state = services.mcp.mcpService.getState();
+      const failedServers = state.connections.filter(
+        (connection) => connection.status === "error",
+      );
+
+      if (failedServers.length > 0) {
+        const message =
+          failedServers.length === 1
+            ? `${failedServers[0].config?.name || "MCP server"} failed to start, /mcp to configure`
+            : `${failedServers.length} MCP servers failed to start, /mcp to configure`;
+        return message;
+      }
+    }
+
+    // Fallback to update message or default "Continue CLI"
     if (!services.update?.message) {
       return "Continue CLI";
     }
 
     return services.update.message;
-  }, [columns, services.update?.message]);
+  }, [
+    columns,
+    services.update?.message,
+    services.mcp?.mcpService,
+    isRemoteMode,
+  ]);
 
   if (!services.update?.isUpdateAvailable && isRemoteMode) {
     return <Text color="cyan">◉ Remote Mode</Text>;
