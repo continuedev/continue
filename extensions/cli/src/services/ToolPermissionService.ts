@@ -1,3 +1,5 @@
+import { parseWorkflowTools } from "@continuedev/config-yaml";
+
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
 import {
@@ -7,14 +9,18 @@ import {
 } from "../permissions/types.js";
 import { logger } from "../util/logger.js";
 
+import { serviceContainer } from "./ServiceContainer.js";
+import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
+
 import { BaseService } from "./BaseService.js";
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
   isHeadless: boolean;
-  modePolicyCount?: number; // Track how many policies are from mode vs other sources
-  originalPolicies?: ToolPermissions; // Store original policies when switching modes
+  modePolicyCount?: number;
+  workflowPolicyCount?: number;
+  originalPolicies?: ToolPermissions;
 }
 
 /**
@@ -28,6 +34,53 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       isHeadless: false,
       modePolicyCount: 0,
     });
+  }
+
+  /**
+   * Generate workflow-specific policies if a workflow is active
+   */
+  private async generateWorkflowPolicies(): Promise<ToolPermissionPolicy[]> {
+    try {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      if (!workflowState.isActive || !workflowState.workflowFile?.tools) {
+        return [];
+      }
+
+      const parsedTools = parseWorkflowTools(workflowState.workflowFile.tools);
+      const policies: ToolPermissionPolicy[] = [];
+
+      if (parsedTools.allBuiltIn) {
+        policies.push({ tool: "*", permission: "allow" });
+        policies.push({ tool: "mcp:*", permission: "exclude" });
+      } else {
+        policies.push({ tool: "*", permission: "exclude" });
+      }
+
+      for (const toolRef of parsedTools.tools) {
+        if (toolRef.mcpServer) {
+          if (toolRef.toolName) {
+            policies.push({
+              tool: `mcp:${toolRef.mcpServer}:${toolRef.toolName}`,
+              permission: "allow",
+            });
+          } else {
+            policies.push({
+              tool: `mcp:${toolRef.mcpServer}:*`,
+              permission: "allow",
+            });
+          }
+        } else if (toolRef.toolName) {
+          policies.push({ tool: toolRef.toolName, permission: "allow" });
+        }
+      }
+
+      return policies;
+    } catch (error) {
+      return [];
+    }
   }
 
   /**
@@ -124,10 +177,13 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
+      workflowPolicyCount: 0,
     });
 
-    // Mark as initialized since we're bypassing the async initialize flow
     (this as any).isInitialized = true;
+
+    // Apply workflow policies asynchronously after initialization
+    this.applyWorkflowPoliciesAsync();
 
     return this.getState();
   }
@@ -292,11 +348,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
     );
 
-    // Update the service container with the new state
-    // Import here to avoid circular dependencies
     try {
-      const { serviceContainer } = await import("./ServiceContainer.js");
-      const { SERVICE_NAMES } = await import("./types.js");
       serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.getState());
       logger.debug("Updated service container with reloaded permissions");
     } catch (error) {
@@ -304,6 +356,42 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         "Failed to update service container after permission reload",
         { error },
       );
+    }
+  }
+
+  /**
+   * Apply workflow policies asynchronously
+   */
+  private async applyWorkflowPoliciesAsync(): Promise<void> {
+    try {
+      const workflowPolicies = await this.generateWorkflowPolicies();
+
+      if (workflowPolicies.length > 0) {
+        const currentState = this.getState();
+        const existingPolicies = currentState.permissions.policies;
+        const modePolicyCount = currentState.modePolicyCount || 0;
+
+        // Insert workflow policies after mode policies but before other policies
+        const nonModePolicies = existingPolicies.slice(modePolicyCount);
+        const modePolicies = existingPolicies.slice(0, modePolicyCount);
+
+        const allPolicies = [
+          ...modePolicies,
+          ...workflowPolicies,
+          ...nonModePolicies,
+        ];
+
+        this.setState({
+          permissions: { policies: allPolicies },
+          workflowPolicyCount: workflowPolicies.length,
+        });
+
+        logger.debug(
+          `Applied ${workflowPolicies.length} workflow tool policies`,
+        );
+      }
+    } catch (error: any) {
+      logger.debug(`Failed to apply workflow policies: ${error.message}`);
     }
   }
 

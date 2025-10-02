@@ -1,4 +1,8 @@
-import { AssistantUnrolled, Rule } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  parseWorkflowTools,
+  Rule,
+} from "@continuedev/config-yaml";
 
 import { BaseCommandOptions } from "./commands/BaseCommandOptions.js";
 import {
@@ -24,8 +28,9 @@ export class ConfigEnhancer {
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
 
-    // Apply workflow rules first (highest priority)
+    // Apply workflow components first (highest priority)
     enhancedConfig = await this.injectWorkflowRules(enhancedConfig);
+    enhancedConfig = await this.injectWorkflowMcpServers(enhancedConfig);
 
     // Apply rules
     if (options.rule && options.rule.length > 0) {
@@ -82,6 +87,58 @@ export class ConfigEnhancer {
       return modifiedConfig;
     } catch (error: any) {
       logger.debug(`Workflow service not available: ${error.message}`);
+      return config;
+    }
+  }
+
+  /**
+   * Inject workflow MCP servers if a workflow has tools
+   */
+  private async injectWorkflowMcpServers(
+    config: AssistantUnrolled,
+  ): Promise<AssistantUnrolled> {
+    try {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      if (!workflowState.isActive || !workflowState.workflowFile?.tools) {
+        return config;
+      }
+
+      const parsedTools = parseWorkflowTools(workflowState.workflowFile.tools);
+      if (parsedTools.mcpServers.length === 0) {
+        return config;
+      }
+
+      const processedMcps = await loadPackagesFromHub(
+        parsedTools.mcpServers,
+        mcpProcessor,
+      );
+      const modifiedConfig = { ...config };
+      const existingMcpServers = (modifiedConfig as any).mcpServers || [];
+
+      // Deduplicate MCP servers by checking if they already exist
+      const existingServerNames = new Set(
+        existingMcpServers.map((server: any) => server.name || server.slug),
+      );
+
+      const newMcpServers = processedMcps.filter((server: any) => {
+        const serverName = server.name || server.slug;
+        return !existingServerNames.has(serverName);
+      });
+
+      if (newMcpServers.length > 0) {
+        (modifiedConfig as any).mcpServers = [
+          ...newMcpServers,
+          ...existingMcpServers,
+        ];
+        logger.debug(`Injected ${newMcpServers.length} workflow MCP servers`);
+      }
+
+      return modifiedConfig;
+    } catch (error: any) {
+      logger.debug(`Failed to inject workflow MCP servers: ${error.message}`);
       return config;
     }
   }
@@ -187,8 +244,3 @@ export class ConfigEnhancer {
     return config;
   }
 }
-
-/**
- * Global config enhancer instance
- */
-export const configEnhancer = new ConfigEnhancer();

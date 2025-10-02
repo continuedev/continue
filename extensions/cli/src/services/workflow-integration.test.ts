@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { configEnhancer } from "../configEnhancer.js";
+import { ConfigEnhancer } from "src/configEnhancer.js";
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { ToolPermissionService } from "./ToolPermissionService.js";
@@ -10,6 +10,7 @@ import { WorkflowService } from "./WorkflowService.js";
 // Mock the hubLoader module
 vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
+  loadPackagesFromHub: vi.fn(),
   mcpProcessor: {},
   modelProcessor: {},
   processRule: vi.fn(),
@@ -39,7 +40,9 @@ describe("Workflow Integration Tests", () => {
   let workflowService: WorkflowService;
   let modelService: ModelService;
   let toolPermissionService: ToolPermissionService;
+  let configEnhancer: ConfigEnhancer;
   let mockLoadPackageFromHub: any;
+  let mockLoadPackagesFromHub: any;
   let mockProcessRule: any;
   let mockCreateLlmApi: any;
   let mockGetLlmApi: any;
@@ -80,6 +83,7 @@ describe("Workflow Integration Tests", () => {
     const configModule = await import("../config.js");
 
     mockLoadPackageFromHub = hubLoaderModule.loadPackageFromHub as any;
+    mockLoadPackagesFromHub = hubLoaderModule.loadPackagesFromHub as any;
     mockProcessRule = hubLoaderModule.processRule as any;
     mockCreateLlmApi = configModule.createLlmApi as any;
     mockGetLlmApi = configModule.getLlmApi as any;
@@ -88,6 +92,7 @@ describe("Workflow Integration Tests", () => {
     workflowService = new WorkflowService();
     modelService = new ModelService();
     toolPermissionService = new ToolPermissionService();
+    configEnhancer = new ConfigEnhancer();
 
     // Mock service container
     vi.spyOn(serviceContainer, "get").mockImplementation(
@@ -101,6 +106,7 @@ describe("Workflow Integration Tests", () => {
 
     // Setup default mocks
     mockProcessRule.mockResolvedValue("Processed rule content");
+    mockLoadPackagesFromHub.mockResolvedValue([{ name: "test-mcp" }]);
     mockCreateLlmApi.mockReturnValue({ mock: "llmApi" });
     mockGetLlmApi.mockReturnValue([
       { mock: "llmApi" },
@@ -363,6 +369,84 @@ describe("Workflow Integration Tests", () => {
       expect(workflowState.workflowFile?.tools).toBeUndefined();
       expect(workflowState.workflowFile?.rules).toBeUndefined();
       expect(workflowState.workflowFile?.prompt).toBe("Partial prompt");
+    });
+  });
+
+  describe("Workflow tools integration", () => {
+    it("should inject MCP servers from workflow tools", async () => {
+      const workflowWithTools = {
+        ...mockWorkflowFile,
+        tools: "owner/mcp1, another/mcp2:specific_tool",
+      };
+
+      mockLoadPackageFromHub.mockResolvedValue(workflowWithTools);
+      mockLoadPackagesFromHub.mockResolvedValue([
+        { name: "mcp1" },
+        { name: "mcp2" },
+      ]);
+
+      await workflowService.initialize("owner/workflow");
+
+      const baseConfig = {
+        mcpServers: [{ name: "existing-mcp" }],
+      };
+
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        {},
+      );
+
+      expect(enhancedConfig.mcpServers).toHaveLength(3);
+      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
+      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "mcp2" });
+      expect(enhancedConfig.mcpServers?.[2]).toEqual({ name: "existing-mcp" });
+    });
+
+    it("should not inject MCP servers when workflow has no tools", async () => {
+      const workflowWithoutTools = {
+        ...mockWorkflowFile,
+        tools: undefined,
+      };
+
+      mockLoadPackageFromHub.mockResolvedValue(workflowWithoutTools);
+      await workflowService.initialize("owner/workflow");
+
+      const baseConfig = {
+        mcpServers: [{ name: "existing-mcp" }],
+      };
+
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        {},
+      );
+
+      expect(enhancedConfig.mcpServers).toHaveLength(1);
+      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "existing-mcp" });
+    });
+
+    it("should deduplicate MCP servers", async () => {
+      const workflowWithDuplicateTools = {
+        ...mockWorkflowFile,
+        tools: "owner/mcp1, owner/mcp1:tool1, owner/mcp1:tool2",
+      };
+
+      mockLoadPackageFromHub.mockResolvedValue(workflowWithDuplicateTools);
+      mockLoadPackagesFromHub.mockResolvedValue([{ name: "mcp1" }]);
+
+      await workflowService.initialize("owner/workflow");
+
+      const baseConfig = {
+        mcpServers: [{ name: "mcp1" }], // Already exists
+      };
+
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        {},
+      );
+
+      // Should not duplicate existing MCP server
+      expect(enhancedConfig.mcpServers).toHaveLength(1);
+      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
     });
   });
 });

@@ -1,5 +1,6 @@
 import {
   parseWorkflowFile,
+  parseWorkflowTools,
   serializeWorkflowFile,
   type WorkflowFile,
 } from "./workflowFiles.js";
@@ -317,5 +318,171 @@ Prompt
     expect(() => parseWorkflowFile(nullNameExample)).toThrow(
       "Workflow file must contain YAML frontmatter with a 'name' field",
     );
+  });
+});
+
+describe("parseWorkflowTools", () => {
+  it("should return empty arrays for undefined tools", () => {
+    const result = parseWorkflowTools(undefined);
+    expect(result).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
+  });
+
+  it("should return empty arrays for empty tools string", () => {
+    const result = parseWorkflowTools("");
+    expect(result).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
+
+    const result2 = parseWorkflowTools("   ");
+    expect(result2).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
+  });
+
+  it("should parse built-in tools", () => {
+    const result = parseWorkflowTools("bash, read, edit");
+    expect(result).toEqual({
+      tools: [{ toolName: "bash" }, { toolName: "read" }, { toolName: "edit" }],
+      mcpServers: [],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should parse built_in keyword", () => {
+    const result = parseWorkflowTools("built_in");
+    expect(result).toEqual({
+      tools: [],
+      mcpServers: [],
+      allBuiltIn: true,
+    });
+  });
+
+  it("should parse built_in with other tools", () => {
+    const result = parseWorkflowTools("built_in, owner/package");
+    expect(result).toEqual({
+      tools: [{ mcpServer: "owner/package" }],
+      mcpServers: ["owner/package"],
+      allBuiltIn: true,
+    });
+  });
+
+  it("should parse MCP server (all tools)", () => {
+    const result = parseWorkflowTools("owner/package, another/server");
+    expect(result).toEqual({
+      tools: [{ mcpServer: "owner/package" }, { mcpServer: "another/server" }],
+      mcpServers: ["owner/package", "another/server"],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should parse specific MCP tools", () => {
+    const result = parseWorkflowTools(
+      "owner/package:tool1, owner/package:tool2",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "owner/package", toolName: "tool1" },
+        { mcpServer: "owner/package", toolName: "tool2" },
+      ],
+      mcpServers: ["owner/package"],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should parse mixed tool types", () => {
+    const result = parseWorkflowTools(
+      "anmcp/serverslug:a_tool, anmcp/serverslug:another_tool, asecond/mcpserver, bash, read, edit",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "anmcp/serverslug", toolName: "a_tool" },
+        { mcpServer: "anmcp/serverslug", toolName: "another_tool" },
+        { mcpServer: "asecond/mcpserver" },
+        { toolName: "bash" },
+        { toolName: "read" },
+        { toolName: "edit" },
+      ],
+      mcpServers: ["anmcp/serverslug", "asecond/mcpserver"],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should parse mixed tools with built_in keyword", () => {
+    const result = parseWorkflowTools(
+      "built_in, anmcp/serverslug:a_tool, asecond/mcpserver",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "anmcp/serverslug", toolName: "a_tool" },
+        { mcpServer: "asecond/mcpserver" },
+      ],
+      mcpServers: ["anmcp/serverslug", "asecond/mcpserver"],
+      allBuiltIn: true,
+    });
+  });
+
+  it("should deduplicate MCP servers", () => {
+    const result = parseWorkflowTools(
+      "owner/package:tool1, owner/package:tool2, owner/package, other/server",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "owner/package", toolName: "tool1" },
+        { mcpServer: "owner/package", toolName: "tool2" },
+        { mcpServer: "owner/package" },
+        { mcpServer: "other/server" },
+      ],
+      mcpServers: ["owner/package", "other/server"],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should handle extra whitespace", () => {
+    const result = parseWorkflowTools(
+      "  owner/package:tool1  ,   bash  ,  other/server  ",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "owner/package", toolName: "tool1" },
+        { toolName: "bash" },
+        { mcpServer: "other/server" },
+      ],
+      mcpServers: ["owner/package", "other/server"],
+      allBuiltIn: false,
+    });
+  });
+
+  it("should handle any MCP server slug format", () => {
+    expect(() => parseWorkflowTools("invalid-slug")).not.toThrow();
+    expect(() => parseWorkflowTools("invalid/slug/extra")).not.toThrow();
+    expect(() =>
+      parseWorkflowTools("owner/package:tool, invalid/slug/extra:tool"),
+    ).not.toThrow();
+  });
+
+  it("should handle valid MCP server slug formats", () => {
+    const validSlugs = [
+      "owner/package",
+      "owner-name/package-name",
+      "owner.name/package.name",
+      "owner_name/package_name",
+      "owner123/package456",
+    ];
+
+    for (const slug of validSlugs) {
+      expect(() => parseWorkflowTools(slug)).not.toThrow();
+      expect(() => parseWorkflowTools(`${slug}:tool`)).not.toThrow();
+    }
+  });
+
+  it("should handle empty tool names and empty entries", () => {
+    const result = parseWorkflowTools(
+      "owner/package:tool1, , owner/package:, bash",
+    );
+    expect(result).toEqual({
+      tools: [
+        { mcpServer: "owner/package", toolName: "tool1" },
+        { mcpServer: "owner/package", toolName: "" },
+        { toolName: "bash" },
+      ],
+      mcpServers: ["owner/package"],
+      allBuiltIn: false,
+    });
   });
 });

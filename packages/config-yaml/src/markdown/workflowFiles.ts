@@ -22,6 +22,28 @@ const workflowFileSchema = workflowFileFrontmatterSchema.extend({
 export type WorkflowFile = z.infer<typeof workflowFileSchema>;
 
 /**
+ * Parsed workflow tool reference
+ */
+export interface WorkflowToolReference {
+  /** MCP server slug (owner/package) if this is an MCP tool */
+  mcpServer?: string;
+  /** Specific tool name - either MCP tool name or built-in tool name */
+  toolName?: string;
+}
+
+/**
+ * Parsed workflow tools configuration
+ */
+export interface ParsedWorkflowTools {
+  /** All tool references */
+  tools: WorkflowToolReference[];
+  /** Unique MCP server slugs that need to be added to config */
+  mcpServers: string[];
+  /** Whether all built-in tools are allowed */
+  allBuiltIn: boolean;
+}
+
+/**
  * Parses and validates a workflow file from markdown content
  * Workflow files must have frontmatter with at least a name
  */
@@ -63,4 +85,65 @@ export function serializeWorkflowFile(workflowFile: WorkflowFile): string {
   const yamlFrontmatter = YAML.stringify(cleanFrontmatter).trim();
 
   return `---\n${yamlFrontmatter}\n---\n${prompt}`;
+}
+
+/**
+ * Parse workflow tools string into structured format
+ *
+ * Supports formats:
+ * - owner/package - all tools from MCP server
+ * - owner/package:tool_name - specific tool from MCP server
+ * - ToolName or tool_name - built-in tool
+ * - built_in - all built-in tools
+ *
+ * @param toolsString Comma-separated tools string
+ * @returns Parsed tools configuration
+ */
+export function parseWorkflowTools(toolsString?: string): ParsedWorkflowTools {
+  if (!toolsString?.trim()) {
+    return { tools: [], mcpServers: [], allBuiltIn: false };
+  }
+
+  const tools: WorkflowToolReference[] = [];
+  const mcpServerSet = new Set<string>();
+  let allBuiltIn = false;
+
+  const toolRefs = toolsString
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  for (const toolRef of toolRefs) {
+    if (toolRef === "built_in") {
+      // Special keyword for all built-in tools
+      allBuiltIn = true;
+    } else if (toolRef.includes("/")) {
+      // MCP tool reference: "owner/package" or "owner/package:tool_name"
+      const colonIndex = toolRef.indexOf(":");
+
+      if (colonIndex > 0) {
+        // Specific tool: "owner/package:tool_name"
+        const mcpServer = toolRef.substring(0, colonIndex);
+        const toolName = toolRef.substring(colonIndex + 1);
+
+        tools.push({ mcpServer, toolName });
+        mcpServerSet.add(mcpServer);
+      } else {
+        // All tools from server: "owner/package"
+        const mcpServer = toolRef;
+
+        tools.push({ mcpServer });
+        mcpServerSet.add(mcpServer);
+      }
+    } else {
+      // Built-in tool
+      tools.push({ toolName: toolRef });
+    }
+  }
+
+  return {
+    tools,
+    mcpServers: Array.from(mcpServerSet),
+    allBuiltIn,
+  };
 }
