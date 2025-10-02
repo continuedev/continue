@@ -269,7 +269,7 @@ export class NextEditWindowManager {
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
-      console.log(
+      console.debug(
         "deleteChain from NextEditWindowManager.ts: hide next edit command",
       );
       NextEditProvider.getInstance().deleteChain();
@@ -616,7 +616,7 @@ export class NextEditWindowManager {
       ) {
         this.theme = getThemeString();
         await this.codeRenderer.setTheme(this.theme);
-        console.log(
+        console.debug(
           "Theme updated:",
           this.theme ? "Theme exists" : "Theme is undefined",
         );
@@ -630,7 +630,7 @@ export class NextEditWindowManager {
     vscode.window.onDidChangeActiveColorTheme(async () => {
       this.theme = getThemeString();
       await this.codeRenderer.setTheme(this.theme);
-      console.log(
+      console.debug(
         "Active theme changed:",
         this.theme ? "Theme exists" : "Theme is undefined",
       );
@@ -792,7 +792,7 @@ export class NextEditWindowManager {
 
     // Check if line numbers are valid.
     if (range.start.line < 0 || range.start.line >= doc.lineCount) {
-      console.log(
+      console.debug(
         "Invalid start line:",
         range.start.line,
         "doc lines:",
@@ -802,7 +802,7 @@ export class NextEditWindowManager {
     }
 
     if (range.end.line < 0 || range.end.line >= doc.lineCount) {
-      console.log(
+      console.debug(
         "Invalid end line:",
         range.end.line,
         "doc lines:",
@@ -819,7 +819,7 @@ export class NextEditWindowManager {
       range.start.character < 0 ||
       range.start.character > startLine.text.length
     ) {
-      console.log(
+      console.debug(
         "Invalid start character:",
         range.start.character,
         "line length:",
@@ -829,7 +829,7 @@ export class NextEditWindowManager {
     }
 
     if (range.end.character < 0 || range.end.character > endLine.text.length) {
-      console.log(
+      console.debug(
         "Invalid end character:",
         range.end.character,
         "line length:",
@@ -884,7 +884,7 @@ export class NextEditWindowManager {
 
     // Check if document changed during async operation.
     if (editor.document.version !== docVersion) {
-      console.log("Document changed during decoration creation, aborting");
+      console.debug("Document changed during decoration creation, aborting");
       decoration.dispose();
       return;
     }
@@ -991,7 +991,7 @@ export class NextEditWindowManager {
       "nextEditWindowManager",
       async (e, state) => {
         if (state.nextEditWindowAccepted) {
-          console.log(
+          console.debug(
             "NextEditWindowManager: Edit was just accepted, preserving chain",
           );
           return true;
