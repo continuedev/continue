@@ -95,7 +95,9 @@ export class NextEditLoggingService {
       outcome.accepted = true;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      this.logAcceptReject(completionId, true);
+      if (outcome.requestId) {
+        this.logAcceptReject(outcome.requestId, true);
+      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -114,7 +116,9 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      this.logAcceptReject(completionId, false);
+      if (outcome.requestId) {
+        this.logAcceptReject(outcome.requestId, false);
+      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -147,7 +151,9 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      void this.logAcceptReject(completionId, false);
+      if (outcome.requestId) {
+        void this.logAcceptReject(outcome.requestId, false);
+      }
       this._logRejectionTimeouts.delete(completionId);
       this._outcomes.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);

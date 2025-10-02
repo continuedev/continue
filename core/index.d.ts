@@ -99,6 +99,8 @@ export interface ILLM
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
+  lastRequestId?: string;
+
   complete(
     prompt: string,
     signal: AbortSignal,
