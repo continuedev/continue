@@ -68,10 +68,19 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
     **Option 2: STDIO Mode with Auth Token**
 
-    For local development, you can use STDIO mode:
+    For local development or self-hosted Sentry installations, you can use STDIO mode:
     ```bash
     npx @sentry/mcp-server@latest --access-token=YOUR_SENTRY_TOKEN --host=sentry.io
     ```
+
+    Or use environment variables:
+    ```bash
+    SENTRY_ACCESS_TOKEN=your-token SENTRY_HOST=sentry.io
+    ```
+
+    <Info>
+      The `--host` parameter is required and should point to your Sentry instance (e.g., `sentry.io` or `sentry.example.com` for self-hosted).
+    </Info>
 
   </Tab>
   <Tab title="Sentry API Credentials">
