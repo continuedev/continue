@@ -1,0 +1,59 @@
+/* Fix for MCP card text extending outside of card on mobile */
+
+/* Package page header card mobile overflow fix */
+.package-card,
+.mcp-card,
+.package-header-card {
+  /* Ensure container respects viewport boundaries */
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.package-card .description,
+.mcp-card .description,
+.package-header-card .description {
+  /* Break long words and URLs that exceed container width */
+  word-break: break-word;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  /* Handle long URLs specifically */
+  hyphens: auto;
+
+  /* Ensure text doesn't overflow horizontally */
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Additional fix for links within descriptions */
+.package-card .description a,
+.mcp-card .description a,
+.package-header-card .description a {
+  /* Break long URLs */
+  word-break: break-all;
+  overflow-wrap: break-word;
+
+  /* Add some visual indication that this is a wrapped link */
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .package-card,
+  .mcp-card,
+  .package-header-card {
+    /* Ensure proper padding on mobile */
+    padding: 1rem;
+    margin: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .package-card .description,
+  .mcp-card .description,
+  .package-header-card .description {
+    /* More aggressive word breaking on mobile */
+    word-break: break-all;
+    line-height: 1.4;
+  }
+}
