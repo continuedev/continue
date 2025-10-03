@@ -335,5 +335,93 @@ describe("slashCommands", () => {
       );
       expect(result?.exit).toBe(false);
     });
+
+    it("should handle custom assistant prompts", async () => {
+      const assistantWithPrompts: AssistantUnrolled = {
+        ...mockAssistant,
+        prompts: [
+          {
+            name: "explain",
+            description: "Explain the code",
+            prompt: "Please explain the following code:",
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/explain some code",
+        assistantWithPrompts,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe("Please explain the following code:some code");
+    });
+
+    it("should handle invokable rules", async () => {
+      const assistantWithRules: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          {
+            name: "review",
+            description: "Review this code",
+            rule: "Perform a code review on the following:",
+            invokable: true,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/review some code",
+        assistantWithRules,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe("Perform a code review on the following: some code");
+    });
+
+    it("should not treat non-invokable rules as slash commands", async () => {
+      const assistantWithNonInvokableRule: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          {
+            name: "regular",
+            description: "A regular rule",
+            rule: "This is a regular rule",
+            invokable: false,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/regular",
+        assistantWithNonInvokableRule,
+      );
+
+      // Should return null because the rule is not invokable
+      expect(result).toBeNull();
+    });
+
+    it("should handle invokable rules from hub (string rules ignored)", async () => {
+      const assistantWithMixedRules: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          "string rule",
+          {
+            name: "analyze",
+            description: "Analyze code patterns",
+            rule: "Analyze the following code for patterns:",
+            invokable: true,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/analyze my code",
+        assistantWithMixedRules,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe("Analyze the following code for patterns: my code");
+    });
   });
 });
