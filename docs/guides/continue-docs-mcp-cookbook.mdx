@@ -374,10 +374,10 @@ jobs:
           echo "🔍 Analyzing code changes for documentation needs..."
 
           # Get changed files
-          git diff origin/main..HEAD --name-only > changed_files.txt
+          git diff origin/${{ github.base_ref }}..HEAD --name-only > changed_files.txt
 
           # Create detailed diff
-          git diff origin/main..HEAD > changes.diff
+          git diff origin/${{ github.base_ref }}..HEAD > changes.diff
 
           # Use Continue agent to check if docs need updates
           PROMPT="Review these code changes and determine if documentation updates are needed.
