@@ -31,6 +31,7 @@ export enum ContinueErrorReason {
   FindAndReplaceOldStringNotFound = "find_and_replace_old_string_not_found",
   FindAndReplaceMultipleOccurrences = "find_and_replace_multiple_occurrences",
   FindAndReplaceMissingFilepath = "find_and_replace_missing_filepath",
+  FindAndReplaceEditChainInvalid = "find_and_replace_edit_chain_invalid",
 
   // Multi-edit
   MultiEditEditsArrayRequired = "multi_edit_edits_array_required",
