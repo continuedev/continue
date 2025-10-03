@@ -354,7 +354,9 @@ describe("slashCommands", () => {
       );
 
       expect(result).toBeDefined();
-      expect(result?.newInput).toBe("Please explain the following code:some code");
+      expect(result?.newInput).toBe(
+        "Please explain the following code:some code",
+      );
     });
 
     it("should handle invokable rules", async () => {
@@ -376,7 +378,9 @@ describe("slashCommands", () => {
       );
 
       expect(result).toBeDefined();
-      expect(result?.newInput).toBe("Perform a code review on the following: some code");
+      expect(result?.newInput).toBe(
+        "Perform a code review on the following: some code",
+      );
     });
 
     it("should not treat non-invokable rules as slash commands", async () => {
@@ -421,7 +425,9 @@ describe("slashCommands", () => {
       );
 
       expect(result).toBeDefined();
-      expect(result?.newInput).toBe("Analyze the following code for patterns: my code");
+      expect(result?.newInput).toBe(
+        "Analyze the following code for patterns: my code",
+      );
     });
   });
 });

@@ -234,16 +234,14 @@ export async function handleSlashCommands(
   }
 
   // Check for invokable rules
-  const invokableRule = assistant.rules?.find(
-    (rule) => {
-      // Handle both string rules and rule objects
-      if (!rule || typeof rule === "string") {
-        return false;
-      }
-      const ruleObj = rule as any;
-      return ruleObj.invokable === true && ruleObj.name === command;
-    },
-  );
+  const invokableRule = assistant.rules?.find((rule) => {
+    // Handle both string rules and rule objects
+    if (!rule || typeof rule === "string") {
+      return false;
+    }
+    const ruleObj = rule as any;
+    return ruleObj.invokable === true && ruleObj.name === command;
+  });
   if (invokableRule) {
     const ruleObj = invokableRule as any;
     const newInput = ruleObj.rule + " " + args.join(" ");
