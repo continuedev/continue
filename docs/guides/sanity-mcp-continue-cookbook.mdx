@@ -1,0 +1,559 @@
+---
+title: "Content Management with Sanity MCP and Continue"
+description: "Set up an AI-powered content management workflow that helps you manage schemas, run GROQ queries, handle documentation, and perform migrations using natural language commands."
+sidebarTitle: "Sanity CMS with Continue"
+---
+
+<Card title="What You'll Build" icon="database">
+  An AI-powered content management system workflow that uses Continue's AI agent with Sanity
+  MCP to manage schemas, execute GROQ queries, handle migrations, and maintain documentation - all through simple natural language prompts
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Continue account with **Hub access**
+- Read: [Understanding Agents — How to get started with Hub agents](/guides/understanding-agents#how-to-get-started-with-hub-agents)
+- Node.js 20+ installed locally
+- A [Sanity account](https://www.sanity.io/) and project (free tier works)
+- Basic understanding of content management systems
+
+For all options, first:
+<Steps>
+<Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+<Step title="Install Sanity CLI">
+  ```bash
+  npm install -g @sanity/cli
+  ```
+  </Step>
+</Steps>
+ <Warning>
+  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys) and proper environment variable configuration.
+  </Warning>
+
+## Getting Started with Sanity
+
+<Accordion title="New to Sanity? Start Here">
+
+New to Sanity? Follow the [Sanity Getting Started Guide](https://www.sanity.io/docs/getting-started) to set up your first project.
+
+**Quick setup:**
+```bash
+npm create sanity@latest
+cd your-project-name
+npm run dev
+```
+
+**Key resources:**
+- [Sanity Studio](https://www.sanity.io/docs/sanity-studio) - Content editing interface
+- [Schema Types](https://www.sanity.io/docs/schema-types) - Define content structure
+- [GROQ](https://www.sanity.io/docs/groq) - Query language for fetching content
+- [Content Lake](https://www.sanity.io/docs/datastore) - Real-time data store
+
+</Accordion>
+
+## Sanity MCP Workflow Options
+
+<Card title="Fastest Path to Success" icon="rocket">
+  Skip the manual setup and use our pre-built Sanity Assistant agent that includes
+  the Sanity MCP and optimized content management workflows for more consistent results. You can [remix this agent](/guides/understanding-agents#how-to-get-started-with-hub-agents) to customize it for your specific needs.
+</Card>
+
+
+After ensuring you meet the **Prerequisites** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    <Steps>
+      <Step title="Load the Pre-Built Agent">
+        Visit the [Sanity Agent Config](https://hub.continue.dev/continuedev/sanity-agent-config) on Continue Hub and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --config continuedev/sanity-agent-config
+        ```
+
+        This agent includes:
+        - **[Sanity MCP](https://hub.continue.dev/sanity/sanity-mcp)** pre-configured and ready to use
+        - **Content management rules** for best practices
+        - **Schema optimization** guidelines
+      </Step>
+
+      <Step title="Run Your First Schema Query">
+        Start with exploring your content schema:
+        ```bash
+        Show me all the document types in my Sanity schema and explain their relationships.
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** The pre-built Sanity Assistant agent provides consistent content management workflows and handles MCP configuration automatically, making it easier to get started with AI-powered CMS operations. Results are more consistent and debugging is easier thanks to the [Sanity MCP](https://hub.continue.dev/sanity/sanity-mcp) integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+<Steps>
+  <Step title="Create a New Agent via the Continue Hub">
+    Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+    </Step>
+
+  <Step title="Connect Sanity MCP via Continue Hub">
+    Visit the [Sanity MCP on Continue Hub](https://hub.continue.dev/sanity/sanity-mcp) and click **"Install"** to add it to the agent you created in the step above.
+
+    This will add Sanity MCP to your agent's available tools. The Hub listing automatically configures the MCP connection.
+
+    <Tip>
+      **Alternative installation methods:**
+      1. **Quick CLI install**: `cn --mcp sanity/sanity-mcp`
+      2. **With config**: Use [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) for environment variable setup
+      3. **Manual configuration**: Add the MCP to your agent configuration
+
+      Once installed, Sanity MCP tools become available to your Continue agent for all prompts.
+    </Tip>
+
+    <Info>
+      **Authentication Options:**
+      - **Interactive mode**: OAuth authentication via browser (expires after 7 days)
+      - **Headless/CI mode**: Uses environment variables (SANITY_API_TOKEN, SANITY_PROJECT_ID, etc.)
+      
+      See [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) for environment variable setup.
+    </Info>
+
+  </Step>
+
+        <Step title="Run Your First Query">
+        Start with exploring your content:
+        ```bash
+        cn
+        # Then type: Run a GROQ query to fetch the last 10 published articles with their titles and authors
+        ```
+  </Step>
+</Steps>
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built Sanity Assistant agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Continue Hub secrets
+
+    The agent will automatically detect and use your configuration along with the pre-configured Sanity MCP for content operations. Note that OAuth authentication will be required on first use.
+
+</Accordion>
+
+---
+
+## Sanity MCP Capabilities
+
+<Card title="Understanding the Capabilities" icon="info-circle">
+  **Sanity MCP** provides comprehensive tools for content management:
+  - Execute [GROQ queries](https://www.sanity.io/docs/groq) to fetch and analyze content
+  - Explore and modify [document schemas](https://www.sanity.io/docs/schema-types)
+  - Manage [content releases](https://www.sanity.io/docs/release-schedules) and versions
+  - Handle content [migrations](https://www.sanity.io/docs/migrating-data) between environments
+  - Automate documentation generation
+  - Perform bulk content operations
+  - Manage [localization](https://www.sanity.io/docs/localization) and translations
+
+  The MCP integrates seamlessly with your existing Sanity workspace, providing AI-powered assistance for both development and content operations.
+</Card>
+
+---
+
+## Content Management Recipes
+
+Now you can use natural language prompts to manage your Sanity content and schemas. The Continue agent automatically calls the appropriate Sanity MCP tools.
+
+<Info>
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Hub](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
+</Info>
+
+<Info>
+  **Where to run these workflows:**
+  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+
+  **Test in Plan Mode First**: Before running operations that might make
+  changes, test your prompts in plan mode (see the [Plan Mode
+  Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
+  shows you what the agent will do without executing it.
+</Info>
+
+<Info>
+
+  **About the --auto flag**: The `--auto` flag enables tools to run continuously without manual confirmation. This is essential for headless mode where the agent needs to execute multiple tools automatically to complete tasks like schema exploration, GROQ execution, and content migration.
+
+</Info>
+
+### Schema Management
+
+<Card title="Explore Document Types" icon="diagram-project">
+  Review and understand your content schema structure.
+
+**TUI Mode Prompt:**
+```
+Show me all document types in my Sanity schema with their fields,
+validation rules, and relationships to other types.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Show me all document types in my Sanity schema with their fields, validation rules, and relationships to other types." --auto
+```
+
+</Card>
+
+### GROQ Queries
+
+<Card title="Execute GROQ Queries" icon="magnifying-glass">
+  Run GROQ queries to fetch and analyze content.
+
+**TUI Mode Prompt:**
+```
+Run a GROQ query to fetch all articles published in the last 30 days,
+including their titles, authors, categories, and view counts.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Run a GROQ query to fetch all articles published in the last 30 days, including their titles, authors, categories, and view counts." --auto
+```
+
+</Card>
+
+### Content Operations
+
+<Card title="Bulk Content Updates" icon="arrows-rotate">
+  Perform bulk operations on your content.
+
+**TUI Mode Prompt:**
+```
+Find all blog posts with the category "News" and update their
+status to "archived" if they are older than 6 months.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Find all blog posts with the category 'News' and update their status to 'archived' if they are older than 6 months." --auto
+```
+
+</Card>
+
+### Localization
+
+<Card title="Add Localization Support" icon="language">
+  Set up and manage content translations.
+
+**TUI Mode Prompt:**
+```
+Add localization support to my article document type for
+Spanish and French languages with appropriate field configurations.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Add localization support to my article document type for Spanish and French languages with appropriate field configurations." --auto
+```
+
+</Card>
+
+### Content Migration
+
+<Card title="Migrate Content Structure" icon="right-left">
+  Migrate content between different schemas or environments.
+
+**TUI Mode Prompt:**
+```
+Help me migrate my blog posts from the old schema structure
+to the new one, mapping the deprecated fields to the new format.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Help me migrate my blog posts from the old schema structure to the new one, mapping the deprecated fields to the new format." --auto
+```
+
+</Card>
+
+### Documentation Generation
+
+<Card title="Generate Schema Documentation" icon="book">
+  Automatically generate documentation for your content model.
+
+**TUI Mode Prompt:**
+```
+Generate comprehensive documentation for my Sanity schema including
+all document types, their purposes, field descriptions, and usage examples.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Generate comprehensive documentation for my Sanity schema including all document types, their purposes, field descriptions, and usage examples." --auto
+```
+
+</Card>
+
+### Content Releases
+
+<Card title="Manage Content Releases" icon="rocket">
+  Work with Sanity's content release feature.
+
+**TUI Mode Prompt:**
+```
+List all active releases in my dataset and show me the content
+changes scheduled for each release.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "List all active releases in my dataset and show me the content changes scheduled for each release." --auto
+```
+
+</Card>
+
+### Performance Analysis
+
+<Card title="Analyze Query Performance" icon="gauge-high">
+  Optimize GROQ queries for better performance.
+
+**TUI Mode Prompt:**
+```
+Analyze the performance of my most frequent GROQ queries and
+suggest optimizations to improve response times.
+```
+
+**Headless Mode Prompt:**
+```bash
+cn -p "Analyze the performance of my most frequent GROQ queries and suggest optimizations to improve response times." --auto
+```
+
+</Card>
+
+## Continuous Content Management with GitHub Actions
+
+This example demonstrates a **Continuous AI workflow** where content validation and schema checks run automatically in your CI/CD pipeline in headless mode using the Sanity agent config. Consider [remixing this agent](/guides/understanding-agents#how-to-get-started-with-hub-agents) to add your organization's specific content governance rules.
+
+### Add GitHub Secrets
+
+Navigate to **Repository Settings → Secrets and variables → Actions** and add:
+
+- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `SANITY_PROJECT_ID`: Your Sanity project ID
+- `SANITY_DATASET`: Your Sanity dataset name (usually "production")
+- `SANITY_API_TOKEN`: Your Sanity API token with appropriate permissions
+- `MCP_USER_ROLE`: Your MCP user role (typically "admin" or "editor")
+
+<Info>
+  The workflow uses the [Sanity Agent Config](https://hub.continue.dev/continuedev/sanity-agent-config) with environment variable authentication via [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
+</Info>
+
+### Create Workflow File
+
+This workflow automatically validates your Sanity schemas and content on pull requests using the Continue CLI in [headless mode](/cli/overview#headless-mode%3A-production-automation). It checks schema integrity, validates content relationships, and posts a summary report as a PR comment.
+
+Create `.github/workflows/sanity-content-validation.yml` in your repository:
+
+```yaml
+name: Sanity Content Validation with MCP
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-content:
+    runs-on: ubuntu-latest
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
+      SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
+      SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
+      MCP_USER_ROLE: ${{ secrets.MCP_USER_ROLE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Sanity CLI
+        run: |
+          npm install -g @sanity/cli
+          echo "✅ Sanity CLI installed"
+
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+
+      - name: Validate Schema Structure
+        run: |
+          echo "🔍 Validating schema structure..."
+          cn --config continuedev/sanity-agent-config \
+             -p "Analyze the Sanity schema for any structural issues,
+                 missing required fields, or broken references between document types." \
+             --auto
+
+      - name: Check Content Integrity
+        run: |
+          echo "📊 Checking content integrity..."
+          cn --config continuedev/sanity-agent-config \
+             -p "Run GROQ queries to identify any orphaned documents,
+                 broken references, or missing required fields in the content." \
+             --auto
+
+      - name: Generate Schema Documentation
+        run: |
+          echo "📝 Generating schema documentation..."
+          cn --config continuedev/sanity-agent-config \
+             -p "Generate a markdown summary of all schema changes
+                 in this PR and their potential impact on existing content." \
+             --auto > schema-changes.md
+
+      - name: Comment Report on PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPORT=$(cn --config continuedev/sanity-agent-config \
+             -p "Generate a concise summary (200 words or less) of:
+                 - Schema validation results
+                 - Content integrity checks
+                 - Any breaking changes detected
+                 - Recommended actions before merging" \
+             --auto)
+
+          gh pr comment ${{ github.event.pull_request.number }} --body "$REPORT"
+```
+
+<Info>
+  Environment variables enable the MCP to authenticate without OAuth browser prompts. The [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) documentation provides detailed setup instructions for all required variables.
+</Info>
+
+## Content Management Best Practices
+
+Implement automated content quality checks using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+
+<Card title="Schema Validation" icon="check-circle">
+  ```bash
+  "Before deploying schema changes, validate that all required fields
+  are present and that no breaking changes affect existing content."
+  ```
+</Card>
+
+<Card title="Content Consistency" icon="shield-exclamation">
+  ```bash
+  "When creating new content types, ensure they follow the existing
+  naming conventions and field patterns established in the schema."
+  ```
+</Card>
+
+<Card title="Query Optimization" icon="gauge-high">
+  ```bash
+  "Review GROQ queries for performance issues and suggest indexes
+  or query restructuring to improve response times."
+  ```
+</Card>
+
+<Card title="Localization Standards" icon="check-double">
+  ```bash
+  "Ensure all user-facing content fields have proper localization
+  support configured for the required languages."
+  ```
+</Card>
+
+## Troubleshooting
+
+### Authentication Issues
+
+```bash
+"Check if I'm properly authenticated with Sanity.
+If not, help me set up OAuth or API token authentication."
+```
+
+### Schema Not Found
+
+```bash
+"Verify that the Sanity project is properly configured
+and that the schema files are accessible in the current directory."
+```
+
+### GROQ Query Errors
+
+```bash
+"Debug this GROQ query and explain why it's failing,
+then provide a corrected version that achieves the intended result."
+```
+
+### Migration Conflicts
+
+<Check>
+  **Verification Steps:**
+  - Sanity MCP is installed via [Continue Hub](https://hub.continue.dev/sanity/sanity-mcp)
+  - Project is authenticated with Sanity
+  - Schema files are present and valid
+  - Dataset permissions are correctly configured
+</Check>
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered content management system** that:
+
+- ✅ Uses natural language — Simple prompts instead of complex CMS commands
+- ✅ Manages schemas automatically — AI handles schema evolution and migrations
+- ✅ Runs continuously — Automated validation in CI/CD pipelines
+- ✅ Ensures quality — Content checks prevent broken references and invalid data
+
+<Card title="Continuous AI" icon="rocket">
+  Your content management workflow now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine content operations and schema management with human oversight
+  through review and approval of changes.
+</Card>
+
+## Next Steps
+
+1. **Explore your schema** - Try the schema exploration prompt on your current project
+2. **Run GROQ queries** - Use natural language to query your content
+3. **Set up CI validation** - Add the GitHub Actions workflow to your repo
+4. **Create documentation** - Generate comprehensive docs for your content model
+5. **Optimize performance** - Analyze and improve query performance
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Sanity Documentation" icon="book" href="https://www.sanity.io/docs">
+    Complete Sanity platform documentation
+  </Card>
+  <Card title="Continue Hub" icon="plug" href="https://hub.continue.dev">
+    Explore more MCP integrations and agents
+  </Card>
+  <Card
+    title="GROQ Documentation"
+    icon="code"
+    href="https://www.sanity.io/docs/groq"
+  >
+    Learn GROQ query language
+  </Card>
+  <Card
+    title="Sanity MCP Setup"
+    icon="puzzle-piece"
+    href="https://www.sanity.io/docs/compute-and-ai/mcp-server"
+  >
+    Official Sanity MCP documentation
+  </Card>
+</CardGroup>
