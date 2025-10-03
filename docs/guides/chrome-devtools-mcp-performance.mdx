@@ -35,7 +35,7 @@ This cookbook teaches you to:
 
 - Chrome browser installed
 - Web project with a running development server (or deployed URL)
-- Node.js 18+ installed
+- Node.js 20+ installed
 - [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
 - [Chrome DevTools MCP](https://hub.continue.dev) configured
 
@@ -52,27 +52,61 @@ For all options, first:
 
 ## Chrome DevTools MCP Workflow Options
 
-<Card title="Fastest Path to Success" icon="zap">
-  Use the Chrome DevTools MCP to automatically launch Chrome, connect to DevTools, and analyze performance - all through natural language prompts in Continue CLI.
+<Card title="Fastest Path to Success" icon="rocket">
+  Skip the manual setup and use our pre-built Chrome DevTools agent that includes
+  optimized prompts, rules, and the Chrome DevTools MCP for more consistent results.
 </Card>
 
 After completing **Quick Setup** above, you have two paths to get started:
 
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
-    <Steps>
-      <Step title="Configure Chrome DevTools MCP">
-        Add the Chrome DevTools MCP to your Continue configuration (`~/.continue/config.json`):
+    **Perfect for:** Immediate results with optimized prompts and built-in performance analysis
 
-        ```json
-        {
-          "mcpServers": {
-            "chrome-devtools": {
-              "command": "npx",
-              "args": ["chrome-devtools-mcp@latest"]
-            }
-          }
-        }
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Chrome DevTools Continuous Agent](https://hub.continue.dev/continuedev/chrome-dev-continuous) on Continue Hub and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --config continuedev/chrome-dev-continuous
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for performance analysis and debugging
+        - **Built-in rules** for consistent formatting and error handling
+        - **[Chrome DevTools MCP](https://hub.continue.dev/google/chrome-devtools-mcp)** for reliable browser automation
+      </Step>
+
+      <Step title="Run Performance Analysis">
+        Navigate to your project directory and run:
+        ```bash
+        cn "Analyze performance of http://localhost:3000 and provide optimization recommendations"
+        ```
+
+        That's it! The agent handles Chrome automation automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Chrome DevTools MCP integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Add Chrome DevTools MCP to Your Assistant">
+        Visit the [Chrome DevTools MCP](https://hub.continue.dev/google/chrome-devtools-mcp) on Continue Hub and add it to your assistant, or add this to your configuration:
+
+        ```yaml
+        name: Chrome DevTools MCP
+        version: 0.0.1
+        schema: v1
+        mcpServers:
+          - name: Chrome DevTools MCP
+            command: npx
+            args:
+              - chrome-devtools-mcp@latest
         ```
 
         The MCP will automatically launch Chrome and connect to DevTools when needed.
@@ -94,50 +128,23 @@ After completing **Quick Setup** above, you have two paths to get started:
         ```
         Navigate to http://localhost:3000 and record a performance trace. Analyze LCP, FID, and CLS.
         ```
-
-        That's it! The MCP handles Chrome automation automatically.
       </Step>
     </Steps>
 
     <Info>
-      **Why Use Chrome DevTools MCP?** Results are more consistent and debugging is easier thanks to direct DevTools integration. The MCP automatically handles browser lifecycle, screenshot capture, and performance trace collection.
-    </Info>
-
-  </Tab>
-
-  <Tab title="🛠️ Manual Chrome DevTools">
-    <Steps>
-      <Step title="Open Chrome DevTools Manually">
-        1. Open Chrome and navigate to your site
-        2. Press F12 to open DevTools
-        3. Go to the Performance tab
-        4. Record traces manually
-      </Step>
-
-      <Step title="Analyze with AI">
-        Copy performance data and ask Continue:
-
-        ```bash
-        cn
-        # Then in TUI mode:
-        "Analyze this performance trace data: [paste data]"
-        ```
-      </Step>
-    </Steps>
-
-    <Info>
-      **Manual Workflow**: While you can analyze performance manually, the Chrome DevTools MCP automates the entire workflow and provides programmatic access to all DevTools features through natural language.
+      **Manual Setup**: While you can configure the MCP manually, the pre-built agent provides optimized prompts and better error handling for performance analysis workflows.
     </Info>
   </Tab>
 </Tabs>
 
-<Accordion title="MCP Requirements">
-    To use the Chrome DevTools MCP, you need:
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Continue Hub secrets
       - **Chrome browser** installed on your system
-      - **Continue CLI** with your own API keys or Continue CLI Pro Plan
-      - **Node.js 18+** to run the MCP via npx
+      - **Node.js 20+** to run the MCP via npx
 
-    The MCP automatically launches Chrome in debugging mode and connects to DevTools programmatically.
+    The agent will automatically detect and use your configuration.
 </Accordion>
 
 ---
