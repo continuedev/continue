@@ -262,7 +262,8 @@
               "guides/posthog-github-continuous-ai",
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
-              "guides/netlify-mcp-continuous-deployment"
+              "guides/netlify-mcp-continuous-deployment",
+              "guides/chrome-devtools-mcp-performance"
             ]
           }
         ]
