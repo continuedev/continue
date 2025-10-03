@@ -41,6 +41,7 @@ IMPORTANT:
 - All edits are applied in sequence, in the order they are provided
 - Each edit operates on the result of the previous edit, so plan your edits carefully to avoid conflicts between sequential operations
 - Edits are atomic - all edits must be valid for the operation to succeed - if any edit fails, none will be applied
+- The system validates the entire edit chain before applying any changes - you will receive a detailed error if edits conflict
 - This tool is ideal when you need to make several changes to different parts of the same file
 
 CRITICAL REQUIREMENTS:
@@ -52,10 +53,25 @@ CRITICAL REQUIREMENTS:
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked
 - Use replace_all for replacing and renaming all matches for a string across the file. This parameter is useful if you want to rename a variable, for instance
 
+SEQUENTIAL EDIT PLANNING - HOW TO AVOID CONFLICTS:
+The system validates that each edit will succeed AFTER previous edits are applied. If you get an error like "Edit N will fail: string not found after applying previous edits", you have two options:
+
+Option 1 - Reorder edits: Edit non-overlapping parts first
+  WRONG: [Edit 1: rename "data" to "user_data" (replace_all), Edit 2: change "process(data)" to "process_data(user_data)"]
+  RIGHT: [Edit 1: change "process(data)" to "process_data(data)", Edit 2: rename "data" to "user_data" (replace_all)]
+
+Option 2 - Update old_string to match state after previous edits
+  WRONG: [Edit 1: change "rate = 0.1" to "tax_rate = 0.15", Edit 2: change "return rate" to "return tax_rate"]
+  RIGHT: [Edit 1: change "rate = 0.1" to "tax_rate = 0.15", Edit 2: change "return tax_rate" to "return tax_rate" if Edit 1 changed it, OR keep as separate edits if they don't conflict]
+
+Option 3 - Use replace_all strategically: For variable renames, use replace_all LAST
+  Example: [Edit 1: update function body, Edit 2: rename variable with replace_all]
+
 WARNINGS:
-- If earlier edits affect the text that later edits are trying to find, files can become mangled
+- If earlier edits modify text that later edits target, the system will detect and reject ALL edits before making changes
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
-- The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different`,
+- The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
+- For Python files, indentation must be preserved exactly - whitespace-insensitive matching is disabled`,
     parameters: {
       type: "object",
       required: ["filepath", "edits"],

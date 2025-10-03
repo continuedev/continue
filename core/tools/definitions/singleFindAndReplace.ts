@@ -34,7 +34,15 @@ IMPORTANT:
 
 WARNINGS:
 - When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
-- The edit will likely fail if you have not recently used the \`${BuiltInToolNames.ReadFile}\` tool to view up-to-date file contents.`,
+- The edit will likely fail if you have not recently used the \`${BuiltInToolNames.ReadFile}\` tool to view up-to-date file contents.
+- For Python files, indentation must be preserved exactly - whitespace-insensitive matching is disabled to prevent IndentationError.
+- The tool will fail if \`old_string\` and \`new_string\` are identical - they MUST be different.
+
+BEST PRACTICES:
+1. Include sufficient context in \`old_string\` to make it unique (e.g., include the function signature when editing function body)
+2. For multi-line edits, preserve exact indentation and line breaks
+3. When renaming variables, use \`replace_all: true\` to update all occurrences
+4. For complex edits to the same file, consider using ${BuiltInToolNames.MultiEdit} tool instead to make multiple changes atomically`,
     parameters: {
       type: "object",
       required: ["filepath", "old_string", "new_string"],
