@@ -9,10 +9,21 @@ import { WorkflowServiceState } from "./types.js";
  * Loads workflows from the hub and extracts model, tools, and prompt information
  */
 export class WorkflowService extends BaseService<WorkflowServiceState> {
+  /**
+   * Set the resolved workflow model name after it's been processed
+   * Called by ConfigEnhancer after resolving the model slug
+   */
+  setWorkflowModelName(modelName: string): void {
+    this.setState({
+      workflowModelName: modelName,
+    });
+  }
   constructor() {
     super("WorkflowService", {
+      workflowService: null,
       workflowFile: null,
       slug: null,
+      workflowModelName: null,
     });
   }
 
@@ -22,8 +33,10 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
   async doInitialize(workflowSlug?: string): Promise<WorkflowServiceState> {
     if (!workflowSlug) {
       return {
+        workflowService: this,
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
       };
     }
 
@@ -41,14 +54,18 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
       );
 
       return {
+        workflowService: this,
         workflowFile,
         slug: workflowSlug,
+        workflowModelName: null, // Will be set by ConfigEnhancer after model resolution
       };
     } catch (error: any) {
       logger.error("Failed to initialize WorkflowService:", error);
       return {
+        workflowService: this,
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
       };
     }
   }

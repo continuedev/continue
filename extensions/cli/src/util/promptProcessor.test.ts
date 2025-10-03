@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { processRule } from "../hubLoader.js";
+
 import { processAndCombinePrompts } from "./promptProcessor.js";
 
 // Mock the args module

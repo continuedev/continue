@@ -6,6 +6,7 @@ import {
 
 import { BaseCommandOptions } from "./commands/BaseCommandOptions.js";
 import {
+  loadPackageFromHub,
   loadPackagesFromHub,
   mcpProcessor,
   modelProcessor,
@@ -27,12 +28,13 @@ export class ConfigEnhancer {
     _options: BaseCommandOptions,
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
+    const options = { ..._options };
 
     // Add workflow rules/mcp servers if present
-    const options = { ..._options };
-    const { workflowFile } = await serviceContainer.get<WorkflowServiceState>(
+    const workflowState = await serviceContainer.get<WorkflowServiceState>(
       SERVICE_NAMES.WORKFLOW,
     );
+    const { workflowFile, workflowService } = workflowState;
 
     if (workflowFile) {
       const { rules, model, tools, prompt } = workflowFile;
@@ -50,12 +52,17 @@ export class ConfigEnhancer {
         }
       }
 
-      // Note that --model takes precedence over workflow model
+      // --model takes precedence over workflow model
       if (model) {
-        options.model = [...(options.model ?? []), model];
+        const workflowModel = await loadPackageFromHub(model, modelProcessor);
+        enhancedConfig.models = [
+          workflowModel,
+          ...(enhancedConfig.models ?? []),
+        ];
+        workflowService?.setWorkflowModelName(workflowModel.name);
       }
 
-      // Add workflow prompt as prefix
+      // Add workflow prompt as prefix (see processAndCombinePrompts)
       if (prompt) {
         options.prompt = [prompt, ...(options.prompt || [])];
       }
@@ -141,11 +148,8 @@ export class ConfigEnhancer {
     const modifiedConfig = { ...config };
 
     // Prepend processed MCPs to existing mcpServers array for consistency
-    const existingMcpServers = (modifiedConfig as any).mcpServers || [];
-    (modifiedConfig as any).mcpServers = [
-      ...processedMcps,
-      ...existingMcpServers,
-    ];
+    const existingMcpServers = modifiedConfig.mcpServers || [];
+    modifiedConfig.mcpServers = [...processedMcps, ...existingMcpServers];
 
     return modifiedConfig;
   }
@@ -159,12 +163,11 @@ export class ConfigEnhancer {
   ): Promise<AssistantUnrolled> {
     const processedModels = await loadPackagesFromHub(models, modelProcessor);
 
-    // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
 
     // Prepend processed models to existing models array so they become the default
-    const existingModels = (modifiedConfig as any).models || [];
-    (modifiedConfig as any).models = [...processedModels, ...existingModels];
+    const existingModels = modifiedConfig.models || [];
+    modifiedConfig.models = [...processedModels, ...existingModels];
 
     return modifiedConfig;
   }

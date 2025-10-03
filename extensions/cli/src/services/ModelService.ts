@@ -56,15 +56,14 @@ export class ModelService
         model && (model.roles?.includes("chat") || model.roles === undefined),
     ) || []) as ModelConfig[];
 
-    // Check if workflow has a model specified (highest priority)
-    let preferredModelName: string | null = null;
+    let preferredModelName: string | null | undefined = null;
     let modelSource = "default";
 
-    if (workflowServiceState?.workflowFile?.model) {
-      preferredModelName = workflowServiceState.workflowFile.model;
+    // Priority = workflow -> last selected model
+    if (workflowServiceState?.workflowModelName) {
+      preferredModelName = workflowServiceState.workflowModelName;
       modelSource = "workflow";
     } else {
-      // Fall back to persisted model name if no workflow model
       preferredModelName = getModelName(authConfig);
       if (preferredModelName) {
         modelSource = "persisted";

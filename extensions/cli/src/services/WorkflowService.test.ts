@@ -1,6 +1,7 @@
 import { Mock, vi } from "vitest";
 
 import { workflowProcessor } from "../hubLoader.js";
+
 import { WorkflowService } from "./WorkflowService.js";
 
 // Mock the hubLoader module
@@ -44,6 +45,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
+        workflowService: service,
       });
     });
 
@@ -53,6 +56,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
+        workflowService: service,
       });
     });
 
@@ -62,6 +67,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
+        workflowService: service,
       });
 
       // Should not call loadPackageFromHub with invalid slug
@@ -74,6 +81,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
+        workflowService: service,
       });
 
       expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
@@ -96,6 +105,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
         slug: "owner/package",
+        workflowModelName: null,
+        workflowService: service,
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -112,6 +123,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: null,
         slug: null,
+        workflowModelName: null,
+        workflowService: service,
       });
 
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
@@ -133,6 +146,8 @@ describe("WorkflowService", () => {
       expect(state).toEqual({
         workflowFile: mockWorkflowFile,
         slug: "owner/minimal",
+        workflowModelName: null,
+        workflowService: service,
       });
     });
   });

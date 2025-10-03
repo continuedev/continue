@@ -13,6 +13,7 @@ import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
 import { MCPService } from "./MCPService.js";
+import { WorkflowService } from "./WorkflowService.js";
 
 /**
  * Service lifecycle states
@@ -125,6 +126,8 @@ export interface StorageSyncServiceState {
 export interface WorkflowServiceState {
   workflowFile: WorkflowFile | null;
   slug: string | null;
+  workflowModelName: string | null;
+  workflowService: WorkflowService | null;
 }
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";

@@ -60,6 +60,8 @@ describe("ModelService workflow model prioritization", () => {
         prompt: "Test workflow",
       },
       slug: "test/workflow",
+      workflowModelName: "gpt-4",
+      workflowService: null,
     };
 
     // Mock createLlmApi to return different models based on the selected model
@@ -100,6 +102,8 @@ describe("ModelService workflow model prioritization", () => {
         // No model specified
       },
       slug: "test/workflow",
+      workflowModelName: null,
+      workflowService: null,
     };
 
     // Mock getModelName to return a persisted model
@@ -142,6 +146,8 @@ describe("ModelService workflow model prioritization", () => {
         prompt: "Test workflow",
       },
       slug: "test/workflow",
+      workflowModelName: "non-existent-model",
+      workflowService: null,
     };
 
     const getLlmApiMock = vi.mocked(config.getLlmApi);
@@ -171,6 +177,8 @@ describe("ModelService workflow model prioritization", () => {
     const workflowServiceState: WorkflowServiceState = {
       workflowFile: null,
       slug: null,
+      workflowModelName: null,
+      workflowService: null,
     };
 
     // Make sure getModelName returns null (no persisted model)
@@ -207,6 +215,8 @@ describe("ModelService workflow model prioritization", () => {
         prompt: "Test workflow",
       },
       slug: "test/workflow",
+      workflowModelName: "gpt-4",
+      workflowService: null,
     };
 
     // Mock getModelName to return a different persisted model

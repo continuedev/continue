@@ -136,6 +136,12 @@ describe("Workflow Integration Tests", () => {
       const workflowState = workflowService.getState();
       expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
 
+      // Mock loadPackageFromHub to return a model for the workflow model
+      mockLoadPackageFromHub.mockResolvedValueOnce({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
+
       // Test that ConfigEnhancer adds the workflow model to options
       const baseConfig = { models: [] };
       const baseOptions = {}; // No --model flag
@@ -145,11 +151,18 @@ describe("Workflow Integration Tests", () => {
         baseOptions,
       );
 
-      // Should have loaded the workflow model via injectModels
-      expect(mockLoadPackagesFromHub).toHaveBeenCalledWith(
-        ["gpt-4-workflow"],
-        expect.anything(),
+      // Should have loaded the workflow model directly via loadPackageFromHub
+      expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+        "gpt-4-workflow",
+        mockModelProcessor,
       );
+
+      // The workflow model should be prepended to the models array
+      expect(enhancedConfig.models).toHaveLength(1);
+      expect(enhancedConfig.models?.[0]).toEqual({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
     });
 
     it("should not add workflow model when no workflow is active", async () => {
@@ -177,6 +190,18 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
+      // Mock loadPackageFromHub for workflow model and loadPackagesFromHub for user models
+      mockLoadPackageFromHub.mockResolvedValueOnce({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
+      mockLoadPackagesFromHub.mockResolvedValueOnce([
+        {
+          name: "user-specified-model",
+          provider: "anthropic",
+        },
+      ]);
+
       // Test that --model flag takes precedence
       const baseConfig = { models: [] };
       const baseOptions = { model: ["user-specified-model"] }; // User specified --model
@@ -186,12 +211,28 @@ describe("Workflow Integration Tests", () => {
         baseOptions,
       );
 
-      // Should process both the user model and workflow model
-      // The ConfigEnhancer adds workflow model to the existing model options
+      // Should process the user model via loadPackagesFromHub
       expect(mockLoadPackagesFromHub).toHaveBeenCalledWith(
-        ["user-specified-model", "gpt-4-workflow"],
-        expect.anything(),
+        ["user-specified-model"],
+        mockModelProcessor,
       );
+
+      // Should also load the workflow model
+      expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+        "gpt-4-workflow",
+        mockModelProcessor,
+      );
+
+      // Both models should be in the config, with user model first (takes precedence)
+      expect(enhancedConfig.models).toHaveLength(2);
+      expect(enhancedConfig.models?.[0]).toEqual({
+        name: "user-specified-model",
+        provider: "anthropic",
+      });
+      expect(enhancedConfig.models?.[1]).toEqual({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
     });
   });
 

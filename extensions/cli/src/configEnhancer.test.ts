@@ -13,6 +13,9 @@ vi.mock("./hubLoader.js", () => ({
     // Return as-is for direct content
     return Promise.resolve(rule);
   }),
+  loadPackageFromHub: vi.fn(() =>
+    Promise.resolve({ name: "test", provider: "test" }),
+  ),
   loadPackagesFromHub: vi.fn(() => Promise.resolve([])),
   mcpProcessor: {},
   modelProcessor: {},
@@ -23,6 +26,8 @@ vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(() =>
       Promise.resolve({
+        workflowService: null,
+        workflowModelName: null,
         workflowFile: null,
         workflow: null,
       }),
