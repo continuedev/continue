@@ -1,0 +1,181 @@
+name: Documentation Update Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    paths:
+      - 'core/**/*.ts'
+      - 'core/**/*.js'
+      - 'extensions/**/*.ts'
+      - 'extensions/**/*.js'
+      - 'packages/**/*.ts'
+      - 'packages/**/*.js'
+      - 'gui/**/*.tsx'
+      - 'gui/**/*.jsx'
+
+jobs:
+  check-docs-needed:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Continue CLI
+        run: npm i -g @continuedev/cli
+
+      - name: Analyze changes for documentation needs
+        id: analyze
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the diff of changed files
+          git diff origin/main..HEAD --name-only > changed_files.txt
+
+          # Create a detailed diff for analysis
+          git diff origin/main..HEAD > detailed_diff.txt
+
+          # Use Continue to analyze if docs are needed
+          ANALYSIS=$(cn --auto --headless \
+            "Analyze these code changes and determine if documentation updates are needed.
+             Consider:
+             1. New features or APIs added
+             2. Breaking changes to existing functionality
+             3. New configuration options or settings
+             4. Changes to CLI commands or flags
+             5. New integrations or MCP servers
+             6. Modified agent behavior or capabilities
+
+             Changed files: $(cat changed_files.txt | tr '\n' ' ')
+
+             If documentation updates are needed, list specific docs that should be updated.
+             Format as markdown bullet list.
+             If no docs updates needed, respond with 'NO_DOCS_NEEDED'.
+             Be concise and specific." 2>&1) || true
+
+          # Save the analysis
+          echo "$ANALYSIS" > docs_analysis.md
+
+          # Check if docs are needed
+          if grep -q "NO_DOCS_NEEDED" docs_analysis.md; then
+            echo "docs_needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "docs_needed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Format documentation suggestions
+        if: steps.analyze.outputs.docs_needed == 'true'
+        id: format
+        run: |
+          # Create a formatted comment
+          cat > comment.md << 'EOF'
+          ## 📚 Documentation Update Suggested
+
+          Based on the changes in this PR, the following documentation may need updates:
+
+          EOF
+
+          # Add the analysis (excluding any system output)
+          cat docs_analysis.md | grep -E "^[\*\-\+]|^[[:space:]]*[\*\-\+]|^#{1,6}" >> comment.md || echo "See detailed analysis below." >> comment.md
+
+          cat >> comment.md << 'EOF'
+
+          ---
+
+          ### Next Steps
+
+          1. Review the suggested documentation areas
+          2. Update relevant docs in the `/docs` folder
+          3. Consider updating:
+             - API references if interfaces changed
+             - Guides if workflows changed
+             - Configuration docs if settings changed
+             - MCP cookbook if new integrations added
+
+          ### Resources
+
+          - [Documentation Contributing Guide](/docs/CONTRIBUTING.mdx)
+          - [MCP Integration Guide](/docs/guides/mcp-continue-cookbook.mdx)
+          - [Continue Hub](https://hub.continue.dev)
+
+          <sub>This analysis was generated automatically. Please review and update as needed.</sub>
+          EOF
+
+      - name: Post PR comment
+        if: steps.analyze.outputs.docs_needed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync('comment.md', 'utf8');
+
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Documentation Update Suggested')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+      - name: Add label if docs needed
+        if: steps.analyze.outputs.docs_needed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['docs-needed']
+            });
+
+      - name: Remove label if docs not needed
+        if: steps.analyze.outputs.docs_needed == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'docs-needed'
+              });
+            } catch (error) {
+              // Label might not exist, that's okay
+              console.log('Label does not exist or already removed');
+            }
