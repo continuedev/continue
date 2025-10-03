@@ -263,7 +263,6 @@
               "guides/continue-docs-mcp-cookbook",
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
-              "guides/sanity-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment"
             ]
           }
