@@ -8,8 +8,9 @@ export function executeFindAndReplace(
   newString: string,
   replaceAll: boolean,
   editIndex = 0,
+  filename?: string,
 ): string {
-  const matches = findSearchMatches(fileContent, oldString);
+  const matches = findSearchMatches(fileContent, oldString, filename);
 
   if (matches.length === 0) {
     throw new ContinueError(
@@ -51,6 +52,7 @@ export function executeFindAndReplace(
 export function executeMultiFindAndReplace(
   fileContent: string,
   edits: EditOperation[],
+  filename?: string,
 ): string {
   let result = fileContent;
 
@@ -63,6 +65,7 @@ export function executeMultiFindAndReplace(
       edit.new_string,
       edit.replace_all ?? false,
       editIndex,
+      filename,
     );
   }
 

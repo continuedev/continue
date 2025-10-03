@@ -279,14 +279,51 @@ function findFuzzyMatch(
 }
 
 /**
- * Ordered list of matching strategies to try with their names
+ * Languages where indentation is syntactically significant.
+ * For these languages, whitespace-insensitive matching should be disabled
+ * to prevent IndentationErrors and broken block structure.
  */
-const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
-  { strategy: exactMatch, name: "exactMatch" },
-  { strategy: trimmedMatch, name: "trimmedMatch" },
-  { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
-  // { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
-];
+const INDENTATION_SENSITIVE_LANGUAGES = new Set([
+  ".py",   // Python
+  ".pyx",  // Cython
+  ".pyi",  // Python Interface
+  ".yaml", // YAML
+  ".yml",  // YAML
+  ".haml", // HAML
+  ".slim", // Slim
+  ".pug",  // Pug
+  ".jade", // Jade
+]);
+
+/**
+ * Check if a filename extension indicates an indentation-sensitive language
+ */
+function isIndentationSensitive(filename?: string): boolean {
+  if (!filename) return false;
+
+  const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+  return INDENTATION_SENSITIVE_LANGUAGES.has(ext);
+}
+
+/**
+ * Get matching strategies based on filename/language
+ */
+function getMatchingStrategies(filename?: string): Array<{ strategy: MatchStrategy; name: string }> {
+  const strategies = [
+    { strategy: exactMatch, name: "exactMatch" },
+    { strategy: trimmedMatch, name: "trimmedMatch" },
+  ];
+
+  // CRITICAL: Do NOT use whitespace-insensitive matching for indentation-sensitive languages
+  // This prevents IndentationErrors in Python and similar languages
+  if (!isIndentationSensitive(filename)) {
+    strategies.push({ strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" });
+  }
+
+  // strategies.push({ strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" });
+
+  return strategies;
+}
 
 /**
  * Find the exact match position for search content in file content.
@@ -295,15 +332,17 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
  * Matching Strategy:
  * 1. If search content is empty, matches at the beginning of file (position 0)
  * 2. Try each matching strategy in order until one succeeds
+ * 3. For indentation-sensitive languages (Python, YAML, etc.), skip whitespace-insensitive matching
  *
  * @param fileContent - The complete content of the file to search in
  * @param searchContent - The content to search for
- * @param config - Configuration options for matching behavior
+ * @param filename - Optional filename to detect indentation-sensitive languages
  * @returns Match result with character positions, or null if no match found
  */
 export function findSearchMatch(
   fileContent: string,
   searchContent: string,
+  filename?: string,
 ): SearchMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
 
@@ -311,6 +350,9 @@ export function findSearchMatch(
     // Empty search content matches the beginning of the file
     return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
   }
+
+  // Get appropriate strategies based on file type
+  const matchingStrategies = getMatchingStrategies(filename);
 
   // Try each matching strategy in order
   for (const { strategy, name } of matchingStrategies) {
@@ -329,11 +371,13 @@ export function findSearchMatch(
  *
  * @param fileContent - The complete content of the file to search in
  * @param searchContent - The content to search for
+ * @param filename - Optional filename to detect indentation-sensitive languages
  * @returns Array of match results with character positions, empty array if no matches found
  */
 export function findSearchMatches(
   fileContent: string,
   searchContent: string,
+  filename?: string,
 ): SearchMatchResult[] {
   const matches: SearchMatchResult[] = [];
 
@@ -346,7 +390,7 @@ export function findSearchMatches(
   let currentOffset = 0;
 
   while (remainingContent.length > 0) {
-    const match = findSearchMatch(remainingContent, searchContent);
+    const match = findSearchMatch(remainingContent, searchContent, filename);
 
     if (match === null) {
       break;

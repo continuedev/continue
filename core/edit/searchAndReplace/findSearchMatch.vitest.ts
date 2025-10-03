@@ -262,7 +262,78 @@ export default MyComponent;`;
         strategyName: "whitespaceIgnoredMatch",
       });
     });
+  });
 
+  describe("Python indentation-sensitive matching", () => {
+    it("should NOT use whitespace-ignored matching for Python files", () => {
+      const fileContent = `def process():
+    calculate_data()
+    return result`;
+      const searchContent = "defprocess():calculate_data()returnresult";
+
+      // Without filename, whitespace-ignored would match (but incorrectly)
+      const resultWithoutFilename = findSearchMatch(fileContent, searchContent);
+      expect(resultWithoutFilename?.strategyName).toBe("whitespaceIgnoredMatch");
+
+      // With .py filename, should NOT match (preserves indentation)
+      const resultWithFilename = findSearchMatch(fileContent, searchContent, "test.py");
+      expect(resultWithFilename).toBeNull();
+    });
+
+    it("should require exact indentation for Python files", () => {
+      const fileContent = `def calculate_sum(a, b):
+    """Calculate the sum of two numbers."""
+    result = a + b
+    return result`;
+
+      // This search preserves the indentation
+      const correctSearch = `def calculate_sum(a, b):
+    """Calculate the sum of two numbers."""
+    result = a + b
+    return result`;
+
+      const result = findSearchMatch(fileContent, correctSearch, "module.py");
+      expect(result).toEqual({
+        startIndex: 0,
+        endIndex: fileContent.length,
+        strategyName: "exactMatch",
+      });
+    });
+
+    it("should work with YAML files (indentation-sensitive)", () => {
+      const fileContent = `config:
+  name: test
+  value: 123`;
+      const searchWithoutIndent = "config:name:test";
+
+      // Should NOT match with whitespace-ignored for YAML
+      const result = findSearchMatch(fileContent, searchWithoutIndent, "config.yaml");
+      expect(result).toBeNull();
+    });
+
+    it("should allow whitespace-ignored for JavaScript files", () => {
+      const fileContent = `function test() {
+    return 1;
+}`;
+      const searchContent = "function test(){return 1;}";
+
+      // JavaScript should still allow whitespace-ignored matching
+      const result = findSearchMatch(fileContent, searchContent, "test.js");
+      expect(result?.strategyName).toBe("whitespaceIgnoredMatch");
+    });
+
+    it("should handle Python .pyi interface files", () => {
+      const fileContent = `def greet(name: str) -> str:
+    ...`;
+      const searchContent = "def greet(name:str)->str:...";
+
+      // .pyi files are also Python - should NOT use whitespace-ignored
+      const result = findSearchMatch(fileContent, searchContent, "stubs.pyi");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("Whitespace edge cases", () => {
     it("should match content surrounded by different types of whitespace", () => {
       const fileContent = `\tconst data = {\n\t\tname: "John",\n\t\tage: 30,\n\t\taddress: {\n\t\t\tstreet: "Main St",\n\t\t\tcity: "NYC"\n\t\t}\n\t};`;
       const searchContent = `address:{street:"MainSt",city:"NYC"}`;

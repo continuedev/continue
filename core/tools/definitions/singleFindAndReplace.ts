@@ -91,6 +91,7 @@ WARNINGS:
       newString,
       replaceAll ?? false,
       0,
+      args.filepath as string,
     );
 
     return {

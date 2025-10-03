@@ -121,6 +121,7 @@ WARNINGS:
     const newFileContents = executeMultiFindAndReplace(
       editingFileContents,
       edits,
+      args.filepath as string,
     );
 
     return {
