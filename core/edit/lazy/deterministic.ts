@@ -359,12 +359,22 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     return false;
   }
 
-  // Check if they have the same name
+  // Check if they have the same name field (exact match required)
   if (
     a.childForFieldName("name") !== null &&
     a.childForFieldName("name")?.text === b.childForFieldName("name")?.text
   ) {
     return true;
+  }
+
+  // CRITICAL FIX: If nodes have a name field but names DON'T match, they are NOT similar
+  // This prevents matching functions like calculate_tax() and calculate_total()
+  if (
+    a.childForFieldName("name") !== null &&
+    b.childForFieldName("name") !== null &&
+    a.childForFieldName("name")?.text !== b.childForFieldName("name")?.text
+  ) {
+    return false;
   }
 
   if (
@@ -387,10 +397,18 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     }
   }
 
-  const lineOneA = a.text.split("\n")[0];
-  const lineOneB = b.text.split("\n")[0];
+  // IMPROVED: Use first 3 lines instead of just first line for better accuracy
+  // This prevents false matches between functions with similar signatures but different bodies
+  const linesA = a.text.split("\n");
+  const linesB = b.text.split("\n");
 
-  return stringsWithinLevDistThreshold(lineOneA, lineOneB, 0.2);
+  // Compare first 3 lines (or all lines if less than 3)
+  const linesToCompare = Math.min(3, Math.min(linesA.length, linesB.length));
+  const firstLinesA = linesA.slice(0, linesToCompare).join("\n");
+  const firstLinesB = linesB.slice(0, linesToCompare).join("\n");
+
+  // TIGHTENED: Reduced threshold from 0.2 (20%) to 0.1 (10%) for stricter matching
+  return stringsWithinLevDistThreshold(firstLinesA, firstLinesB, 0.1);
 }
 
 function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
