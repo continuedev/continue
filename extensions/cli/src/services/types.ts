@@ -10,9 +10,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { PermissionMode, ToolPermissions } from "../permissions/types.js";
+import { PermissionMode } from "../permissions/types.js";
 
-import { MCPService } from "./MCPService.js";
+import { type MCPService } from "./MCPService.js";
 import { WorkflowService } from "./WorkflowService.js";
 
 /**
@@ -107,13 +107,6 @@ export interface UpdateServiceState {
 
 export interface ApiClientServiceState {
   apiClient: DefaultApiInterface | null;
-}
-
-export interface ToolPermissionServiceState {
-  permissions: ToolPermissions;
-  currentMode: PermissionMode;
-  modePolicyCount?: number;
-  originalPolicies?: ToolPermissions;
 }
 
 export interface StorageSyncServiceState {

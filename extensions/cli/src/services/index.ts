@@ -9,11 +9,14 @@ import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
-import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { StorageSyncService } from "./StorageSyncService.js";
-import { systemMessageService } from "./SystemMessageService.js";
+import { SystemMessageService } from "./SystemMessageService.js";
+import {
+  InitializeToolServiceOverrides,
+  ToolPermissionService,
+} from "./ToolPermissionService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -38,6 +41,8 @@ const chatHistoryService = new ChatHistoryService();
 const updateService = new UpdateService();
 const storageSyncService = new StorageSyncService();
 const workflowService = new WorkflowService();
+const toolPermissionService = new ToolPermissionService();
+const systemMessageService = new SystemMessageService();
 
 /**
  * Initialize all services and register them with the service container
@@ -79,46 +84,48 @@ export async function initializeServices(
     commandOptions.config = CONFIG_PATH;
   }
 
-  // Initialize mode service with tool permission overrides
-  if (initOptions.toolPermissionOverrides) {
-    const overrides = { ...initOptions.toolPermissionOverrides };
+  serviceContainer.register(
+    SERVICE_NAMES.WORKFLOW,
+    () => workflowService.initialize(commandOptions.workflow),
+    [],
+  );
 
-    // Convert mode to boolean flags for ModeService
-    const initArgs: Parameters<typeof modeService.initialize>[0] = {
-      allow: overrides.allow,
-      ask: overrides.ask,
-      exclude: overrides.exclude,
-      isHeadless: initOptions.headless,
-    };
-
-    // Only set the boolean flag that corresponds to the mode
-    if (overrides.mode === "plan") {
-      initArgs.readonly = true;
-    } else if (overrides.mode === "auto") {
-      initArgs.auto = true;
-    }
-    // If mode is "normal" or undefined, no flags are set
-
-    await modeService.initialize(initArgs);
-  } else {
-    // Even if no overrides, we need to initialize with defaults
-    await modeService.initialize({
-      isHeadless: initOptions.headless,
-    });
-  }
-
-  // Register the TOOL_PERMISSIONS service with immediate value
-  // Since ToolPermissionService is already initialized synchronously in ModeService,
-  // we can register it as a ready value instead of a factory
-  const toolPermissionState = modeService.getToolPermissionService().getState();
-  logger.debug("Registering TOOL_PERMISSIONS with state:", {
-    currentMode: toolPermissionState.currentMode,
-    isHeadless: toolPermissionState.isHeadless,
-    policyCount: toolPermissionState.permissions.policies.length,
-  });
-  serviceContainer.registerValue(
+  serviceContainer.register(
     SERVICE_NAMES.TOOL_PERMISSIONS,
-    toolPermissionState,
+    async () => {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      // Initialize mode service with tool permission overrides
+      if (initOptions.toolPermissionOverrides) {
+        const overrides = { ...initOptions.toolPermissionOverrides };
+
+        // Convert mode to boolean flags for ModeService
+        const initArgs: InitializeToolServiceOverrides = {
+          allow: overrides.allow,
+          ask: overrides.ask,
+          exclude: overrides.exclude,
+          isHeadless: initOptions.headless,
+        };
+
+        // Only set the boolean flag that corresponds to the mode
+        if (overrides.mode) {
+          initArgs.mode = overrides.mode;
+        }
+        // If mode is "normal" or undefined, no flags are set
+        return await toolPermissionService.initialize(initArgs, workflowState);
+      } else {
+        // Even if no overrides, we need to initialize with defaults
+        return await toolPermissionService.initialize(
+          {
+            isHeadless: initOptions.headless,
+          },
+          workflowState,
+        );
+      }
+    },
+    [SERVICE_NAMES.WORKFLOW],
   );
 
   // Initialize SystemMessageService with command options
@@ -130,7 +137,7 @@ export async function initializeServices(
         format: (commandOptions as any).format, // format option from CLI
         headless: initOptions.headless,
       }),
-    [], // No dependencies
+    [SERVICE_NAMES.TOOL_PERMISSIONS],
   );
 
   serviceContainer.register(
@@ -159,9 +166,10 @@ export async function initializeServices(
   serviceContainer.register(
     SERVICE_NAMES.CONFIG,
     async () => {
-      const [authState, apiClientState] = await Promise.all([
+      const [authState, apiClientState, workflowState] = await Promise.all([
         serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
         serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
+        serviceContainer.get<WorkflowServiceState>(SERVICE_NAMES.WORKFLOW),
       ]);
 
       // Ensure organization is selected if authenticated
@@ -207,9 +215,10 @@ export async function initializeServices(
         finalAuthState.organizationId || null,
         apiClientState.apiClient,
         commandOptions,
+        workflowState,
       );
     },
-    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT], // Depends on auth and API client
+    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.WORKFLOW], // Dependencies
   );
 
   serviceContainer.register(
@@ -273,12 +282,6 @@ export async function initializeServices(
     [], // No dependencies for now, but could depend on SESSION in future
   );
 
-  serviceContainer.register(
-    SERVICE_NAMES.WORKFLOW,
-    () => workflowService.initialize(commandOptions.workflow),
-    [],
-  );
-
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -335,13 +338,13 @@ export const services = {
   apiClient: apiClientService,
   mcp: mcpService,
   fileIndex: fileIndexService,
-  mode: modeService,
   resourceMonitoring: resourceMonitoringService,
   systemMessage: systemMessageService,
   chatHistory: chatHistoryService,
   updateService: updateService,
   storageSync: storageSyncService,
   workflow: workflowService,
+  toolPermissions: toolPermissionService,
 } as const;
 
 // Export the service container for advanced usage

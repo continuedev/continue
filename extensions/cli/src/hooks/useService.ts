@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useServiceContainer } from "../services/ServiceContainerContext.js";
 import { ServiceResult } from "../services/types.js";
@@ -96,47 +96,54 @@ export function useServices<T extends Record<string, any>>(
   allReady: boolean;
 } {
   const container = useServiceContainer();
-  const [services, setServices] = useState<Partial<T>>({});
+
+  const getServiceStates = useCallback(() => {
+    const services: Partial<T> = {};
+    let hasLoading = false;
+    let hasError: Error | null = null;
+
+    for (const serviceName of serviceNames) {
+      const result = container.getSync(serviceName as string);
+
+      if (result.state === "loading") {
+        hasLoading = true;
+      } else if (result.state === "error") {
+        hasError = result.error;
+      } else if (result.state === "idle") {
+        // Auto-load idle services
+        container.load(serviceName as string).catch(() => {});
+      } else if (result.state === "ready" && result.value !== null) {
+        services[serviceName] = result.value as T[keyof T];
+      } else {
+      }
+    }
+
+    return {
+      hasLoading,
+      hasError,
+      services,
+    };
+  }, [serviceNames]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [services, setServices] = useState<Partial<T>>(
+    getServiceStates().services,
+  );
 
   useEffect(() => {
-    const updateState = () => {
-      const newServices: Partial<T> = {};
-      let hasLoading = false;
-      let hasError: Error | null = null;
-
-      for (const serviceName of serviceNames) {
-        const result = container.getSync(serviceName as string);
-
-        if (result.state === "loading") {
-          hasLoading = true;
-        } else if (result.state === "error") {
-          hasError = result.error;
-        } else if (result.state === "idle") {
-          // Auto-load idle services
-          container.load(serviceName as string).catch(() => {});
-        } else if (result.state === "ready" && result.value !== null) {
-          newServices[serviceName] = result.value as T[keyof T];
-        } else {
-        }
-      }
-
-      setServices(newServices);
-      setLoading(hasLoading);
-      setError(hasError);
-    };
-
-    // Initial state
-    updateState();
-
     // Set up listeners for all services
     const listeners: Array<() => void> = [];
 
     for (const serviceName of serviceNames) {
       const name = serviceName as string;
 
-      const onAnyChange = () => updateState();
+      const onAnyChange = () => {
+        const { hasLoading, hasError, services } = getServiceStates();
+        setLoading(hasLoading);
+        setError(hasError);
+        setServices(services);
+      };
 
       container.on(`${name}:loading`, onAnyChange);
       container.on(`${name}:ready`, onAnyChange);
@@ -155,7 +162,7 @@ export function useServices<T extends Record<string, any>>(
     return () => {
       listeners.forEach((cleanup) => cleanup());
     };
-  }, [serviceNames.join(","), container]);
+  }, [serviceNames.join(","), container, getServiceStates]);
 
   const allReady = serviceNames.every((name) =>
     container.isReady(name as string),

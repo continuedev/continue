@@ -99,7 +99,6 @@ export class ModelService
         });
 
         const llmApi = createLlmApi(selectedModel, authConfig);
-
         if (!llmApi) {
           throw new Error(`Failed to initialize LLM with ${modelSource} model`);
         }

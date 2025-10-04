@@ -286,7 +286,11 @@ describe("ConfigService", () => {
 
   describe("getDependencies()", () => {
     test("should declare auth and apiClient dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "apiClient"]);
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "apiClient",
+        "workflow",
+      ]);
     });
   });
 

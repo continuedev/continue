@@ -3,7 +3,7 @@ import { constructSystemMessage } from "../systemMessage.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
-import { modeService } from "./ModeService.js";
+import { SERVICE_NAMES } from "./types.js";
 
 export interface SystemMessageServiceState {
   additionalRules?: string[];
@@ -16,26 +16,8 @@ export interface SystemMessageServiceState {
  * Provides fresh system messages that reflect current mode and configuration
  */
 export class SystemMessageService extends BaseService<SystemMessageServiceState> {
-  private currentMode: PermissionMode = "normal";
-
   constructor() {
     super("SystemMessageService", {});
-
-    // Listen to mode changes from ModeService
-    this.setupModeListener();
-  }
-
-  /**
-   * Set up listener for mode changes
-   */
-  private setupModeListener(): void {
-    modeService.on("modeChanged", (newMode: PermissionMode) => {
-      logger.debug(`SystemMessageService: Mode changed to ${newMode}`);
-      this.currentMode = newMode;
-    });
-
-    // Initialize current mode
-    this.currentMode = modeService.getCurrentMode();
   }
 
   /**
@@ -64,22 +46,26 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
   /**
    * Get a fresh system message with current mode and configuration
    */
-  public async getSystemMessage(): Promise<string> {
+  public async getSystemMessage(currentMode: PermissionMode): Promise<string> {
     const { additionalRules, format, headless } = this.currentState;
 
     const systemMessage = await constructSystemMessage(
       additionalRules,
       format,
       headless,
-      this.currentMode,
+      currentMode,
     );
 
     logger.debug("Generated fresh system message", {
-      mode: this.currentMode,
+      mode: currentMode,
       messageLength: systemMessage.length,
     });
 
     return systemMessage;
+  }
+
+  getDependencies(): string[] {
+    return [SERVICE_NAMES.TOOL_PERMISSIONS];
   }
 
   /**
@@ -93,14 +79,4 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
 
     logger.debug("SystemMessageService config updated", config);
   }
-
-  /**
-   * Get the current mode being used for system messages
-   */
-  public getCurrentMode(): PermissionMode {
-    return this.currentMode;
-  }
 }
-
-// Export singleton instance
-export const systemMessageService = new SystemMessageService();

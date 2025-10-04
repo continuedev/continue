@@ -8,6 +8,7 @@ const { constructSystemMessage } = await import("./systemMessage.js");
 vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn().mockResolvedValue({ config: { rules: [] } }),
+    set: vi.fn(),
   },
 }));
 

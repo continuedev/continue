@@ -1,21 +1,6 @@
-import { vi, beforeEach, describe, it, expect } from "vitest";
-
-// Mock the services
-const mockToolPermissionService = {
-  reloadPermissions: vi.fn(),
-  getState: vi.fn(),
-  getCurrentMode: vi.fn(() => "normal"),
-};
-
-const mockServices = {
-  mode: {
-    getToolPermissionService: vi.fn(() => mockToolPermissionService),
-  },
-};
-
-vi.mock("../../services/index.js", () => ({
-  services: mockServices,
-}));
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { services } from "../../services/index.js";
+vi.mock("../../services/index.js");
 
 // Mock the permission system
 vi.mock("../../permissions/policyWriter.js", () => ({
@@ -63,7 +48,7 @@ describe("Permission Policy Reload Workflow", () => {
         await addPolicyToYaml(policyRule);
 
         // This is the key part we're testing - reload should be called
-        await services.mode.getToolPermissionService().reloadPermissions();
+        await services.toolPermissions.reloadPermissions();
       } catch (error) {
         // Handle errors gracefully
       }
@@ -76,7 +61,7 @@ describe("Permission Policy Reload Workflow", () => {
     expect(addPolicyToYaml).toHaveBeenCalledWith(
       "tool: Edit\npermission: allow",
     );
-    expect(mockToolPermissionService.reloadPermissions).toHaveBeenCalled();
+    expect(services.toolPermissions.reloadPermissions).toHaveBeenCalled();
   });
 
   it("should handle permission reload failure gracefully", async () => {
@@ -90,7 +75,7 @@ describe("Permission Policy Reload Workflow", () => {
     vi.mocked(addPolicyToYaml).mockResolvedValue(undefined);
 
     // Mock reloadPermissions to fail
-    mockToolPermissionService.reloadPermissions.mockRejectedValue(
+    vi.mocked(services.toolPermissions.reloadPermissions).mockRejectedValue(
       new Error("Reload failed"),
     );
 
@@ -118,7 +103,7 @@ describe("Permission Policy Reload Workflow", () => {
       await addPolicyToYaml(policyRule);
 
       // This should fail but not break the flow
-      await services.mode.getToolPermissionService().reloadPermissions();
+      await services.toolPermissions.reloadPermissions();
     } catch (error) {
       // Error should be caught and handled gracefully
       errorCaught = true;
@@ -127,7 +112,7 @@ describe("Permission Policy Reload Workflow", () => {
 
     // Verify that despite the reload failure, the policy was still created
     expect(addPolicyToYaml).toHaveBeenCalled();
-    expect(mockToolPermissionService.reloadPermissions).toHaveBeenCalled();
+    expect(services.toolPermissions.reloadPermissions).toHaveBeenCalled();
     expect(errorCaught).toBe(true);
   });
 
@@ -142,7 +127,9 @@ describe("Permission Policy Reload Workflow", () => {
     vi.mocked(addPolicyToYaml).mockResolvedValue(undefined);
 
     // Mock successful reload
-    mockToolPermissionService.reloadPermissions.mockResolvedValue(undefined);
+    vi.mocked(services.toolPermissions.reloadPermissions).mockResolvedValue(
+      undefined,
+    );
 
     const mockActiveRequest = {
       toolName: "Edit",
@@ -167,13 +154,13 @@ describe("Permission Policy Reload Workflow", () => {
       );
 
       await addPolicyToYaml(policyRule);
-      await services.mode.getToolPermissionService().reloadPermissions();
+      await services.toolPermissions.reloadPermissions();
     }
 
     // AFTER: Policy is now active without restart
     // Next time user tries to edit a file, it should be automatically allowed
 
-    expect(mockToolPermissionService.reloadPermissions).toHaveBeenCalled();
+    expect(services.toolPermissions.reloadPermissions).toHaveBeenCalled();
 
     // This represents the improvement: the new policy takes effect immediately
     // without requiring the user to restart the Continue CLI

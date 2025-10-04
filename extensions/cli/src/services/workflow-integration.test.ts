@@ -4,7 +4,6 @@ import { ConfigEnhancer } from "../configEnhancer.js";
 
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { ToolPermissionService } from "./ToolPermissionService.js";
 import { SERVICE_NAMES } from "./types.js";
 import { WorkflowService } from "./WorkflowService.js";
 
@@ -46,7 +45,6 @@ vi.mock("../auth/workos.js", () => ({
 describe("Workflow Integration Tests", () => {
   let workflowService: WorkflowService;
   let modelService: ModelService;
-  let toolPermissionService: ToolPermissionService;
   let configEnhancer: ConfigEnhancer;
   let mockLoadPackageFromHub: any;
   let mockLoadPackagesFromHub: any;
@@ -100,7 +98,6 @@ describe("Workflow Integration Tests", () => {
     // Create service instances
     workflowService = new WorkflowService();
     modelService = new ModelService();
-    toolPermissionService = new ToolPermissionService();
     configEnhancer = new ConfigEnhancer();
 
     // Mock service container

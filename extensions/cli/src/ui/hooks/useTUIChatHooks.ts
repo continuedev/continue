@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { PermissionMode } from "../../permissions/types.js";
-import { modeService } from "../../services/ModeService.js";
 import { getGitBranch, getGitRemoteUrl, isGitRepo } from "../../util/git.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 
@@ -148,26 +146,6 @@ export function useLoginHandlers(
   );
 
   return { handleLoginPrompt, handleLoginTokenSubmit };
-}
-
-// Custom hook for mode tracking
-export function useCurrentMode() {
-  const [currentMode, setCurrentMode] = useState<PermissionMode>(
-    modeService.getCurrentMode(),
-  );
-
-  useEffect(() => {
-    const handleModeChange = (newMode: PermissionMode) => {
-      setCurrentMode(newMode);
-    };
-
-    modeService.on("modeChanged", handleModeChange);
-    return () => {
-      modeService.off("modeChanged", handleModeChange);
-    };
-  }, []);
-
-  return currentMode;
 }
 
 // Custom hook to combine all selector logic

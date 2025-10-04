@@ -32,7 +32,11 @@ export class ConfigService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
+    return [
+      SERVICE_NAMES.AUTH,
+      SERVICE_NAMES.API_CLIENT,
+      SERVICE_NAMES.WORKFLOW,
+    ];
   }
 
   /**

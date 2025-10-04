@@ -7,11 +7,11 @@ import { Minimatch } from "minimatch";
 
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
-import { modeService } from "./services/ModeService.js";
+import { services } from "./services/index.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
-
+const toolPermissionService = services.toolPermissions;
 /**
  * Check if current directory is a git repository
  */
@@ -167,7 +167,7 @@ export async function constructSystemMessage(
   processedRules.push(...configYamlRules);
 
   // Get current mode if not provided
-  const currentMode = mode ?? modeService.getCurrentMode();
+  const currentMode = mode ?? toolPermissionService.getCurrentMode();
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
