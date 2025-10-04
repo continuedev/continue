@@ -538,9 +538,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Start active time tracking
     telemetryService.startActiveTime();
 
-    options.workflow = "peter-parker/workflow-48";
-    // options.headless = true;
-
     // If not in headless mode, use unified initialization with TUI
     if (!options.headless) {
       // Process flags for TUI mode
