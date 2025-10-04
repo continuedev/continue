@@ -391,6 +391,7 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
+        isHeadless,
         chatHistory,
         model,
         llmApi,

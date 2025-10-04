@@ -123,6 +123,14 @@ export function parseWorkflowTools(toolsString?: string): ParsedWorkflowTools {
 
       if (colonIndex > 0) {
         // Specific tool: "owner/package:tool_name"
+        // Reject references with whitespace to prevent silent misconfigurations
+        if (/\s/.test(toolRef)) {
+          throw new Error(
+            `Invalid MCP tool reference "${toolRef}": colon-separated tool references cannot contain whitespace. ` +
+              `Use format "owner/slug:tool_name" without spaces.`,
+          );
+        }
+
         const mcpServer = toolRef.substring(0, colonIndex);
         const toolName = toolRef.substring(colonIndex + 1);
 

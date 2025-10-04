@@ -123,7 +123,7 @@ export function useServices<T extends Record<string, any>>(
       hasError,
       services,
     };
-  }, [serviceNames]);
+  }, [serviceNames, container]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

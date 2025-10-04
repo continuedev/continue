@@ -379,6 +379,7 @@ describe("Workflow Integration Tests", () => {
 
       const baseConfig = {
         rules: ["existing rule"],
+        prompts: [],
       };
 
       const enhancedConfig = await configEnhancer.enhanceConfig(
@@ -387,34 +388,42 @@ describe("Workflow Integration Tests", () => {
         workflowService.getState(),
       );
 
-      // Prompts should be processed at runtime, not injected into config
-      // The workflow prompt is added to options.prompt and will be processed
-      // by processAndCombinePrompts() in chat.ts
+      // Workflow prompt should be added to config.prompts
+      expect(enhancedConfig.prompts).toBeDefined();
+      expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
+      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+        prompt: "You are a workflow assistant.",
+        name: expect.stringContaining("Test Workflow"),
+      });
       expect(enhancedConfig.rules).toHaveLength(2);
     });
 
-    it("should add workflow prompt as prefix to existing prompts", async () => {
+    it("should add workflow prompt to config alongside other prompts", async () => {
       // Setup workflow service with active workflow
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
-      // Test that the workflow prompt gets added to options.prompt as prefix
-      const baseOptions = { prompt: ["existing-prompt"] };
-      const modifiedOptions = { ...baseOptions };
+      const baseConfig = {
+        prompts: [{ name: "Existing", prompt: "existing-prompt" }],
+      };
+      const baseOptions = {};
 
-      // Simulate what ConfigEnhancer does internally
-      const workflowState = workflowService.getState();
-      if (workflowState.workflowFile?.prompt) {
-        modifiedOptions.prompt = [
-          workflowState.workflowFile.prompt,
-          ...(modifiedOptions.prompt || []),
-        ];
-      }
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        baseOptions,
+        workflowService.getState(),
+      );
 
-      expect(modifiedOptions.prompt).toEqual([
-        "You are a workflow assistant.",
-        "existing-prompt",
-      ]);
+      // Workflow prompt should be prepended to existing prompts
+      expect(enhancedConfig.prompts).toHaveLength(2);
+      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+        name: expect.stringContaining("Test Workflow"),
+        prompt: "You are a workflow assistant.",
+      });
+      expect(enhancedConfig.prompts?.[1]).toMatchObject({
+        name: "Existing",
+        prompt: "existing-prompt",
+      });
     });
 
     it("should not add workflow prompt when workflow has no prompt", async () => {
@@ -426,43 +435,53 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(workflowWithoutPrompt);
       await workflowService.initialize("owner/workflow");
 
-      const baseOptions = { prompt: ["existing-prompt"] };
-      const modifiedOptions = { ...baseOptions };
+      const baseConfig = {
+        prompts: [{ name: "Existing", prompt: "existing-prompt" }],
+      };
+      const baseOptions = {};
 
-      // Simulate what ConfigEnhancer does internally
-      const workflowState = workflowService.getState();
-      if (workflowState.workflowFile?.prompt) {
-        modifiedOptions.prompt = [
-          workflowState.workflowFile.prompt,
-          ...(modifiedOptions.prompt || []),
-        ];
-      }
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        baseOptions,
+        workflowService.getState(),
+      );
 
-      expect(modifiedOptions.prompt).toEqual(["existing-prompt"]);
+      // Should only have the existing prompt, no workflow prompt added
+      expect(enhancedConfig.prompts).toHaveLength(1);
+      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+        name: "Existing",
+        prompt: "existing-prompt",
+      });
     });
   });
 
   describe("ConfigEnhancer prompt integration", () => {
-    it("should modify options to include workflow prompt as prefix", async () => {
+    it("should add workflow prompt to config.prompts when workflow is active", async () => {
       // Setup workflow service with active workflow
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
       const baseOptions = { prompt: ["user-prompt"] };
+      const baseConfig = { prompts: [] };
 
-      // This should internally modify the options to include workflow prompt
-      await configEnhancer.enhanceConfig(
-        {} as any,
+      // Enhance config with workflow state
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
         baseOptions,
         workflowService.getState(),
       );
 
-      // Verify that the workflow prompt was added to the options
-      // by checking that injectPrompts was called with workflow prompt prefixed
-      expect(baseOptions.prompt).toHaveLength(1);
+      // Verify that the workflow prompt was added to config.prompts
+      expect(enhancedConfig.prompts).toBeDefined();
+      expect(enhancedConfig.prompts).toHaveLength(1);
+      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+        name: expect.stringContaining("Test Workflow"),
+        prompt: "You are a workflow assistant.",
+        description: "A test workflow for integration testing",
+      });
     });
 
-    it("should work end-to-end with workflow prompt processing", async () => {
+    it("should work end-to-end with workflow prompt in config", async () => {
       // Setup workflow service with active workflow
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
@@ -472,24 +491,23 @@ describe("Workflow Integration Tests", () => {
         "You are a workflow assistant.",
       );
 
-      // Verify that if we manually apply the same logic as ConfigEnhancer,
-      // the workflow prompt gets added as prefix
-      const options = { prompt: ["Tell me about TypeScript"] };
+      const baseConfig = { prompts: [] };
+      const baseOptions = { prompt: ["Tell me about TypeScript"] };
 
-      if (workflowState.workflowFile?.prompt) {
-        options.prompt = [workflowState.workflowFile.prompt, ...options.prompt];
-      }
-
-      expect(options.prompt).toEqual([
-        "You are a workflow assistant.",
-        "Tell me about TypeScript",
-      ]);
-
-      // This mimics what processAndCombinePrompts would do
-      const combinedPrompt = options.prompt.join("\n\n");
-      expect(combinedPrompt).toBe(
-        "You are a workflow assistant.\n\nTell me about TypeScript",
+      // Enhance config with workflow
+      const enhancedConfig = await configEnhancer.enhanceConfig(
+        baseConfig as any,
+        baseOptions,
+        workflowState,
       );
+
+      // Verify workflow prompt is added to config.prompts
+      expect(enhancedConfig.prompts).toBeDefined();
+      expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
+      expect(enhancedConfig.prompts?.[0]?.prompt).toBe(
+        "You are a workflow assistant.",
+      );
+      expect(enhancedConfig.prompts?.[0]?.name).toContain("Test Workflow");
     });
   });
 

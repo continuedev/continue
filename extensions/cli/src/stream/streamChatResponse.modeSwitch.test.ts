@@ -13,9 +13,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
   const toolPermissionService = services.toolPermissions;
   beforeEach(async () => {
     // Clean up service container state before each test
-    const services = Object.keys(SERVICE_NAMES);
-
-    services.forEach((service) => {
+    Object.values(SERVICE_NAMES).forEach((service) => {
       (serviceContainer as any).services.delete(service);
       (serviceContainer as any).factories.delete(service);
       (serviceContainer as any).dependencies.delete(service);

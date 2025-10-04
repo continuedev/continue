@@ -485,4 +485,120 @@ describe("parseWorkflowTools", () => {
       allBuiltIn: false,
     });
   });
+
+  describe("whitespace validation in colon-separated MCP tool references", () => {
+    it("should reject MCP tool reference with space after colon", () => {
+      expect(() => parseWorkflowTools("owner/slug: tool")).toThrow(
+        'Invalid MCP tool reference "owner/slug: tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with space before colon", () => {
+      expect(() => parseWorkflowTools("owner/slug :tool")).toThrow(
+        'Invalid MCP tool reference "owner/slug :tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with spaces around colon", () => {
+      expect(() => parseWorkflowTools("owner/slug : tool")).toThrow(
+        'Invalid MCP tool reference "owner/slug : tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with space in tool name", () => {
+      expect(() => parseWorkflowTools("owner/slug:my tool")).toThrow(
+        'Invalid MCP tool reference "owner/slug:my tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with space in server slug", () => {
+      expect(() => parseWorkflowTools("owner /slug:tool")).toThrow(
+        'Invalid MCP tool reference "owner /slug:tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with tab character", () => {
+      expect(() => parseWorkflowTools("owner/slug:\ttool")).toThrow(
+        'Invalid MCP tool reference "owner/slug:\ttool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with newline character", () => {
+      expect(() => parseWorkflowTools("owner/slug:\ntool")).toThrow(
+        'Invalid MCP tool reference "owner/slug:\ntool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with multiple spaces", () => {
+      expect(() => parseWorkflowTools("owner/slug:  tool  ")).toThrow(
+        'Invalid MCP tool reference "owner/slug:  tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should reject MCP tool reference with leading spaces in tool name", () => {
+      expect(() => parseWorkflowTools("owner/slug:  tool")).toThrow(
+        'Invalid MCP tool reference "owner/slug:  tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should accept valid colon-separated MCP tool reference without whitespace", () => {
+      const result = parseWorkflowTools("owner/package:tool_name");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "owner/package", toolName: "tool_name" }],
+        mcpServers: ["owner/package"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should accept valid MCP tool references with hyphens and underscores", () => {
+      const result = parseWorkflowTools(
+        "owner-name/package_name:tool-name_123",
+      );
+      expect(result).toEqual({
+        tools: [
+          {
+            mcpServer: "owner-name/package_name",
+            toolName: "tool-name_123",
+          },
+        ],
+        mcpServers: ["owner-name/package_name"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should allow whitespace between comma-separated items", () => {
+      const result = parseWorkflowTools(
+        "owner/package:tool1,   owner/package:tool2  ,  bash",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "owner/package", toolName: "tool1" },
+          { mcpServer: "owner/package", toolName: "tool2" },
+          { toolName: "bash" },
+        ],
+        mcpServers: ["owner/package"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should reject whitespace in one reference but accept valid references in same string", () => {
+      expect(() =>
+        parseWorkflowTools("owner/package:tool1, owner/package: tool2, bash"),
+      ).toThrow(
+        'Invalid MCP tool reference "owner/package: tool2": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should not reject whitespace in MCP server references without colon", () => {
+      // Note: This behavior may or may not be desired, but documents current behavior
+      // Server-only references (no colon) don't trigger the whitespace check
+      expect(() => parseWorkflowTools("owner /package")).not.toThrow();
+    });
+
+    it("should not reject whitespace in built-in tool names", () => {
+      // Note: This behavior may or may not be desired, but documents current behavior
+      // Built-in tools (no slash) don't trigger the whitespace check
+      expect(() => parseWorkflowTools("my tool")).not.toThrow();
+    });
+  });
 });
