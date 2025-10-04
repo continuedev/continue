@@ -82,13 +82,6 @@ export class ToolPermissionService
     }
     const policies: ToolPermissionPolicy[] = [];
 
-    if (parsedTools.allBuiltIn) {
-      policies.push({ tool: "*", permission: "allow" });
-      policies.push({ tool: "mcp:*", permission: "exclude" });
-    } else {
-      policies.push({ tool: "*", permission: "exclude" });
-    }
-
     for (const toolRef of parsedTools.tools) {
       if (toolRef.mcpServer) {
         if (toolRef.toolName) {
@@ -109,6 +102,13 @@ export class ToolPermissionService
 
     if (policies.length > 0) {
       logger.debug(`Generated ${policies.length} workflow tool policies`);
+    }
+
+    if (parsedTools.allBuiltIn) {
+      policies.push({ tool: "*", permission: "allow" });
+      policies.push({ tool: "mcp:*", permission: "exclude" });
+    } else {
+      policies.push({ tool: "*", permission: "exclude" });
     }
 
     return policies;

@@ -212,10 +212,10 @@ export async function initializeServices(
       return configService.initialize({
         authConfig: finalAuthState.authConfig,
         configPath,
-        organizationIde: finalAuthState.organizationId || null,
+        // organizationId: finalAuthState.organizationId || null,
         apiClient: apiClientState.apiClient,
         workflowState,
-        commandOptions,
+        injectedConfigOptions: commandOptions,
       });
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.WORKFLOW], // Dependencies

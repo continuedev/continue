@@ -2,6 +2,7 @@ import { loadPackageFromHub, workflowProcessor } from "../hubLoader.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
+import { serviceContainer } from "./ServiceContainer.js";
 import { WorkflowServiceState } from "./types.js";
 
 /**
@@ -68,5 +69,10 @@ export class WorkflowService extends BaseService<WorkflowServiceState> {
         workflowModelName: null,
       };
     }
+  }
+
+  protected override setState(newState: Partial<WorkflowServiceState>): void {
+    super.setState(newState);
+    serviceContainer.set("update", this.currentState);
   }
 }

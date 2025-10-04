@@ -66,8 +66,8 @@ export class ConfigService
 
     // Apply injected config if provided
     if (
-      injectedConfigOptions &&
-      this.hasInjectedConfig(injectedConfigOptions)
+      workflowState?.workflowFile ||
+      (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions))
     ) {
       config = await configEnhancer.enhanceConfig(
         config,

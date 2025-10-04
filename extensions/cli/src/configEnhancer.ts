@@ -22,7 +22,7 @@ export class ConfigEnhancer {
   // added this for lint complexity rule
   private async enhanceConfigFromWorkflow(
     config: AssistantUnrolled,
-    _options: BaseCommandOptions,
+    _options: BaseCommandOptions | undefined,
     workflowState?: WorkflowServiceState,
   ) {
     const enhancedConfig = { ...config };
@@ -32,33 +32,51 @@ export class ConfigEnhancer {
       const { rules, model, tools, prompt } = workflowState?.workflowFile;
       if (rules) {
         options.rule = [
-          ...rules.split(",").filter(Boolean),
+          ...rules
+            .split(",")
+            .filter(Boolean)
+            .map((r) => r.trim()),
           ...(options.rule || []),
         ];
       }
 
       if (tools) {
-        const parsedTools = parseWorkflowTools(tools);
-        if (parsedTools.mcpServers.length > 0) {
-          options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
+        try {
+          const parsedTools = parseWorkflowTools(tools);
+          if (parsedTools.mcpServers.length > 0) {
+            options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
+          }
+        } catch (e) {
+          logger.error("Failed to parse workflow tools", e);
         }
       }
 
       // --model takes precedence over workflow model
       if (model) {
-        const workflowModel = await loadPackageFromHub(model, modelProcessor);
-        enhancedConfig.models = [
-          workflowModel,
-          ...(enhancedConfig.models ?? []),
-        ];
-        workflowState?.workflowService?.setWorkflowModelName(
-          workflowModel.name,
-        );
+        try {
+          const workflowModel = await loadPackageFromHub(model, modelProcessor);
+          enhancedConfig.models = [
+            workflowModel,
+            ...(enhancedConfig.models ?? []),
+          ];
+          workflowState?.workflowService?.setWorkflowModelName(
+            workflowModel.name,
+          );
+        } catch (e) {
+          logger.error("Failed to load workflow model", e);
+        }
       }
 
-      // Add workflow prompt as prefix (see processAndCombinePrompts)
+      // Workflow prompt is included as a slash command, initial kickoff is handled elsewhere
       if (prompt) {
-        options.prompt = [prompt, ...(options.prompt || [])];
+        enhancedConfig.prompts = [
+          {
+            name: `Workflow prompt (${workflowState.workflowFile.name})`,
+            prompt,
+            description: workflowState.workflowFile.description,
+          },
+          ...(enhancedConfig.prompts ?? []),
+        ];
       }
     }
     return { options, enhancedConfig };
@@ -68,7 +86,7 @@ export class ConfigEnhancer {
    */
   async enhanceConfig(
     config: AssistantUnrolled,
-    _options: BaseCommandOptions,
+    _options?: BaseCommandOptions,
     workflowState?: WorkflowServiceState,
   ): Promise<AssistantUnrolled> {
     const enhanced = await this.enhanceConfigFromWorkflow(

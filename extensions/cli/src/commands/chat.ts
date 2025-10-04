@@ -12,7 +12,11 @@ import * as logging from "../logging.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices, services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
-import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
+import {
+  ModelServiceState,
+  SERVICE_NAMES,
+  WorkflowServiceState,
+} from "../services/types.js";
 import {
   loadSession,
   updateSessionHistory,
@@ -474,9 +478,15 @@ async function runHeadlessMode(
   const { processAndCombinePrompts } = await import(
     "../util/promptProcessor.js"
   );
+  const workflowState = await serviceContainer.get<WorkflowServiceState>(
+    SERVICE_NAMES.WORKFLOW,
+  );
+  const initialPrompt =
+    `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+    undefined;
   const initialUserInput = await processAndCombinePrompts(
     options.prompt,
-    prompt,
+    initialPrompt,
   );
 
   let isFirstMessage = true;
@@ -528,11 +538,13 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Start active time tracking
     telemetryService.startActiveTime();
 
+    options.workflow = "peter-parker/workflow-48";
+    // options.headless = true;
+
     // If not in headless mode, use unified initialization with TUI
     if (!options.headless) {
       // Process flags for TUI mode
       const { permissionOverrides } = processCommandFlags(options);
-
       // Initialize services with onboarding handled internally
       await initializeServices({
         options,
@@ -540,9 +552,17 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         toolPermissionOverrides: permissionOverrides,
       });
 
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      const initialPrompt =
+        `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+        undefined;
+
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {
-        initialPrompt: prompt,
+        initialPrompt,
         resume: options.resume,
         fork: options.fork,
         config: options.config,
