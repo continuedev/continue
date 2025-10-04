@@ -14,6 +14,14 @@ import {
   WorkflowServiceState,
 } from "./types.js";
 
+interface ConfigServiceInit {
+  authConfig: AuthConfig;
+  configPath: string | undefined;
+  _organizationId: string | null;
+  apiClient: DefaultApiInterface;
+  workflowState: WorkflowServiceState;
+  injectedConfigOptions?: BaseCommandOptions;
+}
 /**
  * Service for managing configuration state and operations
  * Handles loading configs from files or assistant slugs
@@ -43,14 +51,13 @@ export class ConfigService
   /**
    * Initialize the config service
    */
-  async doInitialize(
-    authConfig: AuthConfig,
-    configPath: string | undefined,
-    _organizationId: string | null,
-    apiClient: DefaultApiInterface,
-    workflowState: WorkflowServiceState,
-    injectedConfigOptions?: BaseCommandOptions,
-  ): Promise<ConfigServiceState> {
+  async doInitialize({
+    apiClient,
+    authConfig,
+    configPath,
+    workflowState,
+    injectedConfigOptions,
+  }: ConfigServiceInit): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
     const { loadConfiguration } = await import("../configLoader.js");
     const result = await loadConfiguration(authConfig, configPath, apiClient);

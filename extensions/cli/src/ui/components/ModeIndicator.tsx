@@ -4,6 +4,7 @@ import React from "react";
 import { useServices } from "src/hooks/useService.js";
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { SERVICE_NAMES } from "src/services/types.js";
+
 import type { PermissionMode } from "../../permissions/types.js";
 
 interface ModeIndicatorProps {

@@ -1,7 +1,8 @@
 import { vi } from "vitest";
 
-import { initializeServices, services } from "./index.js";
 import { WorkflowService } from "./WorkflowService.js";
+
+import { initializeServices, services } from "./index.js";
 
 // Mock the onboarding module
 vi.mock("../onboarding.js", () => ({

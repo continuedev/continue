@@ -7,6 +7,8 @@ import React, {
   useState,
 } from "react";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -18,7 +20,6 @@ import {
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
-import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { ActionStatus } from "./components/ActionStatus.js";
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";

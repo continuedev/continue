@@ -19,15 +19,13 @@ import { logger } from "./util/logger.js";
  * Enhances a configuration by injecting additional components from CLI flags
  */
 export class ConfigEnhancer {
-  /**
-   * Apply all enhancements to a configuration
-   */
-  async enhanceConfig(
+  // added this for lint complexity rule
+  private async enhanceConfigFromWorkflow(
     config: AssistantUnrolled,
     _options: BaseCommandOptions,
     workflowState?: WorkflowServiceState,
-  ): Promise<AssistantUnrolled> {
-    let enhancedConfig = { ...config };
+  ) {
+    const enhancedConfig = { ...config };
     const options = { ..._options };
 
     if (workflowState?.workflowFile) {
@@ -63,6 +61,23 @@ export class ConfigEnhancer {
         options.prompt = [prompt, ...(options.prompt || [])];
       }
     }
+    return { options, enhancedConfig };
+  }
+  /**
+   * Apply all enhancements to a configuration
+   */
+  async enhanceConfig(
+    config: AssistantUnrolled,
+    _options: BaseCommandOptions,
+    workflowState?: WorkflowServiceState,
+  ): Promise<AssistantUnrolled> {
+    const enhanced = await this.enhanceConfigFromWorkflow(
+      config,
+      _options,
+      workflowState,
+    );
+    let { enhancedConfig } = enhanced;
+    const { options } = enhanced;
 
     // Inject resolved items into config
     if (options.rule && options.rule.length > 0) {

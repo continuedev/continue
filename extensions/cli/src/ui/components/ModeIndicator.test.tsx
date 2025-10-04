@@ -3,6 +3,7 @@ import React from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { initializeServices, services } from "src/services/index.js";
+
 import { ModeIndicator } from "./ModeIndicator.js";
 
 describe("ModeIndicator", () => {

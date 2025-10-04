@@ -209,14 +209,14 @@ export async function initializeServices(
         }
       }
 
-      return configService.initialize(
-        finalAuthState.authConfig,
+      return configService.initialize({
+        authConfig: finalAuthState.authConfig,
         configPath,
-        finalAuthState.organizationId || null,
-        apiClientState.apiClient,
+        organizationIde: finalAuthState.organizationId || null,
+        apiClient: apiClientState.apiClient,
         workflowState,
         commandOptions,
-      );
+      });
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.WORKFLOW], // Dependencies
   );
