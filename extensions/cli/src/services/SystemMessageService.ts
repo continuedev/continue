@@ -50,10 +50,10 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
     const { additionalRules, format, headless } = this.currentState;
 
     const systemMessage = await constructSystemMessage(
+      currentMode,
       additionalRules,
       format,
       headless,
-      currentMode,
     );
 
     logger.debug("Generated fresh system message", {

@@ -7,11 +7,10 @@ import { Minimatch } from "minimatch";
 
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
-import { services } from "./services/index.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
-const toolPermissionService = services.toolPermissions;
+
 /**
  * Check if current directory is a git repository
  */
@@ -125,10 +124,10 @@ async function getConfigYamlRules(): Promise<string[]> {
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
+  mode: PermissionMode,
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
-  mode?: PermissionMode,
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -166,14 +165,11 @@ export async function constructSystemMessage(
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
-  // Get current mode if not provided
-  const currentMode = mode ?? toolPermissionService.getCurrentMode();
-
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
   // Add plan mode specific instructions if in plan mode
-  if (currentMode === "plan") {
+  if (mode === "plan") {
     systemMessage +=
       '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
   } else {
