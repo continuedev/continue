@@ -214,8 +214,8 @@ export async function initializeServices(
         configPath,
         finalAuthState.organizationId || null,
         apiClientState.apiClient,
-        commandOptions,
         workflowState,
+        commandOptions,
       );
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.WORKFLOW], // Dependencies

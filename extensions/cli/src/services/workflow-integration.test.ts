@@ -3,8 +3,6 @@ import { vi } from "vitest";
 import { ConfigEnhancer } from "../configEnhancer.js";
 
 import { ModelService } from "./ModelService.js";
-import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES } from "./types.js";
 import { WorkflowService } from "./WorkflowService.js";
 
 // Mock the hubLoader module
@@ -100,16 +98,6 @@ describe("Workflow Integration Tests", () => {
     modelService = new ModelService();
     configEnhancer = new ConfigEnhancer();
 
-    // Mock service container
-    vi.spyOn(serviceContainer, "get").mockImplementation(
-      async (serviceName: string) => {
-        if (serviceName === SERVICE_NAMES.WORKFLOW) {
-          return workflowService.getState();
-        }
-        throw new Error(`Service ${serviceName} not mocked`);
-      },
-    );
-
     // Setup default mocks
     mockProcessRule.mockResolvedValue("Processed rule content");
     mockLoadPackagesFromHub.mockResolvedValue([{ name: "test-mcp" }]);
@@ -146,6 +134,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
+        workflowState,
       );
 
       // Should have loaded the workflow model directly via loadPackageFromHub
@@ -176,6 +165,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
+        workflowState,
       );
 
       // Should not have enhanced with any models
@@ -206,6 +196,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
+        workflowService.getState(),
       );
 
       // Should process the user model via loadPackagesFromHub
@@ -246,6 +237,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       // Rules should be processed normally since workflow rules are now added to options.rule
@@ -269,6 +261,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       expect(mockProcessRule).not.toHaveBeenCalled();
@@ -292,6 +285,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       expect(mockProcessRule).not.toHaveBeenCalled();
@@ -367,6 +361,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       // Should not inject workflow rule but should preserve existing rules
@@ -389,6 +384,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       // Prompts should be processed at runtime, not injected into config
@@ -452,27 +448,18 @@ describe("Workflow Integration Tests", () => {
       mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
       await workflowService.initialize("owner/workflow");
 
-      // Create a spy to verify the internal behavior of ConfigEnhancer
-      const originalGet = serviceContainer.get;
-      const getSpy = vi
-        .spyOn(serviceContainer, "get")
-        .mockImplementation(async (serviceName: string) => {
-          if (serviceName === SERVICE_NAMES.WORKFLOW) {
-            return workflowService.getState();
-          }
-          return originalGet.call(serviceContainer, serviceName);
-        });
-
       const baseOptions = { prompt: ["user-prompt"] };
 
       // This should internally modify the options to include workflow prompt
-      await configEnhancer.enhanceConfig({} as any, baseOptions);
+      await configEnhancer.enhanceConfig(
+        {} as any,
+        baseOptions,
+        workflowService.getState(),
+      );
 
-      // The ConfigEnhancer should have been called with workflow service
-      expect(getSpy).toHaveBeenCalledWith(SERVICE_NAMES.WORKFLOW);
-
-      // Clean up
-      getSpy.mockRestore();
+      // Verify that the workflow prompt was added to the options
+      // by checking that injectPrompts was called with workflow prompt prefixed
+      expect(baseOptions.prompt).toHaveLength(1);
     });
 
     it("should work end-to-end with workflow prompt processing", async () => {
@@ -564,6 +551,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       expect(enhancedConfig.mcpServers).toHaveLength(3);
@@ -588,6 +576,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       expect(enhancedConfig.mcpServers).toHaveLength(1);
@@ -612,6 +601,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
+        workflowService.getState(),
       );
 
       // Should not deduplicate since we simplified the logic

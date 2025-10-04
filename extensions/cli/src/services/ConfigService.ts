@@ -11,6 +11,7 @@ import {
   ApiClientServiceState,
   ConfigServiceState,
   SERVICE_NAMES,
+  WorkflowServiceState,
 } from "./types.js";
 
 /**
@@ -47,6 +48,7 @@ export class ConfigService
     configPath: string | undefined,
     _organizationId: string | null,
     apiClient: DefaultApiInterface,
+    workflowState: WorkflowServiceState,
     injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
@@ -63,6 +65,7 @@ export class ConfigService
       config = await configEnhancer.enhanceConfig(
         config,
         injectedConfigOptions,
+        workflowState,
       );
 
       logger.debug("Applied injected configuration");

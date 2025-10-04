@@ -237,8 +237,12 @@ describe("ConfigEnhancer", () => {
 
   it("should handle workflow integration when workflow is active", async () => {
     // Mock service container to return active workflow
-    const { serviceContainer } = await import("./services/ServiceContainer.js");
-    (serviceContainer.get as any).mockResolvedValueOnce({
+    const options: BaseCommandOptions = {
+      rule: ["user-rule"],
+      prompt: ["user-prompt"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options, {
       workflowFile: {
         name: "Test Workflow",
         prompt: "You are a test assistant",
@@ -246,15 +250,10 @@ describe("ConfigEnhancer", () => {
         model: "gpt-4",
         tools: "bash,read",
       },
-      workflow: "owner/test-workflow",
+      slug: "owner/test-workflow",
+      workflowModelName: null,
+      workflowService: null,
     });
-
-    const options: BaseCommandOptions = {
-      rule: ["user-rule"],
-      prompt: ["user-prompt"],
-    };
-
-    const config = await enhancer.enhanceConfig(mockConfig, options);
 
     // Should have both workflow and user rules
     expect(config.rules).toHaveLength(2);

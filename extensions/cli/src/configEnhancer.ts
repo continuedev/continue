@@ -12,8 +12,7 @@ import {
   modelProcessor,
   processRule,
 } from "./hubLoader.js";
-import { serviceContainer } from "./services/ServiceContainer.js";
-import { SERVICE_NAMES, WorkflowServiceState } from "./services/types.js";
+import { WorkflowServiceState } from "./services/types.js";
 import { logger } from "./util/logger.js";
 
 /**
@@ -26,18 +25,13 @@ export class ConfigEnhancer {
   async enhanceConfig(
     config: AssistantUnrolled,
     _options: BaseCommandOptions,
+    workflowState?: WorkflowServiceState,
   ): Promise<AssistantUnrolled> {
     let enhancedConfig = { ...config };
     const options = { ..._options };
 
-    // Add workflow rules/mcp servers if present
-    const workflowState = await serviceContainer.get<WorkflowServiceState>(
-      SERVICE_NAMES.WORKFLOW,
-    );
-    const { workflowFile, workflowService } = workflowState;
-
-    if (workflowFile) {
-      const { rules, model, tools, prompt } = workflowFile;
+    if (workflowState?.workflowFile) {
+      const { rules, model, tools, prompt } = workflowState?.workflowFile;
       if (rules) {
         options.rule = [
           ...rules.split(",").filter(Boolean),
@@ -59,7 +53,9 @@ export class ConfigEnhancer {
           workflowModel,
           ...(enhancedConfig.models ?? []),
         ];
-        workflowService?.setWorkflowModelName(workflowModel.name);
+        workflowState?.workflowService?.setWorkflowModelName(
+          workflowModel.name,
+        );
       }
 
       // Add workflow prompt as prefix (see processAndCombinePrompts)

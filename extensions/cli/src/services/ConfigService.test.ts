@@ -12,7 +12,7 @@ import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES } from "./types.js";
+import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
 
 describe("ConfigService", () => {
   let service: ConfigService;
@@ -23,7 +23,12 @@ describe("ConfigService", () => {
     systemMessage: "Test system message",
   } as any;
   const mockApiClient = { get: vi.fn(), post: vi.fn() };
-
+  const mockWorkflowState: WorkflowServiceState = {
+    slug: null,
+    workflowFile: null,
+    workflowModelName: null,
+    workflowService: null,
+  };
   beforeEach(() => {
     vi.clearAllMocks();
     service = new ConfigService();
@@ -41,6 +46,7 @@ describe("ConfigService", () => {
         "/path/to/config.yaml",
         "org-123",
         mockApiClient as any,
+        mockWorkflowState,
       );
 
       expect(state).toEqual({
@@ -60,6 +66,7 @@ describe("ConfigService", () => {
         undefined,
         "org-123",
         mockApiClient as any,
+        mockWorkflowState,
       );
 
       expect(state).toEqual({
@@ -87,6 +94,7 @@ describe("ConfigService", () => {
         "/config.yaml",
         "org-123",
         mockApiClient as any,
+        mockWorkflowState,
         { rule: ["rule1", "rule2"] },
       );
 
@@ -94,6 +102,7 @@ describe("ConfigService", () => {
       expect(vi.mocked(configEnhancer.enhanceConfig)).toHaveBeenCalledWith(
         mockConfig,
         { rule: ["rule1", "rule2"] },
+        mockWorkflowState,
       );
 
       expect(state.config).toEqual(expectedConfig);
@@ -111,6 +120,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -140,6 +150,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -169,6 +180,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/config.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -201,6 +213,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         undefined,
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -225,6 +238,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -267,6 +281,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -304,6 +319,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
@@ -337,6 +353,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
+        mockWorkflowState,
         mockApiClient as any,
       );
 
