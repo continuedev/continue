@@ -76,10 +76,10 @@ describe("SystemMessageService", () => {
       const message = await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal", // Default mode
         ["rule1"],
         "json",
         true,
-        "normal", // Default mode
       );
       expect(message).toBe("Test system message");
     });
@@ -100,10 +100,10 @@ describe("SystemMessageService", () => {
       await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal",
         ["rule1"],
         "json",
         false,
-        "normal",
       );
     });
 
@@ -121,10 +121,10 @@ describe("SystemMessageService", () => {
       await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal",
         ["rule2", "rule3"],
         "json",
         undefined,
-        "normal",
       );
     });
   });
