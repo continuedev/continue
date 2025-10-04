@@ -2,6 +2,7 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { posthogService } from "src/telemetry/posthogService.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
@@ -29,7 +30,6 @@ import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
-import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import {
   streamChatResponseWithInterruption,
