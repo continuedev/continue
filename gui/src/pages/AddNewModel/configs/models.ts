@@ -1548,13 +1548,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   asksagegpto3: {
-    title: "GPT-o3*",
+    title: "GPT-o3",
     description: "Azure OpenAI GPT o3 model.",
     params: {
       model: "gpt-o3",
       contextLength: 200_000,
       maxTokens: 100_000,
-      title: "GPT-o3*",
+      title: "GPT-o3",
       apiKey: "",
     },
     providerOptions: ["askSage"],
@@ -1562,13 +1562,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   asksagegpt04mini: {
-    title: "GPT-o4-mini*",
+    title: "GPT-o4-mini",
     description: "Azure OpenAI GPT o4-mini model.",
     params: {
       model: "gpt-o4-mini",
       contextLength: 200_000,
       maxTokens: 100_000,
-      title: "GPT-o4-mini*",
+      title: "GPT-o4-mini",
       apiKey: "",
     },
     providerOptions: ["askSage"],
