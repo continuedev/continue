@@ -1,4 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { fileURLToPath } from "url";
+
 import {
   SSEClientTransport,
   SseError,
@@ -6,7 +9,6 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
-import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Agent as HttpsAgent } from "https";
 import {
   IDE,
@@ -22,6 +24,7 @@ import {
   MCPServerStatus,
   MCPTool,
 } from "../..";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
 import { getOauthToken } from "./MCPOauth";
 
@@ -413,6 +416,44 @@ class MCPConnection {
     };
   }
 
+  /**
+   * Resolves the current working directory of the current workspace.
+   * @param cwd The cwd parameter provided by user.
+   * @returns Current working directory (user-provided cwd or workspace root).
+   */
+  private async resolveCwd(cwd?: string) {
+    if (!cwd) {
+      return this.resolveWorkspaceCwd(undefined);
+    }
+
+    if (cwd.startsWith("file://")) {
+      return fileURLToPath(cwd);
+    }
+
+    // Return cwd if cwd is an absolute path.
+    if (cwd.charAt(0) === "/") {
+      return cwd;
+    }
+
+    return this.resolveWorkspaceCwd(cwd);
+  }
+
+  private async resolveWorkspaceCwd(cwd: string | undefined) {
+    const IDE = this.extras?.ide;
+    if (IDE) {
+      const target = cwd ?? ".";
+      const resolved = await resolveRelativePathInDir(target, IDE);
+      if (resolved) {
+        if (resolved.startsWith("file://")) {
+          return fileURLToPath(resolved);
+        }
+        return resolved;
+      }
+      return resolved;
+    }
+    return cwd;
+  }
+
   private constructWebsocketTransport(
     options: InternalWebsocketMcpOptions,
   ): WebSocketClientTransport {
@@ -499,11 +540,13 @@ class MCPConnection {
       options.args || [],
     );
 
+    const cwd = await this.resolveCwd(options.cwd);
+
     const transport = new StdioClientTransport({
       command,
       args,
       env,
-      cwd: options.cwd,
+      cwd,
       stderr: "pipe",
     });
 
