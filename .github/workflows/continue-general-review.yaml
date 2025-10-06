@@ -1,6 +1,9 @@
 name: Continue General Review
 
 on:
+  push:
+    branches:
+      - nate/fix-wf
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
