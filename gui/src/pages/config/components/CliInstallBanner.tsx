@@ -35,7 +35,7 @@ export function CliInstallBanner() {
 
   // Don't show if still loading, already installed, or dismissed
   if (cliInstalled === null || cliInstalled === true || dismissed) {
-    // return null;
+    return null;
   }
 
   return (
