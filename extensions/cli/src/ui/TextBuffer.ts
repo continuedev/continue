@@ -337,26 +337,24 @@ export class TextBuffer {
     const timeSinceLastInput = now - this._lastInputTime;
 
     // If we're already in rapid input mode and this comes quickly, add to buffer
-    // But only if it's a reasonably large chunk - small inputs are likely typing, not paste
-    // This prevents typed characters from being mixed into paste content during accumulation
-    if (
-      this._rapidInputBuffer.length > 0 &&
-      timeSinceLastInput < 200 &&
-      input.length >= 50
-    ) {
-      this._rapidInputBuffer += input;
-      this._lastInputTime = now;
+    if (this._rapidInputBuffer.length > 0 && timeSinceLastInput < 200) {
+      const isLikelyTyping = input.length < 50 && timeSinceLastInput >= 50;
 
-      if (this._rapidInputTimer) {
-        clearTimeout(this._rapidInputTimer);
+      if (!isLikelyTyping) {
+        this._rapidInputBuffer += input;
+        this._lastInputTime = now;
+
+        if (this._rapidInputTimer) {
+          clearTimeout(this._rapidInputTimer);
+        }
+
+        // Reset timer: 200ms pause indicates end of paste
+        this._rapidInputTimer = setTimeout(() => {
+          this.finalizeRapidInput();
+        }, 200);
+
+        return true;
       }
-
-      // Reset timer: 200ms pause indicates end of paste
-      this._rapidInputTimer = setTimeout(() => {
-        this.finalizeRapidInput();
-      }, 200);
-
-      return true;
     }
 
     // Fallback paste detection: some terminals send large pastes as rapid chunks

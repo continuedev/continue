@@ -24,11 +24,13 @@ export const statusTool: Tool = {
   displayName: "Status",
   description: `Set the current status of your task for the user to see
 
-The available statuses are:
+The default available statuses are:
 - PLANNING: You are creating a plan before beginning implementation
 - WORKING: The task is in progress
 - DONE: The task is complete
 - BLOCKED: You need further information from the user in order to proceed
+
+However, if the user explicitly specifies in their prompt to use one or more different statuses, you can use those as well.
 
 You should use this tool to notify the user whenever the state of your work changes. By default, the status is assumed to be "PLANNING" prior to you setting a different status.`,
   parameters: {

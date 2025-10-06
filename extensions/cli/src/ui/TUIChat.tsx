@@ -7,6 +7,8 @@ import React, {
   useState,
 } from "react";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -28,7 +30,6 @@ import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import {
-  useCurrentMode,
   useIntroMessage,
   useLoginHandlers,
   useSelectors,
@@ -95,7 +96,16 @@ function useTUIChatServices(remoteUrl?: string) {
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
     update: UpdateServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient", "update"]);
+    toolPermissions: ToolPermissionServiceState;
+  }>([
+    "auth",
+    "config",
+    "model",
+    "mcp",
+    "apiClient",
+    "update",
+    "toolPermissions",
+  ]);
 
   return { services, allServicesReady, isRemoteMode };
 }
@@ -161,9 +171,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     services,
     allServicesReady,
   );
-
-  // State for current mode (for hiding cwd in plan/auto modes)
-  const currentMode = useCurrentMode();
 
   // Use login handlers
   const { handleLoginPrompt, handleLoginTokenSubmit } = useLoginHandlers(
@@ -379,7 +386,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
-          currentMode={currentMode}
+          currentMode={services?.toolPermissions?.currentMode ?? "normal"}
           remoteUrl={remoteUrl}
           isRemoteMode={isRemoteMode}
           services={services}

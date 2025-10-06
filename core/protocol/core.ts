@@ -54,6 +54,7 @@ import {
 } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
+import { ContinueErrorReason } from "../util/errors";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -317,7 +318,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "tools/preprocessArgs": [
     { toolName: string; args: Record<string, unknown> },
-    { preprocessedArgs?: Record<string, unknown> },
+    {
+      preprocessedArgs?: Record<string, unknown>;
+      errorReason?: ContinueErrorReason;
+      errorMessage?: string;
+    },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];

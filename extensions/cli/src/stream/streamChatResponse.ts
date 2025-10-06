@@ -8,9 +8,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
-import { systemMessageService } from "../services/SystemMessageService.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
@@ -157,7 +155,9 @@ export async function processStreamingResponse(
   }
 
   // Get fresh system message and inject it
-  const systemMessage = await systemMessageService.getSystemMessage();
+  const systemMessage = await services.systemMessage.getSystemMessage(
+    services.toolPermissions.getState().currentMode,
+  );
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
     chatHistory,
     systemMessage,
@@ -337,10 +337,7 @@ export async function streamChatResponse(
     hasCallbacks: !!callbacks,
   });
 
-  const serviceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-  );
-  const isHeadless = serviceResult.value?.isHeadless ?? false;
+  const isHeadless = services.toolPermissions.isHeadless();
 
   let fullResponse = "";
   let finalResponse = "";
@@ -394,12 +391,12 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
+        isHeadless,
         chatHistory,
         model,
         llmApi,
         abortController,
         callbacks,
-        isHeadless,
         tools,
       });
 

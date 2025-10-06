@@ -2,6 +2,7 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { posthogService } from "src/telemetry/posthogService.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
@@ -72,9 +73,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Get initialized services from the service container
-  const [configState, modelState] = await Promise.all([
+  const [configState, modelState, permissionsState] = await Promise.all([
     getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
     getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+    getService<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS),
   ]);
 
   if (!configState.config || !modelState.llmApi || !modelState.model) {
@@ -117,6 +119,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Initialize session with system message
   const systemMessage = await constructSystemMessage(
+    permissionsState.currentMode,
     options.rule,
     undefined,
     true,
