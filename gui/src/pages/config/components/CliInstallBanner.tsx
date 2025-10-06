@@ -62,7 +62,7 @@ export function CliInstallBanner() {
             </div>
           </div>
           <div className="flex flex-col items-start gap-2 self-stretch">
-            <div className="bg-vsc-background flex items-center gap-2 rounded border border-gray-600 px-3 py-2">
+            <div className="bg-vsc-background flex items-center gap-2 self-stretch rounded border border-gray-600 px-3 py-2">
               <code className="text-foreground flex-1 text-xs">
                 npm i -g @continuedev/cli
               </code>
