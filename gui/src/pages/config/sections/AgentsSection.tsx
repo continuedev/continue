@@ -41,14 +41,14 @@ export function AgentsSection() {
                     <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center">
                       <AssistantIcon assistant={profile} />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex flex-1 flex-col gap-2">
                       <h3
                         className={`my-2 text-sm font-medium ${errors && errors.length > 0 ? "text-error" : ""}`}
                       >
                         {profile.title}
                       </h3>
                       {errors && errors.length > 0 && (
-                        <div className="mt-2 space-y-1">
+                        <div className="space-y-1 overflow-hidden">
                           {errors.map((error, errorIndex) => (
                             <div
                               key={errorIndex}

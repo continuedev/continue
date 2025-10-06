@@ -5,7 +5,7 @@ describe("markdownToRule", () => {
   // Use a mock PackageIdentifier for testing
   const mockId: PackageIdentifier = {
     uriType: "file",
-    fileUri: "/path/to/file",
+    fileUri: "file:///path/to/file",
   };
 
   it("should convert markdown with frontmatter to a rule", () => {
@@ -18,7 +18,7 @@ name: Custom Name
 
 This is a test rule.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.name).toBe("Custom Name");
@@ -33,7 +33,7 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.name).toBe("to/file"); // Should use last two path segments
@@ -44,7 +44,7 @@ This is a test rule.`;
 
 This is a test rule without frontmatter.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(content);
     expect(result.name).toBe("to/file"); // Should use last two path segments
@@ -58,7 +58,7 @@ This is a test rule without frontmatter.`;
 
 This is a test rule with empty frontmatter.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(
       "# Test Rule\n\nThis is a test rule with empty frontmatter.",
@@ -85,7 +85,7 @@ name: glob pattern testing
   
   This is a test rule.`;
 
-      const result = markdownToRule(content, mockId);
+      const result = markdownToRule(content, mockId, "/path/to/");
       expect(result.globs).toBe("/path/to/**/*.ts");
     });
 
@@ -99,7 +99,7 @@ name: glob pattern testing
   
   This is a test rule.`;
 
-      const result = markdownToRule(content, mockId);
+      const result = markdownToRule(content, mockId, "/path/to/");
       expect(result.globs).toBe("/path/to/**/.gitignore");
     });
 
@@ -115,9 +115,9 @@ name: glob pattern testing
 
       const result = markdownToRule(content, {
         uriType: "file",
-        fileUri: "/",
+        fileUri: "file:///",
       });
-      expect(result.globs).toBe("/**/src/**/Dockerfile");
+      expect(result.globs).toBe("src/**/Dockerfile");
     });
 
     it("should match for multiple globs", () => {
@@ -130,7 +130,7 @@ name: glob pattern testing
 
 This is a test rule.`;
 
-      const result = markdownToRule(content, mockId);
+      const result = markdownToRule(content, mockId, "/path/to/");
       expect(result.globs).toEqual([
         "/path/to/**/nested/**/deeper/**/*.rs",
         "/path/to/**/.zshrc1",
@@ -149,10 +149,14 @@ name: glob pattern testing
   
   This is a test rule.`;
 
-      const result = markdownToRule(content, {
-        uriType: "file",
-        fileUri: "/Documents/myproject/.continue/rules/rule1.md",
-      });
+      const result = markdownToRule(
+        content,
+        {
+          uriType: "file",
+          fileUri: "file:///Documents/myproject/.continue/rules/rule1.md",
+        },
+        "/Documents/myproject/.continue/",
+      );
       expect(result.globs).toBe(".git");
     });
   });
@@ -166,7 +170,7 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.name).toBe("to/file"); // Should use last two path segments
@@ -182,7 +186,7 @@ globs: "**/test/**/*.kt"\r
 \r
 This is a test rule.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     // The result should be normalized to \n
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
@@ -200,7 +204,7 @@ invalid: yaml: content
 This is a test rule.`;
 
     // Should treat as only markdown when frontmatter is malformed
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(content);
     expect(result.name).toBe("to/file"); // Should use last two path segments
@@ -215,7 +219,7 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
 
@@ -226,7 +230,7 @@ globs: "**/test/**/*.kt"
 
 This is a test rule without a heading.`;
 
-    const result = markdownToRule(content, mockId);
+    const result = markdownToRule(content, mockId, "/path/to/");
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
 
@@ -328,7 +332,7 @@ describe("getRuleName", () => {
     const frontmatter = { name: "Custom Rule Name" };
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "/path/to/my-rule.md",
+      fileUri: "file:///path/to/my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);
@@ -339,29 +343,17 @@ describe("getRuleName", () => {
     const frontmatter = {};
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "/long/path/to/rules/my-rule.md",
+      fileUri: "file:///long/path/to/rules/my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);
     expect(result).toBe("rules/my-rule.md");
   });
-
-  it("should handle file paths with backslashes", () => {
-    const frontmatter = {};
-    const id: PackageIdentifier = {
-      uriType: "file",
-      fileUri: "C:\\long\\path\\to\\rules\\my-rule.md",
-    };
-
-    const result = getRuleName(frontmatter, id);
-    expect(result).toBe("rules/my-rule.md");
-  });
-
   it("should handle mixed forward and back slashes", () => {
     const frontmatter = {};
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "/path/to\\rules/my-rule.md",
+      fileUri: "file:///path/to\\rules/my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);
@@ -372,7 +364,7 @@ describe("getRuleName", () => {
     const frontmatter = {};
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "my-rule.md",
+      fileUri: "file:///my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);
@@ -383,7 +375,7 @@ describe("getRuleName", () => {
     const frontmatter = {};
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "rules/my-rule.md",
+      fileUri: "file:///rules/my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);
@@ -409,7 +401,7 @@ describe("getRuleName", () => {
     const frontmatter = { name: "Override Name" };
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "/very/long/path/to/rules/original-name.md",
+      fileUri: "file:///very/long/path/to/rules/original-name.md",
     };
 
     const result = getRuleName(frontmatter, id);
@@ -420,7 +412,7 @@ describe("getRuleName", () => {
     const frontmatter = { name: "" };
     const id: PackageIdentifier = {
       uriType: "file",
-      fileUri: "/path/to/rules/my-rule.md",
+      fileUri: "file:///path/to/rules/my-rule.md",
     };
 
     const result = getRuleName(frontmatter, id);

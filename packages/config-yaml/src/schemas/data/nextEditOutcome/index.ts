@@ -5,6 +5,7 @@ export const nextEditOutcomeEventAllSchema = baseDevDataAllSchema.extend({
   elapsed: z.number(),
   completionOptions: z.any(),
   completionId: z.string(),
+  requestId: z.string().optional(),
   gitRepo: z.string().optional(),
   uniqueId: z.string(),
   timestamp: z.number(),

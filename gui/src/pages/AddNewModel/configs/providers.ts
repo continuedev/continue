@@ -598,9 +598,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.gemini20FlashLite,
       models.gemini20FlashImageGeneration,
       models.gemini25ProExp,
-      models.gemini15Pro,
-      models.geminiPro,
-      models.gemini15Flash,
     ],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
@@ -925,11 +922,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     longDescription:
       "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
     icon: "vertexai.png",
-    packages: [
-      models.VertexGemini15Pro,
-      models.VertexGemini15Flash,
-      models.mistralLarge,
-    ],
+    packages: [models.mistralLarge],
     collectInputFor: [
       {
         inputType: "project",
@@ -1000,7 +993,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.asksagegroq70b,
       models.mistralLarge,
       models.llama370bChat,
-      models.gemini15Pro,
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
   },

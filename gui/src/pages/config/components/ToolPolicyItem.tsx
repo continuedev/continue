@@ -70,14 +70,14 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
         fontSize,
       }}
     >
-      <div className="-mx-2 flex flex-col rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5">
+      <div className="flex flex-col rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5">
         <div className="flex flex-row items-start justify-between">
           <div
-            className="flex flex-1 cursor-pointer flex-row items-start gap-1"
+            className="flex flex-1 cursor-pointer flex-row items-start gap-1.5"
             onClick={() => setIsExpanded((val) => !val)}
           >
             <ChevronRightIcon
-              className={`xs:flex mt-0.5 hidden h-3 w-3 flex-shrink-0 transition-all duration-200 ${isExpanded ? "rotate-90" : ""}`}
+              className={`xs:flex hidden h-3 w-3 flex-shrink-0 pt-1 transition-all duration-200 ${isExpanded ? "rotate-90" : ""}`}
             />
 
             <div className="flex flex-col gap-1">
