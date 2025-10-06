@@ -1,9 +1,10 @@
 import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CloseButton } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { getPlatform } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import useCopy from "../hooks/useCopy";
 import { CopyButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
 import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
 import { Card } from "./ui";
@@ -25,6 +26,21 @@ export function CliInstallBanner({
   const ideMessenger = useContext(IdeMessengerContext);
   const [cliInstalled, setCliInstalled] = useState<boolean | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const commandTextRef = useRef<HTMLSpanElement>(null);
+  const { copyText } = useCopy("npm i -g @continuedev/cli");
+
+  const handleCommandClick = () => {
+    // Select the text
+    if (commandTextRef.current) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(commandTextRef.current);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+    // Copy to clipboard
+    copyText();
+  };
 
   useEffect(() => {
     // Check if user has permanently dismissed the banner
@@ -116,8 +132,10 @@ export function CliInstallBanner({
             <div className="rounded-default outline-command-border flex items-center self-stretch outline outline-1">
               <div className="bg-editor rounded-l-default flex-1 px-3 py-3">
                 <span
-                  className="text-foreground text-xs"
+                  ref={commandTextRef}
+                  className="text-foreground cursor-pointer text-xs"
                   style={{ fontFamily: "var(--vscode-editor-font-family)" }}
+                  onClick={handleCommandClick}
                 >
                   npm i -g @continuedev/cli
                 </span>
