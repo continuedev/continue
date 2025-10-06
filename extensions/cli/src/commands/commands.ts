@@ -146,7 +146,10 @@ export function getAllSlashCommands(
       category: "assistant" as const,
     })) || [];
 
-  return [...systemCommands, ...assistantCommands];
+  // Get invokable rule commands
+  const invokableRuleCommands = getInvokableRuleSlashCommands(assistant);
+
+  return [...systemCommands, ...assistantCommands, ...invokableRuleCommands];
 }
 
 /**
@@ -162,4 +165,34 @@ export function getAssistantSlashCommands(
       category: "assistant" as const,
     })) || []
   );
+}
+
+/**
+ * Get invokable rule commands from assistant config
+ */
+export function getInvokableRuleSlashCommands(
+  assistant: AssistantConfig,
+): SlashCommand[] {
+  if (!assistant?.rules) {
+    return [];
+  }
+
+  return assistant.rules
+    .filter((rule) => {
+      // Handle both string rules and rule objects
+      if (!rule || typeof rule === "string") {
+        return false;
+      }
+      // Only include rules with invokable: true
+      return rule.invokable === true;
+    })
+    .map((rule) => {
+      // TypeScript now knows rule is an object with invokable: true
+      const ruleObj = rule as any;
+      return {
+        name: ruleObj.name || "",
+        description: ruleObj.description || "",
+        category: "assistant" as const,
+      };
+    });
 }

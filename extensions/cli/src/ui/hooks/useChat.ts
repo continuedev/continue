@@ -749,7 +749,7 @@ export function useChat({
         logger.debug(`Policy created: ${policyRule}`);
 
         // Reload permissions to pick up the new policy without requiring restart
-        await services.mode.getToolPermissionService().reloadPermissions();
+        await services.toolPermissions.reloadPermissions();
       } catch (error) {
         logger.error("Failed to create policy or reload permissions", {
           error,

@@ -19,6 +19,24 @@ vi.mock("../hubLoader.js", () => ({
   modelProcessor: {},
 }));
 
+// Mock the service container to provide empty workflow state
+vi.mock("../services/ServiceContainer.js", () => ({
+  serviceContainer: {
+    get: vi.fn(() =>
+      Promise.resolve({
+        workflowFile: null,
+        slug: null,
+      }),
+    ),
+  },
+}));
+
+vi.mock("../services/types.js", () => ({
+  SERVICE_NAMES: {
+    WORKFLOW: "workflow",
+  },
+}));
+
 describe("Rule duplication integration test", () => {
   it("should not duplicate rules when using --rule flag", async () => {
     const enhancer = new ConfigEnhancer();
