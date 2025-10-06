@@ -5,6 +5,8 @@ import * as path from "path";
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { AuthService } from "src/services/AuthService.js";
+
 import {
   AuthenticatedConfig,
   getModelName,
@@ -12,7 +14,6 @@ import {
   saveAuthConfig,
 } from "../auth/workos.js";
 import * as config from "../config.js";
-import { AuthService } from "../services/AuthService.js";
 import { ModelService } from "../services/ModelService.js";
 
 // Mock the config module
@@ -25,7 +26,7 @@ describe("Model Persistence User Flow", () => {
   let mockAuthConfig: AuthenticatedConfig;
   const mockLlmApi = { complete: vi.fn(), stream: vi.fn() };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Create a temporary directory for testing
@@ -68,6 +69,7 @@ describe("Model Persistence User Flow", () => {
       refreshToken: "test-refresh",
       expiresAt: Date.now() + 3600000, // 1 hour from now
       organizationId: "test-org",
+      modelName: "GPT-4",
     };
 
     // Setup default mock behavior

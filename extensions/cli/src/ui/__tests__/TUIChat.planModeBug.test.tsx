@@ -4,11 +4,14 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getAllTools } from "src/stream/handleToolCalls.js";
 
-import { SERVICE_NAMES, serviceContainer } from "../../services/index.js";
-import { modeService } from "../../services/ModeService.js";
+import {
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../../services/index.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
-
+const toolPermissionService = services.toolPermissions;
 describe("TUIChat - Plan Mode Bug Reproduction", () => {
   let context: any;
 
@@ -20,7 +23,9 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     });
 
     // Ensure mode service is properly initialized in normal mode
-    await modeService.initialize({});
+    await toolPermissionService.doInitialize({
+      mode: "normal",
+    });
   });
 
   afterEach(() => {
@@ -142,10 +147,10 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     // that causes the actual bug in production
 
     // First, set up a realistic service state (not mocked)
-    await modeService.initialize({ isHeadless: false });
+    await toolPermissionService.initialize({ isHeadless: false });
 
     // Register the tool permissions service like the real app does
-    const initialState = modeService.getToolPermissionService().getState();
+    const initialState = toolPermissionService.getState();
     serviceContainer.registerValue(
       SERVICE_NAMES.TOOL_PERMISSIONS,
       initialState,
@@ -155,7 +160,7 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     expect(() => getAllTools()).not.toThrow();
 
     // Switch modes WITHOUT updating the service container (this simulates the bug)
-    modeService.switchMode("plan");
+    toolPermissionService.switchMode("plan");
 
     // The service container still has the old state, so getAllTools() should not find
     // the updated state with plan mode permissions. However, since the ToolPermissionService
@@ -172,9 +177,5 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     const tools = getAllTools();
     expect(tools).toBeDefined();
     expect(Array.isArray(tools)).toBe(true);
-
-    // But the tools returned will be for "normal" mode, not "plan" mode
-    // In plan mode, many tools should be excluded, but with stale normal state, all tools are available
-    const planModeState = modeService.getToolPermissionService().getState();
   });
 });
