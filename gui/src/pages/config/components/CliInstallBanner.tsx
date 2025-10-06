@@ -50,15 +50,26 @@ export function CliInstallBanner() {
           <div>
             <div className="text-foreground flex items-center gap-2 font-medium">
               <CommandLineIcon className="h-5 w-5 flex-shrink-0 text-gray-400" />
-              Try the Continue CLI
+              Try out the Continue CLI
             </div>
             <div className="text-description mt-1 text-sm">
               Use{" "}
               <code className="bg-vsc-background rounded px-1.5 py-0.5">
                 cn
               </code>{" "}
-              in your terminal for command-line coding assistance with
-              interactive and headless modes.
+              in your terminal interactively and then deploy Continuous AI
+              workflows.{" "}
+              <span
+                onClick={() =>
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://docs.continue.dev/guides/cli",
+                  )
+                }
+                className="cursor-pointer underline hover:brightness-125"
+              >
+                Learn more.
+              </span>
             </div>
           </div>
           <div className="flex flex-col items-start gap-2 self-stretch">
@@ -73,17 +84,6 @@ export function CliInstallBanner() {
                 />
               </div>
             </div>
-            <SecondaryButton
-              onClick={() =>
-                ideMessenger.post(
-                  "openUrl",
-                  "https://docs.continue.dev/guides/cli",
-                )
-              }
-              style={{ margin: 0 }}
-            >
-              Learn more
-            </SecondaryButton>
           </div>
         </div>
       </Card>
