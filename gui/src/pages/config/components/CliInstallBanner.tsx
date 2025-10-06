@@ -46,44 +46,42 @@ export function CliInstallBanner() {
         <CloseButton onClick={() => setDismissed(true)}>
           <XMarkIcon className="h-5 w-5 hover:brightness-125" />
         </CloseButton>
-        <div className="flex items-start gap-4">
-          <CommandLineIcon className="mt-1 h-6 w-6 flex-shrink-0 text-gray-400" />
-          <div className="flex flex-1 flex-col gap-3">
-            <div>
-              <div className="text-foreground font-medium">
-                Try the Continue CLI
-              </div>
-              <div className="text-description mt-1 text-sm">
-                Use{" "}
-                <code className="bg-vsc-background rounded px-1.5 py-0.5">
-                  cn
-                </code>{" "}
-                in your terminal for command-line coding assistance with
-                interactive and headless modes.
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="text-foreground flex items-center gap-2 font-medium">
+              <CommandLineIcon className="h-5 w-5 flex-shrink-0 text-gray-400" />
+              Try the Continue CLI
+            </div>
+            <div className="text-description mt-1 text-sm">
+              Use{" "}
+              <code className="bg-vsc-background rounded px-1.5 py-0.5">
+                cn
+              </code>{" "}
+              in your terminal for command-line coding assistance with
+              interactive and headless modes.
+            </div>
+          </div>
+          <div className="flex flex-col items-start gap-2">
+            <div className="bg-vsc-background flex w-full items-center gap-2 rounded border border-gray-600 px-3 py-2">
+              <code className="text-foreground flex-1 text-xs">
+                npm i -g @continuedev/cli
+              </code>
+              <div className="flex items-center gap-2">
+                <CopyButton text="npm i -g @continuedev/cli" />
+                <RunInTerminalButton command="npm i -g @continuedev/cli" />
               </div>
             </div>
-            <div className="flex flex-col items-start gap-2">
-              <div className="bg-vsc-background flex w-full items-center gap-2 rounded border border-gray-600 px-3 py-2">
-                <code className="text-foreground flex-1 text-xs">
-                  npm i -g @continuedev/cli
-                </code>
-                <div className="flex items-center gap-2">
-                  <CopyButton text="npm i -g @continuedev/cli" />
-                  <RunInTerminalButton command="npm i -g @continuedev/cli" />
-                </div>
-              </div>
-              <SecondaryButton
-                onClick={() =>
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://docs.continue.dev/guides/cli",
-                  )
-                }
-                style={{ margin: 0 }}
-              >
-                Learn more
-              </SecondaryButton>
-            </div>
+            <SecondaryButton
+              onClick={() =>
+                ideMessenger.post(
+                  "openUrl",
+                  "https://docs.continue.dev/guides/cli",
+                )
+              }
+              style={{ margin: 0 }}
+            >
+              Learn more
+            </SecondaryButton>
           </div>
         </div>
       </Card>
