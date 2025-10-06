@@ -4,6 +4,7 @@ import {
   ThunkDispatch,
   UnknownAction,
 } from "@reduxjs/toolkit";
+import { createLogger } from "redux-logger";
 import {
   createMigrate,
   MigrationManifest,
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
 const saveSubsetFilters = [
   createFilter("session", [
     "id",
+    "lastSessionId",
     "title",
 
     // Persist edit mode in case closes in middle
@@ -103,6 +105,13 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
 
 export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
   const ideMessenger = options.ideMessenger ?? new IdeMessenger();
+
+  const logger = createLogger({
+    // Customize logger options if needed
+    collapsed: true, // Collapse console groups by default
+    timestamp: false, // Remove timestamps from log
+    diff: true, // Show diff between states
+  });
 
   return configureStore({
     // persistedReducer causes type errors with async thunks
