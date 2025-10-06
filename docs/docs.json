@@ -260,11 +260,14 @@
             "icon": "book-open-cover",
             "pages": [
               "guides/posthog-github-continuous-ai",
+              "guides/continue-docs-mcp-cookbook",
+              "guides/sanity-mcp-continue-cookbook",
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
               "guides/notion-continue-cookbook",
-              "guides/linear-continue-cookbook"
+              "guides/linear-continue-cookbook",
+              "guides/chrome-devtools-mcp-performance"
             ]
           }
         ]

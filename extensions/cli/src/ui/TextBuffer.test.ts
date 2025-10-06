@@ -526,12 +526,31 @@ describe("TextBuffer", () => {
       buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
 
       // Small typed input should not be mixed into paste
-      const typedChar = "a";
-      buffer.handleInput(typedChar, { ctrl: false, meta: false } as any);
-      expect(buffer.text).toBe("a");
+      const smallChunk = "abc";
+      buffer.handleInput(smallChunk, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe(""); // Both chunks buffered
 
       buffer.flushPendingInput();
+      expect(buffer.text).toBe(largeChunk + smallChunk);
+    });
+
+    it("should allow typing after paste accumulation delay", () => {
+      vi.useFakeTimers();
+
+      const largeChunk = "x".repeat(100);
+      buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
+
+      // Advance time to simulate user typing after a delay
+      vi.advanceTimersByTime(60); // so that it is treated as typing
+
+      const typedChar = "a";
+      buffer.handleInput(typedChar, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe("a"); // Typed char inserted immediately
+
+      vi.advanceTimersByTime(250); // Finalize paste
       expect(buffer.text).toBe("a" + largeChunk);
+
+      vi.useRealTimers();
     });
 
     it("should preserve all chunks when expanding (content loss fix)", () => {

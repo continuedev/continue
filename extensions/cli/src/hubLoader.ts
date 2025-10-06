@@ -1,3 +1,4 @@
+import { parseWorkflowFile, WorkflowFile } from "@continuedev/config-yaml";
 import JSZip from "jszip";
 
 import { env } from "./env.js";
@@ -11,7 +12,7 @@ const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 /**
  * Hub package type definitions
  */
-export type HubPackageType = "rule" | "mcp" | "model" | "prompt";
+export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "workflow";
 
 /**
  * Hub package processor interface
@@ -97,6 +98,15 @@ export const promptProcessor: HubPackageProcessor<string> = {
   type: "prompt",
   expectedFileExtensions: [".md", ".txt"],
   parseContent: (content: string) => content,
+};
+
+export const workflowProcessor: HubPackageProcessor<WorkflowFile> = {
+  type: "workflow",
+  expectedFileExtensions: [".md"],
+  parseContent: (content: string) => parseWorkflowFile(content),
+  validateContent: (workflowFile: WorkflowFile) => {
+    return !!workflowFile.name;
+  },
 };
 
 /**
