@@ -1,12 +1,12 @@
 import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { CloseButton } from ".";
-import { CopyButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
-import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
-import { Card } from "./ui";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { getPlatform } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { CopyButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
+import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
+import { Card } from "./ui";
 
 interface CliInstallBannerProps {
   /** Current message count - banner shows only if >= messageThreshold */
@@ -77,7 +77,7 @@ export function CliInstallBanner({
     (messageThreshold !== undefined &&
       (messageCount === undefined || messageCount < messageThreshold))
   ) {
-    return null;
+    // return null;
   }
 
   return (
@@ -113,11 +113,16 @@ export function CliInstallBanner({
             </div>
           </div>
           <div className="flex flex-col items-start gap-2 self-stretch">
-            <div className="bg-vsc-background flex items-center gap-2 self-stretch rounded border border-gray-600 px-3 py-2">
-              <code className="text-foreground flex-1 text-xs">
-                npm i -g @continuedev/cli
-              </code>
-              <div className="flex items-center gap-2">
+            <div className="rounded-default outline-command-border flex items-center self-stretch outline outline-1">
+              <div className="bg-editor rounded-l-default flex-1 px-3 py-3">
+                <span
+                  className="text-foreground text-xs"
+                  style={{ fontFamily: "var(--vscode-editor-font-family)" }}
+                >
+                  npm i -g @continuedev/cli
+                </span>
+              </div>
+              <div className="bg-background rounded-r-default flex items-center gap-2 px-3 py-3">
                 <CopyButton
                   text={`npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`}
                 />
