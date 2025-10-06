@@ -147,12 +147,12 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
   async (_, { extra, dispatch, getState }) => {
     let lastSessionId = getState().session.lastSessionId;
 
-    const lastSessionResult = await extra.ideMessenger.request("history/list", {
-      limit: 1,
-    });
-    if (lastSessionResult.status === "success") {
-      lastSessionId = lastSessionResult.content.at(0)?.sessionId;
-    }
+    // const lastSessionResult = await extra.ideMessenger.request("history/list", {
+    //   limit: 1,
+    // });
+    // if (lastSessionResult.status === "success") {
+    //   lastSessionId = lastSessionResult.content.at(0)?.sessionId;
+    // }
 
     if (!lastSessionId) {
       dispatch(newSession());
