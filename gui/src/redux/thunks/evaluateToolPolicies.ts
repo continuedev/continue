@@ -24,7 +24,10 @@ async function evaluateToolPolicy(
   autoAcceptEditToolDiffs: boolean,
 ): Promise<EvaluatedPolicy> {
   // allow edit tool calls without permission if auto-accept is enabled
-  if (isAutoEditToolCall(toolCallState) && autoAcceptEditToolDiffs) {
+  if (
+    isAutoEditToolCall(toolCallState.toolCall.function.name) &&
+    autoAcceptEditToolDiffs
+  ) {
     return { policy: "allowedWithoutPermission", toolCallState };
   }
 

@@ -69,13 +69,13 @@ export function addToolCallDeltaToState(
   };
 }
 
-export function isAutoEditToolCall(toolCallState: ToolCallState) {
+export function isAutoEditToolCall(toolCallFunctionName: string) {
   if (
     [
       BuiltInToolNames.EditExistingFile,
       BuiltInToolNames.SingleFindAndReplace,
       BuiltInToolNames.MultiEdit,
-    ].includes(toolCallState.toolCall.function.name as BuiltInToolNames)
+    ].includes(toolCallFunctionName as BuiltInToolNames)
   ) {
     return true;
   }
