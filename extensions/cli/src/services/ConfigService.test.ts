@@ -12,7 +12,7 @@ import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES } from "./types.js";
+import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
 
 describe("ConfigService", () => {
   let service: ConfigService;
@@ -23,7 +23,12 @@ describe("ConfigService", () => {
     systemMessage: "Test system message",
   } as any;
   const mockApiClient = { get: vi.fn(), post: vi.fn() };
-
+  const mockWorkflowState: WorkflowServiceState = {
+    slug: null,
+    workflowFile: null,
+    workflowModelName: null,
+    workflowService: null,
+  };
   beforeEach(() => {
     vi.clearAllMocks();
     service = new ConfigService();
@@ -36,12 +41,13 @@ describe("ConfigService", () => {
         source: { type: "cli-flag", path: "/path/to/config.yaml" } as any,
       });
 
-      const state = await service.initialize(
-        { accessToken: "token" } as any,
-        "/path/to/config.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      const state = await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/path/to/config.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       expect(state).toEqual({
         config: mockConfig as any,
@@ -55,12 +61,13 @@ describe("ConfigService", () => {
         source: { type: "default-agent" } as any,
       });
 
-      const state = await service.initialize(
-        { accessToken: "token" } as any,
-        undefined,
-        "org-123",
-        mockApiClient as any,
-      );
+      const state = await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: undefined,
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       expect(state).toEqual({
         config: mockConfig as any,
@@ -82,18 +89,20 @@ describe("ConfigService", () => {
 
       vi.mocked(configEnhancer.enhanceConfig).mockResolvedValue(expectedConfig);
 
-      const state = await service.initialize(
-        { accessToken: "token" } as any,
-        "/config.yaml",
-        "org-123",
-        mockApiClient as any,
-        { rule: ["rule1", "rule2"] },
-      );
+      const state = await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/config.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+        injectedConfigOptions: { rule: ["rule1", "rule2"] },
+      });
 
       // Verify configEnhancer was called with the right parameters
       expect(vi.mocked(configEnhancer.enhanceConfig)).toHaveBeenCalledWith(
         mockConfig,
         { rule: ["rule1", "rule2"] },
+        mockWorkflowState,
       );
 
       expect(state.config).toEqual(expectedConfig);
@@ -107,12 +116,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       // Switch to new config
       const newConfig = { ...mockConfig, name: "new-assistant" } as any;
@@ -136,12 +146,13 @@ describe("ConfigService", () => {
     });
 
     test("should handle switch config errors", async () => {
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       vi.mocked(configLoader.loadConfiguration).mockRejectedValue(
         new Error("Config not found"),
@@ -165,12 +176,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/config.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/config.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       // Modify mock to return updated config
       const updatedConfig = { ...mockConfig, name: "updated-assistant" } as any;
@@ -197,12 +209,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "default-agent" } as any,
       });
-      await service.initialize(
-        { accessToken: "token" } as any,
-        undefined,
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: undefined,
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       await expect(
         service.reload(
@@ -221,12 +234,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       // Mock service container
       vi.mocked(workos.loadAuthConfig).mockReturnValue({
@@ -263,12 +277,13 @@ describe("ConfigService", () => {
     });
 
     test("should handle missing API client", async () => {
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       vi.mocked(workos.loadAuthConfig).mockReturnValue({
         accessToken: "token",
@@ -286,7 +301,11 @@ describe("ConfigService", () => {
 
   describe("getDependencies()", () => {
     test("should declare auth and apiClient dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "apiClient"]);
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "apiClient",
+        "workflow",
+      ]);
     });
   });
 
@@ -296,12 +315,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       const listener = vi.fn();
       service.on("stateChanged", listener);
@@ -329,12 +349,13 @@ describe("ConfigService", () => {
     });
 
     test("should emit error on switch failure", async () => {
-      await service.initialize(
-        { accessToken: "token" } as any,
-        "/old.yaml",
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.initialize({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/old.yaml",
+        _organizationId: "org-123",
+        apiClient: mockApiClient as any,
+        workflowState: mockWorkflowState,
+      });
 
       const errorListener = vi.fn();
       service.on("error", errorListener);

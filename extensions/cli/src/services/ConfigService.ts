@@ -11,8 +11,17 @@ import {
   ApiClientServiceState,
   ConfigServiceState,
   SERVICE_NAMES,
+  WorkflowServiceState,
 } from "./types.js";
 
+interface ConfigServiceInit {
+  authConfig: AuthConfig;
+  configPath: string | undefined;
+  _organizationId: string | null;
+  apiClient: DefaultApiInterface;
+  workflowState: WorkflowServiceState;
+  injectedConfigOptions?: BaseCommandOptions;
+}
 /**
  * Service for managing configuration state and operations
  * Handles loading configs from files or assistant slugs
@@ -32,19 +41,23 @@ export class ConfigService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
+    return [
+      SERVICE_NAMES.AUTH,
+      SERVICE_NAMES.API_CLIENT,
+      SERVICE_NAMES.WORKFLOW,
+    ];
   }
 
   /**
    * Initialize the config service
    */
-  async doInitialize(
-    authConfig: AuthConfig,
-    configPath: string | undefined,
-    _organizationId: string | null,
-    apiClient: DefaultApiInterface,
-    injectedConfigOptions?: BaseCommandOptions,
-  ): Promise<ConfigServiceState> {
+  async doInitialize({
+    apiClient,
+    authConfig,
+    configPath,
+    workflowState,
+    injectedConfigOptions,
+  }: ConfigServiceInit): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
     const { loadConfiguration } = await import("../configLoader.js");
     const result = await loadConfiguration(authConfig, configPath, apiClient);
@@ -53,12 +66,13 @@ export class ConfigService
 
     // Apply injected config if provided
     if (
-      injectedConfigOptions &&
-      this.hasInjectedConfig(injectedConfigOptions)
+      workflowState?.workflowFile ||
+      (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions))
     ) {
       config = await configEnhancer.enhanceConfig(
         config,
         injectedConfigOptions,
+        workflowState,
       );
 
       logger.debug("Applied injected configuration");

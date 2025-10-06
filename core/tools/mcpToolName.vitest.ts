@@ -12,10 +12,8 @@ const createMcpServer = (name: string): MCPServerStatus => ({
   resourceTemplates: [],
   status: "connected",
   id: "",
-  transport: {
-    type: "sse",
-    url: "",
-  },
+  type: "sse",
+  url: "",
   isProtectedResource: false,
 });
 

@@ -1,5 +1,7 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+import { getControlPlaneEnvSync } from "../control-plane/env";
 import { DataLogger } from "../data/log";
 import { Telemetry } from "../util/posthog";
 import { NextEditOutcome } from "./types";
@@ -93,6 +95,9 @@ export class NextEditLoggingService {
       outcome.accepted = true;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
+      if (outcome.requestId) {
+        void this.logAcceptReject(outcome.requestId, true);
+      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -111,6 +116,9 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
+      if (outcome.requestId) {
+        void this.logAcceptReject(outcome.requestId, false);
+      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -121,6 +129,7 @@ export class NextEditLoggingService {
       clearTimeout(this._logRejectionTimeouts.get(completionId)!);
       this._logRejectionTimeouts.delete(completionId);
     }
+
     if (this._outcomes.has(completionId)) {
       this._outcomes.delete(completionId);
     }
@@ -142,6 +151,9 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
+      if (outcome.requestId) {
+        void this.logAcceptReject(outcome.requestId, false);
+      }
       this._logRejectionTimeouts.delete(completionId);
       this._outcomes.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
@@ -244,5 +256,31 @@ export class NextEditLoggingService {
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
     void Telemetry.capture("nextEditOutcome", outcome, true);
+  }
+
+  private async logAcceptReject(
+    requestId: string,
+    accepted: boolean,
+  ): Promise<void> {
+    try {
+      if (!Telemetry.client) {
+        return;
+      }
+
+      const controlPlaneEnv = getControlPlaneEnvSync("production");
+      await fetchwithRequestOptions(
+        new URL("model-proxy/v1/feedback", controlPlaneEnv.CONTROL_PLANE_URL),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requestId,
+            accepted,
+          }),
+        },
+      );
+    } catch (error) {}
   }
 }

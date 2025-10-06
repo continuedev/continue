@@ -49,6 +49,65 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  cometapi: {
+    title: "CometAPI",
+    provider: "cometapi",
+    description: "500+ AI Model API,All In One API. Just In CometAPI",
+    longDescription:
+      "Unified Access to Leading AI Models, see [here](https://www.cometapi.com/?utm_source=continue&utm_medium=integration&utm_campaign=cometapi_integration&utm_content=continue_plugin) for more details.",
+    icon: "cometapi.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your CometAPI key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      // GPT, OpenAI family
+      models.cometapiGpt5ChatLatest,
+      models.cometapiGpt5Mini,
+      models.cometapiGpt5,
+      models.cometapiChatgpt4oLatest,
+      models.cometapiGpt41,
+      models.cometapiO4Mini,
+      models.cometapiO3Pro,
+      // Anthropic Claude family
+      models.cometapiClaudeOpus41,
+      models.cometapiClaudeOpus41Thinking,
+      models.cometapiClaudeSonnet4,
+      models.cometapiClaudeSonnet4Thinking,
+      models.cometapiClaude37SonnetLatest,
+      models.cometapiClaude35HaikuLatest,
+      // Google Gemini family
+      models.cometapiGemini25Pro,
+      models.cometapiGemini25Flash,
+      models.cometapiGemini25FlashLite,
+      models.cometapiGemini20Flash,
+      // xAI Grok family
+      models.cometapiGrok40709,
+      models.cometapiGrok3,
+      models.cometapiGrok3Mini,
+      // Deepseek family
+      models.cometapiDeepseekV31,
+      models.cometapiDeepseekR10528,
+      models.cometapiDeepseekChat,
+      models.cometapiDeepseekReasoner,
+      // Qwen family
+      models.cometapiQwen330BA3B,
+      models.cometapiQwen3CoderPlus,
+      //TODO: Need to wait for the improvement after the upgrade of the cometapi model list interface
+      // {
+      //   ...models.AUTODETECT,
+      //   params: { ...models.AUTODETECT.params, title: "CometAPI" },
+      // },
+    ],
+    apiKeyUrl: "https://api.cometapi.com/console/token",
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",
@@ -539,9 +598,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.gemini20FlashLite,
       models.gemini20FlashImageGeneration,
       models.gemini25ProExp,
-      models.gemini15Pro,
-      models.geminiPro,
-      models.gemini15Flash,
     ],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
@@ -563,7 +619,14 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.grokBeta],
+    packages: [
+      models.grokCodeFast1,
+      models.grok4FastReasoning,
+      models.grok4FastNonReasoning,
+      models.grok4,
+      models.grok3,
+      models.grok3Mini,
+    ],
     apiKeyUrl: "https://console.x.ai/",
   },
   lemonade: {
@@ -809,17 +872,16 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
+      models.llama33Swallow70BInstruct,
       models.llama318BInstruct,
-      models.llama31405BInstruct,
-      models.llama321BInstruct,
-      models.llama323BInstruct,
-      models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
       models.deepseekV3,
+      models.deepseekV31,
+      models.qwen332B,
+      models.gptOss120b,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -860,11 +922,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     longDescription:
       "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
     icon: "vertexai.png",
-    packages: [
-      models.VertexGemini15Pro,
-      models.VertexGemini15Flash,
-      models.mistralLarge,
-    ],
+    packages: [models.mistralLarge],
     collectInputFor: [
       {
         inputType: "project",
@@ -935,7 +993,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.asksagegroq70b,
       models.mistralLarge,
       models.llama370bChat,
-      models.gemini15Pro,
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
   },

@@ -87,6 +87,12 @@ cn --ask Bash(curl*)
 cn --exclude Fetch
 ```
 
+## API Key Authentication
+
+For automation in CI or other headless environments, you can use an API key to authenticate with Continue. First, obtain your personal API key [here](https://hub.continue.dev/settings/api-keys). Then, set it as the `CONTINUE_API_KEY` environment variable. You can now use `cn -p` (headless mode) without needing to log in.
+
+If you wish to run an automation on behalf of your organization you can obtain an organization-scoped API key by going to [your organization's settings](https://hub.continue.dev/settings/organizations) -> API Keys.
+
 ## Troubleshooting
 
 Run `cn` with the `--verbose` flag to see more detailed logs. These will be output to `~/.continue/logs/cn.log`.

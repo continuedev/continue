@@ -1,10 +1,9 @@
 import { render } from "ink";
 import React from "react";
 
-import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
-import { env } from "../env.js";
 import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
+import { ApiRequestError, post } from "../util/apiClient.js";
 import { logger } from "../util/logger.js";
 
 import { chat } from "./chat.js";
@@ -27,23 +26,19 @@ function setSessionId(sessionId: string): void {
 }
 
 export async function getTunnelForAgent(agentId: string): Promise<string> {
-  const authConfig = loadAuthConfig();
-  const accessToken = getAccessToken(authConfig);
-
-  const resp = await fetch(`${env.apiBase}agents/devboxes/${agentId}/tunnel`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  if (!resp.ok) {
-    throw new Error(
-      `Failed to get tunnel for agent ${agentId}: ${await resp.text()}`,
+  try {
+    const response = await post<{ url: string }>(
+      `agents/${encodeURIComponent(agentId)}/tunnel`,
     );
+    return response.data.url;
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new Error(
+        `Failed to get tunnel for agent ${agentId}: ${error.response || error.statusText}`,
+      );
+    }
+    throw error;
   }
-  const data = await resp.json();
-  return data.url;
 }
 
 /**

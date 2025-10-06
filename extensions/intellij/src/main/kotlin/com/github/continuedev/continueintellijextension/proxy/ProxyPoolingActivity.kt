@@ -4,16 +4,15 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.seconds
 
-class ProxyPoolingActivity : StartupActivity {
-    private val scope = CoroutineScope(Dispatchers.Default)
+class ProxyPoolingActivity : ProjectActivity {
     private var lastSettings = ProxySettings.getSettings()
-    private val log = Logger.getInstance(ProxyPoolingActivity::class.java)
+    private val scope = CoroutineScope(Dispatchers.Default)
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
         scope.launch {
             while (isActive) {
                 val newSettings = ProxySettings.getSettings()
@@ -27,8 +26,12 @@ class ProxyPoolingActivity : StartupActivity {
     }
 
     private fun onSettingsChanged(project: Project) {
-        log.warn("Proxy settings changed, restarting")
+        LOG.warn("Proxy settings changed, restarting")
         project.service<ContinuePluginService>().coreMessengerManager?.coreMessenger?.restart()
+    }
+
+    private companion object {
+        private val LOG = Logger.getInstance(ProxyPoolingActivity::class.java.simpleName)
     }
 }
 

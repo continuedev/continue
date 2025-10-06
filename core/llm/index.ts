@@ -65,7 +65,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-
 export class LLMError extends Error {
   constructor(
     message: string,
@@ -197,12 +196,15 @@ export abstract class BaseLLM implements ILLM {
 
   isFromAutoDetect?: boolean;
 
+  lastRequestId: string | undefined;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
+    this.lastRequestId = undefined;
 
     // Set default options
     const options = {
@@ -217,7 +219,7 @@ export abstract class BaseLLM implements ILLM {
       this.providerName === "continue-proxy"
         ? this.model?.split("/").pop() || this.model
         : this.model;
-    const llmInfo = findLlmInfo(modelSearchString);
+    const llmInfo = findLlmInfo(modelSearchString, this.underlyingProviderName);
 
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
@@ -561,12 +563,14 @@ export abstract class BaseLLM implements ILLM {
   private _formatChatMessage(msg: ChatMessage): string {
     let contentToShow = renderChatMessage(msg);
     if (msg.role === "assistant" && msg.toolCalls?.length) {
-      contentToShow += msg.toolCalls
-        ?.map(
-          (toolCall) =>
-            `${toolCall.function?.name}(${toolCall.function?.arguments})`,
-        )
-        .join("\n");
+      contentToShow +=
+        "\n" +
+        msg.toolCalls
+          ?.map(
+            (toolCall) =>
+              `${toolCall.function?.name}(${toolCall.function?.arguments})`,
+          )
+          .join("\n");
     }
 
     return `<${msg.role}>\n${contentToShow}\n\n`;
@@ -596,6 +600,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string> {
+    this.lastRequestId = undefined;
     const { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -625,6 +630,9 @@ export abstract class BaseLLM implements ILLM {
           signal,
         );
         for await (const chunk of stream) {
+          if (!this.lastRequestId && typeof (chunk as any).id === "string") {
+            this.lastRequestId = (chunk as any).id;
+          }
           const result = fromChatCompletionChunk(chunk);
           if (result) {
             const content = renderChatMessage(result);
@@ -708,6 +716,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
+    this.lastRequestId = undefined;
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -747,6 +756,7 @@ export abstract class BaseLLM implements ILLM {
             { ...toCompleteBody(prompt, completionOptions), stream: false },
             signal,
           );
+          this.lastRequestId = response.id ?? this.lastRequestId;
           completion = response.choices[0]?.text ?? "";
           yield completion;
         } else {
@@ -758,6 +768,9 @@ export abstract class BaseLLM implements ILLM {
             },
             signal,
           )) {
+            if (!this.lastRequestId && typeof (chunk as any).id === "string") {
+              this.lastRequestId = (chunk as any).id;
+            }
             const content = chunk.choices[0]?.text ?? "";
             completion += content;
             interaction?.logItem({
@@ -837,6 +850,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
+    this.lastRequestId = undefined;
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -878,6 +892,7 @@ export abstract class BaseLLM implements ILLM {
           },
           signal,
         );
+        this.lastRequestId = result.id ?? this.lastRequestId;
         completion = result.choices[0].text;
       } else {
         completion = await this._complete(prompt, signal, completionOptions);
@@ -1025,6 +1040,7 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {},
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
+    this.lastRequestId = undefined;
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -1090,7 +1106,8 @@ export abstract class BaseLLM implements ILLM {
               { ...body, stream: false },
               signal,
             );
-            
+
+            this.lastRequestId = response.id ?? this.lastRequestId;
             const messages = fromChatResponse(response);
             for (const msg of messages) {
               const result = this.processChatChunk(msg, interaction);
@@ -1101,7 +1118,6 @@ export abstract class BaseLLM implements ILLM {
               }
               yield result.chunk;
             }
-
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
@@ -1114,6 +1130,13 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const chatChunk = fromChatCompletionChunk(chunk);
               if (chatChunk) {
+                if (
+                  !this.lastRequestId &&
+                  "id" in chunk &&
+                  typeof chunk.id === "string"
+                ) {
+                  this.lastRequestId = chunk.id;
+                }
                 const result = this.processChatChunk(chatChunk, interaction);
                 completion.push(...result.completion);
                 thinking.push(...result.thinking);

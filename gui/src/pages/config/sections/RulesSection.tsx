@@ -4,7 +4,6 @@ import {
   BookmarkIcon as BookmarkOutline,
   EyeIcon,
   PencilIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import {
@@ -19,11 +18,14 @@ import {
   DEFAULT_PLAN_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
-import { useContext, useMemo } from "react";
+import { getRuleDisplayName } from "core/llm/rules/rules-utils";
+import { useContext, useMemo, useState } from "react";
+import { DropdownButton } from "../../../components/DropdownButton";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
+import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
-import { Button, Card, EmptyState, useFontSize } from "../../../components/ui";
+import { Card, EmptyState, useFontSize } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
@@ -80,8 +82,7 @@ function PromptRow({
     }
   };
 
-  const canEdit =
-    prompt.promptFile && !prompt.promptFile.startsWith("builtin:");
+  const canEdit = prompt.source !== "built-in";
 
   return (
     <div
@@ -100,11 +101,13 @@ function PromptRow({
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <PencilIcon
-          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125 ${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
-          onClick={canEdit ? handleEditClick : undefined}
-          aria-disabled={!canEdit}
-        />
+        {canEdit && (
+          <PencilIcon
+            className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125`}
+            onClick={canEdit ? handleEditClick : undefined}
+            aria-disabled={!canEdit}
+          />
+        )}
         <div
           onClick={handleBookmarkClick}
           className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"
@@ -136,27 +139,16 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const isDisabled = policy === "off";
 
+  const editBlock = useEditBlock();
   const handleOpen = async () => {
-    if (rule.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${rule.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else if (rule.ruleFile) {
-      ideMessenger.post("openFile", {
-        path: rule.ruleFile,
-      });
-    } else if (
+    if (
       rule.source === "default-chat" ||
       rule.source === "default-plan" ||
       rule.source === "default-agent"
     ) {
       ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
     } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (rule as any).sourceFile },
-      });
+      editBlock(rule?.slug, rule?.sourceFile);
     }
   };
 
@@ -167,27 +159,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   };
 
   const title = useMemo(() => {
-    if (rule.name) {
-      return rule.name;
-    } else {
-      if (rule.source === ".continuerules") {
-        return "Project rules";
-      } else if (rule.source === "default-chat") {
-        return "Default chat system message";
-      } else if (rule.source === "default-agent") {
-        return "Default agent system message";
-      } else if (rule.source === "json-systemMessage") {
-        return "JSON systemMessage)";
-      } else if (rule.source === "model-options-agent") {
-        return "Base System Agent Message";
-      } else if (rule.source === "model-options-plan") {
-        return "Base System Plan Message";
-      } else if (rule.source === "model-options-chat") {
-        return "Base System Chat Message";
-      } else {
-        return "Agent rule";
-      }
-    }
+    return getRuleDisplayName(rule);
   }, [rule]);
 
   function onClickExpand() {
@@ -202,8 +174,8 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
-  const smallFont = useFontSize(-2);
-  const tinyFont = useFontSize(-3);
+  const smallFont = fontSize(-2);
+  const tinyFont = fontSize(-3);
   return (
     <div
       className={`border-border flex flex-col rounded-sm px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
@@ -288,22 +260,10 @@ function PromptsSubSection() {
     (state) => state.config.config.slashCommands ?? [],
   );
 
+  const editBlock = useEditBlock();
+
   const handleEdit = (prompt: PromptCommandWithSlug) => {
-    if (prompt.promptFile) {
-      ideMessenger.post("openFile", {
-        path: prompt.promptFile,
-      });
-    } else if (prompt.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${prompt.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (prompt as any).sourceFile },
-      });
-    }
+    editBlock(prompt.slug, prompt.sourceFile);
   };
 
   const handleAddPrompt = () => {
@@ -330,7 +290,7 @@ function PromptsSubSection() {
       let index = 0;
       for (const commandWithSlug of promptsWithSlug) {
         // skip for local prompt files
-        if (commandWithSlug.promptFile) continue;
+        if (commandWithSlug.sourceFile) continue;
 
         const yamlPrompt = parsedPrompts[index];
         if (yamlPrompt) {
@@ -427,24 +387,41 @@ function addDefaultSystemMessage(
   }
 }
 
+// Define dropdown options for global rules
+const globalRulesOptions = [
+  { value: "workspace", label: "Current workspace" },
+  { value: "global", label: "Global" },
+];
+
 function RulesSubSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
   const ideMessenger = useContext(IdeMessengerContext);
   const isLocal = selectedProfile?.profileType === "local";
+  const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
 
-  const handleAddRule = () => {
+  const handleAddRule = (mode?: string) => {
+    const currentMode = mode || globalRulesMode;
     if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "rules",
-      });
+      if (currentMode === "global") {
+        void ideMessenger.request("config/addGlobalRule", undefined);
+      } else {
+        void ideMessenger.request("config/addLocalWorkspaceBlock", {
+          blockType: "rules",
+        });
+      }
     } else {
       void ideMessenger.request("controlPlane/openUrl", {
         path: "?type=rules",
         orgSlug: undefined,
       });
     }
+  };
+
+  const handleOptionClick = (value: string) => {
+    setGlobalRulesMode(value);
+    handleAddRule(value);
   };
 
   const sortedRules: RuleWithSource[] = useMemo(() => {
@@ -489,12 +466,22 @@ function RulesSubSection() {
 
   return (
     <div>
-      <ConfigHeader
-        title="Rules"
-        variant="sm"
-        onAddClick={handleAddRule}
-        addButtonTooltip="Add rule"
-      />
+      {isLocal ? (
+        <DropdownButton
+          title="Rules"
+          variant="sm"
+          options={globalRulesOptions}
+          onOptionClick={handleOptionClick}
+          addButtonTooltip="Add rules"
+        />
+      ) : (
+        <ConfigHeader
+          title="Rules"
+          variant="sm"
+          onAddClick={() => handleAddRule()}
+          addButtonTooltip="Add rules"
+        />
+      )}
 
       <Card>
         {sortedRules.length > 0 ? (

@@ -9,6 +9,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
   AssistantChatMessage,
+  BaseSessionMetadata,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -18,7 +19,6 @@ import {
   PromptLog,
   RuleWithSource,
   Session,
-  BaseSessionMetadata,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
@@ -52,7 +52,11 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 function filterMultipleEditToolCalls(
   toolCalls: ToolCallDelta[],
 ): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile];
+  const editToolNames = [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
+  ];
   let hasSeenEditTool = false;
 
   return toolCalls.filter((toolCall) => {
@@ -229,7 +233,7 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
-const initialState: SessionState = {
+export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
@@ -251,7 +255,7 @@ const initialState: SessionState = {
 
 export const sessionSlice = createSlice({
   name: "session",
-  initialState,
+  initialState: INITIAL_SESSION_STATE,
   reducers: {
     addPromptCompletionPair: (
       state,
@@ -307,7 +311,10 @@ export const sessionSlice = createSlice({
           // Cancel any tool calls that are dangling and generated
           if (message.toolCallStates) {
             message.toolCallStates.forEach((toolCallState) => {
-              if (toolCallState.status === "generated") {
+              if (
+                toolCallState.status === "generated" ||
+                toolCallState.status === "generating"
+              ) {
                 toolCallState.status = "canceled";
               }
             });

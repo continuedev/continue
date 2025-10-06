@@ -99,6 +99,8 @@ export interface ILLM
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
+  lastRequestId?: string;
+
   complete(
     prompt: string,
     signal: AbortSignal,
@@ -308,11 +310,6 @@ export interface FileEdit {
   filepath: string;
   range: Range;
   replacement: string;
-}
-
-export interface ContinueError {
-  title: string;
-  message: string;
 }
 
 export interface CompletionOptions extends BaseCompletionOptions {
@@ -828,6 +825,8 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
+  getExternalUri?(uri: string): Promise<string>;
+
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
   saveFile(fileUri: string): Promise<void>;
@@ -925,7 +924,8 @@ export interface SlashCommand extends SlashCommandDescription {
 export interface SlashCommandWithSource extends SlashCommandDescription {
   run?: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>; // Optional - only needed for legacy
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   overrideSystemMessage?: string;
 }
 
@@ -943,7 +943,8 @@ export type SlashCommandSource =
 export interface SlashCommandDescWithSource extends SlashCommandDescription {
   isLegacy: boolean; // Maps to if slashcommand.run exists
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   mcpServerName?: string;
   mcpArgs?: MCPPromptArgs;
 }
@@ -1087,7 +1088,6 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-
   displayTitle: string;
   wouldLikeTo?: string;
   isCurrently?: string;
@@ -1104,6 +1104,12 @@ export interface Tool {
   };
   defaultToolPolicy?: ToolPolicy;
   toolCallIcon?: string;
+  preprocessArgs?: (
+    args: Record<string, unknown>,
+    extras: {
+      ide: IDE;
+    },
+  ) => Promise<Record<string, unknown>>;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
@@ -1253,7 +1259,6 @@ export interface StdioOptions {
   args: string[];
   env?: Record<string, string>;
   cwd?: string;
-  requestOptions?: RequestOptions;
 }
 
 export interface WebSocketOptions {
@@ -1280,16 +1285,8 @@ export type TransportOptions =
   | SSEOptions
   | StreamableHTTPOptions;
 
-export interface MCPOptions {
-  name: string;
-  id: string;
-  transport: TransportOptions;
-  faviconUrl?: string;
-  timeout?: number;
-  requestOptions?: RequestOptions;
-}
-
 export type MCPConnectionStatus =
+  | "disabled"
   | "connecting"
   | "connected"
   | "error"
@@ -1336,18 +1333,55 @@ export interface MCPTool {
   };
 }
 
-export interface MCPServerStatus extends MCPOptions {
+type BaseInternalMCPOptions = {
+  id: string;
+  name: string;
+  faviconUrl?: string;
+  timeout?: number;
+  requestOptions?: RequestOptions;
+  sourceFile?: string;
+};
+
+export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
+  type?: "stdio";
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+};
+
+export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
+  type?: "streamable-http";
+  url: string;
+};
+
+export type InternalSseMcpOptions = BaseInternalMCPOptions & {
+  type?: "sse";
+  url: string;
+};
+
+export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
+  type: "websocket"; // websocket requires explicit type
+  url: string;
+};
+
+export type InternalMcpOptions =
+  | InternalStdioMcpOptions
+  | InternalStreamableHttpMcpOptions
+  | InternalSseMcpOptions
+  | InternalWebsocketMcpOptions;
+
+export type MCPServerStatus = InternalMcpOptions & {
   status: MCPConnectionStatus;
   errors: string[];
   infos: string[];
   isProtectedResource: boolean;
-
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
   resourceTemplates: MCPResourceTemplate[];
   sourceFile?: string;
-}
+};
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
@@ -1756,7 +1790,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  tools: Tool[];
+  tools: Omit<Tool, "preprocessArgs", "evaluatePolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   usePlatform: boolean;
@@ -1818,7 +1852,8 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
-  | ".continuerules";
+  | ".continuerules"
+  | "agent-file";
 
 export interface RuleWithSource {
   name?: string;
@@ -1828,7 +1863,7 @@ export interface RuleWithSource {
   regex?: string | string[];
   rule: string;
   description?: string;
-  ruleFile?: string;
+  sourceFile?: string;
   alwaysApply?: boolean;
   invokable?: boolean;
 }
