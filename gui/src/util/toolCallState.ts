@@ -70,14 +70,9 @@ export function addToolCallDeltaToState(
 }
 
 export function isAutoEditToolCall(toolCallFunctionName: string) {
-  if (
-    [
-      BuiltInToolNames.EditExistingFile,
-      BuiltInToolNames.SingleFindAndReplace,
-      BuiltInToolNames.MultiEdit,
-    ].includes(toolCallFunctionName as BuiltInToolNames)
-  ) {
-    return true;
-  }
-  return false;
+  return [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
+  ].includes(toolCallFunctionName as BuiltInToolNames);
 }
