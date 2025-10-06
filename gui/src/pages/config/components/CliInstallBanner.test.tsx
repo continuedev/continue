@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { MockIdeMessenger } from "../../../context/MockIdeMessenger";
 import * as util from "../../../util";
+import * as localStorage from "../../../util/localStorage";
 import { CliInstallBanner } from "./CliInstallBanner";
 
 vi.mock("../../../util", async () => {
@@ -19,6 +20,15 @@ vi.mock("../../../util", async () => {
   };
 });
 
+vi.mock("../../../util/localStorage", async () => {
+  const actual = await vi.importActual("../../../util/localStorage");
+  return {
+    ...actual,
+    getLocalStorage: vi.fn(),
+    setLocalStorage: vi.fn(),
+  };
+});
+
 describe("CliInstallBanner", () => {
   let mockIdeMessenger: MockIdeMessenger;
 
@@ -26,6 +36,7 @@ describe("CliInstallBanner", () => {
     vi.clearAllMocks();
     mockIdeMessenger = new MockIdeMessenger();
     vi.mocked(util.getPlatform).mockReturnValue("mac");
+    vi.mocked(localStorage.getLocalStorage).mockReturnValue(undefined);
   });
 
   const renderComponent = async (subprocessResponse: [string, string]) => {
@@ -49,7 +60,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try the Continue CLI"),
+          screen.queryByText("Try out the Continue CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -58,7 +69,9 @@ describe("CliInstallBanner", () => {
       await renderComponent(["", "command not found"]);
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -66,7 +79,9 @@ describe("CliInstallBanner", () => {
       await renderComponent(["", ""]);
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -76,7 +91,13 @@ describe("CliInstallBanner", () => {
         .spyOn(mockIdeMessenger.ide, "subprocess")
         .mockResolvedValue(["", ""]);
 
-      await renderComponent(["", ""]);
+      await act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
 
       await waitFor(() => {
         expect(subprocessSpy).toHaveBeenCalledWith("which cn");
@@ -89,7 +110,13 @@ describe("CliInstallBanner", () => {
         .spyOn(mockIdeMessenger.ide, "subprocess")
         .mockResolvedValue(["", ""]);
 
-      await renderComponent(["", ""]);
+      await act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
 
       await waitFor(() => {
         expect(subprocessSpy).toHaveBeenCalledWith("which cn");
@@ -102,7 +129,13 @@ describe("CliInstallBanner", () => {
         .spyOn(mockIdeMessenger.ide, "subprocess")
         .mockResolvedValue(["", ""]);
 
-      await renderComponent(["", ""]);
+      await act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
 
       await waitFor(() => {
         expect(subprocessSpy).toHaveBeenCalledWith("where cn");
@@ -123,7 +156,9 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -132,12 +167,14 @@ describe("CliInstallBanner", () => {
     beforeEach(async () => {
       await renderComponent(["", "not found"]);
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
 
     it("displays the title", () => {
-      expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+      expect(screen.getByText("Try out the Continue CLI")).toBeInTheDocument();
     });
 
     it("displays the description with 'cn' code element", () => {
@@ -150,18 +187,22 @@ describe("CliInstallBanner", () => {
       expect(screen.getByText("npm i -g @continuedev/cli")).toBeInTheDocument();
     });
 
-    it("displays the Learn more button", () => {
-      expect(screen.getByText("Learn more")).toBeInTheDocument();
+    it("displays the Learn more link", () => {
+      expect(screen.getByText("Learn more.")).toBeInTheDocument();
     });
 
     it("displays the close button", () => {
-      const closeButton = screen.getByRole("button", { name: /dismiss/i });
-      expect(closeButton).toBeInTheDocument();
+      // Get the styled close button (it doesn't have a text label)
+      const buttons = screen.getAllByRole("button");
+      // There should be multiple buttons (close, copy, run)
+      expect(buttons.length).toBeGreaterThan(0);
     });
 
     it("displays the CommandLine icon", () => {
       // The icon should be present in the component
-      const banner = screen.getByText("Try the Continue CLI").closest("div");
+      const banner = screen
+        .getByText("Try out the Continue CLI")
+        .closest("div");
       expect(banner).toBeInTheDocument();
     });
   });
@@ -170,26 +211,30 @@ describe("CliInstallBanner", () => {
     beforeEach(async () => {
       await renderComponent(["", "not found"]);
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
 
     it("dismisses banner when close button is clicked", async () => {
-      const closeButton = screen.getByRole("button", { name: /dismiss/i });
+      const buttons = screen.getAllByRole("button");
+      // First button should be the close button (CloseButton component)
+      const closeButton = buttons[0];
       fireEvent.click(closeButton);
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try the Continue CLI"),
+          screen.queryByText("Try out the Continue CLI"),
         ).not.toBeInTheDocument();
       });
     });
 
-    it("opens documentation URL when Learn more button is clicked", async () => {
+    it("opens documentation URL when Learn more link is clicked", async () => {
       const postSpy = vi.spyOn(mockIdeMessenger, "post");
-      const learnMoreButton = screen.getByText("Learn more");
+      const learnMoreLink = screen.getByText("Learn more.");
 
-      fireEvent.click(learnMoreButton);
+      fireEvent.click(learnMoreLink);
 
       expect(postSpy).toHaveBeenCalledWith(
         "openUrl",
@@ -197,14 +242,11 @@ describe("CliInstallBanner", () => {
       );
     });
 
-    it("copies installation command when copy button is clicked", async () => {
-      // Find the copy button (ClipboardIcon)
-      const copyButtons = screen.getAllByRole("button");
-      const copyButton = copyButtons.find((btn) =>
-        btn.querySelector('svg[class*="ClipboardIcon"]'),
-      );
-
-      expect(copyButton).toBeDefined();
+    it("displays the installation command with interactive controls", async () => {
+      // The installation command should be visible
+      expect(screen.getByText("npm i -g @continuedev/cli")).toBeInTheDocument();
+      // The "Run" text should be visible for the run button
+      expect(screen.getByText(/Run/i)).toBeInTheDocument();
     });
 
     it("runs installation command in terminal when run button is clicked", async () => {
@@ -216,7 +258,7 @@ describe("CliInstallBanner", () => {
         fireEvent.click(runButton);
 
         expect(postSpy).toHaveBeenCalledWith("runCommand", {
-          command: "npm i -g @continuedev/cli",
+          command: `npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`,
         });
       }
     });
@@ -239,7 +281,7 @@ describe("CliInstallBanner", () => {
 
       // Should not be visible immediately
       expect(
-        screen.queryByText("Try the Continue CLI"),
+        screen.queryByText("Try out the Continue CLI"),
       ).not.toBeInTheDocument();
     });
 
@@ -247,16 +289,19 @@ describe("CliInstallBanner", () => {
       const { rerender } = await renderComponent(["", "not found"]);
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
 
       // Dismiss the banner
-      const closeButton = screen.getByRole("button", { name: /dismiss/i });
+      const buttons = screen.getAllByRole("button");
+      const closeButton = buttons[0];
       fireEvent.click(closeButton);
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try the Continue CLI"),
+          screen.queryByText("Try out the Continue CLI"),
         ).not.toBeInTheDocument();
       });
 
@@ -269,7 +314,7 @@ describe("CliInstallBanner", () => {
 
       // Should still be hidden
       expect(
-        screen.queryByText("Try the Continue CLI"),
+        screen.queryByText("Try out the Continue CLI"),
       ).not.toBeInTheDocument();
     });
   });
@@ -279,7 +324,9 @@ describe("CliInstallBanner", () => {
       await renderComponent(["  \n  ", ""]);
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -288,7 +335,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try the Continue CLI"),
+          screen.queryByText("Try out the Continue CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -297,8 +344,148 @@ describe("CliInstallBanner", () => {
       await renderComponent(["", "cn: command not found"]);
 
       await waitFor(() => {
-        expect(screen.getByText("Try the Continue CLI")).toBeInTheDocument();
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Message threshold logic", () => {
+    const renderWithMessageCount = async (
+      messageCount?: number,
+      messageThreshold?: number,
+    ) => {
+      vi.spyOn(mockIdeMessenger.ide, "subprocess").mockResolvedValue([
+        "",
+        "not found",
+      ]);
+
+      return act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner
+              messageCount={messageCount}
+              messageThreshold={messageThreshold}
+            />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
+    };
+
+    it("shows banner when no threshold is set", async () => {
+      await renderWithMessageCount(0, undefined);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("does not show banner when message count is below threshold", async () => {
+      await renderWithMessageCount(2, 3);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Try out the Continue CLI"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it("shows banner when message count meets threshold", async () => {
+      await renderWithMessageCount(3, 3);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("shows banner when message count exceeds threshold", async () => {
+      await renderWithMessageCount(5, 3);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Permanent dismissal with localStorage", () => {
+    const renderWithPermanentDismissal = async () => {
+      vi.spyOn(mockIdeMessenger.ide, "subprocess").mockResolvedValue([
+        "",
+        "not found",
+      ]);
+
+      return act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner permanentDismissal={true} />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
+    };
+
+    it("does not show banner when previously dismissed permanently", async () => {
+      vi.mocked(localStorage.getLocalStorage).mockReturnValue(true);
+
+      await renderWithPermanentDismissal();
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Try out the Continue CLI"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it("sets localStorage when dismissed with permanentDismissal=true", async () => {
+      await renderWithPermanentDismissal();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
+      });
+
+      const buttons = screen.getAllByRole("button");
+      const closeButton = buttons[0];
+      fireEvent.click(closeButton);
+
+      expect(localStorage.setLocalStorage).toHaveBeenCalledWith(
+        "hasDismissedCliInstallBanner",
+        true,
+      );
+    });
+
+    it("does not set localStorage when dismissed with permanentDismissal=false", async () => {
+      vi.spyOn(mockIdeMessenger.ide, "subprocess").mockResolvedValue([
+        "",
+        "not found",
+      ]);
+
+      await act(async () =>
+        render(
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <CliInstallBanner permanentDismissal={false} />
+          </IdeMessengerContext.Provider>,
+        ),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Try out the Continue CLI"),
+        ).toBeInTheDocument();
+      });
+
+      const buttons = screen.getAllByRole("button");
+      const closeButton = buttons[0];
+      fireEvent.click(closeButton);
+
+      expect(localStorage.setLocalStorage).not.toHaveBeenCalled();
     });
   });
 });

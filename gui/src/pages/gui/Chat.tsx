@@ -46,6 +46,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
+import { CliInstallBanner } from "../config/components/CliInstallBanner";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -380,6 +381,11 @@ export function Chat() {
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
+  // Count user messages for CLI banner threshold
+  const userMessageCount = useMemo(() => {
+    return history.filter((item) => item.message.role === "user").length;
+  }, [history]);
+
   return (
     <>
       {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
@@ -419,6 +425,12 @@ export function Chat() {
             sendInput(editorState, modifiers, undefined, editor)
           }
           inputId={MAIN_EDITOR_INPUT_ID}
+        />
+
+        <CliInstallBanner
+          messageCount={userMessageCount}
+          messageThreshold={3}
+          permanentDismissal={true}
         />
 
         <div

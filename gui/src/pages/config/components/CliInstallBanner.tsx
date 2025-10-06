@@ -6,13 +6,36 @@ import { RunInTerminalButton } from "../../../components/StyledMarkdownPreview/S
 import { Card } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { getPlatform } from "../../../util";
+import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
 
-export function CliInstallBanner() {
+interface CliInstallBannerProps {
+  /** Current message count - banner shows only if >= messageThreshold */
+  messageCount?: number;
+  /** Minimum messages before showing banner (default: always show) */
+  messageThreshold?: number;
+  /** If true, dismissal is permanent via localStorage (default: session only) */
+  permanentDismissal?: boolean;
+}
+
+export function CliInstallBanner({
+  messageCount,
+  messageThreshold,
+  permanentDismissal = false,
+}: CliInstallBannerProps = {}) {
   const ideMessenger = useContext(IdeMessengerContext);
   const [cliInstalled, setCliInstalled] = useState<boolean | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    // Check if user has permanently dismissed the banner
+    if (permanentDismissal) {
+      const hasDismissed = getLocalStorage("hasDismissedCliInstallBanner");
+      if (hasDismissed) {
+        setDismissed(true);
+        return;
+      }
+    }
+
     const checkCliInstallation = async () => {
       try {
         const platform = getPlatform();
@@ -32,18 +55,35 @@ export function CliInstallBanner() {
       }
     };
 
-    checkCliInstallation();
-  }, [ideMessenger]);
+    void checkCliInstallation();
+  }, [ideMessenger, permanentDismissal]);
 
-  // Don't show if still loading, already installed, or dismissed
-  if (cliInstalled === null || cliInstalled === true || dismissed) {
+  const handleDismiss = () => {
+    setDismissed(true);
+    if (permanentDismissal) {
+      setLocalStorage("hasDismissedCliInstallBanner", true);
+    }
+  };
+
+  // Don't show if:
+  // - Still loading CLI status
+  // - CLI is already installed
+  // - User has dismissed it
+  // - Message threshold not met (if threshold is set)
+  if (
+    cliInstalled === null ||
+    cliInstalled === true ||
+    dismissed ||
+    (messageThreshold !== undefined &&
+      (messageCount === undefined || messageCount < messageThreshold))
+  ) {
     return null;
   }
 
   return (
     <div className="border-t-vsc-input-border bg-vsc-background sticky bottom-0 border-t px-4 pb-4 pt-4">
       <Card className="relative">
-        <CloseButton onClick={() => setDismissed(true)}>
+        <CloseButton onClick={handleDismiss}>
           <XMarkIcon className="h-5 w-5 hover:brightness-125" />
         </CloseButton>
         <div className="flex flex-col gap-3">
