@@ -68,7 +68,9 @@ export function CliInstallBanner() {
               </code>
               <div className="flex items-center gap-2">
                 <CopyButton text="npm i -g @continuedev/cli" />
-                <RunInTerminalButton command="npm i -g @continuedev/cli" />
+                <RunInTerminalButton
+                  command={`npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`}
+                />
               </div>
             </div>
             <SecondaryButton
