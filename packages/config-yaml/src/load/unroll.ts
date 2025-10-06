@@ -357,13 +357,6 @@ export async function unrollBlocks(
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
-  function injectDuplicationError(errorMsg: string) {
-    errors.push({
-      fatal: false,
-      message: errorMsg,
-    });
-  }
-
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
@@ -622,12 +615,7 @@ export async function unrollBlocks(
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
       unrolledAssistant[sectionResult.section] = sectionResult.blocks.filter(
-        (block) =>
-          !detector.isDuplicated(
-            block,
-            sectionResult.section,
-            injectDuplicationError,
-          ),
+        (block) => !detector.isDuplicated(block, sectionResult.section),
       );
     }
   }
@@ -635,7 +623,7 @@ export async function unrollBlocks(
   // Assign rules result
   if (rulesResult.rules) {
     unrolledAssistant.rules = rulesResult.rules.filter(
-      (rule) => !detector.isDuplicated(rule, "rules", injectDuplicationError),
+      (rule) => !detector.isDuplicated(rule, "rules"),
     );
   }
 
@@ -654,10 +642,7 @@ export async function unrollBlocks(
       key,
       resolvedBlock,
       source,
-    ).filter(
-      (block: any) =>
-        !detector.isDuplicated(block, blockType, injectDuplicationError),
-    );
+    ).filter((block: any) => !detector.isDuplicated(block, blockType));
     unrolledAssistant[key]?.push(...filteredBlocks);
   }
 

@@ -13,7 +13,7 @@ describe("Nested directory rules application", () => {
     name: "Nested Folder Rule",
     rule: "HELLO WORLD THIS IS A RULE",
     source: "rules-block",
-    ruleFile: "manual-testing-sandbox/nested-folder/rules.md",
+    sourceFile: "manual-testing-sandbox/nested-folder/rules.md",
     // No globs specified
   };
 
@@ -22,7 +22,7 @@ describe("Nested directory rules application", () => {
     name: "Global Rule",
     rule: "SOLID Design Principles - Coding Agent Guidelines",
     source: "rules-block",
-    ruleFile: ".continue/rules.md",
+    sourceFile: ".continue/rules.md",
   };
 
   it("should apply nested directory rules to files in that directory", () => {
@@ -103,7 +103,7 @@ describe("Nested directory rules application", () => {
       rule: "Follow Python best practices for src directory",
       globs: "**/*.py", // This should only match .py files in src/ and subdirectories
       source: "rules-block",
-      ruleFile: "src/rules.md",
+      sourceFile: "src/rules.md",
     };
 
     // A rule in utils/ that targets *.py files
@@ -112,7 +112,7 @@ describe("Nested directory rules application", () => {
       rule: "Follow Python best practices for utils directory",
       globs: "**/*.py", // This should only match .py files in utils/ and subdirectories
       source: "rules-block",
-      ruleFile: "utils/rules.md",
+      sourceFile: "utils/rules.md",
     };
 
     // A file in src/

@@ -88,13 +88,14 @@
               "customization/models",
               "customization/mcp-tools",
               "customization/rules",
-              "customization/prompts"
+              "customization/prompts",
+              "customization/settings"
             ]
           },
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["faqs", "troubleshooting"]
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
       },
@@ -185,7 +186,7 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "agents",
+                "group": "Agents",
                 "icon": "robot",
                 "pages": [
                   "hub/agents/intro",
@@ -221,6 +222,11 @@
                   "hub/secrets/secret-resolution"
                 ]
               },
+              {
+                "group": "Workflows",
+                "icon": "cloud",
+                "pages": ["hub/workflows/intro"]
+              },
               "hub/sharing",
               "hub/source-control"
             ]
@@ -238,6 +244,7 @@
               "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/doc-writing-agent-cli",
               "guides/continuous-ai",
               "guides/continuous-ai-readiness-assessment",
               "guides/plan-mode-guide",
@@ -253,7 +260,10 @@
             "icon": "book-open-cover",
             "pages": [
               "guides/posthog-github-continuous-ai",
+              "guides/continue-docs-mcp-cookbook",
+              "guides/sanity-mcp-continue-cookbook",
               "guides/snyk-mcp-continue-cookbook",
+              "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment"
             ]
           }

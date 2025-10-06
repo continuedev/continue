@@ -8,6 +8,7 @@ import nodeFetch from "node-fetch";
 import open from "open";
 
 import { getApiClient } from "../config.js";
+// eslint-disable-next-line import/order
 import { env } from "../env.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
@@ -96,13 +97,24 @@ export function getConfigUri(config: AuthConfig): string | null {
 
 /**
  * Gets the model name from any auth config type
+ * For unauthenticated users or when auth config has no modelName, checks GlobalContext
  */
 export function getModelName(config: AuthConfig): string | null {
-  if (config === null) return null;
-  return config.modelName || null;
+  // Priority 1: Logged-in users with modelName in auth config
+  if (config !== null && config.modelName) {
+    return config.modelName;
+  }
+
+  // Priority 2: Fall back to GlobalContext (for logged-out users or logged-in without modelName)
+  return getPersistedModelName();
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import {
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
+
 import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
@@ -214,21 +226,30 @@ export function updateConfigUri(configUri: string | null): void {
 
 /**
  * Updates the model name in the authentication configuration
+ * Returns the updated config so the caller can update in-memory state
+ * For unauthenticated users, saves to GlobalContext
  */
-export function updateModelName(modelName: string | null): void {
+export function updateModelName(modelName: string | null): AuthConfig {
   // If using CONTINUE_API_KEY environment variable, don't save anything
   if (process.env.CONTINUE_API_KEY) {
-    return;
+    return loadAuthConfig();
   }
 
   const config = loadAuthConfig();
+
+  // If logged in, save to auth.json
   if (config && isAuthenticatedConfig(config)) {
     const updatedConfig: AuthenticatedConfig = {
       ...config,
       modelName: modelName || undefined,
     };
     saveAuthConfig(updatedConfig);
+    return updatedConfig;
   }
+
+  // If logged out, save to GlobalContext
+  persistModelName(modelName);
+  return config;
 }
 
 /**

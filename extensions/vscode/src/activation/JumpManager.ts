@@ -192,13 +192,13 @@ export class JumpManager {
     // identical to the completion content,
     // then we don't have to jump.
     if (completionContent !== undefined) {
-      console.log("completionContent is not null");
+      console.debug("completionContent is not null");
       const editor = vscode.window.activeTextEditor;
 
       if (editor) {
         try {
           const completionLines = completionContent.split("\n");
-          console.log("completionLines:", completionLines);
+          console.debug("completionLines:", completionLines);
 
           // Get document content at jump location spanning multiple lines.
           const document = editor.document;
@@ -212,7 +212,7 @@ export class JumpManager {
           if (endLine - startLine + 1 < completionLines.length) {
             // Not enough lines in document, so content can't be identical.
             // Proceed to jump!
-            console.log(
+            console.debug(
               "Not enough lines in document to match completion content",
             );
           } else {
@@ -224,12 +224,12 @@ export class JumpManager {
               const lineText = document.lineAt(documentLine).text;
               if (lineText !== completionLines[i]) {
                 contentMatches = false;
-                console.log(`Line ${i + 1} doesn't match`);
+                console.debug(`Line ${i + 1} doesn't match`);
               }
             }
 
             if (contentMatches) {
-              console.log(
+              console.debug(
                 "Skipping jump as content is identical at jump location",
               );
               return false; // Exit early, don't suggest jump.
@@ -242,20 +242,20 @@ export class JumpManager {
       }
     }
 
-    console.log("this._jumpInProgress");
+    console.debug("this._jumpInProgress");
     this._jumpInProgress = true;
     this._oldCursorPosition = currentPosition;
 
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      console.log("No active editor, cannot suggest jump");
+      console.debug("No active editor, cannot suggest jump");
       this._jumpInProgress = false;
       return false;
     }
 
     const visibleRanges = editor.visibleRanges;
     if (visibleRanges.length === 0) {
-      console.log("No visible ranges in editor, cannot suggest jump");
+      console.debug("No visible ranges in editor, cannot suggest jump");
       this._jumpInProgress = false;
       return false;
     }
@@ -375,7 +375,7 @@ export class JumpManager {
       "continue.rejectJump",
       async () => {
         if (this._jumpDecorationVisible) {
-          console.log(
+          console.debug(
             "deleteChain from JumpManager.ts: rejectJump and decoration visible",
           );
           NextEditProvider.getInstance().deleteChain();
@@ -447,7 +447,7 @@ export class JumpManager {
       "jumpManager",
       async (e, state) => {
         if (state.jumpInProgress || state.jumpJustAccepted) {
-          console.log(
+          console.debug(
             "JumpManager: jump in progress or just accepted, preserving chain",
           );
           return true;

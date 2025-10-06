@@ -67,6 +67,7 @@ First, you'll need to gather your PostHog and GitHub API credentials and add the
     3. Name it "Continue CLI Session Analysis"
     4. Select these scopes:
        - `session_recording:read` - **Required** for accessing session data
+       - `feature_flag:read` - **Required** for feature flag auditing
        - `insight:read`
        - `query:read`
        - `session_recording_playlist:read`
@@ -212,227 +213,24 @@ You only need to configure the PostHog MCP credential - it automatically handles
 
 <Warning>
 **Repository Labels Required**: Make sure your GitHub repository has these labels:
-- `bug`, `enhancement` 
+- `bug`, `enhancement`, `technical-debt`
 - `high-priority`, `medium-priority`, `low-priority`
-- `user-experience`, `automated`
+- `user-experience`, `automated`, `feature-flag`, `cleanup`
 
 Create missing labels in your repo at: **Settings → Labels → New label**
 
 </Warning>
 
 <Info>
-  **What Continue CLI Does:** - Parses your analysis results automatically -
-  Makes authenticated GitHub API calls using your stored token - Creates
-  properly formatted issues with appropriate labels - Checks for duplicate
-  issues to avoid spam - Provides confirmation with issue URLs
+    **What Continue CLI Does:** 
+    - Parses your analysis results automatically 
+    - Makes authenticated GitHub API calls using your stored token 
+    - Creates properly formatted issues with appropriate labels 
+    - Checks for duplicate issues to avoid spam 
+    - Provides confirmation with issue URLs
+
 </Info>
 
-## Setting Up Automated GitHub Actions Workflow
-
-Create a GitHub Actions workflow that runs your Continue CLI analysis automatically on a schedule.
-
-### Add GitHub Secrets
-
-First, add these secrets to your GitHub repository:
-
-1. Go to **Repository Settings → Secrets and variables → Actions**
-2. Click **"New repository secret"** and add:
-   - `CONTINUE_API_KEY`: Your Continue API key from hub.continue.dev
-
-### Create GitHub Actions Workflow
-
-Create `.github/workflows/posthog-analysis.yml` in your repository:
-
-<Tabs>
-  <Tab title="⚡ Using Pre-Built Agent (Recommended)">
-```yaml
-name: PostHog Session Analysis with Continue CLI Agent
-
-on:
-schedule: - cron: "0 6 \* \* \*" # Run at 6 AM UTC daily
-workflow_dispatch: # Allow manual triggering
-
-jobs:
-analyze:
-runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      issues: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Install Continue CLI
-        run: |
-          npm install -g @continuedev/cli
-          echo "✅ Continue CLI installed"
-          cn --version
-
-      - name: Authenticate with Continue CLI
-        run: |
-          # Set Continue API key
-          export CONTINUE_API_KEY="${{ secrets.CONTINUE_API_KEY }}"
-          # Login to Continue CLI
-          if ! cn auth login --api-key "$CONTINUE_API_KEY"; then
-            echo "❌ Failed to authenticate with Continue CLI"
-            exit 1
-          fi
-          echo "✅ Continue CLI authenticated"
-
-      - name: Load PostHog GitHub Agent
-        run: |
-          echo "🤖 Loading PostHog GitHub Continuous AI Agent..."
-          cn --config continuedev/awesome-models-posthog-gh
-          echo "✅ Agent loaded successfully"
-
-      - name: Run PostHog Analysis and Create GitHub Issues
-        run: |
-          echo "🎬 Starting automated PostHog session analysis..."
-
-          # Run the agent with the simple prompt
-          cn -p "Tell me about my PostHog session recordings and create GitHub issues based on the problems."
-
-          echo "✅ Analysis and issue creation completed"
-
-      - name: Summary
-        run: |
-          echo "✅ PostHog analysis workflow completed!"
-          echo "📊 Check the artifacts for detailed analysis results"
-          echo "🐛 Check your repository issues for newly created UX issues"
-          echo "🤖 Agent automatically handled both analysis and issue creation"
-      ```
-
-  </Tab>
-
-  <Tab title="🛠️ Manual Setup Version">
-  
-```yaml
-name: PostHog Session Analysis with Continue CLI Manual
-
-on:
-schedule: - cron: "0 6 \* \* \*" # Run at 6 AM UTC daily
-workflow_dispatch: # Allow manual triggering
-
-jobs:
-analyze:
-runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      issues: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Install Continue CLI
-        run: |
-          npm install -g @continuedev/cli
-          echo "✅ Continue CLI installed"
-          cn --version
-
-      - name: Authenticate with Continue CLI
-        run: |
-          # Set Continue API key
-          export CONTINUE_API_KEY="${{ secrets.CONTINUE_API_KEY }}"
-          # Login to Continue CLI
-          if ! cn auth login --api-key "$CONTINUE_API_KEY"; then
-            echo "❌ Failed to authenticate with Continue CLI"
-            exit 1
-          fi
-          echo "✅ Continue CLI authenticated"
-
-      - name: Run PostHog Session Analysis
-        run: |
-          echo "🎬 Starting PostHog session analysis..."
-          # Create the analysis prompt
-          I need you to help me analyze PostHog session recordings to identify UX issues. Please:
-
-          1. First, fetch session recordings from PostHog using these details:
-             - Use the POSTHOG_API_KEY, POSTHOG_PROJECT_ID, and POSTHOG_HOST from my secrets
-             - API endpoint: {POSTHOG_HOST}/api/projects/{POSTHOG_PROJECT_ID}/session_recordings/?limit=20
-             - Include Authorization header: 'Bearer {POSTHOG_API_KEY}'
-
-          2. Filter the sessions to find problematic ones with either:
-             - console_error_count > 0 (JavaScript errors)
-             - recording_duration > 300 (sessions longer than 5 minutes)
-
-          3. Analyze the filtered sessions and create exactly 3 GitHub issues for the most critical UX problems.
-
-          4. Format each issue like this:
-          ### 1. **Issue Title Here**
-          **Problem**: One sentence describing the user problem
-          **Technical Causes**: Brief technical explanation
-          **Affected Pages**: List the URLs
-          **Recommended Fix**:
-          - Specific action item 1
-          - Specific action item 2
-          **Priority**: **HIGH** or **MEDIUM** or **LOW**
-          **Impact**: Quantify the impact (e.g., 'Affects 80% of sessions')
-
-          Please make the API call, analyze the data, and provide the 3 formatted issues. Base all recommendations on actual patterns in the session data.
-          EOF
-
-          echo "✅ Analysis completed"
-
-
-      - name: Create GitHub Issues from Analysis
-        run: |
-          echo "📝 Creating GitHub issues from analysis..."
-          # Create the issue creation prompt
-          I have analyzed PostHog session data and identified UX issues. Now I need you to create GitHub issues using the GitHub API.
-
-          For each issue in my analysis:
-          1. Parse the issue title, body content, and priority level
-          2. Create a GitHub issue via API POST to: https://api.github.com/repos/{owner}/{repo}/issues
-          3. Use these headers:
-             - Authorization: token {GITHUB_PAT}
-             - Accept: application/vnd.github.v3+json
-             - Content-Type: application/json
-          4. Set labels based on priority:
-             - HIGH: ["bug", "high-priority", "user-experience", "automated"]
-             - MEDIUM: ["enhancement", "medium-priority", "user-experience", "automated"]
-             - LOW: ["low-priority", "user-experience", "automated"]
-          5. Format the issue title as: "🔍 UX Issue: {original title}"
-
-          Please create the GitHub issues and confirm they were successfully created with issue numbers and URLs.
-
-          echo "✅ Issue creation completed"
-
-      - name: Summary
-        run: |
-          echo "✅ PostHog analysis workflow completed!"
-          echo "🐛 Check your repository issues for newly created UX issues"
-    ```
-
-  </Tab>
-</Tabs>
-
-### Test the GitHub Actions Workflow
-
-1. **Manual Trigger**: Go to **Actions** tab in your repository and manually trigger the workflow
-2. **Check Artifacts**: Download the analysis results from the workflow run
-3. **Verify Issues**: Check that GitHub issues were created in your repository
-
-<Check>
-
-    **Success Indicators:**
-    - PostHog API returns session data (not empty)
-    - Continue CLI generates analysis with identified issues
-    - GitHub issues are created with proper labels and formatting
-    - Workflow completes without errors
-
-</Check>
 
 ## What You've Built
 
@@ -469,7 +267,57 @@ After completing this guide, you have a complete **Continuous AI system** that:
 
 </Warning>
 
-## Advanced Prompts
+## Example Use Cases
+
+Here are practical examples of what you can build with PostHog MCP and Continue CLI:
+
+### Session Recording Analysis (Current Implementation)
+
+The main workflow above focuses on analyzing session recordings to identify UX issues and create GitHub issues automatically.
+
+### Feature Flag Audit and Cleanup
+
+<Card title="🏁 Feature Flag Management" icon="flag">
+  Automatically audit your feature flags to identify unused, outdated, or problematic flags that need attention.
+</Card>
+
+**What this workflow does:**
+- Fetches all feature flags from your PostHog project
+- Analyzes flag usage, rollout status, and configuration
+- Identifies flags that may be candidates for removal or updates
+- Creates GitHub issues for flag cleanup tasks
+
+**Example Continue CLI prompts:**
+
+```bash
+# Get all feature flags and analyze them
+cn "Use PostHog MCP to fetch all feature flags with mcp__posthog__feature-flag-get-all. Then analyze each flag to identify: 1) Flags that are 100% rolled out and could be removed, 2) Flags that haven't been updated in 90+ days, 3) Flags with complex targeting that might need simplification, 4) Experimental flags that should be cleaned up."
+
+# Create cleanup issues for identified flags
+cn "For each problematic feature flag identified, create a GitHub issue using gh CLI:
+- Title: '🏁 Feature Flag Cleanup: [flag_name]'
+- Include flag details: rollout percentage, last modified date, targeting rules
+- Add labels: 'technical-debt', 'feature-flag', 'cleanup'
+- Set priority based on risk level (high for 100% rollouts, medium for stale flags)
+- Include specific recommendations for each flag"
+
+# Audit flag performance impact
+cn "Cross-reference feature flags with PostHog performance metrics to identify flags that may be impacting user experience or site performance. Create performance-focused GitHub issues for flags showing negative impact."
+```
+
+**Required PostHog MCP Tools:**
+- `feature-flag-get-all` - Retrieve all feature flags
+- `feature-flag-get-definition` - Get detailed flag configuration
+- `query-run` - Run analytics queries to check flag usage
+- `insights-get-all` - Get insights related to flag performance
+
+**Sample Output:**
+This workflow creates GitHub issues like:
+- "🏁 Feature Flag Cleanup: dark-mode-toggle" (100% rollout, safe to remove)
+- "🏁 Feature Flag Review: experimental-checkout" (unused for 120 days)
+- "🏁 Feature Flag Simplify: complex-user-targeting" (overly complex rules)
+
+### Advanced Prompts
 
 Consider enhancing your workflow with these advanced Continue CLI prompts:
 
@@ -483,13 +331,12 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
     "Cross-reference JavaScript console errors with user actions to identify the
     root cause of UX issues"
   </Card>
-  <Card title="Feature Flag Analysis" icon="flag">
-    "Analyze how [PostHog feature flags](https://posthog.com/docs/feature-flags)
-    impact user behavior in session recordings"
+  <Card title="Feature Flag Performance Impact" icon="flag">
+    "Use PostHog MCP to correlate feature flag rollouts with performance metrics and user behavior changes to identify flags causing issues"
   </Card>
   <Card title="Custom Slack Alerts" icon="slack">
     "Create Slack alerts when critical UX issues are detected in PostHog
-    sessions"
+    sessions or when feature flags need attention"
   </Card>
 </CardGroup>
 

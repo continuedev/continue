@@ -28,6 +28,7 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
@@ -171,6 +172,8 @@ export default async function doLoadConfig(options: {
     }
   }
 
+  newConfig.slashCommands.push(initSlashCommand);
+
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",
   );
@@ -210,6 +213,13 @@ export default async function doLoadConfig(options: {
   newConfig.mcpServerStatuses = serializableStatuses;
 
   for (const server of mcpServerStatuses) {
+    server.errors.forEach((error) => {
+      // MCP errors will also show as config loading errors
+      errors.push({
+        fatal: false,
+        message: error,
+      });
+    });
     if (server.status === "connected") {
       const serverTools: Tool[] = server.tools.map((tool) => ({
         displayTitle: server.name + " " + tool.name,

@@ -41,7 +41,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
 
     it("should return true for Gemini models", () => {
       expect(supportsFn("ownerSlug/packageSlug/gemini/gemini-pro")).toBe(true);
-      expect(supportsFn("ownerSlug/packageSlug/gemini/gemini-1.5-pro")).toBe(
+      expect(supportsFn("ownerSlug/packageSlug/gemini/gemini-2.5-pro")).toBe(
         true,
       );
     });
@@ -139,7 +139,6 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
 
     it("should return true for all Gemini models", () => {
       expect(supportsFn("gemini-pro")).toBe(true);
-      expect(supportsFn("gemini-1.5-pro")).toBe(true);
       expect(supportsFn("gemini-ultra")).toBe(true);
     });
 
@@ -150,7 +149,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
 
     it("should handle case insensitivity", () => {
       expect(supportsFn("GEMINI-pro")).toBe(true);
-      expect(supportsFn("Gemini-1.5-Pro")).toBe(true);
+      expect(supportsFn("Gemini-2.5-Pro")).toBe(true);
     });
   });
 

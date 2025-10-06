@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MCPOptions } from "../..";
+import { InternalMcpOptions } from "../..";
 import MCPConnection from "./MCPConnection";
 import { MCPManagerSingleton } from "./MCPManagerSingleton";
 
 // Create test versions with stubbed behavior
 class TestMCPConnection extends MCPConnection {
-  constructor(options: MCPOptions) {
+  constructor(options: InternalMcpOptions) {
     super(options);
 
     // Override with test implementations
@@ -28,14 +28,12 @@ class TestMCPConnection extends MCPConnection {
 
 describe("MCPManagerSingleton", () => {
   let manager: MCPManagerSingleton;
-  const testOptions: MCPOptions = {
+  const testOptions: InternalMcpOptions = {
     name: "test-mcp",
     id: "test-id",
-    transport: {
-      type: "stdio",
-      command: "test-command",
-      args: [],
-    },
+    type: "stdio",
+    command: "test-command",
+    args: [],
   };
 
   beforeEach(() => {
@@ -53,7 +51,7 @@ describe("MCPManagerSingleton", () => {
     // Override createConnection to use our TestMCPConnection
     manager.createConnection = function (
       id: string,
-      options: MCPOptions,
+      options: InternalMcpOptions,
     ): MCPConnection {
       if (this.connections.has(id)) {
         return this.connections.get(id)!;
@@ -93,28 +91,6 @@ describe("MCPManagerSingleton", () => {
     it("should return existing connection", () => {
       const connection = manager.createConnection("test-id", testOptions);
       expect(manager.getConnection("test-id")).toBe(connection);
-    });
-  });
-
-  describe("removeConnection", () => {
-    it("should remove connection and close client", async () => {
-      // Create a spy on the close method
-      const connection = manager.createConnection(
-        "test-id",
-        testOptions,
-      ) as TestMCPConnection;
-      const closeSpy = vi.spyOn(connection.client, "close");
-
-      await manager.removeConnection("test-id");
-
-      expect(closeSpy).toHaveBeenCalled();
-      expect(manager.getConnection("test-id")).toBeUndefined();
-    });
-
-    it("should handle non-existent connection", async () => {
-      await expect(
-        manager.removeConnection("non-existent"),
-      ).resolves.toBeUndefined();
     });
   });
 

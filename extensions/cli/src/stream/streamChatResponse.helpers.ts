@@ -51,25 +51,30 @@ export function handlePermissionDenied(
 }
 
 // Helper function to handle headless mode permission
-export function handleHeadlessPermission(
+export async function handleHeadlessPermission(
   toolCall: PreprocessedToolCall,
-): never {
+): Promise<never> {
   const allBuiltinTools = getAllBuiltinTools();
   const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
   const toolName = tool?.displayName || toolCall.name;
 
-  console.error(
-    `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`,
+  // Import safeStderr to bypass console blocking in headless mode
+  const { safeStderr } = await import("../init.js");
+  safeStderr(
+    `Error: Tool '${toolName}' requires permission but cn is running in headless mode.\n`,
   );
-  console.error(`If you want to allow this tool, use --allow ${toolName}.`);
-  console.error(
-    `If you don't want the tool to be included, use --exclude ${toolName}.`,
+  safeStderr(
+    `If you want to allow all tools without asking, use cn -p --auto "your prompt".\n`,
+  );
+  safeStderr(`If you want to allow this tool, use --allow ${toolName}.\n`);
+  safeStderr(
+    `If you don't want the tool to be included, use --exclude ${toolName}.\n`,
   );
 
   // Use graceful exit to flush telemetry even in headless denial
-  // Note: We purposely trigger an async exit without awaiting in this sync path
-  import("../util/exit.js").then(({ gracefulExit }) => gracefulExit(1));
-  // Throw to satisfy the never return type; process will exit shortly
+  const { gracefulExit } = await import("../util/exit.js");
+  await gracefulExit(1);
+  // This line will never be reached, but TypeScript needs it for the 'never' return type
   throw new Error("Exiting due to headless permission requirement");
 }
 
@@ -133,7 +138,7 @@ export async function checkToolPermissionApproval(
     return { approved: true };
   } else if (permissionCheck.permission === "ask") {
     if (isHeadless) {
-      handleHeadlessPermission(toolCall);
+      await handleHeadlessPermission(toolCall);
     }
     const userApproved = await requestUserPermission(toolCall, callbacks);
     return userApproved

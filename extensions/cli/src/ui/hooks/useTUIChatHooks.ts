@@ -175,6 +175,7 @@ export function useSelectors(
   configPath: string | undefined,
   setChatHistory: React.Dispatch<React.SetStateAction<any[]>>,
   handleClear: () => void,
+  setStaticRefreshTrigger?: React.Dispatch<React.SetStateAction<number>>,
 ): {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
@@ -204,6 +205,12 @@ export function useSelectors(
           contextItems: [],
         },
       ]);
+    },
+    onRefreshUI: () => {
+      // Force a UI refresh to update the IntroMessage with new model
+      if (setStaticRefreshTrigger) {
+        setStaticRefreshTrigger((prev) => prev + 1);
+      }
     },
   });
 
