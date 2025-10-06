@@ -1,6 +1,6 @@
 import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
-import { CloseButton, SecondaryButton } from "../../../components";
+import { CloseButton } from "../../../components";
 import { CopyButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
 import { RunInTerminalButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
 import { Card } from "../../../components/ui";
@@ -78,7 +78,9 @@ export function CliInstallBanner() {
                 npm i -g @continuedev/cli
               </code>
               <div className="flex items-center gap-2">
-                <CopyButton text="npm i -g @continuedev/cli" />
+                <CopyButton
+                  text={`npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`}
+                />
                 <RunInTerminalButton
                   command={`npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`}
                 />
