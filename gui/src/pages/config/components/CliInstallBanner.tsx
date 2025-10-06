@@ -1,6 +1,8 @@
 import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { CloseButton, SecondaryButton } from "../../../components";
+import { CopyButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
+import { RunInTerminalButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
 import { Card } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { getPlatform } from "../../../util";
@@ -61,9 +63,15 @@ export function CliInstallBanner() {
               </div>
             </div>
             <div className="flex flex-col items-start gap-2">
-              <code className="bg-vsc-background text-foreground rounded px-2 py-1 text-xs">
-                npm i -g @continuedev/cli
-              </code>
+              <div className="bg-vsc-background flex w-full items-center gap-2 rounded border border-gray-600 px-3 py-2">
+                <code className="text-foreground flex-1 text-xs">
+                  npm i -g @continuedev/cli
+                </code>
+                <div className="flex items-center gap-2">
+                  <CopyButton text="npm i -g @continuedev/cli" />
+                  <RunInTerminalButton command="npm i -g @continuedev/cli" />
+                </div>
+              </div>
               <SecondaryButton
                 onClick={() =>
                   ideMessenger.post(

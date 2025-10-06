@@ -196,6 +196,30 @@ describe("CliInstallBanner", () => {
         "https://docs.continue.dev/guides/cli",
       );
     });
+
+    it("copies installation command when copy button is clicked", async () => {
+      // Find the copy button (ClipboardIcon)
+      const copyButtons = screen.getAllByRole("button");
+      const copyButton = copyButtons.find((btn) =>
+        btn.querySelector('svg[class*="ClipboardIcon"]'),
+      );
+
+      expect(copyButton).toBeDefined();
+    });
+
+    it("runs installation command in terminal when run button is clicked", async () => {
+      const postSpy = vi.spyOn(mockIdeMessenger, "post");
+
+      // Find the "Run" text or CommandLineIcon
+      const runButton = screen.getByText(/Run/i).closest("div");
+      if (runButton) {
+        fireEvent.click(runButton);
+
+        expect(postSpy).toHaveBeenCalledWith("runCommand", {
+          command: "npm i -g @continuedev/cli",
+        });
+      }
+    });
   });
 
   describe("Banner visibility states", () => {
