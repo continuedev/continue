@@ -192,7 +192,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
             </Listbox>
           </div>
         </div>
-        <Tooltip>
+        <Tooltip id={disabledTooltipId}>
           {mode === "chat"
             ? "Tool disabled in chat mode"
             : !props.isGroupEnabled
