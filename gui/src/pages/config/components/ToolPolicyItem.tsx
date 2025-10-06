@@ -19,7 +19,7 @@ import {
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
-import { isAutoEditToolCall } from "../../../util/toolCallState";
+import { isEditTool } from "../../../util/toolCallState";
 
 interface ToolPolicyItemProps {
   tool: Tool;
@@ -39,13 +39,11 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
     (state) => state.config.config.ui?.autoAcceptEditToolDiffs,
   );
   const isAutoAcceptedToolCall =
-    isAutoEditToolCall(props.tool.function.name) && autoAcceptEditToolDiffs;
+    isEditTool(props.tool.function.name) && autoAcceptEditToolDiffs;
 
   const policy = isAutoAcceptedToolCall
     ? "allowedWithoutPermission"
     : toolPolicy;
-
-  console.log("debug1 policy->", policy, "and", props.tool.function.name);
 
   useEffect(() => {
     if (!policy) {
@@ -120,8 +118,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                     className="flex flex-wrap items-center"
                     content={
                       <p className="m-0 p-0">
-                        Tool policy is now automatic as you have turned on
-                        Auto-Accept Agent Edits.
+                        Auto-Accept Agent Edits setting is on
                       </p>
                     }
                   >

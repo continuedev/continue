@@ -1,7 +1,7 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
 import { Tool, ToolCallState } from "core";
 import { IIdeMessenger } from "../../context/IdeMessenger";
-import { isAutoEditToolCall } from "../../util/toolCallState";
+import { isEditTool } from "../../util/toolCallState";
 import { errorToolCall, updateToolCallOutput } from "../slices/sessionSlice";
 import { DEFAULT_TOOL_SETTING, ToolPolicies } from "../slices/uiSlice";
 import { AppThunkDispatch } from "../store";
@@ -21,11 +21,11 @@ async function evaluateToolPolicy(
   activeTools: Tool[],
   toolCallState: ToolCallState,
   toolPolicies: ToolPolicies,
-  autoAcceptEditToolDiffs: boolean,
+  autoAcceptEditToolDiffs: boolean | undefined,
 ): Promise<EvaluatedPolicy> {
   // allow edit tool calls without permission if auto-accept is enabled
   if (
-    isAutoEditToolCall(toolCallState.toolCall.function.name) &&
+    isEditTool(toolCallState.toolCall.function.name) &&
     autoAcceptEditToolDiffs
   ) {
     return { policy: "allowedWithoutPermission", toolCallState };
@@ -83,7 +83,7 @@ export async function evaluateToolPolicies(
   activeTools: Tool[],
   generatedToolCalls: ToolCallState[],
   toolPolicies: ToolPolicies,
-  autoAcceptEditToolDiffs: boolean,
+  autoAcceptEditToolDiffs: boolean | undefined,
 ): Promise<EvaluatedPolicy[]> {
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   const policyResults = await Promise.all(

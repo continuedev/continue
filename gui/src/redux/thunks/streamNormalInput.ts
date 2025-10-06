@@ -268,7 +268,7 @@ export const streamNormalInput = createAsyncThunk<
       activeTools,
       generatedCalls3,
       toolPolicies,
-      state3.config.config.ui?.autoAcceptEditToolDiffs ?? false,
+      state3.config.config.ui?.autoAcceptEditToolDiffs,
     );
     const anyRequireApproval = policies.find(
       ({ policy }) => policy === "allowedWithPermission",
