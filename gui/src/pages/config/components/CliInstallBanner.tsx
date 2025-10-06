@@ -61,8 +61,8 @@ export function CliInstallBanner() {
               interactive and headless modes.
             </div>
           </div>
-          <div className="flex flex-col items-start gap-2">
-            <div className="bg-vsc-background flex w-full items-center gap-2 rounded border border-gray-600 px-3 py-2">
+          <div className="flex flex-col items-start gap-2 self-stretch">
+            <div className="bg-vsc-background flex items-center gap-2 rounded border border-gray-600 px-3 py-2">
               <code className="text-foreground flex-1 text-xs">
                 npm i -g @continuedev/cli
               </code>
