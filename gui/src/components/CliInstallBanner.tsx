@@ -1,12 +1,12 @@
 import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
-import { CloseButton } from "../../../components";
-import { CopyButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
-import { RunInTerminalButton } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
-import { Card } from "../../../components/ui";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getPlatform } from "../../../util";
-import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
+import { CloseButton } from ".";
+import { CopyButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
+import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
+import { Card } from "./ui";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { getPlatform } from "../util";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 interface CliInstallBannerProps {
   /** Current message count - banner shows only if >= messageThreshold */

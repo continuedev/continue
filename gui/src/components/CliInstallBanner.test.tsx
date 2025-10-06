@@ -6,22 +6,22 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { MockIdeMessenger } from "../../../context/MockIdeMessenger";
-import * as util from "../../../util";
-import * as localStorage from "../../../util/localStorage";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import * as util from "../../util";
+import * as localStorage from "../../util/localStorage";
 import { CliInstallBanner } from "./CliInstallBanner";
 
-vi.mock("../../../util", async () => {
-  const actual = await vi.importActual("../../../util");
+vi.mock("../../util", async () => {
+  const actual = await vi.importActual("../../util");
   return {
     ...actual,
     getPlatform: vi.fn(),
   };
 });
 
-vi.mock("../../../util/localStorage", async () => {
-  const actual = await vi.importActual("../../../util/localStorage");
+vi.mock("../../util/localStorage", async () => {
+  const actual = await vi.importActual("../../util/localStorage");
   return {
     ...actual,
     getLocalStorage: vi.fn(),

@@ -46,7 +46,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { CliInstallBanner } from "../config/components/CliInstallBanner";
+import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
