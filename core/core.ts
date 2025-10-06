@@ -83,6 +83,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { ContinueError, ContinueErrorReason } from "./util/errors";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 
@@ -425,10 +426,7 @@ export class Core {
     });
 
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(
-        msg.data.profileId,
-        msg.data?.element,
-      );
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -497,20 +495,10 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
-      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
     });
-    on("mcp/disconnectServer", async (msg) => {
-      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
-        msg.data.id,
-      );
-      if (!mcpConnection)
-        throw new Error(`MCP connection with id ${msg.data.id} not found`);
-      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
-      await mcpConnection.disconnect();
-      await this.configHandler.refreshAll("MCP Servers disconnected");
-    });
-    on("mcp/getDisconnectedServers", async (_msg) => {
-      return MCPManagerSingleton.getInstance().getDisconnectedServers();
+    on("mcp/setServerEnabled", async (msg) => {
+      const { id, enabled } = msg.data;
+      await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;
@@ -942,7 +930,7 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
-      console.log("deleteChain called from files/closed");
+      console.debug("deleteChain called from files/closed");
       await NextEditProvider.getInstance().deleteChain();
 
       try {
@@ -1144,12 +1132,27 @@ export class Core {
       if (!tool) {
         throw new Error(`Tool ${toolName} not found`);
       }
-      const preprocessedArgs = await tool.preprocessArgs?.(args, {
-        ide: this.ide,
-      });
-      return {
-        preprocessedArgs,
-      };
+
+      try {
+        const preprocessedArgs = await tool.preprocessArgs?.(args, {
+          ide: this.ide,
+        });
+        return {
+          preprocessedArgs,
+        };
+      } catch (e) {
+        let errorReason =
+          e instanceof ContinueError ? e.reason : ContinueErrorReason.Unknown;
+        let errorMessage =
+          e instanceof Error
+            ? e.message
+            : `Error preprocessing tool call args for ${toolName}\n${JSON.stringify(args)}`;
+        return {
+          preprocessedArgs: undefined,
+          errorReason,
+          errorMessage,
+        };
+      }
     });
 
     on("isItemTooBig", async ({ data: { item } }) => {

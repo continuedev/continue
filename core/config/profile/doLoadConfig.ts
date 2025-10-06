@@ -28,6 +28,7 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
@@ -170,6 +171,8 @@ export default async function doLoadConfig(options: {
       }
     }
   }
+
+  newConfig.slashCommands.push(initSlashCommand);
 
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",

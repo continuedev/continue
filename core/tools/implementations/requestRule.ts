@@ -7,7 +7,7 @@ export const requestRuleImpl: ToolImpl = async (args, extras) => {
   // Find the rule by name in the config
   const rule = extras.config.rules.find((r) => r.name === name);
 
-  if (!rule || !rule.ruleFile) {
+  if (!rule || !rule.sourceFile) {
     throw new Error(`Rule with name "${name}" not found or has no file path`);
   }
 
@@ -18,7 +18,7 @@ export const requestRuleImpl: ToolImpl = async (args, extras) => {
       content: rule.rule,
       uri: {
         type: "file",
-        value: rule.ruleFile,
+        value: rule.sourceFile,
       },
     },
   ];

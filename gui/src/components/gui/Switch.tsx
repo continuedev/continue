@@ -38,7 +38,14 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         {isToggled && !!showIfToggled && showIfToggled}
         <div
           className={`border-command-border bg-vsc-input-background relative flex items-center rounded-full border border-solid`}
-          onClick={disabled ? undefined : onToggle}
+          onClick={
+            disabled
+              ? undefined
+              : (e) => {
+                  e.stopPropagation();
+                  onToggle();
+                }
+          }
           style={{
             height: size,
             width: size * 2,

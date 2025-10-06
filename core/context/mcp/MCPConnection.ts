@@ -90,11 +90,11 @@ class MCPConnection {
     this.abortController = new AbortController();
   }
 
-  async disconnect() {
-    this.status = "not-connected";
+  async disconnect(disable = false) {
     this.abortController.abort();
     await this.client.close();
     await this.transport.close();
+    this.status = disable ? "disabled" : "not-connected";
   }
 
   getStatus(): MCPServerStatus {
@@ -112,6 +112,9 @@ class MCPConnection {
   }
 
   async connectClient(forceRefresh: boolean, externalSignal: AbortSignal) {
+    if (this.status === "disabled") {
+      return;
+    }
     if (!forceRefresh) {
       // Already connected
       if (this.status === "connected") {
