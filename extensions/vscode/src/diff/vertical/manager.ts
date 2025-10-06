@@ -51,7 +51,7 @@ export class VerticalDiffManager {
       this.fileUriToHandler.get(fileUri)?.clear(false);
       this.fileUriToHandler.delete(fileUri);
     }
-    const editor = vscode.window.activeTextEditor; // TODO might cause issues if user switches files
+    const editor = vscode.window.activeTextEditor;
     if (editor && URI.equal(editor.document.uri.toString(), fileUri)) {
       const handler = new VerticalDiffHandler(
         startLine,
@@ -302,6 +302,7 @@ export class VerticalDiffManager {
     newCode,
     toolCallId,
     rulesToInclude,
+    isApply,
   }: {
     input: string;
     llm: ILLM;
@@ -311,6 +312,7 @@ export class VerticalDiffManager {
     newCode?: string;
     toolCallId?: string;
     rulesToInclude: undefined | RuleWithSource[];
+    isApply: boolean;
   }): Promise<string | undefined> {
     void vscode.commands.executeCommand(
       "setContext",
@@ -468,17 +470,23 @@ export class VerticalDiffManager {
       const streamedLines: string[] = [];
 
       async function* recordedStream() {
-        const stream = streamDiffLines({
-          highlighted: rangeContent,
-          prefix,
-          suffix,
+        const stream = streamDiffLines(
+          {
+            highlighted: rangeContent,
+            prefix,
+            suffix,
+            input,
+            language: getMarkdownLanguageTagForFile(fileUri),
+            type: isApply ? "apply" : "edit",
+            newCode: newCode ?? "",
+            includeRulesInSystemMessage: !!rulesToInclude && !isApply,
+            modelTitle: llm.title ?? llm.model,
+          },
           llm,
-          rulesToInclude,
-          input,
-          language: getMarkdownLanguageTagForFile(fileUri),
-          overridePrompt,
           abortController,
-        });
+          overridePrompt,
+          rulesToInclude,
+        );
 
         for await (const line of stream) {
           if (line.type === "new" || line.type === "same") {

@@ -18,7 +18,7 @@ describe("getFileContent", () => {
     expect(result).toContain("provider: anthropic");
   });
 
-  test("generates correct YAML for different block types", () => {
+  test("generates correct content for different block types", () => {
     const contextResult = getFileContent("context");
     expect(contextResult).toContain("name: New context");
     expect(contextResult).toContain("context:");
@@ -31,8 +31,10 @@ describe("getFileContent", () => {
 
     const promptsResult = getFileContent("prompts");
     expect(promptsResult).toContain("name: New prompt");
-    expect(promptsResult).toContain("prompts:");
+    expect(promptsResult).toContain("description: New prompt");
+    expect(promptsResult).toContain("invokable: true");
     expect(promptsResult).toContain("thorough suite of unit tests");
+    expect(promptsResult).toContain("---"); // Should be markdown with frontmatter
 
     const mcpResult = getFileContent("mcpServers");
     expect(mcpResult).toContain("name: New MCP server");
@@ -96,7 +98,7 @@ describe("findAvailableFilename", () => {
       { blockType: "context", expected: "/test/new-context.yaml" },
       { blockType: "rules", expected: `/test/new-rule.${RULE_FILE_EXTENSION}` },
       { blockType: "docs", expected: "/test/new-doc.yaml" },
-      { blockType: "prompts", expected: "/test/new-prompt.yaml" },
+      { blockType: "prompts", expected: "/test/new-prompt.md" },
       { blockType: "mcpServers", expected: "/test/new-mcp-server.yaml" },
     ];
 
@@ -148,8 +150,8 @@ describe("findAvailableFilename", () => {
     const existingFiles = new Set(
       Array.from({ length: 100 }, (_, i) =>
         i === 0
-          ? "/workspace/.continue/prompts/new-prompt.yaml"
-          : `/workspace/.continue/prompts/new-prompt-${i}.yaml`,
+          ? "/workspace/.continue/prompts/new-prompt.md"
+          : `/workspace/.continue/prompts/new-prompt-${i}.md`,
       ),
     );
 
@@ -163,6 +165,6 @@ describe("findAvailableFilename", () => {
       mockFileExists,
     );
 
-    expect(result).toBe("/workspace/.continue/prompts/new-prompt-100.yaml");
+    expect(result).toBe("/workspace/.continue/prompts/new-prompt-100.md");
   });
 });

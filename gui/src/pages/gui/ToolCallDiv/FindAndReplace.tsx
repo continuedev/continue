@@ -1,5 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import { trimEmptyLines } from "core/edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
@@ -13,13 +15,13 @@ import {
   selectApplyStateByToolCallId,
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
-import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
 import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
-  fileUri?: string;
-  editingFileContents?: string;
+  fileUri?: string; // Added during args preprocessing
+  newFileContents?: string; // Added during args preprocessing
+  editingFileContents?: string; // Added args preprocessing
   relativeFilePath?: string;
   edits: EditOperation[];
   toolCallId: string;
@@ -83,6 +85,7 @@ function DiffStats({ added, removed }: { added: number; removed: number }) {
 
 export function FindAndReplaceDisplay({
   fileUri,
+  newFileContents,
   relativeFilePath,
   editingFileContents,
   edits,
@@ -116,43 +119,44 @@ export function FindAndReplaceDisplay({
     if (editingFileContents) {
       return editingFileContents;
     }
-    return edits?.map((edit) => edit.old_string ?? "").join("\n");
+    if (Array.isArray(edits)) {
+      return edits.map((edit) => edit.old_string ?? "").join("\n");
+    }
+    return "";
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
-    if (!currentFileContent) {
-      return null;
-    }
-
     try {
-      // Apply all edits sequentially
-      let newContent = currentFileContent;
-      for (let i = 0; i < edits.length; i++) {
-        const {
-          old_string: oldString,
-          new_string: newString,
-          replace_all: replaceAll,
-        } = edits[i];
-        newContent = performFindAndReplace(
-          newContent,
-          oldString,
-          newString,
-          replaceAll,
-          i,
-        );
+      let contentsAfterReplace = newFileContents;
+      if (typeof contentsAfterReplace === "undefined") {
+        // Apply all edits sequentially
+        contentsAfterReplace = currentFileContent;
+        for (let i = 0; i < edits.length; i++) {
+          const {
+            old_string: oldString,
+            new_string: newString,
+            replace_all: replaceAll,
+          } = edits[i];
+          contentsAfterReplace = executeFindAndReplace(
+            contentsAfterReplace,
+            oldString,
+            newString,
+            !!replaceAll,
+            i,
+          );
+        }
       }
 
       // Generate diff between original and final content
-      const diff = diffLines(currentFileContent, newContent);
-      return { diff, newContent, error: null };
+      const diff = diffLines(currentFileContent, contentsAfterReplace);
+      return { diff, error: null };
     } catch (error) {
       return {
         diff: null,
-        newContent: null,
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
-  }, [currentFileContent, edits]);
+  }, [currentFileContent, newFileContents, edits]);
 
   const diffStats = useMemo(() => {
     if (!diffResult?.diff) {
@@ -181,24 +185,22 @@ export function FindAndReplaceDisplay({
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;
     if (status) {
-      if (status === "canceled" || status === "errored" || status === "done") {
-        return (
-          <div
-            className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
-            onClick={(e) => {
-              if (toolCallState.output) {
-                e.stopPropagation();
-                ideMessenger.post("showVirtualFile", {
-                  name: "Edit output",
-                  content: renderContextItems(toolCallState.output),
-                });
-              }
-            }}
-          >
-            {getStatusIcon(toolCallState.status)}
-          </div>
-        );
-      }
+      return (
+        <div
+          className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+          onClick={(e) => {
+            if (toolCallState.output) {
+              e.stopPropagation();
+              ideMessenger.post("showVirtualFile", {
+                name: "Edit output",
+                content: renderContextItems(toolCallState.output),
+              });
+            }
+          }}
+        >
+          {getStatusIcon(status)}
+        </div>
+      );
     }
   }, [toolCallState?.status, toolCallState?.output]);
 
@@ -313,14 +315,16 @@ export function FindAndReplaceDisplay({
             const showMiddleEllipses =
               !isFirst && !isLast && lines.length > MAX_SAME_LINES * 2 + 1;
 
-            const startLines = showStartEllipsis
+            let startLines = showStartEllipsis
               ? lines.slice(-MAX_SAME_LINES)
               : showMiddleEllipses || showEndEllipsis
                 ? lines.slice(0, MAX_SAME_LINES)
                 : lines;
-            const endLines = showMiddleEllipses
+            startLines = trimEmptyLines({ lines: startLines, fromEnd: false });
+            let endLines = showMiddleEllipses
               ? lines.slice(-MAX_SAME_LINES)
               : [];
+            endLines = trimEmptyLines({ lines: endLines, fromEnd: true });
 
             return (
               <div key={index}>

@@ -1,5 +1,5 @@
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import Alert from "../../components/gui/Alert";
@@ -14,16 +14,8 @@ function ConfigPage() {
   useNavigationListener();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("settings");
+  const activeTab = searchParams.get("tab") || "settings";
   const { session, organizations } = useAuth();
-
-  // Set initial tab from URL parameter
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   const allTabs = getAllTabs();
   const shouldRenderOrgInfo =
@@ -33,7 +25,7 @@ function ConfigPage() {
     if (tabId === "back") {
       navigate("/");
     } else {
-      setActiveTab(tabId);
+      navigate(`/config?tab=${tabId}`);
     }
   };
 
@@ -97,7 +89,7 @@ function ConfigPage() {
         </div>
 
         {/* Tab Content for larger screens (md and above) */}
-        <div className="hidden flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:block">
+        <div className="thin-scrollbar hidden flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:block">
           {allTabs.find((tab) => tab.id === activeTab)?.component}
         </div>
       </div>

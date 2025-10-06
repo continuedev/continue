@@ -55,12 +55,15 @@ export function useChat({
   additionalPrompts,
   onShowConfigSelector,
   onShowModelSelector,
+  onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
   onLoginPrompt: _onLoginPrompt,
   onClear,
   isRemoteMode = false,
   remoteUrl,
+  onShowDiff,
+  onShowStatusMessage,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -334,13 +337,13 @@ export function useChat({
 
       // Check if there are queued messages and process them after a microtask delay
       // This ensures the GUI state has been updated before processing the next message
-      const queuedMessageData = messageQueue.getLatestMessage();
+      const queuedMessageData = messageQueue.getNextMessage();
       if (queuedMessageData) {
         const { message: latestQueuedMessage, imageMap } = queuedMessageData;
         logger.debug("processing queued message", { latestQueuedMessage });
 
         // Clear queued messages from display since they're about to be processed
-        // Note: messageQueue.getLatestMessage() already cleared the actual queue
+        // Note: messageQueue.getNextMessage() already cleared the actual queue
         setQueuedMessages([]);
 
         await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
@@ -385,12 +388,16 @@ export function useChat({
   const handleSlashCommandProcessing = async (
     message: string,
   ): Promise<string | null> => {
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (isRemoteMode || !assistant) {
+    // Handle slash commands
+    if (!assistant) {
       return message;
     }
 
-    const commandResult = await handleSlashCommands(message, assistant);
+    const commandResult = await handleSlashCommands(message, assistant, {
+      remoteUrl,
+      isRemoteMode,
+    });
+
     if (!commandResult) {
       return message;
     }
@@ -419,6 +426,7 @@ export function useChat({
       onShowModelSelector,
       onShowMCPSelector,
       onShowSessionSelector,
+      onShowUpdateSelector,
       onClear,
     });
 
@@ -455,6 +463,8 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
+      onShowDiff,
+      onShowStatusMessage,
     });
 
     if (handled) return;
@@ -466,7 +476,7 @@ export function useChat({
     }
     message = bashProcessedMessage;
 
-    // Handle slash commands
+    // Handle slash commands (MUST happen before remote message handling)
     const processedMessage = await handleSlashCommandProcessing(message);
     if (processedMessage === null) {
       return; // Command was handled and no further processing needed

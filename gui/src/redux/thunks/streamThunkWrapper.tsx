@@ -13,7 +13,6 @@ export const streamThunkWrapper = createAsyncThunk<
   () => Promise<void>,
   ThunkApiType
 >("chat/streamWrapper", async (runStream, { dispatch, extra, getState }) => {
-  const initialState = getState();
   try {
     await runStream();
     const state = getState();

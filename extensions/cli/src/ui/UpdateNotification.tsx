@@ -1,79 +1,54 @@
 import { Text } from "ink";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 
-import { compareVersions, getLatestVersion, getVersion } from "../version.js";
+import { useServices } from "../hooks/useService.js";
+import {
+  SERVICE_NAMES,
+  UpdateServiceState,
+  UpdateStatus,
+} from "../services/types.js";
 
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
 
 interface UpdateNotificationProps {
   isRemoteMode?: boolean;
 }
-
 const UpdateNotification: React.FC<UpdateNotificationProps> = ({
   isRemoteMode = false,
 }) => {
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [latestVersion, setLatestVersion] = useState<string>("");
-  const [currentVersion] = useState(getVersion());
   const { columns } = useTerminalSize();
 
-  useEffect(() => {
-    // Skip update check in test environment
-    if (process.env.NODE_ENV === "test") {
-      return;
+  const { services } = useServices<{
+    update: UpdateServiceState;
+  }>([SERVICE_NAMES.UPDATE]);
+
+  const color = useMemo(() => {
+    switch (services.update?.status) {
+      case UpdateStatus.UPDATING:
+      case UpdateStatus.CHECKING:
+        return "yellow";
+      case UpdateStatus.UPDATED:
+        return "green";
+      case UpdateStatus.ERROR:
+        return "red";
+      default:
+        return "dim";
     }
-
-    // Skip update check for development versions
-    if (currentVersion.endsWith("-dev")) {
-      return;
-    }
-
-    const abortController = new AbortController();
-
-    const checkForUpdate = async () => {
-      try {
-        const latest = await getLatestVersion(abortController.signal);
-        if (latest) {
-          setLatestVersion(latest);
-          const comparison = compareVersions(currentVersion, latest);
-          setUpdateAvailable(comparison === "older");
-        }
-      } catch (error) {
-        // Silently fail - we don't want to interrupt the user experience
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.debug("Failed to check for updates:", error);
-        }
-      }
-    };
-
-    // Check for updates but don't block
-    checkForUpdate();
-
-    // Cleanup function to abort the request when component unmounts
-    return () => {
-      abortController.abort();
-    };
-  }, [currentVersion]);
+  }, [services.update?.status]);
 
   const text = useMemo(() => {
-    if (columns < 75) {
-      return `v${latestVersion} available`;
+    if (!services.update?.message) {
+      return "Continue CLI";
     }
-    return `Update available: v${latestVersion} (npm i -g @continuedev/cli)`;
-  }, [columns, latestVersion]);
 
-  if (!updateAvailable) {
-    if (isRemoteMode) {
-      return <Text color="cyan">◉ Remote Mode</Text>;
-    }
-    return (
-      <Text wrap="truncate-end" color="gray">
-        ● Continue CLI
-      </Text>
-    );
+    return services.update.message;
+  }, [columns, services.update?.message]);
+
+  if (!services.update?.isUpdateAvailable && isRemoteMode) {
+    return <Text color="cyan">◉ Remote Mode</Text>;
   }
 
-  return <Text color="dim">{text}</Text>;
+  return <Text color={color}>{`◉ ${text}`}</Text>;
 };
 
 export { UpdateNotification };

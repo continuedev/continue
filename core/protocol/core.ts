@@ -14,6 +14,7 @@ import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
+  BaseSessionMetadata,
   BrowserSerializedContinueConfig,
   ChatMessage,
   CompiledMessagesResult,
@@ -27,7 +28,6 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
-  MCPServerStatus,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -35,7 +35,6 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  SessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -49,9 +48,13 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import { FreeTrialStatus } from "../control-plane/client";
+import {
+  FreeTrialStatus,
+  RemoteSessionMetadata,
+} from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
+import { ContinueErrorReason } from "../util/errors";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -71,10 +74,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionMetadata[]];
+  "history/list": [
+    ListHistoryOptions,
+    (BaseSessionMetadata | RemoteSessionMetadata)[],
+  ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
+  "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
+  "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
@@ -86,6 +94,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
+  "config/addGlobalRule": [undefined, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
@@ -110,10 +119,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [
-    { profileId: string | undefined; element?: { sourceFile?: string } },
-    void,
-  ];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -140,6 +146,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/setServerEnabled": [{ id: string; enabled: boolean }, void];
   "mcp/getPrompt": [
     {
       serverName: string;
@@ -151,9 +158,20 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
-  "mcp/startAuthentication": [MCPServerStatus, void];
-  "mcp/removeAuthentication": [MCPServerStatus, void];
-
+  "mcp/startAuthentication": [
+    {
+      serverId: string;
+      serverUrl: string;
+    },
+    void,
+  ];
+  "mcp/removeAuthentication": [
+    {
+      serverId: string;
+      serverUrl: string;
+    },
+    void,
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -297,6 +315,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tools/evaluatePolicy": [
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
     { policy: ToolPolicy; displayValue?: string },
+  ];
+  "tools/preprocessArgs": [
+    { toolName: string; args: Record<string, unknown> },
+    {
+      preprocessedArgs?: Record<string, unknown>;
+      errorReason?: ContinueErrorReason;
+      errorMessage?: string;
+    },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];

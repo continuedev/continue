@@ -14,6 +14,7 @@ export function addCommonOptions(command: Command): Command {
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
     .option("--verbose", "Enable verbose logging")
+    .option("--beta-status-tool", "Enable beta status tool")
     .option(
       "--rule <rule>",
       "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",

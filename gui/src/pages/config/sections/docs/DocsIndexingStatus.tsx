@@ -1,7 +1,14 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
-import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowPathIcon,
+  PencilIcon,
+  StopIcon,
+} from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { useContext, useEffect, useMemo, useState } from "react";
+import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
+import { ToolTip } from "../../../../components/gui/Tooltip";
+import { useEditDoc } from "../../../../components/mainInput/Lump/useEditBlock";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { updateIndexingStatus } from "../../../../redux/slices/indexingSlice";
@@ -10,9 +17,6 @@ import {
   setShowDialog,
 } from "../../../../redux/slices/uiSlice";
 import { fontSize } from "../../../../util";
-import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
-import { ToolTip } from "../../../../components/gui/Tooltip";
-import EditBlockButton from "../../../../components/mainInput/Lump/EditBlockButton";
 import { IndexedPagesTooltip } from "./IndexedPagesTooltip";
 import { StatusIndicator } from "./StatusIndicator";
 
@@ -25,6 +29,7 @@ function DocsIndexingStatus({
   docConfig,
   docFromYaml,
 }: IndexingStatusViewerProps) {
+  const editDoc = useEditDoc();
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   const [indexedPages, setIndexedPages] = useState<null | string[]>(null);
@@ -159,10 +164,11 @@ function DocsIndexingStatus({
               />
             )}
 
-            <EditBlockButton
-              blockType="docs"
-              block={docFromYaml}
-              sourceFile={docConfig.sourceFile}
+            <PencilIcon
+              className={
+                "h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
+              }
+              onClick={() => editDoc(docFromYaml)}
             />
 
             {["aborted", "complete", "failed"].includes(

@@ -1,17 +1,16 @@
 ---
 title: "Migrating Config to YAML"
-description: "Continue's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Continue products. Below is a brief guide for migration from  to ."
+description: "Continue's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Continue products. Below is a brief guide for migration from config.json to config.yaml."
 ---
 
 See also
 
 - [Intro to YAML](https://yaml.org/)
-- [JSON Continue Config Reference](/reference)
 - [YAML Continue Config Reference](/reference)
 
 ## Create YAML file
 
-Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current `config.json` file. If a `config.yaml` file is present, it will be loaded instead of `config.json`.
+Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current config.json file. If a `config.yaml` file is present, it will be loaded instead of config.json.
 
 Give your configuration a `name` and a `version`:
 
@@ -87,12 +86,12 @@ config.json
 
 config.yaml
 
-```
+```yaml
 models:
   - name: GPT-4
     provider: openai
     model: gpt-4
-    apiKey: <YOUR_OPENAI_KEY>
+    apiKey: <YOUR_OPENAI_API_KEY>
     defaultCompletionOptions:
       temperature: 0.5
       maxTokens: 2000
@@ -101,7 +100,8 @@ models:
       - edit
   - name: My Voyage Reranker
     provider: voyage
-    apiKey: <YOUR_VOYAGE_KEY>
+    model: rerank-2
+    apiKey: <YOUR_VOYAGE_API_KEY>
     roles:
       - rerank
   - name: My Starcoder
@@ -111,22 +111,25 @@ models:
       - autocomplete
   - name: My Ada Embedder
     provider: openai
-    apiKey: <YOUR_ADA_API_KEY>
+    model: text-embedding-ada-002
+    apiKey: <YOUR_OPENAI_API_KEY>
     roles:
       - embed
     embedOptions:
-      - maxChunkSize: 256
-      - maxBatchSize: 5
+      maxChunkSize: 256
+      maxBatchSize: 5
   - name: Ollama Autodetect
     provider: ollama
     model: AUTODETECT
-  - name: My Open AI Compatible Model - Apply
+    roles:
+      - chat
+  - name: My Open AI Compatible Model
     provider: openai
     model: my-openai-compatible-model
     apiBase: http://3.3.3.3/v1
     requestOptions:
       headers:
-        X-Auth-Token: <MY_API_KEY>
+        X-Auth-Token: <API_KEY>
     roles:
       - chat
       - apply
@@ -159,7 +162,7 @@ config.json
 
 config.yaml
 
-```
+```yaml
 context:
   - provider: docs
   - provider: codebase
@@ -178,14 +181,16 @@ The `systemMessage` property has been replaced with a `rules` property that take
 config.json
 
 ```json
-{ "systemMessage": "Always give concise responses" }
+{
+  "systemMessage": "Always give concise responses"
+}
 ```
 
 **After**
 
 config.yaml
 
-```
+```yaml
 rules:
   - Always give concise responses
 ```
@@ -214,7 +219,7 @@ config.json
 
 config.yaml
 
-```
+```yaml
 prompts:
   - name: check
     description: Check for mistakes in my code
@@ -239,8 +244,14 @@ config.json
 ```json
 {
   "docs": [
-    { "startUrl": "https://docs.nestjs.com/", "title": "nest.js" },
-    { "startUrl": "https://mysite.com/docs/", "title": "My site" }
+    {
+      "startUrl": "https://docs.nestjs.com/",
+      "title": "nest.js"
+    },
+    {
+      "startUrl": "https://mysite.com/docs/",
+      "title": "My site"
+    }
   ]
 }
 ```
@@ -249,7 +260,7 @@ config.json
 
 config.yaml
 
-```
+```yaml
 docs:
   - name: nest.js
     startUrl: https://docs.nestjs.com/
@@ -279,8 +290,14 @@ config.json
         "transport": {
           "type": "stdio",
           "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"],
-          "env": { "KEY": "<VALUE>" }
+          "args": [
+            "mcp-server-sqlite",
+            "--db-path",
+            "/Users/NAME/test.db"
+          ],
+          "env": {
+            "KEY": "<VALUE>"
+          }
         }
       }
     ]
@@ -292,7 +309,7 @@ config.json
 
 config.yaml
 
-```
+```yaml
 mcpServers:
   - name: My MCP Server
     command: uvx
@@ -308,13 +325,11 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the user settings (Gear Icon). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
+Some deprecated config.json settings are no longer stored in config and have been moved to be editable through the user settings (Gear Icon). If found in config.json, they will be auto-migrated to User Settings and removed from config.json.
 
-See the [JSON Config Reference](/reference) for more information on fully deprecated options.
+The following top-level fields from config.json have been deprecated and don't have a config.yaml equivalent:
 
-The following top-level fields from `config.json` still work when using `config.json` but have been deprecated and don't have a YAML equivalent:
-
-- Slash commands (JSON `slashCommands`)
+- Slash commands (`slashCommands`)
 
 - top-level `requestOptions`
 
@@ -332,7 +347,7 @@ The following top-level fields from `config.json` still work when using `config.
 
 - `analytics`
 
-The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+The following top-level fields from config.json have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
 
 - `customCommands`
 - `experimental`

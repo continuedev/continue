@@ -17,6 +17,7 @@ import { setupStore } from "../../redux/store";
 type ExtendedRenderOptions = Omit<RenderOptions, "queries"> & {
   store?: ReturnType<typeof setupStore>;
   routerProps?: RouterProps;
+  mockIdeMessenger?: MockIdeMessenger;
 };
 
 function setupMocks() {
@@ -32,7 +33,8 @@ export async function renderWithProviders(
   extendedRenderOptions: ExtendedRenderOptions = {},
 ) {
   setupMocks();
-  const ideMessenger = new MockIdeMessenger();
+  const ideMessenger =
+    extendedRenderOptions?.mockIdeMessenger ?? new MockIdeMessenger();
 
   const {
     // Automatically create a store instance if no store was passed in

@@ -32,7 +32,6 @@ models:
 ---
 name: rulename
 description: my rule description
-pattern: "**"
 ---
 This is the rule 
 `;
@@ -48,7 +47,7 @@ This is the rule
     const rule = result.rules![0];
     expect(rule).toHaveProperty("name", "rulename");
     expect(rule).toHaveProperty("description", "my rule description");
-    expect(rule).toHaveProperty("globs", "./foo/**/*");
+    expect(rule).toHaveProperty("globs", undefined);
     expect(rule).toHaveProperty("rule", "This is the rule");
   });
 
@@ -74,7 +73,7 @@ model: # should be models
   it("Every non-YAML file is a rule", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
-      fileUri: "./foo/bar",
+      fileUri: "file:///foo/bar",
     };
     const dubiousContent = `This is not \nproper #YAML#`;
     const result = parseMarkdownRuleOrAssistantUnrolled(dubiousContent, mockId);
@@ -85,7 +84,7 @@ model: # should be models
     expect(result.rules!.length).toBe(1);
     const rule = result.rules![0];
     expect(rule).toHaveProperty("name", "foo/bar");
-    expect(rule).toHaveProperty("globs", "./foo/**/*");
+    expect(rule).toHaveProperty("globs", undefined);
     expect(rule).toHaveProperty("rule", dubiousContent);
   });
 });

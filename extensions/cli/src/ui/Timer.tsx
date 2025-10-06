@@ -6,7 +6,7 @@ interface TimerProps {
   color?: string;
 }
 
-const Timer: React.FC<TimerProps> = ({ startTime, color = "gray" }) => {
+const Timer: React.FC<TimerProps> = ({ startTime, color = "dim" }) => {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {

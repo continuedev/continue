@@ -278,6 +278,10 @@ addCommonOptions(
     "Connect directly to the specified URL instead of creating a new remote environment",
   )
   .option(
+    "--id <id>",
+    "Connect to an existing remote agent by id and establish a tunnel",
+  )
+  .option(
     "--idempotency-key <key>",
     "Idempotency key for session management - allows resuming existing sessions",
   )
@@ -312,6 +316,10 @@ program
     "300",
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
+  .option(
+    "--id <storageId>",
+    "Upload session snapshots to Continue-managed storage using the provided identifier",
+  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "serve" });
@@ -344,17 +352,19 @@ program.on("command:*", () => {
   void gracefulExit(1);
 });
 
-// Parse arguments and handle errors
-try {
-  program.parse();
-} catch (error) {
-  console.error(error);
-  sentryService.captureException(
-    error instanceof Error ? error : new Error(String(error)),
-  );
-  void gracefulExit(1);
-}
+export async function runCli(): Promise<void> {
+  // Parse arguments and handle errors
+  try {
+    program.parse();
+  } catch (error) {
+    console.error(error);
+    sentryService.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    process.exit(1);
+  }
 
-process.on("SIGTERM", async () => {
-  await gracefulExit(0);
-});
+  process.on("SIGTERM", async () => {
+    await gracefulExit(0);
+  });
+}

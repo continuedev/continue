@@ -167,8 +167,8 @@ const UserInput: React.FC<UserInputProps> = ({
   >([]);
   const { exit } = useApp();
 
-  // Get file index service
-  const { services } = useServices<{
+  // Get file index service state for reactive updates (unused but needed for service initialization)
+  useServices<{
     fileIndex: FileIndexServiceState;
   }>(["fileIndex"]);
 
@@ -243,20 +243,24 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    // Get the complete slash command, not just the part before cursor
+    // Get the complete slash command from the text (not just before cursor)
     const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
     const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-    // Hide selector if we have an exact match and there's a space after cursor
+    // Hide selector if we have an exact match and there's any additional content
     if (exactMatch) {
-      const restOfText = text.slice(cursor);
-      // Only hide if there's a space or newline immediately after cursor
-      const shouldHide =
-        restOfText.startsWith(" ") || restOfText.startsWith("\n");
-      if (shouldHide) {
+      // Check if there's anything after the command name (space + args)
+      const commandWithSlash = "/" + exactMatch.name;
+      const textAfterCommand = trimmedText.slice(commandWithSlash.length);
+
+      // If there's any content after the command name (space + args), hide dropdown
+      if (
+        textAfterCommand.trim().length > 0 &&
+        beforeCursor.length >= commandWithSlash.length
+      ) {
         setShowSlashCommands(false);
         return;
       }
@@ -297,44 +301,38 @@ const UserInput: React.FC<UserInputProps> = ({
 
     // Check if we're in a file search context
     const beforeCursor = text.slice(0, cursor);
-    const lastAtIndex = beforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex === -1) {
-      setShowFileSearch(false);
-    } else {
-      // Check if there's any whitespace between the last @ and cursor
-      const afterAt = beforeCursor.slice(lastAtIndex + 1);
-
-      if (afterAt.includes(" ") || afterAt.includes("\n")) {
-        setShowFileSearch(false);
-      } else {
-        // We're in a file search context - check if there are matching files
-        const fileIndexService = services.fileIndex;
-        if (fileIndexService) {
-          const filteredFiles = fileIndexService.files.filter((file) => {
-            if (afterAt.length === 0) {
-              return true;
-            }
-            const lowerFilter = afterAt.toLowerCase();
-            return (
-              file.displayName.toLowerCase().includes(lowerFilter) ||
-              file.path.toLowerCase().includes(lowerFilter)
-            );
-          });
-
-          // If no files match, hide the dropdown to allow normal Enter behavior
-          if (filteredFiles.length === 0 && afterAt.length > 0) {
-            setShowFileSearch(false);
-            return;
+    // Find the first @ symbol that starts a file search context
+    // We need to find the last @ that has no space before it (or is at word boundary)
+    let firstAtIndex = -1;
+    for (let i = beforeCursor.length - 1; i >= 0; i--) {
+      if (beforeCursor[i] === "@") {
+        // Check if this @ is at the start of a word (preceded by space/newline or start of string)
+        const beforeAt = beforeCursor.slice(0, i);
+        const lastChar = beforeAt[beforeAt.length - 1];
+        if (i === 0 || lastChar === " " || lastChar === "\n") {
+          // Check if there's any space/newline between this @ and cursor
+          const afterThis = beforeCursor.slice(i + 1);
+          if (!afterThis.includes(" ") && !afterThis.includes("\n")) {
+            firstAtIndex = i;
+            break;
           }
         }
-
-        setShowFileSearch(true);
-        setFileSearchFilter(afterAt);
-        setSelectedFileIndex(0);
-        setShowSlashCommands(false);
-        setShowBashMode(false);
       }
+    }
+
+    if (firstAtIndex === -1) {
+      setShowFileSearch(false);
+    } else {
+      // Get ALL text after the @ symbol (including subsequent @ symbols)
+      const afterAt = beforeCursor.slice(firstAtIndex + 1);
+
+      // We're in a file search context
+      setShowFileSearch(true);
+      setFileSearchFilter(afterAt);
+      setSelectedFileIndex(0);
+      setShowSlashCommands(false);
+      setShowBashMode(false);
     }
   };
 
@@ -385,15 +383,32 @@ const UserInput: React.FC<UserInputProps> = ({
   // Handle file selection
   const selectFile = async (filePath: string) => {
     const beforeCursor = inputText.slice(0, cursorPosition);
-    const lastAtIndex = beforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex !== -1) {
-      const beforeAt = inputText.slice(0, lastAtIndex);
+    // Find the first @ symbol that starts a file search context (same logic as updateFileSearchState)
+    let firstAtIndex = -1;
+    for (let i = beforeCursor.length - 1; i >= 0; i--) {
+      if (beforeCursor[i] === "@") {
+        // Check if this @ is at the start of a word (preceded by space/newline or start of string)
+        const beforeAt = beforeCursor.slice(0, i);
+        const lastChar = beforeAt[beforeAt.length - 1];
+        if (i === 0 || lastChar === " " || lastChar === "\n") {
+          // Check if there's any space/newline between this @ and cursor
+          const afterThis = beforeCursor.slice(i + 1);
+          if (!afterThis.includes(" ") && !afterThis.includes("\n")) {
+            firstAtIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (firstAtIndex !== -1) {
+      const beforeAt = inputText.slice(0, firstAtIndex);
       const afterCursor = inputText.slice(cursorPosition);
 
       // Replace the partial file reference with the full file path
       const newText = beforeAt + "@" + filePath + " " + afterCursor;
-      const newCursorPos = lastAtIndex + 1 + filePath.length + 1;
+      const newCursorPos = firstAtIndex + 1 + filePath.length + 1;
 
       textBuffer.setText(newText);
       textBuffer.setCursor(newCursorPos);
@@ -410,7 +425,14 @@ const UserInput: React.FC<UserInputProps> = ({
           const content = await fs.readFile(absolutePath, "utf-8");
           onFileAttached(absolutePath, content);
         } catch (error) {
-          console.error(`Error reading file ${filePath}:`, error);
+          // If file doesn't exist, just attach the filename without content
+          if (error instanceof Error && (error as any).code === "ENOENT") {
+            const path = await import("path");
+            const absolutePath = path.resolve(filePath);
+            onFileAttached(absolutePath, filePath);
+          } else {
+            console.error(`Error reading file ${filePath}:`, error);
+          }
         }
       }
     }
@@ -526,16 +548,14 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        if (isWaitingForResponse || isCompacting) {
+        inputHistory.addEntry(submittedText);
+
+        // We don't queue, we just send in remote mode because the server handles queueing
+        if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
           // Process message later when LLM has responded or compaction is complete
-          void messageQueue.enqueueMessage(
-            submittedText,
-            imageMap,
-            inputHistory,
-          );
+          void messageQueue.enqueueMessage(submittedText, imageMap);
         } else {
           // Submit with images
-          inputHistory.addEntry(submittedText);
           onSubmit(submittedText, imageMap);
         }
 

@@ -36,20 +36,6 @@ Our current top recommendations are Claude Opus 4.1 and Claude Sonnet 4 from [An
       apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Claude Opus 4.1",
-        "provider": "anthropic",
-        "model": "claude-4-1-opus",
-        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-      }
-    ]
-  }
-  ```
-  </Tab>
 </Tabs>
 
 ### Gemma from Google DeepMind
@@ -88,37 +74,6 @@ If you prefer to use an open-weight model, then the Gemma family of Models from 
         </Tab>
     </Tabs>
   </Tab>
-  <Tab title="JSON">
-    <Tabs>
-        <Tab title="Ollama">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Gemma 3 27B",
-              "provider": "ollama",
-              "model": "gemma3:27b"
-            }
-          ]
-        }
-        ```
-        </Tab>
-        <Tab title="Together">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Gemma 3 27B",
-              "provider": "together",
-              "model": "google/gemma-2-27b-it",
-              "apiKey": "<YOUR_TOGETHER_API_KEY>"
-            }
-          ]
-        }
-        ```
-        </Tab>
-    </Tabs>
-  </Tab>
 </Tabs>
 
 ### GPT-4o from OpenAI
@@ -136,20 +91,6 @@ If you prefer to use a model from [OpenAI](../model-providers/top-level/openai),
       provider: openai
       model: ''
       apiKey: <YOUR_OPENAI_API_KEY>
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "GPT-4o",
-        "provider": "openai",
-        "model": "",
-        "apiKey": "<YOUR_OPENAI_API_KEY>"
-      }
-    ]
-  }
   ```
   </Tab>
 </Tabs>
@@ -171,20 +112,6 @@ If you prefer to use a model from [xAI](../model-providers/more/xAI), then we re
       apiKey: <YOUR_XAI_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Grok-2",
-        "provider": "xAI",
-        "model": "grok-2-latest",
-        "apiKey": "<YOUR_XAI_API_KEY>"
-      }
-    ]
-  }
-  ```
-  </Tab>
 </Tabs>
 
 ### Gemini 2.0 Flash from Google
@@ -202,20 +129,6 @@ If you prefer to use a model from [Google](../model-providers/top-level/gemini),
       provider: gemini
       model: gemini-2.0-flash
       apiKey: <YOUR_GEMINI_API_KEY>
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Gemini 2.0 Flash",
-        "provider": "gemini",
-        "model": "gemini-2.0-flash",
-        "apiKey": "<YOUR_GEMINI_API_KEY>"
-      }
-    ]
-  }
   ```
   </Tab>
 </Tabs>
@@ -268,49 +181,6 @@ If your local machine can run an 8B parameter model, then we recommend running L
       </Tab>
     </Tabs>
   </Tab>
-  <Tab title="JSON">
-    <Tabs>
-      <Tab title="Ollama">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "ollama",
-            "model": "llama3.1:8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="LM Studio">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "lmstudio",
-            "model": "llama3.1-8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="Msty">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "msty",
-            "model": "llama3.1-8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-    </Tabs>
-  </Tab>
 </Tabs>
 
 ### DeepSeek Coder 2 16B
@@ -355,50 +225,6 @@ If your local machine can run a 16B parameter model, then we recommend running D
             model: deepseek-coder-v2:16b
         ```
         </Tab>
-    </Tabs>
-  </Tab>
-  <Tab title="JSON">
-    <Tabs>
-      <Tab title="Ollama">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "ollama",
-            "model": "deepseek-coder-v2:16b",
-            "apiBase": "http://localhost:11434"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="LM Studio">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "lmstudio",
-            "model": "deepseek-coder-v2:16b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="Msty">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "msty",
-            "model": "deepseek-coder-v2:16b"
-          }
-        ]
-      }
-      ```
-      </Tab>
     </Tabs>
   </Tab>
 </Tabs>

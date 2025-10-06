@@ -37,14 +37,16 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/cli.git"
+    "url": "https://github.com/continuedev/continue.git"
   },
   "bugs": {
     "url": "https://github.com/continuedev/continue/issues"
   },
   "homepage": "https://continue.dev",
   "dependencies": {
-    "@sentry/profiling-node": "^9.43.0"
+    "@sentry/profiling-node": "^9.43.0",
+    "fdir": "^6.4.2",
+    "fzf": "^0.5.2"
   },
   "devDependencies": {
     "@continuedev/config-yaml": "file:../../packages/config-yaml",
@@ -75,7 +77,6 @@
     "@types/jszip": "^3.4.0",
     "@types/nock": "^10.0.3",
     "@types/react": "^19.1.8",
-    "@types/readline-sync": "^1.4.8",
     "@types/shell-quote": "^1.7.5",
     "@types/supertest": "^6.0.3",
     "@types/turndown": "^5.0.5",
@@ -120,7 +121,6 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "react": "^19.1.0",
-    "readline-sync": "^1.4.10",
     "semantic-release": "^24.2.7",
     "shell-quote": "^1.8.3",
     "supertest": "^7.1.3",

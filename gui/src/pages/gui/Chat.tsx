@@ -49,6 +49,8 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
+import { useStore } from "react-redux";
+import { RootState } from "../../redux/store";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -98,12 +100,10 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const reduxStore = useStore<RootState>();
   const onboardingCard = useOnboardingCard();
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
-  );
-  const selectedModels = useAppSelector(
-    (store) => store.config?.config.selectedModelByRole,
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
@@ -115,7 +115,6 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
@@ -152,9 +151,6 @@ export function Chat() {
     isStreaming,
   );
 
-  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
-  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
-
   const sendInput = useCallback(
     (
       editorState: JSONContent,
@@ -162,8 +158,16 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
+      const stateSnapshot = reduxStore.getState();
+      const latestPendingToolCalls = selectPendingToolCalls(stateSnapshot);
+      const latestPendingApplyStates = selectDoneApplyStates(stateSnapshot);
+      const isCurrentlyInEdit = stateSnapshot.session.isInEdit;
+      const codeToEditSnapshot = stateSnapshot.editModeState.codeToEdit;
+      const selectedModelByRole =
+        stateSnapshot.config.config.selectedModelByRole;
+
       // Cancel all pending tool calls
-      pendingToolCalls.forEach((toolCallState) => {
+      latestPendingToolCalls.forEach((toolCallState) => {
         dispatch(
           cancelToolCall({
             toolCallId: toolCallState.toolCallId,
@@ -172,19 +176,20 @@ export function Chat() {
       });
 
       // Reject all pending apply states
-      pendingApplyStates.forEach((applyState) => {
+      latestPendingApplyStates.forEach((applyState) => {
         if (applyState.status !== "closed") {
           ideMessenger.post("rejectDiff", applyState);
         }
       });
-      const model = isInEdit
-        ? (selectedModels?.edit ?? selectedModels?.chat)
-        : selectedModels?.chat;
+      const model = isCurrentlyInEdit
+        ? (selectedModelByRole.edit ?? selectedModelByRole.chat)
+        : selectedModelByRole.chat;
+
       if (!model) {
         return;
       }
 
-      if (isInEdit && codeToEdit.length === 0) {
+      if (isCurrentlyInEdit && codeToEditSnapshot.length === 0) {
         return;
       }
 
@@ -212,11 +217,11 @@ export function Chat() {
       //   }
       // }
 
-      if (isInEdit) {
+      if (isCurrentlyInEdit) {
         void dispatch(
           streamEditThunk({
             editorState,
-            codeToEdit,
+            codeToEdit: codeToEditSnapshot,
           }),
         );
       } else {
@@ -227,15 +232,7 @@ export function Chat() {
         }
       }
     },
-    [
-      history,
-      selectedModels,
-      mode,
-      isInEdit,
-      codeToEdit,
-      pendingToolCalls,
-      pendingApplyStates,
-    ],
+    [dispatch, ideMessenger, reduxStore],
   );
 
   useWebviewListener(
@@ -294,7 +291,7 @@ export function Chat() {
             }
             isLastUserInput={isLastUserInput(index)}
             isMainInput={false}
-            editorState={editorState}
+            editorState={editorState ?? item.message.content}
             contextItems={contextItems}
             appliedRules={appliedRules}
             inputId={message.id}
@@ -393,24 +390,26 @@ export function Chat() {
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
-        {history.map((item, index: number) => (
-          <div
-            key={item.message.id}
-            style={{
-              minHeight: index === history.length - 1 ? "200px" : 0,
-            }}
-          >
-            <ErrorBoundary
-              FallbackComponent={fallbackRender}
-              onReset={() => {
-                dispatch(newSession());
+        {history
+          .filter((item) => item.message.role !== "system")
+          .map((item, index: number) => (
+            <div
+              key={item.message.id}
+              style={{
+                minHeight: index === history.length - 1 ? "200px" : 0,
               }}
             >
-              {renderChatHistoryItem(item, index)}
-            </ErrorBoundary>
-            {index === history.length - 1 && <InlineErrorMessage />}
-          </div>
-        ))}
+              <ErrorBoundary
+                FallbackComponent={fallbackRender}
+                onReset={() => {
+                  dispatch(newSession());
+                }}
+              >
+                {renderChatHistoryItem(item, index)}
+              </ErrorBoundary>
+              {index === history.length - 1 && <InlineErrorMessage />}
+            </div>
+          ))}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox
