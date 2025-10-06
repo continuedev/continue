@@ -263,7 +263,8 @@
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
-              "guides/notion-continue-cookbook"
+              "guides/notion-continue-cookbook",
+              "guides/linear-continue-cookbook"
             ]
           }
         ]
