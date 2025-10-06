@@ -45,7 +45,8 @@ function FunctionSpecificToolCallDiv({
       return (
         <FindAndReplaceDisplay
           editingFileContents={args?.editingFileContents}
-          fileUri={args?.fileUri}
+          fileUri={args?.fileUri ?? ""}
+          newFileContents={args?.newFileContents}
           relativeFilePath={args?.filepath ?? ""}
           edits={edits}
           toolCallId={toolCall.id}
@@ -57,7 +58,8 @@ function FunctionSpecificToolCallDiv({
         <FindAndReplaceDisplay
           editingFileContents={args?.editingFileContents}
           relativeFilePath={args?.filepath ?? ""}
-          fileUri={args?.fileUri}
+          fileUri={args?.fileUri ?? ""}
+          newFileContents={args?.newFileContents}
           edits={args?.edits ?? []}
           toolCallId={toolCall.id}
           historyIndex={historyIndex}

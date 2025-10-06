@@ -8,7 +8,6 @@ import {
   prevFilepaths,
 } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
-import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
@@ -49,18 +48,25 @@ import {
   type IDE,
 } from ".";
 
-import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
+import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { createNewAssistantFile } from "./config/createNewAssistantFile";
-import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
+import {
+  isColocatedRulesFile,
+  isContinueAgentConfigFile,
+  isContinueConfigRelatedUri,
+} from "./config/loadLocalAssistants";
 import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import {
   setupLocalConfig,
   setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
+import {
+  createNewGlobalRuleFile,
+  createNewWorkspaceBlockFile,
+} from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
@@ -69,7 +75,6 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
-import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
@@ -78,19 +83,9 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { ContinueError, ContinueErrorReason } from "./util/errors";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
-import { getUriPathBasename } from "./util/uri";
-
-const hasRulesFiles = (uris: string[]): boolean => {
-  for (const uri of uris) {
-    const filename = getUriPathBasename(uri);
-    if (filename === RULES_MARKDOWN_FILENAME) {
-      return true;
-    }
-  }
-  return false;
-};
 
 export class Core {
   configHandler: ConfigHandler;
@@ -419,11 +414,19 @@ export class Core {
       );
     });
 
+    on("config/addGlobalRule", async (msg) => {
+      try {
+        await createNewGlobalRuleFile(this.ide);
+        await this.configHandler.reloadConfig(
+          "Global rule created (config/addGlobalRule message)",
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(
-        msg.data.profileId,
-        msg.data?.element,
-      );
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -492,20 +495,10 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
-      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
     });
-    on("mcp/disconnectServer", async (msg) => {
-      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
-        msg.data.id,
-      );
-      if (!mcpConnection)
-        throw new Error(`MCP connection with id ${msg.data.id} not found`);
-      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
-      await mcpConnection.disconnect();
-      await this.configHandler.refreshAll("MCP Servers disconnected");
-    });
-    on("mcp/getDisconnectedServers", async (_msg) => {
-      return MCPManagerSingleton.getInstance().getDisconnectedServers();
+    on("mcp/setServerEnabled", async (msg) => {
+      const { id, enabled } = msg.data;
+      await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;
@@ -522,15 +515,26 @@ export class Core {
     });
     on("mcp/startAuthentication", async (msg) => {
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      MCPManagerSingleton.getInstance().setStatus(msg.data, "authenticating");
-      const status = await performAuth(msg.data, this.ide);
+      MCPManagerSingleton.getInstance().setStatus(
+        msg.data.serverId,
+        "authenticating",
+      );
+      const status = await performAuth(
+        msg.data.serverId,
+        msg.data.serverUrl,
+        this.ide,
+      );
       if (status === "AUTHORIZED") {
-        await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+        await MCPManagerSingleton.getInstance().refreshConnection(
+          msg.data.serverId,
+        );
       }
     });
     on("mcp/removeAuthentication", async (msg) => {
-      removeMCPAuth(msg.data, this.ide);
-      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      removeMCPAuth(msg.data.serverUrl, this.ide);
+      await MCPManagerSingleton.getInstance().refreshConnection(
+        msg.data.serverId,
+      );
     });
 
     // Context providers
@@ -823,7 +827,6 @@ export class Core {
       if (data?.shouldClearIndexes) {
         await this.codeBaseIndexer.clearIndexes();
       }
-
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
@@ -864,45 +867,70 @@ export class Core {
     };
 
     on("files/created", async ({ data }) => {
-      if (data?.uris?.length) {
-        walkDirCache.invalidate();
-        void refreshIfNotIgnored(data.uris);
+      if (!data?.uris?.length) {
+        return;
+      }
 
-        if (hasRulesFiles(data.uris)) {
-          const rulesCache = CodebaseRulesCache.getInstance();
-          await Promise.all(
-            data.uris.map((uri) => rulesCache.update(this.ide, uri)),
-          );
-          await this.configHandler.reloadConfig("Rules file created");
-        }
-        // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
-        let localAssistantCreated = false;
-        for (const uri of data.uris) {
-          if (isLocalDefinitionFile(uri)) {
-            localAssistantCreated = true;
-          }
-        }
-        if (localAssistantCreated) {
-          await this.configHandler.refreshAll("Local assistant file created");
-        }
+      walkDirCache.invalidate();
+      void refreshIfNotIgnored(data.uris);
+
+      const colocatedRulesUris = data.uris.filter(isColocatedRulesFile);
+      const nonColocatedRuleUris = data.uris.filter(
+        (uri) => !isColocatedRulesFile(uri),
+      );
+      if (colocatedRulesUris) {
+        const rulesCache = CodebaseRulesCache.getInstance();
+        void Promise.all(
+          colocatedRulesUris.map((uri) => rulesCache.update(this.ide, uri)),
+        ).then(() => {
+          void this.configHandler.reloadConfig("Codebase rule file created");
+        });
+      }
+
+      // If it's a local agent being created, we want to reload all agent so it shows up in the list
+      if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
+        await this.configHandler.refreshAll("Local assistant file created");
+      } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
+        await this.configHandler.reloadConfig(
+          ".continue config-related file created",
+        );
       }
     });
 
     on("files/deleted", async ({ data }) => {
-      if (data?.uris?.length) {
-        walkDirCache.invalidate();
-        void refreshIfNotIgnored(data.uris);
+      if (!data?.uris?.length) {
+        return;
+      }
 
-        if (hasRulesFiles(data.uris)) {
-          const rulesCache = CodebaseRulesCache.getInstance();
-          data.uris.forEach((uri) => rulesCache.remove(uri));
-          await this.configHandler.reloadConfig("Codebase rule file deleted");
-        }
+      walkDirCache.invalidate();
+      void refreshIfNotIgnored(data.uris);
+
+      const colocatedRulesUris = data.uris.filter(isColocatedRulesFile);
+      const nonColocatedRuleUris = data.uris.filter(
+        (uri) => !isColocatedRulesFile(uri),
+      );
+
+      if (colocatedRulesUris) {
+        const rulesCache = CodebaseRulesCache.getInstance();
+        void Promise.all(
+          colocatedRulesUris.map((uri) => rulesCache.remove(uri)),
+        ).then(() => {
+          void this.configHandler.reloadConfig("Codebase rule file deleted");
+        });
+      }
+
+      // If it's a local agent being deleted, we want to reload all agent so it disappears from the list
+      if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
+        await this.configHandler.refreshAll("Local assistant file deleted");
+      } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
+        await this.configHandler.reloadConfig(
+          ".continue config-related file deleted",
+        );
       }
     });
 
     on("files/closed", async ({ data }) => {
-      console.log("deleteChain called from files/closed");
+      console.debug("deleteChain called from files/closed");
       await NextEditProvider.getInstance().deleteChain();
 
       try {
@@ -1077,7 +1105,6 @@ export class Core {
 
         const tool = config.tools.find((t) => t.function.name === toolName);
         if (!tool) {
-          // Tool not found, return base policy
           return { policy: basePolicy };
         }
 
@@ -1087,16 +1114,46 @@ export class Core {
           displayValue = args.command as string;
         }
 
-        // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
           const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
           return { policy: evaluatedPolicy, displayValue };
         }
-
-        // Otherwise return base policy unchanged
         return { policy: basePolicy, displayValue };
       },
     );
+
+    on("tools/preprocessArgs", async ({ data: { toolName, args } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
+      const tool = config?.tools.find((t) => t.function.name === toolName);
+      if (!tool) {
+        throw new Error(`Tool ${toolName} not found`);
+      }
+
+      try {
+        const preprocessedArgs = await tool.preprocessArgs?.(args, {
+          ide: this.ide,
+        });
+        return {
+          preprocessedArgs,
+        };
+      } catch (e) {
+        let errorReason =
+          e instanceof ContinueError ? e.reason : ContinueErrorReason.Unknown;
+        let errorMessage =
+          e instanceof Error
+            ? e.message
+            : `Error preprocessing tool call args for ${toolName}\n${JSON.stringify(args)}`;
+        return {
+          preprocessedArgs: undefined,
+          errorReason,
+          errorMessage,
+        };
+      }
+    });
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
@@ -1226,10 +1283,9 @@ export class Core {
       const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
       diffCache.invalidate();
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
+      const currentProfileUri =
+        this.configHandler.currentProfile?.profileDescription.uri ?? "";
       for (const uri of data.uris) {
-        const currentProfileUri =
-          this.configHandler.currentProfile?.profileDescription.uri ?? "";
-
         if (URI.equal(uri, currentProfileUri)) {
           // Trigger a toast notification to provide UI feedback that config has been updated
           const showToast =
@@ -1249,24 +1305,7 @@ export class Core {
           );
           continue;
         }
-
-        if (
-          uri.endsWith(".continuerc.json") ||
-          uri.endsWith(".prompt") ||
-          uri.endsWith("AGENTS.md") ||
-          uri.endsWith("AGENT.md") ||
-          uri.endsWith("CLAUDE.md") ||
-          uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") &&
-            (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
-          BLOCK_TYPES.some((blockType) =>
-            uri.includes(`.continue/${blockType}`),
-          )
-        ) {
-          await this.configHandler.reloadConfig(
-            "Config-related file updated: continuerc, prompt, local block, etc",
-          );
-        } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
+        if (isColocatedRulesFile(uri)) {
           try {
             const codebaseRulesCache = CodebaseRulesCache.getInstance();
             void codebaseRulesCache.update(this.ide, uri).then(() => {
@@ -1275,6 +1314,10 @@ export class Core {
           } catch (e) {
             Logger.error(`Failed to update codebase rule: ${e}`);
           }
+        } else if (isContinueConfigRelatedUri(uri)) {
+          await this.configHandler.reloadConfig(
+            "Local config-related file updated",
+          );
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")

@@ -309,6 +309,7 @@ export abstract class BaseNextEditModelProvider {
         outcomeCtx.completionId || outcomeCtx.helper.input.completionId,
       gitRepo: await outcomeCtx.ide.getRepoName(outcomeCtx.helper.filepath),
       uniqueId: await outcomeCtx.ide.getUniqueId(),
+      requestId: outcomeCtx.llm.lastRequestId,
       timestamp: Date.now(),
       fileUri: outcomeCtx.helper.filepath,
       workspaceDirUri:

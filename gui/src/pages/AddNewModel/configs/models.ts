@@ -856,46 +856,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mistral.png",
     isOpenSource: true,
   },
-  geminiPro: {
-    title: "Gemini Pro",
-    description: "A highly capable model created by Google DeepMind",
-    params: {
-      title: "Gemini Pro",
-      model: "gemini-pro",
-      contextLength: 32_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
-  gemini15Pro: {
-    title: "Gemini 1.5 Pro",
-    description: "A newer Gemini model with 1M token context length",
-    params: {
-      title: "Gemini 1.5 Pro",
-      model: "gemini-1.5-pro-latest",
-      contextLength: 2_000_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini", "askSage"],
-    isOpenSource: false,
-  },
-  gemini15Flash: {
-    title: "Gemini 1.5 Flash",
-    description:
-      "Fast and versatile multimodal model for scaling across diverse tasks",
-    params: {
-      title: "Gemini 1.5 Flash",
-      model: "gemini-1.5-flash-latest",
-      contextLength: 1_000_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
   gemini20Flash: {
     title: "Gemini 2.0 Flash",
     description:
@@ -1356,31 +1316,6 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     providerOptions: ["watsonx"],
-    isOpenSource: false,
-  },
-  VertexGemini15Pro: {
-    title: "Gemini 1.5 Pro",
-    description: "A newer Gemini model with 1M token context length",
-    params: {
-      title: "Gemini 1.5 Pro",
-      model: "gemini-1.5-pro-002",
-      contextLength: 2_097_152,
-    },
-    icon: "gemini.png",
-    providerOptions: ["vertexai"],
-    isOpenSource: false,
-  },
-  VertexGemini15Flash: {
-    title: "Gemini 1.5 Flash",
-    description:
-      "Fast and versatile multimodal model for scaling across diverse tasks",
-    params: {
-      title: "Gemini 1.5 Flash",
-      model: "gemini-1.5-flash-002",
-      contextLength: 1_048_576,
-    },
-    icon: "gemini.png",
-    providerOptions: ["vertexai"],
     isOpenSource: false,
   },
   vertexMistralLarge: {
