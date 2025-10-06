@@ -18,7 +18,7 @@ Before starting, ensure you have:
 
 - Continue account with **Hub access**
 - Read: [Understanding Agents — How to get started with Hub agents](/guides/understanding-agents#how-to-get-started-with-hub-agents)
-- Node.js 18+ installed locally
+- Node.js 22+ installed locally
 - A GitHub account and a repository to work with
 - A GitHub token with the appropriate scopes:
   - For read-only: `repo:read`
@@ -85,9 +85,10 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         ```yaml title="config.yaml"
         mcpServers:
           - name: GitHub MCP
-            command: uvx
+            command: npx
             args:
-              - github_mcp
+              - "-y"
+              - "@modelcontextprotocol/server-github"
             env:
               GITHUB_TOKEN: ${env:GITHUB_TOKEN}
             connectionTimeout: 30
