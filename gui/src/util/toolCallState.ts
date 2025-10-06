@@ -1,4 +1,5 @@
 import { ToolCallDelta, ToolCallState } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 
 // Merge streamed tool calls
@@ -66,4 +67,17 @@ export function addToolCallDeltaToState(
     toolCallId: callId,
     parsedArgs,
   };
+}
+
+export function isAutoEditToolCall(toolCallState: ToolCallState) {
+  if (
+    [
+      BuiltInToolNames.EditExistingFile,
+      BuiltInToolNames.SingleFindAndReplace,
+      BuiltInToolNames.MultiEdit,
+    ].includes(toolCallState.toolCall.function.name as BuiltInToolNames)
+  ) {
+    return true;
+  }
+  return false;
 }
