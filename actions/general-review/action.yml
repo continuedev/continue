@@ -170,62 +170,11 @@ runs:
           PR_NUMBER="${{ github.event.issue.number }}"
         fi
 
-        # Get PR diff
-        gh pr diff $PR_NUMBER > pr_diff.txt
-
-        # Get PR details
-        PR_TITLE=$(gh pr view $PR_NUMBER --json title -q .title)
-        PR_AUTHOR=$(gh pr view $PR_NUMBER --json author -q .author.login)
-        PR_BODY=$(gh pr view $PR_NUMBER --json body -q .body)
-        FILES_CHANGED=$(gh pr view $PR_NUMBER --json files -q '.files | length')
-        
-        # Create review prompt
-        cat > review_prompt.txt << EOF
-        You are reviewing a pull request. Please provide helpful, context-aware feedback.
-
-        CONTEXT:
-        - Repository: ${{ github.repository }}
-        - PR #$PR_NUMBER: $PR_TITLE
-        - Files Changed: $FILES_CHANGED
-        - Author: $PR_AUTHOR
-
-        REVIEW APPROACH:
-        1. First, understand what this PR is trying to accomplish
-        2. Check if similar patterns exist elsewhere in the codebase
-        3. Focus on actual issues that affect functionality
-        4. Be constructive and suggest solutions when possible
-
-        FOCUS ON:
-        - Bugs that will cause failures or incorrect behavior
-        - Security vulnerabilities (exposed secrets, injection risks)
-        - Breaking changes that affect other parts of the system
-        - Performance issues with real impact (memory leaks, O(n²) algorithms)
-        - Missing tests for new features or bug fixes
-        - Missing documentation for APIs or complex logic
-
-        SKIP COMMENTING ON:
-        - Style and formatting (handled by linters)
-        - Alternative approaches unless current is broken
-        - Minor naming unless genuinely confusing
-        - Trivial documentation for self-explanatory code
-
-        Be specific with line numbers and explain why something is an issue.
-
-        PR Description: ${PR_BODY:-No description provided}
-
-        Code Changes:
-EOF
-
-        # Add the diff
-        cat pr_diff.txt >> review_prompt.txt
-        
-        cat >> review_prompt.txt << 'EOF'
-
-        Your Review:
-        Please provide constructive feedback on the code changes.
-        Focus on issues that matter for functionality, security, and maintainability.
-        If the code looks good overall, acknowledge that while noting any minor suggestions.
-EOF
+        # Gather PR context and build prompt without heredocs
+        gh pr diff "$PR_NUMBER" > pr_diff.txt
+        gh pr view "$PR_NUMBER" --json title,author,body,files > pr_data.json
+        node actions/general-review/scripts/buildPrompt.js "$PR_NUMBER"
+        rm -f pr_data.json
 
     - name: Run Continue CLI Review
       if: env.SHOULD_RUN == 'true'
@@ -247,15 +196,7 @@ EOF
         if [ -z "$CONTINUE_API_KEY" ]; then
           echo "Warning: CONTINUE_API_KEY environment variable is not set"
           # Create fallback review and continue
-          cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ AI review skipped: CONTINUE_API_KEY not configured.
-
-          ### Configuration Required
-          - Please set the CONTINUE_API_KEY secret in repository settings
-          - Verify that the organization and config path are valid
-EOF
+          node actions/general-review/scripts/writeMarkdown.js code_review.md missing_api_key
           echo "SKIP_CLI=true" >> $GITHUB_ENV
         else
           echo "SKIP_CLI=false" >> $GITHUB_ENV
@@ -277,15 +218,7 @@ EOF
           echo "Testing Continue CLI..."
           if ! which cn > /dev/null 2>&1; then
             echo "Warning: Continue CLI not found or not working"
-            cat > code_review.md << 'EOF'
-            ## Code Review Summary
-
-            ⚠️ AI review skipped: Continue CLI installation failed.
-
-            ### Troubleshooting
-            - Check that npm installation succeeded
-            - Verify @continuedev/cli package is available
-EOF
+            node actions/general-review/scripts/writeMarkdown.js code_review.md cli_install_failed
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
             echo "Continue CLI found at: $(which cn)"
@@ -321,11 +254,7 @@ EOF
             # Check if output is empty
             if [ ! -s code_review.md ]; then
               echo "Warning: Continue CLI returned empty output"
-              cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ Continue CLI returned an empty response. Please check the configuration.
-EOF
+              node actions/general-review/scripts/writeMarkdown.js code_review.md empty_output
             fi
           else
             echo "Error: Continue CLI command failed with exit code $?"
@@ -334,34 +263,13 @@ EOF
             
             # Check for specific error patterns
             if grep -q "not found\|ENOENT" cli_error.log 2>/dev/null; then
-              cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ Continue CLI is not properly installed. Please ensure @continuedev/cli is installed globally.
-EOF
+              node actions/general-review/scripts/writeMarkdown.js code_review.md cli_not_found
             elif grep -q "config\|assistant" cli_error.log 2>/dev/null; then
-              cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ Continue configuration error. Please verify that the assistant exists in Continue Hub.
-EOF
+              node actions/general-review/scripts/writeMarkdown.js code_review.md config_error
             elif grep -q "api\|auth" cli_error.log 2>/dev/null; then
-              cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ Continue API authentication failed. Please check your CONTINUE_API_KEY.
-EOF
+              node actions/general-review/scripts/writeMarkdown.js code_review.md auth_error
             else
-              cat > code_review.md << 'EOF'
-          ## Code Review Summary
-
-          ⚠️ AI review failed. Please check the Continue API key and configuration.
-
-          ### Troubleshooting
-          - Verify the CONTINUE_API_KEY secret is set correctly
-          - Check that the organization and config path are valid
-          - Ensure the Continue service is accessible
-EOF
+              node actions/general-review/scripts/writeMarkdown.js code_review.md generic_failure
             fi
           fi
           
