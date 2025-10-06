@@ -214,7 +214,7 @@ runs:
         PR Description: ${PR_BODY:-No description provided}
 
         Code Changes:
-        EOF
+EOF
 
         # Add the diff
         cat pr_diff.txt >> review_prompt.txt
@@ -225,7 +225,7 @@ runs:
         Please provide constructive feedback on the code changes.
         Focus on issues that matter for functionality, security, and maintainability.
         If the code looks good overall, acknowledge that while noting any minor suggestions.
-        EOF
+EOF
 
     - name: Run Continue CLI Review
       if: env.SHOULD_RUN == 'true'
@@ -255,7 +255,7 @@ runs:
           ### Configuration Required
           - Please set the CONTINUE_API_KEY secret in repository settings
           - Verify that the organization and config path are valid
-          EOF
+EOF
           echo "SKIP_CLI=true" >> $GITHUB_ENV
         else
           echo "SKIP_CLI=false" >> $GITHUB_ENV
@@ -285,7 +285,7 @@ runs:
             ### Troubleshooting
             - Check that npm installation succeeded
             - Verify @continuedev/cli package is available
-            EOF
+EOF
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
             echo "Continue CLI found at: $(which cn)"
@@ -325,7 +325,7 @@ runs:
           ## Code Review Summary
 
           ⚠️ Continue CLI returned an empty response. Please check the configuration.
-          EOF
+EOF
             fi
           else
             echo "Error: Continue CLI command failed with exit code $?"
@@ -338,19 +338,19 @@ runs:
           ## Code Review Summary
 
           ⚠️ Continue CLI is not properly installed. Please ensure @continuedev/cli is installed globally.
-          EOF
+EOF
             elif grep -q "config\|assistant" cli_error.log 2>/dev/null; then
               cat > code_review.md << 'EOF'
           ## Code Review Summary
 
           ⚠️ Continue configuration error. Please verify that the assistant exists in Continue Hub.
-          EOF
+EOF
             elif grep -q "api\|auth" cli_error.log 2>/dev/null; then
               cat > code_review.md << 'EOF'
           ## Code Review Summary
 
           ⚠️ Continue API authentication failed. Please check your CONTINUE_API_KEY.
-          EOF
+EOF
             else
               cat > code_review.md << 'EOF'
           ## Code Review Summary
@@ -361,7 +361,7 @@ runs:
           - Verify the CONTINUE_API_KEY secret is set correctly
           - Check that the organization and config path are valid
           - Ensure the Continue service is accessible
-          EOF
+EOF
             fi
           fi
           
