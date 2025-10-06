@@ -28,6 +28,7 @@ export function CliInstallBanner({
   const [dismissed, setDismissed] = useState(false);
   const commandTextRef = useRef<HTMLSpanElement>(null);
   const { copyText } = useCopy("npm i -g @continuedev/cli");
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
 
   const handleCommandClick = () => {
     // Select the text
@@ -40,6 +41,10 @@ export function CliInstallBanner({
     }
     // Copy to clipboard
     copyText();
+
+    // Show "Copied!" message for 3 seconds
+    setShowCopiedMessage(true);
+    setTimeout(() => setShowCopiedMessage(false), 3000);
   };
 
   useEffect(() => {
@@ -130,7 +135,7 @@ export function CliInstallBanner({
           </div>
           <div className="flex flex-col items-start gap-2 self-stretch">
             <div className="rounded-default outline-command-border flex items-center self-stretch outline outline-1">
-              <div className="bg-editor rounded-l-default flex-1 px-3 py-3">
+              <div className="bg-editor rounded-l-default relative flex-1 px-3 py-3">
                 <span
                   ref={commandTextRef}
                   className="text-foreground cursor-pointer text-xs"
@@ -139,6 +144,11 @@ export function CliInstallBanner({
                 >
                   npm i -g @continuedev/cli
                 </span>
+                {showCopiedMessage && (
+                  <span className="bg-editor rounded-l-default absolute inset-0 flex items-center justify-center px-2 text-xs font-medium">
+                    Copied!
+                  </span>
+                )}
               </div>
               <div className="bg-background rounded-r-default flex items-center gap-2 px-3 py-3">
                 <CopyButton
