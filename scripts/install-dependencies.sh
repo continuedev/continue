@@ -45,7 +45,7 @@ echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
 npm link @continuedev/core
-npm run build
+NODE_OPTIONS="--max-old-space-size=4096" npm run build
 popd
 
 # VSCode Extension (will also package GUI)

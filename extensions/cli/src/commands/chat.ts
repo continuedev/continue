@@ -1,22 +1,22 @@
 import { ModelConfig } from "@continuedev/config-yaml";
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
-import type { ChatHistoryItem, Session } from "core/index.js";
+import { ChatHistoryItem, Session } from "core";
 import { ChatDescriber } from "core/util/chatDescriber.js";
-import * as readlineSync from "readline-sync";
 
-import {
-  compactChatHistory,
-  findCompactionIndex,
-  getHistoryForLLM,
-} from "../compaction.js";
+import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
-import { safeStdout } from "../init.js";
+import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { sentryService } from "../sentry.js";
-import { initializeServices } from "../services/index.js";
+import { initializeServices, services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
-import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
+import {
+  ModelServiceState,
+  SERVICE_NAMES,
+  WorkflowServiceState,
+} from "../services/types.js";
 import {
   loadSession,
   updateSessionHistory,
@@ -26,8 +26,10 @@ import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
+import { gracefulExit } from "../util/exit.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { question } from "../util/prompt.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
@@ -80,6 +82,7 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
+  fork?: string; // Fork from an existing session ID
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
 }
@@ -88,6 +91,20 @@ export async function initializeChatHistory(
   options: ChatOptions,
 ): Promise<ChatHistoryItem[]> {
   let session: Session | null = null;
+
+  // Fork from an existing session if --fork flag is used
+  if (options.fork) {
+    const { loadSessionById, startNewSession } = await import("../session.js");
+    const sessionToFork = loadSessionById(options.fork);
+    if (sessionToFork) {
+      logger.info(chalk.yellow("Forking from existing session..."));
+      const newSession = startNewSession(sessionToFork.history);
+      return newSession.history;
+    } else {
+      logger.error(chalk.red(`Session with ID "${options.fork}" not found.`));
+      await gracefulExit(1);
+    }
+  }
 
   // Load previous session if --resume flag is used
   if (options.resume) {
@@ -107,7 +124,7 @@ export async function initializeChatHistory(
 async function handleManualCompaction(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   isHeadless: boolean,
 ): Promise<{ compactionIndex?: number | null } | void> {
   if (!isHeadless) {
@@ -115,21 +132,21 @@ async function handleManualCompaction(
   }
 
   try {
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    const current = services.chatHistory.getHistory();
+    const result = await compactChatHistory(current, model, llmApi);
 
-    // Replace chat history with compacted version
-    chatHistory.length = 0;
-    chatHistory.push(...result.compactedHistory);
-
-    // Save the compacted session
-    updateSessionHistory(chatHistory);
+    // Update service-driven history (persistence handled by service)
+    services.chatHistory.compact(
+      result.compactedHistory,
+      result.compactionIndex,
+    );
 
     if (isHeadless) {
       safeStdout(
         JSON.stringify({
           status: "success",
           message: "Chat history compacted",
-          historyLength: chatHistory.length,
+          historyLength: services.chatHistory.getHistory().length,
         }) + "\n",
       );
     } else {
@@ -148,11 +165,66 @@ async function handleManualCompaction(
   }
 }
 
+// Helper function to get streaming response based on compaction state
+async function getStreamingResponse(
+  compactionIndex: number | null | undefined,
+  model: ModelConfig,
+  llmApi: BaseLlmApi,
+): Promise<string> {
+  const abortController = new AbortController();
+
+  if (compactionIndex !== null && compactionIndex !== undefined) {
+    // Use service to compute history for LLM
+    const historyForLLM =
+      services.chatHistory.getHistoryForLLM(compactionIndex);
+
+    return await streamChatResponse(
+      historyForLLM,
+      model,
+      llmApi,
+      abortController,
+    );
+  } else {
+    // No compaction - get full history from service
+    return await streamChatResponse(
+      services.chatHistory.getHistory(),
+      model,
+      llmApi,
+      abortController,
+    );
+  }
+}
+
+// Helper function to process and output response in headless mode
+function processAndOutputResponse(
+  finalResponse: string,
+  isHeadless: boolean,
+  silent?: boolean,
+  format?: "json",
+): void {
+  if (isHeadless && finalResponse && finalResponse.trim()) {
+    let processedResponse = finalResponse;
+
+    // Strip think tags if --silent flag is enabled
+    if (silent) {
+      processedResponse = stripThinkTags(processedResponse);
+    }
+
+    // Process output based on format
+    const outputResponse =
+      format === "json"
+        ? processJsonOutput(processedResponse)
+        : processedResponse;
+
+    safeStdout(outputResponse + "\n");
+  }
+}
+
 // Helper function to handle auto-compaction for headless mode
 async function handleAutoCompaction(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   isHeadless: boolean,
   format?: "json",
 ): Promise<number | null> {
@@ -176,7 +248,7 @@ async function handleAutoCompaction(
               message: "Auto-compacting triggered",
               contextUsage:
                 calculateContextUsagePercentage(
-                  countChatHistoryTokens(chatHistory),
+                  countChatHistoryTokens(services.chatHistory.getHistory()),
                   model,
                 ) + "%",
             }) + "\n",
@@ -186,11 +258,11 @@ async function handleAutoCompaction(
         if (!isHeadless) {
           console.info(chalk.green(message));
         } else if (format === "json") {
+          // Omit history length here; service updates occur after compaction completes
           safeStdout(
             JSON.stringify({
               status: "success",
               message: "Auto-compacted successfully",
-              historyLength: chatHistory.length,
             }) + "\n",
           );
         }
@@ -210,15 +282,19 @@ async function handleAutoCompaction(
     },
   };
 
-  const result = await coreAutoCompaction(chatHistory, model, llmApi, {
-    isHeadless,
-    format,
-    callbacks,
-  });
+  const result = await coreAutoCompaction(
+    services.chatHistory.getHistory(),
+    model,
+    llmApi,
+    {
+      isHeadless,
+      format,
+      callbacks,
+    },
+  );
 
-  // Update the original array reference for headless mode
-  chatHistory.length = 0;
-  chatHistory.push(...result.chatHistory);
+  // Update service-driven history
+  services.chatHistory.setHistory(result.chatHistory);
 
   return result.compactionIndex;
 }
@@ -228,7 +304,7 @@ async function handleAutoCompaction(
  */
 async function handleTitleGeneration(
   assistantResponse: string,
-  llmApi: any,
+  llmApi: BaseLlmApi,
   model: ModelConfig,
 ): Promise<void> {
   try {
@@ -254,7 +330,7 @@ interface ProcessMessageOptions {
   userInput: string;
   chatHistory: ChatHistoryItem[];
   model: ModelConfig;
-  llmApi: any;
+  llmApi: BaseLlmApi;
   isHeadless: boolean;
   format?: "json";
   silent?: boolean;
@@ -286,7 +362,7 @@ async function processMessage(
   telemetryService.logUserPrompt(userInput.length, userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
-  if (shouldAutoCompact(chatHistory, model)) {
+  if (shouldAutoCompact(services.chatHistory.getHistory(), model)) {
     const newIndex = await handleAutoCompaction(
       chatHistory,
       model,
@@ -296,17 +372,12 @@ async function processMessage(
     );
     if (newIndex !== null) {
       compactionIndex = newIndex;
-      // Replace chatHistory with compacted version
-      chatHistory.length = 0;
-      chatHistory.push(...chatHistory);
+      // Service already updated in handleAutoCompaction via setHistory
     }
   }
 
   // Add user message to history AFTER potential compaction
-  chatHistory.push({
-    message: { role: "user", content: userInput },
-    contextItems: [],
-  });
+  services.chatHistory.addUserMessage(userInput);
 
   // Get AI response with potential tool usage
   if (!isHeadless) {
@@ -314,79 +385,56 @@ async function processMessage(
   }
 
   try {
-    const abortController = new AbortController();
-
-    // Handle compaction properly - streamChatResponse modifies the array in place
-    let finalResponse;
-    if (compactionIndex !== null && compactionIndex !== undefined) {
-      // When using compaction, we need to send a subset but capture the full history
-      const historyForLLM = getHistoryForLLM(chatHistory, compactionIndex);
-      const originalLength = historyForLLM.length;
-
-      finalResponse = await streamChatResponse(
-        historyForLLM,
-        model,
-        llmApi,
-        abortController,
-      );
-
-      // Append any new messages (assistant/tool) that were added by streamChatResponse
-      const newMessages = historyForLLM.slice(originalLength);
-      chatHistory.push(...newMessages);
-    } else {
-      // No compaction - just pass the full history directly
-      finalResponse = await streamChatResponse(
-        chatHistory,
-        model,
-        llmApi,
-        abortController,
-      );
-      // No need to sync back - streamChatResponse modifies chatHistory in place
-    }
+    // Get AI response with potential tool usage
+    const finalResponse = await getStreamingResponse(
+      compactionIndex,
+      model,
+      llmApi,
+    );
 
     // Generate session title after first assistant response
     if (firstAssistantResponse && finalResponse && finalResponse.trim()) {
       await handleTitleGeneration(finalResponse, llmApi, model);
     }
 
-    // In headless mode, only print the final response using safe stdout
-    if (isHeadless && finalResponse && finalResponse.trim()) {
-      let processedResponse = finalResponse;
-
-      // Strip think tags if --silent flag is enabled
-      if (silent) {
-        processedResponse = stripThinkTags(processedResponse);
-      }
-
-      // Process output based on format
-      const outputResponse =
-        format === "json"
-          ? processJsonOutput(processedResponse)
-          : processedResponse;
-
-      safeStdout(outputResponse + "\n");
-    }
+    // Process and output response in headless mode
+    processAndOutputResponse(finalResponse, isHeadless, silent, format);
 
     // Save session after each successful response
-    updateSessionHistory(chatHistory);
+    updateSessionHistory(services.chatHistory.getHistory());
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 
-    if (model.provider === "anthropic") {
-      logger.error(`\n${chalk.red(`Error: ${formatAnthropicError(error)}`)}`);
-    } else {
-      logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+    // In headless mode, don't output JSON here - let error bubble up to main handler
+    if (!isHeadless) {
+      // Non-headless mode: use colored console output
+      if (model.provider === "anthropic") {
+        logger.error(`\n${chalk.red(`Error: ${formatAnthropicError(error)}`)}`);
+      } else {
+        logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+      }
+
+      logger.info(
+        chalk.dim(
+          `Chat history:\n${JSON.stringify(
+            services.chatHistory.getHistory(),
+            null,
+            2,
+          )}`,
+        ),
+      );
     }
 
     sentryService.captureException(error, {
       context: "chat_response",
       isHeadless,
-      chatHistoryLength: chatHistory.length,
+      chatHistoryLength: services.chatHistory.getHistory().length,
     });
-    if (!isHeadless) {
-      logger.info(
-        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`),
-      );
+
+    // In headless mode, re-throw the error to bubble up to main error handler
+    // This preserves downstream logic like telemetry cleanup
+    if (isHeadless) {
+      throw error;
     }
   }
 }
@@ -414,12 +462,15 @@ async function runHeadlessMode(
     throw new Error("No models were found.");
   }
 
-  // Initialize chat history
-  const chatHistory = await initializeChatHistory(options);
+  if (!llmApi) {
+    throw new Error("No LLM API instance found.");
+  }
 
-  // Track compaction index if resuming with compacted history
+  // Initialize service-driven history (resume if requested)
+  const chatHistory = await initializeChatHistory(options);
   let compactionIndex: number | null = null;
-  if (options.resume) {
+  if (options.resume || options.fork) {
+    services.chatHistory.setHistory(chatHistory);
     compactionIndex = findCompactionIndex(chatHistory);
   }
 
@@ -427,9 +478,15 @@ async function runHeadlessMode(
   const { processAndCombinePrompts } = await import(
     "../util/promptProcessor.js"
   );
+  const workflowState = await serviceContainer.get<WorkflowServiceState>(
+    SERVICE_NAMES.WORKFLOW,
+  );
+  const initialPrompt =
+    `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+    undefined;
   const initialUserInput = await processAndCombinePrompts(
     options.prompt,
-    prompt,
+    initialPrompt,
   );
 
   let isFirstMessage = true;
@@ -443,7 +500,7 @@ async function runHeadlessMode(
     const userInput =
       isFirstMessage && initialUserInput
         ? initialUserInput
-        : readlineSync.question(`\n${chalk.bold.green("You:")} `);
+        : await question(`\n${chalk.bold.green("You:")} `);
 
     isFirstMessage = false;
 
@@ -485,23 +542,26 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     if (!options.headless) {
       // Process flags for TUI mode
       const { permissionOverrides } = processCommandFlags(options);
-
       // Initialize services with onboarding handled internally
-      const initResult = await initializeServices({
+      await initializeServices({
         options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
 
-      // If onboarding was completed, show success message
-      if (initResult.wasOnboarded) {
-        console.log(chalk.green("✓ Setup complete! Starting chat..."));
-      }
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      const initialPrompt =
+        `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+        undefined;
 
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {
-        initialPrompt: prompt,
+        initialPrompt,
         resume: options.resume,
+        fork: options.fork,
         config: options.config,
         org: options.org,
         rule: options.rule,
@@ -528,15 +588,30 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     await runHeadlessMode(prompt, options);
   } catch (error: any) {
     const err = error instanceof Error ? error : new Error(String(error));
-    // Use headless-aware error logging to ensure fatal errors are shown in headless mode
-    logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
+
+    // In headless mode, output error as JSON to stdout
+    if (options.headless) {
+      const errorOutput = {
+        status: "error",
+        message: err.message || String(err),
+      };
+      safeStderr(JSON.stringify(errorOutput) + "\n");
+    } else {
+      // Use headless-aware error logging for non-headless mode
+      logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
+    }
+
     sentryService.captureException(err, {
       context: "chat_command_fatal",
       headless: options.headless,
     });
-    process.exit(1);
+
+    // Stop active time tracking BEFORE graceful exit
+    telemetryService.stopActiveTime();
+
+    await gracefulExit(1);
   } finally {
-    // Stop active time tracking
+    // Stop active time tracking for normal completion
     telemetryService.stopActiveTime();
   }
 }

@@ -1,6 +1,9 @@
 name: Continue General Review
 
 on:
+  push:
+    branches:
+      - nate/fix-wf
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
@@ -18,7 +21,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Run Continue PR Review Action
-        uses: continuedev/continue/actions/general-review@64bda6b2b3dac1037e9895dbee4ce1d35565e1fe
+        uses: continuedev/continue/actions/general-review@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"

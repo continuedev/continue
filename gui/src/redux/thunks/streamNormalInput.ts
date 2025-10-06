@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, Tool } from "core";
+import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -16,84 +16,73 @@ import {
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
-import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
+import {
+  selectCurrentToolCalls,
+  selectPendingToolCalls,
+} from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { enhanceParsedArgs } from "./enhanceParsedArgs";
+import { evaluateToolPolicies } from "./evaluateToolPolicies";
+import { preprocessToolCalls } from "./preprocessToolCallArgs";
+import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
+
 /**
- * Handles the execution of tool calls that may be automatically accepted.
- * Sets all tools as generated first, then executes auto-approved tool calls.
+ * Builds completion options with reasoning configuration based on session state and model capabilities.
+ *
+ * @param baseOptions - Base completion options to extend
+ * @param hasReasoningEnabled - Whether reasoning is enabled in the session
+ * @param model - The selected model with provider and completion options
+ * @returns Completion options with reasoning configuration
  */
-async function handleToolCallExecution(
-  dispatch: AppThunkDispatch,
-  getState: () => RootState,
-  activeTools: Tool[],
-): Promise<void> {
-  const newState = getState();
-  const toolSettings = newState.ui.toolSettings;
-  const allToolCallStates = selectCurrentToolCalls(newState);
-
-  // Only process tool calls that are in "generating" status (newly created during this streaming session)
-  const toolCallStates = allToolCallStates.filter(
-    (toolCallState) => toolCallState.status === "generating",
-  );
-
-  // If no generating tool calls, nothing to process
-  if (toolCallStates.length === 0) {
-    return;
+function buildReasoningCompletionOptions(
+  baseOptions: LLMFullCompletionOptions,
+  hasReasoningEnabled: boolean | undefined,
+  model: ModelDescription,
+): LLMFullCompletionOptions {
+  if (hasReasoningEnabled === undefined) {
+    return baseOptions;
   }
 
-  // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every((toolCallState) => {
-    const toolPolicy =
-      toolSettings[toolCallState.toolCall.function.name] ??
-      activeTools.find(
-        (tool) => tool.function.name === toolCallState.toolCall.function.name,
-      )?.defaultToolPolicy ??
-      DEFAULT_TOOL_SETTING;
-    return toolPolicy == "allowedWithoutPermission";
-  });
+  const reasoningOptions: LLMFullCompletionOptions = {
+    ...baseOptions,
+    reasoning: !!hasReasoningEnabled,
+  };
 
-  // Set all tools as generated first
-  toolCallStates.forEach((toolCallState) => {
-    dispatch(
-      setToolGenerated({
-        toolCallId: toolCallState.toolCallId,
-        tools: newState.config.config.tools,
-      }),
-    );
-  });
-
-  // Only run if we have auto-approve for all
-  if (allAutoApproved && toolCallStates.length > 0) {
-    const toolCallPromises = toolCallStates.map(async (toolCallState) => {
-      const response = await dispatch(
-        callToolById({ toolCallId: toolCallState.toolCallId }),
-      );
-      unwrapResult(response);
-    });
-
-    await Promise.all(toolCallPromises);
+  // Add reasoning budget tokens if reasoning is enabled and provider supports it
+  if (hasReasoningEnabled && model.underlyingProviderName !== "ollama") {
+    // Ollama doesn't support limiting reasoning tokens at this point
+    reasoningOptions.reasoningBudgetTokens =
+      model.completionOptions?.reasoningBudgetTokens ?? 2048;
   }
+
+  return reasoningOptions;
 }
 
 export const streamNormalInput = createAsyncThunk<
   void,
   {
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
+    depth?: number;
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
+  async (
+    { legacySlashCommandData, depth = 0 },
+    { dispatch, extra, getState },
+  ) => {
+    if (process.env.NODE_ENV === "test" && depth > 50) {
+      const message = `Max stream depth of ${50} reached in test`;
+      console.error(message, JSON.stringify(getState(), null, 2));
+      throw new Error(message);
+    }
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -121,14 +110,11 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    if (state.session.hasReasoningEnabled) {
-      completionOptions = {
-        ...completionOptions,
-        reasoning: true,
-        reasoningBudgetTokens:
-          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
-      };
-    }
+    completionOptions = buildReasoningCompletionOptions(
+      completionOptions,
+      state.session.hasReasoningEnabled,
+      selectedChatModel,
+    );
 
     // Construct messages (excluding system message)
     const baseSystemMessage = getBaseSystemMessage(
@@ -249,49 +235,78 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    // Check if we have any tool calls that were just generated
-    const newState = getState();
-    const toolSettings = newState.ui.toolSettings;
-    const allToolCallStates = selectCurrentToolCalls(newState);
+    // Tool call sequence:
+    // 1. Mark generating tool calls as generated
+    const state1 = getState();
+    const originalToolCalls = selectCurrentToolCalls(state1);
 
-    await Promise.all(
-      allToolCallStates.map((tcState) =>
-        enhanceParsedArgs(
-          extra.ideMessenger,
-          dispatch,
-          tcState?.toolCall.function.name,
-          tcState.toolCallId,
-          tcState.parsedArgs,
-        ),
-      ),
+    const generatingCalls = originalToolCalls.filter(
+      (tc) => tc.status === "generating",
     );
-
-    const generatingToolCalls = allToolCallStates.filter(
-      (toolCallState) => toolCallState.status === "generating",
-    );
-
-    // Check if ALL generating tool calls are auto-approved
-    const allAutoApproved =
-      generatingToolCalls.length > 0 &&
-      generatingToolCalls.every((toolCallState) => {
-        const toolPolicy =
-          toolSettings[toolCallState.toolCall.function.name] ??
-          activeTools.find(
-            (tool) =>
-              tool.function.name === toolCallState.toolCall.function.name,
-          )?.defaultToolPolicy ??
-          DEFAULT_TOOL_SETTING;
-        return toolPolicy == "allowedWithoutPermission";
-      });
-
-    // Only set inactive if:
-    // 1. There are no tool calls, OR
-    // 2. There are tool calls but they require manual approval
-    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-    if (generatingToolCalls.length === 0 || !allAutoApproved) {
-      dispatch(setInactive());
+    for (const { toolCallId } of generatingCalls) {
+      dispatch(
+        setToolGenerated({
+          toolCallId,
+          tools: state1.config.config.tools,
+        }),
+      );
     }
 
-    await handleToolCallExecution(dispatch, getState, activeTools);
+    // 2. Pre-process args to catch invalid args before checking policies
+    const state2 = getState();
+    const generatedCalls2 = selectPendingToolCalls(state2);
+    await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
+
+    // 3. Security check: evaluate updated policies based on args
+    const state3 = getState();
+
+    const generatedCalls3 = selectPendingToolCalls(state3);
+    const toolPolicies = state3.ui.toolSettings;
+    const policies = await evaluateToolPolicies(
+      dispatch,
+      extra.ideMessenger,
+      activeTools,
+      generatedCalls3,
+      toolPolicies,
+    );
+    const anyRequireApproval = policies.find(
+      ({ policy }) => policy === "allowedWithPermission",
+    );
+
+    // 4. Execute remaining tool calls
+    // Only set inactive if not all tools were auto-approved
+    // This prevents UI flashing for auto-approved tools
+    if (originalToolCalls.length === 0 || anyRequireApproval) {
+      dispatch(setInactive());
+    } else {
+      // auto stream cases increase thunk depth by 1
+      const state4 = getState();
+      const generatedCalls4 = selectPendingToolCalls(state4);
+      if (generatedCalls4.length > 0) {
+        // All that didn't fail are auto approved - call them
+        await Promise.all(
+          generatedCalls4.map(async ({ toolCallId }) => {
+            unwrapResult(
+              await dispatch(
+                callToolById({
+                  toolCallId,
+                  isAutoApproved: true,
+                  depth: depth + 1,
+                }),
+              ),
+            );
+          }),
+        );
+      } else {
+        // All failed - stream on
+        for (const { toolCallId } of originalToolCalls) {
+          unwrapResult(
+            await dispatch(
+              streamResponseAfterToolCall({ toolCallId, depth: depth + 1 }),
+            ),
+          );
+        }
+      }
+    }
   },
 );

@@ -7,15 +7,19 @@ import {
   loadAuthConfig,
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
+import { handleInit } from "./commands/init.js";
+import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getCurrentSession, getSessionFilePath } from "./session.js";
+import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
-import { getVersion } from "./version.js";
 
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
+  remoteUrl?: string,
+  options?: { isRemoteMode?: boolean },
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -28,6 +32,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  ${chalk.cyan("Enter")}      Submit message`,
     `  ${chalk.cyan("Shift+Enter")} New line`,
     `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
+    `  ${chalk.cyan("!")}          Shell mode - run shell commands`,
     "",
     chalk.white("Controls:"),
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,
@@ -39,16 +44,16 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     chalk.white("Special Characters:"),
     `  ${chalk.cyan("@")}          Search and attach files for context`,
     `  ${chalk.cyan("/")}          Access slash commands`,
+    `  ${chalk.cyan("!")}          Execute bash commands directly`,
     "",
     chalk.white("Available Commands:"),
     `  Type ${chalk.cyan("/")} to see available slash commands`,
+    `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
-  posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
 }
 
 async function handleLogin() {
-  posthogService.capture("useSlashCommand", { name: "login" });
   try {
     const newAuthState = await services.auth.login();
     await reloadService(SERVICE_NAMES.AUTH);
@@ -74,7 +79,6 @@ async function handleLogin() {
 }
 
 async function handleLogout() {
-  posthogService.capture("useSlashCommand", { name: "logout" });
   try {
     await services.auth.logout();
     return {
@@ -90,7 +94,6 @@ async function handleLogout() {
 }
 
 function handleWhoami() {
-  posthogService.capture("useSlashCommand", { name: "whoami" });
   if (isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
@@ -112,140 +115,100 @@ function handleWhoami() {
   }
 }
 
-async function handleInfo() {
-  posthogService.capture("useSlashCommand", { name: "info" });
-
-  const infoLines = [];
-
-  // Version and working directory info
-  const version = getVersion();
-  const cwd = process.cwd();
-
-  infoLines.push(chalk.white("CLI Information:"));
-  infoLines.push(`  Version: ${chalk.green(version)}`);
-  infoLines.push(`  Working Directory: ${chalk.blue(cwd)}`);
-
-  // Auth info
-  if (isAuthenticated()) {
-    const config = loadAuthConfig();
-    if (config && isAuthenticatedConfig(config)) {
-      const email = config.userEmail || config.userId;
-      const org = "(no org)"; // Organization info not available in AuthenticatedConfig
-      infoLines.push("");
-      infoLines.push(chalk.white("Authentication:"));
-      infoLines.push(`  Email: ${chalk.green(email)}`);
-      infoLines.push(`  Organization: ${chalk.cyan(org)}`);
-    } else {
-      infoLines.push("");
-      infoLines.push(chalk.white("Authentication:"));
-      infoLines.push(
-        `  ${chalk.yellow("Authenticated via environment variable")}`,
-      );
-    }
-  } else {
-    infoLines.push("");
-    infoLines.push(chalk.white("Authentication:"));
-    infoLines.push(`  ${chalk.red("Not logged in")}`);
-  }
-
-  // Config info
-  try {
-    const configState = services.config.getState();
-    infoLines.push("");
-    infoLines.push(chalk.white("Configuration:"));
-    if (configState.config) {
-      infoLines.push(`  ${chalk.gray(`Using ${configState.config?.name}`)}`);
-    } else {
-      infoLines.push(`  ${chalk.red(`Config not found`)}`);
-    }
-    if (configState.configPath) {
-      infoLines.push(`  Path: ${chalk.blue(configState.configPath)}`);
-    }
-
-    // Add current model info
-    try {
-      const modelInfo = services.model?.getModelInfo();
-      if (modelInfo) {
-        infoLines.push(`  Model: ${chalk.cyan(modelInfo.name)}`);
-      } else {
-        infoLines.push(`  Model: ${chalk.red("Not available")}`);
-      }
-    } catch {
-      infoLines.push(`  Model: ${chalk.red("Error retrieving model info")}`);
-    }
-  } catch {
-    infoLines.push("");
-    infoLines.push(chalk.white("Configuration:"));
-    infoLines.push(`  ${chalk.red("Configuration service not available")}`);
-  }
-
-  // Session info
-  infoLines.push("");
-  infoLines.push(chalk.white("Session:"));
+async function handleFork() {
   try {
     const currentSession = getCurrentSession();
-    infoLines.push(`  Title: ${chalk.green(currentSession.title)}`);
-    infoLines.push(`  ID: ${chalk.gray(currentSession.sessionId)}`);
+    const forkCommand = `cn --fork ${currentSession.sessionId}`;
+    // Try to copy to clipboard dynamically to avoid hard dependency in tests
+    try {
+      const clipboardy = await import("clipboardy");
+      await clipboardy.default.write(forkCommand);
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand} (copied to clipboard)`),
+      };
+    } catch {
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand}`),
+      };
+    }
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to create fork command: ${error.message}`),
+    };
+  }
+}
 
-    const sessionFilePath = getSessionFilePath();
-    infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
-  } catch {
-    infoLines.push(`  ${chalk.red("Session not available")}`);
+function handleTitle(args: string[]) {
+  posthogService.capture("useSlashCommand", { name: "title" });
+
+  const title = args.join(" ").trim();
+  if (!title) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a title. Usage: /title <your title>",
+      ),
+    };
   }
 
-  return {
-    exit: false,
-    output: infoLines.join("\n"),
-  };
+  try {
+    updateSessionTitle(title);
+    return {
+      exit: false,
+      output: chalk.green(`Session title updated to: "${title}"`),
+    };
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to update title: ${error.message}`),
+    };
+  }
 }
 
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
-    posthogService.capture("useSlashCommand", { name: "clear" });
     return { clear: true, output: "Chat history cleared" };
   },
   exit: () => {
-    posthogService.capture("useSlashCommand", { name: "exit" });
     return { exit: true, output: "Goodbye!" };
   },
   config: () => {
-    posthogService.capture("useSlashCommand", { name: "config" });
     return { openConfigSelector: true };
   },
   login: handleLogin,
   logout: handleLogout,
   whoami: handleWhoami,
-  info: handleInfo,
+  info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
-    posthogService.capture("useSlashCommand", { name: "compact" });
     return { compact: true };
   },
   mcp: () => {
-    posthogService.capture("useSlashCommand", { name: "mcp" });
     return { openMcpSelector: true };
   },
   resume: () => {
-    posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
+  },
+  fork: handleFork,
+  title: handleTitle,
+  init: (args, assistant) => {
+    posthogService.capture("useSlashCommand", { name: "init" });
+    return handleInit(args, assistant);
+  },
+  update: () => {
+    return { openUpdateSelector: true };
   },
 };
 
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-): Promise<{
-  output?: string;
-  exit?: boolean;
-  newInput?: string;
-  clear?: boolean;
-  openConfigSelector?: boolean;
-  openModelSelector?: boolean;
-  openMCPSelector?: boolean;
-  openSessionSelector?: boolean;
-  compact?: boolean;
-} | null> {
+  options?: { remoteUrl?: string; isRemoteMode?: boolean },
+): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
     return null;
@@ -253,9 +216,12 @@ export async function handleSlashCommands(
 
   const [command, ...args] = input.slice(1).split(" ");
 
+  telemetryService.recordSlashCommand(command);
+  posthogService.capture("useSlashCommand", { name: command });
+
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant);
+    return await handler(args, assistant, options?.remoteUrl, options);
   }
 
   // Check for custom assistant prompts
@@ -267,8 +233,25 @@ export async function handleSlashCommands(
     return { newInput };
   }
 
+  // Check for invokable rules
+  const invokableRule = assistant.rules?.find((rule) => {
+    // Handle both string rules and rule objects
+    if (!rule || typeof rule === "string") {
+      return false;
+    }
+    const ruleObj = rule as any;
+    return ruleObj.invokable === true && ruleObj.name === command;
+  });
+  if (invokableRule) {
+    const ruleObj = invokableRule as any;
+    const newInput = ruleObj.rule + " " + args.join(" ");
+    return { newInput };
+  }
+
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant);
+  const allCommands = getAllSlashCommands(assistant, {
+    isRemoteMode: options?.isRemoteMode,
+  });
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );

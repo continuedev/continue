@@ -13,6 +13,7 @@ import LMStudio from "./LMStudio.js";
 import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
 import Nvidia from "./Nvidia.js";
+import CometAPI from "./CometAPI.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -291,4 +292,14 @@ createOpenAISubclassTests(Nvidia, {
     input_type: "passage",
     truncate: "END",
   },
+});
+
+createOpenAISubclassTests(CometAPI, {
+  providerName: "cometapi",
+  defaultApiBase: "https://api.cometapi.com/v1/",
+  modelConversions: {
+    "gpt-5-mini": "gpt-5-mini",
+    "claude-4-sonnet": "claude-sonnet-4-20250514",
+  },
+  modelConversionContent: "hello",
 });

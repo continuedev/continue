@@ -19,6 +19,11 @@ import {
 } from "../types.js";
 import { isWhitespaceOnlyDeletion } from "../utils.js";
 
+/**
+ * This class is used as an abstract base class for model-specific providers.
+ * This and its children are responsible for pre/post processing of prompts and outcomes.
+ * Different next edit models have very different requirements.
+ */
 export abstract class BaseNextEditModelProvider {
   protected readonly modelName: string;
 
@@ -304,6 +309,7 @@ export abstract class BaseNextEditModelProvider {
         outcomeCtx.completionId || outcomeCtx.helper.input.completionId,
       gitRepo: await outcomeCtx.ide.getRepoName(outcomeCtx.helper.filepath),
       uniqueId: await outcomeCtx.ide.getUniqueId(),
+      requestId: outcomeCtx.llm.lastRequestId,
       timestamp: Date.now(),
       fileUri: outcomeCtx.helper.filepath,
       workspaceDirUri:

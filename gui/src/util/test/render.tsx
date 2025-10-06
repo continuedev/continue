@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { PropsWithChildren } from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter, RouterProps } from "react-router-dom";
-import { LumpProvider } from "../../components/mainInput/Lump/LumpContext";
 import { MainEditorProvider } from "../../components/mainInput/TipTapEditor";
 import { AuthProvider } from "../../context/Auth";
 import { IdeMessengerProvider } from "../../context/IdeMessenger";
@@ -18,6 +17,7 @@ import { setupStore } from "../../redux/store";
 type ExtendedRenderOptions = Omit<RenderOptions, "queries"> & {
   store?: ReturnType<typeof setupStore>;
   routerProps?: RouterProps;
+  mockIdeMessenger?: MockIdeMessenger;
 };
 
 function setupMocks() {
@@ -33,7 +33,8 @@ export async function renderWithProviders(
   extendedRenderOptions: ExtendedRenderOptions = {},
 ) {
   setupMocks();
-  const ideMessenger = new MockIdeMessenger();
+  const ideMessenger =
+    extendedRenderOptions?.mockIdeMessenger ?? new MockIdeMessenger();
 
   const {
     // Automatically create a store instance if no store was passed in
@@ -52,10 +53,8 @@ export async function renderWithProviders(
         <Provider store={store}>
           <AuthProvider>
             <MainEditorProvider>
-              <LumpProvider>
-                {children}
-                <ParallelListeners />
-              </LumpProvider>
+              {children}
+              <ParallelListeners />
             </MainEditorProvider>
           </AuthProvider>
         </Provider>

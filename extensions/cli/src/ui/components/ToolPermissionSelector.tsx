@@ -4,8 +4,12 @@ import React, { useState } from "react";
 import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
 
 import { ToolCallPreview } from "../../tools/types.js";
+import { defaultBoxStyles } from "../styles.js";
 
 import { ToolPreview } from "./ToolPreview.js";
+
+// show dangerous commmand warning only once per CLI process
+let hasShownDangerousCommandWarning = false;
 
 interface PermissionOption {
   id: string;
@@ -21,6 +25,7 @@ interface ToolPermissionSelectorProps {
   toolArgs: any;
   requestId: string;
   toolCallPreview?: ToolCallPreview[];
+  hasDynamicEvaluation?: boolean;
   onResponse: (
     requestId: string,
     approved: boolean,
@@ -29,36 +34,46 @@ interface ToolPermissionSelectorProps {
   ) => void;
 }
 
-const PERMISSION_OPTIONS: PermissionOption[] = [
-  { id: "approve", name: "Continue", color: "green", approved: true },
-  {
-    id: "approve_policy",
-    name: "Continue + don't ask again",
-    color: "cyan",
-    approved: true,
-    createPolicy: true,
-  },
-  {
-    id: "deny_stop",
-    name: "No, and tell Continue what to do differently",
-    color: "yellow",
-    approved: false,
-    stopStream: true,
-  },
-];
+const getPermissionOptions = (): PermissionOption[] => {
+  return [
+    { id: "approve", name: "Continue", color: "green", approved: true },
+    {
+      id: "approve_policy",
+      name: "Continue + don't ask again",
+      color: "cyan",
+      approved: true,
+      createPolicy: true,
+    },
+    {
+      id: "deny_stop",
+      name: "No, and tell Continue what to do differently",
+      color: "yellow",
+      approved: false,
+      stopStream: true,
+    },
+  ];
+};
 
 export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   toolName,
   toolArgs,
   requestId,
   toolCallPreview,
+  hasDynamicEvaluation = false,
   onResponse,
 }) => {
+  const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [initialHasShownDangerousCommand] = useState(
+    hasShownDangerousCommandWarning,
+  );
+  hasShownDangerousCommandWarning = false;
+  const showDynamicWarning =
+    hasDynamicEvaluation && !initialHasShownDangerousCommand;
 
   useInput((input, key) => {
     if (key.return) {
-      const selectedOption = PERMISSION_OPTIONS[selectedIndex];
+      const selectedOption = permissionOptions[selectedIndex];
       onResponse(
         requestId,
         selectedOption.approved,
@@ -80,8 +95,8 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       return;
     }
 
-    // Escape to reject with stop stream
-    if (key.escape) {
+    // Escape or Ctrl+C to reject with stop stream
+    if (key.escape || (key.ctrl && input === "c")) {
       onResponse(requestId, false, false, true);
       return;
     }
@@ -90,7 +105,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       setSelectedIndex(Math.max(0, selectedIndex - 1));
     } else if (key.downArrow) {
       setSelectedIndex(
-        Math.min(PERMISSION_OPTIONS.length - 1, selectedIndex + 1),
+        Math.min(permissionOptions.length - 1, selectedIndex + 1),
       );
     }
 
@@ -103,12 +118,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   });
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="magenta"
-    >
+    <Box {...defaultBoxStyles("magenta")}>
       <Text color="magenta" bold>
         <ToolCallTitle toolName={toolName} args={toolArgs} />
       </Text>
@@ -124,7 +134,15 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 
       <Box marginTop={1} flexDirection="column">
         <Text color="dim">Would you like to continue?</Text>
-        {PERMISSION_OPTIONS.map((option, index) => {
+        {showDynamicWarning && (
+          <Box marginTop={1}>
+            <Text color="yellow" dimColor>
+              Note: Dangerous commands will be blocked regardless of your
+              preference.
+            </Text>
+          </Box>
+        )}
+        {permissionOptions.map((option, index) => {
           const isSelected = index === selectedIndex;
           let shortcut = "";
           if (option.id === "approve") shortcut = "(tab)";

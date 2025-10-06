@@ -1,3 +1,4 @@
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
@@ -12,6 +13,8 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
+
+import { readFileRangeImpl } from "./implementations/readFileRange";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
@@ -85,10 +88,14 @@ async function callToolFromUri(
       if (!client) {
         throw new Error("MCP connection not found");
       }
-      const response = await client.client.callTool({
-        name: toolName,
-        arguments: args,
-      });
+      const response = await client.client.callTool(
+        {
+          name: toolName,
+          arguments: args,
+        },
+        CallToolResultSchema,
+        { timeout: client.options.timeout },
+      );
 
       if (response.isError === true) {
         throw new Error(JSON.stringify(response.content));
@@ -145,6 +152,8 @@ export async function callBuiltInTool(
   switch (functionName) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
+    case BuiltInToolNames.ReadFileRange:
+      return await readFileRangeImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.GrepSearch:

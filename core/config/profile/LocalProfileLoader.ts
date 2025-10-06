@@ -1,7 +1,7 @@
 import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../../index.js";
+import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import { getPrimaryConfigFilePath } from "../../util/paths.js";
@@ -15,7 +15,6 @@ export default class LocalProfileLoader implements IProfileLoader {
 
   constructor(
     private ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private controlPlaneClient: ControlPlaneClient,
     private llmLogger: ILLMLogger,
     private overrideAssistantFile?:
@@ -57,7 +56,6 @@ export default class LocalProfileLoader implements IProfileLoader {
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
     const result = await doLoadConfig({
       ide: this.ide,
-      ideSettingsPromise: this.ideSettingsPromise,
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
       profileId: this.description.id,

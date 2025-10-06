@@ -176,9 +176,9 @@ See [`intellij/CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the 
 ### Our Git Workflow
 
 We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the
-`main` branch titled `v1.1.x-vscode`, which automatically triggers the workflow
+`main` branch titled `v1.3.x-vscode`, which automatically triggers the workflow
 in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When
-a release has been sufficiently tested, we will create a new release titled `v1.0x-vscode`, triggering a similar
+a release has been sufficiently tested, we will create a new release titled `v1.2.x-vscode`, triggering a similar
 workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code
 extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow
 is well explained by <http://releaseflow.org>.
@@ -252,7 +252,7 @@ add it with the following steps:
 3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array
    in [core/llm/autodetect.ts](./core/llm/autodetect.ts).
 4. Add a documentation page for your provider in [
-   `docs/docs/customize/model-providers/more`](./docs/docs/customize/model-providers/more). This should show an example
+   `docs/customize/model-providers/more`](./docs/customize/model-providers/more). This should show an example
    of configuring your provider in `config.yaml` and explain what options are available.
 
 ### Adding Models

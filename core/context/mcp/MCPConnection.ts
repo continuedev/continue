@@ -9,11 +9,15 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
-
+import { Agent as HttpsAgent } from "https";
 import {
   IDE,
+  InternalMcpOptions,
+  InternalSseMcpOptions,
+  InternalStdioMcpOptions,
+  InternalStreamableHttpMcpOptions,
+  InternalWebsocketMcpOptions,
   MCPConnectionStatus,
-  MCPOptions,
   MCPPrompt,
   MCPResource,
   MCPResourceTemplate,
@@ -55,6 +59,7 @@ class MCPConnection {
   public status: MCPConnectionStatus = "not-connected";
   public isProtectedResource = false;
   public errors: string[] = [];
+  public infos: string[] = [];
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
@@ -67,7 +72,7 @@ class MCPConnection {
   };
 
   constructor(
-    public options: MCPOptions,
+    public options: InternalMcpOptions,
     public extras?: MCPExtras,
   ) {
     // Don't construct transport in constructor to avoid blocking
@@ -86,16 +91,18 @@ class MCPConnection {
     this.abortController = new AbortController();
   }
 
-  async disconnect() {
+  async disconnect(disable = false) {
     this.abortController.abort();
     await this.client.close();
     await this.transport.close();
+    this.status = disable ? "disabled" : "not-connected";
   }
 
   getStatus(): MCPServerStatus {
     return {
       ...this.options,
       errors: this.errors,
+      infos: this.infos,
       prompts: this.prompts,
       resources: this.resources,
       resourceTemplates: this.resourceTemplates,
@@ -106,6 +113,9 @@ class MCPConnection {
   }
 
   async connectClient(forceRefresh: boolean, externalSignal: AbortSignal) {
+    if (this.status === "disabled") {
+      return;
+    }
     if (!forceRefresh) {
       // Already connected
       if (this.status === "connected") {
@@ -125,26 +135,27 @@ class MCPConnection {
     this.resources = [];
     this.resourceTemplates = [];
     this.errors = [];
+    this.infos = [];
     this.stdioOutput = { stdout: "", stderr: "" };
 
     this.abortController.abort();
     this.abortController = new AbortController();
 
     // currently support oauth for sse transports only
-    if (this.options.transport.type === "sse") {
-      if (!this.options.transport.requestOptions) {
-        this.options.transport.requestOptions = {
+    if (this.options.type === "sse") {
+      if (!this.options.requestOptions) {
+        this.options.requestOptions = {
           headers: {},
         };
       }
       const accessToken = await getOauthToken(
-        this.options.transport.url,
+        this.options.url,
         this.extras?.ide!,
       );
       if (accessToken) {
         this.isProtectedResource = true;
-        this.options.transport.requestOptions.headers = {
-          ...this.options.transport.requestOptions.headers,
+        this.options.requestOptions.headers = {
+          ...this.options.requestOptions.headers,
           Authorization: `Bearer ${accessToken}`,
         };
       }
@@ -177,22 +188,71 @@ class MCPConnection {
               });
             }),
             (async () => {
-              this.transport = await this.constructTransportAsync(this.options);
-
-              try {
-                await this.client.connect(this.transport);
-              } catch (error) {
-                // Allow the case where for whatever reason is already connected
-                if (
-                  error instanceof Error &&
-                  error.message.startsWith(
-                    "StdioClientTransport already started",
-                  )
-                ) {
-                  await this.client.close();
-                  await this.client.connect(this.transport);
+              if ("command" in this.options) {
+                // STDIO: no need to check type, just if command is present
+                const transport = await this.constructStdioTransport(
+                  this.options,
+                );
+                try {
+                  await this.client.connect(transport, {});
+                  this.transport = transport;
+                } catch (error) {
+                  // Allow the case where for whatever reason is already connected
+                  if (
+                    error instanceof Error &&
+                    error.message.startsWith(
+                      "StdioClientTransport already started",
+                    )
+                  ) {
+                    await this.client.close();
+                    await this.client.connect(transport);
+                    this.transport = transport;
+                  } else {
+                    throw error;
+                  }
+                }
+              } else {
+                // SSE/HTTP: if type isn't explicit: try http and fall back to sse
+                if (this.options.type === "sse") {
+                  const transport = this.constructSseTransport(this.options);
+                  await this.client.connect(transport, {});
+                  this.transport = transport;
+                } else if (this.options.type === "streamable-http") {
+                  const transport = this.constructHttpTransport(this.options);
+                  await this.client.connect(transport, {});
+                  this.transport = transport;
+                } else if (this.options.type === "websocket") {
+                  const transport = this.constructWebsocketTransport(
+                    this.options,
+                  );
+                  await this.client.connect(transport, {});
+                  this.transport = transport;
+                } else if (this.options.type) {
+                  throw new Error(
+                    `Unsupported transport type: ${this.options.type}`,
+                  );
                 } else {
-                  throw error;
+                  try {
+                    const transport = this.constructHttpTransport({
+                      ...this.options,
+                      type: "streamable-http",
+                    });
+                    await this.client.connect(transport, {});
+                    this.transport = transport;
+                  } catch (e) {
+                    try {
+                      const transport = this.constructSseTransport({
+                        ...this.options,
+                        type: "sse",
+                      });
+                      await this.client.connect(transport, {});
+                      this.transport = transport;
+                    } catch (e) {
+                      throw new Error(
+                        `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
+                      );
+                    }
+                  }
                 }
               }
 
@@ -201,7 +261,6 @@ class MCPConnection {
               // this.client.setNotificationHandler(, notification => {
               //   console.log(notification)
               // })
-
               const capabilities = this.client.getServerCapabilities();
 
               // Resources <—> Context Provider
@@ -283,6 +342,16 @@ class MCPConnection {
             if (msg.includes("spawn") && msg.includes("enoent")) {
               const command = msg.split(" ")[1];
               errorMessage += `Error: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+              if (["uv", "uvx"].includes(command)) {
+                this.infos.push(
+                  'Please install uv by following the installation guide: <a href="https://docs.astral.sh/uv/getting-started/installation/">https://docs.astral.sh/uv/getting-started/installation/</a>',
+                );
+              }
+              if (["node", "npx"].includes(command)) {
+                this.infos.push(
+                  'Please install npx by following the installation guide: <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">https://docs.npmjs.com/downloading-and-installing-node-js-and-npm</a>',
+                );
+              }
             } else {
               errorMessage += "Error: " + error.message;
             }
@@ -294,7 +363,7 @@ class MCPConnection {
 
           // Include stdio output if available for stdio transport
           if (
-            this.options.transport.type === "stdio" &&
+            this.options.type === "stdio" &&
             (this.stdioOutput.stdout || this.stdioOutput.stderr)
           ) {
             errorMessage += "\n\nProcess output:";
@@ -368,7 +437,7 @@ class MCPConnection {
   }
 
   private async resolveWorkspaceCwd(cwd: string | undefined) {
-    const IDE = await this.extras?.ide;
+    const IDE = this.extras?.ide;
     if (IDE) {
       const target = cwd ?? ".";
       const resolved = await resolveRelativePathInDir(target, IDE);
@@ -383,83 +452,99 @@ class MCPConnection {
     return cwd;
   }
 
-  private async constructTransportAsync(
-    options: MCPOptions,
-  ): Promise<Transport> {
-    switch (options.transport.type) {
-      case "stdio":
-        const env: Record<string, string> = options.transport.env
-          ? { ...options.transport.env }
-          : {};
+  private constructWebsocketTransport(
+    options: InternalWebsocketMcpOptions,
+  ): WebSocketClientTransport {
+    return new WebSocketClientTransport(new URL(options.url));
+  }
 
-        if (process.env.PATH !== undefined) {
-          // Set the initial PATH from process.env
-          env.PATH = process.env.PATH;
+  private constructSseTransport(
+    options: InternalSseMcpOptions,
+  ): SSEClientTransport {
+    const sseAgent =
+      options.requestOptions?.verifySsl === false
+        ? new HttpsAgent({ rejectUnauthorized: false })
+        : undefined;
 
-          // For non-Windows platforms, try to get the PATH from user shell
-          if (process.platform !== "win32") {
-            try {
-              const shellEnvPath = await getEnvPathFromUserShell();
-              if (shellEnvPath && shellEnvPath !== process.env.PATH) {
-                env.PATH = shellEnvPath;
-              }
-            } catch (err) {
-              console.error("Error getting PATH:", err);
-            }
+    return new SSEClientTransport(new URL(options.url), {
+      eventSourceInit: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              ...options.requestOptions?.headers,
+            },
+            ...(sseAgent && { agent: sseAgent }),
+          }),
+      },
+      requestInit: {
+        headers: options.requestOptions?.headers,
+        ...(sseAgent && { agent: sseAgent }),
+      },
+    });
+  }
+
+  private constructHttpTransport(
+    options: InternalStreamableHttpMcpOptions,
+  ): StreamableHTTPClientTransport {
+    const { url, requestOptions } = options;
+    const streamableAgent =
+      requestOptions?.verifySsl === false
+        ? new HttpsAgent({ rejectUnauthorized: false })
+        : undefined;
+
+    return new StreamableHTTPClientTransport(new URL(url), {
+      requestInit: {
+        headers: requestOptions?.headers,
+        ...(streamableAgent && { agent: streamableAgent }),
+      },
+    });
+  }
+
+  private async constructStdioTransport(
+    options: InternalStdioMcpOptions,
+  ): Promise<StdioClientTransport> {
+    const env: Record<string, string> = options.env ? { ...options.env } : {};
+
+    if (process.env.PATH !== undefined) {
+      // Set the initial PATH from process.env
+      env.PATH = process.env.PATH;
+
+      // For non-Windows platforms, try to get the PATH from user shell
+      if (process.platform !== "win32") {
+        try {
+          const shellEnvPath = await getEnvPathFromUserShell();
+          if (shellEnvPath && shellEnvPath !== process.env.PATH) {
+            env.PATH = shellEnvPath;
           }
+        } catch (err) {
+          console.error("Error getting PATH:", err);
         }
-
-        // Resolve the command and args for the current platform
-        const { command, args } = this.resolveCommandForPlatform(
-          options.transport.command,
-          options.transport.args || [],
-        );
-
-        const transport = new StdioClientTransport({
-          command,
-          args,
-          env,
-          cwd: await this.resolveCwd(options.transport.cwd),
-          stderr: "pipe",
-        });
-
-        // Capture stdio output for better error reporting
-
-        transport.stderr?.on("data", (data: Buffer) => {
-          this.stdioOutput.stderr += data.toString();
-        });
-
-        return transport;
-      case "websocket":
-        return new WebSocketClientTransport(new URL(options.transport.url));
-      case "sse":
-        return new SSEClientTransport(new URL(options.transport.url), {
-          eventSourceInit: {
-            fetch: (input, init) =>
-              fetch(input, {
-                ...init,
-                headers: {
-                  ...init?.headers,
-                  ...(options.transport.requestOptions?.headers as
-                    | Record<string, string>
-                    | undefined),
-                },
-              }),
-          },
-          requestInit: { headers: options.transport.requestOptions?.headers },
-        });
-      case "streamable-http":
-        return new StreamableHTTPClientTransport(
-          new URL(options.transport.url),
-          {
-            requestInit: { headers: options.transport.requestOptions?.headers },
-          },
-        );
-      default:
-        throw new Error(
-          `Unsupported transport type: ${(options.transport as any).type}`,
-        );
+      }
     }
+
+    const { command, args } = this.resolveCommandForPlatform(
+      options.command,
+      options.args || [],
+    );
+
+    const cwd = await this.resolveCwd(options.cwd);
+
+    const transport = new StdioClientTransport({
+      command,
+      args,
+      env,
+      cwd,
+      stderr: "pipe",
+    });
+
+    // Capture stdio output for better error reporting
+    transport.stderr?.on("data", (data: Buffer) => {
+      this.stdioOutput.stderr += data.toString();
+    });
+
+    return transport;
   }
 }
 

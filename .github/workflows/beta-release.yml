@@ -24,7 +24,7 @@ jobs:
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
@@ -110,6 +110,6 @@ jobs:
 
           # Create GitHub release
           gh release create "v${{ steps.get_version.outputs.beta_version }}" \
-            --title "Beta Release v${{ steps.get_version.outputs.beta_version }}" \
+            --title "CLI Beta Release v${{ steps.get_version.outputs.beta_version }}" \
             --notes "Daily beta release for testing. This version will be promoted to stable after 7 days if no critical issues are found." \
             --prerelease

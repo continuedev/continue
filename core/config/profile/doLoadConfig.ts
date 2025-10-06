@@ -11,7 +11,6 @@ import {
 import {
   ContinueConfig,
   IDE,
-  IdeSettings,
   ILLMLogger,
   RuleWithSource,
   SerializedContinueConfig,
@@ -19,6 +18,7 @@ import {
   Tool,
 } from "../../";
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
+import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
@@ -28,6 +28,7 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
@@ -70,7 +71,6 @@ async function loadRules(ide: IDE) {
 }
 export default async function doLoadConfig(options: {
   ide: IDE;
-  ideSettingsPromise: Promise<IdeSettings>;
   controlPlaneClient: ControlPlaneClient;
   llmLogger: ILLMLogger;
   overrideConfigJson?: SerializedContinueConfig;
@@ -82,7 +82,6 @@ export default async function doLoadConfig(options: {
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
-    ideSettingsPromise,
     controlPlaneClient,
     llmLogger,
     overrideConfigJson,
@@ -95,7 +94,7 @@ export default async function doLoadConfig(options: {
 
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
-  const ideSettings = await ideSettingsPromise;
+  const ideSettings = await ide.getIdeSettings();
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
   const isSignedIn = await controlPlaneClient.isSignedIn();
 
@@ -158,6 +157,23 @@ export default async function doLoadConfig(options: {
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
 
+  // Convert invokable rules to slash commands
+  for (const rule of newConfig.rules) {
+    if (rule.invokable) {
+      try {
+        const slashCommand = convertRuleBlockToSlashCommand(rule);
+        (newConfig.slashCommands ??= []).push(slashCommand);
+      } catch (e) {
+        errors.push({
+          message: `Error converting invokable rule ${rule.name} to slash command: ${e instanceof Error ? e.message : e}`,
+          fatal: false,
+        });
+      }
+    }
+  }
+
+  newConfig.slashCommands.push(initSlashCommand);
+
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",
   );
@@ -190,7 +206,6 @@ export default async function doLoadConfig(options: {
   const mcpManager = MCPManagerSingleton.getInstance();
   const mcpServerStatuses = mcpManager.getStatuses();
 
-  // Slightly hacky just need connection's client to make slash command for now
   const serializableStatuses = mcpServerStatuses.map((server) => {
     const { client, ...rest } = server;
     return rest;
@@ -198,6 +213,13 @@ export default async function doLoadConfig(options: {
   newConfig.mcpServerStatuses = serializableStatuses;
 
   for (const server of mcpServerStatuses) {
+    server.errors.forEach((error) => {
+      // MCP errors will also show as config loading errors
+      errors.push({
+        fatal: false,
+        message: error,
+      });
+    });
     if (server.status === "connected") {
       const serverTools: Tool[] = server.tools.map((tool) => ({
         displayTitle: server.name + " " + tool.name,
@@ -332,11 +354,13 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  if (
-    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
-    false
-  ) {
+  // Org policies
+  const policy = PolicySingleton.getInstance().policy?.policy;
+  if (policy?.allowAnonymousTelemetry === false) {
     newConfig.allowAnonymousTelemetry = false;
+  }
+  if (policy?.allowCodebaseIndexing === false) {
+    newConfig.disableIndexing = true;
   }
 
   // Setup telemetry only after (and if) we know it is enabled
@@ -372,7 +396,7 @@ export default async function doLoadConfig(options: {
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
 
-  const env = await getControlPlaneEnv(ideSettingsPromise);
+  const env = await getControlPlaneEnv(Promise.resolve(ideSettings));
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
     : env.DEFAULT_CONTROL_PLANE_PROXY_URL;

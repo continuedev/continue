@@ -31,7 +31,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
     ];
-  }, [isRemoteMode, assistant?.prompts]);
+  }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands
@@ -73,7 +73,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
               {"  "}
               {paddedCommandName}
               <Text color={isSelected ? "blue" : "gray"}>
-                {"   "}
+                {"    "}
                 {command.description}
               </Text>
             </Text>

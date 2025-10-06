@@ -37,7 +37,6 @@ class MessageTypes {
             "applyToFile",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -93,6 +92,9 @@ class MessageTypes {
             "config/updateSharedConfig",
             "config/updateSelectedModel",
             "mcp/reloadServer",
+            "mcp/startAuthentication",
+            "mcp/removeAuthentication",
+            "mcp/setServerEnabled",
             "mcp/getPrompt",
             "context/getContextItems",
             "context/getSymbolsForFiles",
@@ -142,10 +144,13 @@ class MessageTypes {
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
+            "tools/evaluatePolicy",
+            "tools/preprocessArgs",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

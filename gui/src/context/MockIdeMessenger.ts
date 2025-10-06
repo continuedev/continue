@@ -44,14 +44,8 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     "file:///Users/user/workspace1",
     "file:///Users/user/workspace2",
   ],
-  "history/list": [
-    {
-      title: "Session 1",
-      sessionId: "session-1",
-      dateCreated: new Date().toString(),
-      workspaceDirectory: "/tmp",
-    },
-  ],
+  "history/list": [],
+  "docs/getIndexedPages": [],
   "history/save": undefined,
   getControlPlaneSessionInfo: {
     AUTH_TYPE: AuthType.WorkOsStaging,
@@ -84,10 +78,38 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     ],
   },
+  "context/getSymbolsForFiles": {},
+  "tools/preprocessArgs": {
+    preprocessedArgs: undefined,
+  },
   "llm/compileChat": {
     compiledChatMessages: [],
     didPrune: false,
     contextPercentage: 0.5,
+  },
+  "context/getContextItems": [
+    {
+      id: {
+        providerTitle: "mock",
+        itemId: "mock",
+      },
+      content: "Mock current file content",
+      name: "Mock File",
+      description: "Mock file for testing",
+      uri: {
+        type: "file",
+        value: "file:///Users/test/mock-file.ts",
+      },
+    },
+  ],
+};
+
+const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {
+  "tools/evaluatePolicy": async (data) => {
+    return {
+      policy: data.basePolicy,
+      displayValue: undefined,
+    };
   },
 };
 
@@ -142,7 +164,9 @@ export class MockIdeMessenger implements IIdeMessenger {
   }
 
   responses: MockResponses = { ...DEFAULT_MOCK_CORE_RESPONSES };
-  responseHandlers: MockResponseHandlers = {};
+  responseHandlers: MockResponseHandlers = {
+    ...DEFAULT_MOCK_CORE_RESPONSE_HANDLERS,
+  };
   chatResponse: ChatMessage[] = DEFAULT_CHAT_RESPONSE;
   chatStreamDelay: number = 0;
   setChatResponseText(text: string): void {
@@ -230,7 +254,7 @@ export class MockIdeMessenger implements IIdeMessenger {
 
   resetMocks(): void {
     this.responses = { ...DEFAULT_MOCK_CORE_RESPONSES };
-    this.responseHandlers = {};
+    this.responseHandlers = { ...DEFAULT_MOCK_CORE_RESPONSE_HANDLERS };
     this.chatResponse = DEFAULT_CHAT_RESPONSE;
     this.chatStreamDelay = 0;
   }

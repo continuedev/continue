@@ -1,5 +1,10 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  InternalSseMcpOptions,
+  InternalStdioMcpOptions,
+  InternalWebsocketMcpOptions,
+} from "../..";
 import * as ideUtils from "../../util/ideUtils";
 import MCPConnection from "./MCPConnection";
 
@@ -17,15 +22,13 @@ describe("MCPConnection", () => {
 
   describe("constructor", () => {
     it("should create instance with stdio transport", () => {
-      const options = {
+      const options: InternalStdioMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "stdio" as const,
-          command: "test-cmd",
-          args: ["--test"],
-          env: { TEST: "true" },
-        },
+        type: "stdio",
+        command: "test-cmd",
+        args: ["--test"],
+        env: { TEST: "true" },
       };
 
       const conn = new MCPConnection(options);
@@ -34,34 +37,30 @@ describe("MCPConnection", () => {
     });
 
     it("should create instance with stdio transport including cwd", () => {
-      const options = {
+      const options: InternalStdioMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "stdio" as const,
-          command: "test-cmd",
-          args: ["--test"],
-          env: { TEST: "true" },
-          cwd: "/path/to/working/directory",
-        },
+        type: "stdio",
+        command: "test-cmd",
+        args: ["--test"],
+        env: { TEST: "true" },
+        cwd: "/path/to/working/directory",
       };
 
       const conn = new MCPConnection(options);
       expect(conn).toBeInstanceOf(MCPConnection);
       expect(conn.status).toBe("not-connected");
-      if (conn.options.transport.type === "stdio") {
-        expect(conn.options.transport.cwd).toBe("/path/to/working/directory");
+      if (conn.options.type === "stdio") {
+        expect(conn.options.cwd).toBe("/path/to/working/directory");
       }
     });
 
     it("should create instance with websocket transport", () => {
-      const options = {
+      const options: InternalWebsocketMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "websocket" as const,
-          url: "ws://test.com",
-        },
+        type: "websocket",
+        url: "ws://test.com",
       };
 
       const conn = new MCPConnection(options);
@@ -70,13 +69,11 @@ describe("MCPConnection", () => {
     });
 
     it("should create instance with SSE transport", () => {
-      const options = {
+      const options: InternalSseMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "sse" as const,
-          url: "http://test.com/events",
-        },
+        type: "sse",
+        url: "http://test.com/events",
       };
 
       const conn = new MCPConnection(options);
@@ -85,17 +82,15 @@ describe("MCPConnection", () => {
     });
 
     it("should create instance with SSE transport and custom headers", () => {
-      const options = {
+      const options: InternalSseMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "sse" as const,
-          url: "http://test.com/events",
-          requestOptions: {
-            headers: {
-              Authorization: "Bearer token123",
-              "X-Custom-Header": "custom-value",
-            },
+        type: "sse",
+        url: "http://test.com/events",
+        requestOptions: {
+          headers: {
+            Authorization: "Bearer token123",
+            "X-Custom-Header": "custom-value",
           },
         },
       };
@@ -109,9 +104,8 @@ describe("MCPConnection", () => {
       const options = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "invalid",
-        } as any,
+        type: "invalid" as any,
+        url: "",
       };
 
       const conn = new MCPConnection(options);
@@ -127,14 +121,12 @@ describe("MCPConnection", () => {
 
   describe("getStatus", () => {
     it("should return current status", () => {
-      const options = {
+      const options: InternalStdioMcpOptions = {
         name: "test-mcp",
         id: "test-id",
-        transport: {
-          type: "stdio" as const,
-          command: "test",
-          args: [],
-        },
+        type: "stdio",
+        command: "test",
+        args: [],
       };
 
       const conn = new MCPConnection(options);
@@ -143,6 +135,7 @@ describe("MCPConnection", () => {
       expect(status).toEqual({
         ...options,
         errors: [],
+        infos: [],
         isProtectedResource: false,
         prompts: [],
         resources: [],
@@ -157,11 +150,9 @@ describe("MCPConnection", () => {
     const baseOptions = {
       name: "test-mcp",
       id: "test-id",
-      transport: {
-        type: "stdio" as const,
-        command: "test-cmd",
-        args: [],
-      },
+      type: "stdio" as const,
+      command: "test-cmd",
+      args: [],
     };
 
     it("should return absolute cwd unchanged", async () => {
@@ -187,14 +178,12 @@ describe("MCPConnection", () => {
   });
 
   describe("connectClient", () => {
-    const options = {
+    const options: InternalStdioMcpOptions = {
       name: "test-mcp",
       id: "test-id",
-      transport: {
-        type: "stdio" as const,
-        command: "test-cmd",
-        args: [],
-      },
+      type: "stdio",
+      command: "test-cmd",
+      args: [],
     };
 
     it("should connect successfully", async () => {
@@ -315,17 +304,15 @@ describe("MCPConnection", () => {
       vi.restoreAllMocks();
 
       // Use a command that will definitely fail and produce stderr output
-      const failingOptions = {
+      const failingOptions: InternalStdioMcpOptions = {
         name: "failing-mcp",
         id: "failing-id",
-        transport: {
-          type: "stdio" as const,
-          command: "node",
-          args: [
-            "-e",
-            "console.error('Custom error message from stderr'); process.exit(1);",
-          ],
-        },
+        type: "stdio",
+        command: "node",
+        args: [
+          "-e",
+          "console.error('Custom error message from stderr'); process.exit(1);",
+        ],
         timeout: 5000, // Give enough time for the command to run and fail
       };
 
@@ -348,11 +335,9 @@ describe("MCPConnection", () => {
       const conn = new MCPConnection({
         id: "filesystem",
         name: "Filesystem",
-        transport: {
-          type: "stdio" as const,
-          command: "npx",
-          args: ["-y", "@modelcontextprotocol/server-filesystem", "."],
-        },
+        type: "stdio",
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "."],
       });
 
       try {

@@ -41,17 +41,25 @@ export function findAllCurToolCalls(
   chatHistory: RootState["session"]["history"],
 ): ToolCallState[] {
   // Find the most recent assistant message that has tool call states
+  let seenAssistantMessage = false;
+  let passedAssistantMessage = false;
   for (let i = chatHistory.length - 1; i >= 0; i--) {
     const item = chatHistory[i];
-    if (
-      item.message.role === "assistant" &&
-      item.toolCallStates &&
-      item.toolCallStates.length > 0
-    ) {
-      return item.toolCallStates;
+    if (item.message.role === "user") {
+      return [];
+    }
+    if (item.message.role === "assistant" || item.message.role === "thinking") {
+      seenAssistantMessage = true;
+      if (item.toolCallStates && item.toolCallStates.length > 0) {
+        return item.toolCallStates;
+      }
+    } else if (seenAssistantMessage) {
+      passedAssistantMessage = true;
+    }
+    if (passedAssistantMessage) {
+      return [];
     }
   }
-
   return [];
 }
 
@@ -66,7 +74,8 @@ export function findToolCallById(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,
 ): ToolCallState | undefined {
-  for (const item of chatHistory) {
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const item = chatHistory[i];
     if (item.toolCallStates) {
       const toolCallState = item.toolCallStates.find(
         (state) => state.toolCallId === toolCallId,
@@ -84,7 +93,7 @@ export function findChatHistoryItemByToolCallId(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,
 ): ChatHistoryItemWithMessageId | undefined {
-  return chatHistory.find(
+  return chatHistory.findLast(
     (item) =>
       item.message.role === "tool" && item.message.toolCallId === toolCallId,
   );

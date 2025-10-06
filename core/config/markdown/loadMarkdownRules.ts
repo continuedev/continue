@@ -3,11 +3,13 @@ import {
   markdownToRule,
 } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
-import { findUriInDirs } from "../../util/uri";
+import { joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
+export const SUPPORTED_AGENT_FILES = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
 /**
  * Loads rules from markdown files in the .continue/rules directory
+ * and agent files (AGENTS.md, AGENT.md, CLAUDE.md) at workspace root
  */
 export async function loadMarkdownRules(ide: IDE): Promise<{
   rules: RuleWithSource[];
@@ -15,6 +17,41 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
 }> {
   const errors: ConfigValidationError[] = [];
   const rules: RuleWithSource[] = [];
+
+  // First, try to load agent files from workspace root
+  const workspaceDirs = await ide.getWorkspaceDirs();
+
+  for (const workspaceDir of workspaceDirs) {
+    let agentFileFound = false;
+    for (const fileName of SUPPORTED_AGENT_FILES) {
+      try {
+        const agentFileUri = joinPathsToUri(workspaceDir, fileName);
+        const exists = await ide.fileExists(agentFileUri);
+        if (exists) {
+          const agentContent = await ide.readFile(agentFileUri);
+
+          const rule = markdownToRule(agentContent, {
+            uriType: "file",
+            fileUri: agentFileUri,
+          });
+          rules.push({
+            ...rule,
+            source: "agent-file",
+            sourceFile: agentFileUri,
+            alwaysApply: true,
+          });
+          agentFileFound = true;
+        }
+
+        break; // Use the first found agent file in this workspace
+      } catch (e) {
+        // File doesn't exist or can't be read, continue to next file
+      }
+    }
+    if (agentFileFound) {
+      break; // Use agent file from first workspace that has one
+    }
+  }
 
   try {
     // Get all .md files from .continue/rules
@@ -30,15 +67,11 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Process each markdown file
     for (const file of mdFiles) {
       try {
-        const { relativePathOrBasename } = findUriInDirs(
-          file.path,
-          await ide.getWorkspaceDirs(),
-        );
         const rule = markdownToRule(file.content, {
           uriType: "file",
-          fileUri: relativePathOrBasename,
+          fileUri: file.path,
         });
-        rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
+        rules.push({ ...rule, source: "rules-block", sourceFile: file.path });
       } catch (e) {
         errors.push({
           fatal: false,

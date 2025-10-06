@@ -5,9 +5,8 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
-import { processPromptOrRule } from "./args.js";
+import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
-import { modeService } from "./services/ModeService.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
@@ -125,10 +124,10 @@ async function getConfigYamlRules(): Promise<string[]> {
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
+  mode: PermissionMode,
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
-  mode?: PermissionMode,
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -153,7 +152,7 @@ export async function constructSystemMessage(
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {
-        const processedRule = await processPromptOrRule(ruleSpec);
+        const processedRule = await processRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
         console.warn(
@@ -166,16 +165,20 @@ export async function constructSystemMessage(
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
-  // Get current mode if not provided
-  const currentMode = mode ?? modeService.getCurrentMode();
-
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
   // Add plan mode specific instructions if in plan mode
-  if (currentMode === "plan") {
+  if (mode === "plan") {
     systemMessage +=
       '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
+  } else {
+    // TODO - make including this coauthor commit configurable
+    systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
+Generated with [Continue](https://continue.dev)
+
+Co-Authored-By: Continue <noreply@continue.dev>
+</context>\n`;
   }
 
   // In headless mode, add instructions to be concise and only provide final answers

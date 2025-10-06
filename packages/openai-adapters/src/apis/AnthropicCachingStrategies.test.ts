@@ -1,24 +1,42 @@
+import { MessageCreateParams, ToolUnion } from "@anthropic-ai/sdk/resources";
 import {
   CACHING_STRATEGIES,
-  CachingStrategy,
   CachingStrategyName,
   getAvailableStrategies,
   getStrategyDescription,
 } from "./AnthropicCachingStrategies.js";
 
+const body_params = {
+  model: "claude",
+  stream: true,
+  max_tokens: 8192,
+};
+
+const makeTool = (name: string): ToolUnion => ({
+  name,
+  input_schema: {
+    type: "object",
+  },
+});
+
 describe("AnthropicCachingStrategies", () => {
   describe("noCachingStrategy", () => {
     it("should return the body unchanged", () => {
-      const body = { system: "test", messages: [] };
+      const body: MessageCreateParams = {
+        system: "test",
+        messages: [],
+        ...body_params,
+      };
       const result = CACHING_STRATEGIES.none(body);
       expect(result).toBe(body);
     });
 
     it("should not modify complex objects", () => {
-      const body = {
-        system: [{ text: "test" }],
-        tools: [{ name: "test" }],
-        messages: [{ content: "test" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "test" }],
+        tools: [makeTool("test")],
+        messages: [{ role: "user", content: "test" }],
+        ...body_params,
       };
       const result = CACHING_STRATEGIES.none(body);
       expect(result).toBe(body);
@@ -27,24 +45,37 @@ describe("AnthropicCachingStrategies", () => {
 
   describe("systemOnlyStrategy", () => {
     it("should add cache_control to system messages array", () => {
-      const body = {
-        system: [{ text: "system message 1" }, { text: "system message 2" }],
-        messages: [{ content: "user message" }],
+      const body: MessageCreateParams = {
+        system: [
+          { type: "text", text: "system message 1" },
+          { type: "text", text: "system message 2" },
+        ],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemOnly(body);
 
       expect(result.system).toEqual([
-        { text: "system message 1", cache_control: { type: "ephemeral" } },
-        { text: "system message 2", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message 1",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 2",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.messages).toEqual(body.messages);
     });
 
     it("should return body unchanged if system is not an array", () => {
-      const body = {
+      const body: MessageCreateParams = {
         system: "string system message",
-        messages: [{ content: "user message" }],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemOnly(body);
@@ -52,8 +83,9 @@ describe("AnthropicCachingStrategies", () => {
     });
 
     it("should return body unchanged if system is undefined", () => {
-      const body = {
-        messages: [{ content: "user message" }],
+      const body: MessageCreateParams = {
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemOnly(body);
@@ -61,25 +93,42 @@ describe("AnthropicCachingStrategies", () => {
     });
 
     it("should not add more than 5 cached messages", () => {
-      const body = {
+      const body: MessageCreateParams = {
         system: [
-          { text: "system message 1" },
-          { text: "system message 2" },
-          { text: "system message 3" },
-          { text: "system message 4" },
-          { text: "system message 5" },
+          { type: "text", text: "system message 1" },
+          { type: "text", text: "system message 2" },
+          { type: "text", text: "system message 3" },
+          { type: "text", text: "system message 4" },
+          { type: "text", text: "system message 5" },
         ],
-        messages: [{ content: "user message" }],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemOnly(body);
 
       expect(result.system).toEqual([
-        { text: "system message 1", cache_control: { type: "ephemeral" } },
-        { text: "system message 2", cache_control: { type: "ephemeral" } },
-        { text: "system message 3", cache_control: { type: "ephemeral" } },
-        { text: "system message 4", cache_control: { type: "ephemeral" } },
-        { text: "system message 5" },
+        {
+          type: "text",
+          text: "system message 1",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 2",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 3",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 4",
+          cache_control: { type: "ephemeral" },
+        },
+        { type: "text", text: "system message 5" },
       ]);
       expect(result.messages).toEqual(body.messages);
     });
@@ -87,82 +136,116 @@ describe("AnthropicCachingStrategies", () => {
 
   describe("systemAndToolsStrategy", () => {
     it("should add cache_control to both system and tools", () => {
-      const body = {
-        system: [{ text: "system message" }],
-        tools: [{ name: "tool1" }, { name: "tool2" }],
-        messages: [{ content: "user message" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        tools: [makeTool("tool1"), makeTool("tool2")],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemAndTools(body);
 
       expect(result.system).toEqual([
-        { text: "system message", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.tools).toEqual([
-        { name: "tool1" },
-        { name: "tool2", cache_control: { type: "ephemeral" } },
+        {
+          name: "tool1",
+          input_schema: {
+            type: "object",
+          },
+        },
+        {
+          name: "tool2",
+          input_schema: {
+            type: "object",
+          },
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.messages).toEqual(body.messages);
     });
 
     it("should handle missing system messages", () => {
-      const body = {
-        tools: [{ name: "tool1" }],
-        messages: [{ content: "user message" }],
+      const body: MessageCreateParams = {
+        tools: [makeTool("tool1")],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemAndTools(body);
 
       expect(result.tools).toEqual([
-        { name: "tool1", cache_control: { type: "ephemeral" } },
+        {
+          name: "tool1",
+          input_schema: {
+            type: "object",
+          },
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.messages).toEqual(body.messages);
     });
 
     it("should handle missing tools", () => {
-      const body = {
-        system: [{ text: "system message" }],
-        messages: [{ content: "user message" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemAndTools(body);
 
       expect(result.system).toEqual([
-        { text: "system message", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.messages).toEqual(body.messages);
     });
 
-    it("should handle non-array system and tools", () => {
-      const body = {
-        system: "string system",
-        tools: "string tools",
-        messages: [{ content: "user message" }],
-      };
-
-      const result = CACHING_STRATEGIES.systemAndTools(body);
-      expect(result).toEqual(body);
-    });
-
     it("should add only 4 cache controls in total to both system and tools", () => {
-      const body = {
+      const body: MessageCreateParams = {
         system: [
-          { text: "system message 1" },
-          { text: "system message 2" },
-          { text: "system message 3" },
-          { text: "system message 4" },
+          { type: "text", text: "system message 1" },
+          { type: "text", text: "system message 2" },
+          { type: "text", text: "system message 3" },
+          { type: "text", text: "system message 4" },
         ],
-        tools: [{ name: "tool1" }, { name: "tool2" }],
-        messages: [{ content: "user message" }],
+        tools: [makeTool("tool1"), makeTool("tool2")],
+        messages: [{ role: "user", content: "user message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.systemAndTools(body);
 
       expect(result.system).toEqual([
-        { text: "system message 1", cache_control: { type: "ephemeral" } },
-        { text: "system message 2", cache_control: { type: "ephemeral" } },
-        { text: "system message 3", cache_control: { type: "ephemeral" } },
-        { text: "system message 4", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message 1",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 2",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 3",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 4",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.tools).toEqual(body.tools);
       expect(result.messages).toEqual(body.messages);
@@ -171,32 +254,45 @@ describe("AnthropicCachingStrategies", () => {
 
   describe("optimizedStrategy", () => {
     it("should cache system messages and tools", () => {
-      const body = {
-        system: [{ text: "system message" }],
-        tools: [{ name: "tool1" }],
-        messages: [{ content: "short message" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        tools: [makeTool("tool1")],
+        messages: [{ role: "user", content: "short message" }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
       expect(result.system).toEqual([
-        { text: "system message", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.tools).toEqual([
-        { name: "tool1", cache_control: { type: "ephemeral" } },
+        {
+          name: "tool1",
+          input_schema: {
+            type: "object",
+          },
+          cache_control: { type: "ephemeral" },
+        },
       ]);
     });
 
     it("should cache large string messages (>500 tokens)", () => {
       const largeContent = "a".repeat(2100); // ~525 tokens
-      const body = {
-        messages: [{ content: largeContent }],
+      const body: MessageCreateParams = {
+        messages: [{ role: "user", content: largeContent }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
       expect(result.messages).toEqual([
         {
+          role: "user",
           content: [
             {
               type: "text",
@@ -210,30 +306,42 @@ describe("AnthropicCachingStrategies", () => {
 
     it("should not cache small string messages (<500 tokens)", () => {
       const smallContent = "a".repeat(100); // ~25 tokens
-      const body = {
-        messages: [{ content: smallContent }],
+      const body: MessageCreateParams = {
+        messages: [{ role: "user", content: smallContent }],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
-      expect(result.messages).toEqual([{ content: smallContent }]);
+      expect(result.messages).toEqual([
+        { role: "user", content: smallContent },
+      ]);
     });
 
     it("should cache large text items in array content but only once per message", () => {
       const largeText = "a".repeat(2100); // ~525 tokens
       const anotherLargeText = "b".repeat(2100); // Also ~525 tokens
       const smallText = "a".repeat(100); // ~25 tokens
-      const body = {
+      const body: MessageCreateParams = {
         messages: [
           {
+            role: "user",
             content: [
               { type: "text", text: largeText },
               { type: "text", text: anotherLargeText },
               { type: "text", text: smallText },
-              { type: "image", data: "image_data" },
+              {
+                type: "image",
+                source: {
+                  data: "image_data",
+                  media_type: "image/jpeg",
+                  type: "base64",
+                },
+              },
             ],
           },
         ],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
@@ -241,6 +349,7 @@ describe("AnthropicCachingStrategies", () => {
       // Only the first large text item should get cache_control
       expect(result.messages).toEqual([
         {
+          role: "user",
           content: [
             {
               type: "text",
@@ -249,40 +358,78 @@ describe("AnthropicCachingStrategies", () => {
             },
             { type: "text", text: anotherLargeText },
             { type: "text", text: smallText },
-            { type: "image", data: "image_data" },
+            {
+              type: "image",
+              source: {
+                data: "image_data",
+                media_type: "image/jpeg",
+                type: "base64",
+              },
+            },
           ],
         },
       ]);
     });
 
     it("should add maximum 4 cache control blocks", () => {
-      const body = {
-        system: [{ text: "system message 1" }, { text: "system message 2" }],
-        tools: [{ name: "tool" }],
+      const body: MessageCreateParams = {
+        system: [
+          { type: "text", text: "system message 1" },
+          { type: "text", text: "system message 2" },
+        ],
+        tools: [makeTool("tool")],
         messages: [
-          { content: "small content" },
-          { content: "a".repeat(2100) },
-          { content: "b".repeat(2100) },
+          { role: "user", content: "small content" },
+          { role: "user", content: "a".repeat(2100) },
+          { role: "user", content: "b".repeat(2100) },
           {
+            role: "user",
             content: [
               { type: "text", text: "c".repeat(2100) },
-              { type: "image", data: "image" },
+              {
+                type: "image",
+                source: {
+                  data: "image_data",
+                  media_type: "image/jpeg",
+                  type: "base64",
+                },
+              },
             ],
           },
         ],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
       expect(result.system).toEqual([
-        { text: "system message 1", cache_control: { type: "ephemeral" } },
-        { text: "system message 2", cache_control: { type: "ephemeral" } },
+        {
+          type: "text",
+          text: "system message 1",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "system message 2",
+          cache_control: { type: "ephemeral" },
+        },
       ]);
       expect(result.tools).toEqual([
-        { name: "tool", cache_control: { type: "ephemeral" } },
+        {
+          name: "tool",
+          input_schema: {
+            type: "object",
+          },
+          cache_control: { type: "ephemeral" },
+        },
       ]);
-      expect(result.messages[0]).toEqual({ content: "small content" });
+      expect(result.messages[0]).toEqual({
+        role: "user",
+        content: "small content",
+      });
+
       expect(result.messages[1]).toEqual({
+        role: "user",
         content: [
           {
             type: "text",
@@ -296,31 +443,50 @@ describe("AnthropicCachingStrategies", () => {
     });
 
     it("should handle complex message structure", () => {
-      const body = {
-        system: [{ text: "system" }],
-        tools: [{ name: "tool" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system" }],
+        tools: [makeTool("tool")],
         messages: [
-          { content: "small content" },
-          { content: "a".repeat(2100) }, // large content
+          { role: "user", content: "small content" },
+          { role: "user", content: "a".repeat(2100) }, // large content
           {
+            role: "user",
             content: [
               { type: "text", text: "a".repeat(2100) }, // large text
-              { type: "image", data: "image" },
+              {
+                type: "image",
+                source: {
+                  data: "image_data",
+                  media_type: "image/jpeg",
+                  type: "base64",
+                },
+              },
             ],
           },
         ],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
       expect(result.system).toEqual([
-        { text: "system", cache_control: { type: "ephemeral" } },
+        { type: "text", text: "system", cache_control: { type: "ephemeral" } },
       ]);
       expect(result.tools).toEqual([
-        { name: "tool", cache_control: { type: "ephemeral" } },
+        {
+          name: "tool",
+          input_schema: {
+            type: "object",
+          },
+          cache_control: { type: "ephemeral" },
+        },
       ]);
-      expect(result.messages[0]).toEqual({ content: "small content" });
+      expect(result.messages[0]).toEqual({
+        role: "user",
+        content: "small content",
+      });
       expect(result.messages[1]).toEqual({
+        role: "user",
         content: [
           {
             type: "text",
@@ -337,30 +503,17 @@ describe("AnthropicCachingStrategies", () => {
     });
 
     it("should handle empty or missing messages", () => {
-      const body = {
-        system: [{ text: "system" }],
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system" }],
+        messages: [],
+        ...body_params,
       };
 
       const result = CACHING_STRATEGIES.optimized(body);
 
       expect(result.system).toEqual([
-        { text: "system", cache_control: { type: "ephemeral" } },
+        { type: "text", text: "system", cache_control: { type: "ephemeral" } },
       ]);
-      expect(result.messages).toBeUndefined();
-    });
-
-    it("should handle non-array messages", () => {
-      const body = {
-        system: [{ text: "system" }],
-        messages: "not an array",
-      };
-
-      const result = CACHING_STRATEGIES.optimized(body);
-
-      expect(result.system).toEqual([
-        { text: "system", cache_control: { type: "ephemeral" } },
-      ]);
-      expect(result.messages).toBe("not an array");
     });
   });
 
@@ -370,8 +523,14 @@ describe("AnthropicCachingStrategies", () => {
       const smallContent = "a".repeat(100); // ~25 tokens
       const largeContent = "a".repeat(2100); // ~525 tokens
 
-      const bodySmall = { messages: [{ content: smallContent }] };
-      const bodyLarge = { messages: [{ content: largeContent }] };
+      const bodySmall: MessageCreateParams = {
+        messages: [{ role: "user", content: smallContent }],
+        ...body_params,
+      };
+      const bodyLarge: MessageCreateParams = {
+        messages: [{ role: "user", content: largeContent }],
+        ...body_params,
+      };
 
       const resultSmall = CACHING_STRATEGIES.optimized(bodySmall);
       const resultLarge = CACHING_STRATEGIES.optimized(bodyLarge);
@@ -429,21 +588,6 @@ describe("AnthropicCachingStrategies", () => {
       });
     });
   });
-
-  describe("CachingStrategy type", () => {
-    it("should accept valid caching strategy functions", () => {
-      const customStrategy: CachingStrategy = (body) => ({
-        ...body,
-        custom: true,
-      });
-
-      const input = { test: "value" };
-      const result = customStrategy(input);
-
-      expect(result).toEqual({ test: "value", custom: true });
-    });
-  });
-
   describe("CachingStrategyName type", () => {
     it("should work with valid strategy names", () => {
       const strategyNames: CachingStrategyName[] = [

@@ -36,8 +36,11 @@ import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
 import {
   isProcessBackgrounded,
+  markProcessAsRunning,
   removeBackgroundedProcess,
-} from "../../util/processTerminalBackgroundStates";
+  removeRunningProcess,
+  updateProcessOutput,
+} from "../../util/processTerminalStates";
 import { getBooleanArg, getStringArg } from "../parseArgs";
 
 const asyncExec = util.promisify(childProcess.exec);
@@ -120,12 +123,27 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             env: getColorEnv(), // Add enhanced environment for colors
           });
 
+          // Track this process for foreground cancellation
+          if (toolCallId && waitForCompletion) {
+            markProcessAsRunning(
+              toolCallId,
+              childProc,
+              extras.onPartialOutput,
+              terminalOutput,
+            );
+          }
+
           childProc.stdout?.on("data", (data) => {
             // Skip if this process has been backgrounded
             if (isProcessBackgrounded(toolCallId)) return;
 
             const newOutput = getDecodedOutput(data);
             terminalOutput += newOutput;
+
+            // Update the tracked output for potential cancellation notifications
+            if (toolCallId && waitForCompletion) {
+              updateProcessOutput(toolCallId, terminalOutput);
+            }
 
             // Send partial output to UI
             if (extras.onPartialOutput) {
@@ -152,6 +170,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
             const newOutput = getDecodedOutput(data);
             terminalOutput += newOutput;
+
+            // Update the tracked output for potential cancellation notifications
+            if (toolCallId && waitForCompletion) {
+              updateProcessOutput(toolCallId, terminalOutput);
+            }
 
             // Send partial output to UI, status is not required
             if (extras.onPartialOutput) {
@@ -182,15 +205,19 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           }
 
           childProc.on("close", (code) => {
-            // If this process has been backgrounded, clean it up from the map and return
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-              return;
+            // Clean up process tracking
+            if (toolCallId) {
+              if (isProcessBackgrounded(toolCallId)) {
+                removeBackgroundedProcess(toolCallId);
+                return;
+              }
+              // Remove from foreground tracking if it was tracked
+              removeRunningProcess(toolCallId);
             }
 
             if (waitForCompletion) {
               // Normal completion, resolve now
-              if (code === 0) {
+              if (!code || code === 0) {
                 const status = "Command completed";
                 resolve([
                   {
@@ -234,10 +261,14 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           });
 
           childProc.on("error", (error) => {
-            // If this process has been backgrounded, clean it up from the map and return
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-              return;
+            // Clean up process tracking
+            if (toolCallId) {
+              if (isProcessBackgrounded(toolCallId)) {
+                removeBackgroundedProcess(toolCallId);
+                return;
+              }
+              // Remove from foreground tracking if it was tracked
+              removeRunningProcess(toolCallId);
             }
 
             reject(error);
@@ -281,6 +312,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 },
               );
 
+              // Track this process for foreground cancellation
+              if (toolCallId) {
+                markProcessAsRunning(toolCallId, childProc, undefined, "");
+              }
+
               let stdout = "";
               let stderr = "";
 
@@ -293,6 +329,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("close", (code) => {
+                // Clean up process tracking
+                if (toolCallId) {
+                  removeRunningProcess(toolCallId);
+                }
+
                 if (code === 0) {
                   resolve({ stdout, stderr });
                 } else {
@@ -305,6 +346,10 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("error", (error) => {
+                // Clean up process tracking
+                if (toolCallId) {
+                  removeRunningProcess(toolCallId);
+                }
                 reject(error);
               });
             },

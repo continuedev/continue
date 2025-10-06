@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -7,13 +8,18 @@ import nodeFetch from "node-fetch";
 import open from "open";
 
 import { getApiClient } from "../config.js";
+// eslint-disable-next-line import/order
 import { env } from "../env.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
 
-// Config file path
-const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
+// Config file path - define as a function to avoid initialization order issues
+function getAuthConfigPath() {
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  return path.join(continueHome, "auth.json");
+}
 
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
@@ -22,7 +28,7 @@ export interface AuthenticatedConfig {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
-  organizationId: string | null; // null means personal organization
+  organizationId: string | null | undefined; // null means personal organization, undefined triggers auto-selection
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -74,7 +80,9 @@ export function getAccessToken(config: AuthConfig): string | null {
 /**
  * Gets the organization ID from any auth config type
  */
-export function getOrganizationId(config: AuthConfig): string | null {
+export function getOrganizationId(
+  config: AuthConfig,
+): string | null | undefined {
   if (config === null) return null;
   return config.organizationId;
 }
@@ -89,17 +97,27 @@ export function getConfigUri(config: AuthConfig): string | null {
 
 /**
  * Gets the model name from any auth config type
+ * For unauthenticated users or when auth config has no modelName, checks GlobalContext
  */
 export function getModelName(config: AuthConfig): string | null {
-  if (config === null) return null;
-  return config.modelName || null;
+  // Priority 1: Logged-in users with modelName in auth config
+  if (config !== null && config.modelName) {
+    return config.modelName;
+  }
+
+  // Priority 2: Fall back to GlobalContext (for logged-out users or logged-in without modelName)
+  return getPersistedModelName();
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import {
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
+
+import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
-  autoSelectOrganization,
-  createUpdatedAuthConfig,
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
 } from "./workos.helpers.js";
@@ -130,8 +148,9 @@ export function loadAuthConfig(): AuthConfig {
   }
 
   try {
-    if (fs.existsSync(AUTH_CONFIG_PATH)) {
-      const data = JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+    const authConfigPath = getAuthConfigPath();
+    if (fs.existsSync(authConfigPath)) {
+      const data = JSON.parse(fs.readFileSync(authConfigPath, "utf8"));
 
       // Validate that we have all required fields for authenticated config
       if (
@@ -173,13 +192,14 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
   }
 
   try {
+    const authConfigPath = getAuthConfigPath();
     // Make sure the directory exists
-    const dir = path.dirname(AUTH_CONFIG_PATH);
+    const dir = path.dirname(authConfigPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(AUTH_CONFIG_PATH, JSON.stringify(config, null, 2));
+    fs.writeFileSync(authConfigPath, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Error saving auth config: ${error}`);
   }
@@ -206,21 +226,30 @@ export function updateConfigUri(configUri: string | null): void {
 
 /**
  * Updates the model name in the authentication configuration
+ * Returns the updated config so the caller can update in-memory state
+ * For unauthenticated users, saves to GlobalContext
  */
-export function updateModelName(modelName: string | null): void {
+export function updateModelName(modelName: string | null): AuthConfig {
   // If using CONTINUE_API_KEY environment variable, don't save anything
   if (process.env.CONTINUE_API_KEY) {
-    return;
+    return loadAuthConfig();
   }
 
   const config = loadAuthConfig();
+
+  // If logged in, save to auth.json
   if (config && isAuthenticatedConfig(config)) {
     const updatedConfig: AuthenticatedConfig = {
       ...config,
       modelName: modelName || undefined,
     };
     saveAuthConfig(updatedConfig);
+    return updatedConfig;
   }
+
+  // If logged out, save to GlobalContext
+  persistModelName(modelName);
+  return config;
 }
 
 /**
@@ -360,7 +389,7 @@ async function pollForDeviceToken(
           accessToken: access_token,
           refreshToken: refresh_token,
           expiresAt: tokenExpiresAt,
-          organizationId: null,
+          organizationId: undefined, // undefined triggers auto-selection, null means personal org selected
         };
 
         // Save the config
@@ -540,8 +569,10 @@ export async function ensureOrganization(
       );
     }
   } else if (isEnvironmentAuthConfig(authConfig)) {
-    // No CLI organization slug (or "personal" was specified) - return as-is
-    return authConfig;
+    // No CLI organization slug (or "personal" was specified)
+    // If using API key auth, attempt to resolve its organization scope once
+    const resolved = await resolveOrgScopeForApiKey(authConfig);
+    return resolved;
   }
 
   // If not authenticated, return as-is
@@ -561,20 +592,71 @@ export async function ensureOrganization(
     );
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authenticatedConfig.organizationId !== undefined) {
-    return authenticatedConfig;
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
+    return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // In headless mode, default to personal organization if none saved
-  if (isHeadless) {
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
+  // User already has made a selection (org or config) - respect their choice
+  return authenticatedConfig;
+}
+
+/**
+ * Attempts to resolve the organization scope for API key auth (environment-based auth).
+ * Calls a lightweight backend endpoint to determine if the API key is an org-scoped key.
+ * If successful, returns a new EnvironmentAuthConfig with organizationId set; otherwise returns the original config.
+ */
+async function resolveOrgScopeForApiKey(
+  envConfig: EnvironmentAuthConfig,
+): Promise<EnvironmentAuthConfig> {
+  // If already set (including explicit null), return as-is
+  if (envConfig.organizationId !== null) {
+    return envConfig;
   }
 
-  // Need to select organization
-  return autoSelectOrganization(authenticatedConfig);
+  const accessToken = envConfig.accessToken;
+  if (!accessToken) return envConfig;
+
+  try {
+    // Prefer a dedicated endpoint for scope discovery. This should return JSON like:
+    // { organizationId: string | null } (aka orgScopeId)
+    const url = new URL("auth/scope", env.apiBase);
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      // Gracefully ignore if the endpoint isn't available yet (e.g., 404) or other non-2xx errors
+      return envConfig;
+    }
+
+    const data: any = await resp.json().catch(() => ({}));
+    const orgId =
+      data?.organizationId ??
+      data?.orgScopeId ??
+      data?.organization?.id ??
+      null;
+
+    if (orgId && typeof orgId === "string") {
+      return {
+        ...envConfig,
+        organizationId: orgId,
+      };
+    }
+  } catch {
+    // Network or parsing issues: leave config unchanged
+  }
+
+  return envConfig;
 }
 
 /**
@@ -624,10 +706,9 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
-  const onboardingFlagPath = path.join(
-    env.continueHome,
-    ".onboarding_complete",
-  );
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const onboardingFlagPath = path.join(continueHome, ".onboarding_complete");
 
   // Remove onboarding completion flag so user will go through onboarding again
   if (fs.existsSync(onboardingFlagPath)) {
@@ -643,8 +724,9 @@ export function logout(): void {
     return;
   }
 
-  if (fs.existsSync(AUTH_CONFIG_PATH)) {
-    fs.unlinkSync(AUTH_CONFIG_PATH);
+  const authConfigPath = getAuthConfigPath();
+  if (fs.existsSync(authConfigPath)) {
+    fs.unlinkSync(authConfigPath);
     console.info(chalk.green("Successfully logged out"));
   } else {
     console.info(chalk.yellow("No active session found"));

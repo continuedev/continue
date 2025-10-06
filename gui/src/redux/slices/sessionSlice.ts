@@ -9,6 +9,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
   AssistantChatMessage,
+  BaseSessionMetadata,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -18,12 +19,12 @@ import {
   PromptLog,
   RuleWithSource,
   Session,
-  SessionMetadata,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -50,7 +51,11 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 function filterMultipleEditToolCalls(
   toolCalls: ToolCallDelta[],
 ): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile];
+  const editToolNames = [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
+  ];
   let hasSeenEditTool = false;
 
   return toolCalls.filter((toolCall) => {
@@ -205,7 +210,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
-  allSessionMetadata: SessionMetadata[];
+  allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -227,7 +232,7 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
-const initialState: SessionState = {
+export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
@@ -249,7 +254,7 @@ const initialState: SessionState = {
 
 export const sessionSlice = createSlice({
   name: "session",
-  initialState,
+  initialState: INITIAL_SESSION_STATE,
   reducers: {
     addPromptCompletionPair: (
       state,
@@ -305,7 +310,10 @@ export const sessionSlice = createSlice({
           // Cancel any tool calls that are dangling and generated
           if (message.toolCallStates) {
             message.toolCallStates.forEach((toolCallState) => {
-              if (toolCallState.status === "generated") {
+              if (
+                toolCallState.status === "generated" ||
+                toolCallState.status === "generating"
+              ) {
                 toolCallState.status = "canceled";
               }
             });
@@ -545,7 +553,7 @@ export const sessionSlice = createSlice({
 
           // OpenAI-compatible models in agent mode sometimes send
           // all of their data in one message, so we handle that case early.
-          if (messageContent) {
+          if (messageContent && message.role !== "tool") {
             const thinkMatches = messageContent.match(
               /<think>([\s\S]*)<\/think>([\s\S]*)/,
             );
@@ -605,7 +613,7 @@ export const sessionSlice = createSlice({
 
           // Add to the existing message
           if (messageContent) {
-            if (messageContent.includes("<think>")) {
+            if (messageContent.includes("<think>") && message.role !== "tool") {
               lastItem.reasoning = {
                 startAt: Date.now(),
                 active: true,
@@ -686,7 +694,9 @@ export const sessionSlice = createSlice({
     },
     setAllSessionMetadata: (
       state,
-      { payload }: PayloadAction<SessionMetadata[]>,
+      {
+        payload,
+      }: PayloadAction<(BaseSessionMetadata | RemoteSessionMetadata)[]>,
     ) => {
       state.allSessionMetadata = payload;
     },
@@ -694,7 +704,7 @@ export const sessionSlice = createSlice({
     // These are for optimistic session metadata updates, especially for History page
     addSessionMetadata: (
       state,
-      { payload }: PayloadAction<SessionMetadata>,
+      { payload }: PayloadAction<BaseSessionMetadata>,
     ) => {
       state.allSessionMetadata = [...state.allSessionMetadata, payload];
     },
@@ -705,7 +715,7 @@ export const sessionSlice = createSlice({
       }: PayloadAction<
         {
           sessionId: string;
-        } & Partial<SessionMetadata>
+        } & Partial<BaseSessionMetadata>
       >,
     ) => {
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>

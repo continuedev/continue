@@ -6,7 +6,7 @@ export const readCurrentlyOpenFileTool: Tool = {
   displayTitle: "Read Currently Open File",
   wouldLikeTo: "read the current file",
   isCurrently: "reading the current file",
-  hasAlready: "viewed the current file",
+  hasAlready: "read the current file",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
@@ -24,4 +24,5 @@ export const readCurrentlyOpenFileTool: Tool = {
     prefix: `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
 If the user is asking about a file and you don't see any code, use this to check the current file`,
   },
+  toolCallIcon: "DocumentTextIcon",
 };

@@ -8,6 +8,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
+import { startLocalLemonade } from "core/util/lemonadeHelper";
 import { startLocalOllama } from "core/util/ollamaHelper";
 import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -173,6 +174,7 @@ const getCommandsMap: (
       llm,
       range,
       rulesToInclude: config.rules,
+      isApply: false,
     });
   }
 
@@ -418,6 +420,43 @@ const getCommandsMap: (
     "continue.newSession": () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
+
+    "continue.shareSession": async (sessionId: string | undefined) => {
+      if (!sessionId) {
+        sessionId = await sidebar.webviewProtocol?.request(
+          "getCurrentSessionId",
+          undefined,
+        );
+      }
+      if (!sessionId) {
+        void vscode.window.showErrorMessage(
+          "No session ID found. Please start a new session first.",
+        );
+        return;
+      }
+      //let user select the destination folder
+      const destinationFolder = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: "Select Destination Folder",
+      });
+      if (!destinationFolder || destinationFolder.length === 0) {
+        return;
+      }
+
+      try {
+        // despite core.invoke not being async, we still need to await it, because the 'history/share' command is async
+        // if not awaited, then errors will not be caught.
+        await core.invoke("history/share", {
+          id: sessionId,
+          outputDir: destinationFolder[0].fsPath,
+        });
+      } catch (error) {
+        const errorMessage = `Failed to save session: ${error instanceof Error ? error.message : String(error)}`;
+        void vscode.window.showErrorMessage(errorMessage);
+      }
+    },
     "continue.viewHistory": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/history", true);
     },
@@ -435,74 +474,6 @@ const getCommandsMap: (
     },
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
-    },
-    "continue.toggleFullScreen": async () => {
-      focusGUI();
-
-      const sessionId = await sidebar.webviewProtocol.request(
-        "getCurrentSessionId",
-        undefined,
-      );
-      // Check if full screen is already open by checking open tabs
-      const fullScreenTab = getFullScreenTab();
-
-      if (fullScreenTab && fullScreenPanel) {
-        // Full screen open, but not focused - focus it
-        fullScreenPanel.reveal();
-        return;
-      }
-
-      // Clear the sidebar to prevent overwriting changes made in fullscreen
-      vscode.commands.executeCommand("continue.newSession");
-
-      // Full screen not open - open it
-      captureCommandTelemetry("openFullScreen");
-
-      // Create the full screen panel
-      let panel = vscode.window.createWebviewPanel(
-        "continue.continueGUIView",
-        "Continue",
-        vscode.ViewColumn.One,
-        {
-          retainContextWhenHidden: true,
-          enableScripts: true,
-        },
-      );
-      fullScreenPanel = panel;
-
-      // Add content to the panel
-      panel.webview.html = sidebar.getSidebarContent(
-        extensionContext,
-        panel,
-        undefined,
-        undefined,
-        true,
-      );
-
-      const sessionLoader = panel.onDidChangeViewState(() => {
-        vscode.commands.executeCommand("continue.newSession");
-        if (sessionId) {
-          vscode.commands.executeCommand(
-            "continue.focusContinueSessionId",
-            sessionId,
-          );
-        }
-        panel.reveal();
-        sessionLoader.dispose();
-      });
-
-      // When panel closes, reset the webview and focus
-      panel.onDidDispose(
-        () => {
-          sidebar.resetWebviewProtocolWebview();
-          vscode.commands.executeCommand("continue.focusContinueInput");
-        },
-        null,
-        extensionContext.subscriptions,
-      );
-
-      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
-      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfigPage": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/config", false);
@@ -700,7 +671,7 @@ const getCommandsMap: (
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
-          vscode.commands.executeCommand("continue.toggleFullScreen");
+          vscode.commands.executeCommand("continue.openInNewWindow");
         } else if (selectedOption === "$(gear) Open settings") {
           vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
@@ -715,6 +686,9 @@ const getCommandsMap: (
     },
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
+    },
+    "continue.startLocalLemonade": () => {
+      startLocalLemonade(ide);
     },
     "continue.installModel": async (
       modelName: string,
@@ -823,6 +797,74 @@ const getCommandsMap: (
         !nextEditEnabled,
         vscode.ConfigurationTarget.Global,
       );
+    },
+    "continue.openInNewWindow": async () => {
+      focusGUI();
+
+      const sessionId = await sidebar.webviewProtocol.request(
+        "getCurrentSessionId",
+        undefined,
+      );
+      // Check if full screen is already open by checking open tabs
+      const fullScreenTab = getFullScreenTab();
+
+      if (fullScreenTab && fullScreenPanel) {
+        // Full screen open, but not focused - focus it
+        fullScreenPanel.reveal();
+        return;
+      }
+
+      // Clear the sidebar to prevent overwriting changes made in fullscreen
+      vscode.commands.executeCommand("continue.newSession");
+
+      // Full screen not open - open it
+      captureCommandTelemetry("openInNewWindow");
+
+      // Create the full screen panel
+      let panel = vscode.window.createWebviewPanel(
+        "continue.continueGUIView",
+        "Continue",
+        vscode.ViewColumn.One,
+        {
+          retainContextWhenHidden: true,
+          enableScripts: true,
+        },
+      );
+      fullScreenPanel = panel;
+
+      // Add content to the panel
+      panel.webview.html = sidebar.getSidebarContent(
+        extensionContext,
+        panel,
+        undefined,
+        undefined,
+        true,
+      );
+
+      const sessionLoader = panel.onDidChangeViewState(() => {
+        vscode.commands.executeCommand("continue.newSession");
+        if (sessionId) {
+          vscode.commands.executeCommand(
+            "continue.focusContinueSessionId",
+            sessionId,
+          );
+        }
+        panel.reveal();
+        sessionLoader.dispose();
+      });
+
+      // When panel closes, reset the webview and focus
+      panel.onDidDispose(
+        () => {
+          sidebar.resetWebviewProtocolWebview();
+          vscode.commands.executeCommand("continue.focusContinueInput");
+        },
+        null,
+        extensionContext.subscriptions,
+      );
+
+      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
+      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.forceNextEdit": async () => {
       captureCommandTelemetry("forceNextEdit");

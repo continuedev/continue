@@ -106,6 +106,8 @@ interface HandlerRegistration {
  * - After current event is processed, queued events are handled sequentially.
  * - Ensures all events are processed in the order they were received.
  * - NOTE: I'm not sure if we even want to queue these events...
+ *
+ * Case n: Other cases that I didn't catch.
  */
 export class SelectionChangeManager {
   private static instance: SelectionChangeManager;
@@ -328,7 +330,7 @@ export class SelectionChangeManager {
       return false;
     }
 
-    console.log(
+    console.debug(
       "defaultFallbackHandler: deleteChain called from onDidChangeTextEditorSelection",
     );
     await NextEditProvider.getInstance().deleteChain();

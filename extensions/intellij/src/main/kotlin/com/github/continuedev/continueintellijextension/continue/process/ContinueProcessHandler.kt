@@ -1,65 +1,56 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
-import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
 class ContinueProcessHandler(
-    private val parentScope: CoroutineScope,
-    private val readMessage: (String) -> (Unit),
-    private val createProcess: () -> ContinueProcess
+    parentScope: CoroutineScope,
+    private val process: ContinueProcess,
+    handleMessage: (String) -> (Unit)
 ) {
+    private val innerJob = Job()
+    private val scope = CoroutineScope(parentScope.coroutineContext + innerJob)
     private val pendingWrites = Channel<String>(Channel.UNLIMITED)
-    private val backoff = BackoffCalculator()
-    private var processScope: CoroutineScope? = null
-    private var process: ContinueProcess? = null
+    private val writer = OutputStreamWriter(process.output)
+    private val reader = BufferedReader(InputStreamReader(process.input))
+    private val log = Logger.getInstance(ContinueProcessHandler::class.java)
 
     init {
-        restart()
-    }
-
-    fun restart() {
-        LOG.warn("Starting Continue process")
-        processScope?.cancel()
-        process?.close()
-
-        val handler = CoroutineExceptionHandler { _, e ->
-            service<ContinueSentryService>().report(e)
-            service<ContinuePostHogService>().capture("jetbrains_core_exit", mapOf("error" to e))
-
-            val backoffDuration = backoff.nextDuration()
-            LOG.warn("Process failed! Restarting in $backoffDuration")
-            parentScope.launch {
-                delay(backoffDuration)
-                restart()
+        scope.launch(Dispatchers.IO) {
+            try {
+                while (isActive) {
+                    val line = reader.readLine()
+                    if (line != null && line.isNotEmpty()) {
+                        try {
+                            log.debug("Handle: $line")
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            service<ContinueSentryService>().report(e, "Error handling message: $line")
+                        }
+                    } else
+                        delay(100)
+                }
+            } catch (e: IOException) {
+                service<ContinueSentryService>().report(e)
             }
         }
-
-        val job = SupervisorJob(parentScope.coroutineContext.job)
-        processScope = CoroutineScope(parentScope.coroutineContext + job + handler)
-        process = createProcess()
-
-        val reader = BufferedReader(InputStreamReader(process!!.input))
-        val writer = OutputStreamWriter(process!!.output)
-
-        processScope!!.launch(Dispatchers.IO) {
-            while (isActive) {
-                val line = reader.readLine()
-                if (line != null && line.isNotEmpty())
-                    readMessage(line)
-            }
-        }
-        processScope!!.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             for (message in pendingWrites) {
-                writer.write(message)
-                writer.write("\r\n")
-                writer.flush()
+                try {
+                    log.debug("Write: $message")
+                    writer.write(message)
+                    writer.write("\r\n")
+                    writer.flush()
+                } catch (e: IOException) {
+                    log.warn(e)
+                }
             }
         }
     }
@@ -67,7 +58,12 @@ class ContinueProcessHandler(
     fun write(message: String) =
         pendingWrites.trySend(message)
 
-    private companion object {
-        private val LOG = Logger.getInstance(ContinueProcessHandler::class.java.simpleName)
+    fun close() {
+        innerJob.cancel()
+        scope.launch(Dispatchers.IO) {
+            reader.close()
+            writer.close()
+            process.close()
+        }
     }
 }

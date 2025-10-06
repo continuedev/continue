@@ -4,6 +4,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
+  mergeConfigYamlRequestOptions,
   mergeUnrolledAssistants,
   ModelRole,
   PackageIdentifier,
@@ -14,7 +15,14 @@ import {
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
+import {
+  ContinueConfig,
+  IDE,
+  IdeInfo,
+  IdeSettings,
+  ILLMLogger,
+  InternalMcpOptions,
+} from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
@@ -24,7 +32,9 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
@@ -33,7 +43,7 @@ import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 import {
-  convertYamlMcpToContinueMcp,
+  convertYamlMcpConfigToInternalMcpOptions,
   convertYamlRuleToContinueRule,
 } from "./yamlToContinueConfig";
 
@@ -153,16 +163,15 @@ async function loadConfigYaml(options: {
   };
 }
 
-async function configYamlToContinueConfig(options: {
+export async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
-  ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
   workOsAccessToken: string | undefined;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  let { config, ide, ideSettings, ideInfo, uniqueId, llmLogger } = options;
+  let { config, ide, ideInfo, uniqueId, llmLogger } = options;
 
   const localErrors: ConfigValidationError[] = [];
 
@@ -190,6 +199,7 @@ async function configYamlToContinueConfig(options: {
       summarize: null,
     },
     rules: [],
+    requestOptions: { ...config.requestOptions },
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -207,10 +217,17 @@ async function configYamlToContinueConfig(options: {
   }
 
   for (const rule of config.rules ?? []) {
-    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+    const convertedRule = convertYamlRuleToContinueRule(rule);
+    continueConfig.rules.push(convertedRule);
   }
 
-  continueConfig.data = config.data;
+  continueConfig.data = config.data?.map((d) => ({
+    ...d,
+    requestOptions: mergeConfigYamlRequestOptions(
+      d.requestOptions,
+      continueConfig.requestOptions,
+    ),
+  }));
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -221,24 +238,20 @@ async function configYamlToContinueConfig(options: {
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
-    const mcpArgVariables =
-      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
+    if ("args" in mcpServer) {
+      const mcpArgVariables =
+        mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
 
-    if (mcpArgVariables.length === 0) {
-      return;
+      if (mcpArgVariables.length === 0) {
+        return;
+      }
+
+      localErrors.push({
+        fatal: false,
+        message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
+      });
     }
-
-    localErrors.push({
-      fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-    });
   });
-
-  continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map(
-      convertYamlMcpToContinueMcp,
-    ),
-  };
 
   // Prompt files -
   try {
@@ -291,9 +304,7 @@ async function configYamlToContinueConfig(options: {
     try {
       const llms = await llmsFromModelConfig({
         model,
-        ide,
         uniqueId,
-        ideSettings,
         llmLogger,
         config: continueConfig,
       });
@@ -378,21 +389,24 @@ async function configYamlToContinueConfig(options: {
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => ({
-      id: server.name,
-      name: server.name,
-      sourceFile: server.sourceFile,
-      transport: {
-        type: "stdio",
-        args: [],
-        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-      },
-      timeout: server.connectionTimeout,
-    })),
-    false,
-    { ide },
-  );
+
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+      (server) =>
+        convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
+    );
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
+    );
+    localErrors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false, { ide });
+  }
 
   return { config: continueConfig, errors: localErrors };
 }
@@ -443,7 +457,6 @@ export async function loadContinueConfigFromYaml(options: {
     await configYamlToContinueConfig({
       config: configYamlResult.config,
       ide,
-      ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,

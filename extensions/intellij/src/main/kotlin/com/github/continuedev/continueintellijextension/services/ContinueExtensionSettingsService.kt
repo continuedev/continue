@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
-import com.intellij.openapi.application.ApplicationInfo
+import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
@@ -13,8 +13,6 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.io.HttpRequests
 import com.intellij.util.messages.Topic
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.io.File
@@ -118,12 +116,12 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
             val baseUrl = remoteServerUrl.removeSuffix("/")
             try {
                 val url = "$baseUrl/sync"
-                val responseBody = HttpRequests.post(url, HttpRequests.JSON_CONTENT_TYPE)
+                val responseBody = HttpRequests.request(url)
                     .tuner { connection ->
                         if (token != null)
                             connection.addRequestProperty("Authorization", "Bearer $token")
                     }.readString()
-                val response = Json.decodeFromString<ContinueRemoteConfigSyncResponse>(responseBody)
+                val response = Gson().fromJson(responseBody, ContinueRemoteConfigSyncResponse::class.java)
                 val file = File(getConfigJsonPath(URL(url).host))
                 response.configJs.let { file.writeText(it!!) }
                 response.configJson.let { file.writeText(it!!) }

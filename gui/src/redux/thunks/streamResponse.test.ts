@@ -1,7 +1,12 @@
 import { JSONContent } from "@tiptap/core";
-import { InputModifiers } from "core";
+import {
+  AssistantChatMessage,
+  ChatMessage,
+  InputModifiers,
+  PromptLog,
+} from "core";
 import { describe, expect, it, vi } from "vitest";
-import { createMockStore } from "../../util/test/mockStore";
+import { createMockStore, getEmptyRootState } from "../../util/test/mockStore";
 import { streamResponseThunk } from "./streamResponse";
 
 // Mock external dependencies only - let selectors run naturally
@@ -37,8 +42,11 @@ vi.mock(
 );
 
 import { ModelDescription } from "core";
+import { serializeTool } from "core/tools";
+import { grepSearchTool } from "core/tools/definitions";
 import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { RootState } from "../store";
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
@@ -70,11 +78,25 @@ const mockModifiers: InputModifiers = {
   noContext: false,
 };
 
-function setupTest() {
+export function getRootStateWithClaude(): RootState {
+  const state = getEmptyRootState();
+  return {
+    ...state,
+    config: {
+      ...state.config,
+      config: {
+        ...state.config.config,
+        selectedModelByRole: {
+          ...state.config.config.selectedModelByRole,
+          chat: mockClaudeModel,
+        },
+      },
+    },
+  };
+}
+
+beforeEach(() => {
   vi.clearAllMocks();
-
-  // Default mock implementations for external functions
-
   // Default mock for resolveEditorContent (can be overridden in individual tests)
   mockResolveEditorContent.mockResolvedValue({
     selectedContextItems: [],
@@ -85,114 +107,47 @@ function setupTest() {
 
   // Mock getBaseSystemMessage to return simple system message for readable tests
   mockGetBaseSystemMessage.mockReturnValue("You are a helpful assistant.");
-
-  // Create store with realistic state that selectors can work with
-  const mockStore = createMockStore({
-    session: {
-      history: [
-        {
-          message: { id: "1", role: "user", content: "Hello" },
-          contextItems: [],
-        },
-      ],
-      hasReasoningEnabled: false,
-      isStreaming: true,
-      id: "session-123",
-      mode: "chat",
-      streamAborter: new AbortController(),
-      contextPercentage: 0,
-      isPruned: false,
-      isInEdit: false,
-      title: "",
-      lastSessionId: undefined,
-      isSessionMetadataLoading: false,
-      allSessionMetadata: [],
-      symbols: {},
-      codeBlockApplyStates: {
-        states: [],
-        curIndex: 0,
-      },
-      newestToolbarPreviewForInput: {},
-      compactionLoading: {},
-      inlineErrorMessage: undefined,
-    },
-    config: {
-      config: {
-        tools: [],
-        rules: [],
-        tabAutocompleteModel: undefined,
-        selectedModelByRole: {
-          chat: mockClaudeModel,
-          apply: null,
-          edit: null,
-          summarize: null,
-          autocomplete: null,
-          rerank: null,
-          embed: null,
-        },
-        experimental: {
-          onlyUseSystemMessageTools: false,
-        },
-      } as any,
-      lastSelectedModelByRole: {
-        chat: mockClaudeModel.title,
-      },
-    } as any,
-    ui: {
-      toolSettings: {},
-      ruleSettings: {},
-      showDialog: false,
-      dialogMessage: undefined,
-    } as any,
-  });
-
-  const mockIdeMessenger = mockStore.mockIdeMessenger;
-
-  return { mockStore, mockIdeMessenger };
-}
+});
 
 describe("streamResponseThunk", () => {
   it("should execute complete streaming flow with all dispatches", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
+      },
+    ];
+    initialState.session.id = "session-123";
+    const mockStore = createMockStore(initialState);
+    const mockIdeMessenger = mockStore.mockIdeMessenger;
 
-    // Mock all necessary IDE messenger calls
-    mockIdeMessenger.request.mockImplementation((endpoint: string) => {
-      if (endpoint === "llm/compileChat") {
-        return Promise.resolve({
-          status: "success",
-          content: {
-            compiledChatMessages: [{ role: "user", content: "Hello" }],
-            didPrune: false,
-            contextPercentage: 0.8,
-          },
-        });
-      } else if (endpoint === "history/save") {
-        return Promise.resolve({ status: "success" });
-      } else if (endpoint === "session/refreshMetadata") {
-        return Promise.resolve({
-          status: "success",
-          content: {
-            compiledChatMessages: [{ role: "user", content: "Hello" }],
-            didPrune: false,
-            contextPercentage: 0.8,
-          },
-        });
-      }
-      return Promise.resolve({ status: "success", content: {} });
-    });
+    mockIdeMessenger.responses["llm/compileChat"] = {
+      compiledChatMessages: [{ role: "user", content: "Hello" }],
+      didPrune: false,
+      contextPercentage: 0.8,
+    };
+    const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+    const postSpy = vi.spyOn(mockIdeMessenger, "post");
 
     // Setup streaming generator
-    async function* mockStreamGenerator() {
+    async function* mockStreamGenerator(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
       yield [{ role: "assistant", content: "First chunk" }];
       yield [{ role: "assistant", content: "Second chunk" }];
       return {
         prompt: "Hello",
         completion: "Hi there!",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
       };
     }
 
-    mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
+    const mockStreamChat = vi.fn();
+    mockStreamChat.mockReturnValue(mockStreamGenerator());
+    mockIdeMessenger.llmStreamChat = mockStreamChat;
 
     // Execute thunk
     const result = await mockStore.dispatch(
@@ -203,7 +158,7 @@ describe("streamResponseThunk", () => {
     );
 
     // Verify exact sequence of dispatched actions with payloads
-    const dispatchedActions = (mockStore as any).getActions();
+    const dispatchedActions = mockStore.getActions();
 
     expect(dispatchedActions).toEqual([
       {
@@ -318,6 +273,7 @@ describe("streamResponseThunk", () => {
             prompt: "Hello",
             completion: "Hi there!",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
           },
         ],
       },
@@ -352,7 +308,7 @@ describe("streamResponseThunk", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Session summary",
         },
       },
       {
@@ -368,14 +324,14 @@ describe("streamResponseThunk", () => {
       },
       {
         type: "session/setAllSessionMetadata",
-        payload: {},
+        payload: [],
       },
       {
         type: "session/refreshMetadata/fulfilled",
         meta: expect.objectContaining({
           requestStatus: "fulfilled",
         }),
-        payload: {},
+        payload: [],
       },
       {
         type: "session/update/fulfilled",
@@ -410,7 +366,7 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger calls
-    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
       messages: [
         {
           role: "system",
@@ -455,7 +411,7 @@ describe("streamResponseThunk", () => {
     );
 
     // Verify dev data logging call
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith("devdata/log", {
+    expect(postSpy).toHaveBeenCalledWith("devdata/log", {
       name: "chatInteraction",
       data: {
         prompt: "Hello",
@@ -468,17 +424,21 @@ describe("streamResponseThunk", () => {
     });
 
     // Verify session save was called
-    expect(mockIdeMessenger.request).toHaveBeenCalledWith(
-      "history/save",
-      expect.anything(),
-    );
+    expect(requestSpy).toHaveBeenCalledWith("history/save", expect.anything());
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify final state after thunk completion
     const finalState = mockStore.getState();
     expect(finalState).toEqual({
+      ...initialState,
       session: {
+        ...initialState.session,
+        streamAborter: expect.any(AbortController),
+        title: "Session summary",
+        isPruned: false,
+        inlineErrorMessage: undefined,
+        contextPercentage: 0.8,
         history: [
           {
             contextItems: [],
@@ -507,202 +467,72 @@ describe("streamResponseThunk", () => {
                 completion: "Hi there!",
                 modelProvider: "anthropic",
                 prompt: "Hello",
+                modelTitle: "Claude 3.5 Sonnet",
               },
             ],
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: expect.any(AbortController),
-        contextPercentage: 0.8,
-        isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: {},
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
 
   it("should execute streaming flow with tool call execution", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
-
     // Set up auto-approved tool setting for our test tool
-    const mockStoreWithToolSettings = createMockStore({
-      session: {
-        history: [
-          {
-            message: {
-              id: "1",
-              role: "user",
-              content: "Please search the codebase",
-            },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
+    const stateWithToolSettings = getRootStateWithClaude();
+    stateWithToolSettings.session.history = [
+      {
+        message: {
+          id: "1",
+          role: "user",
+          content: "Please search the codebase",
         },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+        contextItems: [],
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {
-          search_codebase: "allowedWithoutPermission", // Auto-approve this tool
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
+    ];
+    const grepTool = serializeTool(grepSearchTool);
+    const grepName = grepTool.function.name;
+    stateWithToolSettings.config.config.tools = [grepTool];
+
+    stateWithToolSettings.ui.toolSettings = {
+      [grepName]: "allowedWithoutPermission", // Auto-approve this tool
+    };
+    stateWithToolSettings.session.id = "session-123";
+    const mockStoreWithToolSettings = createMockStore(stateWithToolSettings);
 
     const mockIdeMessengerWithTool = mockStoreWithToolSettings.mockIdeMessenger;
 
     // Setup successful compilation and tool responses
-    mockIdeMessengerWithTool.request.mockImplementation(
-      (endpoint: string, data: any) => {
-        if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [
-                { role: "user", content: "Please search the codebase" },
-              ],
-              didPrune: false,
-              contextPercentage: 0.9,
-            },
-          });
-        } else if (endpoint === "tools/call") {
-          // Mock server-side tool call response
-          return Promise.resolve({
-            status: "success",
-            content: {
-              contextItems: [
-                {
-                  name: "Search Results",
-                  description: "Found 3 matches",
-                  content: "Result 1\nResult 2\nResult 3",
-                  icon: "search",
-                  hidden: false,
-                },
-              ],
-              errorMessage: undefined,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          // Mock session save
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
-        }
-        // Let other endpoints pass through or return success
-        return Promise.resolve({ status: "success", content: {} });
-      },
-    );
+    mockIdeMessengerWithTool.responses["llm/compileChat"] = {
+      compiledChatMessages: [
+        { role: "user", content: "Please search the codebase" },
+      ],
+      didPrune: false,
+      contextPercentage: 0.9,
+    };
+    mockIdeMessengerWithTool.responses["tools/call"] = {
+      contextItems: [
+        {
+          name: "Search Results",
+          description: "Found 3 matches",
+          content: "Result 1\nResult 2\nResult 3",
+          icon: "search",
+          hidden: false,
+        },
+      ],
+      errorMessage: undefined,
+    };
+    const requestSpy = vi.spyOn(mockIdeMessengerWithTool, "request");
 
     // Setup streaming generator with tool call
-    async function* mockStreamGeneratorWithTool() {
+    async function* mockStreamGeneratorWithTool(): AsyncGenerator<
+      ChatMessage[],
+      PromptLog
+    > {
       yield [
-        { role: "assistant", content: "I'll search the codebase for you." },
+        {
+          role: "assistant",
+          content: "I'll search the codebase for you.",
+        },
       ];
       yield [
         {
@@ -713,7 +543,7 @@ describe("streamResponseThunk", () => {
               id: "tool-call-1",
               type: "function",
               function: {
-                name: "search_codebase",
+                name: grepTool.function.name,
                 arguments: JSON.stringify({ query: "test function" }),
               },
             },
@@ -724,29 +554,35 @@ describe("streamResponseThunk", () => {
         prompt: "Please search the codebase",
         completion: "I'll search the codebase for you.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
       };
     }
 
     // Mock different streaming responses for multiple calls
     let streamCallCount = 0;
-    mockIdeMessengerWithTool.llmStreamChat.mockImplementation(() => {
+    const mockStreamChat = vi.fn().mockImplementation(() => {
       streamCallCount++;
       if (streamCallCount === 1) {
         // First call - main streaming with tool call
         return mockStreamGeneratorWithTool();
       } else {
         // Subsequent calls from streamResponseAfterToolCall - return minimal response
-        async function* simpleGenerator() {
+        async function* simpleGenerator(): AsyncGenerator<
+          AssistantChatMessage[],
+          PromptLog
+        > {
           yield [{ role: "assistant", content: "Search completed." }];
           return {
             prompt: "continuing after tool",
             completion: "Search completed.",
             modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
           };
         }
         return simpleGenerator();
       }
     });
+    mockIdeMessengerWithTool.llmStreamChat = mockStreamChat;
 
     // Execute thunk
     const result = await mockStoreWithToolSettings.dispatch(
@@ -757,9 +593,9 @@ describe("streamResponseThunk", () => {
     );
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
-    const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
+    const dispatchedActions = mockStoreWithToolSettings.getActions();
 
-    // Verify exact action sequence by comparing action types
+    // Verify exact action sequence
     const actionTypes = dispatchedActions.map((action: any) => action.type);
     expect(actionTypes).toEqual([
       "chat/streamResponse/pending",
@@ -827,7 +663,7 @@ describe("streamResponseThunk", () => {
     const setContextPercentageAction = dispatchedActions.find(
       (a: any) => a.type === "session/setContextPercentage",
     );
-    expect(setContextPercentageAction.payload).toBe(0.9);
+    expect(setContextPercentageAction?.payload).toBe(0.9);
 
     const streamUpdates = dispatchedActions.filter(
       (a: any) => a.type === "session/streamUpdate",
@@ -844,7 +680,7 @@ describe("streamResponseThunk", () => {
             id: "tool-call-1",
             type: "function",
             function: {
-              name: "search_codebase",
+              name: grepName,
               arguments: JSON.stringify({ query: "test function" }),
             },
           },
@@ -859,6 +695,7 @@ describe("streamResponseThunk", () => {
       {
         completion: "I'll search the codebase for you.",
         modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
         prompt: "Please search the codebase",
       },
     ]);
@@ -885,64 +722,59 @@ describe("streamResponseThunk", () => {
     });
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please search the codebase",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello, please help me with this code",
-              },
-            ],
-          },
-        ],
-        options: {},
-      },
-    );
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Please search the codebase",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: { tools: [grepTool] },
+    });
 
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
-      "tools/call",
-      {
-        toolCall: {
-          id: "tool-call-1",
-          type: "function",
-          function: {
-            name: "search_codebase",
-            arguments: JSON.stringify({ query: "test function" }),
-          },
+    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-call-1",
+        type: "function",
+        function: {
+          name: grepName,
+          arguments: JSON.stringify({ query: "test function" }),
         },
       },
-    );
+    });
 
     // Verify that multiple compilation calls were made (due to tool call continuation)
-    const compileCallsCount =
-      mockIdeMessengerWithTool.request.mock.calls.filter(
-        (call: any) => call[0] === "llm/compileChat",
-      ).length;
-    expect(compileCallsCount).toBeGreaterThanOrEqual(1);
+    expect(requestSpy).toHaveBeenCalledWith(
+      "llm/compileChat",
+      expect.any(Object),
+    );
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState();
     expect(finalState).toEqual({
+      ...stateWithToolSettings,
       session: {
+        ...stateWithToolSettings.session,
         history: [
           {
             contextItems: [],
@@ -973,7 +805,7 @@ describe("streamResponseThunk", () => {
                   id: "tool-call-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -983,6 +815,7 @@ describe("streamResponseThunk", () => {
               {
                 completion: "I'll search the codebase for you.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "Please search the codebase",
               },
             ],
@@ -993,7 +826,7 @@ describe("streamResponseThunk", () => {
                   id: "tool-call-1",
                   type: "function",
                   function: {
-                    name: "search_codebase",
+                    name: grepName,
                     arguments: JSON.stringify({ query: "test function" }),
                   },
                 },
@@ -1008,6 +841,7 @@ describe("streamResponseThunk", () => {
                     hidden: false,
                   },
                 ],
+                tool: grepTool,
               },
             ],
           },
@@ -1032,84 +866,18 @@ describe("streamResponseThunk", () => {
               {
                 completion: "Search completed.",
                 modelProvider: "anthropic",
+                modelTitle: "Claude 3.5 Sonnet",
                 prompt: "continuing after tool",
               },
             ],
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false,
+        title: "Session summary",
         id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController),
         contextPercentage: 0.9,
         isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
         inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {
-          search_codebase: "allowedWithoutPermission",
-        },
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
@@ -1118,84 +886,31 @@ describe("streamResponseThunk", () => {
     // Create an AbortController that we'll abort during streaming
     const testAbortController = new AbortController();
 
-    // Use setupTest to get proper mock configuration
-    const { mockStore: baseStore, mockIdeMessenger: baseMessenger } =
-      setupTest();
-
     // Create store with our test abort controller, starting from setupTest config
-    const mockStoreWithAbort = createMockStore({
-      session: {
-        history: [
-          {
-            message: { id: "1", role: "user", content: "Hello" },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: testAbortController, // Use our test controller
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+    const abortState = getRootStateWithClaude();
+    abortState.session.streamAborter = testAbortController;
+    abortState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-      } as any,
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
-
+    ];
+    abortState.session.id = "session-123";
+    const mockStoreWithAbort = createMockStore(abortState);
     const mockIdeMessengerAbort = mockStoreWithAbort.mockIdeMessenger;
-
-    // Setup successful compilation
-    mockIdeMessengerAbort.request.mockResolvedValue({
-      status: "success",
-      content: {
-        compiledChatMessages: [{ role: "user", content: "Hello" }],
-        didPrune: false,
-        contextPercentage: 0.8,
-      },
-    });
+    mockIdeMessengerAbort.responses["llm/compileChat"] = {
+      compiledChatMessages: [{ role: "user", content: "Hello" }],
+      didPrune: false,
+      contextPercentage: 0.8,
+    };
+    const requestSpy = vi.spyOn(mockIdeMessengerAbort, "request");
+    const postSpy = vi.spyOn(mockIdeMessengerAbort, "post");
 
     // Setup streaming generator that simulates abort by user interaction
-    async function* mockStreamGeneratorWithAbort() {
+    async function* mockStreamGeneratorWithAbort(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
       yield [{ role: "assistant", content: "First chunk" }];
 
       // Add a delay to allow the first chunk to be processed
@@ -1214,12 +929,14 @@ describe("streamResponseThunk", () => {
         prompt: "Hello",
         completion: "Complete response",
         modelProvider: "anthropic",
+        modelTitle: "claude",
       };
     }
 
-    mockIdeMessengerAbort.llmStreamChat.mockReturnValue(
-      mockStreamGeneratorWithAbort(),
-    );
+    const mockStreamChat = vi
+      .fn()
+      .mockReturnValue(mockStreamGeneratorWithAbort());
+    mockIdeMessengerAbort.llmStreamChat = mockStreamChat;
 
     // Execute thunk - should be aborted
     const result = await mockStoreWithAbort.dispatch(
@@ -1233,7 +950,7 @@ describe("streamResponseThunk", () => {
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact action sequence - should start but then be aborted
-    const dispatchedActions = (mockStoreWithAbort as any).getActions();
+    const dispatchedActions = mockStoreWithAbort.getActions();
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -1385,7 +1102,7 @@ describe("streamResponseThunk", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -1397,7 +1114,7 @@ describe("streamResponseThunk", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Session summary",
         },
       },
       {
@@ -1415,16 +1132,7 @@ describe("streamResponseThunk", () => {
       },
       {
         type: "session/setAllSessionMetadata",
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Hello",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.8,
-          didPrune: false,
-        },
+        payload: [],
       },
       {
         type: "session/refreshMetadata/fulfilled",
@@ -1433,16 +1141,7 @@ describe("streamResponseThunk", () => {
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
-        payload: {
-          compiledChatMessages: [
-            {
-              content: "Hello",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.8,
-          didPrune: false,
-        },
+        payload: [],
       },
       {
         type: "session/update/fulfilled",
@@ -1450,7 +1149,7 @@ describe("streamResponseThunk", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Session summary",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -1494,36 +1193,33 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Hello, please help me with this code",
-              },
-            ],
-          },
-        ],
-        options: {},
-      },
-    );
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: {},
+    });
 
     expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
       {
@@ -1542,21 +1238,17 @@ describe("streamResponseThunk", () => {
     );
 
     // Dev data logging should not occur since streaming was stopped early
-    expect(mockIdeMessengerAbort.post).not.toHaveBeenCalledWith(
-      "devdata/log",
-      expect.anything(),
-    );
+    expect(postSpy).not.toHaveBeenCalledWith("devdata/log", expect.anything());
 
     // Verify session save was called despite abort
-    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
-      "history/save",
-      expect.anything(),
-    );
+    expect(requestSpy).toHaveBeenCalledWith("history/save", expect.anything());
 
     // Verify final state - streaming should be stopped, partial content preserved
     const finalState = mockStoreWithAbort.getState();
     expect(finalState).toEqual({
+      ...abortState,
       session: {
+        ...abortState.session,
         history: [
           {
             contextItems: [],
@@ -1583,86 +1275,12 @@ describe("streamResponseThunk", () => {
             // No promptLogs because streaming was stopped before completion
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false, // False because setInactive was called
         id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController), // New controller after abort
         contextPercentage: 0.8,
-        isPruned: false,
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: {
-          compiledChatMessages: [
-            {
-              content: "Hello",
-              role: "user",
-            },
-          ],
-          contextPercentage: 0.8,
-          didPrune: false,
-        },
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
         inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
+        isPruned: false,
+        title: "Session summary",
       },
     });
   });

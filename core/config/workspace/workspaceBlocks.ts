@@ -2,10 +2,12 @@ import {
   BlockType,
   ConfigYaml,
   createRuleMarkdown,
+  createPromptMarkdown,
   RULE_FILE_EXTENSION,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
+import { getContinueGlobalPath } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 
 const BLOCK_TYPE_CONFIG: Record<
@@ -83,7 +85,10 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
 }
 
 function getFileExtension(blockType: BlockType): string {
-  return blockType === "rules" ? RULE_FILE_EXTENSION : "yaml";
+  if (blockType === "rules" || blockType === "prompts") {
+    return "md";
+  }
+  return "yaml";
 }
 
 export function getFileContent(blockType: BlockType): string {
@@ -91,6 +96,15 @@ export function getFileContent(blockType: BlockType): string {
     return createRuleMarkdown("New Rule", "Your rule content", {
       description: "A description of your rule",
     });
+  } else if (blockType === "prompts") {
+    return createPromptMarkdown(
+      "New prompt",
+      "Please write a thorough suite of unit tests for this code, making sure to cover all relevant edge cases",
+      {
+        description: "New prompt",
+        invokable: true,
+      },
+    );
   } else {
     return YAML.stringify(getContentsForNewBlock(blockType));
   }
@@ -101,8 +115,13 @@ export async function findAvailableFilename(
   blockType: BlockType,
   fileExists: (uri: string) => Promise<boolean>,
   extension?: string,
+  isGlobal?: boolean,
 ): Promise<string> {
-  const baseFilename = `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
+  // Differentiate filename based on whether its a global rule or a workspace rule
+  const baseFilename =
+    blockType === "rules" && isGlobal
+      ? "global-rule"
+      : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
   const fileExtension = extension ?? getFileExtension(blockType);
   let counter = 0;
   let fileUri: string;
@@ -142,4 +161,29 @@ export async function createNewWorkspaceBlockFile(
 
   await ide.writeFile(fileUri, fileContent);
   await ide.openFile(fileUri);
+}
+
+export async function createNewGlobalRuleFile(ide: IDE): Promise<void> {
+  try {
+    const globalDir = getContinueGlobalPath();
+
+    // Create the rules subdirectory within the global directory
+    const rulesDir = joinPathsToUri(globalDir, "rules");
+
+    const fileUri = await findAvailableFilename(
+      rulesDir,
+      "rules",
+      ide.fileExists.bind(ide),
+      undefined,
+      true, // isGlobal = true for global rules
+    );
+
+    const fileContent = getFileContent("rules");
+
+    await ide.writeFile(fileUri, fileContent);
+
+    await ide.openFile(fileUri);
+  } catch (error) {
+    throw error;
+  }
 }

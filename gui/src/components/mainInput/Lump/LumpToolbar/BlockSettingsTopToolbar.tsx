@@ -1,152 +1,44 @@
 import {
-  ChatBubbleLeftIcon,
-  ChevronLeftIcon,
   CubeIcon,
-  EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
   PencilIcon,
-  Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { ReactNode, useContext, useEffect, useState } from "react";
-import { vscBadgeForeground } from "../../..";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import {
+  selectPendingToolCalls,
+  selectToolCallsByStatus,
+} from "../../../../redux/selectors/selectToolCalls";
+import { setSelectedProfile } from "../../../../redux/slices/profilesSlice";
 import FreeTrialButton from "../../../FreeTrialButton";
 import { ToolTip } from "../../../gui/Tooltip";
-import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
-import { useLump } from "../LumpContext";
-import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
-import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
-import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
 
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
+import { useAuth } from "../../../../context/Auth";
 import { getLocalStorage } from "../../../../util/localStorage";
+import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
-interface BlockSettingsToolbarIcon {
-  title: string;
-  tooltip: ReactNode;
-  icon: React.ComponentType<any>;
-  itemCount?: number;
-  onClick: () => void;
-  isSelected?: boolean;
-  className?: string;
-}
-
-interface Section {
-  id: string;
-  title: string;
-  tooltip: ReactNode;
-  icon: React.ComponentType<any>;
-}
-
-const sections: Section[] = [
-  { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
-  { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
-  {
-    id: "prompts",
-    title: "Prompts",
-    tooltip: "Prompts",
-    icon: ChatBubbleLeftIcon,
-  },
-  {
-    id: "tools",
-    title: "Tools",
-    tooltip: <ToolsSectionTooltip />,
-    icon: WrenchScrewdriverIcon,
-  },
-  {
-    id: "mcp",
-    title: "MCP",
-    tooltip: <McpSectionTooltip />,
-    icon: Squares2X2Icon,
-  },
-  {
-    id: "error",
-    title: "Errors",
-    tooltip: <ErrorsSectionTooltip />,
-    icon: ExclamationTriangleIcon,
-  },
-];
-
-function BlockSettingsToolbarIcon(
-  props: BlockSettingsToolbarIcon & { sectionId?: string },
-) {
-  const isErrorSection = props.sectionId === "error";
-
-  const id = `block-settings-toolbar-icon-${props.sectionId}`;
-
-  const fontSize = useFontSize(-3);
-  return (
-    <>
-      <HoverItem
-        px={0}
-        onClick={props.onClick}
-        data-testid={id}
-        data-tooltip-id={id}
-      >
-        <div
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              props.onClick();
-            }
-          }}
-          className={`${
-            props.isSelected
-              ? isErrorSection
-                ? "bg-error"
-                : "bg-badge"
-              : undefined
-          } relative flex select-none items-center rounded-full px-[3px] py-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
-        >
-          <props.icon
-            className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
-              isErrorSection ? "text-error" : ""
-            }`}
-            style={{
-              color: props.isSelected ? vscBadgeForeground : undefined,
-            }}
-            aria-hidden="true"
-          />
-          <div
-            style={{ fontSize }}
-            className={`overflow-hidden transition-all duration-200 ${
-              props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
-            }`}
-          >
-            <span
-              className="whitespace-nowrap"
-              style={{ color: vscBadgeForeground }}
-            >
-              {props.title}
-            </span>
-          </div>
-        </div>
-      </HoverItem>
-      <ToolTip delayShow={700} id={id}>
-        {props.tooltip}
-      </ToolTip>
-    </>
-  );
-}
-
 export function BlockSettingsTopToolbar() {
-  const {
-    isToolbarExpanded,
-    toggleToolbar,
-    selectedSection,
-    setSelectedSection,
-  } = useLump();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { selectedProfile } = useAuth();
 
   const configError = useAppSelector((store) => store.config.configError);
   const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
+  const callingToolCalls = useAppSelector((state) =>
+    selectToolCallsByStatus(state, "calling"),
+  );
+  const hasActiveContent =
+    pendingToolCalls.length > 0 || callingToolCalls.length > 0;
 
   const [freeTrialStatus, setFreeTrialStatus] =
     useState<FreeTrialStatus | null>(null);
@@ -180,69 +72,99 @@ export function BlockSettingsTopToolbar() {
     };
   }, [ideMessenger, isUsingFreeTrial]);
 
-  const handleEllipsisClick = () => {
-    if (isToolbarExpanded) {
-      setSelectedSection(null);
+  const shouldShowError = configError && configError?.length > 0;
+
+  const handleRulesClick = () => {
+    if (selectedProfile) {
+      dispatch(setSelectedProfile(selectedProfile.id));
+      ideMessenger.post("didChangeSelectedProfile", {
+        id: selectedProfile.id,
+      });
     }
-    toggleToolbar();
+    navigate(CONFIG_ROUTES.RULES);
   };
 
-  const visibleSections = sections.filter(
-    (section) =>
-      section.id !== "error" ||
-      (section.id === "error" && configError && configError?.length > 0),
-  );
+  const handleToolsClick = () => {
+    if (selectedProfile) {
+      dispatch(setSelectedProfile(selectedProfile.id));
+      ideMessenger.post("didChangeSelectedProfile", {
+        id: selectedProfile.id,
+      });
+    }
+    navigate(CONFIG_ROUTES.TOOLS);
+  };
+
+  const handleModelsClick = () => {
+    if (selectedProfile) {
+      dispatch(setSelectedProfile(selectedProfile.id));
+      ideMessenger.post("didChangeSelectedProfile", {
+        id: selectedProfile.id,
+      });
+    }
+    navigate(CONFIG_ROUTES.MODELS);
+  };
 
   return (
-    <div className="flex flex-1 items-center justify-between gap-2">
-      <div className="flex flex-row">
-        <div className="xs:flex text-description hidden items-center justify-center gap-0.5">
-          <BlockSettingsToolbarIcon
-            className="-ml-1.5"
-            icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
-            title=""
-            isSelected={false}
-            onClick={handleEllipsisClick}
-          />
-          <div
-            className={`${isToolbarExpanded ? "w-min" : "w-0"} flex overflow-hidden transition-all duration-200`}
-          >
-            <div className="flex">
-              {visibleSections.map((section) => (
-                <BlockSettingsToolbarIcon
-                  key={section.id}
-                  sectionId={section.id}
-                  icon={section.icon}
-                  tooltip={section.tooltip}
-                  title={section.title}
-                  isSelected={selectedSection === section.id}
-                  onClick={() =>
-                    setSelectedSection(
-                      selectedSection === section.id ? null : section.id,
-                    )
-                  }
-                />
-              ))}
+    <div className="flex flex-1 items-center justify-between gap-3">
+      <div className="flex items-center gap-1">
+        {shouldShowError && (
+          <ToolTip delayShow={700} content="View configuration errors">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(CONFIG_ROUTES.AGENTS)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(CONFIG_ROUTES.AGENTS);
+                }
+              }}
+              data-testid="block-settings-toolbar-icon-error"
+              className="relative flex cursor-pointer select-none items-center rounded-full px-1.5 py-1 sm:px-1.5"
+            >
+              <ExclamationTriangleIcon
+                className="text-warning h-[13px] w-[13px] flex-shrink-0"
+                aria-hidden="true"
+              />
             </div>
+          </ToolTip>
+        )}
+
+        {!hasActiveContent && (
+          <div className="flex items-center gap-1.5">
+            <ToolTip content="Configure rules">
+              <HoverItem onClick={handleRulesClick} px={2}>
+                <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+              </HoverItem>
+            </ToolTip>
+
+            <ToolTip content="Configure tools">
+              <HoverItem onClick={handleToolsClick} px={2}>
+                <WrenchScrewdriverIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+              </HoverItem>
+            </ToolTip>
+
+            <ToolTip content="Configure models">
+              <HoverItem onClick={handleModelsClick} px={2}>
+                <CubeIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+              </HoverItem>
+            </ToolTip>
           </div>
-        </div>
+        )}
       </div>
-      <div className="flex gap-0.5">
-        <HoverItem
-          data-tooltip-id="assistant-select-tooltip"
-          className="!m-0 !p-0"
-        >
+
+      <ToolTip
+        place="top"
+        content={isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
+      >
+        <div>
           {isUsingFreeTrial ? (
             <FreeTrialButton freeTrialStatus={freeTrialStatus} />
           ) : (
-            <AssistantAndOrgListbox />
+            <AssistantAndOrgListbox variant="lump" />
           )}
-          <ToolTip id="assistant-select-tooltip" place="top">
-            {isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
-          </ToolTip>
-        </HoverItem>
-      </div>
+        </div>
+      </ToolTip>
     </div>
   );
 }

@@ -1,4 +1,8 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  ModelConfig,
+  WorkflowFile,
+} from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { AssistantConfig } from "@continuedev/sdk";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
@@ -6,9 +10,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { PermissionMode, ToolPermissions } from "../permissions/types.js";
+import { PermissionMode } from "../permissions/types.js";
 
-import { MCPService } from "./MCPService.js";
+import { type MCPService } from "./MCPService.js";
+import { WorkflowService } from "./WorkflowService.js";
 
 /**
  * Service lifecycle states
@@ -81,17 +86,44 @@ export interface MCPServiceState {
   prompts: MCPPrompt[];
 }
 
+export enum UpdateStatus {
+  IDLE = "idle",
+  CHECKING = "checking",
+  UPDATING = "updating",
+  UPDATED = "updated",
+  ERROR = "error",
+}
+
+export interface UpdateServiceState {
+  autoUpdate: boolean;
+  isAutoUpdate: boolean;
+  status: UpdateStatus;
+  message: string;
+  error?: Error | null;
+  isUpdateAvailable: boolean;
+  latestVersion: string | null;
+  currentVersion: string;
+}
+
 export interface ApiClientServiceState {
   apiClient: DefaultApiInterface | null;
 }
 
-export interface ToolPermissionServiceState {
-  permissions: ToolPermissions;
-  currentMode: PermissionMode;
-  modePolicyCount?: number;
-  originalPolicies?: ToolPermissions;
+export interface StorageSyncServiceState {
+  isEnabled: boolean;
+  storageId?: string;
+  lastUploadAt?: number;
+  lastError?: string | null;
 }
 
+export interface WorkflowServiceState {
+  workflowFile: WorkflowFile | null;
+  slug: string | null;
+  workflowModelName: string | null;
+  workflowService: WorkflowService | null;
+}
+
+export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 
 /**
@@ -107,6 +139,10 @@ export const SERVICE_NAMES = {
   FILE_INDEX: "fileIndex",
   RESOURCE_MONITORING: "resourceMonitoring",
   SYSTEM_MESSAGE: "systemMessage",
+  CHAT_HISTORY: "chatHistory",
+  UPDATE: "update",
+  STORAGE_SYNC: "storageSync",
+  WORKFLOW: "workflow",
 } as const;
 
 /**

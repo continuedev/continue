@@ -4,14 +4,19 @@ import { logger } from "../util/logger.js";
 
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
+import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
-import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { systemMessageService } from "./SystemMessageService.js";
+import { StorageSyncService } from "./StorageSyncService.js";
+import { SystemMessageService } from "./SystemMessageService.js";
+import {
+  InitializeToolServiceOverrides,
+  ToolPermissionService,
+} from "./ToolPermissionService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -19,7 +24,10 @@ import {
   SERVICE_NAMES,
   ServiceInitOptions,
   ServiceInitResult,
+  WorkflowServiceState,
 } from "./types.js";
+import { UpdateService } from "./UpdateService.js";
+import { WorkflowService } from "./WorkflowService.js";
 
 // Service instances
 const authService = new AuthService();
@@ -29,6 +37,12 @@ const apiClientService = new ApiClientService();
 const mcpService = new MCPService();
 const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
+const chatHistoryService = new ChatHistoryService();
+const updateService = new UpdateService();
+const storageSyncService = new StorageSyncService();
+const workflowService = new WorkflowService();
+const toolPermissionService = new ToolPermissionService();
+const systemMessageService = new SystemMessageService();
 
 /**
  * Initialize all services and register them with the service container
@@ -70,46 +84,48 @@ export async function initializeServices(
     commandOptions.config = CONFIG_PATH;
   }
 
-  // Initialize mode service with tool permission overrides
-  if (initOptions.toolPermissionOverrides) {
-    const overrides = { ...initOptions.toolPermissionOverrides };
+  serviceContainer.register(
+    SERVICE_NAMES.WORKFLOW,
+    () => workflowService.initialize(commandOptions.workflow),
+    [],
+  );
 
-    // Convert mode to boolean flags for ModeService
-    const initArgs: Parameters<typeof modeService.initialize>[0] = {
-      allow: overrides.allow,
-      ask: overrides.ask,
-      exclude: overrides.exclude,
-      isHeadless: initOptions.headless,
-    };
-
-    // Only set the boolean flag that corresponds to the mode
-    if (overrides.mode === "plan") {
-      initArgs.readonly = true;
-    } else if (overrides.mode === "auto") {
-      initArgs.auto = true;
-    }
-    // If mode is "normal" or undefined, no flags are set
-
-    await modeService.initialize(initArgs);
-  } else {
-    // Even if no overrides, we need to initialize with defaults
-    await modeService.initialize({
-      isHeadless: initOptions.headless,
-    });
-  }
-
-  // Register the TOOL_PERMISSIONS service with immediate value
-  // Since ToolPermissionService is already initialized synchronously in ModeService,
-  // we can register it as a ready value instead of a factory
-  const toolPermissionState = modeService.getToolPermissionService().getState();
-  logger.debug("Registering TOOL_PERMISSIONS with state:", {
-    currentMode: toolPermissionState.currentMode,
-    isHeadless: toolPermissionState.isHeadless,
-    policyCount: toolPermissionState.permissions.policies.length,
-  });
-  serviceContainer.registerValue(
+  serviceContainer.register(
     SERVICE_NAMES.TOOL_PERMISSIONS,
-    toolPermissionState,
+    async () => {
+      const workflowState = await serviceContainer.get<WorkflowServiceState>(
+        SERVICE_NAMES.WORKFLOW,
+      );
+
+      // Initialize mode service with tool permission overrides
+      if (initOptions.toolPermissionOverrides) {
+        const overrides = { ...initOptions.toolPermissionOverrides };
+
+        // Convert mode to boolean flags for ModeService
+        const initArgs: InitializeToolServiceOverrides = {
+          allow: overrides.allow,
+          ask: overrides.ask,
+          exclude: overrides.exclude,
+          isHeadless: initOptions.headless,
+        };
+
+        // Only set the boolean flag that corresponds to the mode
+        if (overrides.mode) {
+          initArgs.mode = overrides.mode;
+        }
+        // If mode is "normal" or undefined, no flags are set
+        return await toolPermissionService.initialize(initArgs, workflowState);
+      } else {
+        // Even if no overrides, we need to initialize with defaults
+        return await toolPermissionService.initialize(
+          {
+            isHeadless: initOptions.headless,
+          },
+          workflowState,
+        );
+      }
+    },
+    [SERVICE_NAMES.WORKFLOW],
   );
 
   // Initialize SystemMessageService with command options
@@ -121,12 +137,18 @@ export async function initializeServices(
         format: (commandOptions as any).format, // format option from CLI
         headless: initOptions.headless,
       }),
-    [], // No dependencies
+    [SERVICE_NAMES.TOOL_PERMISSIONS],
   );
 
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.UPDATE,
+    () => updateService.initialize(),
     [], // No dependencies
   );
 
@@ -144,9 +166,10 @@ export async function initializeServices(
   serviceContainer.register(
     SERVICE_NAMES.CONFIG,
     async () => {
-      const [authState, apiClientState] = await Promise.all([
+      const [authState, apiClientState, workflowState] = await Promise.all([
         serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
         serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
+        serviceContainer.get<WorkflowServiceState>(SERVICE_NAMES.WORKFLOW),
       ]);
 
       // Ensure organization is selected if authenticated
@@ -186,32 +209,38 @@ export async function initializeServices(
         }
       }
 
-      return configService.initialize(
-        finalAuthState.authConfig,
+      return configService.initialize({
+        authConfig: finalAuthState.authConfig,
         configPath,
-        finalAuthState.organizationId || null,
-        apiClientState.apiClient,
-        commandOptions,
-      );
+        // organizationId: finalAuthState.organizationId || null,
+        apiClient: apiClientState.apiClient,
+        workflowState,
+        injectedConfigOptions: commandOptions,
+      });
     },
-    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT], // Depends on auth and API client
+    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.WORKFLOW], // Dependencies
   );
 
   serviceContainer.register(
     SERVICE_NAMES.MODEL,
     async () => {
-      const [configState, authState] = await Promise.all([
+      const [configState, authState, workflowState] = await Promise.all([
         serviceContainer.get<ConfigServiceState>(SERVICE_NAMES.CONFIG),
         serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
+        serviceContainer.get<WorkflowServiceState>(SERVICE_NAMES.WORKFLOW),
       ]);
 
       if (!configState.config) {
         throw new Error("Config not available");
       }
 
-      return modelService.initialize(configState.config, authState.authConfig);
+      return modelService.initialize(
+        configState.config,
+        authState.authConfig,
+        workflowState,
+      );
     },
-    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH], // Depends on config and auth
+    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH, SERVICE_NAMES.WORKFLOW], // Depends on config, auth, and workflow
   );
 
   serviceContainer.register(
@@ -239,6 +268,18 @@ export async function initializeServices(
     SERVICE_NAMES.RESOURCE_MONITORING,
     () => resourceMonitoringService.initialize(),
     [],
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.STORAGE_SYNC,
+    () => storageSyncService.initialize(),
+    [],
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.CHAT_HISTORY,
+    () => chatHistoryService.initialize(undefined, initOptions.headless),
+    [], // No dependencies for now, but could depend on SESSION in future
   );
 
   // Eagerly initialize all services to ensure they're ready when needed
@@ -275,16 +316,9 @@ export function reloadService(serviceName: string) {
  * Check if all core services are ready
  */
 export function areServicesReady(): boolean {
-  return [
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-    SERVICE_NAMES.AUTH,
-    SERVICE_NAMES.API_CLIENT,
-    SERVICE_NAMES.CONFIG,
-    SERVICE_NAMES.MODEL,
-    SERVICE_NAMES.MCP,
-    SERVICE_NAMES.FILE_INDEX,
-    SERVICE_NAMES.RESOURCE_MONITORING,
-  ].every((name) => serviceContainer.isReady(name));
+  return Object.values(SERVICE_NAMES).every((name) =>
+    serviceContainer.isReady(name),
+  );
 }
 
 /**
@@ -304,9 +338,13 @@ export const services = {
   apiClient: apiClientService,
   mcp: mcpService,
   fileIndex: fileIndexService,
-  mode: modeService,
   resourceMonitoring: resourceMonitoringService,
   systemMessage: systemMessageService,
+  chatHistory: chatHistoryService,
+  updateService: updateService,
+  storageSync: storageSyncService,
+  workflow: workflowService,
+  toolPermissions: toolPermissionService,
 } as const;
 
 // Export the service container for advanced usage

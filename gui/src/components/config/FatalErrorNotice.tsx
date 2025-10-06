@@ -1,30 +1,28 @@
 import { useContext, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
-import { ROUTES } from "../../util/navigation";
+import { CONFIG_ROUTES } from "../../util/navigation";
 import Alert from "../gui/Alert";
-import { useLump } from "../mainInput/Lump/LumpContext";
 
 export const FatalErrorIndicator = () => {
   const { refreshProfiles } = useAuth();
   const configError = useAppSelector((store) => store.config.configError);
   const ideMessenger = useContext(IdeMessengerContext);
-
+  const location = useLocation();
   const navigate = useNavigate();
 
   const hasFatalErrors = useMemo(() => {
     return configError?.some((error) => error.fatal);
   }, [configError]);
 
-  const { setSelectedSection, selectedSection } = useLump();
   const configLoading = useAppSelector((state) => state.config.loading);
-
-  const showLumpErrorSection = () => {
-    navigate(ROUTES.HOME);
-    setSelectedSection("error");
+  const showConfigPage = () => {
+    navigate(CONFIG_ROUTES.AGENTS);
   };
+  // const onAgentsPage = location.
+  const currentPath = `${location.pathname}${location.search}`;
 
   const { selectedProfile } = useAuth();
 
@@ -67,12 +65,11 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-        <div
-          onClick={showLumpErrorSection}
-          className={`cursor-pointer underline transition-all ${selectedSection === "error" ? "opacity-0" : ""}`}
-        >
-          View
-        </div>
+        {currentPath !== CONFIG_ROUTES.AGENTS && (
+          <div onClick={showConfigPage} className="cursor-pointer underline">
+            View
+          </div>
+        )}
       </div>
     </Alert>
   );

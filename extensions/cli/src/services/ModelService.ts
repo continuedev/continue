@@ -1,17 +1,11 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
 
-import {
-  AuthConfig,
-  getAccessToken,
-  getModelName,
-  getOrganizationId,
-} from "../auth/workos.js";
-import { getLlmApi } from "../config.js";
+import { AuthConfig, getModelName } from "../auth/workos.js";
+import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { ModelServiceState } from "./types.js";
+import { ModelServiceState, WorkflowServiceState } from "./types.js";
 
 /**
  * Service for managing LLM and model state
@@ -38,7 +32,7 @@ export class ModelService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return ["auth", "config"];
+    return ["auth", "config", "workflow"];
   }
 
   /**
@@ -47,6 +41,7 @@ export class ModelService
   async doInitialize(
     assistant: AssistantUnrolled,
     authConfig: AuthConfig,
+    workflowServiceState?: WorkflowServiceState,
   ): Promise<ModelServiceState> {
     logger.debug("ModelService.doInitialize called", {
       hasAssistant: !!assistant,
@@ -61,16 +56,29 @@ export class ModelService
         model && (model.roles?.includes("chat") || model.roles === undefined),
     ) || []) as ModelConfig[];
 
-    // Check if we have a persisted model name and use it if valid
-    const persistedModelName = getModelName(authConfig);
-    if (persistedModelName) {
+    let preferredModelName: string | null | undefined = null;
+    let modelSource = "default";
+
+    // Priority = workflow -> last selected model
+    if (workflowServiceState?.workflowModelName) {
+      preferredModelName = workflowServiceState.workflowModelName;
+      modelSource = "workflow";
+    } else {
+      preferredModelName = getModelName(authConfig);
+      if (preferredModelName) {
+        modelSource = "persisted";
+      }
+    }
+
+    // Try to use the preferred model (workflow or persisted)
+    if (preferredModelName) {
       // During initialization, we need to check against availableModels directly
       const modelIndex = this.availableModels.findIndex((model) => {
         const name = (model as any).name || (model as any).model;
-        return name === persistedModelName;
+        return name === preferredModelName;
       });
       if (modelIndex === -1) {
-        // Model name not found, use default model selection
+        // Preferred model not found, use default model selection
         const [llmApi, model] = getLlmApi(assistant, authConfig);
         return {
           llmApi,
@@ -79,44 +87,20 @@ export class ModelService
           authConfig,
         };
       } else {
-        // Use the persisted model - but we need to handle initialization specially
+        // Use the preferred model - but we need to handle initialization specially
         // During init, currentState isn't set yet, so switchModel would fail
         // Instead, we'll manually switch here
         const selectedModel = this.availableModels[modelIndex];
-        logger.debug("Using persisted model during initialization", {
+        logger.debug(`Using ${modelSource} model during initialization`, {
           modelIndex,
           provider: selectedModel.provider,
           name: (selectedModel as any).name || "unnamed",
+          modelSource,
         });
 
-        const accessToken = getAccessToken(authConfig);
-        const organizationId = getOrganizationId(authConfig);
-
-        const config: LLMConfig =
-          selectedModel.provider === "continue-proxy"
-            ? {
-                provider: selectedModel.provider,
-                requestOptions: selectedModel.requestOptions,
-                apiBase: selectedModel.apiBase,
-                apiKey: accessToken ?? undefined,
-                env: {
-                  apiKeyLocation: (selectedModel as any).apiKeyLocation,
-                  orgScopeId: organizationId,
-                  proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
-                },
-              }
-            : {
-                provider: selectedModel.provider as any,
-                apiKey: selectedModel.apiKey,
-                apiBase: selectedModel.apiBase,
-                requestOptions: selectedModel.requestOptions,
-                env: selectedModel.env,
-              };
-
-        const llmApi = constructLlmApi(config);
-
+        const llmApi = createLlmApi(selectedModel, authConfig);
         if (!llmApi) {
-          throw new Error("Failed to initialize LLM with persisted model");
+          throw new Error(`Failed to initialize LLM with ${modelSource} model`);
         }
 
         return {
@@ -288,31 +272,7 @@ export class ModelService
     });
 
     try {
-      const accessToken = getAccessToken(authConfig);
-      const organizationId = getOrganizationId(authConfig);
-
-      const config: LLMConfig =
-        selectedModel.provider === "continue-proxy"
-          ? {
-              provider: selectedModel.provider,
-              requestOptions: selectedModel.requestOptions,
-              apiBase: selectedModel.apiBase,
-              apiKey: accessToken ?? undefined,
-              env: {
-                apiKeyLocation: (selectedModel as any).apiKeyLocation,
-                orgScopeId: organizationId,
-                proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
-              },
-            }
-          : {
-              provider: selectedModel.provider as any,
-              apiKey: selectedModel.apiKey,
-              apiBase: selectedModel.apiBase,
-              requestOptions: selectedModel.requestOptions,
-              env: selectedModel.env,
-            };
-
-      const llmApi = constructLlmApi(config);
+      const llmApi = createLlmApi(selectedModel, authConfig);
 
       if (!llmApi) {
         throw new Error("Failed to initialize LLM with selected model");

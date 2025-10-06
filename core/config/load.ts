@@ -6,6 +6,7 @@ import path from "path";
 import {
   ConfigResult,
   ConfigValidationError,
+  mergeConfigYamlRequestOptions,
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
@@ -25,6 +26,7 @@ import {
   IdeType,
   ILLM,
   ILLMLogger,
+  InternalMcpOptions,
   LLMOptions,
   ModelDescription,
   RerankerDescription,
@@ -57,8 +59,10 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
+import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import { getBaseToolDefinitions } from "../tools";
+import { PolicySingleton } from "../control-plane/PolicySingleton";
+import { getBaseToolDefinitions, serializeTool } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
 import { loadConfigContextProviders } from "./loadContextProviders";
@@ -214,8 +218,8 @@ function applyRequestOptionsToModels(
   // Prepare models
   for (const model of models) {
     model.requestOptions = {
-      ...model.requestOptions,
       ...config.requestOptions,
+      ...model.requestOptions,
     };
     if (roles !== undefined) {
       model.roles = model.roles ?? roles;
@@ -544,16 +548,33 @@ async function intermediateToFinalConfig({
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map(
-      (server, index) => ({
-        id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server`,
-        ...server,
-      }),
-    ),
-    false,
-  );
+
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    const mcpOptions: InternalMcpOptions[] = (
+      config.experimental?.modelContextProtocolServers ?? []
+    ).map((server, index) => ({
+      id: `continue-mcp-server-${index + 1}`,
+      name: `MCP Server`,
+      requestOptions: mergeConfigYamlRequestOptions(
+        server.transport.type !== "stdio"
+          ? server.transport.requestOptions
+          : undefined,
+        config.requestOptions,
+      ),
+      ...server.transport,
+    }));
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
+    );
+    errors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false);
+  }
 
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
@@ -651,7 +672,7 @@ async function finalToBrowserConfig(
     experimental: final.experimental,
     rules: final.rules,
     docs: final.docs,
-    tools: final.tools,
+    tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
