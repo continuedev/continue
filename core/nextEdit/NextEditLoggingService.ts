@@ -95,9 +95,6 @@ export class NextEditLoggingService {
       outcome.accepted = true;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      if (outcome.requestId) {
-        void this.logAcceptReject(outcome.requestId, true);
-      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -116,9 +113,6 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      if (outcome.requestId) {
-        void this.logAcceptReject(outcome.requestId, false);
-      }
       this._outcomes.delete(completionId);
       return outcome;
     }
@@ -151,9 +145,6 @@ export class NextEditLoggingService {
       outcome.accepted = false;
       outcome.aborted = false;
       this.logNextEditOutcome(outcome);
-      if (outcome.requestId) {
-        void this.logAcceptReject(outcome.requestId, false);
-      }
       this._logRejectionTimeouts.delete(completionId);
       this._outcomes.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
@@ -255,6 +246,9 @@ export class NextEditLoggingService {
     });
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
+    if (outcome.requestId && outcome.accepted !== undefined) {
+      void this.logAcceptReject(outcome.requestId, outcome.accepted);
+    }
     void Telemetry.capture("nextEditOutcome", outcome, true);
   }
 
@@ -268,7 +262,7 @@ export class NextEditLoggingService {
       }
 
       const controlPlaneEnv = getControlPlaneEnvSync("production");
-      await fetchwithRequestOptions(
+      const resp = await fetchwithRequestOptions(
         new URL("model-proxy/v1/feedback", controlPlaneEnv.CONTROL_PLANE_URL),
         {
           method: "POST",
