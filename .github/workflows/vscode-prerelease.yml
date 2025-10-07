@@ -158,7 +158,7 @@ jobs:
           done
 
           if [ $ELAPSED -ge $TIMEOUT ]; then
-            echo "Warning: Timed out waiting for PR merge. Please check manually."
+            echo "Warning: Timed out waiting for PR merge. Please check manually." && exit 1
           fi
 
       - name: Checkout main branch
