@@ -8,6 +8,7 @@ import { ContextRetrievalService } from "../autocomplete/context/ContextRetrieva
 
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
+import { postprocessCompletion } from "../autocomplete/postprocessing/index.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
 import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types.js";
@@ -468,7 +469,22 @@ export class NextEditProvider {
     }
 
     // Extract completion using model-specific logic.
-    const nextCompletion = this.modelProvider.extractCompletion(msg.content);
+    let nextCompletion = this.modelProvider.extractCompletion(msg.content);
+
+    // Postprocess the completion (same as autocomplete).
+    const postprocessed = postprocessCompletion({
+      completion: nextCompletion,
+      llm,
+      prefix: helper.prunedPrefix,
+      suffix: helper.prunedSuffix,
+    });
+
+    // Return early if postprocessing filtered out the completion.
+    if (!postprocessed) {
+      return undefined;
+    }
+
+    nextCompletion = postprocessed;
 
     let outcome: NextEditOutcome | undefined;
 
