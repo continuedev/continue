@@ -157,6 +157,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     await this.secretStorage.store(SESSIONS_SECRET_KEY, data);
   }
 
+  private async clearSessions() {
+    await this.secretStorage.delete(SESSIONS_SECRET_KEY);
+  }
+
   public async getSessions(
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
@@ -168,7 +172,31 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
     try {
       const value = JSON.parse(data) as ContinueAuthenticationSession[];
-      return value;
+
+      // Validate that sessions have required fields
+      const validSessions = value.filter((session) => {
+        const isValid =
+          session.id &&
+          session.accessToken &&
+          session.refreshToken &&
+          session.account;
+
+        if (!isValid) {
+          Logger.error(new Error("Invalid session structure detected"), {
+            context: "workOS_sessions_validation",
+            sessionId: session.id,
+          });
+        }
+
+        return isValid;
+      });
+
+      // If we filtered out invalid sessions, update storage
+      if (validSessions.length !== value.length) {
+        await this.storeSessions(validSessions);
+      }
+
+      return validSessions;
     } catch (e: any) {
       // Capture session file parsing errors to Sentry
       Logger.error(e, {
@@ -177,6 +205,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       });
 
       console.warn(`Error parsing sessions.json: ${e}`);
+
+      // Clear corrupted session data
+      console.warn("Clearing corrupted session data");
+      await this.clearSessions();
+
       return [];
     }
   }
@@ -619,6 +652,61 @@ export async function getControlPlaneSessionInfo(
     if (!session) {
       return undefined;
     }
+
+    // Validate session structure
+    if (!session.accessToken || !session.account?.id) {
+      Logger.error(
+        new Error("Invalid session returned from VS Code authentication"),
+        {
+          context: "workOS_getSession_validation",
+          hasAccessToken: !!session.accessToken,
+          hasAccount: !!session.account,
+          hasAccountId: !!session.account?.id,
+        },
+      );
+
+      // Try to clear and retry once if not already silent
+      if (!silent) {
+        console.warn("Invalid session detected, attempting to clear and retry");
+        // Clear corrupted VS Code authentication cache by removing the session
+        try {
+          const sessions = await authentication.getSession(
+            controlPlaneEnv.AUTH_TYPE,
+            [],
+            { silent: true },
+          );
+          if (sessions) {
+            // This will trigger the provider's removeSession
+            await authentication
+              .getSession(controlPlaneEnv.AUTH_TYPE, [], {
+                forceNewSession: true,
+                createIfNone: true,
+              })
+              .then((newSession) => {
+                if (!newSession?.accessToken || !newSession?.account?.id) {
+                  throw new Error("Retry also returned invalid session");
+                }
+                return {
+                  AUTH_TYPE: controlPlaneEnv.AUTH_TYPE,
+                  accessToken: newSession.accessToken,
+                  account: {
+                    id: newSession.account.id,
+                    label: newSession.account.label,
+                  },
+                };
+              });
+          }
+        } catch (retryError) {
+          Logger.error(retryError, {
+            context: "workOS_getSession_retry",
+          });
+          console.error("Failed to recover from invalid session:", retryError);
+        }
+      }
+
+      return undefined;
+    }
+
     return {
       AUTH_TYPE: controlPlaneEnv.AUTH_TYPE,
       accessToken: session.accessToken,
@@ -627,6 +715,23 @@ export async function getControlPlaneSessionInfo(
         label: session.account.label,
       },
     };
+  } catch (error) {
+    Logger.error(error, {
+      context: "workOS_getControlPlaneSessionInfo",
+      silent,
+      useOnboarding,
+    });
+
+    // If authentication fails, ensure we surface the error
+    if (!silent) {
+      console.error("Failed to get control plane session:", error);
+      void window.showErrorMessage(
+        `Authentication failed: ${error instanceof Error ? error.message : String(error)}. ` +
+          "If this persists, try signing out and back in.",
+      );
+    }
+
+    return undefined;
   } finally {
     WorkOsAuthProvider.useOnboardingUri = false;
   }
