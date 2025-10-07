@@ -267,6 +267,7 @@
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
               "guides/sanity-mcp-continue-cookbook",
+              "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
@@ -334,10 +335,6 @@
       {
         "label": "🚀 Get Started",
         "href": "https://hub.continue.dev/"
-      },
-      {
-        "label": "Sign In to Hub",
-        "href": "https://hub.continue.dev/auth/signin"
       }
     ],
     "primary": {
@@ -370,8 +367,7 @@
     }
   },
   "custom": {
-    "css": ["custom.css"],
-    "js": ["navigation-enhancer.js", "navigation-banner.js"]
+    "css": ["custom.css"]
   },
   "redirects": [
     {
