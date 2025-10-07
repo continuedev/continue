@@ -1,5 +1,5 @@
 import type { ChatHistoryItem } from "core/index.js";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 /**
  * Tests for the message edit feature in useChat hook
@@ -24,7 +24,7 @@ describe("useChat - Message Edit Feature", () => {
   describe("handleEditMessage", () => {
     it("should rewind history to exclude the message being edited", () => {
       const chatHistory = createMockChatHistory(5); // [user, asst, user, asst, user]
-      let currentHistory = chatHistory;
+      const currentHistory = chatHistory;
 
       const setChatHistory = vi.fn();
       const setQueuedMessages = vi.fn();
@@ -74,7 +74,7 @@ describe("useChat - Message Edit Feature", () => {
 
     it("should handle editing the first message", () => {
       const chatHistory = createMockChatHistory(5);
-      let currentHistory = chatHistory;
+      const currentHistory = chatHistory;
 
       const updateSessionHistory = vi.fn();
       const processMessage = vi.fn();
@@ -103,7 +103,7 @@ describe("useChat - Message Edit Feature", () => {
 
     it("should handle editing the last message", () => {
       const chatHistory = createMockChatHistory(5);
-      let currentHistory = chatHistory;
+      const currentHistory = chatHistory;
 
       const updateSessionHistory = vi.fn();
       const processMessage = vi.fn();
