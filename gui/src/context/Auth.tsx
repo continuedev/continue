@@ -50,25 +50,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const currentOrg = useAppSelector(selectCurrentOrg);
   const selectedProfile = useAppSelector(selectSelectedProfile);
 
-  const login: AuthContextType["login"] = (useOnboarding: boolean) => {
-    return new Promise(async (resolve) => {
-      await ideMessenger
-        .request("getControlPlaneSessionInfo", {
-          silent: false,
-          useOnboarding,
-        })
-        .then((result) => {
-          if (result.status === "error") {
-            resolve(false);
-            return;
-          }
+  const login: AuthContextType["login"] = async (useOnboarding: boolean) => {
+    try {
+      const result = await ideMessenger.request("getControlPlaneSessionInfo", {
+        silent: false,
+        useOnboarding,
+      });
 
-          const session = result.content;
-          setSession(session);
+      if (result.status === "error") {
+        console.error("Login failed:", result.error);
+        return false;
+      }
 
-          resolve(true);
-        });
-    });
+      const session = result.content;
+      setSession(session);
+
+      return true;
+    } catch (error: any) {
+      console.error("Login request failed:", error);
+      // Let the error propagate so the caller can handle it
+      throw error;
+    }
   };
 
   const logout = () => {

@@ -161,22 +161,22 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
     // await this.hasAttemptedRefresh;
-    const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
-    if (!data) {
-      return [];
-    }
-
     try {
+      const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
+      if (!data) {
+        return [];
+      }
+
       const value = JSON.parse(data) as ContinueAuthenticationSession[];
       return value;
     } catch (e: any) {
-      // Capture session file parsing errors to Sentry
+      // Capture session decrypt and parsing errors to Sentry
       Logger.error(e, {
-        context: "workOS_sessions_json_parse",
-        dataLength: data.length,
+        context: "workOS_sessions_retrieval",
+        errorMessage: e.message,
       });
 
-      console.warn(`Error parsing sessions.json: ${e}`);
+      console.warn(`Error retrieving or parsing sessions: ${e.message}`);
       return [];
     }
   }
