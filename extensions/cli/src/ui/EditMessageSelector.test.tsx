@@ -3,7 +3,6 @@
  */
 import { render } from "@testing-library/react";
 import type { ChatHistoryItem } from "core/index.js";
-import { Box } from "ink";
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 

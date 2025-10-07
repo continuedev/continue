@@ -3,8 +3,8 @@ import React, { useMemo, useState } from "react";
 
 import type { ChatHistoryItem } from "../../../../core/index.js";
 
-import { TextBuffer } from "./TextBuffer.js";
 import { defaultBoxStyles } from "./styles.js";
+import { TextBuffer } from "./TextBuffer.js";
 
 interface EditMessageSelectorProps {
   chatHistory: ChatHistoryItem[];
