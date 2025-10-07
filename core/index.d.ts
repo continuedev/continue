@@ -1875,6 +1875,16 @@ export interface CompiledMessagesResult {
   contextPercentage: number;
 }
 
+export interface AddToChatPayload {
+  data: AddToChatPayloadItem[];
+}
+
+interface AddToChatPayloadItem {
+  type: "file" | "folder";
+  fullPath: string;
+  name: string;
+}
+
 export interface MessageOption {
   precompiled: boolean;
 }

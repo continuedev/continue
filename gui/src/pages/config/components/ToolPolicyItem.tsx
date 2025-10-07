@@ -19,6 +19,7 @@ import {
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
+import { isEditTool } from "../../../util/toolCallState";
 
 interface ToolPolicyItemProps {
   tool: Tool;
@@ -28,11 +29,21 @@ interface ToolPolicyItemProps {
 
 export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const dispatch = useDispatch();
-  const policy = useAppSelector(
+  const toolPolicy = useAppSelector(
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const mode = useAppSelector((state) => state.session.mode);
+
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (state) => state.config.config.ui?.autoAcceptEditToolDiffs,
+  );
+  const isAutoAcceptedToolCall =
+    isEditTool(props.tool.function.name) && autoAcceptEditToolDiffs;
+
+  const policy = isAutoAcceptedToolCall
+    ? "allowedWithoutPermission"
+    : toolPolicy;
 
   useEffect(() => {
     if (!policy) {
@@ -53,6 +64,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const fontSize = useFontSize(-2);
 
   const disabled =
+    isAutoAcceptedToolCall ||
     !props.isGroupEnabled ||
     (mode === "plan" &&
       props.tool.group === BUILT_IN_GROUP_NAME &&
@@ -100,6 +112,19 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                     <InformationCircleIcon className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500" />
                   </ToolTip>
                 ) : null}
+                {isAutoAcceptedToolCall ? (
+                  <ToolTip
+                    place="bottom"
+                    className="flex flex-wrap items-center"
+                    content={
+                      <p className="m-0 p-0">
+                        Auto-Accept Agent Edits setting is on
+                      </p>
+                    }
+                  >
+                    <InformationCircleIcon className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500" />
+                  </ToolTip>
+                ) : null}
                 {props.tool.faviconUrl && (
                   <img
                     src={props.tool.faviconUrl}
@@ -139,11 +164,13 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                   data-tooltip-id={disabled ? disabledTooltipId : undefined}
                 >
                   <span className="text-xs">
-                    {disabled || policy === "disabled"
-                      ? "Excluded"
-                      : policy === "allowedWithoutPermission"
-                        ? "Automatic"
-                        : "Ask First"}
+                    {isAutoAcceptedToolCall
+                      ? "Automatic"
+                      : disabled || policy === "disabled"
+                        ? "Excluded"
+                        : policy === "allowedWithoutPermission"
+                          ? "Automatic"
+                          : "Ask First"}
                   </span>
                   <ChevronDownIcon className="h-3 w-3" />
                 </ListboxButton>
