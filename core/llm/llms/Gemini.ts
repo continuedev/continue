@@ -192,7 +192,9 @@ class Gemini extends BaseLLM {
       : {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.imageUrl?.url ? extractBase64FromDataUrl(part.imageUrl.url) : ""
+            data: part.imageUrl?.url
+              ? extractBase64FromDataUrl(part.imageUrl.url)
+              : "",
           },
         };
   }
