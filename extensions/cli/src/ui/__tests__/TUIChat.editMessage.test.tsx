@@ -130,7 +130,7 @@ describe("TUIChat - Message Edit Feature", () => {
 
       // UI should remain stable and edit selector should be closed
       expect(frame).toBeDefined();
-      expect(frame.length).toBeGreaterThan(0);
+      expect(frame!.length).toBeGreaterThan(0);
       expect(frame).not.toContain("No user messages to edit");
     },
   );
@@ -189,7 +189,7 @@ describe("TUIChat - Edit Feature Edge Cases", () => {
 
       // Should either show "no messages" or handle gracefully
       expect(frame).toBeDefined();
-      expect(frame.length).toBeGreaterThan(0);
+      expect(frame!.length).toBeGreaterThan(0);
     },
   );
 

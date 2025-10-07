@@ -316,7 +316,14 @@ describe("useChat - Message Edit Feature", () => {
       const chatHistory: ChatHistoryItem[] = [
         {
           message: { role: "user", content: "Original" },
-          contextItems: [{ name: "file.txt", content: "data" }],
+          contextItems: [
+            {
+              name: "file.txt",
+              content: "data",
+              description: "file.txt",
+              id: { providerTitle: "file", itemId: "file.txt" },
+            },
+          ],
         },
       ];
 
