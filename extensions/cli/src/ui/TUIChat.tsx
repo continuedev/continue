@@ -227,7 +227,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
-    handleSelectMessageForEdit,
     handleEditMessage,
     handleToolPermissionResponse,
   } = useChat({
@@ -382,7 +381,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onImageInClipboardChange={setHasImageInClipboard}
           diffContent={diffContent}
           chatHistory={chatHistory}
-          handleSelectMessageForEdit={handleSelectMessageForEdit}
           handleEditMessage={handleEditMessage}
           onShowEditSelector={() => navigateTo("edit")}
         />

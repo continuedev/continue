@@ -457,7 +457,11 @@ export function useChat({
     message: string,
     imageMap?: Map<string, Buffer>,
     isQueuedMessage: boolean = false,
+    baseHistory?: ChatHistoryItem[],
   ) => {
+    // Use baseHistory if provided (e.g., when editing a message),
+    // otherwise use current chatHistory
+    const currentHistory = baseHistory ?? chatHistory;
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -526,7 +530,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -593,7 +597,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -723,25 +727,22 @@ export function useChat({
     setQueuedMessages([]);
   };
 
-  const handleSelectMessageForEdit = (
-    originalIndex: number,
-    onComplete?: () => void,
+  const handleEditMessage = async (
+    messageIndex: number,
+    newContent: string,
   ) => {
-    logger.debug("handleSelectMessageForEdit called", {
-      originalIndex,
+    logger.debug("handleEditMessage called", {
+      messageIndex,
       currentHistoryLength: chatHistory.length,
     });
 
-    // Rewind chat history to the selected message index (up to and including the message)
-    const rewindedHistory = chatHistory.slice(0, originalIndex + 1);
+    // Rewind chat history to exclude the message being edited
+    const rewindedHistory = chatHistory.slice(0, messageIndex);
 
-    logger.debug("Rewinding history", {
+    logger.debug("Rewinding history for edit", {
       from: chatHistory.length,
       to: rewindedHistory.length,
     });
-
-    // Update the chat history with the rewound version
-    setChatHistory(rewindedHistory);
 
     // Clear any queued messages
     setQueuedMessages([]);
@@ -757,28 +758,9 @@ export function useChat({
       onRefreshStatic();
     }
 
-    // Call onComplete callback if provided
-    if (onComplete) {
-      onComplete();
-    }
-  };
-
-  const handleEditMessage = async (
-    messageIndex: number,
-    newContent: string,
-  ) => {
-    // At this point, history is already rewound to the selected message
-    // We need to rewind one more step to exclude the original message, then resubmit
-    const rewindedHistory = chatHistory.slice(0, messageIndex);
-
-    // Update the chat history to exclude the message being edited
-    setChatHistory(rewindedHistory);
-
-    // Update the session
-    updateSessionHistory(rewindedHistory);
-
-    // Resubmit the edited message
-    await processMessage(newContent, undefined, false);
+    // Resubmit the edited message with the rewound history as the base
+    // This ensures processMessage uses the correct base history
+    await processMessage(newContent, undefined, false, rewindedHistory);
   };
 
   const handleToolPermissionResponse = async (
@@ -863,7 +845,6 @@ export function useChat({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
-    handleSelectMessageForEdit,
     handleEditMessage,
     handleToolPermissionResponse,
   };
