@@ -1,4 +1,5 @@
 import { Box, Text, useInput } from "ink";
+import type { Key } from "ink/build/hooks/use-input.js";
 import React, { useMemo, useState } from "react";
 
 import type { ChatHistoryItem } from "../../../../core/index.js";
@@ -45,17 +46,23 @@ export function EditMessageSelector({
     }
   }, [selectedIndex, isEditing, userMessages, textBuffer]);
 
-  useInput((input, key) => {
-    // If editing, handle text input
-    if (isEditing) {
-      // In edit mode, handle text input
+  // Helper to get message content safely
+  const getMessageContent = React.useCallback(
+    (index: number): string => {
+      return typeof userMessages[index]?.item.message.content === "string"
+        ? userMessages[index].item.message.content
+        : "";
+    },
+    [userMessages],
+  );
+
+  // Handle input when in editing mode
+  const handleEditModeInput = React.useCallback(
+    (input: string, key: Key) => {
       if (key.escape) {
         setIsEditing(false);
         // Reset text to original
-        const content =
-          typeof userMessages[selectedIndex]?.item.message.content === "string"
-            ? userMessages[selectedIndex].item.message.content
-            : "";
+        const content = getMessageContent(selectedIndex);
         textBuffer.setText(content);
         setEditText(content);
         setCursorPosition(content.length);
@@ -76,8 +83,22 @@ export function EditMessageSelector({
         setEditText(textBuffer.text);
         setCursorPosition(textBuffer.cursor);
       }
-    } else {
-      // If not editing, handle navigation
+    },
+    [
+      getMessageContent,
+      selectedIndex,
+      textBuffer,
+      userMessages,
+      onEdit,
+      setIsEditing,
+      setEditText,
+      setCursorPosition,
+    ],
+  );
+
+  // Handle input when in navigation mode
+  const handleNavigationInput = React.useCallback(
+    (input: string, key: Key) => {
       if (key.upArrow || input === "k") {
         // Only navigate if there are messages
         if (userMessages.length > 0) {
@@ -96,11 +117,7 @@ export function EditMessageSelector({
         // Start editing the selected message - set cursor to end
         // Only allow editing if there are messages
         if (userMessages.length > 0) {
-          const content =
-            typeof userMessages[selectedIndex]?.item.message.content ===
-            "string"
-              ? userMessages[selectedIndex].item.message.content
-              : "";
+          const content = getMessageContent(selectedIndex);
           textBuffer.setCursor(content.length);
           setCursorPosition(content.length);
           setIsEditing(true);
@@ -108,6 +125,24 @@ export function EditMessageSelector({
       } else if (key.escape || (key.ctrl && input === "d")) {
         onExit();
       }
+    },
+    [
+      userMessages.length,
+      getMessageContent,
+      selectedIndex,
+      textBuffer,
+      onExit,
+      setSelectedIndex,
+      setCursorPosition,
+      setIsEditing,
+    ],
+  );
+
+  useInput((input, key) => {
+    if (isEditing) {
+      handleEditModeInput(input, key);
+    } else {
+      handleNavigationInput(input, key);
     }
   });
 
