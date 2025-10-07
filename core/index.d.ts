@@ -1350,11 +1350,13 @@ export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
 export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
   type?: "streamable-http";
   url: string;
+  apiKey?: string;
 };
 
 export type InternalSseMcpOptions = BaseInternalMCPOptions & {
   type?: "sse";
   url: string;
+  apiKey?: string;
 };
 
 export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {

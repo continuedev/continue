@@ -58,13 +58,14 @@ export function convertYamlMcpConfigToInternalMcpOptions(
     return stdioOptions;
   }
   // HTTP/SSE
-  const { type, url, requestOptions } = config;
+  const { type, url, apiKey, requestOptions } = config;
   const httpSseConfig:
     | InternalStreamableHttpMcpOptions
     | InternalSseMcpOptions = {
     ...shared,
     type,
     url,
+    apiKey,
     requestOptions: mergeConfigYamlRequestOptions(
       requestOptions,
       globalRequestOptions,

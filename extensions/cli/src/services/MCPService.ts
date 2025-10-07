@@ -403,6 +403,14 @@ export class MCPService
   private constructSseTransport(
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...serverConfig.requestOptions?.headers,
+      ...(serverConfig.apiKey && {
+        Authorization: `Bearer ${serverConfig.apiKey}`,
+      }),
+    };
+
     return new SSEClientTransport(new URL(serverConfig.url), {
       eventSourceInit: {
         fetch: (input, init) =>
@@ -410,18 +418,26 @@ export class MCPService
             ...init,
             headers: {
               ...init?.headers,
-              ...serverConfig.requestOptions?.headers,
+              ...headers,
             },
           }),
       },
-      requestInit: { headers: serverConfig.requestOptions?.headers },
+      requestInit: { headers },
     });
   }
   private constructHttpTransport(
     serverConfig: HttpMcpServer,
   ): StreamableHTTPClientTransport {
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...serverConfig.requestOptions?.headers,
+      ...(serverConfig.apiKey && {
+        Authorization: `Bearer ${serverConfig.apiKey}`,
+      }),
+    };
+
     return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
-      requestInit: { headers: serverConfig.requestOptions?.headers },
+      requestInit: { headers },
     });
   }
   private constructStdioTransport(
