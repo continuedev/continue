@@ -2,9 +2,9 @@ import { CommandLineIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { CloseButton } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import useCopy from "../hooks/useCopy";
 import { getPlatform } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import useCopy from "../hooks/useCopy";
 import { CopyButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/CopyButton";
 import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToolbar/RunInTerminalButton";
 import { Card } from "./ui";
@@ -98,7 +98,7 @@ export function CliInstallBanner({
     (messageThreshold !== undefined &&
       (messageCount === undefined || messageCount < messageThreshold))
   ) {
-    // return null;
+    return null;
   }
 
   return (

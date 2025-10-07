@@ -43,15 +43,15 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { useStore } from "react-redux";
+import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
-import { useStore } from "react-redux";
-import { RootState } from "../../redux/store";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -429,7 +429,7 @@ export function Chat() {
 
         <CliInstallBanner
           messageCount={userMessageCount}
-          messageThreshold={3}
+          messageThreshold={5}
           permanentDismissal={true}
         />
 
