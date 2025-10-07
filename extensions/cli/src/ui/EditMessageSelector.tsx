@@ -53,7 +53,7 @@ export function EditMessageSelector({
         setIsEditing(false);
         // Reset text to original
         const content =
-          typeof userMessages[selectedIndex].item.message.content === "string"
+          typeof userMessages[selectedIndex]?.item.message.content === "string"
             ? userMessages[selectedIndex].item.message.content
             : "";
         textBuffer.setText(content);
@@ -79,22 +79,32 @@ export function EditMessageSelector({
     } else {
       // If not editing, handle navigation
       if (key.upArrow || input === "k") {
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : userMessages.length - 1,
-        );
+        // Only navigate if there are messages
+        if (userMessages.length > 0) {
+          setSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : userMessages.length - 1,
+          );
+        }
       } else if (key.downArrow || input === "j") {
-        setSelectedIndex((prev) =>
-          prev < userMessages.length - 1 ? prev + 1 : 0,
-        );
+        // Only navigate if there are messages
+        if (userMessages.length > 0) {
+          setSelectedIndex((prev) =>
+            prev < userMessages.length - 1 ? prev + 1 : 0,
+          );
+        }
       } else if (key.return) {
         // Start editing the selected message - set cursor to end
-        const content =
-          typeof userMessages[selectedIndex]?.item.message.content === "string"
-            ? userMessages[selectedIndex].item.message.content
-            : "";
-        textBuffer.setCursor(content.length);
-        setCursorPosition(content.length);
-        setIsEditing(true);
+        // Only allow editing if there are messages
+        if (userMessages.length > 0) {
+          const content =
+            typeof userMessages[selectedIndex]?.item.message.content ===
+            "string"
+              ? userMessages[selectedIndex].item.message.content
+              : "";
+          textBuffer.setCursor(content.length);
+          setCursorPosition(content.length);
+          setIsEditing(true);
+        }
       } else if (key.escape || (key.ctrl && input === "d")) {
         onExit();
       }
