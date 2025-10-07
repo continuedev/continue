@@ -490,6 +490,9 @@ export class NextEditProvider {
     let outcome: NextEditOutcome | undefined;
 
     // Handle based on diff type.
+    const profileType =
+      this.configHandler.currentProfile?.profileDescription.profileType;
+
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       outcome = await this.modelProvider.handlePartialFileDiff(
         helper,
@@ -500,6 +503,7 @@ export class NextEditProvider {
         nextCompletion,
         this.promptMetadata!,
         this.ide,
+        profileType,
       );
     } else {
       outcome = await this.modelProvider.handleFullFileDiff(
@@ -511,6 +515,7 @@ export class NextEditProvider {
         nextCompletion,
         this.promptMetadata!,
         this.ide,
+        profileType,
       );
     }
 
