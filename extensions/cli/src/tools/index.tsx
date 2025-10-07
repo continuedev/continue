@@ -8,8 +8,8 @@ import {
   MCPServiceState,
   SERVICE_NAMES,
   serviceContainer,
+  services,
 } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import type { ModelServiceState } from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
@@ -23,16 +23,18 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
-  type ToolParameters,
+  type ToolParametersSchema,
+  ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolCall, ToolParameters };
+export type { Tool, ToolCall, ToolParametersSchema };
 
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
@@ -56,17 +58,13 @@ export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
 function getDynamicTools(): Tool[] {
   const dynamicTools: Tool[] = [];
 
-  // Add headless-specific tools if in headless mode
-  try {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-    const isHeadless = serviceResult.value?.isHeadless ?? false;
-    if (isHeadless) {
-      dynamicTools.push(exitTool);
-    }
-  } catch {
-    // Service not ready yet, no dynamic tools
+  if (services.toolPermissions.isHeadless()) {
+    dynamicTools.push(exitTool);
+  }
+
+  // Add beta status tool if --beta-status-tool flag is present
+  if (process.argv.includes("--beta-status-tool")) {
+    dynamicTools.push(statusTool);
   }
 
   return dynamicTools;
@@ -152,22 +150,6 @@ export function extractToolCalls(
   return toolCalls;
 }
 
-function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
-  const parameters: Record<
-    string,
-    { type: string; description: string; required: boolean }
-  > = {};
-  for (const [key, value] of Object.entries(inputSchema.properties)) {
-    const val = value as any;
-    parameters[key] = {
-      type: val.type,
-      description: val.description || "",
-      required: inputSchema.required?.includes(key) || false,
-    };
-  }
-  return parameters;
-}
-
 export async function getAvailableTools() {
   // Load MCP tools
   const mcpState = await serviceContainer.get<MCPServiceState>(
@@ -179,7 +161,14 @@ export async function getAvailableTools() {
       name: t.name,
       displayName: t.name.replace("mcp__", "").replace("ide__", ""),
       description: t.description ?? "",
-      parameters: convertInputSchemaToParameters(t.inputSchema),
+      parameters: {
+        type: "object",
+        properties: (t.inputSchema.properties ?? {}) as Record<
+          string,
+          ParameterSchema
+        >,
+        required: t.inputSchema.required,
+      },
       readonly: undefined, // MCP tools don't have readonly property
       isBuiltIn: false,
       run: async (args: any) => {
@@ -255,10 +244,12 @@ export async function executeToolCall(
   }
 }
 
+// Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.parameters.required ?? [];
+  for (const [paramName] of Object.entries(tool.parameters)) {
     if (
-      paramDef.required &&
+      requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||
         toolCall.arguments[paramName] === null)
     ) {

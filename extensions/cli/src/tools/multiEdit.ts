@@ -10,7 +10,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { validateAndResolveFilePath } from "./edit.js";
+import { editTool, validateAndResolveFilePath } from "./edit.js";
 import { readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
@@ -31,17 +31,18 @@ export const multiEditTool: Tool = {
   displayName: "MultiEdit",
   readonly: false,
   isBuiltIn: true,
-  description: `This is a tool for making multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently.
-This tool is ideal when you need to make multiple edits to the same file.
+  description: `Use this tool to make multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently. 
+Prefer this tool over the ${editTool.name} tool when you need to make multiple edits to the same file.
 
 To make multiple edits to a file, provide the following:
-1. file_path: The absolute path to the file to modify (must be absolute, not relative)
+1. file_path: The absolute path to the file to modify. Relative paths can also be used (resolved against cwd) but absolute is preferred
 2. edits: An array of edit operations to perform, where each edit contains:
    - old_string: The text to replace (must match the file contents exactly, including all whitespace/indentation)
    - new_string: The edited text to replace the old_string
-   - replace_all: Replace all occurences of old_string. This parameter is optional and defaults to false.
+   - replace_all: Replace all occurrences of old_string. This parameter is optional and defaults to false.
 
 IMPORTANT:
+- Files may be modified between tool calls by users, linters, etc, so always make all edits in one tool call where possible. For example, do not only edit imports if there are other changes in the file, as unused imports may be removed by a linter between tool calls.
 - All edits are applied in sequence, in the order they are provided
 - Each edit operates on the result of the previous edit, so plan your edits carefully to avoid conflicts between sequential operations
 - Edits are atomic - all edits must be valid for the operation to succeed - if any edit fails, none will be applied
@@ -65,18 +66,39 @@ WARNINGS:
 - The tool will fail if the file does not exist - it cannot create new files
 - This tool cannot create new files - the file must already exist`,
   parameters: {
-    file_path: {
-      type: "string",
-      description: "The absolute path to the file to modify",
-      required: true,
-    },
-    edits: {
-      type: "array",
-      description:
-        "Array of edit operations to perform sequentially on the file",
-      required: true,
-      items: {
-        type: "object",
+    type: "object",
+    required: ["file_path", "edits"],
+    properties: {
+      file_path: {
+        type: "string",
+        description:
+          "Absolute or relative path to the file to modify. Absolute preferred",
+      },
+      edits: {
+        type: "array",
+        description:
+          "Array of edit operations to perform sequentially on the file",
+        items: {
+          type: "object",
+          required: ["old_string", "new_string"],
+          properties: {
+            old_string: {
+              type: "string",
+              description:
+                "The text to replace (exact match including whitespace/indentation)",
+            },
+            new_string: {
+              type: "string",
+              description:
+                "The text to replace it with. MUST be different than old_string.",
+            },
+            replace_all: {
+              type: "boolean",
+              description:
+                "Replace all occurrences of old_string (default false) in the file",
+            },
+          },
+        },
       },
     },
   },

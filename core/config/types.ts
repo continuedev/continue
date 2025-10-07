@@ -78,8 +78,9 @@ declare global {
   
   export interface ILLM extends LLMOptions {
     get providerName(): string;
-  
+
     uniqueId: string;
+    lastRequestId?: string;
     model: string;
   
     title?: string;
@@ -686,6 +687,8 @@ declare global {
     openFile(path: string): Promise<void>;
   
     openUrl(url: string): Promise<void>;
+  
+    getExternalUri?(uri: string): Promise<string>;
   
     runCommand(command: string): Promise<void>;
   

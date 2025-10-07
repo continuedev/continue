@@ -8,7 +8,7 @@ const COLORS = {
   DELETION_BG: "#712f37",
   ADDITION_HIGHLIGHT: "#59a467",
   DELETION_HIGHLIGHT: "#a75e6d",
-  LINE_NUMBER: "gray",
+  LINE_NUMBER: "dim",
 } as const;
 
 interface DiffLine {
@@ -179,7 +179,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
   const parsedLines = parseDiffWithLineNumbers(diffContent);
 
   if (parsedLines.length === 0) {
-    return <Text color="gray">No changes detected.</Text>;
+    return <Text color="dim">No changes detected.</Text>;
   }
 
   const displayableLines = parsedLines.filter(
@@ -269,7 +269,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
         }
       })}
       {isTruncated && (
-        <Text color="gray" dimColor>
+        <Text color="dim" dimColor>
           ... ({displayableLines.length - 16} more lines)
         </Text>
       )}

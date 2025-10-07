@@ -1,15 +1,21 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { modeService } from "../../services/ModeService.js";
+import { initializeServices, services } from "src/services/index.js";
 
 import { ModeIndicator } from "./ModeIndicator.js";
 
 describe("ModeIndicator", () => {
-  beforeEach(() => {
+  const toolPermissionService = services.toolPermissions;
+  beforeEach(async () => {
     // Reset to normal mode for each test
-    modeService.initialize({});
+    await initializeServices({
+      headless: true,
+      toolPermissionOverrides: {
+        mode: "normal",
+      },
+    });
   });
 
   describe("mode display", () => {
@@ -29,13 +35,13 @@ describe("ModeIndicator", () => {
     });
 
     it("should use current mode from service when no mode prop provided", () => {
-      modeService.switchMode("plan");
+      toolPermissionService.switchMode("plan");
       const { lastFrame } = render(<ModeIndicator />);
       expect(lastFrame()).toContain("plan]");
     });
 
     it("should prioritize mode prop over service mode", () => {
-      modeService.switchMode("plan");
+      toolPermissionService.switchMode("plan");
       const { lastFrame } = render(<ModeIndicator mode="auto" />);
       expect(lastFrame()).toContain("auto]");
     });
@@ -49,17 +55,17 @@ describe("ModeIndicator", () => {
       expect(lastFrame()).toBe("");
 
       // Switch to plan
-      modeService.switchMode("plan");
+      toolPermissionService.switchMode("plan");
       rerender(<ModeIndicator />);
       expect(lastFrame()).toContain("plan]");
 
       // Switch to auto
-      modeService.switchMode("auto");
+      toolPermissionService.switchMode("auto");
       rerender(<ModeIndicator />);
       expect(lastFrame()).toContain("auto]");
 
       // Switch back to normal
-      modeService.switchMode("normal");
+      toolPermissionService.switchMode("normal");
       rerender(<ModeIndicator />);
       expect(lastFrame()).toBe("");
     });

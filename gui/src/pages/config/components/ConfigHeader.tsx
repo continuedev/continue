@@ -1,6 +1,7 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Button } from "../../../components/ui";
+import { cn } from "../../../util/cn";
 
 interface ConfigHeaderProps {
   title: string;
@@ -9,6 +10,7 @@ interface ConfigHeaderProps {
   addButtonTooltip?: string;
   className?: string;
   variant?: "default" | "sm";
+  showAddButton?: boolean;
 }
 
 export function ConfigHeader({
@@ -18,6 +20,7 @@ export function ConfigHeader({
   addButtonTooltip = "Add item",
   className = "",
   variant = "default",
+  showAddButton = true,
 }: ConfigHeaderProps) {
   const isSmall = variant === "sm";
   const marginBottom = isSmall ? "mb-4" : "mb-6";
@@ -26,13 +29,16 @@ export function ConfigHeader({
 
   return (
     <div
-      className={`${marginBottom} flex items-center justify-between ${className}`}
+      className={cn(
+        `${marginBottom} flex items-center justify-between`,
+        className,
+      )}
     >
       <div className="flex flex-col">
         <HeadingTag className={`my-0 ${titleSize}`}>{title}</HeadingTag>
         {subtext && <p className="text-description mt-1 text-sm">{subtext}</p>}
       </div>
-      {onAddClick && (
+      {showAddButton && onAddClick && (
         <ToolTip content={addButtonTooltip}>
           <Button
             onClick={onAddClick}

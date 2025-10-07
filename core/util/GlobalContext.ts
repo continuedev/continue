@@ -30,6 +30,7 @@ export type GlobalContextType = {
   selectedModelsByProfileId: {
     [profileId: string]: GlobalContextModelSelections;
   };
+  cliSelectedModel?: string; // CLI-specific model selection for unauthenticated users
 
   /**
    * This is needed to handle the case where a JetBrains user has created

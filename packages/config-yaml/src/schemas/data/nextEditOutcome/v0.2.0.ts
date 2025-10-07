@@ -14,6 +14,7 @@ export const nextEditOutcomeEventSchema_0_2_0 =
     elapsed: true,
     completionOptions: true,
     completionId: true,
+    requestId: true,
     gitRepo: true,
     uniqueId: true,
     // timestamp: z.number(),

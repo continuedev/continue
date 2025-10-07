@@ -106,11 +106,15 @@ export class VsCodeMessenger {
     this.onWebview("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("continue.viewLogs");
     });
+
     this.onWebview("reloadWindow", (msg) => {
       vscode.commands.executeCommand("workbench.action.reloadWindow");
     });
     this.onWebview("focusEditor", (msg) => {
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+    });
+    this.onWebview("toggleFullScreen", (msg) => {
+      vscode.commands.executeCommand("continue.openInNewWindow");
     });
 
     this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
@@ -250,6 +254,13 @@ export class VsCodeMessenger {
 
     this.onWebview("edit/clearDecorations", async (msg) => {
       editDecorationManager.clear();
+    });
+
+    this.onWebview("session/share", async (msg) => {
+      await vscode.commands.executeCommand(
+        "continue.shareSession",
+        msg.data.sessionId,
+      );
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

@@ -3,7 +3,11 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import {
+  HttpMcpServer,
+  SseMcpServer,
+  StdioMcpServer,
+} from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
@@ -217,19 +221,7 @@ export class MCPService
     this.updateState();
 
     try {
-      const client = new Client(
-        { name: "continue-cli-client", version: "1.0.0" },
-        { capabilities: {} },
-      );
-
-      const transport = await this.constructTransport(serverConfig);
-
-      logger.debug("Connecting to MCP server", {
-        name: serverName,
-        command: serverConfig.command,
-      });
-
-      await client.connect(transport, {});
+      const client = await this.getConnectedClient(serverConfig);
 
       connection.client = client;
       connection.status = "connected";
@@ -349,66 +341,103 @@ export class MCPService
   }
 
   /**
-   * Construct transport based on server configuration
+   * Construct transport based on server configuration and connect client
    */
-  private async constructTransport(
+  private async getConnectedClient(
     serverConfig: MCPServerConfig,
-  ): Promise<Transport> {
-    const transportType = serverConfig.type || "stdio";
+  ): Promise<Client> {
+    const client = new Client(
+      { name: "continue-cli-client", version: "1.0.0" },
+      { capabilities: {} },
+    );
 
-    switch (transportType) {
-      case "stdio":
-        if (!serverConfig.command) {
-          throw new Error(
-            "MCP server command is not specified for stdio transport",
+    if ("command" in serverConfig) {
+      // STDIO: no need to check type, just if command is present
+      logger.debug("Connecting to MCP server", {
+        name: serverConfig.name,
+        command: serverConfig.command,
+      });
+      const transport = this.constructStdioTransport(serverConfig);
+      await client.connect(transport, {});
+    } else {
+      // SSE/HTTP: if type isn't explicit: try http and fall back to sse
+      logger.debug("Connecting to MCP server", {
+        name: serverConfig.name,
+        url: serverConfig.url,
+      });
+
+      if (serverConfig.type === "sse") {
+        const transport = this.constructSseTransport(serverConfig);
+        await client.connect(transport, {});
+      } else if (serverConfig.type === "streamable-http") {
+        const transport = this.constructHttpTransport(serverConfig);
+        await client.connect(transport, {});
+      } else if (serverConfig.type) {
+        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
+      } else {
+        try {
+          const transport = this.constructHttpTransport(serverConfig);
+          await client.connect(transport, {});
+        } catch {
+          logger.debug(
+            "MCP Connection: http connection failed, falling back to sse connection",
+            {
+              name: serverConfig.name,
+            },
           );
+          try {
+            const transport = this.constructSseTransport(serverConfig);
+            await client.connect(transport, {});
+          } catch (e) {
+            throw new Error(
+              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
+            );
+          }
         }
-
-        const env: Record<string, string> = serverConfig.env || {};
-        if (process.env.PATH !== undefined) {
-          env.PATH = process.env.PATH;
-        }
-
-        return new StdioClientTransport({
-          command: serverConfig.command,
-          args: serverConfig.args || [],
-          env,
-          cwd: serverConfig.cwd,
-          stderr: "ignore",
-        });
-
-      case "sse":
-        if (!serverConfig.url) {
-          throw new Error("MCP server URL is not specified for SSE transport");
-        }
-        return new SSEClientTransport(new URL(serverConfig.url), {
-          eventSourceInit: {
-            fetch: (input, init) =>
-              fetch(input, {
-                ...init,
-                headers: {
-                  ...init?.headers,
-                  ...(serverConfig.requestOptions?.headers as
-                    | Record<string, string>
-                    | undefined),
-                },
-              }),
-          },
-          requestInit: { headers: serverConfig.requestOptions?.headers },
-        });
-
-      case "streamable-http":
-        if (!serverConfig.url) {
-          throw new Error(
-            "MCP server URL is not specified for streamable-http transport",
-          );
-        }
-        return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
-          requestInit: { headers: serverConfig.requestOptions?.headers },
-        });
-
-      default:
-        throw new Error(`Unsupported transport type: ${transportType}`);
+      }
     }
+
+    return client;
+  }
+
+  private constructSseTransport(
+    serverConfig: SseMcpServer,
+  ): SSEClientTransport {
+    return new SSEClientTransport(new URL(serverConfig.url), {
+      eventSourceInit: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              ...serverConfig.requestOptions?.headers,
+            },
+          }),
+      },
+      requestInit: { headers: serverConfig.requestOptions?.headers },
+    });
+  }
+  private constructHttpTransport(
+    serverConfig: HttpMcpServer,
+  ): StreamableHTTPClientTransport {
+    return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
+      requestInit: { headers: serverConfig.requestOptions?.headers },
+    });
+  }
+  private constructStdioTransport(
+    serverConfig: StdioMcpServer,
+  ): StdioClientTransport {
+    const env: Record<string, string> = serverConfig.env || {};
+    if (process.env.PATH !== undefined) {
+      env.PATH = process.env.PATH;
+    }
+
+    return new StdioClientTransport({
+      command: serverConfig.command,
+      args: serverConfig.args || [],
+      env,
+      cwd: serverConfig.cwd,
+      stderr: "ignore",
+    });
   }
 }

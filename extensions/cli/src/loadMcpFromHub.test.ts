@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadMcpFromHub } from "./args.js";
+import { loadMcpFromHub } from "./hubLoader.js";
 
 // Store original fetch to restore later
 const originalFetch = global.fetch;
