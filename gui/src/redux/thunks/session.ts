@@ -159,7 +159,14 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
       return;
     }
 
-    const session = await getSession(extra.ideMessenger, lastSessionId);
+    let session: Session;
+    try {
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    } catch {
+      // retry again after 1 sec
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    }
     dispatch(newSession(session));
   },
 );
