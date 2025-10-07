@@ -18,8 +18,6 @@ export interface UseChatProps {
   onShowUpdateSelector: () => void;
   onShowModelSelector?: () => void;
   onShowSessionSelector?: () => void;
-  onShowEditSelector?: () => void;
-  onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   onClear?: () => void;
   onRefreshStatic?: () => void;

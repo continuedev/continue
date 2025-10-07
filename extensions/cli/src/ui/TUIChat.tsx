@@ -173,7 +173,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 
   // Use login handlers
-  const { handleLoginPrompt, handleLoginTokenSubmit } = useLoginHandlers(
+  const { handleLoginTokenSubmit } = useLoginHandlers(
     navigateTo,
     navState,
     closeCurrentScreen,
@@ -243,8 +243,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
-    onShowEditSelector: () => navigateTo("edit"),
-    onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     onClear: handleClear,
     onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
