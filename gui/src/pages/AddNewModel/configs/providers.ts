@@ -952,7 +952,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     tags: [ModelProviderTags.RequiresApiKey],
     params: {
       apiKey: "",
-      apiBase: "",
+      apiBase: "https://api.asksage.ai/server/",
     },
     collectInputFor: [
       {
