@@ -223,6 +223,70 @@ describe("ConfigEnhancer", () => {
     });
   });
 
+  it("should handle URLs in --mcp flag as streamable-http servers", async () => {
+    // Set up existing MCPs in config
+    mockConfig.mcpServers = [{ name: "Existing-MCP", command: "existing-mcp" }];
+
+    const options: BaseCommandOptions = {
+      mcp: ["https://docs.continue.dev/mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // URL should be converted to streamable-http MCP configuration
+    expect(config.mcpServers).toHaveLength(2);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "docs.continue.dev",
+      type: "streamable-http",
+      url: "https://docs.continue.dev/mcp",
+    });
+    expect(config.mcpServers?.[1]).toEqual({
+      name: "Existing-MCP",
+      command: "existing-mcp",
+    });
+  });
+
+  it("should handle mix of URLs and hub slugs in --mcp flag", async () => {
+    // Mock loadPackageFromHub to return test MCP for hub slug
+    const { loadPackageFromHub } = await import("./hubLoader.js");
+    (loadPackageFromHub as any).mockResolvedValueOnce({
+      name: "Hub-MCP",
+      command: "hub-mcp",
+    });
+
+    const options: BaseCommandOptions = {
+      mcp: ["https://example.com/mcp", "test/hub-mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    expect(config.mcpServers).toHaveLength(2);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "example.com",
+      type: "streamable-http",
+      url: "https://example.com/mcp",
+    });
+    expect(config.mcpServers?.[1]).toEqual({
+      name: "Hub-MCP",
+      command: "hub-mcp",
+    });
+  });
+
+  it("should handle http:// URLs in --mcp flag", async () => {
+    const options: BaseCommandOptions = {
+      mcp: ["http://localhost:8080/mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    expect(config.mcpServers).toHaveLength(1);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "localhost",
+      type: "streamable-http",
+      url: "http://localhost:8080/mcp",
+    });
+  });
+
   it("should handle workflow integration gracefully when no workflow", async () => {
     // The mocked service container returns null workflow state
     const options: BaseCommandOptions = {

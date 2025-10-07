@@ -171,7 +171,28 @@ export class ConfigEnhancer {
     config: AssistantUnrolled,
     mcps: string[],
   ): Promise<AssistantUnrolled> {
-    const processedMcps = await loadPackagesFromHub(mcps, mcpProcessor);
+    const processedMcps: any[] = [];
+
+    // Process each MCP spec - check if it's a URL or hub slug
+    for (const mcpSpec of mcps) {
+      try {
+        // Check if it's a URL (starts with http:// or https://)
+        if (mcpSpec.startsWith("http://") || mcpSpec.startsWith("https://")) {
+          // Create a streamable-http MCP configuration
+          processedMcps.push({
+            name: new URL(mcpSpec).hostname,
+            type: "streamable-http",
+            url: mcpSpec,
+          });
+        } else {
+          // Otherwise, treat it as a hub slug
+          const hubMcp = await loadPackageFromHub(mcpSpec, mcpProcessor);
+          processedMcps.push(hubMcp);
+        }
+      } catch (error: any) {
+        logger.warn(`Failed to load MCP "${mcpSpec}": ${error.message}`);
+      }
+    }
 
     // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
