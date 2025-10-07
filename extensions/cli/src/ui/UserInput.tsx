@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
@@ -130,7 +130,7 @@ const UserInput: React.FC<UserInputProps> = ({
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
-  const [lastEscapePress, setLastEscapePress] = useState<number>(0);
+  const lastEscapePressRef = useRef<number>(0);
 
   // Stable callback for TextBuffer state changes to prevent race conditions
   const onStateChange = useCallback(() => {
@@ -636,16 +636,16 @@ const UserInput: React.FC<UserInputProps> = ({
       !showFileSearch &&
       !showBashMode &&
       onShowEditSelector &&
-      now - lastEscapePress < 500
+      now - lastEscapePressRef.current < 500
     ) {
       // Double escape detected
       onShowEditSelector();
-      setLastEscapePress(0); // Reset to prevent triple-escape
+      lastEscapePressRef.current = 0; // Reset to prevent triple-escape
       return true;
     }
 
     // Track single escape press
-    setLastEscapePress(now);
+    lastEscapePressRef.current = now;
 
     return false;
   };

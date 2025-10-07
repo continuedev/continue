@@ -117,16 +117,22 @@ describe("TUIChat - Message Edit Feature", () => {
       const { lastFrame, stdin } = renderInMode(mode);
 
       // Perform various operations
-      stdin.write("\u001b\u001b"); // Open edit
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      stdin.write("\u001b");
+      stdin.write("\u001b"); // Open edit with separate Esc presses
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      stdin.write("k"); // Navigate
+      // Verify selector opened
+      let frame = lastFrame();
+      expect(frame).toBeDefined();
+      expect(frame).toContain("No user messages to edit");
+
+      stdin.write("k"); // Navigate (no-op with 0 messages)
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       stdin.write("\u001b"); // Close
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const frame = lastFrame();
+      frame = lastFrame();
 
       // UI should remain stable and edit selector should be closed
       expect(frame).toBeDefined();
