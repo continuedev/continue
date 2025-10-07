@@ -46,29 +46,8 @@ export function EditMessageSelector({
   }, [selectedIndex, isEditing, userMessages, textBuffer]);
 
   useInput((input, key) => {
-    // If not editing, handle navigation
-    if (!isEditing) {
-      if (key.upArrow || input === "k") {
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : userMessages.length - 1,
-        );
-      } else if (key.downArrow || input === "j") {
-        setSelectedIndex((prev) =>
-          prev < userMessages.length - 1 ? prev + 1 : 0,
-        );
-      } else if (key.return) {
-        // Start editing the selected message - set cursor to end
-        const content =
-          typeof userMessages[selectedIndex]?.item.message.content === "string"
-            ? userMessages[selectedIndex].item.message.content
-            : "";
-        textBuffer.setCursor(content.length);
-        setCursorPosition(content.length);
-        setIsEditing(true);
-      } else if (key.escape || (key.ctrl && input === "d")) {
-        onExit();
-      }
-    } else {
+    // If editing, handle text input
+    if (isEditing) {
       // In edit mode, handle text input
       if (key.escape) {
         setIsEditing(false);
@@ -96,6 +75,28 @@ export function EditMessageSelector({
         textBuffer.handleInput(input, key);
         setEditText(textBuffer.text);
         setCursorPosition(textBuffer.cursor);
+      }
+    } else {
+      // If not editing, handle navigation
+      if (key.upArrow || input === "k") {
+        setSelectedIndex((prev) =>
+          prev > 0 ? prev - 1 : userMessages.length - 1,
+        );
+      } else if (key.downArrow || input === "j") {
+        setSelectedIndex((prev) =>
+          prev < userMessages.length - 1 ? prev + 1 : 0,
+        );
+      } else if (key.return) {
+        // Start editing the selected message - set cursor to end
+        const content =
+          typeof userMessages[selectedIndex]?.item.message.content === "string"
+            ? userMessages[selectedIndex].item.message.content
+            : "";
+        textBuffer.setCursor(content.length);
+        setCursorPosition(content.length);
+        setIsEditing(true);
+      } else if (key.escape || (key.ctrl && input === "d")) {
+        onExit();
       }
     }
   });
@@ -164,12 +165,6 @@ export function EditMessageSelector({
       </Box>
     );
   };
-
-  const selectedMessage = userMessages[selectedIndex];
-  const messageContent =
-    typeof selectedMessage?.item.message.content === "string"
-      ? selectedMessage.item.message.content
-      : "";
 
   return (
     <Box {...defaultBoxStyles("yellow")}>
