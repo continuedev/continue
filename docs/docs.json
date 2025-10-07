@@ -26,7 +26,12 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quick-start",
+              "cli/guides"
+            ]
           },
           {
             "group": "Features",
@@ -328,7 +333,7 @@
   "navbar": {
     "links": [
       {
-        "label": "Explore",
+        "label": "🚀 Get Started",
         "href": "https://hub.continue.dev/"
       }
     ],
