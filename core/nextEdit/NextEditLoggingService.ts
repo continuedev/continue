@@ -188,44 +188,15 @@ export class NextEditLoggingService {
       this._logRejectionTimeouts.delete(completionId);
     }
 
-    // If we have the full outcome, log it as aborted.
+    // Only log if the completion was displayed to the user.
+    // This aligns with Autocomplete behavior and prevents logging
+    // of cancelled requests that never reached the user.
     if (this._outcomes.has(completionId)) {
       const outcome = this._outcomes.get(completionId)!;
-      outcome.accepted = false;
+      // outcome.accepted = false;
       outcome.aborted = true;
       this.logNextEditOutcome(outcome);
       this._outcomes.delete(completionId);
-    } else {
-      // Log minimal abort event for requests that never got displayed.
-      const pendingData = this._pendingCompletions.get(completionId);
-
-      const minimalAbortOutcome: Partial<NextEditOutcome> = {
-        completionId,
-        accepted: false,
-        aborted: true,
-        timestamp: Date.now(),
-        uniqueId: completionId,
-        elapsed: pendingData ? Date.now() - pendingData.startTime : 0,
-        modelName: pendingData?.modelName || "unknown",
-        modelProvider: pendingData?.modelProvider || "unknown",
-        fileUri: pendingData?.filepath || "unknown",
-
-        // Empty/default values for fields we don't have.
-        completion: "",
-        prompt: "",
-        userEdits: "",
-        userExcerpts: "",
-        originalEditableRange: "",
-        workspaceDirUri: "",
-        cursorPosition: { line: -1, character: -1 },
-        finalCursorPosition: { line: -1, character: -1 },
-        editableRegionStartLine: -1,
-        editableRegionEndLine: -1,
-        diffLines: [],
-        completionOptions: {},
-      };
-
-      this.logNextEditOutcome(minimalAbortOutcome as NextEditOutcome);
     }
 
     // Clean up.

@@ -140,6 +140,7 @@ export const processNextEditData = async ({
       filePath: filePath,
       diffType: DiffFormatType.Unified,
       contextLines: 25, // storing many context lines for downstream trimming
+      workspaceDir: workspaceDir,
     }),
     fileUri: filePath,
     workspaceUri: workspaceDir,
