@@ -57,7 +57,13 @@ export function EditMessageSelector({
           prev < userMessages.length - 1 ? prev + 1 : 0,
         );
       } else if (key.return) {
-        // Start editing the selected message
+        // Start editing the selected message - set cursor to end
+        const content =
+          typeof userMessages[selectedIndex]?.item.message.content === "string"
+            ? userMessages[selectedIndex].item.message.content
+            : "";
+        textBuffer.setCursor(content.length);
+        setCursorPosition(content.length);
         setIsEditing(true);
       } else if (key.escape || (key.ctrl && input === "d")) {
         onExit();
