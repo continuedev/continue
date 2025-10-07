@@ -1,11 +1,13 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { UpdateServiceState } from "src/services/types.js";
 
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
+import { EditMessageSelector } from "../EditMessageSelector.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
@@ -44,6 +46,9 @@ interface ScreenContentProps {
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
   diffContent?: string;
+  chatHistory?: ChatHistoryItem[];
+  handleEditMessage?: (messageIndex: number, newContent: string) => void;
+  onShowEditSelector?: () => void;
 }
 
 function hideScreenContent(state?: UpdateServiceState) {
@@ -77,6 +82,9 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isRemoteMode,
   onImageInClipboardChange,
   diffContent,
+  chatHistory = [],
+  handleEditMessage,
+  onShowEditSelector,
 }) => {
   if (hideScreenContent(services.update)) {
     return null;
@@ -162,6 +170,22 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     );
   }
 
+  // Edit message selector
+  if (isScreenActive("edit")) {
+    return (
+      <EditMessageSelector
+        chatHistory={chatHistory}
+        onEdit={(messageIndex, newContent) => {
+          if (handleEditMessage) {
+            handleEditMessage(messageIndex, newContent);
+          }
+          closeCurrentScreen();
+        }}
+        onExit={closeCurrentScreen}
+      />
+    );
+  }
+
   // Chat screen with input area
   if (isScreenActive("chat")) {
     if (activePermissionRequest) {
@@ -189,6 +213,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         disabled={isInputDisabled}
         isRemoteMode={isRemoteMode}
         onImageInClipboardChange={onImageInClipboardChange}
+        onShowEditSelector={onShowEditSelector}
       />
     );
   }
