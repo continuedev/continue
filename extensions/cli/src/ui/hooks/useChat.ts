@@ -58,6 +58,7 @@ export function useChat({
   onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
+  onShowEditSelector,
   onLoginPrompt: _onLoginPrompt,
   onClear,
   isRemoteMode = false,
@@ -721,6 +722,34 @@ export function useChat({
     setQueuedMessages([]);
   };
 
+  const handleEditMessage = async (
+    messageIndex: number,
+    newContent: string,
+  ) => {
+    // Close the edit selector if callback is available
+    if (onShowEditSelector) {
+      // The screen will be closed automatically by the navigation system
+    }
+
+    // Rewind chat history to the selected message index
+    const rewindedHistory = chatHistory.slice(0, messageIndex);
+
+    // Update the chat history with the rewound version
+    setChatHistory(rewindedHistory);
+
+    // Clear any queued messages
+    setQueuedMessages([]);
+
+    // Clear attached files
+    setAttachedFiles([]);
+
+    // Update the session with the rewound history
+    updateSessionHistory(rewindedHistory);
+
+    // Resubmit the edited message
+    await processMessage(newContent, undefined, false);
+  };
+
   const handleToolPermissionResponse = async (
     requestId: string,
     approved: boolean,
@@ -803,6 +832,7 @@ export function useChat({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   };
 }

@@ -109,6 +109,7 @@ interface UserInputProps {
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  onShowEditSelector?: () => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -125,9 +126,11 @@ const UserInput: React.FC<UserInputProps> = ({
   hideNormalUI = false,
   isRemoteMode = false,
   onImageInClipboardChange,
+  onShowEditSelector,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+  const [lastEscapePress, setLastEscapePress] = useState<number>(0);
 
   // Stable callback for TextBuffer state changes to prevent race conditions
   const onStateChange = useCallback(() => {
@@ -624,6 +627,25 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowFileSearch(false);
       return true;
     }
+
+    // Handle double Esc to open edit message selector
+    const now = Date.now();
+    if (
+      inputMode &&
+      !showSlashCommands &&
+      !showFileSearch &&
+      !showBashMode &&
+      onShowEditSelector &&
+      now - lastEscapePress < 500
+    ) {
+      // Double escape detected
+      onShowEditSelector();
+      setLastEscapePress(0); // Reset to prevent triple-escape
+      return true;
+    }
+
+    // Track single escape press
+    setLastEscapePress(now);
 
     return false;
   };

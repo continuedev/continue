@@ -266,6 +266,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   } = useChat({
     assistant: services.config?.config || undefined,
@@ -281,6 +282,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
+    onShowEditSelector: () => navigateTo("edit"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     onClear: handleClear,
@@ -420,6 +422,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isRemoteMode={isRemoteMode}
           onImageInClipboardChange={setHasImageInClipboard}
           diffContent={diffContent}
+          chatHistory={chatHistory}
+          handleEditMessage={handleEditMessage}
+          onShowEditSelector={() => navigateTo("edit")}
         />
 
         {/* Resource debug bar - only in verbose mode */}
