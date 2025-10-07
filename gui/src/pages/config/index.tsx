@@ -94,7 +94,7 @@ function ConfigPage() {
           <div className="space-y-6 px-4 py-4">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>
-          <CliInstallBanner />
+          <CliInstallBanner permanentDismissal={true} />
         </div>
       </div>
     </div>
