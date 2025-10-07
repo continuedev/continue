@@ -191,7 +191,6 @@ export class NextEditLoggingService {
     // If we have the full outcome, log it as aborted.
     if (this._outcomes.has(completionId)) {
       const outcome = this._outcomes.get(completionId)!;
-      outcome.accepted = false;
       outcome.aborted = true;
       this.logNextEditOutcome(outcome);
       this._outcomes.delete(completionId);
