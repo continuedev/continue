@@ -63,15 +63,19 @@ describe("TUIChat - Message Edit Feature", () => {
     stdin.write("\u001b");
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    // Verify edit selector is open
+    let frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).toContain("No user messages to edit");
+
     // Press Esc to exit
     stdin.write("\u001b");
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const frame = lastFrame();
-
-    // Should return to normal chat view
+    // Verify edit selector is closed
+    frame = lastFrame();
     expect(frame).toBeDefined();
-    expect(frame).toContain("Ask anything");
+    expect(frame).not.toContain("No user messages to edit");
   });
 
   testBothModes("should handle edit flow without crashing", async (mode) => {
