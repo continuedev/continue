@@ -478,6 +478,7 @@ interface ToolCallState {
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
+  processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;
 }
