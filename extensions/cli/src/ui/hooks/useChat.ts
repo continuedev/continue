@@ -58,7 +58,7 @@ export function useChat({
   onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
-  onShowEditSelector,
+  onShowEditSelector: _onShowEditSelector,
   onLoginPrompt: _onLoginPrompt,
   onClear,
   onRefreshStatic,
