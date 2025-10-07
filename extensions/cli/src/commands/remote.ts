@@ -1,6 +1,7 @@
 import chalk from "chalk";
 
 import { env } from "../env.js";
+import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
 import {
@@ -8,6 +9,7 @@ import {
   AuthenticationRequiredError,
   post,
 } from "../util/apiClient.js";
+import { generateBranchNameWithSuffix } from "../util/branchNameGenerator.js";
 import { gracefulExit } from "../util/exit.js";
 import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
@@ -119,7 +121,7 @@ async function createAndConnectRemoteEnvironment(
   prompt: string | undefined,
   options: RemoteCommandOptions,
 ) {
-  const requestBody = buildAgentRequestBody(options, prompt);
+  const requestBody = await buildAgentRequestBody(options, prompt);
 
   let result: AgentCreationResponse;
   try {
@@ -161,10 +163,33 @@ async function createAndConnectRemoteEnvironment(
   await launchRemoteTUI(result.url, prompt);
 }
 
-function buildAgentRequestBody(
+async function buildAgentRequestBody(
   options: RemoteCommandOptions,
   prompt: string | undefined,
 ) {
+  // Generate branch name using LLM if not explicitly provided
+  let branchName = options.branch;
+  if (!branchName && prompt) {
+    try {
+      const modelService = services.model;
+      if (modelService?.isReady()) {
+        const { llmApi } = modelService.getState();
+        if (llmApi) {
+          logger.debug("Generating branch name with LLM");
+          branchName = await generateBranchNameWithSuffix(llmApi, prompt);
+          logger.debug("Generated branch name", { branchName });
+        }
+      }
+    } catch (error) {
+      logger.error(
+        "Failed to generate branch name with LLM, using fallback",
+        error,
+      );
+      // Fallback to timestamp-based name
+      branchName = undefined;
+    }
+  }
+
   const body: Record<string, unknown> = {
     repoUrl: options.repo ?? getRepoUrl(),
     name: `devbox-${Date.now()}`,
@@ -177,8 +202,8 @@ function buildAgentRequestBody(
     body.idempotencyKey = options.idempotencyKey;
   }
 
-  if (options.branch) {
-    body.branchName = options.branch;
+  if (branchName) {
+    body.branchName = branchName;
   }
 
   return body;
