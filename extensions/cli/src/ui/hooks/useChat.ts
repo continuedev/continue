@@ -61,6 +61,7 @@ export function useChat({
   onShowEditSelector,
   onLoginPrompt: _onLoginPrompt,
   onClear,
+  onRefreshStatic,
   isRemoteMode = false,
   remoteUrl,
   onShowDiff,
@@ -722,17 +723,22 @@ export function useChat({
     setQueuedMessages([]);
   };
 
-  const handleEditMessage = async (
-    messageIndex: number,
-    newContent: string,
+  const handleSelectMessageForEdit = (
+    originalIndex: number,
+    onComplete?: () => void,
   ) => {
-    // Close the edit selector if callback is available
-    if (onShowEditSelector) {
-      // The screen will be closed automatically by the navigation system
-    }
+    logger.debug("handleSelectMessageForEdit called", {
+      originalIndex,
+      currentHistoryLength: chatHistory.length,
+    });
 
-    // Rewind chat history to the selected message index
-    const rewindedHistory = chatHistory.slice(0, messageIndex);
+    // Rewind chat history to the selected message index (up to and including the message)
+    const rewindedHistory = chatHistory.slice(0, originalIndex + 1);
+
+    logger.debug("Rewinding history", {
+      from: chatHistory.length,
+      to: rewindedHistory.length,
+    });
 
     // Update the chat history with the rewound version
     setChatHistory(rewindedHistory);
@@ -744,6 +750,31 @@ export function useChat({
     setAttachedFiles([]);
 
     // Update the session with the rewound history
+    updateSessionHistory(rewindedHistory);
+
+    // Force refresh of StaticChatContent to show truncated history
+    if (onRefreshStatic) {
+      onRefreshStatic();
+    }
+
+    // Call onComplete callback if provided
+    if (onComplete) {
+      onComplete();
+    }
+  };
+
+  const handleEditMessage = async (
+    messageIndex: number,
+    newContent: string,
+  ) => {
+    // At this point, history is already rewound to the selected message
+    // We need to rewind one more step to exclude the original message, then resubmit
+    const rewindedHistory = chatHistory.slice(0, messageIndex);
+
+    // Update the chat history to exclude the message being edited
+    setChatHistory(rewindedHistory);
+
+    // Update the session
     updateSessionHistory(rewindedHistory);
 
     // Resubmit the edited message
@@ -832,6 +863,7 @@ export function useChat({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleSelectMessageForEdit,
     handleEditMessage,
     handleToolPermissionResponse,
   };
