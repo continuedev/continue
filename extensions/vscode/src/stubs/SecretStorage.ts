@@ -59,31 +59,50 @@ export class SecretStorage {
   }
 
   async decrypt(filePath: string): Promise<string> {
-    const key = await this.getOrCreateEncryptionKey();
-    const data = fs.readFileSync(filePath);
+    try {
+      const key = await this.getOrCreateEncryptionKey();
+      const data = fs.readFileSync(filePath);
 
-    const salt = data.subarray(0, this.saltLength);
-    const iv = data.subarray(this.saltLength, this.saltLength + this.ivLength);
-    const tag = data.subarray(
-      this.saltLength + this.ivLength,
-      this.saltLength + this.ivLength + this.tagLength,
-    );
-    const encrypted = data.subarray(
-      this.saltLength + this.ivLength + this.tagLength,
-    );
+      // Validate minimum data size to detect corruption early
+      const minSize = this.saltLength + this.ivLength + this.tagLength;
+      if (data.length < minSize) {
+        throw new Error(
+          `Corrupted cache file: insufficient data (${data.length} bytes, expected at least ${minSize})`,
+        );
+      }
 
-    const decipher: crypto.DecipherGCM = crypto.createDecipheriv(
-      this.algorithm,
-      key,
-      iv,
-    ) as crypto.DecipherGCM;
-    decipher.setAuthTag(tag);
+      const salt = data.subarray(0, this.saltLength);
+      const iv = data.subarray(
+        this.saltLength,
+        this.saltLength + this.ivLength,
+      );
+      const tag = data.subarray(
+        this.saltLength + this.ivLength,
+        this.saltLength + this.ivLength + this.tagLength,
+      );
+      const encrypted = data.subarray(
+        this.saltLength + this.ivLength + this.tagLength,
+      );
 
-    const decrypted = Buffer.concat([
-      decipher.update(encrypted),
-      decipher.final(),
-    ]);
-    return decrypted.toString("utf8");
+      const decipher: crypto.DecipherGCM = crypto.createDecipheriv(
+        this.algorithm,
+        key,
+        iv,
+      ) as crypto.DecipherGCM;
+      decipher.setAuthTag(tag);
+
+      const decrypted = Buffer.concat([
+        decipher.update(encrypted),
+        decipher.final(),
+      ]);
+      return decrypted.toString("utf8");
+    } catch (error: any) {
+      // Log the error with context for debugging
+      console.error(`Failed to decrypt cache file ${filePath}:`, error.message);
+      throw new Error(
+        `Cache decryption failed: ${error.message}. The cache file may be corrupted.`,
+      );
+    }
   }
 
   private keyToFilepath(key: string): string {
@@ -100,8 +119,30 @@ export class SecretStorage {
   async get(key: string): Promise<string | undefined> {
     const filePath = this.keyToFilepath(key);
     if (fs.existsSync(filePath)) {
-      const value = await this.decrypt(filePath);
-      return value;
+      try {
+        const value = await this.decrypt(filePath);
+        return value;
+      } catch (error: any) {
+        // Corrupted cache file - delete it and return undefined
+        // This allows the auth flow to continue with a fresh start
+        console.error(
+          `Corrupted cache file detected for key "${key}". Deleting file and returning undefined.`,
+          error.message,
+        );
+
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`Successfully deleted corrupted cache file: ${filePath}`);
+        } catch (deleteError: any) {
+          console.error(
+            `Failed to delete corrupted cache file ${filePath}:`,
+            deleteError.message,
+          );
+        }
+
+        // Return undefined to signal missing data (same as if file didn't exist)
+        return undefined;
+      }
     }
     return undefined;
   }
