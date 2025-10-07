@@ -416,6 +416,7 @@ export class NextEditProvider {
         filePath: helper.filepath,
         diffType: DiffFormatType.Unified,
         contextLines: 3,
+        workspaceDir: workspaceDirs[0], // Use first workspace directory
       }),
     };
 

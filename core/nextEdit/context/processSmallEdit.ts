@@ -14,16 +14,6 @@ export const processSmallEdit = async (
   getDefsFromLspFunction: GetLspDefinitionsFunction,
   ide: IDE,
 ) => {
-  NextEditProvider.getInstance().addDiffToContext(
-    createDiff({
-      beforeContent: beforeAfterdiff.beforeContent,
-      afterContent: beforeAfterdiff.afterContent,
-      filePath: beforeAfterdiff.filePath,
-      diffType: DiffFormatType.Unified,
-      contextLines: 5, // NOTE: This can change depending on experiments!
-    }),
-  );
-
   // Get the current context data from the most recent message
   const currentData = (EditAggregator.getInstance() as any)
     .latestContextData || {
@@ -32,6 +22,17 @@ export const processSmallEdit = async (
     recentlyEditedRanges: [],
     recentlyVisitedRanges: [],
   };
+
+  NextEditProvider.getInstance().addDiffToContext(
+    createDiff({
+      beforeContent: beforeAfterdiff.beforeContent,
+      afterContent: beforeAfterdiff.afterContent,
+      filePath: beforeAfterdiff.filePath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 5, // NOTE: This can change depending on experiments!
+      workspaceDir: currentData.workspaceDir,
+    }),
+  );
 
   void processNextEditData({
     filePath: beforeAfterdiff.filePath,

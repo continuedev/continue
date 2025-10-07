@@ -537,12 +537,19 @@ export class ConfigHandler {
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
-    void Telemetry.capture("config_reload", {
+
+    const profileDescription = this.currentProfile.profileDescription;
+    const telemetryData: Record<string, any> = {
       duration,
       reason,
       totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
-    });
+      profileType: profileDescription.profileType,
+      isPersonalOrg: this.currentOrg?.id === this.PERSONAL_ORG_DESC.id,
+      errorCount: errors.length,
+    };
+
+    void Telemetry.capture("config_reload", telemetryData);
 
     return {
       config,
