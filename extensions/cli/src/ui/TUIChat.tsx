@@ -227,6 +227,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleSelectMessageForEdit,
     handleEditMessage,
     handleToolPermissionResponse,
   } = useChat({
@@ -247,6 +248,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     onClear: handleClear,
+    onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
@@ -380,6 +382,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onImageInClipboardChange={setHasImageInClipboard}
           diffContent={diffContent}
           chatHistory={chatHistory}
+          handleSelectMessageForEdit={handleSelectMessageForEdit}
           handleEditMessage={handleEditMessage}
           onShowEditSelector={() => navigateTo("edit")}
         />

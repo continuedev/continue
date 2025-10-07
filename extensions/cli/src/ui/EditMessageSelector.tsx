@@ -9,12 +9,14 @@ import { defaultBoxStyles } from "./styles.js";
 interface EditMessageSelectorProps {
   chatHistory: ChatHistoryItem[];
   onEdit: (messageIndex: number, newContent: string) => void;
+  onMessageSelected?: (originalIndex: number) => void;
   onExit: () => void;
 }
 
 export function EditMessageSelector({
   chatHistory,
   onEdit,
+  onMessageSelected,
   onExit,
 }: EditMessageSelectorProps) {
   // Filter to only show user messages
@@ -24,7 +26,9 @@ export function EditMessageSelector({
       .filter(({ item }) => item.message.role === "user");
   }, [chatHistory]);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(
+    Math.max(0, userMessages.length - 1),
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [textBuffer] = useState(() => new TextBuffer());
   const [editText, setEditText] = useState("");
@@ -55,6 +59,17 @@ export function EditMessageSelector({
           prev < userMessages.length - 1 ? prev + 1 : 0,
         );
       } else if (key.return) {
+        // Notify parent that a message was selected for editing
+        if (onMessageSelected && userMessages[selectedIndex]) {
+          const originalIndex = userMessages[selectedIndex].originalIndex;
+          console.log("EditMessageSelector: User pressed Enter", {
+            selectedIndex,
+            originalIndex,
+            totalUserMessages: userMessages.length,
+            totalChatHistory: chatHistory.length,
+          });
+          onMessageSelected(originalIndex);
+        }
         setIsEditing(true);
       } else if (key.escape || (key.ctrl && input === "d")) {
         onExit();

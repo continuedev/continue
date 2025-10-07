@@ -47,6 +47,7 @@ interface ScreenContentProps {
   onImageInClipboardChange?: (hasImage: boolean) => void;
   diffContent?: string;
   chatHistory?: ChatHistoryItem[];
+  handleSelectMessageForEdit?: (originalIndex: number) => void;
   handleEditMessage?: (messageIndex: number, newContent: string) => void;
   onShowEditSelector?: () => void;
 }
@@ -83,6 +84,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   onImageInClipboardChange,
   diffContent,
   chatHistory = [],
+  handleSelectMessageForEdit,
   handleEditMessage,
   onShowEditSelector,
 }) => {
@@ -175,6 +177,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return (
       <EditMessageSelector
         chatHistory={chatHistory}
+        onMessageSelected={handleSelectMessageForEdit}
         onEdit={(messageIndex, newContent) => {
           if (handleEditMessage) {
             handleEditMessage(messageIndex, newContent);
