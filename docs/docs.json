@@ -26,7 +26,15 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quick-start",
+              {
+                "page": "https://docs.continue.dev/guides/overview#mcp-integration-cookbooks",
+                "name": "Guides"
+              }
+            ]
           },
           {
             "group": "Features",
