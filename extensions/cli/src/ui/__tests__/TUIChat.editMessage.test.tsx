@@ -15,6 +15,11 @@ describe("TUIChat - Message Edit Feature", () => {
   testBothModes("double Esc should open edit selector", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
+    // Verify selector is not open initially
+    let frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).not.toContain("No user messages to edit");
+
     // Press Esc twice quickly (within 500ms)
     stdin.write("\u001b"); // First Esc
     stdin.write("\u001b"); // Second Esc
@@ -22,16 +27,10 @@ describe("TUIChat - Message Edit Feature", () => {
     // Wait for UI to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const frame = lastFrame();
-
-    // Should show edit message selector
-    // The exact text depends on implementation, but should indicate edit mode
-    if (mode === "local") {
-      // In local mode, edit selector should be available
-      expect(frame).toBeDefined();
-      // Note: The actual UI content will depend on chat history
-      // This test verifies the component doesn't crash
-    }
+    // Verify selector is now open
+    frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).toContain("No user messages to edit");
   });
 
   testBothModes("edit selector should handle navigation", async (mode) => {
@@ -42,6 +41,11 @@ describe("TUIChat - Message Edit Feature", () => {
     stdin.write("\u001b");
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    // Verify selector is open
+    let frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).toContain("No user messages to edit");
+
     // Try navigation keys
     stdin.write("j"); // Down
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -49,10 +53,10 @@ describe("TUIChat - Message Edit Feature", () => {
     stdin.write("k"); // Up
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const frame = lastFrame();
-
-    // Should handle navigation without crashing
+    // Verify selector is still open after navigation
+    frame = lastFrame();
     expect(frame).toBeDefined();
+    expect(frame).toContain("No user messages to edit");
   });
 
   testBothModes("edit selector should exit with Esc", async (mode) => {
@@ -124,16 +128,10 @@ describe("TUIChat - Message Edit Feature", () => {
 
       const frame = lastFrame();
 
-      // UI should remain stable
+      // UI should remain stable and edit selector should be closed
       expect(frame).toBeDefined();
       expect(frame.length).toBeGreaterThan(0);
-
-      // Should still show chat interface
-      if (mode === "local") {
-        expect(frame).toContain("Continue CLI");
-      } else {
-        expect(frame).toContain("Remote Mode");
-      }
+      expect(frame).not.toContain("No user messages to edit");
     },
   );
 });
@@ -202,14 +200,18 @@ describe("TUIChat - Edit Feature Edge Cases", () => {
     stdin.write("\u001b");
     await new Promise((resolve) => setTimeout(resolve, 600)); // Wait longer than 500ms threshold
 
+    // Verify selector did not open
+    let frame = lastFrame();
+    expect(frame).toBeDefined();
+    expect(frame).not.toContain("No user messages to edit");
+
     stdin.write("\u001b"); // Another single Esc after timeout
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const frame = lastFrame();
-
-    // Should not open edit selector (requires double Esc within 500ms)
-    // Instead should just remain in normal mode
+    // Verify selector still did not open
+    frame = lastFrame();
     expect(frame).toBeDefined();
+    expect(frame).not.toContain("No user messages to edit");
   });
 
   testBothModes(
