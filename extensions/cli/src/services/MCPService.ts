@@ -394,6 +394,8 @@ export class MCPService
             args: ["-y", "mcp-remote", serverConfig.url],
           });
           await client.connect(transport, {});
+        } else {
+          throw error;
         }
       }
 
