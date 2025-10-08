@@ -84,28 +84,23 @@ describe("IndexedPagesTooltip", () => {
 
   it("opens URL when page is clicked", () => {
     const { mockIdeMessenger } = renderComponent();
-
+    const spy = vi.spyOn(mockIdeMessenger, "post");
     const pageLink = screen.getByText("/page1");
     fireEvent.click(pageLink);
 
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith(
-      "openUrl",
-      "https://example.com/page1",
-    );
+    expect(spy).toHaveBeenCalledWith("openUrl", "https://example.com/page1");
   });
 
   it("opens each page URL correctly when clicked", () => {
     const { mockIdeMessenger } = renderComponent();
+    const spy = vi.spyOn(mockIdeMessenger, "post");
 
     // Click on different pages
     fireEvent.click(screen.getByText("/page2"));
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith(
-      "openUrl",
-      "https://example.com/page2",
-    );
+    expect(spy).toHaveBeenCalledWith("openUrl", "https://example.com/page2");
 
     fireEvent.click(screen.getByText("/sub/page3"));
-    expect(mockIdeMessenger.post).toHaveBeenCalledWith(
+    expect(spy).toHaveBeenCalledWith(
       "openUrl",
       "https://example.com/sub/page3",
     );

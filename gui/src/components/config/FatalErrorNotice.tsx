@@ -1,5 +1,5 @@
 import { useContext, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
@@ -10,7 +10,7 @@ export const FatalErrorIndicator = () => {
   const { refreshProfiles } = useAuth();
   const configError = useAppSelector((store) => store.config.configError);
   const ideMessenger = useContext(IdeMessengerContext);
-
+  const location = useLocation();
   const navigate = useNavigate();
 
   const hasFatalErrors = useMemo(() => {
@@ -18,10 +18,11 @@ export const FatalErrorIndicator = () => {
   }, [configError]);
 
   const configLoading = useAppSelector((state) => state.config.loading);
-
   const showConfigPage = () => {
     navigate(CONFIG_ROUTES.AGENTS);
   };
+  // const onAgentsPage = location.
+  const currentPath = `${location.pathname}${location.search}`;
 
   const { selectedProfile } = useAuth();
 
@@ -64,9 +65,11 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-        <div onClick={showConfigPage} className="cursor-pointer underline">
-          View
-        </div>
+        {currentPath !== CONFIG_ROUTES.AGENTS && (
+          <div onClick={showConfigPage} className="cursor-pointer underline">
+            View
+          </div>
+        )}
       </div>
     </Alert>
   );

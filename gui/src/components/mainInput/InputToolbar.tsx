@@ -56,7 +56,6 @@ function InputToolbar(props: InputToolbarProps) {
   const hasReasoningEnabled = useAppSelector(
     (store) => store.session.hasReasoningEnabled,
   );
-
   const isEnterDisabled =
     props.disabled || (isInEdit && codeToEdit.length === 0);
 

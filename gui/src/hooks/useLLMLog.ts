@@ -10,6 +10,7 @@ import {
   LLMInteractionSuccess,
 } from "core";
 import { useEffect, useReducer } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 declare const vscode: any;
 
@@ -231,7 +232,7 @@ export default function useLLMLog() {
     // messages from the previous generation. In particular, this
     // avoids problems when React.StrictMode runs this effect
     // twice - we don't want to process two "init" messages.
-    const uuid = crypto.randomUUID();
+    const uuid = uuidv4();
     const onMessage = (event: MessageEvent<ToConsoleView>) => {
       if (event.data.uuid !== uuid) {
         return;

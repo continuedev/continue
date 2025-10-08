@@ -4,6 +4,7 @@ import { callToolById } from "../../../../redux/thunks/callToolById";
 import { cancelToolCallThunk } from "../../../../redux/thunks/cancelToolCall";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { Button } from "../../../ui";
+import { useMainEditor } from "../../TipTapEditor";
 
 export const generateToolCallButtonTestId = (
   action: "accept" | "reject",
@@ -16,6 +17,7 @@ export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
   const jetbrains = isJetBrains();
   const pendingToolCalls = useAppSelector(selectPendingToolCalls);
+  const editor = useMainEditor();
 
   if (pendingToolCalls.length === 0) {
     return null;
@@ -26,6 +28,10 @@ export function PendingToolCallToolbar() {
   };
 
   const handleReject = (toolCallId: string) => {
+    // put cursor in editor after last rejection
+    if (pendingToolCalls.length === 1) {
+      editor.mainEditor?.commands.focus();
+    }
     void dispatch(cancelToolCallThunk({ toolCallId }));
   };
 

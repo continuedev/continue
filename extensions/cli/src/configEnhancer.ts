@@ -1,43 +1,115 @@
-import { AssistantUnrolled, Rule } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  parseWorkflowTools,
+  Rule,
+} from "@continuedev/config-yaml";
 
 import { BaseCommandOptions } from "./commands/BaseCommandOptions.js";
 import {
+  loadPackageFromHub,
   loadPackagesFromHub,
   mcpProcessor,
   modelProcessor,
   processRule,
 } from "./hubLoader.js";
+import { WorkflowServiceState } from "./services/types.js";
 import { logger } from "./util/logger.js";
 
 /**
  * Enhances a configuration by injecting additional components from CLI flags
  */
 export class ConfigEnhancer {
+  // added this for lint complexity rule
+  private async enhanceConfigFromWorkflow(
+    config: AssistantUnrolled,
+    _options: BaseCommandOptions | undefined,
+    workflowState?: WorkflowServiceState,
+  ) {
+    const enhancedConfig = { ...config };
+    const options = { ..._options };
+
+    if (workflowState?.workflowFile) {
+      const { rules, model, tools, prompt } = workflowState?.workflowFile;
+      if (rules) {
+        options.rule = [
+          ...rules
+            .split(",")
+            .filter(Boolean)
+            .map((r) => r.trim()),
+          ...(options.rule || []),
+        ];
+      }
+
+      if (tools) {
+        try {
+          const parsedTools = parseWorkflowTools(tools);
+          if (parsedTools.mcpServers.length > 0) {
+            options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
+          }
+        } catch (e) {
+          logger.error("Failed to parse workflow tools", e);
+        }
+      }
+
+      // --model takes precedence over workflow model
+      if (model) {
+        try {
+          const workflowModel = await loadPackageFromHub(model, modelProcessor);
+          enhancedConfig.models = [
+            workflowModel,
+            ...(enhancedConfig.models ?? []),
+          ];
+          workflowState?.workflowService?.setWorkflowModelName(
+            workflowModel.name,
+          );
+        } catch (e) {
+          logger.error("Failed to load workflow model", e);
+        }
+      }
+
+      // Workflow prompt is included as a slash command, initial kickoff is handled elsewhere
+      if (prompt) {
+        enhancedConfig.prompts = [
+          {
+            name: `Workflow prompt (${workflowState.workflowFile.name})`,
+            prompt,
+            description: workflowState.workflowFile.description,
+          },
+          ...(enhancedConfig.prompts ?? []),
+        ];
+      }
+    }
+    return { options, enhancedConfig };
+  }
   /**
    * Apply all enhancements to a configuration
    */
   async enhanceConfig(
     config: AssistantUnrolled,
-    options: BaseCommandOptions,
+    _options?: BaseCommandOptions,
+    workflowState?: WorkflowServiceState,
   ): Promise<AssistantUnrolled> {
-    let enhancedConfig = { ...config };
+    const enhanced = await this.enhanceConfigFromWorkflow(
+      config,
+      _options,
+      workflowState,
+    );
+    let { enhancedConfig } = enhanced;
+    const { options } = enhanced;
 
-    // Apply rules
+    // Inject resolved items into config
     if (options.rule && options.rule.length > 0) {
       enhancedConfig = await this.injectRules(enhancedConfig, options.rule);
     }
 
-    // Apply MCPs
     if (options.mcp && options.mcp.length > 0) {
       enhancedConfig = await this.injectMcps(enhancedConfig, options.mcp);
     }
 
-    // Apply models
     if (options.model && options.model.length > 0) {
       enhancedConfig = await this.injectModels(enhancedConfig, options.model);
     }
 
-    // Apply prompts
     if (options.prompt && options.prompt.length > 0) {
       enhancedConfig = await this.injectPrompts(enhancedConfig, options.prompt);
     }
@@ -99,17 +171,35 @@ export class ConfigEnhancer {
     config: AssistantUnrolled,
     mcps: string[],
   ): Promise<AssistantUnrolled> {
-    const processedMcps = await loadPackagesFromHub(mcps, mcpProcessor);
+    const processedMcps: any[] = [];
+
+    // Process each MCP spec - check if it's a URL or hub slug
+    for (const mcpSpec of mcps) {
+      try {
+        // Check if it's a URL (starts with http:// or https://)
+        if (mcpSpec.startsWith("http://") || mcpSpec.startsWith("https://")) {
+          // Create a streamable-http MCP configuration
+          processedMcps.push({
+            name: new URL(mcpSpec).hostname,
+            type: "streamable-http",
+            url: mcpSpec,
+          });
+        } else {
+          // Otherwise, treat it as a hub slug
+          const hubMcp = await loadPackageFromHub(mcpSpec, mcpProcessor);
+          processedMcps.push(hubMcp);
+        }
+      } catch (error: any) {
+        logger.warn(`Failed to load MCP "${mcpSpec}": ${error.message}`);
+      }
+    }
 
     // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
 
     // Prepend processed MCPs to existing mcpServers array for consistency
-    const existingMcpServers = (modifiedConfig as any).mcpServers || [];
-    (modifiedConfig as any).mcpServers = [
-      ...processedMcps,
-      ...existingMcpServers,
-    ];
+    const existingMcpServers = modifiedConfig.mcpServers || [];
+    modifiedConfig.mcpServers = [...processedMcps, ...existingMcpServers];
 
     return modifiedConfig;
   }
@@ -123,26 +213,28 @@ export class ConfigEnhancer {
   ): Promise<AssistantUnrolled> {
     const processedModels = await loadPackagesFromHub(models, modelProcessor);
 
-    // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
 
     // Prepend processed models to existing models array so they become the default
-    const existingModels = (modifiedConfig as any).models || [];
-    (modifiedConfig as any).models = [...processedModels, ...existingModels];
+    const existingModels = modifiedConfig.models || [];
+    modifiedConfig.models = [...processedModels, ...existingModels];
 
     return modifiedConfig;
   }
 
   /**
    * Inject prompts into the configuration
+   * Note: Prompts are processed at runtime via processAndCombinePrompts(),
+   * not injected into the config. This method exists for consistency with
+   * other injection methods but doesn't modify the config.
    */
   private async injectPrompts(
     config: AssistantUnrolled,
     prompts: string[],
   ): Promise<AssistantUnrolled> {
-    // For prompts, we'll need a different approach since they become slash commands
-    // This is a placeholder implementation
-    logger.debug("Prompt injection not yet implemented", { prompts });
+    // Prompts are handled at runtime by processAndCombinePrompts in chat.ts
+    // They don't need to be injected into the configuration
+    logger.debug("Prompts will be processed at runtime", { prompts });
     return config;
   }
 }

@@ -2,6 +2,7 @@ import { ModelRole } from "@continuedev/config-yaml";
 import { ModelDescription } from "core";
 import { useContext, useState } from "react";
 import Shortcut from "../../../components/gui/Shortcut";
+import { useEditModel } from "../../../components/mainInput/Lump/useEditBlock";
 import { Card, Divider, Toggle } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -37,16 +38,7 @@ export function ModelsSection() {
     );
   }
 
-  function handleConfigureModel(model: ModelDescription | null) {
-    if (!model) {
-      return;
-    }
-
-    ideMessenger.post("config/openProfile", {
-      profileId: undefined,
-      element: model,
-    });
-  }
+  const handleConfigureModel = useEditModel();
 
   function handleAddModel() {
     const isLocal = selectedProfile?.profileType === "local";
@@ -91,7 +83,7 @@ export function ModelsSection() {
             <span>
               Used in Chat, Plan, Agent mode (
               <a
-                href="https://docs.continue.dev/features/chat/quick-start hover:text-inherit"
+                href="https://docs.continue.dev/features/chat/quick-start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"

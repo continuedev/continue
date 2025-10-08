@@ -22,8 +22,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   if (!content) {
     return (
       <Box>
-        <Text color="gray">⎿ </Text>
-        <Text color="gray"> No output</Text>
+        <Text color="dim">⎿ </Text>
+        <Text color="dim"> No output</Text>
       </Box>
     );
   }
@@ -37,7 +37,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="gray">⎿ </Text>
+          <Text color="dim">⎿ </Text>
           <Text color="blue">Task List Updated</Text>
         </Box>
         <ChecklistDisplay content={`Task list status:\n${content}`} />
@@ -55,7 +55,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
+            <Text color="dim">⎿ </Text>
             <Text color="green">
               {toolName === "Edit"
                 ? " File edited successfully"
@@ -81,8 +81,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
-            <Text color="gray"> Terminal output:</Text>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color={isStderr ? "red" : "white"}>
@@ -97,8 +97,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
-            <Text color="gray"> Terminal output:</Text>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color={isStderr ? "red" : "white"}>
@@ -106,7 +106,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             </Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color="gray">
+            <Text color="dim">
               ... +{outputLines.length - MAX_BASH_OUTPUT_LINES} lines
             </Text>
           </Box>
@@ -183,8 +183,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   return (
     <Box>
-      <Text color="gray">⎿ </Text>
-      <Text color="gray"> {getSummary()}</Text>
+      <Text color="dim">⎿ </Text>
+      <Text color="dim"> {getSummary()}</Text>
     </Box>
   );
 };

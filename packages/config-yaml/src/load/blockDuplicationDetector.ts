@@ -36,11 +36,7 @@ export class BlockDuplicationDetector {
   }
 
   // Check if the name is duplicated within the same blockType
-  isDuplicated(
-    block: any,
-    blockType: BlockType,
-    injectError?: (errorMsg: string) => void,
-  ): boolean {
+  isDuplicated(block: any, blockType: BlockType): boolean {
     // Not checking any null or undefined object
     if (block === null || block === undefined) {
       return false;
@@ -49,25 +45,16 @@ export class BlockDuplicationDetector {
     switch (blockType) {
       case "rules":
         if (this.isRuleDuplicated(block)) {
-          injectError?.(
-            `Duplicate rules${typeof block === "string" ? "" : ` named ${block.name}`} detected. The duplicate one has been deleted for preventing unexpected behavior.`,
-          );
           return true;
         }
         return false;
       case "context":
         if (this.isContextDuplicated(block)) {
-          injectError?.(
-            `Duplicate ${block.provider} context providers detected. The duplicate one has been deleted for preventing unexpected behavior.`,
-          );
           return true;
         }
         return false;
       default:
         if (this.isCommonBlockDuplicated(block, blockType)) {
-          injectError?.(
-            `Duplicate ${blockType} named ${block.name} detected. The duplicate one has been deleted for preventing unexpected behavior.`,
-          );
           return true;
         }
         return false;

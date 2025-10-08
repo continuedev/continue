@@ -29,7 +29,7 @@ export interface StorageSyncStartOptions {
   accessToken: string;
   intervalMs?: number;
   syncSessionHistory: () => void;
-  getSessionSnapshot: () => unknown;
+  getCompleteStateSnapshot: () => unknown;
   isActive?: () => boolean;
 }
 
@@ -139,6 +139,42 @@ export class StorageSyncService {
     return true;
   }
 
+  async markAgentStatusUnread(): Promise<void> {
+    const storageId = this.options?.storageId;
+    const accessToken = this.options?.accessToken;
+
+    if (!storageId || !accessToken) {
+      return;
+    }
+
+    const url = new URL(
+      `agents/${encodeURIComponent(storageId)}/read-status`,
+      env.apiBase,
+    );
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ unread: true }),
+      });
+
+      if (!response.ok) {
+        const statusText = `${response.status} ${response.statusText}`.trim();
+        logger.debug(
+          `Failed to mark agent session unread (${statusText || "unknown error"}).`,
+        );
+      }
+    } catch (error) {
+      logger.debug(
+        `Failed to mark agent session unread: ${formatError(error)}`,
+      );
+    }
+  }
+
   stop(): void {
     this.stopped = true;
     this.targets = null;
@@ -214,17 +250,28 @@ export class StorageSyncService {
     body: string,
     contentType: string,
   ): Promise<void> {
+    // Parse the URL to extract any required headers from the query parameters
+    const parsedUrl = new URL(url);
+    const headers: Record<string, string> = {
+      "Content-Type": contentType,
+    };
+
+    // Check if the presigned URL includes server-side encryption in signed headers
+    const signedHeaders = parsedUrl.searchParams.get("X-Amz-SignedHeaders");
+    if (signedHeaders?.includes("x-amz-server-side-encryption")) {
+      headers["x-amz-server-side-encryption"] = "AES256";
+    }
+
     const response = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": contentType,
-      },
+      headers,
       body,
     });
 
     if (!response.ok) {
       const statusText = `${response.status} ${response.statusText}`.trim();
-      throw new Error(`Storage upload failed (${statusText})`);
+      const responseBody = await response.text();
+      throw new Error(`Storage upload failed (${statusText}): ${responseBody}`);
     }
   }
 
@@ -237,14 +284,18 @@ export class StorageSyncService {
       return;
     }
 
+    // Capture references to prevent race condition with stop()
+    const targets = this.targets;
+    const options = this.options;
+
     this.uploadInFlight = true;
 
     try {
-      this.options.syncSessionHistory();
-      const snapshot = this.options.getSessionSnapshot();
+      options.syncSessionHistory();
+      const snapshot = options.getCompleteStateSnapshot();
       const sessionPayload = JSON.stringify(snapshot, null, 2);
       await this.uploadToPresignedUrl(
-        this.targets.sessionUrl,
+        targets.sessionUrl,
         sessionPayload,
         "application/json",
       );
@@ -257,7 +308,7 @@ export class StorageSyncService {
         this.missingRepoLogged = true;
       }
       await this.uploadToPresignedUrl(
-        this.targets.diffUrl,
+        targets.diffUrl,
         diffResult.diff,
         "text/plain",
       );
