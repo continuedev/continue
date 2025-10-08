@@ -1,4 +1,5 @@
 import { renderInMode, testSingleMode } from "./TUIChat.dualModeHelper.js";
+import { waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - @ File Search Tests", () => {
   testSingleMode("shows @ character when user types @", "local", async () => {
@@ -56,9 +57,8 @@ describe("TUIChat - @ File Search Tests", () => {
 
     // Type multiple @ characters
     stdin.write("@@test");
-
     // Wait for UI update
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
