@@ -478,6 +478,7 @@ interface ToolCallState {
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
+  processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;
 }
@@ -1349,11 +1350,13 @@ export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
 export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
   type?: "streamable-http";
   url: string;
+  apiKey?: string;
 };
 
 export type InternalSseMcpOptions = BaseInternalMCPOptions & {
   type?: "sse";
   url: string;
+  apiKey?: string;
 };
 
 export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
@@ -1873,6 +1876,16 @@ export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
   didPrune: boolean;
   contextPercentage: number;
+}
+
+export interface AddToChatPayload {
+  data: AddToChatPayloadItem[];
+}
+
+interface AddToChatPayloadItem {
+  type: "file" | "folder";
+  fullPath: string;
+  name: string;
 }
 
 export interface MessageOption {

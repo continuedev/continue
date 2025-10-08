@@ -1,12 +1,12 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { describe, expect, beforeEach, vi, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock dependencies before imports
 vi.mock("../config.js");
 vi.mock("../auth/workos.js");
 
-import { AuthConfig } from "../auth/workos.js";
 import * as workos from "../auth/workos.js";
+import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
 import { ModelService } from "./ModelService.js";
@@ -357,8 +357,8 @@ describe("ModelService", () => {
   });
 
   describe("getDependencies()", () => {
-    test("should declare auth and config dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "config"]);
+    test("should declare auth, config, and workflow dependencies", () => {
+      expect(service.getDependencies()).toEqual(["auth", "config", "workflow"]);
     });
   });
 
