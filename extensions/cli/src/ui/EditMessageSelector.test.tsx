@@ -186,27 +186,6 @@ describe("EditMessageSelector", () => {
     });
   });
 
-  describe("Cursor positioning bug fix", () => {
-    it("should position cursor at end when entering edit mode", () => {
-      const chatHistory: ChatHistoryItem[] = [
-        { message: { role: "user", content: "Hello world" }, contextItems: [] },
-      ];
-
-      const mockTextBuffer = new TextBuffer();
-      const mockSetCursor = vi.fn();
-      mockTextBuffer.setCursor = mockSetCursor;
-
-      // This test verifies the fix: when Enter is pressed to start editing,
-      // setCursor should be called with content.length
-      // The actual implementation test would require simulating Enter keypress
-      // which is complex with Ink components
-
-      // For now, this test documents the expected behavior
-      const messageContent = "Hello world";
-      expect(messageContent.length).toBe(11);
-    });
-  });
-
   describe("Complex message content", () => {
     it("should handle message parts array", () => {
       const chatHistory: ChatHistoryItem[] = [

@@ -71,6 +71,8 @@ export function EditMessageSelector({
         setCursorPosition(content.length);
       } else if (key.return && !key.shift) {
         // Submit the edit
+        // Expand all paste blocks before submission to restore original content
+        textBuffer.expandAllPasteBlocks();
         const trimmedText = textBuffer.text.trim();
         if (trimmedText && userMessages[selectedIndex]) {
           onEdit(userMessages[selectedIndex].originalIndex, trimmedText);
