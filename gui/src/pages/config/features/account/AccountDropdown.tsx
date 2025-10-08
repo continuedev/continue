@@ -17,6 +17,7 @@ import {
 import { Divider } from "../../../../components/ui/Divider";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { GithubIcon } from "../../../../components/svg/GithubIcon";
 
 export function AccountDropdown() {
   const { session, logout, login } = useAuth();
@@ -34,7 +35,10 @@ export function AccountDropdown() {
           className="text-description flex w-full flex-row items-center gap-2 px-2 py-1.5"
           onClick={() => login(false)}
         >
-          <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+          <GithubIcon
+            size={16}
+            className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0"
+          />
           <span className="text-description hidden text-xs md:block">
             Log in
           </span>

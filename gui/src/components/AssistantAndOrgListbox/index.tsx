@@ -17,6 +17,7 @@ import {
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
 import { CONFIG_ROUTES } from "../../util/navigation";
+import { GithubIcon } from "../svg/GithubIcon";
 import {
   Button,
   Listbox,
@@ -277,7 +278,10 @@ export function AssistantAndOrgListbox({
                     className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
                   >
                     <div className="flex w-full items-center">
-                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0 rotate-180" />
+                      <GithubIcon
+                        size={14}
+                        className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0"
+                      />
                       <span className="text-2xs">Log in</span>
                     </div>
                   </Button>

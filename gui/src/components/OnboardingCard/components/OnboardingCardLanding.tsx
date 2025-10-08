@@ -8,6 +8,7 @@ import { selectFirstHubProfile } from "../../../redux/thunks/selectFirstHubProfi
 import { hasPassedFTL } from "../../../util/freeTrial";
 import { ToolTip } from "../../gui/Tooltip";
 import ContinueLogo from "../../svg/ContinueLogo";
+import { GithubIcon } from "../../svg/GithubIcon";
 import { useOnboardingCard } from "../hooks/useOnboardingCard";
 
 export function OnboardingCardLanding({
@@ -93,6 +94,7 @@ export function OnboardingCardLanding({
             onClick={onGetStarted}
             className="mt-4 grid w-full grid-flow-col items-center gap-2"
           >
+            <GithubIcon size={20} />
             Log in to Continue Hub
           </Button>
         </>
