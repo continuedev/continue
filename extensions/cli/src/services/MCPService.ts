@@ -1,6 +1,9 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import {
+  SSEClientTransport,
+  SseError,
+} from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
@@ -20,6 +23,14 @@ import {
   MCPServiceState,
   SERVICE_NAMES,
 } from "./types.js";
+
+function is401Error(error: unknown) {
+  return (
+    (error instanceof SseError && error.code === 401) ||
+    (error instanceof Error && error.message.includes("401")) ||
+    (error instanceof Error && error.message.includes("Unauthorized"))
+  );
+}
 
 interface ServerConnection extends MCPConnectionInfo {
   client: Client | null;
@@ -366,15 +377,27 @@ export class MCPService
         url: serverConfig.url,
       });
 
-      if (serverConfig.type === "sse") {
-        const transport = this.constructSseTransport(serverConfig);
-        await client.connect(transport, {});
-      } else if (serverConfig.type === "streamable-http") {
-        const transport = this.constructHttpTransport(serverConfig);
-        await client.connect(transport, {});
-      } else if (serverConfig.type) {
-        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
-      } else {
+      try {
+        if (serverConfig.type === "sse") {
+          const transport = this.constructSseTransport(serverConfig);
+          await client.connect(transport, {});
+        } else if (serverConfig.type === "streamable-http") {
+          const transport = this.constructHttpTransport(serverConfig);
+          await client.connect(transport, {});
+        }
+      } catch (error: unknown) {
+        // on authorization error, use "mcp-remote" with stdio transport to connect
+        if (is401Error(error)) {
+          const transport = this.constructStdioTransport({
+            name: serverConfig.name,
+            command: "npx",
+            args: ["-y", "mcp-remote", serverConfig.url],
+          });
+          await client.connect(transport, {});
+        }
+      }
+
+      if (typeof serverConfig.type === "undefined") {
         try {
           const transport = this.constructHttpTransport(serverConfig);
           await client.connect(transport, {});
@@ -394,6 +417,10 @@ export class MCPService
             );
           }
         }
+      } else if (
+        !["streamable-http", "sse", "stdio"].includes(serverConfig.type)
+      ) {
+        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
       }
     }
 
