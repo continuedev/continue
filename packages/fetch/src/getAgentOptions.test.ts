@@ -50,7 +50,8 @@ test("getAgentOptions returns basic configuration with default values", async ()
   // Check default timeout (7200 seconds = 2 hours = 7,200,000 ms)
   expect(options.timeout).toBe(7200000);
   expect(options.sessionTimeout).toBe(7200000);
-  expect(options.keepAliveMsecs).toBe(7200000);
+  // keepAliveMsecs is always 1000ms (1 second) to prevent premature close errors
+  expect(options.keepAliveMsecs).toBe(1000);
   expect(options.keepAlive).toBe(true);
 
   // Verify certificates array exists and contains items
@@ -71,7 +72,8 @@ test("getAgentOptions respects custom timeout", async () => {
   // Check timeout values (300 seconds = 300,000 ms)
   expect(options.timeout).toBe(300000);
   expect(options.sessionTimeout).toBe(300000);
-  expect(options.keepAliveMsecs).toBe(300000);
+  // keepAliveMsecs is always 1000ms regardless of custom timeout
+  expect(options.keepAliveMsecs).toBe(1000);
 });
 
 test("getAgentOptions uses verifySsl setting", async () => {

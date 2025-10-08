@@ -21,7 +21,11 @@ export async function getAgentOptions(
     timeout,
     sessionTimeout: timeout,
     keepAlive: true,
-    keepAliveMsecs: timeout,
+    // keepAliveMsecs: Delay before sending TCP keep-alive probes (node default = 1000ms)
+    // Setting this to 1s ensures connections stay alive through network devices
+    // (proxies, load balancers, firewalls) that close idle connections after 30-350s
+    // This should prevent "premature close" errors during long LLM streaming responses
+    keepAliveMsecs: 1000,
   };
 
   // Handle ClientCertificateOptions
@@ -38,9 +42,8 @@ export async function getAgentOptions(
 
   if (process.env.VERBOSE_FETCH) {
     console.log(`Fetch agent options:`);
-    console.log(
-      `\tTimeout (sessionTimeout/keepAliveMsecs): ${agentOptions.timeout}`,
-    );
+    console.log(`\tTimeout (sessionTimeout): ${agentOptions.timeout}`);
+    console.log(`\tkeepAliveMsecs: ${agentOptions.keepAliveMsecs}`);
     console.log(`\tTotal CA certs: ${ca.length}`);
     console.log(`\tGlobal/Root CA certs: ${certsCache.fixedCa.length}`);
     console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
