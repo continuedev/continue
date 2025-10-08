@@ -7,7 +7,6 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { EditMessageSelector } from "./EditMessageSelector.js";
-import { TextBuffer } from "./TextBuffer.js";
 
 describe("EditMessageSelector", () => {
   const createMockChatHistory = (count: number): ChatHistoryItem[] => {
