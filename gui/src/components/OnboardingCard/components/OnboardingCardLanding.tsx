@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { Button, SecondaryButton } from "../..";
+import { CliInstallBanner } from "../../CliInstallBanner";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -49,58 +50,64 @@ export function OnboardingCardLanding({
   const pastFreeTrialLimit = hasPassedFTL();
 
   return (
-    <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-center px-4 text-center">
-      <div className="xs:flex hidden">
-        <ContinueLogo height={75} />
+    <div className="flex w-full max-w-full flex-col">
+      <div className="xs:px-0 flex w-full flex-col items-center justify-center px-4 text-center">
+        <div className="xs:flex hidden">
+          <ContinueLogo height={75} />
+        </div>
+
+        {pastFreeTrialLimit ? (
+          <>
+            <p className="xs:w-3/4 w-full text-sm">
+              You've reached the free trial limit. Visit the Continue Platform to
+              select a Coding Agent.
+            </p>
+            <Button
+              onClick={openPastFreeTrialOnboarding}
+              className="mt-4 grid w-full grid-flow-col items-center gap-2"
+            >
+              Go to Continue Platform
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="mb-5 mt-0 w-full text-sm">
+              Log in to access a free trial of the
+              <br />
+              <ToolTip
+                place="bottom"
+                content="Free trial includes 50 Chat requests and 2,000 autocomplete requests"
+              >
+                <span
+                  className="cursor-pointer underline hover:brightness-125"
+                  onClick={() =>
+                    ideMessenger.post("controlPlane/openUrl", {
+                      path: "pricing",
+                    })
+                  }
+                >
+                  Models Add-On
+                </span>
+              </ToolTip>
+            </p>
+
+            <Button
+              onClick={onGetStarted}
+              className="mt-4 grid w-full grid-flow-col items-center gap-2"
+            >
+              Log in to Continue Hub
+            </Button>
+          </>
+        )}
+
+        <SecondaryButton onClick={onSelectConfigure} className="w-full">
+          Or, configure your own models
+        </SecondaryButton>
       </div>
 
-      {pastFreeTrialLimit ? (
-        <>
-          <p className="xs:w-3/4 w-full text-sm">
-            You've reached the free trial limit. Visit the Continue Platform to
-            select a Coding Agent.
-          </p>
-          <Button
-            onClick={openPastFreeTrialOnboarding}
-            className="mt-4 grid w-full grid-flow-col items-center gap-2"
-          >
-            Go to Continue Platform
-          </Button>
-        </>
-      ) : (
-        <>
-          <p className="mb-5 mt-0 w-full text-sm">
-            Log in to access a free trial of the
-            <br />
-            <ToolTip
-              place="bottom"
-              content="Free trial includes 50 Chat requests and 2,000 autocomplete requests"
-            >
-              <span
-                className="cursor-pointer underline hover:brightness-125"
-                onClick={() =>
-                  ideMessenger.post("controlPlane/openUrl", {
-                    path: "pricing",
-                  })
-                }
-              >
-                Models Add-On
-              </span>
-            </ToolTip>
-          </p>
-
-          <Button
-            onClick={onGetStarted}
-            className="mt-4 grid w-full grid-flow-col items-center gap-2"
-          >
-            Log in to Continue Hub
-          </Button>
-        </>
-      )}
-
-      <SecondaryButton onClick={onSelectConfigure} className="w-full">
-        Or, configure your own models
-      </SecondaryButton>
+      <div className="mt-4">
+        <CliInstallBanner showCloseButton={false} permanentDismissal={false} />
+      </div>
     </div>
   );
 }

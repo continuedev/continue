@@ -16,12 +16,15 @@ interface CliInstallBannerProps {
   sessionThreshold?: number;
   /** If true, dismissal is permanent via localStorage (default: session only) */
   permanentDismissal?: boolean;
+  /** If true, shows the close button (default: true) */
+  showCloseButton?: boolean;
 }
 
 export function CliInstallBanner({
   sessionCount,
   sessionThreshold,
   permanentDismissal = false,
+  showCloseButton = true,
 }: CliInstallBannerProps = {}) {
   const ideMessenger = useContext(IdeMessengerContext);
   const [cliInstalled, setCliInstalled] = useState<boolean | null>(null);
@@ -104,9 +107,11 @@ export function CliInstallBanner({
   return (
     <div className="border-t-vsc-input-border bg-vsc-background sticky bottom-0 border-t px-4 pb-4 pt-4">
       <Card className="relative">
-        <CloseButton onClick={handleDismiss}>
-          <XMarkIcon className="h-5 w-5 hover:brightness-125" />
-        </CloseButton>
+        {showCloseButton && (
+          <CloseButton onClick={handleDismiss}>
+            <XMarkIcon className="h-5 w-5 hover:brightness-125" />
+          </CloseButton>
+        )}
         <div className="flex flex-col gap-3">
           <div>
             <div className="text-foreground flex items-center gap-2 font-medium">
