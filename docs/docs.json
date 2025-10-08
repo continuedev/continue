@@ -252,7 +252,8 @@
               "guides/instinct",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model"
+              "guides/how-to-self-host-a-model",
+              "guides/notion-continue-guide"
             ]
           },
           {
@@ -262,8 +263,7 @@
               "guides/posthog-github-continuous-ai",
               "guides/snyk-mcp-continue-cookbook",
               "guides/dlt-mcp-continue-cookbook",
-              "guides/netlify-mcp-continuous-deployment",
-              "guides/notion-continue-cookbook"
+              "guides/netlify-mcp-continuous-deployment"
             ]
           }
         ]
