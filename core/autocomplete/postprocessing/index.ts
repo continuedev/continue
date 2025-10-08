@@ -54,7 +54,8 @@ function isBlank(completion: string): boolean {
 
 /**
  * Removes markdown code block delimiters from completion.
- * Removes the first line if it contains only backticks and the last line if it contains only backticks.
+ * Removes the first line if it starts with backticks (with optional language name).
+ * Removes the last line if it contains only backticks.
  */
 function removeBackticks(completion: string): string {
   const lines = completion.split("\n");
@@ -66,9 +67,9 @@ function removeBackticks(completion: string): string {
   let startIdx = 0;
   let endIdx = lines.length;
 
-  // Remove first line if it contains only backticks (one or more)
+  // Remove first line if it starts with backticks (``` or ```language)
   const firstLineTrimmed = lines[0].trim();
-  if (firstLineTrimmed.length > 0 && /^`+$/.test(firstLineTrimmed)) {
+  if (firstLineTrimmed.startsWith("```")) {
     startIdx = 1;
   }
 
