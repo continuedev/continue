@@ -3,9 +3,6 @@ import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "core/autocomplete/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { RecentlyEditedRange } from "core/nextEdit/types";
-import { getContinueGlobalPath, isFileWithinFolder } from "core/util/paths";
-import fs from "fs";
-import { resolve } from "path";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 
@@ -18,23 +15,6 @@ export const getBeforeCursorPos = (range: Range, activePos: Position) => {
     return range.end as Position;
   } else {
     return range.start as Position;
-  }
-};
-
-const isEditLoggingAllowed = async (editedFileURI: string) => {
-  const globalContinuePath = getContinueGlobalPath();
-  const editLogDirsPath = resolve(globalContinuePath, ".editlogdirs");
-
-  try {
-    const fileContent = await fs.promises.readFile(editLogDirsPath, "utf-8");
-    const stringItems = fileContent
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    return stringItems.some((dir) => isFileWithinFolder(editedFileURI, dir));
-  } catch (error) {
-    return false;
   }
 };
 
@@ -68,7 +48,6 @@ export const handleTextDocumentChange = async (
   // Ensure that logging will only happen in the open-source continue repo
   const workspaceDirUri = await getWorkspaceDirUri(event);
   if (!workspaceDirUri) return;
-  if (!(await isEditLoggingAllowed(event.document.uri.toString()))) return;
 
   const activeCursorPos = editor.selection.active;
   const editActions: RangeInFileWithNextEditInfo[] = changes.map((change) => ({

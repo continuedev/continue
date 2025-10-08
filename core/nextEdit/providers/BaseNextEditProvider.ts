@@ -47,16 +47,28 @@ export abstract class BaseNextEditModelProvider {
   };
 
   // Methods that can be used as default fallback.
-  public async handlePartialFileDiff(
-    helper: HelperVars,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-    startTime: number,
-    llm: ILLM,
-    nextCompletion: string,
-    promptMetadata: PromptMetadata,
-    ide: IDE,
-  ): Promise<NextEditOutcome> {
+  public async handlePartialFileDiff(params: {
+    helper: HelperVars;
+    editableRegionStartLine: number;
+    editableRegionEndLine: number;
+    startTime: number;
+    llm: ILLM;
+    nextCompletion: string;
+    promptMetadata: PromptMetadata;
+    ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
+  }): Promise<NextEditOutcome> {
+    const {
+      helper,
+      editableRegionStartLine,
+      editableRegionEndLine,
+      startTime,
+      llm,
+      nextCompletion,
+      promptMetadata,
+      ide,
+      profileType,
+    } = params;
     const oldEditRangeSlice = helper.fileContents
       .split("\n")
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
@@ -83,21 +95,34 @@ export abstract class BaseNextEditModelProvider {
       originalEditableRange: oldEditRangeSlice,
       diffLines: [],
       ide,
+      profileType,
     });
 
     return outcome;
   }
 
-  public async handleFullFileDiff(
-    helper: HelperVars,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-    startTime: number,
-    llm: ILLM,
-    nextCompletion: string,
-    promptMetadata: PromptMetadata,
-    ide: IDE,
-  ): Promise<NextEditOutcome | undefined> {
+  public async handleFullFileDiff(params: {
+    helper: HelperVars;
+    editableRegionStartLine: number;
+    editableRegionEndLine: number;
+    startTime: number;
+    llm: ILLM;
+    nextCompletion: string;
+    promptMetadata: PromptMetadata;
+    ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
+  }): Promise<NextEditOutcome | undefined> {
+    const {
+      helper,
+      editableRegionStartLine,
+      editableRegionEndLine,
+      startTime,
+      llm,
+      nextCompletion,
+      promptMetadata,
+      ide,
+      profileType,
+    } = params;
     const fileSlice = helper.fileLines
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
       .join("\n");
@@ -111,7 +136,7 @@ export abstract class BaseNextEditModelProvider {
     const currentLine = helper.pos.line;
     const prefetchQueue = PrefetchQueue.getInstance();
 
-    const cursorLocalDiffGroup = await this.processDiffGroups(
+    const cursorLocalDiffGroup = await this.processDiffGroups({
       diffGroups,
       currentLine,
       helper,
@@ -120,19 +145,21 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
-    );
+      profileType,
+    });
 
     if (cursorLocalDiffGroup) {
-      return await this.createOutcomeFromDiffGroup(
-        cursorLocalDiffGroup,
+      return await this.createOutcomeFromDiffGroup({
+        diffGroup: cursorLocalDiffGroup,
         helper,
         startTime,
         llm,
-        helper.input.completionId,
-        true,
+        completionId: helper.input.completionId,
+        isCurrentCursorGroup: true,
         promptMetadata,
         ide,
-      );
+        profileType,
+      });
     }
 
     return undefined;
@@ -141,23 +168,35 @@ export abstract class BaseNextEditModelProvider {
   /**
    * Process diff groups and find the one containing the cursor.
    */
-  private async processDiffGroups(
-    diffGroups: DiffGroup[],
-    currentLine: number,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    prefetchQueue: PrefetchQueue,
-    promptMetadata: PromptMetadata,
-    ide: IDE,
-  ): Promise<DiffGroup | undefined> {
+  private async processDiffGroups(params: {
+    diffGroups: DiffGroup[];
+    currentLine: number;
+    helper: HelperVars;
+    startTime: number;
+    llm: ILLM;
+    prefetchQueue: PrefetchQueue;
+    promptMetadata: PromptMetadata;
+    ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
+  }): Promise<DiffGroup | undefined> {
+    const {
+      diffGroups,
+      currentLine,
+      helper,
+      startTime,
+      llm,
+      prefetchQueue,
+      promptMetadata,
+      ide,
+      profileType,
+    } = params;
     let cursorGroup: DiffGroup | undefined;
 
     for (const group of diffGroups) {
       if (currentLine >= group.startLine && currentLine <= group.endLine) {
         cursorGroup = group;
       } else {
-        await this.addDiffGroupToPrefetchQueue(
+        await this.addDiffGroupToPrefetchQueue({
           group,
           helper,
           startTime,
@@ -165,22 +204,34 @@ export abstract class BaseNextEditModelProvider {
           prefetchQueue,
           promptMetadata,
           ide,
-        );
+          profileType,
+        });
       }
     }
 
     return cursorGroup;
   }
 
-  private async addDiffGroupToPrefetchQueue(
-    group: DiffGroup,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    prefetchQueue: PrefetchQueue,
-    promptMetadata: PromptMetadata,
-    ide: IDE,
-  ): Promise<void> {
+  private async addDiffGroupToPrefetchQueue(params: {
+    group: DiffGroup;
+    helper: HelperVars;
+    startTime: number;
+    llm: ILLM;
+    prefetchQueue: PrefetchQueue;
+    promptMetadata: PromptMetadata;
+    ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
+  }): Promise<void> {
+    const {
+      group,
+      helper,
+      startTime,
+      llm,
+      prefetchQueue,
+      promptMetadata,
+      ide,
+      profileType,
+    } = params;
     // Extract lines that are not old.
     const groupContent = group.lines
       .filter((l) => l.type !== "old")
@@ -223,6 +274,7 @@ export abstract class BaseNextEditModelProvider {
       completionId: uuidv4(), // Generate a new ID for this prefetched item.
       diffLines: group.lines,
       ide,
+      profileType,
     });
 
     prefetchQueue.enqueueProcessed({
@@ -231,16 +283,28 @@ export abstract class BaseNextEditModelProvider {
     });
   }
 
-  private async createOutcomeFromDiffGroup(
-    diffGroup: DiffGroup,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    completionId: string,
-    isCurrentCursorGroup: boolean,
-    promptMetadata: PromptMetadata,
-    ide: IDE,
-  ): Promise<NextEditOutcome> {
+  private async createOutcomeFromDiffGroup(params: {
+    diffGroup: DiffGroup;
+    helper: HelperVars;
+    startTime: number;
+    llm: ILLM;
+    completionId: string;
+    isCurrentCursorGroup: boolean;
+    promptMetadata: PromptMetadata;
+    ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
+  }): Promise<NextEditOutcome> {
+    const {
+      diffGroup,
+      helper,
+      startTime,
+      llm,
+      completionId,
+      isCurrentCursorGroup,
+      promptMetadata,
+      ide,
+      profileType,
+    } = params;
     const groupContent = diffGroup.lines
       .filter((l) => l.type !== "old")
       .map((l) => l.line)
@@ -278,6 +342,7 @@ export abstract class BaseNextEditModelProvider {
       completionId,
       diffLines: diffGroup.lines,
       ide,
+      profileType,
     });
 
     return outcomeNext;
@@ -299,6 +364,7 @@ export abstract class BaseNextEditModelProvider {
     completionId?: string;
     diffLines: DiffLine[];
     ide: IDE;
+    profileType?: "local" | "platform" | "control-plane";
   }): Promise<NextEditOutcome> {
     return {
       elapsed: Date.now() - outcomeCtx.startTime,
@@ -325,6 +391,7 @@ export abstract class BaseNextEditModelProvider {
       editableRegionStartLine: outcomeCtx.editableRegionStartLine,
       editableRegionEndLine: outcomeCtx.editableRegionEndLine,
       diffLines: outcomeCtx.diffLines,
+      profileType: outcomeCtx.profileType,
       ...outcomeCtx.helper.options,
     };
   }
