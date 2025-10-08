@@ -7,7 +7,7 @@ const { constructSystemMessage } = await import("./systemMessage.js");
 // Mock the service container to avoid "No factory registered for service 'config'" error
 vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
-    get: vi.fn().mockResolvedValue({ config: { rules: [] } }),
+    get: vi.fn(),
     set: vi.fn(),
   },
 }));
@@ -20,6 +20,13 @@ vi.mock("./hubLoader.js", () => ({
 }));
 
 const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+
+const { serviceContainer } = await import("./services/ServiceContainer.js");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  serviceContainer.get.mockResolvedValue({ config: { rules: [] } });
+});
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -259,5 +266,34 @@ Rule 3: Third rule`;
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
+  });
+
+  it("should include commit signature by default in normal mode", async () => {
+    const result = await constructSystemMessage("normal");
+
+    expect(result).toContain("Generated with [Continue]");
+    expect(result).toContain("Co-Authored-By: Continue");
+  });
+
+  it("should not include commit signature when disableCommitSignature is true", async () => {
+    serviceContainer.get.mockResolvedValue({
+      config: { rules: [], disableCommitSignature: true },
+    });
+
+    const result = await constructSystemMessage("normal");
+
+    expect(result).not.toContain("Generated with [Continue]");
+    expect(result).not.toContain("Co-Authored-By: Continue");
+  });
+
+  it("should include commit signature when disableCommitSignature is false", async () => {
+    serviceContainer.get.mockResolvedValue({
+      config: { rules: [], disableCommitSignature: false },
+    });
+
+    const result = await constructSystemMessage("normal");
+
+    expect(result).toContain("Generated with [Continue]");
+    expect(result).toContain("Co-Authored-By: Continue");
   });
 });

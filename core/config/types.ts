@@ -1156,6 +1156,7 @@ declare global {
     experimental?: ExperimentalConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
+    disableCommitSignature?: boolean;
   }
   
   export type ConfigMergeType = "merge" | "overwrite";
@@ -1231,6 +1232,7 @@ declare global {
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
     tools: Tool[];
+    disableCommitSignature?: boolean;
   }
   
   export interface BrowserSerializedContinueConfig {
@@ -1251,6 +1253,7 @@ declare global {
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
     tools: Tool[];
+    disableCommitSignature?: boolean;
   }
   
   // DOCS SUGGESTIONS AND PACKAGE INFO

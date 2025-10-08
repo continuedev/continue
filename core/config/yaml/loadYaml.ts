@@ -200,6 +200,7 @@ export async function configYamlToContinueConfig(options: {
     },
     rules: [],
     requestOptions: { ...config.requestOptions },
+    disableCommitSignature: config.disableCommitSignature,
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
