@@ -196,11 +196,12 @@ describe("ConfigEnhancer", () => {
   });
 
   it("should prepend MCPs from --mcp flag", async () => {
-    // Mock loadPackagesFromHub to return test MCPs
-    const { loadPackagesFromHub } = await import("./hubLoader.js");
-    (loadPackagesFromHub as any).mockResolvedValueOnce([
-      { name: "New-MCP", command: "new-mcp" },
-    ]);
+    // Mock loadPackageFromHub to return test MCP (singular call for each MCP)
+    const { loadPackageFromHub } = await import("./hubLoader.js");
+    (loadPackageFromHub as any).mockResolvedValueOnce({
+      name: "New-MCP",
+      command: "new-mcp",
+    });
 
     // Set up existing MCPs in config
     mockConfig.mcpServers = [{ name: "Existing-MCP", command: "existing-mcp" }];
