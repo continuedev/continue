@@ -2,7 +2,11 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
+import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -16,7 +20,8 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession, getSessionPersistenceSnapshot } from "../session.js";
+import { createSession, getCompleteStateSnapshot } from "../session.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { gracefulExit } from "../util/exit.js";
@@ -40,6 +45,8 @@ interface ServeOptions extends ExtendedCommandOptions {
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+  await posthogService.capture("sessionStart", {});
+
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
   if (!prompt) {
@@ -54,6 +61,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
 
+  // Environment install script will be deferred until after server startup to avoid blocking
+
   // Initialize services with tool permission overrides
   const { permissionOverrides } = processCommandFlags(options);
 
@@ -64,9 +73,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Get initialized services from the service container
-  const [configState, modelState] = await Promise.all([
+  const [configState, modelState, permissionsState] = await Promise.all([
     getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
     getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+    getService<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS),
   ]);
 
   if (!configState.config || !modelState.llmApi || !modelState.model) {
@@ -109,6 +119,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Initialize session with system message
   const systemMessage = await constructSystemMessage(
+    permissionsState.currentMode,
     options.rule,
     undefined,
     true,
@@ -138,9 +149,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model,
     isProcessing: false,
     lastActivity: Date.now(),
-    messageQueue: [],
     currentAbortController: null,
-    shouldInterrupt: false,
     serverRunning: true,
     pendingPermission: null,
   };
@@ -160,7 +169,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     storageOption: options.id,
     accessToken,
     syncSessionHistory,
-    getSessionSnapshot: () => getSessionPersistenceSnapshot(state.session),
+    getCompleteStateSnapshot: () =>
+      getCompleteStateSnapshot(
+        state.session,
+        state.isProcessing,
+        messageQueue.getQueueLength(),
+        state.pendingPermission,
+      ),
     isActive: () => state.serverRunning,
   });
 
@@ -182,12 +197,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     syncSessionHistory();
-    res.json({
-      session: state.session, // Return session directly instead of converting
-      isProcessing: state.isProcessing,
-      messageQueueLength: state.messageQueue.length,
-      pendingPermission: state.pendingPermission,
-    });
+    const stateSnapshot = getCompleteStateSnapshot(
+      state.session,
+      state.isProcessing,
+      messageQueue.getQueueLength(),
+      state.pendingPermission,
+    );
+    res.json(stateSnapshot);
   });
 
   // POST /message - Queue a message and potentially interrupt
@@ -200,17 +216,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Queue the message
-    state.messageQueue.push(message);
-
-    // If currently processing, set interrupt flag
-    if (state.isProcessing && state.currentAbortController) {
-      state.shouldInterrupt = true;
-    }
+    await messageQueue.enqueueMessage(message);
 
     res.json({
       queued: true,
-      position: state.messageQueue.length,
-      willInterrupt: state.shouldInterrupt,
+      position: messageQueue.getQueueLength(),
     });
 
     // Process messages if not already processing
@@ -249,6 +259,32 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     res.json({
       success: true,
       approved,
+    });
+  });
+
+  // POST /pause - Pause the current agent run (like pressing escape in TUI)
+  app.post("/pause", async (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    // Check if there's anything to pause
+    if (!state.isProcessing) {
+      return res.json({
+        success: false,
+        message: "No active processing to pause",
+      });
+    }
+
+    // Abort the current processing
+    if (state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
+
+    // Set isProcessing to false
+    state.isProcessing = false;
+
+    res.json({
+      success: true,
+      message: "Agent run paused",
     });
   });
 
@@ -303,9 +339,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.currentAbortController.abort();
     }
 
-    // Clear the message queue
-    state.messageQueue = [];
-
     // Clean up intervals
     if (inactivityChecker) {
       clearInterval(inactivityChecker);
@@ -325,7 +358,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, () => {
+  const server = app.listen(port, async () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
@@ -339,6 +372,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         "  POST /permission - Approve/reject tool (body: { requestId, approved })",
       ),
     );
+    console.log(chalk.dim("  POST /pause      - Pause the current agent run"));
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),
     );
@@ -351,10 +385,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       ),
     );
 
+    // Run environment install script after server startup
+    runEnvironmentInstallSafe();
+
     // If initial prompt provided, queue it for processing
     if (actualPrompt) {
       console.log(chalk.dim("\nProcessing initial prompt..."));
-      state.messageQueue.push(actualPrompt);
+      await messageQueue.enqueueMessage(actualPrompt);
       processMessages(state, llmApi);
     }
   });
@@ -383,10 +420,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   async function processMessages(state: ServerState, llmApi: any) {
     let processedMessage = false;
-    while (state.messageQueue.length > 0 && state.serverRunning) {
-      const userMessage = state.messageQueue.shift()!;
+    while (state.serverRunning) {
+      const queuedMessage = messageQueue.getNextMessage();
+      if (!queuedMessage) {
+        break;
+      }
+
+      const userMessage = queuedMessage.message;
       state.isProcessing = true;
-      state.shouldInterrupt = false;
       state.lastActivity = Date.now();
       processedMessage = true;
 
@@ -410,7 +451,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           state,
           llmApi,
           state.currentAbortController,
-          () => state.shouldInterrupt,
+          () => false,
         );
 
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
@@ -443,7 +484,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     if (
       processedMessage &&
       state.serverRunning &&
-      state.messageQueue.length === 0
+      messageQueue.getQueueLength() === 0
     ) {
       await storageSyncService.markAgentStatusUnread();
     }

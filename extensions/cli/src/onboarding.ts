@@ -6,10 +6,10 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
-import { processPromptOrRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { env } from "./env.js";
+import { processRule } from "./hubLoader.js";
 import { MCPService } from "./services/MCPService.js";
 import {
   getApiKeyValidationError,
@@ -59,7 +59,7 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
-async function runOnboardingFlow(
+export async function runOnboardingFlow(
   configPath: string | undefined,
   authConfig: AuthConfig,
 ): Promise<OnboardingResult> {
@@ -69,7 +69,16 @@ async function runOnboardingFlow(
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 2: Check if we're in a test/CI environment - if so, skip interactive prompts
+  // Step 2: Check for CONTINUE_USE_BEDROCK environment variable first (before test env check)
+  if (process.env.CONTINUE_USE_BEDROCK === "1") {
+    console.log(
+      chalk.blue("✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)"),
+    );
+    const result = await initialize(authConfig, CONFIG_PATH);
+    return { ...result, wasOnboarded: true };
+  }
+
+  // Step 3: Check if we're in a test/CI environment - if so, skip interactive prompts
   const isTestEnv =
     process.env.NODE_ENV === "test" ||
     process.env.CI === "true" ||
@@ -92,7 +101,7 @@ async function runOnboardingFlow(
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 3: Present user with two options
+  // Step 4: Present user with two options
   console.log(chalk.yellow("How do you want to get started?"));
   console.log(chalk.white("1. ⏩ Log in with Continue"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
@@ -129,7 +138,7 @@ async function runOnboardingFlow(
     const result = await initialize(authConfig, CONFIG_PATH);
     return { ...result, wasOnboarded: true };
   } else {
-    throw new Error("Invalid choice. Please select 1 or 2.");
+    throw new Error(`Invalid choice. Please select "1" or "2"`);
   }
 }
 
@@ -241,7 +250,7 @@ async function injectRulesIntoConfig(
   const processedRules: string[] = [];
   for (const ruleSpec of rules) {
     try {
-      const processedRule = await processPromptOrRule(ruleSpec);
+      const processedRule = await processRule(ruleSpec);
       processedRules.push(processedRule);
     } catch (error: any) {
       console.warn(

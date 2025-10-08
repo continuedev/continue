@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as args from "../args.js";
+import { processRule } from "../hubLoader.js";
 
 import { processAndCombinePrompts } from "./promptProcessor.js";
 
 // Mock the args module
-vi.mock("../args.js", () => ({
-  processPromptOrRule: vi.fn(),
+vi.mock("../hubLoader.js", () => ({
+  processRule: vi.fn(),
 }));
 
 // Mock the logger
@@ -38,7 +38,7 @@ describe("promptProcessor", () => {
     });
 
     it("should process single additional prompt without initial", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule.mockResolvedValue("processed prompt");
 
       const result = await processAndCombinePrompts(["prompt1"]);
@@ -48,7 +48,7 @@ describe("promptProcessor", () => {
     });
 
     it("should combine multiple processed prompts", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule
         .mockResolvedValueOnce("first prompt")
         .mockResolvedValueOnce("second prompt");
@@ -62,7 +62,7 @@ describe("promptProcessor", () => {
     });
 
     it("should combine processed prompts with initial prompt", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule
         .mockResolvedValueOnce("processed1")
         .mockResolvedValueOnce("processed2");
@@ -76,7 +76,7 @@ describe("promptProcessor", () => {
     });
 
     it("should handle processing errors and continue with successful ones", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule
         .mockResolvedValueOnce("success1")
         .mockRejectedValueOnce(new Error("processing failed"))
@@ -89,7 +89,7 @@ describe("promptProcessor", () => {
     });
 
     it("should return initial prompt when all processing fails", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule
         .mockRejectedValueOnce(new Error("fail1"))
         .mockRejectedValueOnce(new Error("fail2"));
@@ -103,7 +103,7 @@ describe("promptProcessor", () => {
     });
 
     it("should return undefined when all processing fails and no initial", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule.mockRejectedValue(new Error("processing failed"));
 
       const result = await processAndCombinePrompts(["bad"]);
@@ -112,7 +112,7 @@ describe("promptProcessor", () => {
     });
 
     it("should warn when processing fails", async () => {
-      const mockProcessPromptOrRule = vi.mocked(args.processPromptOrRule);
+      const mockProcessPromptOrRule = vi.mocked(processRule);
       mockProcessPromptOrRule.mockRejectedValue(new Error("test error"));
 
       const { logger } = await import("./logger.js");

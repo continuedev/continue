@@ -110,6 +110,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       }
       return ["claude", "gemini"].some((val) => lowerCaseModel.includes(val));
     },
+    xAI: (model) => {
+      const lowerCaseModel = model.toLowerCase();
+      return ["grok-3", "grok-4"].some((val) => lowerCaseModel.includes(val));
+    },
     bedrock: (model) => {
       if (
         [

@@ -19,6 +19,7 @@ import {
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
+import { isEditTool } from "../../../util/toolCallState";
 
 interface ToolPolicyItemProps {
   tool: Tool;
@@ -28,11 +29,21 @@ interface ToolPolicyItemProps {
 
 export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const dispatch = useDispatch();
-  const policy = useAppSelector(
+  const toolPolicy = useAppSelector(
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const mode = useAppSelector((state) => state.session.mode);
+
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (state) => state.config.config.ui?.autoAcceptEditToolDiffs,
+  );
+  const isAutoAcceptedToolCall =
+    isEditTool(props.tool.function.name) && autoAcceptEditToolDiffs;
+
+  const policy = isAutoAcceptedToolCall
+    ? "allowedWithoutPermission"
+    : toolPolicy;
 
   useEffect(() => {
     if (!policy) {
@@ -53,6 +64,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const fontSize = useFontSize(-2);
 
   const disabled =
+    isAutoAcceptedToolCall ||
     !props.isGroupEnabled ||
     (mode === "plan" &&
       props.tool.group === BUILT_IN_GROUP_NAME &&
@@ -70,14 +82,14 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
         fontSize,
       }}
     >
-      <div className="-mx-2 flex flex-col rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5">
+      <div className="flex flex-col rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5">
         <div className="flex flex-row items-start justify-between">
           <div
-            className="flex flex-1 cursor-pointer flex-row items-start gap-1"
+            className="flex flex-1 cursor-pointer flex-row items-start gap-1.5"
             onClick={() => setIsExpanded((val) => !val)}
           >
             <ChevronRightIcon
-              className={`xs:flex mt-0.5 hidden h-3 w-3 flex-shrink-0 transition-all duration-200 ${isExpanded ? "rotate-90" : ""}`}
+              className={`xs:flex hidden h-3 w-3 flex-shrink-0 pt-1 transition-all duration-200 ${isExpanded ? "rotate-90" : ""}`}
             />
 
             <div className="flex flex-col gap-1">
@@ -94,6 +106,19 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                           detected. Permissions will conflict and usage may be
                           unpredictable
                         </span>
+                      </p>
+                    }
+                  >
+                    <InformationCircleIcon className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500" />
+                  </ToolTip>
+                ) : null}
+                {isAutoAcceptedToolCall ? (
+                  <ToolTip
+                    place="bottom"
+                    className="flex flex-wrap items-center"
+                    content={
+                      <p className="m-0 p-0">
+                        Auto-Accept Agent Edits setting is on
                       </p>
                     }
                   >
@@ -139,11 +164,13 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                   data-tooltip-id={disabled ? disabledTooltipId : undefined}
                 >
                   <span className="text-xs">
-                    {disabled || policy === "disabled"
-                      ? "Excluded"
-                      : policy === "allowedWithoutPermission"
-                        ? "Automatic"
-                        : "Ask First"}
+                    {isAutoAcceptedToolCall
+                      ? "Automatic"
+                      : disabled || policy === "disabled"
+                        ? "Excluded"
+                        : policy === "allowedWithoutPermission"
+                          ? "Automatic"
+                          : "Ask First"}
                   </span>
                   <ChevronDownIcon className="h-3 w-3" />
                 </ListboxButton>
