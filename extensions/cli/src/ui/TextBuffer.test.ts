@@ -526,12 +526,31 @@ describe("TextBuffer", () => {
       buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
 
       // Small typed input should not be mixed into paste
-      const typedChar = "a";
-      buffer.handleInput(typedChar, { ctrl: false, meta: false } as any);
-      expect(buffer.text).toBe("a");
+      const smallChunk = "abc";
+      buffer.handleInput(smallChunk, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe(""); // Both chunks buffered
 
       buffer.flushPendingInput();
+      expect(buffer.text).toBe(largeChunk + smallChunk);
+    });
+
+    it("should allow typing after paste accumulation delay", () => {
+      vi.useFakeTimers();
+
+      const largeChunk = "x".repeat(100);
+      buffer.handleInput(largeChunk, { ctrl: false, meta: false } as any);
+
+      // Advance time to simulate user typing after a delay
+      vi.advanceTimersByTime(60); // so that it is treated as typing
+
+      const typedChar = "a";
+      buffer.handleInput(typedChar, { ctrl: false, meta: false } as any);
+      expect(buffer.text).toBe("a"); // Typed char inserted immediately
+
+      vi.advanceTimersByTime(250); // Finalize paste
       expect(buffer.text).toBe("a" + largeChunk);
+
+      vi.useRealTimers();
     });
 
     it("should preserve all chunks when expanding (content loss fix)", () => {
@@ -611,6 +630,30 @@ describe("TextBuffer", () => {
       expect(buffer.cursor).toBe(2);
     });
 
+    it("should limit ctrl+u deletion to current line", () => {
+      const text = "first line\nsecond line\nthird";
+      buffer.setText(text);
+      buffer.setCursor(text.indexOf("second line") + "second line".length);
+
+      const result = buffer.handleInput("u", { ctrl: true } as any);
+
+      expect(result).toBe(true);
+      expect(buffer.text).toBe("first line\n\nthird");
+      expect(buffer.cursor).toBe("first line\n".length);
+    });
+
+    it("should limit ctrl+k deletion to current line", () => {
+      const text = "first line\nsecond line\nthird";
+      buffer.setText(text);
+      buffer.setCursor(text.indexOf("second line"));
+
+      const result = buffer.handleInput("k", { ctrl: true } as any);
+
+      expect(result).toBe(true);
+      expect(buffer.text).toBe("first line\n\nthird");
+      expect(buffer.cursor).toBe(text.indexOf("second line"));
+    });
+
     it("should handle arrow keys", () => {
       let result = buffer.handleInput("", { leftArrow: true } as any);
       expect(result).toBe(true);
@@ -642,6 +685,38 @@ describe("TextBuffer", () => {
       } as any);
       expect(result).toBe(true);
       expect(buffer.cursor).toBe(0);
+    });
+
+    it("should delete to start of line with meta+backspace", () => {
+      const text = "first line\nsecond line\nthird line";
+      buffer.setText(text);
+      const cursorPosition = text.indexOf("second line") + "second line".length;
+      buffer.setCursor(cursorPosition);
+
+      const result = buffer.handleInput("", {
+        meta: true,
+        backspace: true,
+      } as any);
+
+      expect(result).toBe(true);
+      expect(buffer.text).toBe("first line\n\nthird line");
+      expect(buffer.cursor).toBe("first line\n".length);
+    });
+
+    it("should delete to end of line with meta+delete", () => {
+      const text = "first line\nsecond line\nthird line";
+      buffer.setText(text);
+      const cursorPosition = text.indexOf("second line");
+      buffer.setCursor(cursorPosition);
+
+      const result = buffer.handleInput("", {
+        meta: true,
+        delete: true,
+      } as any);
+
+      expect(result).toBe(true);
+      expect(buffer.text).toBe("first line\n\nthird line");
+      expect(buffer.cursor).toBe(cursorPosition);
     });
 
     it("should handle option key sequences", () => {

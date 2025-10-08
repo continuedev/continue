@@ -63,7 +63,10 @@ import {
   setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
+import {
+  createNewGlobalRuleFile,
+  createNewWorkspaceBlockFile,
+} from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
@@ -80,6 +83,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { ContinueError, ContinueErrorReason } from "./util/errors";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 
@@ -410,11 +414,19 @@ export class Core {
       );
     });
 
+    on("config/addGlobalRule", async (msg) => {
+      try {
+        await createNewGlobalRuleFile(this.ide);
+        await this.configHandler.reloadConfig(
+          "Global rule created (config/addGlobalRule message)",
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(
-        msg.data.profileId,
-        msg.data?.element,
-      );
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -483,20 +495,10 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
-      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
     });
-    on("mcp/disconnectServer", async (msg) => {
-      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
-        msg.data.id,
-      );
-      if (!mcpConnection)
-        throw new Error(`MCP connection with id ${msg.data.id} not found`);
-      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
-      await mcpConnection.disconnect();
-      await this.configHandler.refreshAll("MCP Servers disconnected");
-    });
-    on("mcp/getDisconnectedServers", async (_msg) => {
-      return MCPManagerSingleton.getInstance().getDisconnectedServers();
+    on("mcp/setServerEnabled", async (msg) => {
+      const { id, enabled } = msg.data;
+      await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;
@@ -825,7 +827,6 @@ export class Core {
       if (data?.shouldClearIndexes) {
         await this.codeBaseIndexer.clearIndexes();
       }
-
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
@@ -929,7 +930,7 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
-      console.log("deleteChain called from files/closed");
+      console.debug("deleteChain called from files/closed");
       await NextEditProvider.getInstance().deleteChain();
 
       try {
@@ -1104,7 +1105,6 @@ export class Core {
 
         const tool = config.tools.find((t) => t.function.name === toolName);
         if (!tool) {
-          // Tool not found, return base policy
           return { policy: basePolicy };
         }
 
@@ -1114,16 +1114,46 @@ export class Core {
           displayValue = args.command as string;
         }
 
-        // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
           const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
           return { policy: evaluatedPolicy, displayValue };
         }
-
-        // Otherwise return base policy unchanged
         return { policy: basePolicy, displayValue };
       },
     );
+
+    on("tools/preprocessArgs", async ({ data: { toolName, args } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
+      const tool = config?.tools.find((t) => t.function.name === toolName);
+      if (!tool) {
+        throw new Error(`Tool ${toolName} not found`);
+      }
+
+      try {
+        const preprocessedArgs = await tool.preprocessArgs?.(args, {
+          ide: this.ide,
+        });
+        return {
+          preprocessedArgs,
+        };
+      } catch (e) {
+        let errorReason =
+          e instanceof ContinueError ? e.reason : ContinueErrorReason.Unknown;
+        let errorMessage =
+          e instanceof Error
+            ? e.message
+            : `Error preprocessing tool call args for ${toolName}\n${JSON.stringify(args)}`;
+        return {
+          preprocessedArgs: undefined,
+          errorReason,
+          errorMessage,
+        };
+      }
+    });
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);

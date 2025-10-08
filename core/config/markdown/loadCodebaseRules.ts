@@ -26,20 +26,30 @@ export class CodebaseRulesCache {
   }
   async update(ide: IDE, uri: string) {
     const content = await ide.readFile(uri);
-    const { relativePathOrBasename } = findUriInDirs(
+    const workspaceDirs = await ide.getWorkspaceDirs();
+    const { relativePathOrBasename, foundInDir } = findUriInDirs(
       uri,
-      await ide.getWorkspaceDirs(),
+      workspaceDirs,
     );
-    const rule = markdownToRule(content, {
-      uriType: "file",
-      fileUri: relativePathOrBasename,
-    });
+    if (!foundInDir) {
+      console.warn(
+        `Failed to load codebase rule ${uri}: URI not found in workspace`,
+      );
+    }
+    const rule = markdownToRule(
+      content,
+      {
+        uriType: "file",
+        fileUri: uri,
+      },
+      relativePathOrBasename,
+    );
     const ruleWithSource: RuleWithSource = {
       ...rule,
       source: "colocated-markdown",
-      ruleFile: uri,
+      sourceFile: uri,
     };
-    const matchIdx = this.rules.findIndex((r) => r.ruleFile === uri);
+    const matchIdx = this.rules.findIndex((r) => r.sourceFile === uri);
     if (matchIdx === -1) {
       this.rules.push(ruleWithSource);
     } else {
@@ -47,7 +57,7 @@ export class CodebaseRulesCache {
     }
   }
   remove(uri: string) {
-    this.rules = this.rules.filter((r) => r.ruleFile !== uri);
+    this.rules = this.rules.filter((r) => r.sourceFile !== uri);
   }
 }
 
@@ -75,20 +85,32 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
     for (const filePath of rulesMdFiles) {
       try {
         const content = await ide.readFile(filePath);
-        const { relativePathOrBasename } = findUriInDirs(
+        const { relativePathOrBasename, foundInDir, uri } = findUriInDirs(
           filePath,
           await ide.getWorkspaceDirs(),
         );
-        const rule = markdownToRule(content, {
-          uriType: "file",
-          fileUri: relativePathOrBasename,
-        });
+        if (foundInDir) {
+          const lastSlashIndex = relativePathOrBasename.lastIndexOf("/");
+          const parentDir = relativePathOrBasename.substring(0, lastSlashIndex);
+          const rule = markdownToRule(
+            content,
+            {
+              uriType: "file",
+              fileUri: uri,
+            },
+            parentDir,
+          );
 
-        rules.push({
-          ...rule,
-          source: "colocated-markdown",
-          ruleFile: filePath,
-        });
+          rules.push({
+            ...rule,
+            source: "colocated-markdown",
+            sourceFile: filePath,
+          });
+        } else {
+          console.warn(
+            `Failed to load codebase rule ${uri}: URI not found in workspace dirs`,
+          );
+        }
       } catch (e) {
         errors.push({
           fatal: false,

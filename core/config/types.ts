@@ -78,8 +78,9 @@ declare global {
   
   export interface ILLM extends LLMOptions {
     get providerName(): string;
-  
+
     uniqueId: string;
+    lastRequestId?: string;
     model: string;
   
     title?: string;

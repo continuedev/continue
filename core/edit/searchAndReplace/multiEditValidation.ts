@@ -2,26 +2,30 @@ import { EditOperation } from "../../tools/definitions/multiEdit";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { validateSingleEdit } from "./findAndReplaceUtils";
 
-export interface MultiEditValidationResult {
-  edits: EditOperation[];
-}
-
 /**
  * Validates multi-edit arguments and all edits in a single pass
  * @param args - The arguments object containing the edits array
  * @returns Validated edits array
  * @throws ContinueError if validation fails
  */
-export function validateMultiEdit(args: any): MultiEditValidationResult {
-  const { edits } = args;
+export function validateMultiEdit(args: unknown): {
+  edits: EditOperation[];
+} {
+  if (typeof args !== "object" || !args || !("edits" in args)) {
+    throw new ContinueError(
+      ContinueErrorReason.MultiEditEditsArrayRequired,
+      "invalid multi-edit args",
+    );
+  }
 
   // Validate that edits is a non-empty array
-  if (!edits || !Array.isArray(edits)) {
+  if (!Array.isArray(args.edits)) {
     throw new ContinueError(
       ContinueErrorReason.MultiEditEditsArrayRequired,
       "edits array is required",
     );
   }
+  const { edits } = args;
 
   if (edits.length === 0) {
     throw new ContinueError(
@@ -35,7 +39,7 @@ export function validateMultiEdit(args: any): MultiEditValidationResult {
     const edit = edits[i];
 
     // Use existing single edit validation
-    validateSingleEdit(edit.old_string, edit.new_string, i);
+    validateSingleEdit(edit.old_string, edit.new_string, edit.replace_all, i);
 
     // Only the first edit can have empty old_string (for insertion at beginning)
     if (i > 0 && edit.old_string === "") {
