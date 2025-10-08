@@ -135,6 +135,7 @@
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/asksage",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",

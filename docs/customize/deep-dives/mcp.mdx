@@ -30,8 +30,8 @@ explore available MCP server blocks
 Below is a quick example of setting up a new MCP server for use in your agent:
 
 1. Create a folder called `.continue/mcpServers` at the top level of your workspace
-2. Add a file called `playwright-mcp.yaml` to this folder.
-3. Write the following contents to `playwright-mcp.yaml` and save.
+2. Add a file called `playwright-mcp.yaml` to this folder
+3. Write the following contents and save
 
 ```yaml title=".continue/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
@@ -60,6 +60,14 @@ You can set up an MCP server to search the Continue documentation directly from 
 
 For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
 
+## Using JSON MCP Format from Claude, Cursor, Cline, etc
+
+<Info>
+If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continue will automatically pick them up.
+
+For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` in your workspace.
+</Info>
+
 ## How to Configure MCP Servers
 
 To set up your own MCP server, read the [MCP
@@ -68,38 +76,21 @@ quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
 block](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
 server block to your [config file](./configuration.md):
 
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  mcpServers:
-    - name: SQLite MCP
-      command: npx
-      args:
-        - "-y"
-        - "mcp-sqlite"
-        - "/path/to/your/database.db"
+```yaml title="config.yaml"
+# ...
+mcpServers:
+  - name: SQLite MCP
+    command: npx
+    args:
+      - "-y"
+      - "mcp-sqlite"
+      - "/path/to/your/database.db"
+# ...
+```
 
-````
-</Tab>
-<Tab title="JSON">
-```json title="config.json"
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/path/to/your/database.db"]
-        }
-      }
-    ]
-  }
-}
-````
-
-  </Tab>
-</Tabs>
+<Note>
+When creating a standalone block file in `.continue/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
+</Note>
 
 ### How to Configure MCP Server Properties
 
@@ -120,10 +111,12 @@ MCP now supports remote server connections through HTTP-based transports, expand
 For real-time streaming communication, use the SSE transport:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: sse
     url: https://....
+# ...
 ```
 
 #### How to Use Standard Input/Output (`stdio`)
@@ -131,6 +124,7 @@ mcpServers:
 For local MCP servers that communicate via standard input and output:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: stdio
@@ -138,6 +132,7 @@ mcpServers:
     args:
       - "@modelcontextprotocol/server-sqlite"
       - "/path/to/your/database.db"
+# ...
 ```
 
 #### How to Use Streamable HTTP Transport
@@ -145,10 +140,12 @@ mcpServers:
 For standard HTTP-based communication with streaming capabilities:
 
 ```yaml
+# ...
 mcpServers:
   - name: Name
     type: streamable-http
     url: https://....
+# ...
 ```
 
 These remote transport options allow you to connect to MCP servers hosted on remote infrastructure, enabling more flexible deployment architectures and shared server resources across multiple clients.
@@ -161,6 +158,7 @@ With some MCP servers you will need to use API keys or other secrets. You can le
 as well as access hosted secrets in the Continue Hub. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
 
 ```yaml
+# ...
 mcpServers:
   - name: Supabase MCP
     command: npx
@@ -178,4 +176,5 @@ mcpServers:
       - "@modelcontextprotocol/server-github"
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+# ...
 ```
