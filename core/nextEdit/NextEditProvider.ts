@@ -494,29 +494,29 @@ export class NextEditProvider {
       this.configHandler.currentProfile?.profileDescription.profileType;
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
-      outcome = await this.modelProvider.handlePartialFileDiff(
+      outcome = await this.modelProvider.handlePartialFileDiff({
         helper,
         editableRegionStartLine,
         editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
-        this.promptMetadata!,
-        this.ide,
+        promptMetadata: this.promptMetadata!,
+        ide: this.ide,
         profileType,
-      );
+      });
     } else {
-      outcome = await this.modelProvider.handleFullFileDiff(
+      outcome = await this.modelProvider.handleFullFileDiff({
         helper,
         editableRegionStartLine,
         editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
-        this.promptMetadata!,
-        this.ide,
+        promptMetadata: this.promptMetadata!,
+        ide: this.ide,
         profileType,
-      );
+      });
     }
 
     if (outcome) {
