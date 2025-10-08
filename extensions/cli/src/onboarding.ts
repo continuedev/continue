@@ -280,24 +280,35 @@ export async function initializeWithOnboarding(
   authConfig: AuthConfig,
   configPath: string | undefined,
   rules?: string[],
-): Promise<OnboardingResult> {
+) {
   const firstTime = await isFirstTime();
 
-  let result: OnboardingResult;
-
   if (firstTime) {
-    result = await runOnboardingFlow(configPath, authConfig);
-    if (result.wasOnboarded) {
+    const onboardingResult = await runOnboardingFlow(configPath, authConfig);
+    if (onboardingResult.wasOnboarded) {
       await markOnboardingComplete();
     }
+    // Inject rules into the config if provided (for onboarding flow which doesn't handle rules directly)
+    if (rules && rules.length > 0 && !onboardingResult.wasOnboarded) {
+      onboardingResult.config = await injectRulesIntoConfig(
+        onboardingResult.config,
+        rules,
+      );
+    }
   } else {
-    result = await runNormalFlow(authConfig, configPath, rules);
+    // when running normal flow, initialize (remote) config asynchronously
+    void (async () => {
+      const onboardingResult = await runNormalFlow(
+        authConfig,
+        configPath,
+        rules,
+      );
+      if (rules && rules.length > 0) {
+        onboardingResult.config = await injectRulesIntoConfig(
+          onboardingResult.config,
+          rules,
+        );
+      }
+    })();
   }
-
-  // Inject rules into the config if provided (for onboarding flow which doesn't handle rules directly)
-  if (rules && rules.length > 0 && !result.wasOnboarded) {
-    result.config = await injectRulesIntoConfig(result.config, rules);
-  }
-
-  return result;
 }
