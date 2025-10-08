@@ -7,19 +7,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { EditMessageSelector } from "./EditMessageSelector.js";
-
-// Mock TextBuffer for controlled testing
-vi.mock("./TextBuffer.js", () => {
-  return {
-    TextBuffer: vi.fn().mockImplementation(() => ({
-      text: "",
-      cursor: 0,
-      setText: vi.fn(),
-      setCursor: vi.fn(),
-      handleInput: vi.fn(),
-    })),
-  };
-});
+import { TextBuffer } from "./TextBuffer.js";
 
 describe("EditMessageSelector", () => {
   const createMockChatHistory = (count: number): ChatHistoryItem[] => {

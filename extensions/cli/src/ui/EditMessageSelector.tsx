@@ -36,6 +36,22 @@ export function EditMessageSelector({
   const [editText, setEditText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
 
+  // Stable callback for TextBuffer state changes (e.g., paste finalization)
+  const onStateChange = React.useCallback(() => {
+    setEditText(textBuffer.text);
+    setCursorPosition(textBuffer.cursor);
+  }, [textBuffer]);
+
+  // Set up callback for when TextBuffer state changes asynchronously
+  React.useEffect(() => {
+    textBuffer.setStateChangeCallback(onStateChange);
+
+    return () => {
+      // Clear any pending timers on unmount
+      textBuffer.clear();
+    };
+  }, [textBuffer, onStateChange]);
+
   // Initialize edit text when selection changes
   React.useEffect(() => {
     if (!isEditing && userMessages[selectedIndex]) {
