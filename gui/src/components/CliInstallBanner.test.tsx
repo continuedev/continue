@@ -351,10 +351,10 @@ describe("CliInstallBanner", () => {
     });
   });
 
-  describe("Message threshold logic", () => {
-    const renderWithMessageCount = async (
-      messageCount?: number,
-      messageThreshold?: number,
+  describe("Session threshold logic", () => {
+    const renderWithSessionCount = async (
+      sessionCount?: number,
+      sessionThreshold?: number,
     ) => {
       vi.spyOn(mockIdeMessenger.ide, "subprocess").mockResolvedValue([
         "",
@@ -365,8 +365,8 @@ describe("CliInstallBanner", () => {
         render(
           <IdeMessengerContext.Provider value={mockIdeMessenger}>
             <CliInstallBanner
-              messageCount={messageCount}
-              messageThreshold={messageThreshold}
+              sessionCount={sessionCount}
+              sessionThreshold={sessionThreshold}
             />
           </IdeMessengerContext.Provider>,
         ),
@@ -374,7 +374,7 @@ describe("CliInstallBanner", () => {
     };
 
     it("shows banner when no threshold is set", async () => {
-      await renderWithMessageCount(0, undefined);
+      await renderWithSessionCount(0, undefined);
 
       await waitFor(() => {
         expect(
@@ -383,8 +383,8 @@ describe("CliInstallBanner", () => {
       });
     });
 
-    it("does not show banner when message count is below threshold", async () => {
-      await renderWithMessageCount(2, 3);
+    it("does not show banner when session count is below threshold", async () => {
+      await renderWithSessionCount(2, 3);
 
       await waitFor(() => {
         expect(
@@ -393,8 +393,8 @@ describe("CliInstallBanner", () => {
       });
     });
 
-    it("shows banner when message count meets threshold", async () => {
-      await renderWithMessageCount(3, 3);
+    it("shows banner when session count meets threshold", async () => {
+      await renderWithSessionCount(3, 3);
 
       await waitFor(() => {
         expect(
@@ -403,8 +403,8 @@ describe("CliInstallBanner", () => {
       });
     });
 
-    it("shows banner when message count exceeds threshold", async () => {
-      await renderWithMessageCount(5, 3);
+    it("shows banner when session count exceeds threshold", async () => {
+      await renderWithSessionCount(5, 3);
 
       await waitFor(() => {
         expect(

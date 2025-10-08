@@ -119,6 +119,9 @@ export function Chat() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const allSessionMetadata = useAppSelector(
+    (state) => state.session.allSessionMetadata,
+  );
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
@@ -381,11 +384,6 @@ export function Chat() {
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
-  // Count user messages for CLI banner threshold
-  const userMessageCount = useMemo(() => {
-    return history.filter((item) => item.message.role === "user").length;
-  }, [history]);
-
   return (
     <>
       {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
@@ -428,8 +426,8 @@ export function Chat() {
         />
 
         <CliInstallBanner
-          messageCount={userMessageCount}
-          messageThreshold={5}
+          sessionCount={allSessionMetadata.length}
+          sessionThreshold={3}
           permanentDismissal={true}
         />
 

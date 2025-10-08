@@ -10,17 +10,17 @@ import { RunInTerminalButton } from "./StyledMarkdownPreview/StepContainerPreToo
 import { Card } from "./ui";
 
 interface CliInstallBannerProps {
-  /** Current message count - banner shows only if >= messageThreshold */
-  messageCount?: number;
-  /** Minimum messages before showing banner (default: always show) */
-  messageThreshold?: number;
+  /** Number of sessions user has had - banner shows only if >= sessionThreshold */
+  sessionCount?: number;
+  /** Minimum sessions before showing banner (default: always show) */
+  sessionThreshold?: number;
   /** If true, dismissal is permanent via localStorage (default: session only) */
   permanentDismissal?: boolean;
 }
 
 export function CliInstallBanner({
-  messageCount,
-  messageThreshold,
+  sessionCount,
+  sessionThreshold,
   permanentDismissal = false,
 }: CliInstallBannerProps = {}) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -90,13 +90,13 @@ export function CliInstallBanner({
   // - Still loading CLI status
   // - CLI is already installed
   // - User has dismissed it
-  // - Message threshold not met (if threshold is set)
+  // - Session threshold not met (if threshold is set)
   if (
     cliInstalled === null ||
     cliInstalled === true ||
     dismissed ||
-    (messageThreshold !== undefined &&
-      (messageCount === undefined || messageCount < messageThreshold))
+    (sessionThreshold !== undefined &&
+      (sessionCount === undefined || sessionCount < sessionThreshold))
   ) {
     return null;
   }
