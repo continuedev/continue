@@ -468,6 +468,12 @@ class MCPConnection {
         ? new HttpsAgent({ rejectUnauthorized: false })
         : undefined;
 
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...options.requestOptions?.headers,
+      ...(options.apiKey && { Authorization: `Bearer ${options.apiKey}` }),
+    };
+
     return new SSEClientTransport(new URL(options.url), {
       eventSourceInit: {
         fetch: (input, init) =>
@@ -475,13 +481,13 @@ class MCPConnection {
             ...init,
             headers: {
               ...init?.headers,
-              ...options.requestOptions?.headers,
+              ...headers,
             },
             ...(sseAgent && { agent: sseAgent }),
           }),
       },
       requestInit: {
-        headers: options.requestOptions?.headers,
+        headers,
         ...(sseAgent && { agent: sseAgent }),
       },
     });
@@ -496,9 +502,15 @@ class MCPConnection {
         ? new HttpsAgent({ rejectUnauthorized: false })
         : undefined;
 
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...requestOptions?.headers,
+      ...(options.apiKey && { Authorization: `Bearer ${options.apiKey}` }),
+    };
+
     return new StreamableHTTPClientTransport(new URL(url), {
       requestInit: {
-        headers: requestOptions?.headers,
+        headers,
         ...(streamableAgent && { agent: streamableAgent }),
       },
     });
