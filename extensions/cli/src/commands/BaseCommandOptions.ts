@@ -21,6 +21,8 @@ export interface BaseCommandOptions {
   ask?: string[];
   /** Array of tools to exclude from use (--exclude) */
   exclude?: string[];
+  /** Workflow slug from the hub (--workflow) */
+  workflow?: string;
 }
 
 /**

@@ -208,7 +208,7 @@ jobs:
 
           # Create GitHub release
           gh release create "v${{ steps.final_version.outputs.stable_version }}" \
-            --title "Stable Release v${{ steps.final_version.outputs.stable_version }}" \
+            --title "CLI Stable Release v${{ steps.final_version.outputs.stable_version }}" \
             --notes "${{ steps.final_version.outputs.release_notes }}" \
             --latest
 
