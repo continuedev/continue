@@ -177,6 +177,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       });
 
       console.warn(`Error retrieving or parsing sessions: ${e.message}`);
+
+      // Delete the corrupted cache file to allow fresh start on next attempt
+      // This handles cases where decryption succeeded but JSON parsing failed
+      try {
+        await this.secretStorage.delete(SESSIONS_SECRET_KEY);
+      } catch (deleteError: any) {
+        console.error(
+          `Failed to delete corrupted sessions cache:`,
+          deleteError.message,
+        );
+      }
+
       return [];
     }
   }
