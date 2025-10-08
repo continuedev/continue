@@ -1,4 +1,5 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
+import { waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("shows slash when user types /", async (mode) => {
@@ -6,9 +7,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type / to trigger slash command
     stdin.write("/");
-
-    // Wait a bit for the UI to update
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -29,9 +28,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi to trigger slash command filtering
     stdin.write("/exi");
-
-    // Wait a bit for the UI to update (allow extra time in both modes)
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -52,12 +49,10 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi and then tab
     stdin.write("/exi");
-
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     stdin.write("\t");
-
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     const frameAfterTab = lastFrame();
 
@@ -80,8 +75,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type just /
     stdin.write("/");
-
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -113,8 +107,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Type a complete command name first
       stdin.write("/title");
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForNextRender();
 
       const frameAfterCommand = lastFrame();
       if (mode === "remote") {
@@ -127,8 +120,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Now add a space and arguments
       stdin.write(" My Session Title");
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForNextRender();
 
       const frameAfterArgs = lastFrame();
 
@@ -151,8 +143,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Type a complete command with arguments
       stdin.write("/title Test Session");
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForNextRender();
 
       const frameBeforeEnter = lastFrame();
       expect(frameBeforeEnter).toContain("/title");
@@ -160,8 +151,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Press Enter - this should execute the command, not try to autocomplete
       stdin.write("\r");
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForNextRender();
 
       const frameAfterEnter = lastFrame();
 
