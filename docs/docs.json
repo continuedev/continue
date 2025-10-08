@@ -26,7 +26,12 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quick-start",
+              "cli/guides"
+            ]
           },
           {
             "group": "Features",
@@ -130,6 +135,7 @@
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/asksage",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
@@ -261,6 +267,7 @@
             "pages": [
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
+              "guides/github-mcp-continue-cookbook",
               "guides/sanity-mcp-continue-cookbook",
               "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
@@ -328,7 +335,7 @@
   "navbar": {
     "links": [
       {
-        "label": "Explore",
+        "label": "🚀 Get Started",
         "href": "https://hub.continue.dev/"
       }
     ],
