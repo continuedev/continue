@@ -50,6 +50,20 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
   "session/share": [{ sessionId: string }, void];
+  createBackgroundAgent: [{ editorState: any }, void];
+  listBackgroundAgents: [
+    undefined,
+    Array<{
+      id: string;
+      name: string | null;
+      status: string;
+      repoUrl: string;
+      createdAt: string;
+      metadata?: {
+        github_repo?: string;
+      };
+    }>,
+  ];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

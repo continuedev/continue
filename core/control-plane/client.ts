@@ -440,4 +440,87 @@ export class ControlPlaneClient {
       );
     }
   }
+
+  /**
+   * Create a new background agent
+   */
+  public async createBackgroundAgent(
+    prompt: string,
+    repoUrl: string,
+    branch?: string,
+  ): Promise<{ id: string } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError("agents/devboxes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          repoUrl,
+          branch,
+        }),
+      });
+
+      return (await resp.json()) as { id: string };
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_create_background_agent",
+        prompt,
+        repoUrl,
+        branch,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * List all background agents for the current user
+   */
+  public async listBackgroundAgents(): Promise<
+    Array<{
+      id: string;
+      name: string | null;
+      status: string;
+      repoUrl: string;
+      createdAt: string;
+      metadata?: {
+        github_repo?: string;
+      };
+    }>
+  > {
+    if (!(await this.isSignedIn())) {
+      return [];
+    }
+
+    try {
+      const resp = await this.requestAndHandleError("agents/devboxes", {
+        method: "GET",
+      });
+
+      const agents = (await resp.json()) as any[];
+
+      return agents.map((agent: any) => ({
+        id: agent.id,
+        name: agent.name || null,
+        status: agent.status,
+        repoUrl: agent.repo_url || agent.repoUrl || "",
+        createdAt: new Date(
+          agent.created_at || agent.create_time_ms,
+        ).toISOString(),
+        metadata: {
+          github_repo: agent.metadata?.github_repo || agent.repo_url,
+        },
+      }));
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_list_background_agents",
+      });
+      return [];
+    }
+  }
 }
