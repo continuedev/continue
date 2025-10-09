@@ -81,4 +81,19 @@ describe("IntroMessage", () => {
     expect(lastFrame()).toContain("Model:");
     expect(lastFrame()).toContain("Loading...");
   });
+
+  it("renders organization name when provided", () => {
+    const { lastFrame } = render(
+      <IntroMessage organizationName="Test Organization" />,
+    );
+
+    expect(lastFrame()).toContain("Org:");
+    expect(lastFrame()).toContain("Test Organization");
+  });
+
+  it("does not render organization section when not provided", () => {
+    const { lastFrame } = render(<IntroMessage />);
+
+    expect(lastFrame()).not.toContain("Org:");
+  });
 });

@@ -1,4 +1,5 @@
 import { createPatch } from "diff";
+import { getUriPathBasename } from "../../util/uri";
 
 export enum DiffFormatType {
   Unified = "unified",
@@ -18,6 +19,7 @@ export interface CreateDiffArgs {
   filePath: string;
   diffType: DiffFormatType;
   contextLines: number;
+  workspaceDir?: string;
 }
 
 export const createDiff = ({
@@ -26,6 +28,7 @@ export const createDiff = ({
   filePath,
   diffType,
   contextLines,
+  workspaceDir,
 }: CreateDiffArgs) => {
   switch (diffType) {
     case DiffFormatType.Unified:
@@ -34,6 +37,7 @@ export const createDiff = ({
         afterContent,
         filePath,
         contextLines,
+        workspaceDir,
       );
     case DiffFormatType.TokenLineDiff:
       return createTokenLineDiff(beforeContent, afterContent, filePath);
@@ -46,6 +50,7 @@ const createUnifiedDiff = (
   afterContent: string,
   filePath: string,
   contextLines: number,
+  workspaceDir?: string,
 ) => {
   const normalizedBefore = beforeContent.endsWith("\n")
     ? beforeContent
@@ -54,12 +59,21 @@ const createUnifiedDiff = (
     ? afterContent
     : afterContent + "\n";
 
+  // Use relative path if workspace directory is provided
+  let displayPath = filePath;
+  if (workspaceDir && filePath.startsWith(workspaceDir)) {
+    displayPath = filePath.slice(workspaceDir.length).replace(/^[\/]/, "");
+  } else if (workspaceDir) {
+    // Fallback to just the basename if we can't determine relative path
+    displayPath = getUriPathBasename(filePath);
+  }
+
   const patch = createPatch(
-    filePath,
+    displayPath,
     normalizedBefore,
     normalizedAfter,
-    "before",
-    "after",
+    undefined,
+    undefined,
     { context: contextLines },
   );
 

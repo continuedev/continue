@@ -9,6 +9,7 @@ import React, {
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 
+import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -108,6 +109,44 @@ function useTUIChatServices(remoteUrl?: string) {
   ]);
 
   return { services, allServicesReady, isRemoteMode };
+}
+
+// Custom hook to fetch organization name
+function useOrganizationName(organizationId?: string): string | undefined {
+  const [organizationName, setOrganizationName] = useState<string | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    if (!organizationId) {
+      setOrganizationName(undefined);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function fetchOrgName() {
+      try {
+        const orgs = await listUserOrganizations();
+        if (!isMounted) return;
+
+        const org = orgs?.find((o) => o.id === organizationId);
+        if (org) {
+          setOrganizationName(org.name);
+        }
+      } catch (error) {
+        logger.debug("Failed to fetch organization name", { error });
+      }
+    }
+
+    fetchOrgName();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [organizationId]);
+
+  return organizationName;
 }
 
 // Custom hook for chat handlers
@@ -298,6 +337,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // State for image in clipboard status
   const [hasImageInClipboard, setHasImageInClipboard] = useState(false);
 
+  // Fetch organization name based on auth state
+  const organizationName = useOrganizationName(services.auth?.organizationId);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -320,6 +362,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           config={services.config?.config || undefined}
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
+          organizationName={organizationName}
           chatHistory={chatHistory}
           queuedMessages={queuedMessages}
           renderMessage={renderMessage}
