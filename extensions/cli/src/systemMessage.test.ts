@@ -25,7 +25,7 @@ const { serviceContainer } = await import("./services/ServiceContainer.js");
 
 beforeEach(() => {
   vi.clearAllMocks();
-  serviceContainer.get.mockResolvedValue({ config: { rules: [] } });
+  vi.mocked(serviceContainer.get).mockResolvedValue({ config: { rules: [] } });
 });
 
 describe("constructSystemMessage", () => {
@@ -276,7 +276,7 @@ Rule 3: Third rule`;
   });
 
   it("should not include commit signature when disableCommitSignature is true", async () => {
-    serviceContainer.get.mockResolvedValue({
+    vi.mocked(serviceContainer.get).mockResolvedValue({
       config: { rules: [], disableCommitSignature: true },
     });
 
@@ -287,7 +287,7 @@ Rule 3: Third rule`;
   });
 
   it("should include commit signature when disableCommitSignature is false", async () => {
-    serviceContainer.get.mockResolvedValue({
+    vi.mocked(serviceContainer.get).mockResolvedValue({
       config: { rules: [], disableCommitSignature: false },
     });
 
