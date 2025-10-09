@@ -23,7 +23,6 @@ import {
   ConfigServiceState,
   SERVICE_NAMES,
   ServiceInitOptions,
-  ServiceInitResult,
   WorkflowServiceState,
 } from "./types.js";
 import { UpdateService } from "./UpdateService.js";
@@ -48,23 +47,15 @@ const systemMessageService = new SystemMessageService();
  * Initialize all services and register them with the service container
  * Handles onboarding internally for TUI mode unless skipOnboarding is true
  */
-export async function initializeServices(
-  initOptions: ServiceInitOptions = {},
-): Promise<ServiceInitResult> {
+export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
-  let wasOnboarded = false;
   const commandOptions = initOptions.options || {};
 
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
     const authConfig = loadAuthConfig();
-    const onboardingResult = await initializeWithOnboarding(
-      authConfig,
-      commandOptions.config,
-      commandOptions.rule,
-    );
-    wasOnboarded = onboardingResult.wasOnboarded;
+    await initializeWithOnboarding(authConfig, commandOptions.config);
   }
 
   // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
@@ -287,8 +278,6 @@ export async function initializeServices(
   await serviceContainer.initializeAll();
 
   logger.debug("Service registry initialized");
-
-  return { wasOnboarded };
 }
 
 /**

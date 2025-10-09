@@ -554,11 +554,19 @@ describe("Workflow Integration Tests", () => {
         tools: "owner/mcp1, another/mcp2:specific_tool",
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(workflowWithTools);
-      mockLoadPackagesFromHub.mockResolvedValue([
-        { name: "mcp1" },
-        { name: "mcp2" },
-      ]);
+      // Clear the default mock and setup specific mocks
+      mockLoadPackageFromHub.mockReset();
+      // First call loads the workflow file
+      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithTools);
+      // Second call loads the workflow model
+      mockLoadPackageFromHub.mockResolvedValueOnce({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
+      // Third call loads mcp1
+      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp1" });
+      // Fourth call loads mcp2
+      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp2" });
 
       await workflowService.initialize("owner/workflow");
 
@@ -573,6 +581,7 @@ describe("Workflow Integration Tests", () => {
       );
 
       expect(enhancedConfig.mcpServers).toHaveLength(3);
+      // MCPs are prepended in the order they are loaded
       expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
       expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "mcp2" });
       expect(enhancedConfig.mcpServers?.[2]).toEqual({ name: "existing-mcp" });
@@ -584,7 +593,8 @@ describe("Workflow Integration Tests", () => {
         tools: undefined,
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(workflowWithoutTools);
+      mockLoadPackageFromHub.mockReset();
+      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithoutTools);
       await workflowService.initialize("owner/workflow");
 
       const baseConfig = {
@@ -607,13 +617,22 @@ describe("Workflow Integration Tests", () => {
         tools: "owner/mcp1, owner/mcp1:tool1, owner/mcp1:tool2",
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(workflowWithDuplicateTools);
-      mockLoadPackagesFromHub.mockResolvedValue([{ name: "mcp1" }]);
+      // Clear the default mock and setup specific mocks
+      mockLoadPackageFromHub.mockReset();
+      // First call loads the workflow file
+      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithDuplicateTools);
+      // Second call loads the workflow model
+      mockLoadPackageFromHub.mockResolvedValueOnce({
+        name: "gpt-4-workflow",
+        provider: "openai",
+      });
+      // Third call: The parseWorkflowTools will extract only unique MCP servers, so only one loadPackageFromHub call
+      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp1" });
 
       await workflowService.initialize("owner/workflow");
 
       const baseConfig = {
-        mcpServers: [{ name: "mcp1" }], // Already exists
+        mcpServers: [{ name: "existing-mcp" }], // Changed to avoid confusion
       };
 
       const enhancedConfig = await configEnhancer.enhanceConfig(
@@ -622,10 +641,10 @@ describe("Workflow Integration Tests", () => {
         workflowService.getState(),
       );
 
-      // Should not deduplicate since we simplified the logic
+      // parseWorkflowTools deduplicates, so we only get mcp1 once
       expect(enhancedConfig.mcpServers).toHaveLength(2);
       expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
-      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "mcp1" });
+      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "existing-mcp" });
     });
   });
 });

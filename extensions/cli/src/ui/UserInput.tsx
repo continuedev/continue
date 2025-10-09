@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
@@ -109,6 +109,7 @@ interface UserInputProps {
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  onShowEditSelector?: () => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -125,9 +126,11 @@ const UserInput: React.FC<UserInputProps> = ({
   hideNormalUI = false,
   isRemoteMode = false,
   onImageInClipboardChange,
+  onShowEditSelector,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+  const lastEscapePressRef = useRef<number>(0);
 
   // Stable callback for TextBuffer state changes to prevent race conditions
   const onStateChange = useCallback(() => {
@@ -624,6 +627,25 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowFileSearch(false);
       return true;
     }
+
+    // Handle double Esc to open edit message selector
+    const now = Date.now();
+    if (
+      inputMode &&
+      !showSlashCommands &&
+      !showFileSearch &&
+      !showBashMode &&
+      onShowEditSelector &&
+      now - lastEscapePressRef.current < 500
+    ) {
+      // Double escape detected
+      onShowEditSelector();
+      lastEscapePressRef.current = 0; // Reset to prevent triple-escape
+      return true;
+    }
+
+    // Track single escape press
+    lastEscapePressRef.current = now;
 
     return false;
   };

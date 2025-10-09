@@ -135,7 +135,7 @@ export class GhostTextAcceptanceTracker {
         );
 
         if (wasGhostTextAccepted) {
-          console.log(
+          console.debug(
             "GhostTextAcceptanceTracker: ghost text was accepted, preserving chain",
           );
           return true;

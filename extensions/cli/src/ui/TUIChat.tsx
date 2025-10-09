@@ -212,7 +212,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 
   // Use login handlers
-  const { handleLoginPrompt, handleLoginTokenSubmit } = useLoginHandlers(
+  const { handleLoginTokenSubmit } = useLoginHandlers(
     navigateTo,
     navState,
     closeCurrentScreen,
@@ -266,6 +266,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   } = useChat({
     assistant: services.config?.config || undefined,
@@ -281,9 +282,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
-    onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     onClear: handleClear,
+    onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
@@ -420,6 +421,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isRemoteMode={isRemoteMode}
           onImageInClipboardChange={setHasImageInClipboard}
           diffContent={diffContent}
+          chatHistory={chatHistory}
+          handleEditMessage={handleEditMessage}
+          onShowEditSelector={() => navigateTo("edit")}
         />
 
         {/* Resource debug bar - only in verbose mode */}
