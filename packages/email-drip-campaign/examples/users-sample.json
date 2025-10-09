@@ -1,0 +1,42 @@
+[
+  {
+    "id": "user-001",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "signUpDate": "2024-01-15T10:00:00.000Z",
+    "unsubscribed": false
+  },
+  {
+    "id": "user-002",
+    "email": "jane.smith@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "signUpDate": "2024-01-20T14:30:00.000Z",
+    "unsubscribed": false
+  },
+  {
+    "id": "user-003",
+    "email": "bob.wilson@example.com",
+    "firstName": "Bob",
+    "lastName": "Wilson",
+    "signUpDate": "2024-02-01T09:15:00.000Z",
+    "unsubscribed": false
+  },
+  {
+    "id": "user-004",
+    "email": "alice.johnson@example.com",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "signUpDate": "2024-02-05T16:45:00.000Z",
+    "unsubscribed": true
+  },
+  {
+    "id": "user-005",
+    "email": "charlie.brown@example.com",
+    "firstName": "Charlie",
+    "lastName": "Brown",
+    "signUpDate": "2024-02-10T11:20:00.000Z",
+    "unsubscribed": false
+  }
+]

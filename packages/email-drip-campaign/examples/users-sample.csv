@@ -1,0 +1,6 @@
+email,firstName,lastName,signUpDate,unsubscribed
+john.doe@example.com,John,Doe,2024-01-15,false
+jane.smith@example.com,Jane,Smith,2024-01-20,false
+bob.wilson@example.com,Bob,Wilson,2024-02-01,false
+alice.johnson@example.com,Alice,Johnson,2024-02-05,true
+charlie.brown@example.com,Charlie,Brown,2024-02-10,false
