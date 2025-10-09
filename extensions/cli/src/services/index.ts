@@ -1,3 +1,4 @@
+import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { logger } from "../util/logger.js";
 
@@ -53,7 +54,8 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
 
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
-    await initializeWithOnboarding(commandOptions.config);
+    const authConfig = loadAuthConfig();
+    await initializeWithOnboarding(authConfig, commandOptions.config);
   }
 
   // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
