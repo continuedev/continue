@@ -449,9 +449,21 @@ export class ControlPlaneClient {
     repoUrl: string,
     name: string,
     branch?: string,
+    organizationId?: string,
   ): Promise<{ id: string }> {
     if (!(await this.isSignedIn())) {
       throw new Error("Not signed in to Continue");
+    }
+
+    const requestBody: any = {
+      prompt,
+      repoUrl,
+      name,
+      branchName: branch,
+    };
+
+    if (organizationId) {
+      requestBody.organizationId = organizationId;
     }
 
     const resp = await this.requestAndHandleError("agents", {
@@ -459,12 +471,7 @@ export class ControlPlaneClient {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        prompt,
-        repoUrl,
-        name,
-        branchName: branch,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     return (await resp.json()) as { id: string };

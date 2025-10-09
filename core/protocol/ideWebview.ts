@@ -50,7 +50,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
   "session/share": [{ sessionId: string }, void];
-  createBackgroundAgent: [{ editorState: any }, void];
+  createBackgroundAgent: [{ editorState: any; organizationId?: string }, void];
   listBackgroundAgents: [
     undefined,
     Array<{

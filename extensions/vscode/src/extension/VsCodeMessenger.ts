@@ -265,7 +265,7 @@ export class VsCodeMessenger {
 
     this.onWebview("createBackgroundAgent", async (msg) => {
       const configHandler = await configHandlerPromise;
-      const { editorState } = msg.data;
+      const { editorState, organizationId } = msg.data;
 
       // Import utilities for processing editor content
       const { stripImages } = await import("core/util/messageContent");
@@ -347,6 +347,8 @@ export class VsCodeMessenger {
         name = `Agent for ${repoName || "repository"}`;
       }
 
+      // debugger;
+
       // Create the background agent
       try {
         console.log("Creating background agent with:", {
@@ -362,6 +364,7 @@ export class VsCodeMessenger {
             repoUrl,
             name,
             branch,
+            organizationId,
           );
 
         vscode.window.showInformationMessage(

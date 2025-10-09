@@ -31,6 +31,7 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -127,6 +128,7 @@ export function Chat() {
     (state) => state.ui.hasDismissedExploreDialog,
   );
   const mode = useAppSelector((state) => state.session.mode);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -176,7 +178,11 @@ export function Chat() {
       // Handle background mode specially
       if (currentMode === "background" && !isCurrentlyInEdit) {
         // Background mode triggers agent creation instead of chat
-        ideMessenger.post("createBackgroundAgent", { editorState });
+        const organizationId = selectCurrentOrg(stateSnapshot)?.id;
+        ideMessenger.post("createBackgroundAgent", {
+          editorState,
+          organizationId,
+        });
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
         }
@@ -473,7 +479,11 @@ export function Chat() {
           {mode === "background" ? (
             <BackgroundModeView
               onCreateAgent={(prompt) => {
-                ideMessenger.post("createBackgroundAgent", { prompt });
+                const organizationId = currentOrg?.id;
+                ideMessenger.post("createBackgroundAgent", {
+                  prompt,
+                  organizationId,
+                });
               }}
             />
           ) : (
