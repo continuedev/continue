@@ -338,6 +338,12 @@ export class VsCodeMessenger {
 
       // Create the background agent
       try {
+        console.log("Creating background agent with:", {
+          prompt: prompt.substring(0, 50) + "...",
+          repoUrl,
+          branch,
+        });
+
         const result =
           await configHandler.controlPlaneClient.createBackgroundAgent(
             prompt,
@@ -345,18 +351,15 @@ export class VsCodeMessenger {
             branch,
           );
 
-        if (result) {
-          vscode.window.showInformationMessage(
-            `Background agent created successfully! Agent ID: ${result.id}`,
-          );
-        } else {
-          vscode.window.showErrorMessage(
-            "Failed to create background agent. Make sure you're signed in to Continue.",
-          );
-        }
+        vscode.window.showInformationMessage(
+          `Background agent created successfully! Agent ID: ${result.id}`,
+        );
       } catch (e) {
+        console.error("Failed to create background agent:", e);
+        const errorMessage =
+          e instanceof Error ? e.message : "Unknown error occurred";
         vscode.window.showErrorMessage(
-          `Error creating background agent: ${e instanceof Error ? e.message : "Unknown error"}`,
+          `Failed to create background agent: ${errorMessage}`,
         );
       }
     });

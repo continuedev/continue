@@ -448,34 +448,24 @@ export class ControlPlaneClient {
     prompt: string,
     repoUrl: string,
     branch?: string,
-  ): Promise<{ id: string } | null> {
+  ): Promise<{ id: string }> {
     if (!(await this.isSignedIn())) {
-      return null;
+      throw new Error("Not signed in to Continue");
     }
 
-    try {
-      const resp = await this.requestAndHandleError("agents/devboxes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
-          repoUrl,
-          branch,
-        }),
-      });
-
-      return (await resp.json()) as { id: string };
-    } catch (e) {
-      Logger.error(e, {
-        context: "control_plane_create_background_agent",
+    const resp = await this.requestAndHandleError("agents/devboxes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         prompt,
         repoUrl,
         branch,
-      });
-      return null;
-    }
+      }),
+    });
+
+    return (await resp.json()) as { id: string };
   }
 
   /**
