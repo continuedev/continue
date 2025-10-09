@@ -447,13 +447,14 @@ export class ControlPlaneClient {
   public async createBackgroundAgent(
     prompt: string,
     repoUrl: string,
+    name: string,
     branch?: string,
   ): Promise<{ id: string }> {
     if (!(await this.isSignedIn())) {
       throw new Error("Not signed in to Continue");
     }
 
-    const resp = await this.requestAndHandleError("agents/devboxes", {
+    const resp = await this.requestAndHandleError("agents", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -461,7 +462,8 @@ export class ControlPlaneClient {
       body: JSON.stringify({
         prompt,
         repoUrl,
-        branch,
+        name,
+        branchName: branch,
       }),
     });
 
@@ -488,7 +490,7 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.requestAndHandleError("agents/devboxes", {
+      const resp = await this.requestAndHandleError("agents", {
         method: "GET",
       });
 
@@ -496,14 +498,15 @@ export class ControlPlaneClient {
 
       return agents.map((agent: any) => ({
         id: agent.id,
-        name: agent.name || null,
+        name: agent.name || agent.metadata?.name || null,
         status: agent.status,
-        repoUrl: agent.repo_url || agent.repoUrl || "",
-        createdAt: new Date(
-          agent.created_at || agent.create_time_ms,
-        ).toISOString(),
+        repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
+        createdAt:
+          agent.created_at || agent.create_time_ms
+            ? new Date(agent.created_at || agent.create_time_ms).toISOString()
+            : new Date().toISOString(),
         metadata: {
-          github_repo: agent.metadata?.github_repo || agent.repo_url,
+          github_repo: agent.metadata?.github_repo || agent.metadata?.repo_url,
         },
       }));
     } catch (e) {

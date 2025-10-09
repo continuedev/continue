@@ -336,9 +336,21 @@ export class VsCodeMessenger {
         return;
       }
 
+      // Generate a name from the prompt (first 50 chars, cleaned up)
+      let name = prompt.substring(0, 50).replace(/\n/g, " ").trim();
+      if (prompt.length > 50) {
+        name += "...";
+      }
+      // Fallback to a generic name if prompt is too short
+      if (name.length < 3) {
+        const repoName = await this.ide.getRepoName(workspaceDir);
+        name = `Agent for ${repoName || "repository"}`;
+      }
+
       // Create the background agent
       try {
         console.log("Creating background agent with:", {
+          name,
           prompt: prompt.substring(0, 50) + "...",
           repoUrl,
           branch,
@@ -348,6 +360,7 @@ export class VsCodeMessenger {
           await configHandler.controlPlaneClient.createBackgroundAgent(
             prompt,
             repoUrl,
+            name,
             branch,
           );
 
