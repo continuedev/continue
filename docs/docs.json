@@ -2,6 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
+  "banner": {
+    "content": "Continue CLI v1.4.49 is live 🚀 Learn how you can [leverage the CLI with our MCP Cookbooks](/guides/overview#mcp-integration-cookbooks)",
+    "dismissable": true
+  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
