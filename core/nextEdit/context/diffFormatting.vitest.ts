@@ -127,6 +127,72 @@ describe("diffFormatting", () => {
 
       expect(result).toContain("@@ -4,5 +4,5 @@");
     });
+
+    it("should use relative path when workspaceDir is provided", () => {
+      const args: CreateDiffArgs = {
+        beforeContent,
+        afterContent,
+        filePath: "file:///workspace/project/src/test.js",
+        diffType: DiffFormatType.Unified,
+        contextLines: 3,
+        workspaceDir: "file:///workspace/project",
+      };
+
+      const result = createDiff(args);
+
+      expect(result).toContain("--- src/test.js");
+      expect(result).toContain("+++ src/test.js");
+      expect(result).not.toContain("file://");
+      expect(result).not.toContain("/workspace/project");
+    });
+
+    it("should handle workspaceDir with trailing slash", () => {
+      const args: CreateDiffArgs = {
+        beforeContent,
+        afterContent,
+        filePath: "file:///workspace/project/src/test.js",
+        diffType: DiffFormatType.Unified,
+        contextLines: 3,
+        workspaceDir: "file:///workspace/project/",
+      };
+
+      const result = createDiff(args);
+
+      expect(result).toContain("--- src/test.js");
+      expect(result).toContain("+++ src/test.js");
+    });
+
+    it("should fallback to basename when path not in workspace", () => {
+      const args: CreateDiffArgs = {
+        beforeContent,
+        afterContent,
+        filePath: "file:///other/location/test.js",
+        diffType: DiffFormatType.Unified,
+        contextLines: 3,
+        workspaceDir: "file:///workspace/project",
+      };
+
+      const result = createDiff(args);
+
+      expect(result).toContain("--- test.js");
+      expect(result).toContain("+++ test.js");
+    });
+
+    it("should use full path when no workspaceDir provided", () => {
+      const fullPath = "file:///workspace/project/src/test.js";
+      const args: CreateDiffArgs = {
+        beforeContent,
+        afterContent,
+        filePath: fullPath,
+        diffType: DiffFormatType.Unified,
+        contextLines: 3,
+      };
+
+      const result = createDiff(args);
+
+      expect(result).toContain(`--- ${fullPath}`);
+      expect(result).toContain(`+++ ${fullPath}`);
+    });
   });
 
   describe("createBeforeAfterDiff", () => {
