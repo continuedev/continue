@@ -3,7 +3,9 @@ import * as path from "path";
 
 import chalk from "chalk";
 
-import { login } from "./auth/workos.js";
+import { AuthConfig, login } from "./auth/workos.js";
+import { getApiClient } from "./config.js";
+import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
 import {
   getApiKeyValidationError,
@@ -131,8 +133,26 @@ export async function markOnboardingComplete(): Promise<void> {
   fs.writeFileSync(flagPath, new Date().toISOString());
 }
 
-export async function initializeWithOnboarding(configPath: string | undefined) {
+export async function initializeWithOnboarding(
+  authConfig: AuthConfig,
+  configPath: string | undefined,
+) {
   const firstTime = await isFirstTime();
+
+  if (configPath !== undefined) {
+    // throw an early error is configPath is invalid or has errors
+    try {
+      await loadConfiguration(
+        authConfig,
+        configPath,
+        getApiClient(authConfig?.accessToken),
+      );
+    } catch (errorMessage) {
+      throw new Error(
+        `Failed to load config from "${configPath}": ${errorMessage}`,
+      );
+    }
+  }
 
   if (!firstTime) return;
 
