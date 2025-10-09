@@ -105,4 +105,11 @@ export class SecretStorage {
     }
     return undefined;
   }
+
+  async delete(key: string): Promise<void> {
+    const filePath = this.keyToFilepath(key);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
 }
