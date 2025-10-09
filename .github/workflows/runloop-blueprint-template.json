@@ -3,6 +3,7 @@
   "system_setup_commands": [
     "npm i -g @continuedev/cli@latest",
     "sudo apt update",
-    "sudo apt install -y ripgrep"
+    "sudo apt install -y ripgrep",
+    "sudo apt install asciinema"
   ]
 }
