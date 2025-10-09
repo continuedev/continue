@@ -361,7 +361,6 @@ export async function unrollBlocks(
     name: assistant.name,
     version: assistant.version,
     requestOptions: assistant.requestOptions,
-    disableCommitSignature: assistant.disableCommitSignature,
   };
 
   if (injectRequestOptions) {
@@ -382,7 +381,6 @@ export async function unrollBlocks(
     | "metadata"
     | "env"
     | "requestOptions"
-    | "disableCommitSignature"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel

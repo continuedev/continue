@@ -12,6 +12,14 @@ vi.mock("./services/ServiceContainer.js", () => ({
   },
 }));
 
+// Mock GlobalContext
+const mockGlobalContextGet = vi.fn((key: string) => undefined);
+vi.mock("core/util/GlobalContext.js", () => ({
+  GlobalContext: class {
+    get = mockGlobalContextGet as any;
+  },
+}));
+
 // Mock processRule to avoid file system operations in tests
 vi.mock("./hubLoader.js", () => ({
   processRule: vi
@@ -22,10 +30,13 @@ vi.mock("./hubLoader.js", () => ({
 const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
 
 const { serviceContainer } = await import("./services/ServiceContainer.js");
+const { GlobalContext } = await import("core/util/GlobalContext.js");
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(serviceContainer.get).mockResolvedValue({ config: { rules: [] } });
+  // Reset GlobalContext mock
+  mockGlobalContextGet.mockReturnValue(undefined);
 });
 
 describe("constructSystemMessage", () => {
@@ -276,8 +287,9 @@ Rule 3: Third rule`;
   });
 
   it("should not include commit signature when disableCommitSignature is true", async () => {
-    vi.mocked(serviceContainer.get).mockResolvedValue({
-      config: { rules: [], disableCommitSignature: true },
+    mockGlobalContextGet.mockImplementation((key: string) => {
+      if (key === "disableCommitSignature") return true as any;
+      return undefined;
     });
 
     const result = await constructSystemMessage("normal");
@@ -287,8 +299,9 @@ Rule 3: Third rule`;
   });
 
   it("should include commit signature when disableCommitSignature is false", async () => {
-    vi.mocked(serviceContainer.get).mockResolvedValue({
-      config: { rules: [], disableCommitSignature: false },
+    mockGlobalContextGet.mockImplementation((key: string) => {
+      if (key === "disableCommitSignature") return false as any;
+      return undefined;
     });
 
     const result = await constructSystemMessage("normal");

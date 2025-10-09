@@ -96,6 +96,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "set",
+    description: "Set CLI preferences",
+    category: "system",
+  },
+  {
     name: "exit",
     description: "Exit the chat",
     category: "system",

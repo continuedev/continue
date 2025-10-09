@@ -14,6 +14,7 @@ import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import { GlobalContext } from "core/util/GlobalContext.js";
 
 type CommandHandler = (
   args: string[],
@@ -168,6 +169,50 @@ function handleTitle(args: string[]) {
   }
 }
 
+function handleSet(args: string[]) {
+  posthogService.capture("useSlashCommand", { name: "set" });
+
+  if (args.length < 2) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Usage: /set <preference> <value>\n\nAvailable preferences:\n  disableCommitSignature <true|false> - Control commit message attribution",
+      ),
+    };
+  }
+
+  const [preference, value] = args;
+
+  try {
+    const globalContext = new GlobalContext();
+
+    switch (preference) {
+      case "disableCommitSignature": {
+        const booleanValue = value.toLowerCase() === "true";
+        globalContext.update("disableCommitSignature", booleanValue);
+        return {
+          exit: false,
+          output: chalk.green(
+            `Preference updated: ${preference} = ${booleanValue}`,
+          ),
+        };
+      }
+      default:
+        return {
+          exit: false,
+          output: chalk.yellow(
+            `Unknown preference: ${preference}\n\nAvailable preferences:\n  disableCommitSignature <true|false> - Control commit message attribution`,
+          ),
+        };
+    }
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to update preference: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -195,6 +240,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   },
   fork: handleFork,
   title: handleTitle,
+  set: handleSet,
   init: (args, assistant) => {
     posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
