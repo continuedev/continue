@@ -2,6 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
+  "banner": {
+    "content": "Continue CLI v1.4.49 is live 🚀 Learn how you can [leverage the CLI with our MCP Cookbooks](/guides/overview#mcp-integration-cookbooks)",
+    "dismissable": true
+  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -26,7 +30,12 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quick-start",
+              "cli/guides"
+            ]
           },
           {
             "group": "Features",
@@ -88,13 +97,14 @@
               "customization/models",
               "customization/mcp-tools",
               "customization/rules",
-              "customization/prompts"
+              "customization/prompts",
+              "customization/settings"
             ]
           },
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["faqs", "troubleshooting"]
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
       },
@@ -129,6 +139,7 @@
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/asksage",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
@@ -185,7 +196,7 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "agents",
+                "group": "Agents",
                 "icon": "robot",
                 "pages": [
                   "hub/agents/intro",
@@ -221,6 +232,11 @@
                   "hub/secrets/secret-resolution"
                 ]
               },
+              {
+                "group": "Workflows",
+                "icon": "cloud",
+                "pages": ["hub/workflows/intro"]
+              },
               "hub/sharing",
               "hub/source-control"
             ]
@@ -246,7 +262,8 @@
               "guides/instinct",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model"
+              "guides/how-to-self-host-a-model",
+              "guides/notion-continue-guide"
             ]
           },
           {
@@ -254,8 +271,14 @@
             "icon": "book-open-cover",
             "pages": [
               "guides/posthog-github-continuous-ai",
+              "guides/continue-docs-mcp-cookbook",
+              "guides/github-mcp-continue-cookbook",
+              "guides/sanity-mcp-continue-cookbook",
+              "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
-              "guides/netlify-mcp-continuous-deployment"
+              "guides/dlt-mcp-continue-cookbook",
+              "guides/netlify-mcp-continuous-deployment",
+              "guides/chrome-devtools-mcp-performance"
             ]
           }
         ]
@@ -317,7 +340,7 @@
   "navbar": {
     "links": [
       {
-        "label": "Explore",
+        "label": "🚀 Get Started",
         "href": "https://hub.continue.dev/"
       }
     ],

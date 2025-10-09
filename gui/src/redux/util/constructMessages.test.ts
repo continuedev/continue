@@ -5,6 +5,7 @@ import {
   ContextItemWithId,
   RuleWithSource,
   ThinkingChatMessage,
+  ToolCall,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
@@ -435,27 +436,26 @@ describe("constructMessages", () => {
   });
 
   test("should handle multiple tool calls in a single assistant message", () => {
+    const toolCall1: ToolCall = {
+      id: "tool-call-1",
+      type: "function",
+      function: {
+        name: "search",
+        arguments: '{"query": "test"}',
+      },
+    };
+    const toolCall2: ToolCall = {
+      id: "tool-call-2",
+      type: "function",
+      function: {
+        name: "weather",
+        arguments: '{"location": "New York"}',
+      },
+    };
     const assistantWithMultipleToolCalls: AssistantChatMessage = {
       role: "assistant",
       content: "I will search and check the weather",
-      toolCalls: [
-        {
-          id: "tool-call-1",
-          type: "function",
-          function: {
-            name: "search",
-            arguments: '{"query": "test"}',
-          },
-        },
-        {
-          id: "tool-call-2",
-          type: "function",
-          function: {
-            name: "weather",
-            arguments: '{"location": "New York"}',
-          },
-        },
-      ],
+      toolCalls: [toolCall1, toolCall2],
     };
 
     // Only the first tool call has output
@@ -465,20 +465,19 @@ describe("constructMessages", () => {
         contextItems: [],
         toolCallStates: [
           {
-            toolCallId: "tool-call-1",
-            toolCall: {
-              id: "tool-call-1",
-              type: "function",
-              function: {
-                name: "search",
-                arguments: '{"query": "test"}',
-              },
-            },
+            toolCallId: toolCall1.id,
+            toolCall: toolCall1,
             status: "done",
             parsedArgs: { query: "test" },
             output: [
               createContextItem("search-result", "Search result content"),
             ],
+          },
+          {
+            toolCallId: toolCall2.id,
+            toolCall: toolCall2,
+            status: "done",
+            parsedArgs: { location: "New York" },
           },
         ],
       },
@@ -957,27 +956,36 @@ describe("constructMessages", () => {
       expect(toolMessage.content).toBe(NO_TOOL_CALL_OUTPUT_MESSAGE);
     });
 
-    test("should use NO_TOOL_CALL_OUTPUT_MESSAGE when toolCallState is undefined", () => {
+    test("should use NO_TOOL_CALL_OUTPUT_MESSAGE when toolCallState output is undefined", () => {
+      const toolCall: ToolCall = {
+        id: "search-call-1",
+        type: "function",
+        function: {
+          name: "search",
+          arguments: '{"query": "test"}',
+        },
+      };
       const assistantWithToolCall: AssistantChatMessage = {
         role: "assistant",
         content: "I'll search for that",
-        toolCalls: [
-          {
-            id: "search-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
-            },
-          },
-        ],
+        toolCalls: [toolCall],
       };
 
       mockHistory = [
         {
           message: assistantWithToolCall,
           contextItems: [],
-          // No toolCallStates array
+          toolCallStates: [
+            {
+              toolCall,
+              parsedArgs: {
+                query: "test",
+              },
+              status: "generated",
+              toolCallId: toolCall.id,
+              // no output defined
+            },
+          ],
         },
       ];
 

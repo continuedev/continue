@@ -25,7 +25,7 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       globs: rule.globs,
       name: rule.name,
       description: rule.description,
-      ruleFile: rule.sourceFile,
+      sourceFile: rule.sourceFile,
       alwaysApply: rule.alwaysApply,
       invokable: rule.invokable ?? false,
     };
@@ -48,27 +48,28 @@ export function convertYamlMcpConfigToInternalMcpOptions(
   if ("command" in config) {
     const { args, command, cwd, env, type } = config;
     const stdioOptions: InternalStdioMcpOptions = {
+      ...shared,
       type,
       command,
       args,
       cwd,
       env,
-      ...shared,
     };
     return stdioOptions;
   }
   // HTTP/SSE
-  const { type, url, requestOptions } = config;
+  const { type, url, apiKey, requestOptions } = config;
   const httpSseConfig:
     | InternalStreamableHttpMcpOptions
     | InternalSseMcpOptions = {
+    ...shared,
     type,
     url,
+    apiKey,
     requestOptions: mergeConfigYamlRequestOptions(
       requestOptions,
       globalRequestOptions,
     ),
-    ...shared,
   };
   return httpSseConfig;
 }

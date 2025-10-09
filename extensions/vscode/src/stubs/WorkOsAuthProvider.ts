@@ -161,22 +161,34 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
     // await this.hasAttemptedRefresh;
-    const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
-    if (!data) {
-      return [];
-    }
-
     try {
+      const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
+      if (!data) {
+        return [];
+      }
+
       const value = JSON.parse(data) as ContinueAuthenticationSession[];
       return value;
     } catch (e: any) {
-      // Capture session file parsing errors to Sentry
+      // Capture session decrypt and parsing errors to Sentry
       Logger.error(e, {
-        context: "workOS_sessions_json_parse",
-        dataLength: data.length,
+        context: "workOS_sessions_retrieval",
+        errorMessage: e.message,
       });
 
-      console.warn(`Error parsing sessions.json: ${e}`);
+      console.warn(`Error retrieving or parsing sessions: ${e.message}`);
+
+      // Delete the corrupted cache file to allow fresh start on next attempt
+      // This handles cases where decryption succeeded but JSON parsing failed
+      try {
+        await this.secretStorage.delete(SESSIONS_SECRET_KEY);
+      } catch (deleteError: any) {
+        console.error(
+          `Failed to delete corrupted sessions cache:`,
+          deleteError.message,
+        );
+      }
+
       return [];
     }
   }

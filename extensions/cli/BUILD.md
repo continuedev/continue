@@ -6,8 +6,9 @@ The Continue CLI uses esbuild to bundle the application along with local package
 
 ## Build Steps
 
-1. **Install dependencies**: `npm install`
-2. **Build**: `npm run build`
+1. **Build packages**: `cd ../../ && node ./scripts/build-packages.js`
+2. **Install dependencies**: `npm install`
+3. **Build**: `npm run build`
    - This first builds the local packages
    - Then bundles everything with esbuild
 

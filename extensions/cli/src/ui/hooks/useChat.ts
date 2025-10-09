@@ -58,8 +58,8 @@ export function useChat({
   onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
-  onLoginPrompt: _onLoginPrompt,
   onClear,
+  onRefreshStatic,
   isRemoteMode = false,
   remoteUrl,
   onShowDiff,
@@ -455,7 +455,11 @@ export function useChat({
     message: string,
     imageMap?: Map<string, Buffer>,
     isQueuedMessage: boolean = false,
+    baseHistory?: ChatHistoryItem[],
   ) => {
+    // Use baseHistory if provided (e.g., when editing a message),
+    // otherwise use current chatHistory
+    const currentHistory = baseHistory ?? chatHistory;
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -524,7 +528,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -591,7 +595,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -721,6 +725,42 @@ export function useChat({
     setQueuedMessages([]);
   };
 
+  const handleEditMessage = async (
+    messageIndex: number,
+    newContent: string,
+  ) => {
+    logger.debug("handleEditMessage called", {
+      messageIndex,
+      currentHistoryLength: chatHistory.length,
+    });
+
+    // Rewind chat history to exclude the message being edited
+    const rewindedHistory = chatHistory.slice(0, messageIndex);
+
+    logger.debug("Rewinding history for edit", {
+      from: chatHistory.length,
+      to: rewindedHistory.length,
+    });
+
+    // Clear any queued messages
+    setQueuedMessages([]);
+
+    // Clear attached files
+    setAttachedFiles([]);
+
+    // Update the session with the rewound history
+    updateSessionHistory(rewindedHistory);
+
+    // Force refresh of StaticChatContent to show truncated history
+    if (onRefreshStatic) {
+      onRefreshStatic();
+    }
+
+    // Resubmit the edited message with the rewound history as the base
+    // This ensures processMessage uses the correct base history
+    await processMessage(newContent, undefined, false, rewindedHistory);
+  };
+
   const handleToolPermissionResponse = async (
     requestId: string,
     approved: boolean,
@@ -749,7 +789,7 @@ export function useChat({
         logger.debug(`Policy created: ${policyRule}`);
 
         // Reload permissions to pick up the new policy without requiring restart
-        await services.mode.getToolPermissionService().reloadPermissions();
+        await services.toolPermissions.reloadPermissions();
       } catch (error) {
         logger.error("Failed to create policy or reload permissions", {
           error,
@@ -803,6 +843,7 @@ export function useChat({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   };
 }

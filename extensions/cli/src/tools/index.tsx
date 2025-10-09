@@ -8,8 +8,8 @@ import {
   MCPServiceState,
   SERVICE_NAMES,
   serviceContainer,
+  services,
 } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import type { ModelServiceState } from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
@@ -23,6 +23,7 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
@@ -57,17 +58,13 @@ export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
 function getDynamicTools(): Tool[] {
   const dynamicTools: Tool[] = [];
 
-  // Add headless-specific tools if in headless mode
-  try {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-    const isHeadless = serviceResult.value?.isHeadless ?? false;
-    if (isHeadless) {
-      dynamicTools.push(exitTool);
-    }
-  } catch {
-    // Service not ready yet, no dynamic tools
+  if (services.toolPermissions.isHeadless()) {
+    dynamicTools.push(exitTool);
+  }
+
+  // Add beta status tool if --beta-status-tool flag is present
+  if (process.argv.includes("--beta-status-tool")) {
+    dynamicTools.push(statusTool);
   }
 
   return dynamicTools;

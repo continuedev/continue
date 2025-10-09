@@ -140,7 +140,7 @@ export class PrefetchQueue {
     const count = Math.min(3, this.processedQueue.length);
     const firstThree = this.processedQueue.slice(0, count);
     firstThree.forEach((item, index) => {
-      console.log(
+      console.debug(
         `Item ${index + 1}: ${item.location.range.start.line} to ${item.location.range.end.line}`,
       );
     });
