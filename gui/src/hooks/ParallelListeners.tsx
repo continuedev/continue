@@ -107,6 +107,7 @@ function ParallelListeners() {
         await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
+      await dispatch(loadLastSession());
     }
     void initialLoadConfig();
     const interval = setInterval(() => {
@@ -241,10 +242,6 @@ function ParallelListeners() {
 
   useEffect(() => {
     migrateLocalStorage(dispatch);
-  }, []);
-
-  useEffect(() => {
-    void dispatch(loadLastSession());
   }, []);
 
   return <></>;
