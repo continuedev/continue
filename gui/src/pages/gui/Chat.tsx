@@ -44,6 +44,7 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
+import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
@@ -125,6 +126,7 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const mode = useAppSelector((state) => state.session.mode);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -169,6 +171,17 @@ export function Chat() {
       const codeToEditSnapshot = stateSnapshot.editModeState.codeToEdit;
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
+      const currentMode = stateSnapshot.session.mode;
+
+      // Handle background mode specially
+      if (currentMode === "background" && !isCurrentlyInEdit) {
+        // Background mode triggers agent creation instead of chat
+        ideMessenger.post("createBackgroundAgent", { editorState });
+        if (editorToClearOnSend) {
+          editorToClearOnSend.commands.clearContent();
+        }
+        return;
+      }
 
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
@@ -457,8 +470,16 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {history.length === 0 && (
-            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+          {mode === "background" ? (
+            <BackgroundModeView
+              onCreateAgent={(prompt) => {
+                ideMessenger.post("createBackgroundAgent", { prompt });
+              }}
+            />
+          ) : (
+            history.length === 0 && (
+              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+            )
           )}
         </div>
       </div>
