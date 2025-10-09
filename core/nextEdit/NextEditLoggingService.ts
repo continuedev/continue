@@ -246,6 +246,9 @@ export class NextEditLoggingService {
           }),
         },
       );
-    } catch (error) {}
+      console.debug("Feedback: ", resp);
+    } catch (error: any) {
+      console.debug(`Error capturing feedback: ${error.message}`);
+    }
   }
 }
