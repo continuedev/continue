@@ -371,9 +371,30 @@ export class VsCodeMessenger {
         console.error("Failed to create background agent:", e);
         const errorMessage =
           e instanceof Error ? e.message : "Unknown error occurred";
-        vscode.window.showErrorMessage(
-          `Failed to create background agent: ${errorMessage}`,
-        );
+
+        // Check if this is a GitHub authorization error
+        if (
+          errorMessage.includes("GitHub token") ||
+          errorMessage.includes("GitHub App")
+        ) {
+          const selection = await vscode.window.showErrorMessage(
+            "Background agents need GitHub access. Please connect your GitHub account to Continue.",
+            "Connect GitHub",
+            "Cancel",
+          );
+
+          if (selection === "Connect GitHub") {
+            vscode.env.openExternal(
+              vscode.Uri.parse(
+                "https://hub.continue.dev/settings/integrations",
+              ),
+            );
+          }
+        } else {
+          vscode.window.showErrorMessage(
+            `Failed to create background agent: ${errorMessage}`,
+          );
+        }
       }
     });
 
