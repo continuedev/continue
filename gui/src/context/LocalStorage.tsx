@@ -34,21 +34,6 @@ export const LocalStorageProvider: React.FC<{ children: React.ReactNode }> = ({
     syncWithLocalStorage();
   }, []);
 
-  // Listen for localStorage changes from other tabs
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "fontSize") {
-        syncWithLocalStorage();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
   // Listen for current tab changes using CustomEvent
   useEffect(() => {
     const handleLocalStorageChange = (event: CustomEvent) => {
