@@ -24,7 +24,8 @@ function reconstructNewFile(
   oldFile: string,
   newFile: string,
   lazyBlockReplacements: AstReplacements,
-): string {
+  parser: Parser,
+): string | null {
   // Sort acc by reverse line number
   lazyBlockReplacements
     .sort((a, b) => a.nodeToReplace.startIndex - b.nodeToReplace.startIndex)
@@ -95,7 +96,72 @@ function reconstructNewFile(
     }
   }
 
-  return newFileChars.join("");
+  const reconstructedFile = newFileChars.join("");
+
+  // CRITICAL FIX: Validate that the reconstructed code is syntactically valid
+  // This prevents IndentationErrors and other syntax errors from corrupting files
+  try {
+    const tree = parser.parse(reconstructedFile);
+
+    // Check if the tree has any error nodes
+    if (tree.rootNode.hasError()) {
+      console.warn(
+        "Lazy block reconstruction created invalid syntax. Falling back to safer method.",
+      );
+      return null;
+    }
+
+    // Additional check: ensure we didn't create empty function/class bodies
+    // Look for function/class definitions followed immediately by another definition
+    const hasEmptyBlocks = findInAst(tree.rootNode, (node) => {
+      // Check for function definitions, class definitions, etc.
+      const isBlockDefinition =
+        node.type.includes("function") ||
+        node.type.includes("class") ||
+        node.type.includes("method");
+
+      if (isBlockDefinition) {
+        // Skip TypeScript interface members and other declarations that don't require bodies
+        const isInterfaceMember = node.parent?.type.includes("interface");
+        const isTypeAliasOrDeclaration =
+          node.parent?.type.includes("type_alias") ||
+          node.type.includes("signature") ||
+          node.type.includes("declaration");
+        const isAbstractMethod = node.text.includes("abstract");
+
+        // Skip ambient declarations (e.g., declare function foo(): void;)
+        const isAmbient = node.text.trim().startsWith("declare ");
+
+        if (
+          isInterfaceMember ||
+          isTypeAliasOrDeclaration ||
+          isAbstractMethod ||
+          isAmbient
+        ) {
+          return false; // These are allowed to have no body
+        }
+
+        // Check if it has a body child
+        const body = node.childForFieldName("body");
+        if (!body || body.namedChildCount === 0) {
+          console.warn(
+            `Lazy block reconstruction created empty ${node.type} body. Falling back to safer method.`,
+          );
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (hasEmptyBlocks) {
+      return null;
+    }
+  } catch (error) {
+    console.warn("Failed to parse reconstructed file:", error);
+    return null;
+  }
+
+  return reconstructedFile;
 }
 
 const REMOVAL_PERCENTAGE_THRESHOLD = 0.3;
@@ -150,7 +216,7 @@ export async function deterministicApplyLazyEdit({
 
   const oldTree = parser.parse(oldFile);
   let newTree = parser.parse(newLazyFile);
-  let reconstructedNewFile: string | undefined = undefined;
+  let reconstructedNewFile: string | null | undefined = undefined;
 
   if (onlyFullFileRewrite) {
     if (!isLazyText(newTree.rootNode.text)) {
@@ -216,7 +282,16 @@ export async function deterministicApplyLazyEdit({
       oldFile,
       newLazyFile,
       replacements,
+      parser,
     );
+
+    // If reconstruction validation failed, fall back to safer method
+    if (!reconstructedNewFile) {
+      console.warn(
+        "Reconstruction validation failed. Falling back to safer method.",
+      );
+      return undefined;
+    }
   }
 
   const diff = myersDiff(oldFile, reconstructedNewFile);
@@ -306,12 +381,22 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     return false;
   }
 
-  // Check if they have the same name
+  // Check if they have the same name field (exact match required)
   if (
     a.childForFieldName("name") !== null &&
     a.childForFieldName("name")?.text === b.childForFieldName("name")?.text
   ) {
     return true;
+  }
+
+  // CRITICAL FIX: If nodes have a name field but names DON'T match, they are NOT similar
+  // This prevents matching functions like calculate_tax() and calculate_total()
+  if (
+    a.childForFieldName("name") !== null &&
+    b.childForFieldName("name") !== null &&
+    a.childForFieldName("name")?.text !== b.childForFieldName("name")?.text
+  ) {
+    return false;
   }
 
   if (
@@ -334,10 +419,18 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     }
   }
 
-  const lineOneA = a.text.split("\n")[0];
-  const lineOneB = b.text.split("\n")[0];
+  // IMPROVED: Use first 3 lines instead of just first line for better accuracy
+  // This prevents false matches between functions with similar signatures but different bodies
+  const linesA = a.text.split("\n");
+  const linesB = b.text.split("\n");
 
-  return stringsWithinLevDistThreshold(lineOneA, lineOneB, 0.2);
+  // Compare first 3 lines (or all lines if less than 3)
+  const linesToCompare = Math.min(3, Math.min(linesA.length, linesB.length));
+  const firstLinesA = linesA.slice(0, linesToCompare).join("\n");
+  const firstLinesB = linesB.slice(0, linesToCompare).join("\n");
+
+  // TIGHTENED: Reduced threshold from 0.2 (20%) to 0.1 (10%) for stricter matching
+  return stringsWithinLevDistThreshold(firstLinesA, firstLinesB, 0.1);
 }
 
 function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
