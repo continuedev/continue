@@ -49,6 +49,8 @@ export async function* llmStreamChat(
     },
   };
 
+  let hasToolCalls = false; // Track if we're streaming tool calls
+
   try {
     if (legacySlashCommandData) {
       const { command, contextItems, historyIndex, input, selectedCode } =
@@ -127,6 +129,8 @@ export async function* llmStreamChat(
         messageOptions,
       );
       let next = await gen.next();
+      let accumulatedChunks: ChatMessage[] = [];
+
       while (!next.done) {
         if (abortController.signal.aborted) {
           next = await gen.return(errorPromptLog);
@@ -134,6 +138,16 @@ export async function* llmStreamChat(
         }
 
         const chunk = next.value;
+        accumulatedChunks.push(chunk);
+
+        // Track if we've seen any tool calls (only assistant/thinking messages have toolCalls)
+        if (
+          (chunk.role === "assistant" || chunk.role === "thinking") &&
+          chunk.toolCalls &&
+          chunk.toolCalls.length > 0
+        ) {
+          hasToolCalls = true;
+        }
 
         yield chunk;
         next = await gen.next();
@@ -160,10 +174,11 @@ export async function* llmStreamChat(
       return next.value;
     }
   } catch (error) {
-    if (
+    const isPrematureClose =
       error instanceof Error &&
-      error.message.toLowerCase().includes("premature close")
-    ) {
+      error.message.toLowerCase().includes("premature close");
+
+    if (isPrematureClose) {
       void Telemetry.capture(
         "stream_premature_close_error",
         {
@@ -178,6 +193,33 @@ export async function* llmStreamChat(
         false,
       );
     }
+
+    // For premature close during tool calls, don't throw - instead yield error as tool result
+    // This allows the model to recover by trying again with more concise output
+    if (isPrematureClose && hasToolCalls) {
+      void Telemetry.capture(
+        "premature_close_tool_call_recovery",
+        {
+          model: model.model,
+          provider: model.providerName,
+        },
+        false,
+      );
+
+      // Yield error message as tool result so model can see it failed
+      yield {
+        role: "tool" as const,
+        content: `Error: The previous tool call response was cancelled mid-stream due to network issues (Premature Close). Please try again with more concise, focused output. Consider:
+- Reducing the amount of data returned
+- Breaking large responses into smaller chunks
+- Using more targeted queries
+- Limiting result sets`,
+        toolCallId: "error", // Placeholder ID
+      };
+
+      return errorPromptLog;
+    }
+
     throw error;
   }
 }
