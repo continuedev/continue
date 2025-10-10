@@ -2,7 +2,6 @@ import path from "path";
 import {
   DEFAULT_PROMPTS_FOLDER_V1,
   DEFAULT_PROMPTS_FOLDER_V2,
-  DEFAULT_RULES_FOLDER,
   RULES_DIR_NAME,
 } from ".";
 import { IDE } from "..";
@@ -24,7 +23,9 @@ export async function getPromptFilesFromDir(
     const uris = await walkDir(dir, ide, {
       source: "get dir prompt files",
     });
-    const promptFilePaths = uris.filter((p) => p.endsWith(".prompt"));
+    const promptFilePaths = uris.filter(
+      (p) => p.endsWith(".prompt") || p.endsWith(".md"),
+    );
     const results = promptFilePaths.map(async (uri) => {
       const content = await ide.readFile(uri); // make a try catch
       return { path: uri, content };
@@ -44,7 +45,7 @@ export async function getAllPromptFiles(
   const workspaceDirs = await ide.getWorkspaceDirs();
   let promptFiles: { path: string; content: string }[] = [];
 
-  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2, DEFAULT_RULES_FOLDER];
+  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2];
   if (checkV1DefaultFolder) {
     dirsToCheck.push(DEFAULT_PROMPTS_FOLDER_V1);
   }
