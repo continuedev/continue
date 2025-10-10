@@ -38,7 +38,7 @@ export function OrganizationsSection() {
 
   function handleConfigureOrganization(org: SerializedOrgWithProfiles) {
     let path: string;
-    if (org.id === "personal") {
+    if (org.id === "personal" || org.slug === undefined) {
       path = "/settings";
     } else {
       path = `/organizations/${org.slug}/settings`;
