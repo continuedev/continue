@@ -62,7 +62,7 @@ Option 1 - Reorder edits: Edit non-overlapping parts first
 
 Option 2 - Update old_string to match state after previous edits
   WRONG: [Edit 1: change "rate = 0.1" to "tax_rate = 0.15", Edit 2: change "return rate" to "return tax_rate"]
-  RIGHT: [Edit 1: change "rate = 0.1" to "tax_rate = 0.15", Edit 2: change "return rate" to "return tax_rate"]
+  RIGHT: [Edit 1: change "rate = 0.1" to "tax_rate = 0.15", Edit 2: change "return tax_rate" to "return tax_rate * 1.1"]
 
 Option 3 - Use replace_all strategically: For variable renames, use replace_all LAST
   Example: [Edit 1: update function body, Edit 2: rename variable with replace_all]

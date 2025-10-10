@@ -123,11 +123,16 @@ function reconstructNewFile(
       if (isBlockDefinition) {
         // Skip TypeScript interface members and other declarations that don't require bodies
         const isInterfaceMember = node.parent?.type.includes("interface");
-        const isTypeDeclaration =
-          node.type.includes("signature") || node.type.includes("declaration");
+        const isTypeAliasOrDeclaration =
+          node.parent?.type.includes("type_alias") ||
+          node.type.includes("signature") ||
+          node.type.includes("declaration");
         const isAbstractMethod = node.text.includes("abstract");
+        
+        // Skip ambient declarations (e.g., declare function foo(): void;)
+        const isAmbient = node.text.trim().startsWith("declare ");
 
-        if (isInterfaceMember || isTypeDeclaration || isAbstractMethod) {
+        if (isInterfaceMember || isTypeAliasOrDeclaration || isAbstractMethod || isAmbient) {
           return false; // These are allowed to have no body
         }
 
