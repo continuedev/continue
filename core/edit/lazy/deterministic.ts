@@ -128,11 +128,16 @@ function reconstructNewFile(
           node.type.includes("signature") ||
           node.type.includes("declaration");
         const isAbstractMethod = node.text.includes("abstract");
-        
+
         // Skip ambient declarations (e.g., declare function foo(): void;)
         const isAmbient = node.text.trim().startsWith("declare ");
 
-        if (isInterfaceMember || isTypeAliasOrDeclaration || isAbstractMethod || isAmbient) {
+        if (
+          isInterfaceMember ||
+          isTypeAliasOrDeclaration ||
+          isAbstractMethod ||
+          isAmbient
+        ) {
           return false; // These are allowed to have no body
         }
 
