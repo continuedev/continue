@@ -109,11 +109,7 @@ export const exitEdit = createAsyncThunk<
   if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
     dispatch(newSession());
   } else {
-    await dispatch(
-      loadLastSession({
-        saveCurrentSession: false,
-      }),
-    );
+    await dispatch(loadLastSession());
   }
 
   dispatch(setMode(state.editModeState.returnToMode));

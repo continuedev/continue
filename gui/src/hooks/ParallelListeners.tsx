@@ -22,7 +22,10 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
-import { refreshSessionMetadata } from "../redux/thunks/session";
+import {
+  loadLastSession,
+  refreshSessionMetadata,
+} from "../redux/thunks/session";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import {
   setDocumentStylesFromLocalStorage,
@@ -104,6 +107,7 @@ function ParallelListeners() {
         await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
+      await dispatch(loadLastSession());
     }
     void initialLoadConfig();
     const interval = setInterval(() => {

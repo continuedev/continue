@@ -45,6 +45,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
+
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { RootState } from "../../redux/store";
@@ -441,11 +442,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >
