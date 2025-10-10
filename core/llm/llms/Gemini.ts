@@ -315,19 +315,30 @@ class Gemini extends BaseLLM {
     stream: AsyncIterable<string>,
   ): AsyncGenerator<ChatMessage> {
     let buffer = "";
+    let hasStrippedOpeningBracket = false;
+
     for await (const chunk of stream) {
       buffer += chunk;
-      if (buffer.startsWith("[")) {
+
+      // Strip the opening bracket of the outer JSON array only once at the start
+      if (!hasStrippedOpeningBracket && buffer.startsWith("[")) {
         buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
+        hasStrippedOpeningBracket = true;
       }
 
-      const parts = buffer.split("\n,");
+      // Check if we have a closing bracket at the end (indicates end of stream)
+      // We temporarily remove it for parsing, and don't re-add it to buffer
+      let workingBuffer = buffer;
+      if (workingBuffer.endsWith("]")) {
+        workingBuffer = workingBuffer.slice(0, -1);
+      }
+
+      // Remove leading comma if present
+      if (workingBuffer.startsWith(",")) {
+        workingBuffer = workingBuffer.slice(1);
+      }
+
+      const parts = workingBuffer.split("\n,");
 
       let foundIncomplete = false;
       for (let i = 0; i < parts.length; i++) {
@@ -387,6 +398,7 @@ class Gemini extends BaseLLM {
         }
       }
       if (foundIncomplete) {
+        // Keep the last incomplete part for next iteration
         buffer = parts[parts.length - 1];
       } else {
         buffer = "";
