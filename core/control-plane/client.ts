@@ -478,9 +478,10 @@ export class ControlPlaneClient {
   }
 
   /**
-   * List all background agents for the current user
+   * List all background agents for the current user or organization
+   * @param organizationId - Optional organization ID to filter agents by organization scope
    */
-  public async listBackgroundAgents(): Promise<
+  public async listBackgroundAgents(organizationId?: string): Promise<
     Array<{
       id: string;
       name: string | null;
@@ -497,7 +498,13 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.requestAndHandleError("agents", {
+      // Build URL with optional organizationId query parameter
+      let url = "agents";
+      if (organizationId) {
+        url += `?organizationId=${encodeURIComponent(organizationId)}`;
+      }
+
+      const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
 

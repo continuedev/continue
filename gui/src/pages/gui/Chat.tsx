@@ -478,10 +478,10 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {mode === "background" ? (
             <BackgroundModeView
-              onCreateAgent={(prompt) => {
+              onCreateAgent={(editorState) => {
                 const organizationId = currentOrg?.id;
                 ideMessenger.post("createBackgroundAgent", {
-                  prompt,
+                  editorState,
                   organizationId,
                 });
               }}

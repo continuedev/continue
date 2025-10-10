@@ -8,7 +8,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { AgentsList } from "./AgentsList";
 
 interface BackgroundModeViewProps {
-  onCreateAgent: (prompt: string) => void;
+  onCreateAgent: (editorState: any) => void;
 }
 
 export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {

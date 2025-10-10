@@ -2,6 +2,8 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppSelector } from "../../redux/hooks";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 
 interface Agent {
   id: string;
@@ -17,6 +19,7 @@ interface Agent {
 export function AgentsList() {
   const { session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +35,10 @@ export function AgentsList() {
       try {
         setIsLoading(true);
         // Request agent list from IDE
-        const result = await ideMessenger.request("listBackgroundAgents", {});
+        const organizationId = currentOrg?.id;
+        const result = await ideMessenger.request("listBackgroundAgents", {
+          organizationId,
+        });
 
         if (result && Array.isArray(result)) {
           setAgents(result);
@@ -57,7 +63,7 @@ export function AgentsList() {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [session, ideMessenger]);
+  }, [session, ideMessenger, currentOrg]);
 
   if (isLoading) {
     return (

@@ -52,7 +52,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "session/share": [{ sessionId: string }, void];
   createBackgroundAgent: [{ editorState: any; organizationId?: string }, void];
   listBackgroundAgents: [
-    undefined,
+    { organizationId?: string },
     Array<{
       id: string;
       name: string | null;

@@ -403,10 +403,13 @@ export class VsCodeMessenger {
 
     this.onWebview("listBackgroundAgents", async (msg) => {
       const configHandler = await configHandlerPromise;
+      const { organizationId } = msg.data;
 
       try {
         const agents =
-          await configHandler.controlPlaneClient.listBackgroundAgents();
+          await configHandler.controlPlaneClient.listBackgroundAgents(
+            organizationId,
+          );
         return agents;
       } catch (e) {
         console.error("Error listing background agents:", e);
