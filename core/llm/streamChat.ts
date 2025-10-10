@@ -50,6 +50,7 @@ export async function* llmStreamChat(
   };
 
   let hasToolCalls = false; // Track if we're streaming tool calls
+  let toolCallIds: string[] = []; // Track tool call IDs for error reporting
 
   try {
     if (legacySlashCommandData) {
@@ -147,6 +148,12 @@ export async function* llmStreamChat(
           chunk.toolCalls.length > 0
         ) {
           hasToolCalls = true;
+          // Collect tool call IDs
+          for (const toolCall of chunk.toolCalls) {
+            if (toolCall.id && !toolCallIds.includes(toolCall.id)) {
+              toolCallIds.push(toolCall.id);
+            }
+          }
         }
 
         yield chunk;
@@ -207,6 +214,12 @@ export async function* llmStreamChat(
       );
 
       // Yield error message as tool result so model can see it failed
+      // Use the last tool call ID if available, otherwise use a descriptive placeholder
+      const errorToolCallId =
+        toolCallIds.length > 0
+          ? toolCallIds[toolCallIds.length - 1]
+          : "premature_close_error";
+
       yield {
         role: "tool" as const,
         content: `Error: The previous tool call response was cancelled mid-stream due to network issues (Premature Close). Please try again with more concise, focused output. Consider:
@@ -214,7 +227,7 @@ export async function* llmStreamChat(
 - Breaking large responses into smaller chunks
 - Using more targeted queries
 - Limiting result sets`,
-        toolCallId: "error", // Placeholder ID
+        toolCallId: errorToolCallId,
       };
 
       return errorPromptLog;
