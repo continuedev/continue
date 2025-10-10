@@ -31,6 +31,7 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -44,6 +45,7 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
+import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
@@ -126,6 +128,8 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const mode = useAppSelector((state) => state.session.mode);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -170,6 +174,21 @@ export function Chat() {
       const codeToEditSnapshot = stateSnapshot.editModeState.codeToEdit;
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
+      const currentMode = stateSnapshot.session.mode;
+
+      // Handle background mode specially
+      if (currentMode === "background" && !isCurrentlyInEdit) {
+        // Background mode triggers agent creation instead of chat
+        const organizationId = selectCurrentOrg(stateSnapshot)?.id;
+        ideMessenger.post("createBackgroundAgent", {
+          editorState,
+          organizationId,
+        });
+        if (editorToClearOnSend) {
+          editorToClearOnSend.commands.clearContent();
+        }
+        return;
+      }
 
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
@@ -454,8 +473,20 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {history.length === 0 && (
-            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+          {mode === "background" ? (
+            <BackgroundModeView
+              onCreateAgent={(editorState) => {
+                const organizationId = currentOrg?.id;
+                ideMessenger.post("createBackgroundAgent", {
+                  editorState,
+                  organizationId,
+                });
+              }}
+            />
+          ) : (
+            history.length === 0 && (
+              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+            )
           )}
         </div>
       </div>

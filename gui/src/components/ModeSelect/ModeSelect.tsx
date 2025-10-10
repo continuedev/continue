@@ -39,6 +39,8 @@ export function ModeSelect() {
       dispatch(setMode("plan"));
     } else if (mode === "plan") {
       dispatch(setMode("agent"));
+    } else if (mode === "agent") {
+      dispatch(setMode("background"));
     } else {
       dispatch(setMode("chat"));
     }
@@ -96,7 +98,13 @@ export function ModeSelect() {
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
-            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
+            {mode === "chat"
+              ? "Chat"
+              : mode === "agent"
+                ? "Agent"
+                : mode === "background"
+                  ? "Background"
+                  : "Plan"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -162,6 +170,24 @@ export function ModeSelect() {
             {!isGoodAtAgentMode && notGreatAtAgent}
             <CheckIcon
               className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+            />
+          </ListboxOption>
+
+          <ListboxOption value="background" className={"gap-1"}>
+            <div className="flex flex-row items-center gap-1.5">
+              <ModeIcon mode="background" />
+              <span className="">Background</span>
+              <ToolTip
+                style={{
+                  zIndex: 200001,
+                }}
+                content="Trigger background agents"
+              >
+                <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
+              </ToolTip>
+            </div>
+            <CheckIcon
+              className={`ml-auto h-3 w-3 ${mode === "background" ? "" : "opacity-0"}`}
             />
           </ListboxOption>
 

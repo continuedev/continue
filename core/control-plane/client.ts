@@ -440,4 +440,94 @@ export class ControlPlaneClient {
       );
     }
   }
+
+  /**
+   * Create a new background agent
+   */
+  public async createBackgroundAgent(
+    prompt: string,
+    repoUrl: string,
+    name: string,
+    branch?: string,
+    organizationId?: string,
+  ): Promise<{ id: string }> {
+    if (!(await this.isSignedIn())) {
+      throw new Error("Not signed in to Continue");
+    }
+
+    const requestBody: any = {
+      prompt,
+      repoUrl,
+      name,
+      branchName: branch,
+    };
+
+    if (organizationId) {
+      requestBody.organizationId = organizationId;
+    }
+
+    const resp = await this.requestAndHandleError("agents", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    return (await resp.json()) as { id: string };
+  }
+
+  /**
+   * List all background agents for the current user or organization
+   * @param organizationId - Optional organization ID to filter agents by organization scope
+   */
+  public async listBackgroundAgents(organizationId?: string): Promise<
+    Array<{
+      id: string;
+      name: string | null;
+      status: string;
+      repoUrl: string;
+      createdAt: string;
+      metadata?: {
+        github_repo?: string;
+      };
+    }>
+  > {
+    if (!(await this.isSignedIn())) {
+      return [];
+    }
+
+    try {
+      // Build URL with optional organizationId query parameter
+      let url = "agents";
+      if (organizationId) {
+        url += `?organizationId=${encodeURIComponent(organizationId)}`;
+      }
+
+      const resp = await this.requestAndHandleError(url, {
+        method: "GET",
+      });
+
+      const agents = (await resp.json()) as any[];
+
+      return agents.map((agent: any) => ({
+        id: agent.id,
+        name: agent.name || agent.metadata?.name || null,
+        status: agent.status,
+        repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
+        createdAt:
+          agent.created_at || agent.create_time_ms
+            ? new Date(agent.created_at || agent.create_time_ms).toISOString()
+            : new Date().toISOString(),
+        metadata: {
+          github_repo: agent.metadata?.github_repo || agent.metadata?.repo_url,
+        },
+      }));
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_list_background_agents",
+      });
+      return [];
+    }
+  }
 }
