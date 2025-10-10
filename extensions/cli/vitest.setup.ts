@@ -4,6 +4,7 @@ import { resetConsoleOverrides } from "./src/init.js";
 
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
+process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
 
 // Mock the 'open' package to prevent browser opening during tests
 vi.mock("open", () => ({

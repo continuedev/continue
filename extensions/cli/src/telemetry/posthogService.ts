@@ -40,7 +40,7 @@ export class PosthogService {
   }
 
   get isEnabled() {
-    return process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0";
+    return process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY !== "0";
   }
 
   private _client: PostHogType | undefined;
