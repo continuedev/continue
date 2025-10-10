@@ -121,6 +121,15 @@ function reconstructNewFile(
         node.type.includes("method");
 
       if (isBlockDefinition) {
+        // Skip TypeScript interface members and other declarations that don't require bodies
+        const isInterfaceMember = node.parent?.type.includes("interface");
+        const isTypeDeclaration = node.type.includes("signature") || node.type.includes("declaration");
+        const isAbstractMethod = node.text.includes("abstract");
+        
+        if (isInterfaceMember || isTypeDeclaration || isAbstractMethod) {
+          return false; // These are allowed to have no body
+        }
+
         // Check if it has a body child
         const body = node.childForFieldName("body");
         if (!body || body.namedChildCount === 0) {
@@ -267,7 +276,9 @@ export async function deterministicApplyLazyEdit({
 
     // If reconstruction validation failed, fall back to safer method
     if (!reconstructedNewFile) {
-      console.warn("Reconstruction validation failed. Falling back to safer method.");
+      console.warn(
+        "Reconstruction validation failed. Falling back to safer method.",
+      );
       return undefined;
     }
   }

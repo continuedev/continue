@@ -276,7 +276,9 @@ describe("deterministicApplyLazyEdit(", () => {
     expect(result).toBeDefined();
 
     if (result) {
-      const finalFile = result.map(d => d.type === "old" ? "" : d.line).join("\n");
+      const finalFile = result
+        .map((d) => (d.type === "old" ? "" : d.line))
+        .join("\n");
       // Verify that calculate_tax was updated (rate changed from 0.1 to 0.15)
       expect(finalFile).toContain("rate = 0.15");
       // Verify that calculate_total was NOT changed

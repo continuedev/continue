@@ -350,7 +350,10 @@ describe("multiEdit shared validation", () => {
       const fileContent = "data = get_data()\nprocess(data)\nreturn data";
       const edits = [
         { old_string: "data", new_string: "user_data", replace_all: true },
-        { old_string: "process(data)", new_string: "process_user_data(user_data)" },
+        {
+          old_string: "process(data)",
+          new_string: "process_user_data(user_data)",
+        },
       ];
 
       // Edit 1 changes all "data" to "user_data"
@@ -358,13 +361,16 @@ describe("multiEdit shared validation", () => {
       expect(() => executeMultiFindAndReplace(fileContent, edits)).toThrowError(
         expect.objectContaining({
           reason: ContinueErrorReason.FindAndReplaceEditChainInvalid,
-          message: expect.stringContaining("Edit 1 will fail: string \"process(data)\" not found after applying previous edits"),
+          message: expect.stringContaining(
+            'Edit 1 will fail: string "process(data)" not found after applying previous edits',
+          ),
         }),
       );
     });
 
     it("should detect when edit invalidates subsequent edits", () => {
-      const fileContent = "def calculate_tax():\n    rate = 0.1\n    return rate";
+      const fileContent =
+        "def calculate_tax():\n    rate = 0.1\n    return rate";
       const edits = [
         { old_string: "rate = 0.1", new_string: "tax_rate = 0.15" },
         { old_string: "return rate", new_string: "return tax_rate" },
@@ -374,7 +380,9 @@ describe("multiEdit shared validation", () => {
       // Edit 2 tries to find "return rate" but it still exists (different line)
       // This should succeed
       const result = executeMultiFindAndReplace(fileContent, edits);
-      expect(result).toBe("def calculate_tax():\n    tax_rate = 0.15\n    return tax_rate");
+      expect(result).toBe(
+        "def calculate_tax():\n    tax_rate = 0.15\n    return tax_rate",
+      );
     });
 
     it("should provide helpful error message for sequential edit conflicts", () => {
@@ -386,7 +394,9 @@ describe("multiEdit shared validation", () => {
 
       expect(() => executeMultiFindAndReplace(fileContent, edits)).toThrowError(
         expect.objectContaining({
-          message: expect.stringMatching(/Edit 1 will fail.*not found after applying previous edits.*Consider reordering edits/),
+          message: expect.stringMatching(
+            /Edit 1 will fail.*not found after applying previous edits.*Consider reordering edits/,
+          ),
         }),
       );
     });
@@ -394,13 +404,21 @@ describe("multiEdit shared validation", () => {
     it("should allow valid sequential edits", () => {
       const fileContent = "def func1():\n    pass\ndef func2():\n    pass";
       const edits = [
-        { old_string: "def func1():\n    pass", new_string: "def func1():\n    return 1" },
-        { old_string: "def func2():\n    pass", new_string: "def func2():\n    return 2" },
+        {
+          old_string: "def func1():\n    pass",
+          new_string: "def func1():\n    return 1",
+        },
+        {
+          old_string: "def func2():\n    pass",
+          new_string: "def func2():\n    return 2",
+        },
       ];
 
       // These edits don't interfere with each other
       const result = executeMultiFindAndReplace(fileContent, edits);
-      expect(result).toBe("def func1():\n    return 1\ndef func2():\n    return 2");
+      expect(result).toBe(
+        "def func1():\n    return 1\ndef func2():\n    return 2",
+      );
     });
 
     it("should validate all edits before applying any (all-or-nothing)", () => {

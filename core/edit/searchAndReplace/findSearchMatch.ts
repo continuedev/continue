@@ -284,14 +284,14 @@ function findFuzzyMatch(
  * to prevent IndentationErrors and broken block structure.
  */
 const INDENTATION_SENSITIVE_LANGUAGES = new Set([
-  ".py",   // Python
-  ".pyx",  // Cython
-  ".pyi",  // Python Interface
+  ".py", // Python
+  ".pyx", // Cython
+  ".pyi", // Python Interface
   ".yaml", // YAML
-  ".yml",  // YAML
+  ".yml", // YAML
   ".haml", // HAML
   ".slim", // Slim
-  ".pug",  // Pug
+  ".pug", // Pug
   ".jade", // Jade
 ]);
 
@@ -308,7 +308,9 @@ function isIndentationSensitive(filename?: string): boolean {
 /**
  * Get matching strategies based on filename/language
  */
-function getMatchingStrategies(filename?: string): Array<{ strategy: MatchStrategy; name: string }> {
+function getMatchingStrategies(
+  filename?: string,
+): Array<{ strategy: MatchStrategy; name: string }> {
   const strategies = [
     { strategy: exactMatch, name: "exactMatch" },
     { strategy: trimmedMatch, name: "trimmedMatch" },
@@ -317,7 +319,10 @@ function getMatchingStrategies(filename?: string): Array<{ strategy: MatchStrate
   // CRITICAL: Do NOT use whitespace-insensitive matching for indentation-sensitive languages
   // This prevents IndentationErrors in Python and similar languages
   if (!isIndentationSensitive(filename)) {
-    strategies.push({ strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" });
+    strategies.push({
+      strategy: whitespaceIgnoredMatch,
+      name: "whitespaceIgnoredMatch",
+    });
   }
 
   // strategies.push({ strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" });

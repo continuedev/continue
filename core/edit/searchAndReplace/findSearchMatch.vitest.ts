@@ -273,10 +273,16 @@ export default MyComponent;`;
 
       // Without filename, whitespace-ignored would match (but incorrectly)
       const resultWithoutFilename = findSearchMatch(fileContent, searchContent);
-      expect(resultWithoutFilename?.strategyName).toBe("whitespaceIgnoredMatch");
+      expect(resultWithoutFilename?.strategyName).toBe(
+        "whitespaceIgnoredMatch",
+      );
 
       // With .py filename, should NOT match (preserves indentation)
-      const resultWithFilename = findSearchMatch(fileContent, searchContent, "test.py");
+      const resultWithFilename = findSearchMatch(
+        fileContent,
+        searchContent,
+        "test.py",
+      );
       expect(resultWithFilename).toBeNull();
     });
 
@@ -307,7 +313,11 @@ export default MyComponent;`;
       const searchWithoutIndent = "config:name:test";
 
       // Should NOT match with whitespace-ignored for YAML
-      const result = findSearchMatch(fileContent, searchWithoutIndent, "config.yaml");
+      const result = findSearchMatch(
+        fileContent,
+        searchWithoutIndent,
+        "config.yaml",
+      );
       expect(result).toBeNull();
     });
 
