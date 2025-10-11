@@ -4,15 +4,76 @@ import {
   ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
+  ChatCompletionMessage,
   ChatCompletionMessageParam,
   CompletionCreateParams,
 } from "openai/resources/index";
 
-import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  TextMessagePart,
+  ThinkingChatMessage,
+} from "..";
+
+function appendReasoningFieldsIfSupported(
+  msg: ChatCompletionAssistantMessageParam & {
+    reasoning?: string;
+    reasoning_details?: any[];
+  },
+  options: CompletionOptions,
+  prevMessage?: ChatMessage,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
+) {
+  if (!prevMessage || prevMessage.role !== "thinking") return;
+
+  const includeReasoning = !!providerFlags?.includeReasoningField;
+  const includeReasoningDetails = !!providerFlags?.includeReasoningDetailsField;
+  if (!includeReasoning && !includeReasoningDetails) return;
+
+  const reasoningDetailsValue =
+    prevMessage.reasoning_details ||
+    (prevMessage.signature
+      ? [{ signature: prevMessage.signature }]
+      : undefined);
+
+  // Claude-specific safeguard: prevent errors when switching to Claude after another model.
+  // Claude requires a signed reasoning_details block; if missing, we must omit both fields.
+  // This check is done before adding any fields to avoid deletes.
+  if (
+    includeReasoningDetails &&
+    options.model.includes("claude") &&
+    !(
+      Array.isArray(reasoningDetailsValue) &&
+      reasoningDetailsValue.some((d) => d && d.signature)
+    )
+  ) {
+    console.warn(
+      "Omitting reasoning fields for Claude: no signature present in reasoning_details",
+    );
+    return;
+  }
+
+  if (includeReasoningDetails && reasoningDetailsValue) {
+    msg.reasoning_details = reasoningDetailsValue || [];
+  }
+  if (includeReasoning) {
+    msg.reasoning = prevMessage.content as string;
+  }
+}
 
 export function toChatMessage(
   message: ChatMessage,
-): ChatCompletionMessageParam {
+  options: CompletionOptions,
+  prevMessage?: ChatMessage,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
+): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
       role: "tool",
@@ -26,18 +87,30 @@ export function toChatMessage(
       content: message.content,
     };
   }
+  if (message.role === "thinking") {
+    // Return null - thinking messages are merged into following assistant messages
+    return null;
+  }
 
   if (message.role === "assistant") {
-    const msg: ChatCompletionAssistantMessageParam = {
+    // Base assistant message
+    const msg: ChatCompletionAssistantMessageParam & {
+      reasoning?: string;
+      reasoning_details?: {
+        [key: string]: any;
+        signature?: string | undefined;
+      }[];
+    } = {
       role: "assistant",
       content:
         typeof message.content === "string"
           ? message.content || " " // LM Studio (and other providers) don't accept empty content
           : message.content
               .filter((part) => part.type === "text")
-              .map((part) => part as TextMessagePart), // can remove with newer typescript version
+              .map((part) => part as TextMessagePart),
     };
 
+    // Add tool calls if present
     if (message.toolCalls) {
       msg.tool_calls = message.toolCalls.map((toolCall) => ({
         id: toolCall.id!,
@@ -48,7 +121,16 @@ export function toChatMessage(
         },
       }));
     }
-    return msg;
+
+    // Preserving reasoning blocks
+    appendReasoningFieldsIfSupported(
+      msg as any,
+      options,
+      prevMessage,
+      providerFlags,
+    );
+
+    return msg as ChatCompletionMessageParam;
   } else {
     if (typeof message.content === "string") {
       return {
@@ -85,9 +167,17 @@ export function toChatMessage(
 export function toChatBody(
   messages: ChatMessage[],
   options: CompletionOptions,
+  providerFlags?: {
+    includeReasoningField?: boolean;
+    includeReasoningDetailsField?: boolean;
+  },
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
-    messages: messages.map(toChatMessage),
+    messages: messages
+      .map((m, index) =>
+        toChatMessage(m, options, messages[index - 1], providerFlags),
+      )
+      .filter((m) => m !== null) as ChatCompletionMessageParam[],
     model: options.model,
     max_tokens: options.maxTokens,
     temperature: options.temperature,
@@ -153,11 +243,40 @@ export function toFimBody(
   } as any;
 }
 
-export function fromChatResponse(response: ChatCompletion): ChatMessage {
-  const message = response.choices[0].message;
+export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
+  const messages: ChatMessage[] = [];
+  const message = response.choices[0].message as ChatCompletionMessage & {
+    reasoning?: string;
+    reasoning_content?: string;
+    reasoning_details?: {
+      signature?: string;
+      [key: string]: any;
+    }[];
+  };
+
+  // Check for reasoning content first (similar to fromChatCompletionChunk)
+  if (message.reasoning_content || message.reasoning) {
+    const thinkingMessage: ChatMessage = {
+      role: "thinking",
+      content: (message as any).reasoning_content || (message as any).reasoning,
+    };
+
+    // Preserve reasoning_details if present
+    if (message.reasoning_details) {
+      thinkingMessage.reasoning_details = message.reasoning_details;
+      // Extract signature from reasoning_details if available
+      if (message.reasoning_details[0]?.signature) {
+        thinkingMessage.signature = message.reasoning_details[0].signature;
+      }
+    }
+
+    messages.push(thinkingMessage);
+  }
+
+  // Then add the assistant message
   const toolCall = message.tool_calls?.[0];
   if (toolCall) {
-    return {
+    messages.push({
       role: "assistant",
       content: "",
       toolCalls: message.tool_calls
@@ -170,19 +289,29 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
             arguments: (tc as any).function?.arguments,
           },
         })),
-    };
+    });
+  } else {
+    messages.push({
+      role: "assistant",
+      content: message.content ?? "",
+    });
   }
 
-  return {
-    role: "assistant",
-    content: message.content ?? "",
-  };
+  return messages;
 }
 
 export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
-  const delta = chunk.choices?.[0]?.delta;
+  const delta = chunk.choices?.[0]?.delta as
+    | (ChatCompletionChunk.Choice.Delta & {
+        reasoning?: string;
+        reasoning_content?: string;
+        reasoning_details?: {
+          signature?: string;
+        }[];
+      })
+    | undefined;
 
   if (delta?.content) {
     return {
@@ -208,9 +337,66 @@ export function fromChatCompletionChunk(
         toolCalls,
       };
     }
+  } else if (
+    delta?.reasoning_content ||
+    delta?.reasoning ||
+    delta?.reasoning_details?.length
+  ) {
+    const message: ThinkingChatMessage = {
+      role: "thinking",
+      content: delta.reasoning_content || delta.reasoning || "",
+      signature: delta?.reasoning_details?.[0]?.signature,
+      reasoning_details: delta?.reasoning_details as any[],
+    };
+    return message;
   }
 
   return undefined;
+}
+
+export function mergeReasoningDetails(
+  existing: any[] | undefined,
+  delta: any[] | undefined,
+): any[] | undefined {
+  if (!delta) return existing;
+  if (!existing) return delta;
+
+  const result = [...existing];
+
+  for (const deltaItem of delta) {
+    // Skip items without a type
+    if (!deltaItem.type) {
+      continue;
+    }
+
+    // Find existing item with the same type
+    const existingIndex = result.findIndex(
+      (item) => item.type === deltaItem.type,
+    );
+
+    if (existingIndex === -1) {
+      // No existing item with this type, add new item
+      result.push({ ...deltaItem });
+    } else {
+      // Merge with existing item of the same type
+      const existingItem = result[existingIndex];
+
+      for (const [key, value] of Object.entries(deltaItem)) {
+        if (value === null || value === undefined) continue;
+
+        if (key === "text" || key === "signature" || key === "summary") {
+          // Concatenate text and signature fields
+          existingItem[key] = (existingItem[key] || "") + value;
+        } else if (key !== "type") {
+          // Don't overwrite type
+          // Overwrite other fields
+          existingItem[key] = value;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 export type LlmApiRequestType =
