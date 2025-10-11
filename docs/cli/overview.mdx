@@ -145,6 +145,32 @@ Store secure credentials for CLI workflows:
 - Share configurations across team members
 - Version control for your AI workflows
 
+## CLI Settings
+
+Continue CLI stores certain user preferences locally to customize your experience:
+
+### Commit Message Attribution
+
+By default, Continue CLI includes an attribution signature in generated commit messages:
+
+```
+Generated with [Continue](https://continue.dev)
+
+Co-Authored-By: Continue <noreply@continue.dev>
+```
+
+If you prefer not to include this attribution, you can disable it using the `/set` command:
+
+```bash
+/set disableCommitSignature true
+```
+
+This setting is stored locally and applies to all CLI usage on your system. To re-enable attribution:
+
+```bash
+/set disableCommitSignature false
+```
+
 ## Common Use Cases
 
 ### TUI Mode Examples
