@@ -1,5 +1,6 @@
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { BuildingOfficeIcon, UserIcon } from "@heroicons/react/24/solid";
+import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext } from "react";
 import { Button, Card, Divider } from "../../../components/ui";
@@ -30,14 +31,20 @@ export function OrganizationsSection() {
     session && organizations.length > 1 && !isOnPremSession(session);
 
   function handleAddOrganization() {
-    ideMessenger.request("controlPlane/openUrl", {
+    void ideMessenger.request("controlPlane/openUrl", {
       path: "/organizations/new",
     });
   }
 
-  function handleConfigureOrganization(orgId: string) {
-    ideMessenger.request("controlPlane/openUrl", {
-      path: `/organizations/${orgId}/settings`,
+  function handleConfigureOrganization(org: SerializedOrgWithProfiles) {
+    let path: string;
+    if (org.id === "personal" || org.slug === undefined) {
+      path = "/settings";
+    } else {
+      path = `/organizations/${org.slug}/settings`;
+    }
+    void ideMessenger.request("controlPlane/openUrl", {
+      path,
     });
   }
 
@@ -82,7 +89,7 @@ export function OrganizationsSection() {
                 </div>
               </div>
               <Button
-                onClick={() => handleConfigureOrganization(organization.id)}
+                onClick={() => handleConfigureOrganization(organization)}
                 variant="ghost"
                 size="sm"
                 className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
