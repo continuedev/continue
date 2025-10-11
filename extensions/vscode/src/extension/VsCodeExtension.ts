@@ -234,9 +234,9 @@ export class VsCodeExtension {
           timeSinceLastDocChange < this.ARBITRARY_TYPING_DELAY &&
           !NextEditWindowManager.getInstance().hasAccepted()
         ) {
-          console.debug(
-            "VsCodeExtension: typing in progress, preserving chain",
-          );
+          // console.debug(
+          //   "VsCodeExtension: typing in progress, preserving chain",
+          // );
           return true;
         }
 

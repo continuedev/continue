@@ -246,7 +246,8 @@ export class NextEditLoggingService {
           }),
         },
       );
-      console.debug("Feedback: ", resp);
+      const text = await resp.text();
+      console.debug("Feedback: ", text);
     } catch (error: any) {
       console.debug(`Error capturing feedback: ${error.message}`);
     }
