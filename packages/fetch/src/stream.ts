@@ -15,7 +15,10 @@ export async function* streamResponse(
   }
 
   if (response.status !== 200) {
-    throw new Error(await response.text());
+    const errorText = await response.text();
+    throw new Error(
+      `HTTP ${response.status} ${response.statusText} from ${response.url}\n\n${errorText}`,
+    );
   }
 
   if (!response.body) {

@@ -48,8 +48,23 @@ export async function compactConversation({
     }
   }
 
-  // Create messages from filtered history
-  const messages = filteredHistory.map((item: any) => item.message);
+  // Create messages from filtered history, stripping images from content
+  const messages = filteredHistory.map((item: any) => {
+    const message = item.message;
+    // Strip images from message content to avoid API errors with models that don't support images
+    if (
+      message.role === "user" ||
+      message.role === "assistant" ||
+      message.role === "thinking" ||
+      message.role === "system"
+    ) {
+      return {
+        ...message,
+        content: stripImages(message.content),
+      };
+    }
+    return message;
+  });
 
   // If there's a previous summary, include it as a user message at the beginning
   if (summaryContent) {
