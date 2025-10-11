@@ -7,8 +7,8 @@ import { filterExcludedTools } from "../permissions/index.js";
 import {
   getServiceSync,
   MCPServiceState,
-  MCPTool,
   SERVICE_NAMES,
+  serviceContainer,
   services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
@@ -180,16 +180,20 @@ export async function getAllTools() {
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
 
-  let mcpTools: MCPTool[] = [];
-  let mcpToolNames: string[] = [];
-  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
-  if (mcpServiceResult.state === "ready") {
-    mcpTools = mcpServiceResult?.value?.tools ?? [];
-    mcpToolNames = mcpTools.map((t) => t.name);
+  let mcpServiceState: MCPServiceState | null = null;
+
+  // MCP loading is lazy in TUI mode
+  if (services.toolPermissions.isHeadless()) {
+    mcpServiceState = await serviceContainer.get(SERVICE_NAMES.MCP);
   } else {
-    // MCP is lazy
-    // throw new Error("MCP Service not initialized");
+    const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
+    if (mcpServiceResult.state === "ready") {
+      mcpServiceState = mcpServiceResult?.value;
+    }
   }
+
+  const mcpTools = mcpServiceState?.tools ?? [];
+  const mcpToolNames = mcpTools.map((t) => t.name);
 
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
