@@ -87,6 +87,26 @@ cn --ask Bash(curl*)
 cn --exclude Fetch
 ```
 
+### Workflow Agents (Beta)
+
+You can run Continue Hub workflow agents locally using the `--workflow` flag. This is primarily used to iterate on workflows until they are reliable for use in the Hub [Agents interface](../hub/workflows/intro)
+
+First, [create a workflow agent](../hub/workflows/creating-workflow-agents) in the Hub. Then, you can use it with CLI:
+
+<Card title="Local Agent Execution" icon="workflow">
+
+  **Headless Mode**: kicks off a workflow locally in headless mode (prints the result)
+  ```bash
+  cn -p --workflow myorg/create-ticket-workflow "additional input (optional)"
+  ```
+
+  **Interactive Usage**: kicks off a workflow locally with a Terminal User Interface
+  ```bash
+  cn --workflow myorg/create-ticket-workflow "additional input (optional)"
+  ```
+
+</Card>
+
 ## API Key Authentication
 
 For automation in CI or other headless environments, you can use an API key to authenticate with Continue. First, obtain your personal API key [here](https://hub.continue.dev/settings/api-keys). Then, set it as the `CONTINUE_API_KEY` environment variable. You can now use `cn -p` (headless mode) without needing to log in.
