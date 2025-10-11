@@ -3,6 +3,7 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
 import {
   AcceptOrRejectDiffPayload,
+  AddToChatPayload,
   ApplyState,
   ApplyToFilePayload,
   HighlightedCodePayload,
@@ -78,4 +79,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   generateRule: [undefined, void];
+  addToChat: [AddToChatPayload, void];
 };

@@ -1,11 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import {
-  MCPOptions,
-  MCPServerStatus,
-  StdioOptions,
-  TransportOptions,
-} from "../..";
+import { InternalMcpOptions, MCPServerStatus } from "../..";
 import MCPConnection, { MCPExtras } from "./MCPConnection";
 
 export class MCPManagerSingleton {
@@ -13,7 +8,6 @@ export class MCPManagerSingleton {
 
   public onConnectionsRefreshed?: () => void;
   public connections: Map<string, MCPConnection> = new Map();
-  private disconnectedServers: string[] = [];
 
   private abortController: AbortController = new AbortController();
 
@@ -26,19 +20,23 @@ export class MCPManagerSingleton {
     return MCPManagerSingleton.instance;
   }
 
-  addDisconnectedServer(serverId: string) {
-    this.disconnectedServers.push(serverId);
-  }
-  removeDisconnectedServer(serverId: string) {
-    this.disconnectedServers = this.disconnectedServers.filter(
-      (server) => server !== serverId,
-    );
-  }
-  getDisconnectedServers() {
-    return this.disconnectedServers;
+  async setEnabled(serverId: string, enabled: boolean) {
+    const conn = this.connections.get(serverId);
+    if (conn) {
+      if (enabled) {
+        conn.status = "not-connected";
+        await this.refreshConnection(serverId);
+      } else {
+        try {
+          await conn.disconnect(true);
+        } catch (e) {
+          console.error(`Error disconnecting from MCP server ${serverId}`, e);
+        }
+      }
+    }
   }
 
-  createConnection(id: string, options: MCPOptions): MCPConnection {
+  createConnection(id: string, options: InternalMcpOptions): MCPConnection {
     if (this.connections.has(id)) {
       return this.connections.get(id)!;
     } else {
@@ -50,15 +48,6 @@ export class MCPManagerSingleton {
 
   getConnection(id: string) {
     return this.connections.get(id);
-  }
-
-  async removeConnection(id: string) {
-    const connection = this.connections.get(id);
-    if (connection) {
-      await connection.client.close();
-    }
-
-    this.connections.delete(id);
   }
 
   async shutdown() {
@@ -77,7 +66,7 @@ export class MCPManagerSingleton {
   }
 
   setConnections(
-    servers: MCPOptions[],
+    servers: InternalMcpOptions[],
     forceRefresh: boolean,
     extras?: MCPExtras,
   ) {
@@ -89,11 +78,7 @@ export class MCPManagerSingleton {
         !servers.find(
           // Refresh the connection if TransportOptions changed
           (s) =>
-            s.id === id &&
-            this.compareTransportOptions(
-              connection.options.transport,
-              s.transport,
-            ),
+            s.id === id && this.compareTransportOptions(connection.options, s),
         )
       ) {
         refresh = true;
@@ -124,33 +109,35 @@ export class MCPManagerSingleton {
   }
 
   private compareTransportOptions(
-    a: TransportOptions,
-    b: TransportOptions,
+    a: InternalMcpOptions,
+    b: InternalMcpOptions,
   ): boolean {
     if (a.type !== b.type) {
       return false;
     }
-    if (a.type === "stdio" && b.type === "stdio") {
+    if ("command" in a && "command" in b) {
       return (
         a.command === b.command &&
         JSON.stringify(a.args) === JSON.stringify(b.args) &&
-        this.compareEnv(a, b)
+        this.compareEnv(a.env, b.env)
       );
-    } else if (a.type !== "stdio" && b.type !== "stdio") {
+    } else if ("url" in a && "url" in b) {
       return a.url === b.url;
     }
     return false;
   }
 
-  private compareEnv(a: StdioOptions, b: StdioOptions): boolean {
-    const aEnv = a.env ?? {};
-    const bEnv = b.env ?? {};
-    const aKeys = Object.keys(aEnv);
-    const bKeys = Object.keys(bEnv);
+  private compareEnv(
+    aEnv: Record<string, string> | undefined,
+    bEnv: Record<string, string> | undefined,
+  ): boolean {
+    const a = aEnv ?? {};
+    const b = bEnv ?? {};
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
 
     return (
-      aKeys.length === bKeys.length &&
-      aKeys.every((key) => aEnv[key] === bEnv[key])
+      aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key])
     );
   }
 
@@ -176,19 +163,9 @@ export class MCPManagerSingleton {
       }),
       (async () => {
         await Promise.all(
-          Array.from(this.connections.values())
-            .filter(
-              (connection) =>
-                !this.disconnectedServers.some(
-                  (s) => s === connection.options.id,
-                ),
-            )
-            .map(async (connection) => {
-              await connection.connectClient(
-                force,
-                this.abortController.signal,
-              );
-            }),
+          Array.from(this.connections.values()).map(async (connection) => {
+            await connection.connectClient(force, this.abortController.signal);
+          }),
         );
         if (this.onConnectionsRefreshed) {
           this.onConnectionsRefreshed();
@@ -204,8 +181,8 @@ export class MCPManagerSingleton {
     }));
   }
 
-  setStatus(server: MCPServerStatus, status: MCPServerStatus["status"]) {
-    this.connections.get(server.id)!.status = status;
+  setStatus(serverId: string, status: MCPServerStatus["status"]) {
+    this.connections.get(serverId)!.status = status;
   }
 
   async getPrompt(

@@ -13,8 +13,8 @@ export async function getPromptV2ContextRequests(
   }
   const workspaceDirs = await ideMessenger.ide.getWorkspaceDirs();
   const visitedFiles = new Set<string>();
-  if (command.promptFile) {
-    visitedFiles.add(command.promptFile);
+  if (command.sourceFile) {
+    visitedFiles.add(command.sourceFile);
   }
 
   const contextRequests: GetContextRequest[] = [];

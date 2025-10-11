@@ -9,7 +9,7 @@ describe("convertRuleBlockToSlashCommand", () => {
       rule: "Review this code for best practices",
       description: "Performs a code review",
       source: "rules-block",
-      ruleFile: "/path/to/rules.yaml",
+      sourceFile: "file:///path/to/rules.yaml",
       invokable: true,
     };
 
@@ -20,7 +20,7 @@ describe("convertRuleBlockToSlashCommand", () => {
       description: "Performs a code review",
       prompt: "Review this code for best practices",
       source: "invokable-rule",
-      promptFile: "/path/to/rules.yaml",
+      sourceFile: "file:///path/to/rules.yaml",
     });
   });
 

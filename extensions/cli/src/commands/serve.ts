@@ -2,6 +2,9 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
@@ -42,6 +45,8 @@ interface ServeOptions extends ExtendedCommandOptions {
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+  await posthogService.capture("sessionStart", {});
+
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
   if (!prompt) {
@@ -68,9 +73,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Get initialized services from the service container
-  const [configState, modelState] = await Promise.all([
+  const [configState, modelState, permissionsState] = await Promise.all([
     getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
     getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+    getService<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS),
   ]);
 
   if (!configState.config || !modelState.llmApi || !modelState.model) {
@@ -113,6 +119,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Initialize session with system message
   const systemMessage = await constructSystemMessage(
+    permissionsState.currentMode,
     options.rule,
     undefined,
     true,
@@ -255,6 +262,32 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     });
   });
 
+  // POST /pause - Pause the current agent run (like pressing escape in TUI)
+  app.post("/pause", async (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    // Check if there's anything to pause
+    if (!state.isProcessing) {
+      return res.json({
+        success: false,
+        message: "No active processing to pause",
+      });
+    }
+
+    // Abort the current processing
+    if (state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
+
+    // Set isProcessing to false
+    state.isProcessing = false;
+
+    res.json({
+      success: true,
+      message: "Agent run paused",
+    });
+  });
+
   // GET /diff - Return git diff against main branch
   app.get("/diff", async (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
@@ -339,6 +372,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         "  POST /permission - Approve/reject tool (body: { requestId, approved })",
       ),
     );
+    console.log(chalk.dim("  POST /pause      - Pause the current agent run"));
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),
     );
