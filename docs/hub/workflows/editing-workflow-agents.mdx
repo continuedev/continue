@@ -1,0 +1,364 @@
+---
+title: "Editing Workflow Agents"
+description: "Learn how to edit existing Continuous AI workflow agents in the Continue Hub"
+---
+
+Once you've created a workflow, you can easily edit and update it through the Continue Hub interface. Editing workflows allows you to refine prompts, update tools and rules, and improve functionality based on usage feedback.
+
+## Accessing the Edit Interface
+
+### From the Workflow Page
+
+NEEDS_IMAGE
+
+To edit an existing workflow:
+
+1. Navigate to your workflow's page at `hub.continue.dev/[owner-slug]/[package-slug]`
+2. Click the **pencil icon** (edit button) in the workflow header
+3. This opens the same form interface used for creating new workflows
+
+<Info>
+
+  You can only edit workflows that you own or have edit permissions for within your organization.
+
+</Info>
+
+### From the Agents Interface
+
+You can also access workflow editing directly from the agents interface:
+
+<Card title="Quick Edit Access" icon="external-link">
+
+  - Select a workflow in the agents interface dropdown
+  - Click the external link icon next to the workflow selector
+  - This opens the workflow page in a new tab
+  - Click the pencil icon to start editing
+
+</Card>
+
+## Edit Form Interface
+
+NEEDS_IMAGE
+
+The workflow edit form is nearly identical to the new workflow creation form, with a few key differences:
+
+### Pre-populated Fields
+
+<Card title="Existing Configuration" icon="database">
+
+  All fields are pre-populated with current workflow values:
+
+  - **Name**: Current workflow name
+  - **Description**: Existing description
+  - **Prompt**: Current prompt content
+  - **Model**: Selected model (if any)
+  - **Tools**: Currently configured tools
+  - **Rules**: Applied rules
+  - **Slug**: Package identifier (read-only when editing)
+
+</Card>
+
+### Form Layout
+
+<CardGroup cols={2}>
+  <Card title="Left Sidebar" icon="sidebar">
+
+    **Configuration Panel**:
+    - Name and description fields
+    - Model selector
+    - Tools multi-select
+    - Rules multi-select
+    - Visibility settings (if permissions allow)
+
+  </Card>
+
+  <Card title="Main Editor" icon="edit">
+
+    **Content Editor**:
+    - Markdown/Preview tabs
+    - Real-time content synchronization
+    - Syntax highlighting
+    - Auto-save indicators
+
+  </Card>
+</CardGroup>
+
+## Making Changes
+
+### Updating Basic Information
+
+<Card title="Metadata Changes" icon="info">
+
+  **Name**: Update the display name
+  - Changes reflect immediately in workflow selectors
+  - Consider impact on team members who use this workflow
+  - Clear, descriptive names improve discoverability
+
+  **Description**: Modify the workflow description
+  - Helps team members understand the workflow's purpose
+  - Displayed in workflow listings and previews
+  - Include any usage notes or prerequisites
+
+</Card>
+
+### Modifying the Prompt
+
+<Card title="Prompt Updates" icon="message-square">
+
+  **Refinement Strategies**:
+  - Add more specific instructions based on usage feedback
+  - Include examples of desired output formats
+  - Clarify edge cases or special handling requirements
+  - Reference project-specific conventions or standards
+
+  **Testing Approach**:
+  - Test prompt changes with the [Continue CLI](../../guides/cli) first
+  - Start with small, incremental improvements
+  - Validate changes against known successful use cases
+
+</Card>
+
+### Tool and Rule Configuration
+
+<Card title="Configuration Updates" icon="settings">
+
+  **Adding Tools**: 
+  - Include new MCP servers as they become available
+  - Add specific tools for enhanced functionality
+  - Format: `owner/package` or `owner/package:tool-name`
+
+  **Updating Rules**:
+  - Add organizational rules as they're created
+  - Remove obsolete or conflicting rules
+  - Ensure rule references are valid and accessible
+
+  **Model Selection**:
+  - Update to newer or more appropriate models
+  - Consider performance vs. cost trade-offs
+  - Test with different models for optimal results
+
+</Card>
+
+## Version Management
+
+### Creating New Versions
+
+<Card title="Versioning System" icon="git-branch">
+
+  **Automatic Versioning**: Each edit creates a new version
+  - Previous versions remain accessible
+  - Existing workflow executions continue to work
+  - Gradual rollout to minimize disruption
+
+  **Version Benefits**:
+  - Rollback capability if issues arise
+  - A/B testing between versions
+  - Team can adopt updates at their own pace
+
+</Card>
+
+### Update Process
+
+When you save changes:
+
+1. **Validation**: System validates configuration and references
+2. **Version Creation**: New version is created with your changes
+3. **Deployment**: Updated workflow becomes the default version
+4. **Notification**: Team members see the updated workflow in their interface
+
+<Warning>
+
+  Significant prompt changes may affect workflow behavior. Test thoroughly and communicate changes to your team.
+
+</Warning>
+
+## Collaboration and Permissions
+
+### Edit Permissions
+
+<Card title="Who Can Edit" icon="users">
+
+  **Workflow Owner**: Full edit access to all aspects
+  
+  **Organization Members**: Edit access based on organization settings
+  - May have restrictions on visibility changes
+  - Tool and rule access based on organization permissions
+  
+  **Collaborators**: Limited edit access if explicitly granted
+
+</Card>
+
+### Team Considerations
+
+<Card title="Team Impact" icon="team">
+
+  **Communication**: Notify team members of significant changes
+  - Update internal documentation
+  - Share reasoning for major prompt modifications
+  - Provide migration guidance if needed
+
+  **Testing**: Validate changes don't break existing use cases
+  - Test with representative repositories
+  - Verify tool integrations still work
+  - Confirm rule applications are correct
+
+</Card>
+
+## Best Practices for Editing
+
+### Incremental Improvements
+
+<Card title="Iterative Approach" icon="refresh">
+
+  **Small Changes**: Make incremental improvements rather than major overhauls
+  - Easier to identify what works and what doesn't
+  - Reduces risk of breaking existing functionality
+  - Allows for gradual learning and optimization
+
+  **Document Changes**: Keep track of what you modify and why
+  - Helps with troubleshooting if issues arise
+  - Provides context for future improvements
+  - Useful for team knowledge sharing
+
+</Card>
+
+### Testing Strategy
+
+<Card title="Validation Process" icon="check-circle">
+
+  **Pre-deployment Testing**:
+  - Test with Continue CLI in "TUI mode" first
+  - Use test repositories that mirror production scenarios
+  - Validate against known successful workflows
+
+  **Post-deployment Monitoring**:
+  - Monitor workflow execution success rates
+  - Gather feedback from team members
+  - Track performance and adjust as needed
+
+</Card>
+
+### Content Management
+
+<Card title="Content Strategy" icon="file-text">
+
+  **Markdown/Form Sync**: Changes sync between the form interface and markdown editor
+  - Use the form for structured configuration
+  - Use markdown editor for complex prompt formatting
+  - Preview tab shows final rendered content
+
+  **Backup Considerations**: Previous versions serve as backups
+  - No need to manually backup workflow content
+  - Can reference previous versions for rollback
+  - Version history maintains change tracking
+
+</Card>
+
+## Common Edit Scenarios
+
+### Adding New Capabilities
+
+<AccordionGroup>
+  <Accordion title="Tool Integration">
+
+    **Adding MCP Tools**: Extend workflow capabilities with new tools
+    ```yaml
+    # Before
+    tools: "built_in, continuedev/filesystem"
+    
+    # After  
+    tools: "built_in, continuedev/filesystem, neworg/database-tools"
+    ```
+
+  </Accordion>
+
+  <Accordion title="Rule Updates">
+
+    **Organizational Standards**: Apply new coding standards or policies
+    ```yaml
+    # Before
+    rules: "myorg/basic-standards"
+    
+    # After
+    rules: "myorg/basic-standards, myorg/security-2024, myorg/performance-rules"
+    ```
+
+  </Accordion>
+
+  <Accordion title="Prompt Refinement">
+
+    **Enhanced Instructions**: Add specificity based on real-world usage
+    ```markdown
+    # Before
+    Create a REST API endpoint for user management.
+    
+    # After
+    Create a REST API endpoint for user management following these requirements:
+    1. Use Express.js with TypeScript
+    2. Include input validation with Joi
+    3. Add comprehensive error handling
+    4. Include OpenAPI documentation
+    5. Follow the existing authentication patterns
+    ```
+
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting Edit Issues
+
+### Common Problems
+
+<Card title="Edit Issues and Solutions" icon="alert-triangle">
+
+  **Permission Denied**: Verify you have edit access to the workflow
+  - Check with workflow owner for permissions
+  - Ensure you're logged into the correct account
+  - Verify organization membership if applicable
+
+  **Configuration Errors**: Use the preview tab to identify issues
+  - Check YAML syntax in frontmatter
+  - Validate tool and rule references
+  - Ensure required fields are not empty
+
+  **Sync Problems**: If form and markdown get out of sync
+  - Refresh the page to reload current state
+  - Use one editing method at a time (form OR markdown)
+  - Save frequently to prevent data loss
+
+</Card>
+
+## After Editing
+
+### Immediate Effects
+
+<Card title="Post-Edit Changes" icon="refresh">
+
+  **Workflow Updates**: Changes are immediately available
+  - New executions use the updated configuration
+  - Workflow appears in agents interface with new settings
+  - Team members see updated prompt and description
+
+  **Testing Window**: Allow time for validation
+  - Monitor initial executions for issues
+  - Gather feedback from team members
+  - Be prepared to make quick fixes if needed
+
+</Card>
+
+### Long-term Monitoring
+
+<Card title="Ongoing Optimization" icon="trending-up">
+
+  **Performance Tracking**: Monitor workflow effectiveness over time
+  - Success rates of workflow executions
+  - Team adoption and usage patterns
+  - Feedback on result quality
+
+  **Continuous Improvement**: Regular review and refinement
+  - Quarterly review of workflow performance
+  - Update tools and rules as new options become available
+  - Refine prompts based on accumulated experience
+
+</Card>
+
+Editing workflows is an ongoing process that helps you optimize AI assistance for your development workflow. Start with small improvements and gradually refine based on real-world usage and feedback.
