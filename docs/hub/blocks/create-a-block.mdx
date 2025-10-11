@@ -27,3 +27,13 @@ After filling out information on the block, you will want to create a block foll
 ### Block Inputs
 
 Blocks can receive values, including secrets, as inputs through templating. For values that the user of the block needs to set, you can use template variables (e.g. `${{ inputs.API_KEY}}`). Then, the user can set `API_KEY: ${{ secrets.MY_API_KEY }}` in the `with` clause of their agent.
+
+<Info>
+**Choosing between `secrets.` and `inputs.`**
+
+When creating blocks for the hub:
+- Use `${{ inputs.INPUT_NAME }}` in your block definition when you want users to be able to customize which secret is used
+- Users will then map their own secrets using `${{ secrets.SECRET_NAME }}` in the `with` clause
+
+For personal or single-use configurations, you can skip the inputs layer and reference `${{ secrets.SECRET_NAME }}` directly in your block.
+</Info>
