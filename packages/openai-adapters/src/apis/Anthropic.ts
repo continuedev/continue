@@ -25,6 +25,7 @@ import {
   CompletionUsage,
 } from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/resources/index.js";
+import { extractBase64FromDataUrl } from "../../../../core/util/url.js";
 import { AnthropicConfig } from "../types.js";
 import {
   chatChunk,
@@ -199,7 +200,7 @@ export class AnthropicApi implements BaseLlmApi {
               source: {
                 type: "base64",
                 media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
-                data: dataUrl.split(",")[1],
+                data: extractBase64FromDataUrl(dataUrl),
               },
             });
           }
