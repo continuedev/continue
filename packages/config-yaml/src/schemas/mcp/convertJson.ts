@@ -59,7 +59,7 @@ export function convertJsonMcpConfigToYamlMcpConfig(
   if ("command" in jsonConfig) {
     if (jsonConfig.envFile) {
       warnings.push(
-        `envFile is not supported in Continue MCP config (server "${name}"). Environment variables from this file will not be used.`,
+        `envFile is not supported in Continue MCP configuration (server "${name}"). Environment variables from file will not be used.`,
       );
     }
 

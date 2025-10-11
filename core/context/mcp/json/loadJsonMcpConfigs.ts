@@ -189,6 +189,7 @@ export async function loadJsonMcpConfigs(
       ...c.warnings.map((warning) => ({
         fatal: false,
         message: warning,
+        uri: c.yamlConfig.sourceFile,
       })),
     );
     return convertYamlMcpConfigToInternalMcpOptions(
