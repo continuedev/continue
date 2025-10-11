@@ -553,6 +553,10 @@ export class ConfigHandler {
 
     void Telemetry.capture("config_reload", telemetryData);
 
+    if (errors.length) {
+      Logger.error("Errors loading config: ", errors);
+    }
+
     return {
       config,
       errors: errors.length ? errors : undefined,
@@ -603,10 +607,6 @@ export class ConfigHandler {
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
-
-    if (config.errors?.length) {
-      Logger.error("Errors loading config: ", config.errors);
-    }
     return config;
   }
 
