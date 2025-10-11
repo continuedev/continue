@@ -2,7 +2,7 @@ import { ToolPolicy } from "@continuedev/terminal-security";
 import { Tool, ToolCallState } from "core";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { isEditTool } from "../../util/toolCallState";
-import { errorToolCall, updateToolCallOutput } from "../slices/sessionSlice";
+import { errorToolCall } from "../slices/sessionSlice";
 import { DEFAULT_TOOL_SETTING, ToolPolicies } from "../slices/uiSlice";
 import { AppThunkDispatch } from "../store";
 
@@ -103,16 +103,11 @@ export async function evaluateToolPolicies(
   );
 
   for (const { displayValue, toolCallState } of disabledResults) {
-    dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
-
-    // Use the displayValue from the policy evaluation, or fallback to function name
     const command = displayValue || toolCallState.toolCall.function.name;
-
-    // Add error message explaining why it's disabled
     dispatch(
-      updateToolCallOutput({
+      errorToolCall({
         toolCallId: toolCallState.toolCallId,
-        contextItems: [
+        output: [
           {
             icon: "problems",
             name: "Security Policy Violation",
