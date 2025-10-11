@@ -47,7 +47,7 @@ export function OnboardingModelsAddOnTab() {
   }
 
   function openPricingPage() {
-    void ideMessenger.post("controlPlane/openUrl", {
+    void ideMessenger.request("controlPlane/openUrl", {
       path: "pricing",
     });
   }
