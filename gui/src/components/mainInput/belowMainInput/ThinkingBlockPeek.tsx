@@ -10,13 +10,6 @@ import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 import { ButtonContent, SpoilerButton } from "../../ui/SpoilerButton";
 
-const ThinkingTextContainer = styled.span`
-  display: inline-block;
-  min-width: fit-content;
-
-  padding-right: 1em; /* Reserve space for the ellipsis animation */
-`;
-
 const MarkdownWrapper = styled.div`
   & > div > *:first-child {
     margin-top: 0 !important;

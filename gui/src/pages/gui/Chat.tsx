@@ -352,7 +352,7 @@ export function Chat() {
               redactedThinking={message.redactedThinking}
               index={index}
               prevItem={index > 0 ? history[index - 1] : null}
-              inProgress={index === history.length - 1}
+              inProgress={index === history.length - 1 && isStreaming}
               signature={message.signature}
             />
           </div>
