@@ -32,7 +32,7 @@ export function OnboardingModelsAddOnTab() {
 
   async function openBillingSettings() {
     try {
-      ideMessenger.post("controlPlane/openUrl", {
+      await ideMessenger.request("controlPlane/openUrl", {
         path: "settings/billing",
       });
     } catch (error) {
