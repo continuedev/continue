@@ -380,7 +380,7 @@ export function Chat() {
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen],
+    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
