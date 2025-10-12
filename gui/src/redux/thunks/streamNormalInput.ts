@@ -254,12 +254,17 @@ export const streamNormalInput = createAsyncThunk<
 
     // 2. Pre-process args to catch invalid args before checking policies
     const state2 = getState();
+    if (streamAborter.signal.aborted || !state2.session.isStreaming) {
+      return;
+    }
     const generatedCalls2 = selectPendingToolCalls(state2);
     await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
 
     // 3. Security check: evaluate updated policies based on args
     const state3 = getState();
-
+    if (streamAborter.signal.aborted || !state3.session.isStreaming) {
+      return;
+    }
     const generatedCalls3 = selectPendingToolCalls(state3);
     const toolPolicies = state3.ui.toolSettings;
     const policies = await evaluateToolPolicies(
@@ -283,6 +288,9 @@ export const streamNormalInput = createAsyncThunk<
       // auto stream cases increase thunk depth by 1
       const state4 = getState();
       const generatedCalls4 = selectPendingToolCalls(state4);
+      if (streamAborter.signal.aborted || !state4.session.isStreaming) {
+        return;
+      }
       if (generatedCalls4.length > 0) {
         // All that didn't fail are auto approved - call them
         await Promise.all(
