@@ -180,8 +180,8 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(setContextPercentage(contextPercentage));
 
     const start = Date.now();
+    const streamAborter = state.session.streamAborter;
     try {
-      const streamAborter = state.session.streamAborter;
       let gen = extra.ideMessenger.llmStreamChat(
         {
           completionOptions,
@@ -246,7 +246,6 @@ export const streamNormalInput = createAsyncThunk<
         e instanceof Error &&
         e.message.toLowerCase().includes("premature close")
       ) {
-        debugger;
         posthog.capture("stream_premature_close_error", {
           duration: (Date.now() - start) / 1000,
           model: selectedChatModel.model,
@@ -281,7 +280,6 @@ export const streamNormalInput = createAsyncThunk<
     // 1. Mark generating tool calls as generated
     const state1 = getState();
     const originalToolCalls = selectCurrentToolCalls(state1);
-
     const generatingCalls = originalToolCalls.filter(
       (tc) => tc.status === "generating",
     );
@@ -295,13 +293,16 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // 2. Pre-process args to catch invalid args before checking policies
+
     const state2 = getState();
+    if (streamAborter.signal.aborted || !state2.session.isStreaming) {
+      return;
+    }
     const generatedCalls2 = selectPendingToolCalls(state2);
     await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
 
     // 3. Security check: evaluate updated policies based on args
     const state3 = getState();
-
     const generatedCalls3 = selectPendingToolCalls(state3);
     const toolPolicies = state3.ui.toolSettings;
     const policies = await evaluateToolPolicies(
@@ -315,6 +316,9 @@ export const streamNormalInput = createAsyncThunk<
     const anyRequireApproval = policies.find(
       ({ policy }) => policy === "allowedWithPermission",
     );
+    if (streamAborter.signal.aborted || !state3.session.isStreaming) {
+      return;
+    }
 
     // 4. Execute remaining tool calls
     // Only set inactive if not all tools were auto-approved
@@ -322,8 +326,11 @@ export const streamNormalInput = createAsyncThunk<
     if (originalToolCalls.length === 0 || anyRequireApproval) {
       dispatch(setInactive());
     } else {
-      // auto stream cases increase thunk depth by 1
+      // auto stream cases increase thunk depth by 1 for debugging
       const state4 = getState();
+      if (streamAborter.signal.aborted || !state4.session.isStreaming) {
+        return;
+      }
       const generatedCalls4 = selectPendingToolCalls(state4);
       if (generatedCalls4.length > 0) {
         // All that didn't fail are auto approved - call them
@@ -345,7 +352,10 @@ export const streamNormalInput = createAsyncThunk<
         for (const { toolCallId } of originalToolCalls) {
           unwrapResult(
             await dispatch(
-              streamResponseAfterToolCall({ toolCallId, depth: depth + 1 }),
+              streamResponseAfterToolCall({
+                toolCallId,
+                depth: depth + 1,
+              }),
             ),
           );
         }

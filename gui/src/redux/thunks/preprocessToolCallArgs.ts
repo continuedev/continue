@@ -5,6 +5,7 @@ import { IIdeMessenger } from "../../context/IdeMessenger";
 import {
   errorToolCall,
   setProcessedToolCallArgs,
+  updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch } from "../store";
 
@@ -42,7 +43,12 @@ export async function preprocessToolCalls(
         dispatch(
           errorToolCall({
             toolCallId: tcState.toolCallId,
-            output: [
+          }),
+        );
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: tcState.toolCallId,
+            contextItems: [
               {
                 icon: "problems",
                 name: "Invalid Tool Call",

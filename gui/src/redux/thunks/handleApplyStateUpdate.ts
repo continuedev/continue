@@ -187,7 +187,12 @@ export const applyForEditTool = createAsyncThunk<
       dispatch(
         errorToolCall({
           toolCallId,
-          output: [
+        }),
+      );
+      dispatch(
+        updateToolCallOutput({
+          toolCallId,
+          contextItems: [
             {
               icon: "problems",
               name: "Apply Error",
