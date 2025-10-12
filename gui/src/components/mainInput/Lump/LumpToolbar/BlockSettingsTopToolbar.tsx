@@ -1,6 +1,7 @@
 import {
   CubeIcon,
   ExclamationTriangleIcon,
+  GiftIcon,
   PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -13,7 +14,7 @@ import {
   selectToolCallsByStatus,
 } from "../../../../redux/selectors/selectToolCalls";
 import { setSelectedProfile } from "../../../../redux/slices/profilesSlice";
-import StarterCreditsButton from "../../../StarterCreditsButton";
+import StarterCreditsPopover from "../../../StarterCreditsPopover";
 import { ToolTip } from "../../../gui/Tooltip";
 import HoverItem from "../../InputToolbar/HoverItem";
 
@@ -100,6 +101,19 @@ export function BlockSettingsTopToolbar() {
 
         {!hasActiveContent && (
           <div className="flex items-center gap-1.5">
+            {isUsingFreeTrial && (
+              <ToolTip content="View remaining starter credits">
+                <StarterCreditsPopover
+                  creditStatus={creditStatus}
+                  refreshCreditStatus={refreshCreditStatus}
+                >
+                  <HoverItem px={2}>
+                    <GiftIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+                  </HoverItem>
+                </StarterCreditsPopover>
+              </ToolTip>
+            )}
+
             <ToolTip content="Configure rules">
               <HoverItem onClick={handleRulesClick} px={2}>
                 <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
@@ -121,21 +135,9 @@ export function BlockSettingsTopToolbar() {
         )}
       </div>
 
-      <ToolTip
-        place="top"
-        content={
-          isUsingFreeTrial ? "View remaining starter credits" : "Select Agent"
-        }
-      >
+      <ToolTip place="top" content="Select Agent">
         <div>
-          {isUsingFreeTrial ? (
-            <StarterCreditsButton
-              creditStatus={creditStatus}
-              refreshCreditStatus={refreshCreditStatus}
-            />
-          ) : (
-            <AssistantAndOrgListbox variant="lump" />
-          )}
+          <AssistantAndOrgListbox variant="lump" />
         </div>
       </ToolTip>
     </div>
