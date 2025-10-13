@@ -72,7 +72,7 @@ class HttpContextProvider extends BaseContextProvider {
         description: item.description ?? "HTTP Context Item",
         content: item.content ?? "",
         name: item.name ?? this.options.title ?? "HTTP",
-        uri: {
+        uri: item.uri && {
           type: item.uri.type,
           value: item.uri.value,
         },
