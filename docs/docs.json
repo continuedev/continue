@@ -20,12 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": [
-              "index",
-              "getting-started/overview",
-              "ide-extensions/install",
-              "ide-extensions/quick-start"
-            ]
+            "pages": ["index", "getting-started/overview"]
           },
           {
             "group": "CLI",
@@ -40,7 +35,10 @@
           {
             "group": "IDE Extensions",
             "icon": "star",
+            "expanded": false,
             "pages": [
+              "ide-extensions/install",
+              "ide-extensions/quick-start",
               {
                 "group": "Agent",
                 "icon": "robot",
