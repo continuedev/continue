@@ -35,7 +35,8 @@ export function AgentsList() {
       try {
         setIsLoading(true);
         // Request agent list from IDE
-        const organizationId = currentOrg?.id;
+        const organizationId =
+          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
         const result = await ideMessenger.request("listBackgroundAgents", {
           organizationId,
         });
