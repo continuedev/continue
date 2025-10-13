@@ -472,9 +472,11 @@ export class Core {
       const urlPath = msg.data.path.startsWith("/")
         ? msg.data.path.slice(1)
         : msg.data.path;
-      let url = `${env.APP_URL}${urlPath}`;
+      let url;
       if (msg.data.orgSlug) {
-        url += `?org=${msg.data.orgSlug}`;
+        url = `${env.APP_URL}organizations/${msg.data.orgSlug}/${urlPath}`;
+      } else {
+        url = `${env.APP_URL}${urlPath}`;
       }
       await this.messenger.request("openUrl", url);
     });
