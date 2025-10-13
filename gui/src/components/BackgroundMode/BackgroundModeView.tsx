@@ -86,17 +86,17 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-8">
-        <RocketLaunchIcon className="h-16 w-16 text-gray-400" />
+        <RocketLaunchIcon className="text-description-muted h-16 w-16" />
         <div className="max-w-md text-center">
           <h3 className="mb-2 text-lg font-semibold">Background Agents</h3>
-          <p className="mb-4 text-sm text-gray-600">
+          <p className="text-description mb-4 text-sm">
             Trigger long-running background agents that work on your codebase
             autonomously. Sign in to Continue to get started.
           </p>
           <button
             onClick={handleSignIn}
             disabled={isLoggingIn}
-            className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover rounded-lg px-6 py-2 disabled:opacity-50"
           >
             {isLoggingIn ? "Signing in..." : "Sign In to Continue"}
           </button>
@@ -129,7 +129,7 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
           </div>
         </div>
       )}
-      <div className="px-2 text-sm text-gray-600">
+      <div className="text-description px-2 text-sm">
         Agents you trigger will run in the background and appear below.
       </div>
       <AgentsList />

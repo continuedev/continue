@@ -77,14 +77,14 @@ export function AgentsList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <ArrowPathIcon className="h-6 w-6 animate-spin text-gray-400" />
+        <ArrowPathIcon className="text-description-muted h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="px-2 py-4 text-sm text-red-500">
+      <div className="text-error px-2 py-4 text-sm">
         Error loading agents: {error}
       </div>
     );
@@ -92,7 +92,7 @@ export function AgentsList() {
 
   if (agents.length === 0) {
     return (
-      <div className="px-2 py-4 text-center text-sm text-gray-500">
+      <div className="text-description-muted px-2 py-4 text-center text-sm">
         No background agents yet. Submit a message above to create one.
       </div>
     );
@@ -100,14 +100,14 @@ export function AgentsList() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="px-2 text-xs font-semibold text-gray-500">
+      <div className="text-description-muted px-2 text-xs font-semibold">
         Recent Agents
       </div>
       <div className="flex flex-col gap-1">
         {agents.map((agent) => (
           <div
             key={agent.id}
-            className="cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+            className="border-command-border bg-input cursor-pointer rounded-md border p-3 shadow-md transition-colors hover:brightness-110"
             onClick={() => {
               // Open agent detail in browser
               ideMessenger.post("controlPlane/openUrl", {
@@ -118,10 +118,10 @@ export function AgentsList() {
           >
             <div className="flex items-start justify-between">
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-gray-900">
+                <div className="truncate text-sm font-medium">
                   {agent.name || "Unnamed Agent"}
                 </div>
-                <div className="mt-0.5 truncate text-xs text-gray-500">
+                <div className="text-description mt-0.5 truncate text-xs">
                   {agent.metadata?.github_repo || agent.repoUrl}
                 </div>
               </div>
@@ -129,7 +129,7 @@ export function AgentsList() {
                 <AgentStatusBadge status={agent.status} />
               </div>
             </div>
-            <div className="mt-1 text-xs text-gray-400">
+            <div className="text-description-muted mt-1 text-xs">
               {formatRelativeTime(agent.createdAt)}
             </div>
           </div>
@@ -141,18 +141,18 @@ export function AgentsList() {
 
 function AgentStatusBadge({ status }: { status: string }) {
   const statusColors: Record<string, string> = {
-    running: "bg-green-100 text-green-800",
-    pending: "bg-yellow-100 text-yellow-800",
-    creating: "bg-blue-100 text-blue-800",
-    failure: "bg-red-100 text-red-800",
-    suspended: "bg-gray-100 text-gray-800",
+    running: "border-success text-success",
+    pending: "border-warning text-warning",
+    creating: "border-info text-info",
+    failure: "border-error text-error",
+    suspended: "border-description text-description",
   };
 
-  const color = statusColors[status] || "bg-gray-100 text-gray-800";
+  const color = statusColors[status] || "border-description text-description";
 
   return (
     <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${color}`}
+      className={`bg-badge inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${color}`}
     >
       {status}
     </span>
