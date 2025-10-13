@@ -279,6 +279,7 @@ export const streamNormalInput = createAsyncThunk<
     // Tool call sequence:
     // 1. Mark generating tool calls as generated
     const state1 = getState();
+
     const originalToolCalls = selectCurrentToolCalls(state1);
     const generatingCalls = originalToolCalls.filter(
       (tc) => tc.status === "generating",
@@ -295,9 +296,6 @@ export const streamNormalInput = createAsyncThunk<
     // 2. Pre-process args to catch invalid args before checking policies
 
     const state2 = getState();
-    if (streamAborter.signal.aborted || !state2.session.isStreaming) {
-      return;
-    }
     const generatedCalls2 = selectPendingToolCalls(state2);
     await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
 
@@ -316,9 +314,6 @@ export const streamNormalInput = createAsyncThunk<
     const anyRequireApproval = policies.find(
       ({ policy }) => policy === "allowedWithPermission",
     );
-    if (streamAborter.signal.aborted || !state3.session.isStreaming) {
-      return;
-    }
 
     // 4. Execute remaining tool calls
     // Only set inactive if not all tools were auto-approved
@@ -328,9 +323,6 @@ export const streamNormalInput = createAsyncThunk<
     } else {
       // auto stream cases increase thunk depth by 1 for debugging
       const state4 = getState();
-      if (streamAborter.signal.aborted || !state4.session.isStreaming) {
-        return;
-      }
       const generatedCalls4 = selectPendingToolCalls(state4);
       if (generatedCalls4.length > 0) {
         // All that didn't fail are auto approved - call them
