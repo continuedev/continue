@@ -242,7 +242,9 @@ export const streamNormalInput = createAsyncThunk<
         }
       }
     } catch (e) {
+      const toolCallsToCancel = selectCurrentToolCalls(getState());
       if (
+        toolCallsToCancel.length > 0 &&
         e instanceof Error &&
         e.message.toLowerCase().includes("premature close")
       ) {
@@ -255,7 +257,6 @@ export const streamNormalInput = createAsyncThunk<
             command: legacySlashCommandData.command.name,
           }),
         });
-        const toolCallsToCancel = selectCurrentToolCalls(getState());
         for (const tc of toolCallsToCancel) {
           dispatch(
             errorToolCall({
