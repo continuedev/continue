@@ -23,8 +23,8 @@
             "pages": [
               "index",
               "getting-started/overview",
-              "getting-started/install",
-              "getting-started/quick-start"
+              "ide-extensions/install",
+              "ide-extensions/quick-start"
             ]
           },
           {
@@ -407,11 +407,11 @@
     },
     {
       "source": "/install/vscode",
-      "destination": "/getting-started/install"
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/install/jetbrains",
-      "destination": "/getting-started/install"
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/customize/model-types",
@@ -919,7 +919,7 @@
     },
     {
       "source": "/getting-started",
-      "destination": "/getting-started/install"
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/customize/deep-dives/prompt-files",
@@ -1324,6 +1324,14 @@
     {
       "source": "/features/edit/context-selection",
       "destination": "/ide-extensions/edit/context-selection"
+    },
+    {
+      "source": "/getting-started/install",
+      "destination": "/ide-extensions/install"
+    },
+    {
+      "source": "/getting-started/quick-start",
+      "destination": "/ide-extensions/quick-start"
     }
   ]
 }
