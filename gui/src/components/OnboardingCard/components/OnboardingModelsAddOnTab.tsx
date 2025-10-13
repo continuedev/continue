@@ -30,30 +30,13 @@ export function OnboardingModelsAddOnTab() {
     return () => clearInterval(interval);
   }, [isPolling, isJetbrains, ideMessenger]);
 
-  function openPricingPage() {
-    ideMessenger.post("controlPlane/openUrl", {
-      path: "pricing",
-    });
-  }
-
-  async function handleUpgrade() {
+  async function openBillingSettings() {
     try {
-      const response = await ideMessenger.request(
-        "controlPlane/getModelsAddOnUpgradeUrl",
-        {
-          vsCodeUriScheme: getLocalStorage("vsCodeUriScheme"),
-        },
-      );
-
-      if (response.status === "success" && response.content?.url) {
-        await ideMessenger.request("openUrl", response.content.url);
-      } else {
-        console.error("Failed to get upgrade URL");
-        openPricingPage();
-      }
+      await ideMessenger.request("controlPlane/openUrl", {
+        path: "settings/billing",
+      });
     } catch (error) {
       console.error("Error during upgrade process:", error);
-      openPricingPage();
     } finally {
       if (isJetbrains) {
         setIsPolling(true);
@@ -61,6 +44,12 @@ export function OnboardingModelsAddOnTab() {
         close();
       }
     }
+  }
+
+  function openPricingPage() {
+    void ideMessenger.request("controlPlane/openUrl", {
+      path: "pricing",
+    });
   }
 
   // Show polling UI for JetBrains after upgrade
@@ -84,10 +73,6 @@ export function OnboardingModelsAddOnTab() {
           </h2>
         </div>
 
-        <div className="bg-badge text-badge-foreground mb-4 rounded-full px-3 py-1 text-xs font-medium">
-          $20/month
-        </div>
-
         <span className="text-description text-base">
           Use a{" "}
           <span
@@ -96,28 +81,13 @@ export function OnboardingModelsAddOnTab() {
           >
             variety of frontier models
           </span>{" "}
-          for a flat monthly fee
+          at cost.
         </span>
       </div>
 
-      <div className="mb-6 mt-4 space-y-3 text-left">
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Base Tier:</span> 500 Chat/Edit and 25,000
-          Autocomplete requests per month
-        </p>
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Plus Tier (2.5x):</span> 1,250 Chat/Edit
-          and 62,500 Autocomplete requests per month
-        </p>
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Pro Tier (5x):</span> 2,500 Chat/Edit and
-          125,000 Autocomplete requests per month
-        </p>
-      </div>
-
       <div className="w-full">
-        <Button onClick={handleUpgrade} className="w-full max-w-xs">
-          Upgrade
+        <Button onClick={openBillingSettings} className="w-full max-w-xs">
+          Purchase Credits
         </Button>
       </div>
       <div className="w-full text-center">

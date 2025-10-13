@@ -483,14 +483,8 @@ export class Core {
       return await getControlPlaneEnv(this.ide.getIdeSettings());
     });
 
-    on("controlPlane/getFreeTrialStatus", async (msg) => {
-      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
-    });
-
-    on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
-      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
-        msg.data.vsCodeUriScheme,
-      );
+    on("controlPlane/getCreditStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getCreditStatus();
     });
 
     on("mcp/reloadServer", async (msg) => {
