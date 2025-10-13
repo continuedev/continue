@@ -178,7 +178,9 @@ export function Chat() {
       // Handle background mode specially
       if (currentMode === "background" && !isCurrentlyInEdit) {
         // Background mode triggers agent creation instead of chat
-        const organizationId = selectCurrentOrg(stateSnapshot)?.id;
+        const currentOrg = selectCurrentOrg(stateSnapshot);
+        const organizationId =
+          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
         ideMessenger.post("createBackgroundAgent", {
           editorState,
           organizationId,
@@ -479,7 +481,8 @@ export function Chat() {
           {mode === "background" ? (
             <BackgroundModeView
               onCreateAgent={(editorState) => {
-                const organizationId = currentOrg?.id;
+                const organizationId =
+                  currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
                 ideMessenger.post("createBackgroundAgent", {
                   editorState,
                   organizationId,
