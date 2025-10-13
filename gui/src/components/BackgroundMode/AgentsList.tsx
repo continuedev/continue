@@ -103,7 +103,7 @@ export function AgentsList() {
       <div className="text-description-muted px-2 text-xs font-semibold">
         Recent Agents
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 px-2">
         {agents.map((agent) => (
           <div
             key={agent.id}
