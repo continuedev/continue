@@ -31,10 +31,9 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
 
   const handleOpenGitHubSettings = useCallback(() => {
     // Open the hub settings page for GitHub integration
-    ideMessenger.post(
-      "openUrl",
-      "https://hub.continue.dev/settings/integrations/github",
-    );
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "settings/integrations/github",
+    });
   }, [ideMessenger]);
 
   // Check if user has GitHub installations when signed in

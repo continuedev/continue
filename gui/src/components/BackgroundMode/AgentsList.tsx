@@ -109,8 +109,9 @@ export function AgentsList() {
             className="cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
             onClick={() => {
               // Open agent detail in browser
-              const agentUrl = `https://app.continue.dev/agents/${agent.id}`;
-              ideMessenger.post("openUrl", agentUrl);
+              ideMessenger.post("controlPlane/openUrl", {
+                path: `agents/${agent.id}`,
+              });
             }}
           >
             <div className="flex items-start justify-between">
