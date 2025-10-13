@@ -457,15 +457,15 @@
     },
     {
       "source": "/model-setup/overview",
-      "destination": "/"
+      "destination": "/customize/model-roles/"
     },
     {
       "source": "/model-setup/select-model",
-      "destination": "/"
+      "destination": "/customize/model-roles/00-intro#selecting-model-roles"
     },
     {
       "source": "/model-setup/configuration",
-      "destination": "/"
+      "destination": "/customize/deep-dives/configuration"
     },
     {
       "source": "/quickstart",
