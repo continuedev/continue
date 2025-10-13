@@ -920,7 +920,7 @@
       "destination": "/ide-extensions/autocomplete/quick-start"
     },
     {
-      "source": "/getting-started",
+      "source": "/getting-started/install",
       "destination": "/ide-extensions/install"
     },
     {
@@ -1326,10 +1326,6 @@
     {
       "source": "/features/edit/context-selection",
       "destination": "/ide-extensions/edit/context-selection"
-    },
-    {
-      "source": "/getting-started/install",
-      "destination": "/ide-extensions/install"
     },
     {
       "source": "/getting-started/quick-start",
