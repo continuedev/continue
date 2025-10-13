@@ -20,6 +20,7 @@ import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
+import { memoryTool } from "./memory.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
@@ -48,6 +49,10 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   fetchTool,
   writeChecklistTool,
 ];
+
+const MEMORY_TOOL_INSERT_INDEX = BASE_BUILTIN_TOOLS.findIndex(
+  (tool) => tool.name === fetchTool.name,
+);
 
 // Export BUILTIN_TOOLS as the base set of tools
 // Dynamic tools (like exit tool in headless mode) are added separately
@@ -106,9 +111,55 @@ function shouldExcludeEditTool(): boolean {
   return false;
 }
 
+function isClaudeModelValue(value?: string | null): boolean {
+  return typeof value === "string" && value.toLowerCase().includes("claude");
+}
+
+function shouldIncludeMemoryTool(): boolean {
+  try {
+    const modelServiceResult = getServiceSync<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    );
+
+    if (
+      modelServiceResult.state === "ready" &&
+      modelServiceResult.value?.model
+    ) {
+      const { name, provider, model } = modelServiceResult.value.model;
+
+      const isClaudeModel =
+        isClaudeModelValue(name) || isClaudeModelValue(model);
+
+      if (isClaudeModel) {
+        logger.debug("Enabling Claude-only memory tool", {
+          provider,
+          name,
+          model,
+        });
+      }
+
+      return isClaudeModel;
+    }
+  } catch (error) {
+    logger.debug("Error checking model for Claude-only memory tool", {
+      error,
+    });
+  }
+
+  return false;
+}
+
 // Get all builtin tools including dynamic ones, with capability-based filtering
 export function getAllBuiltinTools(): Tool[] {
   let builtinTools = [...BUILTIN_TOOLS];
+
+  if (shouldIncludeMemoryTool()) {
+    const insertAt =
+      MEMORY_TOOL_INSERT_INDEX === -1
+        ? builtinTools.length
+        : MEMORY_TOOL_INSERT_INDEX;
+    builtinTools.splice(insertAt, 0, memoryTool);
+  }
 
   // Apply capability-based filtering for edit tools
   // If model is capable, exclude editTool in favor of multiEditTool

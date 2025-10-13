@@ -7,6 +7,7 @@ export { globSearchTool } from "./globSearch";
 export { grepSearchTool } from "./grepSearch";
 export { lsTool } from "./ls";
 export { multiEditTool } from "./multiEdit";
+export { memoryTool } from "./memory";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";
 

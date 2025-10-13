@@ -15,6 +15,14 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.fetchUrlContentTool,
 ];
 
+const isClaudeModel = (modelName: string | undefined): boolean => {
+  if (!modelName) {
+    return false;
+  }
+
+  return modelName.toLowerCase().includes("claude");
+};
+
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => {
@@ -26,6 +34,10 @@ export const getConfigDependentToolDefinitions = (
   if (isSignedIn) {
     // Web search is only available for signed-in users
     tools.push(toolDefinitions.searchWebTool);
+  }
+
+  if (isClaudeModel(modelName)) {
+    tools.push(toolDefinitions.memoryTool);
   }
 
   if (enableExperimentalTools) {

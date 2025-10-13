@@ -21,6 +21,7 @@ import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
+import { memoryToolImpl } from "./implementations/memory";
 import { safeParseToolCallArgs } from "./parseArgs";
 
 async function callHttpTool(
@@ -166,6 +167,8 @@ export async function callBuiltInTool(
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.FetchUrlContent:
       return await fetchUrlContentImpl(args, extras);
+    case BuiltInToolNames.Memory:
+      return await memoryToolImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
     case BuiltInToolNames.LSTool:
