@@ -1,5 +1,4 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getControlPlaneEnv } from "core/control-plane/env";
 import { DataLogger } from "core/data/log";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import {
@@ -388,9 +387,12 @@ export class VsCodeMessenger {
           );
 
           if (selection === "Connect GitHub") {
-            const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-            vscode.env.openExternal(
-              vscode.Uri.parse(`${env.APP_URL}settings/integrations`),
+            await this.inProcessMessenger.externalRequest(
+              "controlPlane/openUrl",
+              {
+                path: "settings/integrations",
+                orgSlug: configHandler.currentOrg?.slug,
+              },
             );
           }
         } else {

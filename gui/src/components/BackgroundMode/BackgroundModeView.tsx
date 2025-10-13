@@ -5,6 +5,8 @@ import {
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppSelector } from "../../redux/hooks";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import { AgentsList } from "./AgentsList";
 
 interface BackgroundModeViewProps {
@@ -14,6 +16,7 @@ interface BackgroundModeViewProps {
 export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
   const { session, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showGitHubSetup, setShowGitHubSetup] = useState(false);
   const [checkingGitHub, setCheckingGitHub] = useState(true);
@@ -33,8 +36,9 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
     // Open the hub settings page for GitHub integration
     ideMessenger.post("controlPlane/openUrl", {
       path: "settings/integrations/github",
+      orgSlug: currentOrg?.slug,
     });
-  }, [ideMessenger]);
+  }, [ideMessenger, currentOrg]);
 
   // Check if user has GitHub installations when signed in
   useEffect(() => {
