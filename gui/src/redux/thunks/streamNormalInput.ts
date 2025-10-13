@@ -243,20 +243,20 @@ export const streamNormalInput = createAsyncThunk<
       }
     } catch (e) {
       const toolCallsToCancel = selectCurrentToolCalls(getState());
+      posthog.capture("stream_premature_close_error", {
+        duration: (Date.now() - start) / 1000,
+        model: selectedChatModel.model,
+        provider: selectedChatModel.underlyingProviderName,
+        context: legacySlashCommandData ? "slash_command" : "regular_chat",
+        ...(legacySlashCommandData && {
+          command: legacySlashCommandData.command.name,
+        }),
+      });
       if (
         toolCallsToCancel.length > 0 &&
         e instanceof Error &&
         e.message.toLowerCase().includes("premature close")
       ) {
-        posthog.capture("stream_premature_close_error", {
-          duration: (Date.now() - start) / 1000,
-          model: selectedChatModel.model,
-          provider: selectedChatModel.underlyingProviderName,
-          context: legacySlashCommandData ? "slash_command" : "regular_chat",
-          ...(legacySlashCommandData && {
-            command: legacySlashCommandData.command.name,
-          }),
-        });
         for (const tc of toolCallsToCancel) {
           dispatch(
             errorToolCall({
