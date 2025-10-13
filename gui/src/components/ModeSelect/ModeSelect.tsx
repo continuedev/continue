@@ -8,6 +8,7 @@ import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
 import { capitalize } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
+import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
@@ -21,6 +22,7 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+  const { selectedProfile } = useAuth();
 
   const isGoodAtAgentMode = useMemo(() => {
     if (!selectedModel) {
@@ -28,6 +30,10 @@ export function ModeSelect() {
     }
     return isRecommendedAgentModel(selectedModel.model);
   }, [selectedModel]);
+
+  const isLocalAgent = useMemo(() => {
+    return selectedProfile?.profileType === "local";
+  }, [selectedProfile]);
 
   const { mainEditor } = useMainEditor();
   const metaKeyLabel = useMemo(() => {
@@ -40,7 +46,8 @@ export function ModeSelect() {
     } else if (mode === "plan") {
       dispatch(setMode("agent"));
     } else if (mode === "agent") {
-      dispatch(setMode("background"));
+      // Skip background mode if local agent is selected
+      dispatch(setMode(isLocalAgent ? "chat" : "background"));
     } else {
       dispatch(setMode("chat"));
     }
@@ -48,7 +55,7 @@ export function ModeSelect() {
     if (!document.activeElement?.classList?.contains("ProseMirror")) {
       mainEditor?.commands.focus();
     }
-  }, [mode, mainEditor]);
+  }, [mode, mainEditor, isLocalAgent]);
 
   const selectMode = useCallback(
     (newMode: MessageModes) => {
@@ -74,6 +81,13 @@ export function ModeSelect() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
+
+  // Auto-switch from background mode when local agent is selected
+  useEffect(() => {
+    if (mode === "background" && isLocalAgent) {
+      dispatch(setMode("agent"));
+    }
+  }, [mode, isLocalAgent, dispatch]);
 
   const notGreatAtAgent = (
     <>
@@ -173,7 +187,11 @@ export function ModeSelect() {
             />
           </ListboxOption>
 
-          <ListboxOption value="background" className={"gap-1"}>
+          <ListboxOption
+            value="background"
+            className={"gap-1"}
+            disabled={isLocalAgent}
+          >
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="background" />
               <span className="">Background</span>
@@ -181,11 +199,14 @@ export function ModeSelect() {
                 style={{
                   zIndex: 200001,
                 }}
-                content="Trigger background agents"
+                content={"Background mode cannot be used with local agents."}
               >
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
             </div>
+            {isLocalAgent && (
+              <ExclamationTriangleIcon className="text-warning h-2.5 w-2.5" />
+            )}
             <CheckIcon
               className={`ml-auto h-3 w-3 ${mode === "background" ? "" : "opacity-0"}`}
             />
