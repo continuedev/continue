@@ -23,8 +23,8 @@ export const memoryTool: Tool = {
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.Memory,
-    description:
-      "Interact with Continue's persistent memory store located under /memories. Supports view, create, insert, str_replace, delete, and rename commands.",
+    type: "memory_20250818",
+    description: "Anthropic claude memory tool",
     parameters: {
       type: "object",
       required: ["command"],
