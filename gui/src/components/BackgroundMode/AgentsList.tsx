@@ -40,9 +40,17 @@ export function AgentsList() {
           organizationId,
         });
 
-        if (result && Array.isArray(result)) {
-          setAgents(result);
-          setError(null);
+        // Handle wrapped response format
+        if ("status" in result && result.status === "success") {
+          if (Array.isArray(result.content)) {
+            setAgents(result.content);
+            setError(null);
+          } else {
+            setAgents([]);
+          }
+        } else if ("error" in result) {
+          setError(result.error);
+          setAgents([]);
         } else {
           setAgents([]);
         }

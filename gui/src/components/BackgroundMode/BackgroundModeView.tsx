@@ -49,12 +49,21 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
         setCheckingGitHub(true);
         // Try to list agents - if this fails with GitHub token error,
         // we know GitHub isn't connected
-        const agents = await ideMessenger.request("listBackgroundAgents", {});
+        const result = await ideMessenger.request("listBackgroundAgents", {});
 
-        // If we got here without error and have agents, GitHub is connected
-        // If we have no agents, we still don't know for sure, so we'll show
-        // the setup warning anyway (it will be dismissed after first agent creation)
-        setShowGitHubSetup(false);
+        // Check for error response
+        if ("error" in result) {
+          // Check if error is related to GitHub token
+          if (
+            result.error?.includes("GitHub token") ||
+            result.error?.includes("GitHub App")
+          ) {
+            setShowGitHubSetup(true);
+          }
+        } else {
+          // If we got here without error, GitHub is connected
+          setShowGitHubSetup(false);
+        }
       } catch (error: any) {
         // Check if error is related to GitHub token
         if (
