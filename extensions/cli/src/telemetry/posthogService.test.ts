@@ -42,7 +42,7 @@ describe("PosthogService", () => {
     vi.spyOn(os, "homedir").mockReturnValue(tempDir);
 
     // Clear environment variable
-    delete process.env.CONTINUE_CLI_ENABLE_TELEMETRY;
+    delete process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY;
 
     // Reset all mocks
     vi.clearAllMocks();
@@ -116,8 +116,8 @@ describe("PosthogService", () => {
       expect(service.isEnabled).toBe(true);
     });
 
-    it("should be disabled when CONTINUE_CLI_ENABLE_TELEMETRY is 0", () => {
-      process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
+    it("should be disabled when CONTINUE_ALLOW_ANONYMOUS_TELEMETRY is 0", () => {
+      process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
       const service = new PosthogService();
       expect(service.isEnabled).toBe(false);
     });
