@@ -1,4 +1,5 @@
 import {
+  ArrowPathIcon,
   ExclamationTriangleIcon,
   RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
@@ -11,9 +12,13 @@ import { AgentsList } from "./AgentsList";
 
 interface BackgroundModeViewProps {
   onCreateAgent: (editorState: any) => void;
+  isCreatingAgent?: boolean;
 }
 
-export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
+export function BackgroundModeView({
+  onCreateAgent,
+  isCreatingAgent = false,
+}: BackgroundModeViewProps) {
   const { session, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentOrg = useAppSelector(selectCurrentOrg);
@@ -129,10 +134,19 @@ export function BackgroundModeView({ onCreateAgent }: BackgroundModeViewProps) {
           </div>
         </div>
       )}
-      <div className="text-description px-2 text-sm">
-        Agents you trigger will run in the background and appear below.
+      <div className="px-2">
+        <div className="text-description text-sm">
+          Submit a task above to run a background agent. Your task will appear
+          below in ~30 seconds once the container starts.
+        </div>
+        {isCreatingAgent && (
+          <div className="text-description-muted mt-2 flex items-center gap-2 text-xs">
+            <ArrowPathIcon className="h-3 w-3 animate-spin" />
+            <span>Creating task...</span>
+          </div>
+        )}
       </div>
-      <AgentsList />
+      <AgentsList isCreatingAgent={isCreatingAgent} />
     </div>
   );
 }

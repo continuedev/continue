@@ -16,7 +16,11 @@ interface Agent {
   };
 }
 
-export function AgentsList() {
+interface AgentsListProps {
+  isCreatingAgent?: boolean;
+}
+
+export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const { session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentOrg = useAppSelector(selectCurrentOrg);
@@ -93,7 +97,7 @@ export function AgentsList() {
   if (agents.length === 0) {
     return (
       <div className="text-description-muted px-2 py-4 text-center text-sm">
-        No background agents yet. Submit a message above to create one.
+        No background tasks yet. Submit a message above to create one.
       </div>
     );
   }
@@ -101,7 +105,7 @@ export function AgentsList() {
   return (
     <div className="flex flex-col gap-2">
       <div className="text-description-muted px-2 text-xs font-semibold">
-        Recent Agents
+        Background Tasks
       </div>
       <div className="flex flex-col gap-1 px-2">
         {agents.map((agent) => (

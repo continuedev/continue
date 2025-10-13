@@ -110,6 +110,7 @@ export function Chat() {
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -181,13 +182,28 @@ export function Chat() {
         const currentOrg = selectCurrentOrg(stateSnapshot);
         const organizationId =
           currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
-        ideMessenger.post("createBackgroundAgent", {
-          editorState,
-          organizationId,
-        });
+
+        setIsCreatingAgent(true);
+
+        // Clear input immediately for better UX
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
         }
+
+        // Create agent and track loading state
+        (async () => {
+          try {
+            await ideMessenger.request("createBackgroundAgent", {
+              editorState,
+              organizationId,
+            });
+            setIsCreatingAgent(false);
+          } catch (error) {
+            console.error("Failed to create background agent:", error);
+            setIsCreatingAgent(false);
+          }
+        })();
+
         return;
       }
 
@@ -257,7 +273,7 @@ export function Chat() {
         }
       }
     },
-    [dispatch, ideMessenger, reduxStore],
+    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
   );
 
   useWebviewListener(
@@ -480,14 +496,11 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {mode === "background" ? (
             <BackgroundModeView
-              onCreateAgent={(editorState) => {
-                const organizationId =
-                  currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
-                ideMessenger.post("createBackgroundAgent", {
-                  editorState,
-                  organizationId,
-                });
+              onCreateAgent={() => {
+                // This callback is kept for compatibility but not used
+                // Agent creation is now handled in sendInput for better loading state management
               }}
+              isCreatingAgent={isCreatingAgent}
             />
           ) : (
             history.length === 0 && (
