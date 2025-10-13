@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index", "getting-started/overview"]
+            "pages": ["index"]
           },
           {
             "group": "CLI",
@@ -457,23 +457,27 @@
     },
     {
       "source": "/model-setup/overview",
-      "destination": "/getting-started/overview"
+      "destination": "/"
     },
     {
       "source": "/model-setup/select-model",
-      "destination": "/getting-started/overview"
+      "destination": "/"
     },
     {
       "source": "/model-setup/configuration",
-      "destination": "/getting-started/overview"
+      "destination": "/"
     },
     {
       "source": "/quickstart",
-      "destination": "/getting-started/overview"
+      "destination": "/"
     },
     {
       "source": "/how-to-use-continue",
-      "destination": "/getting-started/overview"
+      "destination": "/"
+    },
+    {
+      "source": "/getting-started/overview",
+      "destination": "/"
     },
     {
       "source": "/setup/select-provider",
