@@ -574,4 +574,70 @@ export class ControlPlaneClient {
       return { agents: [], totalCount: 0 };
     }
   }
+
+  /**
+   * Get the full agent session information
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent session view including metadata and status
+   */
+  public async getAgentSession(agentSessionId: string): Promise<any | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}`,
+        {
+          method: "GET",
+        },
+      );
+
+      return await resp.json();
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_session",
+        agentSessionId,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Get the state of a specific background agent
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent's session state including history, workspace, and branch
+   */
+  public async getAgentState(agentSessionId: string): Promise<{
+    session: Session;
+    isProcessing: boolean;
+    messageQueueLength: number;
+    pendingPermission: any;
+  } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}/state`,
+        {
+          method: "GET",
+        },
+      );
+
+      return (await resp.json()) as {
+        session: Session;
+        isProcessing: boolean;
+        messageQueueLength: number;
+        pendingPermission: any;
+      };
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_state",
+        agentSessionId,
+      });
+      return null;
+    }
+  }
 }

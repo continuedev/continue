@@ -14,6 +14,7 @@ import {
 } from "../redux/slices/profilesSlice";
 import {
   addContextItemsAtIndex,
+  newSession,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
 } from "../redux/slices/sessionSlice";
@@ -203,6 +204,10 @@ function ParallelListeners() {
 
   useWebviewListener("setInactive", async () => {
     void dispatch(cancelStream());
+  });
+
+  useWebviewListener("loadAgentSession", async (session) => {
+    dispatch(newSession(session));
   });
 
   useWebviewListener("setTTSActive", async (status) => {

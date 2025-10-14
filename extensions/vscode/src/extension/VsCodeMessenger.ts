@@ -425,6 +425,158 @@ export class VsCodeMessenger {
       }
     });
 
+    this.onWebview("openAgentLocally", async (msg) => {
+      const configHandler = await configHandlerPromise;
+      const { agentSessionId } = msg.data;
+
+      try {
+        // First, fetch the agent session to get repo URL and branch
+        const agentSession =
+          await configHandler.controlPlaneClient.getAgentSession(
+            agentSessionId,
+          );
+        if (!agentSession || !agentSession.metadata) {
+          vscode.window.showErrorMessage(
+            "Failed to load agent session details.",
+          );
+          return;
+        }
+
+        const repoUrl = agentSession.metadata.repoUrl || agentSession.repoUrl;
+        const branch = agentSession.metadata.branchName || agentSession.branch;
+
+        if (!repoUrl || !branch) {
+          vscode.window.showErrorMessage(
+            "Agent session is missing repository or branch information.",
+          );
+          return;
+        }
+
+        // Get workspace directories
+        const workspaceDirs = await this.ide.getWorkspaceDirs();
+        if (workspaceDirs.length === 0) {
+          vscode.window.showErrorMessage("No workspace folder is open.");
+          return;
+        }
+
+        // Find the workspace that matches the agent's repo URL
+        let matchingWorkspace: string | null = null;
+        for (const workspaceDir of workspaceDirs) {
+          const repoName = await this.ide.getRepoName(workspaceDir);
+          if (repoName) {
+            // Normalize repo URLs for comparison
+            const normalizedRepoName =
+              repoName.includes("/") && !repoName.startsWith("http")
+                ? `https://github.com/${repoName}`
+                : repoName;
+            const normalizedAgentRepo =
+              repoUrl.includes("/") && !repoUrl.startsWith("http")
+                ? `https://github.com/${repoUrl}`
+                : repoUrl;
+
+            if (normalizedRepoName === normalizedAgentRepo) {
+              matchingWorkspace = workspaceDir;
+              break;
+            }
+          }
+        }
+
+        if (!matchingWorkspace) {
+          vscode.window.showErrorMessage(
+            `This agent is for repository ${repoUrl}. Please open that workspace to take over the workflow.`,
+          );
+          return;
+        }
+
+        // Get the git repository
+        const repo = await this.ide.getRepo(matchingWorkspace);
+        if (!repo) {
+          vscode.window.showErrorMessage("Could not access git repository.");
+          return;
+        }
+
+        // Stash any uncommitted changes
+        if (
+          repo.state.workingTreeChanges.length > 0 ||
+          repo.state.indexChanges.length > 0
+        ) {
+          try {
+            await vscode.window.withProgress(
+              {
+                location: vscode.ProgressLocation.Notification,
+                title: "Stashing local changes...",
+                cancellable: false,
+              },
+              async () => {
+                // Use git command to stash
+                await this.ide.subprocess(
+                  `git stash push -m "Continue: Stashed before opening agent ${agentSessionId}"`,
+                  matchingWorkspace,
+                );
+              },
+            );
+            vscode.window.showInformationMessage(
+              "Local changes have been stashed.",
+            );
+          } catch (e) {
+            console.error("Failed to stash changes:", e);
+            const choice = await vscode.window.showWarningMessage(
+              "Failed to stash changes. Continue anyway?",
+              "Yes",
+              "No",
+            );
+            if (choice !== "Yes") {
+              return;
+            }
+          }
+        }
+
+        // Switch to the agent's branch
+        try {
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: `Switching to branch ${branch}...`,
+              cancellable: false,
+            },
+            async () => {
+              await this.ide.subprocess(
+                `git checkout ${branch}`,
+                matchingWorkspace,
+              );
+            },
+          );
+        } catch (e) {
+          console.error("Failed to switch branch:", e);
+          vscode.window.showErrorMessage(
+            `Failed to switch to branch ${branch}. Please ensure the branch exists.`,
+          );
+          return;
+        }
+
+        // Fetch the agent state
+        const agentState =
+          await configHandler.controlPlaneClient.getAgentState(agentSessionId);
+        if (!agentState || !agentState.session) {
+          vscode.window.showErrorMessage("Failed to load agent session state.");
+          return;
+        }
+
+        // For MVP: Simply load the session by sending to webview
+        // The webview will dispatch the newSession action with the session data
+        this.webviewProtocol.send("loadAgentSession", agentState.session);
+
+        vscode.window.showInformationMessage(
+          `Successfully loaded agent workflow: ${agentState.session.title || "Untitled"}`,
+        );
+      } catch (e) {
+        console.error("Failed to open agent locally:", e);
+        vscode.window.showErrorMessage(
+          `Failed to open agent locally: ${e instanceof Error ? e.message : "Unknown error"}`,
+        );
+      }
+    });
+
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {

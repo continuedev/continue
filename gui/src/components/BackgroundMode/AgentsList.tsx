@@ -1,4 +1,4 @@
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -27,6 +27,40 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [workspaceRepoUrls, setWorkspaceRepoUrls] = useState<string[]>([]);
+
+  // Fetch workspace repo URLs once on mount
+  useEffect(() => {
+    async function fetchWorkspaceRepos() {
+      try {
+        const workspaceDirs = await ideMessenger.request(
+          "getWorkspaceDirs",
+          undefined,
+        );
+        if (workspaceDirs.status === "success" && workspaceDirs.content) {
+          const repoUrls: string[] = [];
+          for (const dir of workspaceDirs.content) {
+            const repoNameResult = await ideMessenger.request("getRepoName", {
+              dir,
+            });
+            if (repoNameResult.status === "success" && repoNameResult.content) {
+              // Normalize repo URL
+              const repoName = repoNameResult.content;
+              const normalizedUrl =
+                repoName.includes("/") && !repoName.startsWith("http")
+                  ? `https://github.com/${repoName}`
+                  : repoName;
+              repoUrls.push(normalizedUrl);
+            }
+          }
+          setWorkspaceRepoUrls(repoUrls);
+        }
+      } catch (err) {
+        console.error("Failed to fetch workspace repos:", err);
+      }
+    }
+    void fetchWorkspaceRepos();
+  }, [ideMessenger]);
 
   useEffect(() => {
     async function fetchAgents() {
@@ -78,6 +112,23 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
     return () => clearInterval(interval);
   }, [session, ideMessenger, currentOrg]);
 
+  // Helper function to check if an agent's repo matches any workspace repo
+  const isAgentInCurrentWorkspace = (agentRepoUrl: string): boolean => {
+    const normalizedAgentRepo =
+      agentRepoUrl.includes("/") && !agentRepoUrl.startsWith("http")
+        ? `https://github.com/${agentRepoUrl}`
+        : agentRepoUrl;
+
+    return workspaceRepoUrls.some(
+      (workspaceUrl) => workspaceUrl === normalizedAgentRepo,
+    );
+  };
+
+  const handleOpenLocally = (agent: Agent, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the agent detail page
+    ideMessenger.post("openAgentLocally", { agentSessionId: agent.id });
+  };
+
   if (error) {
     return (
       <div className="text-error px-2 py-4 text-sm">
@@ -108,36 +159,61 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
         Background Tasks
       </div>
       <div className="flex flex-col gap-1 px-2">
-        {agents.map((agent) => (
-          <div
-            key={agent.id}
-            className="border-command-border bg-input cursor-pointer rounded-md border p-3 shadow-md transition-colors hover:brightness-110"
-            onClick={() => {
-              // Open agent detail in browser
-              ideMessenger.post("controlPlane/openUrl", {
-                path: `agents/${agent.id}`,
-                orgSlug: currentOrg?.slug,
-              });
-            }}
-          >
-            <div className="flex items-start justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">
-                  {agent.name || "Unnamed Agent"}
+        {agents.map((agent) => {
+          const isInWorkspace = isAgentInCurrentWorkspace(agent.repoUrl);
+          const canOpenLocally = isInWorkspace;
+
+          return (
+            <div
+              key={agent.id}
+              className="border-command-border bg-input cursor-pointer rounded-md border p-3 shadow-md transition-colors hover:brightness-110"
+              onClick={() => {
+                // Open agent detail in browser
+                ideMessenger.post("controlPlane/openUrl", {
+                  path: `agents/${agent.id}`,
+                  orgSlug: currentOrg?.slug,
+                });
+              }}
+            >
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">
+                    {agent.name || "Unnamed Agent"}
+                  </div>
+                  <div className="text-description mt-0.5 truncate text-xs">
+                    {agent.metadata?.github_repo || agent.repoUrl}
+                  </div>
                 </div>
-                <div className="text-description mt-0.5 truncate text-xs">
-                  {agent.metadata?.github_repo || agent.repoUrl}
+                <div className="ml-2 flex items-center gap-2">
+                  <AgentStatusBadge status={agent.status} />
+                  <div className="group relative">
+                    <button
+                      onClick={(e) =>
+                        canOpenLocally && handleOpenLocally(agent, e)
+                      }
+                      disabled={!canOpenLocally}
+                      className={`rounded p-1.5 transition-colors ${
+                        canOpenLocally
+                          ? "text-link hover:bg-input-border cursor-pointer"
+                          : "text-description-muted cursor-not-allowed opacity-50"
+                      }`}
+                      title={
+                        canOpenLocally
+                          ? "Open this agent workflow locally"
+                          : "This agent is for a different repository. Open the correct workspace to take over this workflow."
+                      }
+                    >
+                      <ArrowDownTrayIcon className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="ml-2">
-                <AgentStatusBadge status={agent.status} />
+              <div className="text-description-muted mt-1 text-xs">
+                {formatRelativeTime(agent.createdAt)}
               </div>
             </div>
-            <div className="text-description-muted mt-1 text-xs">
-              {formatRelativeTime(agent.createdAt)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {totalCount > agents.length && (
           <div className="mt-2">
             <button
