@@ -53,7 +53,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your pipeline project directory and run:
         ```bash
-        cn --config dlthub/dlt-assistant
+        cn --agent dlthub/dlt-assistant
         ```
 
         This agent includes:
@@ -293,7 +293,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 - Any required database credentials for your destination
 
 <Info>
-  The workflow uses the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) with `--config dlthub/dlt-assistant`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-agents#how-to-get-started-with-hub-agents) to customize the validation rules and prompts for your specific pipeline requirements.
+  The workflow uses the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) with `--agent dlthub/dlt-assistant`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-agents#how-to-get-started-with-hub-agents) to customize the validation rules and prompts for your specific pipeline requirements.
 </Info>
 
 ### Create Workflow File
@@ -342,7 +342,7 @@ jobs:
       - name: Validate Pipeline Schema
         run: |
           echo "🔍 Validating pipeline schema..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent dlthub/dlt-assistant \
              -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes." \
              --auto
@@ -350,7 +350,7 @@ jobs:
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent dlthub/dlt-assistant \
              -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention." \
              --auto
@@ -360,7 +360,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --config dlthub/dlt-assistant \
+          REPORT=$(cn --agent dlthub/dlt-assistant \
              -p "Generate a concise summary (200 words or less) of:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings

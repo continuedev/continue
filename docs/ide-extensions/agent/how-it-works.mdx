@@ -1,13 +1,13 @@
 ---
 title: "How Agent Mode Works"
-description: "Agent offers the same functionality as Chat, while also including tools in the request to the model and an interface for handling tool calls and responses."
+description: "Agent mode offers the same functionality as Chat mode, while also including tools in the request to the model and an interface for handling tool calls and responses."
 ---
 
 ## How the Tool Handshake Works
 
 Tools provide a flexible, powerful way for models to interface with the external world. They are provided to the model as a JSON object with a name and an arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file.
 
-The following handshake describes how Agent uses tools:
+The following handshake describes how Agent mode uses tools:
 
 1. In Agent mode, available tools are sent along with `user` chat requests
 2. The model can choose to include a tool call in its response

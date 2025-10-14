@@ -14,7 +14,7 @@ sidebarTitle: "Sanity CMS with Continue"
 Before starting, ensure you have:
 
 - Continue account with **Hub access**
-- Read: [Understanding Agents — How to get started with Hub agents](/guides/understanding-agents#how-to-get-started-with-hub-agents)
+- Read: [Understanding Agents — How to get started with Hub agents](/hub/agents/intro)
 - Node.js 20+ installed locally
 - A [Sanity account](https://www.sanity.io/) and project (free tier works)
 - Basic understanding of content management systems
@@ -75,7 +75,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         Visit the [Sanity Agent Config](https://hub.continue.dev/continuedev/sanity-agent-config) on Continue Hub and click **"Install Agent"** or run:
         
         ```bash
-        cn --config continuedev/sanity-agent-config
+        cn --agent continuedev/sanity-agent-config
         ```
 
         This agent includes:
@@ -447,7 +447,7 @@ jobs:
       - name: Validate Schema Structure
         run: |
           echo "🔍 Validating schema structure..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-agent-config \
              -p "Analyze the Sanity schema for any structural issues,
                  missing required fields, or broken references between document types." \
              --auto
@@ -455,7 +455,7 @@ jobs:
       - name: Check Content Integrity
         run: |
           echo "📊 Checking content integrity..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-agent-config \
              -p "Run GROQ queries to identify any orphaned documents,
                  broken references, or missing required fields in the content." \
              --auto
@@ -463,7 +463,7 @@ jobs:
       - name: Generate Schema Documentation
         run: |
           echo "📝 Generating schema documentation..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-agent-config \
              -p "Generate a markdown summary of all schema changes
                  in this PR and their potential impact on existing content." \
              --auto > schema-changes.md
@@ -473,7 +473,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --config continuedev/sanity-agent-config \
+          REPORT=$(cn --agent continuedev/sanity-agent-config \
              -p "Generate a concise summary (200 words or less) of:
                  - Schema validation results
                  - Content integrity checks

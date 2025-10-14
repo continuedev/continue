@@ -62,7 +62,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Launch the Agent">
         From your repo root:
         ```bash
-        cn --config continuedev/github-manager-ai
+        cn --agent continuedev/github-manager-ai
         ```
         Now try: "List my open issues labeled bug and summarize priorities."
       </Step>
@@ -305,7 +305,7 @@ jobs:
       - name: Weekly Issue Triage Summary
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
-          cn --config continuedev/github-manager-ai \
+          cn --agent continuedev/github-manager-ai \
              -p "List open issues updated in the last 14 days. Group by label and priority. Propose top 5 actions and include issue links." \
              --auto > issue_summary.txt
 
@@ -314,7 +314,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          REPORT=$(cn --config continuedev/github-manager-ai \
+          REPORT=$(cn --agent continuedev/github-manager-ai \
             -p "Summarize the context for PR #${PR_NUMBER}: related open issues, risk areas, and test suggestions. Keep under 200 words." \
             --auto)
           gh pr comment ${PR_NUMBER} --body "$REPORT"

@@ -1,11 +1,11 @@
 ---
 title: "How to Create and Manage Rules in Continue"
-description: "Rules are used to provide system message instructions to the model for Agent, Chat, and Edit requests"
+description: "Rules are used to provide system message instructions to the model for Agent mode, Chat mode, and Edit mode requests"
 keywords: [rules, system, prompt, message]
 sidebarTitle: "Rules"
 ---
 
-Rules provide instructions to the model for [Agent](../../ide-extensions/agent/quick-start), [Chat](../../ide-extensions/chat/quick-start), and [Edit](../../ide-extensions/edit/quick-start) requests.
+Rules provide instructions to the model for [Agent mode](../../ide-extensions/agent/quick-start), [Chat](../../ide-extensions/chat/quick-start), and [Edit](../../ide-extensions/edit/quick-start) requests.
 
 <Info>
   Rules are not included in [autocomplete](./autocomplete) or
@@ -80,7 +80,7 @@ Now test your rules by asking a question about a file in chat.
 
 ### Creating Local Rules
 
-Rules can be added locally using the "Add Rules" button while viewing the Local Agent's rules.
+Rules can be added locally using the "Add Rules" button.
 
 ![add local rules button](/images/add-local-rules.png)
 
@@ -258,7 +258,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 ### How to Customize Chat System Message
 
-Continue includes a simple default system message for [Agent](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Continue includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
