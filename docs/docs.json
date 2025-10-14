@@ -248,7 +248,7 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-agents",
+              "guides/understanding-configs",
               "guides/configuring-models-rules-tools",
               "guides/codebase-documentation-awareness",
               "guides/cli",
@@ -1233,7 +1233,11 @@
     },
     {
       "source": "/guides/understanding-assistants",
-      "destination": "/guides/understanding-agents"
+      "destination": "/guides/understanding-configs"
+    },
+    {
+      "source": "/guides/understanding-agents",
+      "destination": "/guides/understanding-configs"
     },
     {
       "source": "/features",
