@@ -5,7 +5,7 @@ import { createLlmApi, getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { ModelServiceState, WorkflowServiceState } from "./types.js";
+import { AgentFileServiceState, ModelServiceState } from "./types.js";
 
 /**
  * Service for managing LLM and model state
@@ -32,7 +32,7 @@ export class ModelService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return ["auth", "config", "workflow"];
+    return ["auth", "config", "agent-file"];
   }
 
   /**
@@ -41,7 +41,7 @@ export class ModelService
   async doInitialize(
     assistant: AssistantUnrolled,
     authConfig: AuthConfig,
-    workflowServiceState?: WorkflowServiceState,
+    agentFileServiceState?: AgentFileServiceState,
   ): Promise<ModelServiceState> {
     logger.debug("ModelService.doInitialize called", {
       hasAssistant: !!assistant,
@@ -59,10 +59,10 @@ export class ModelService
     let preferredModelName: string | null | undefined = null;
     let modelSource = "default";
 
-    // Priority = workflow -> last selected model
-    if (workflowServiceState?.workflowModelName) {
-      preferredModelName = workflowServiceState.workflowModelName;
-      modelSource = "workflow";
+    // Priority = agent-file -> last selected model
+    if (agentFileServiceState?.agentFileModelName) {
+      preferredModelName = agentFileServiceState.agentFileModelName;
+      modelSource = "agent-file";
     } else {
       preferredModelName = getModelName(authConfig);
       if (preferredModelName) {
@@ -70,7 +70,7 @@ export class ModelService
       }
     }
 
-    // Try to use the preferred model (workflow or persisted)
+    // Try to use the preferred model (agent-file or persisted)
     if (preferredModelName) {
       // During initialization, we need to check against availableModels directly
       const modelIndex = this.availableModels.findIndex((model) => {

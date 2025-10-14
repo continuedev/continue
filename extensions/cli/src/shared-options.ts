@@ -86,8 +86,8 @@ export function addCommonOptions(command: Command): Command {
       [] as string[],
     )
     .option(
-      "--workflow <slug>",
-      "Load workflow from the hub (slug in format 'owner/package')",
+      "--agent <slug>",
+      "Load agent file from the hub (slug in format 'owner/package')",
     );
 }
 
@@ -111,7 +111,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "allow",
     "ask",
     "exclude",
-    "workflow",
+    "agent-file",
   ];
 
   for (const optName of inheritableOptions) {

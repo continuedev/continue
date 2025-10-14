@@ -1,13 +1,13 @@
 import {
-  parseWorkflowFile,
-  parseWorkflowTools,
-  serializeWorkflowFile,
-  type WorkflowFile,
-} from "./workflowFiles.js";
+  AgentFile,
+  parseAgentFile,
+  parseAgentFileTools,
+  serializeAgentFile,
+} from "./agentFiles.js";
 
 const example = `
 ---
-name: Example Agent / Workflow
+name: Example Agent / Agent File
 description: Trying to wrap my head around what are these files
 model: anthropic/claude-sonnet-4
 tools: linear-mcp, sentry-mcp:read-alerts, Read, Glob, Bash(git diff:*)
@@ -18,7 +18,7 @@ This is the prompt
 
 const minimalExample = `
 ---
-name: Minimal Workflow
+name: Minimal Agent File
 ---
 Just a simple prompt
 `.trim();
@@ -39,12 +39,12 @@ name: [invalid: yaml: syntax
 This should fail
 `.trim();
 
-describe("parseWorkflowFile", () => {
-  test("parses complete workflow file correctly", () => {
-    const result = parseWorkflowFile(example);
+describe("parseAgentFile", () => {
+  test("parses complete agent file correctly", () => {
+    const result = parseAgentFile(example);
 
     expect(result).toEqual({
-      name: "Example Agent / Workflow",
+      name: "Example Agent / Agent File",
       description: "Trying to wrap my head around what are these files",
       model: "anthropic/claude-sonnet-4",
       tools: "linear-mcp, sentry-mcp:read-alerts, Read, Glob, Bash(git diff:*)",
@@ -53,11 +53,11 @@ describe("parseWorkflowFile", () => {
     });
   });
 
-  test("parses minimal workflow file with only name", () => {
-    const result = parseWorkflowFile(minimalExample);
+  test("parses minimal agent file with only name", () => {
+    const result = parseAgentFile(minimalExample);
 
     expect(result).toEqual({
-      name: "Minimal Workflow",
+      name: "Minimal Agent File",
       prompt: "Just a simple prompt",
     });
 
@@ -69,19 +69,19 @@ describe("parseWorkflowFile", () => {
   });
 
   test("throws error when name field is missing", () => {
-    expect(() => parseWorkflowFile(invalidExample)).toThrow(
-      "Workflow file must contain YAML frontmatter with a 'name' field",
+    expect(() => parseAgentFile(invalidExample)).toThrow(
+      "Agent File file must contain YAML frontmatter with a 'name' field",
     );
   });
 
   test("throws error when no frontmatter is present", () => {
-    expect(() => parseWorkflowFile(noFrontmatterExample)).toThrow(
-      "Workflow file must contain YAML frontmatter with a 'name' field",
+    expect(() => parseAgentFile(noFrontmatterExample)).toThrow(
+      "Agent File file must contain YAML frontmatter with a 'name' field",
     );
   });
 
   test("throws error with invalid YAML syntax", () => {
-    expect(() => parseWorkflowFile(invalidYamlExample)).toThrow();
+    expect(() => parseAgentFile(invalidYamlExample)).toThrow();
   });
 
   test("handles empty frontmatter with name", () => {
@@ -91,7 +91,7 @@ name: Empty Test
 ---
 `.trim();
 
-    const result = parseWorkflowFile(emptyFrontmatter);
+    const result = parseAgentFile(emptyFrontmatter);
     expect(result).toEqual({
       name: "Empty Test",
       prompt: "",
@@ -109,7 +109,7 @@ Line 2
 Line 4 with gap
 `.trim();
 
-    const result = parseWorkflowFile(multilineExample);
+    const result = parseAgentFile(multilineExample);
     expect(result.prompt).toBe("Line 1\nLine 2\n\nLine 4 with gap");
   });
 
@@ -122,7 +122,7 @@ This has --- in the middle
 And more content after
 `.trim();
 
-    const result = parseWorkflowFile(dashedContentExample);
+    const result = parseAgentFile(dashedContentExample);
     expect(result.prompt).toBe(
       "This has --- in the middle\nAnd more content after",
     );
@@ -137,29 +137,29 @@ extraField: should be ignored by schema
 Prompt content
 `.trim();
 
-    const result = parseWorkflowFile(extraFieldsExample);
+    const result = parseAgentFile(extraFieldsExample);
     expect(result.name).toBe("Extra Fields Test");
     expect(result.prompt).toBe("Prompt content");
     // Extra fields should not be in the result
     expect("extraField" in result).toBe(false);
   });
 
-  test("parses workflow with tools but no rules", () => {
+  test("parses agent file with tools but no rules", () => {
     const toolsOnlyExample = `
 ---
-name: Tools Only Workflow
-description: A workflow that uses tools but no rules
+name: Tools Only Agent File
+description: A agent file that uses tools but no rules
 tools: git, filesystem, search
 ---
-This workflow uses tools but doesn't define any rules.
+This agent file uses tools but doesn't define any rules.
 `.trim();
 
-    const result = parseWorkflowFile(toolsOnlyExample);
+    const result = parseAgentFile(toolsOnlyExample);
     expect(result).toEqual({
-      name: "Tools Only Workflow",
-      description: "A workflow that uses tools but no rules",
+      name: "Tools Only Agent File",
+      description: "A agent file that uses tools but no rules",
       tools: "git, filesystem, search",
-      prompt: "This workflow uses tools but doesn't define any rules.",
+      prompt: "This agent file uses tools but doesn't define any rules.",
     });
 
     // Rules should be undefined
@@ -174,43 +174,43 @@ name: 123
 Prompt
 `.trim();
 
-    expect(() => parseWorkflowFile(invalidNameType)).toThrow(
-      "Invalid workflow file frontmatter",
+    expect(() => parseAgentFile(invalidNameType)).toThrow(
+      "Invalid agent file frontmatter",
     );
   });
 });
 
-describe("serializeWorkflowFile", () => {
-  test("serializes complete workflow file correctly", () => {
-    const workflowFile: WorkflowFile = {
-      name: "Test Workflow",
-      description: "A test workflow",
+describe("serializeAgentFile", () => {
+  test("serializes complete agent file correctly", () => {
+    const agentFile: AgentFile = {
+      name: "Test Agent File",
+      description: "A test agent file",
       model: "anthropic/claude-3-sonnet",
       tools: "tool1, tool2",
       rules: "rule1, rule2",
       prompt: "This is the test prompt",
     };
 
-    const result = serializeWorkflowFile(workflowFile);
+    const result = serializeAgentFile(agentFile);
 
     // Parse it back to verify round-trip consistency
-    const parsed = parseWorkflowFile(result);
-    expect(parsed).toEqual(workflowFile);
+    const parsed = parseAgentFile(result);
+    expect(parsed).toEqual(agentFile);
   });
 
-  test("serializes minimal workflow file", () => {
-    const workflowFile: WorkflowFile = {
+  test("serializes minimal agent file", () => {
+    const agentFile: AgentFile = {
       name: "Minimal",
       prompt: "Simple prompt",
     };
 
-    const result = serializeWorkflowFile(workflowFile);
-    const parsed = parseWorkflowFile(result);
-    expect(parsed).toEqual(workflowFile);
+    const result = serializeAgentFile(agentFile);
+    const parsed = parseAgentFile(result);
+    expect(parsed).toEqual(agentFile);
   });
 
   test("filters out undefined values from frontmatter", () => {
-    const workflowFile: WorkflowFile = {
+    const agentFile: AgentFile = {
       name: "Test",
       description: undefined,
       model: "gpt-4",
@@ -219,7 +219,7 @@ describe("serializeWorkflowFile", () => {
       prompt: "Test prompt",
     };
 
-    const result = serializeWorkflowFile(workflowFile);
+    const result = serializeAgentFile(agentFile);
 
     // Should not contain undefined fields in YAML
     expect(result).not.toContain("description");
@@ -228,7 +228,7 @@ describe("serializeWorkflowFile", () => {
     expect(result).toContain("model: gpt-4");
 
     // Verify round-trip
-    const parsed = parseWorkflowFile(result);
+    const parsed = parseAgentFile(result);
     expect(parsed.name).toBe("Test");
     expect(parsed.model).toBe("gpt-4");
     expect(parsed.description).toBeUndefined();
@@ -237,41 +237,41 @@ describe("serializeWorkflowFile", () => {
   });
 
   test("handles empty prompt", () => {
-    const workflowFile: WorkflowFile = {
+    const agentFile: AgentFile = {
       name: "Empty Prompt",
       prompt: "",
     };
 
-    const result = serializeWorkflowFile(workflowFile);
-    const parsed = parseWorkflowFile(result);
+    const result = serializeAgentFile(agentFile);
+    const parsed = parseAgentFile(result);
     expect(parsed.prompt).toBe("");
   });
 
   test("preserves multiline prompts", () => {
-    const workflowFile: WorkflowFile = {
+    const agentFile: AgentFile = {
       name: "Multiline",
       prompt: "Line 1\nLine 2\n\nLine 4",
     };
 
-    const result = serializeWorkflowFile(workflowFile);
-    const parsed = parseWorkflowFile(result);
-    expect(parsed.prompt).toBe(workflowFile.prompt);
+    const result = serializeAgentFile(agentFile);
+    const parsed = parseAgentFile(result);
+    expect(parsed.prompt).toBe(agentFile.prompt);
   });
 });
 
 describe("round-trip consistency", () => {
-  test("example workflow maintains consistency", () => {
-    const parsed = parseWorkflowFile(example);
-    const serialized = serializeWorkflowFile(parsed);
-    const reparsed = parseWorkflowFile(serialized);
+  test("example agent file maintains consistency", () => {
+    const parsed = parseAgentFile(example);
+    const serialized = serializeAgentFile(parsed);
+    const reparsed = parseAgentFile(serialized);
 
     expect(reparsed).toEqual(parsed);
   });
 
-  test("minimal workflow maintains consistency", () => {
-    const parsed = parseWorkflowFile(minimalExample);
-    const serialized = serializeWorkflowFile(parsed);
-    const reparsed = parseWorkflowFile(serialized);
+  test("minimal agent file maintains consistency", () => {
+    const parsed = parseAgentFile(minimalExample);
+    const serialized = serializeAgentFile(parsed);
+    const reparsed = parseAgentFile(serialized);
 
     expect(reparsed).toEqual(parsed);
   });
@@ -280,15 +280,15 @@ describe("round-trip consistency", () => {
 describe("edge cases", () => {
   test("handles Windows line endings", () => {
     const windowsExample = example.replace(/\n/g, "\r\n");
-    const result = parseWorkflowFile(windowsExample);
+    const result = parseAgentFile(windowsExample);
 
-    expect(result.name).toBe("Example Agent / Workflow");
+    expect(result.name).toBe("Example Agent / Agent File");
     expect(result.prompt).toBe("This is the prompt");
   });
 
   test("handles mixed line endings", () => {
     const mixedExample = `---\r\nname: Mixed\n---\r\nPrompt content\n`;
-    const result = parseWorkflowFile(mixedExample);
+    const result = parseAgentFile(mixedExample);
 
     expect(result.name).toBe("Mixed");
     expect(result.prompt).toBe("Prompt content");
@@ -302,8 +302,8 @@ name: ""
 Prompt
 `.trim();
 
-    expect(() => parseWorkflowFile(emptyNameExample)).toThrow(
-      "Workflow file must contain YAML frontmatter with a 'name' field",
+    expect(() => parseAgentFile(emptyNameExample)).toThrow(
+      "Agent File file must contain YAML frontmatter with a 'name' field",
     );
   });
 
@@ -315,28 +315,28 @@ name: null
 Prompt
 `.trim();
 
-    expect(() => parseWorkflowFile(nullNameExample)).toThrow(
-      "Workflow file must contain YAML frontmatter with a 'name' field",
+    expect(() => parseAgentFile(nullNameExample)).toThrow(
+      "Agent File file must contain YAML frontmatter with a 'name' field",
     );
   });
 });
 
-describe("parseWorkflowTools", () => {
+describe("parseAgentFileTools", () => {
   it("should return empty arrays for undefined tools", () => {
-    const result = parseWorkflowTools(undefined);
+    const result = parseAgentFileTools(undefined);
     expect(result).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
   });
 
   it("should return empty arrays for empty tools string", () => {
-    const result = parseWorkflowTools("");
+    const result = parseAgentFileTools("");
     expect(result).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
 
-    const result2 = parseWorkflowTools("   ");
+    const result2 = parseAgentFileTools("   ");
     expect(result2).toEqual({ tools: [], mcpServers: [], allBuiltIn: false });
   });
 
   it("should parse built-in tools", () => {
-    const result = parseWorkflowTools("bash, read, edit");
+    const result = parseAgentFileTools("bash, read, edit");
     expect(result).toEqual({
       tools: [{ toolName: "bash" }, { toolName: "read" }, { toolName: "edit" }],
       mcpServers: [],
@@ -345,7 +345,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse built_in keyword", () => {
-    const result = parseWorkflowTools("built_in");
+    const result = parseAgentFileTools("built_in");
     expect(result).toEqual({
       tools: [],
       mcpServers: [],
@@ -354,7 +354,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse built_in with other tools", () => {
-    const result = parseWorkflowTools("built_in, owner/package");
+    const result = parseAgentFileTools("built_in, owner/package");
     expect(result).toEqual({
       tools: [{ mcpServer: "owner/package" }],
       mcpServers: ["owner/package"],
@@ -363,7 +363,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse MCP server (all tools)", () => {
-    const result = parseWorkflowTools("owner/package, another/server");
+    const result = parseAgentFileTools("owner/package, another/server");
     expect(result).toEqual({
       tools: [{ mcpServer: "owner/package" }, { mcpServer: "another/server" }],
       mcpServers: ["owner/package", "another/server"],
@@ -372,7 +372,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse specific MCP tools", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "owner/package:tool1, owner/package:tool2",
     );
     expect(result).toEqual({
@@ -386,7 +386,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse mixed tool types", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "anmcp/serverslug:a_tool, anmcp/serverslug:another_tool, asecond/mcpserver, bash, read, edit",
     );
     expect(result).toEqual({
@@ -404,7 +404,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should parse mixed tools with built_in keyword", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "built_in, anmcp/serverslug:a_tool, asecond/mcpserver",
     );
     expect(result).toEqual({
@@ -418,7 +418,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should deduplicate MCP servers", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "owner/package:tool1, owner/package:tool2, owner/package, other/server",
     );
     expect(result).toEqual({
@@ -434,7 +434,7 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should handle extra whitespace", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "  owner/package:tool1  ,   bash  ,  other/server  ",
     );
     expect(result).toEqual({
@@ -449,10 +449,10 @@ describe("parseWorkflowTools", () => {
   });
 
   it("should handle any MCP server slug format", () => {
-    expect(() => parseWorkflowTools("invalid-slug")).not.toThrow();
-    expect(() => parseWorkflowTools("invalid/slug/extra")).not.toThrow();
+    expect(() => parseAgentFileTools("invalid-slug")).not.toThrow();
+    expect(() => parseAgentFileTools("invalid/slug/extra")).not.toThrow();
     expect(() =>
-      parseWorkflowTools("owner/package:tool, invalid/slug/extra:tool"),
+      parseAgentFileTools("owner/package:tool, invalid/slug/extra:tool"),
     ).not.toThrow();
   });
 
@@ -466,13 +466,13 @@ describe("parseWorkflowTools", () => {
     ];
 
     for (const slug of validSlugs) {
-      expect(() => parseWorkflowTools(slug)).not.toThrow();
-      expect(() => parseWorkflowTools(`${slug}:tool`)).not.toThrow();
+      expect(() => parseAgentFileTools(slug)).not.toThrow();
+      expect(() => parseAgentFileTools(`${slug}:tool`)).not.toThrow();
     }
   });
 
   it("should handle empty tool names and empty entries", () => {
-    const result = parseWorkflowTools(
+    const result = parseAgentFileTools(
       "owner/package:tool1, , owner/package:, bash",
     );
     expect(result).toEqual({
@@ -488,61 +488,61 @@ describe("parseWorkflowTools", () => {
 
   describe("whitespace validation in colon-separated MCP tool references", () => {
     it("should reject MCP tool reference with space after colon", () => {
-      expect(() => parseWorkflowTools("owner/slug: tool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug: tool")).toThrow(
         'Invalid MCP tool reference "owner/slug: tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with space before colon", () => {
-      expect(() => parseWorkflowTools("owner/slug :tool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug :tool")).toThrow(
         'Invalid MCP tool reference "owner/slug :tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with spaces around colon", () => {
-      expect(() => parseWorkflowTools("owner/slug : tool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug : tool")).toThrow(
         'Invalid MCP tool reference "owner/slug : tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with space in tool name", () => {
-      expect(() => parseWorkflowTools("owner/slug:my tool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug:my tool")).toThrow(
         'Invalid MCP tool reference "owner/slug:my tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with space in server slug", () => {
-      expect(() => parseWorkflowTools("owner /slug:tool")).toThrow(
+      expect(() => parseAgentFileTools("owner /slug:tool")).toThrow(
         'Invalid MCP tool reference "owner /slug:tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with tab character", () => {
-      expect(() => parseWorkflowTools("owner/slug:\ttool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug:\ttool")).toThrow(
         'Invalid MCP tool reference "owner/slug:\ttool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with newline character", () => {
-      expect(() => parseWorkflowTools("owner/slug:\ntool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug:\ntool")).toThrow(
         'Invalid MCP tool reference "owner/slug:\ntool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with multiple spaces", () => {
-      expect(() => parseWorkflowTools("owner/slug:  tool  ")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug:  tool  ")).toThrow(
         'Invalid MCP tool reference "owner/slug:  tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should reject MCP tool reference with leading spaces in tool name", () => {
-      expect(() => parseWorkflowTools("owner/slug:  tool")).toThrow(
+      expect(() => parseAgentFileTools("owner/slug:  tool")).toThrow(
         'Invalid MCP tool reference "owner/slug:  tool": colon-separated tool references cannot contain whitespace',
       );
     });
 
     it("should accept valid colon-separated MCP tool reference without whitespace", () => {
-      const result = parseWorkflowTools("owner/package:tool_name");
+      const result = parseAgentFileTools("owner/package:tool_name");
       expect(result).toEqual({
         tools: [{ mcpServer: "owner/package", toolName: "tool_name" }],
         mcpServers: ["owner/package"],
@@ -551,7 +551,7 @@ describe("parseWorkflowTools", () => {
     });
 
     it("should accept valid MCP tool references with hyphens and underscores", () => {
-      const result = parseWorkflowTools(
+      const result = parseAgentFileTools(
         "owner-name/package_name:tool-name_123",
       );
       expect(result).toEqual({
@@ -567,7 +567,7 @@ describe("parseWorkflowTools", () => {
     });
 
     it("should allow whitespace between comma-separated items", () => {
-      const result = parseWorkflowTools(
+      const result = parseAgentFileTools(
         "owner/package:tool1,   owner/package:tool2  ,  bash",
       );
       expect(result).toEqual({
@@ -583,7 +583,7 @@ describe("parseWorkflowTools", () => {
 
     it("should reject whitespace in one reference but accept valid references in same string", () => {
       expect(() =>
-        parseWorkflowTools("owner/package:tool1, owner/package: tool2, bash"),
+        parseAgentFileTools("owner/package:tool1, owner/package: tool2, bash"),
       ).toThrow(
         'Invalid MCP tool reference "owner/package: tool2": colon-separated tool references cannot contain whitespace',
       );
@@ -592,13 +592,13 @@ describe("parseWorkflowTools", () => {
     it("should not reject whitespace in MCP server references without colon", () => {
       // Note: This behavior may or may not be desired, but documents current behavior
       // Server-only references (no colon) don't trigger the whitespace check
-      expect(() => parseWorkflowTools("owner /package")).not.toThrow();
+      expect(() => parseAgentFileTools("owner /package")).not.toThrow();
     });
 
     it("should not reject whitespace in built-in tool names", () => {
       // Note: This behavior may or may not be desired, but documents current behavior
       // Built-in tools (no slash) don't trigger the whitespace check
-      expect(() => parseWorkflowTools("my tool")).not.toThrow();
+      expect(() => parseAgentFileTools("my tool")).not.toThrow();
     });
   });
 });

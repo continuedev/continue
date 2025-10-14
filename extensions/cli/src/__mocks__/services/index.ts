@@ -26,5 +26,5 @@ export const SERVICE_NAMES = {
   CHAT_HISTORY: "chatHistory",
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
-  WORKFLOW: "workflow",
+  AGENT_FILE: "agent-file",
 } as const;

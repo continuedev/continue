@@ -12,7 +12,7 @@ import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
+import { AgentFileServiceState, SERVICE_NAMES } from "./types.js";
 
 describe("ConfigService", () => {
   let service: ConfigService;
@@ -23,11 +23,11 @@ describe("ConfigService", () => {
     systemMessage: "Test system message",
   } as any;
   const mockApiClient = { get: vi.fn(), post: vi.fn() };
-  const mockWorkflowState: WorkflowServiceState = {
+  const mockAgentFileState: AgentFileServiceState = {
     slug: null,
-    workflowFile: null,
-    workflowModelName: null,
-    workflowService: null,
+    agentFile: null,
+    agentFileModelName: null,
+    agentFileService: null,
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,7 +46,7 @@ describe("ConfigService", () => {
         configPath: "/path/to/config.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       expect(state).toEqual({
@@ -66,7 +66,7 @@ describe("ConfigService", () => {
         configPath: undefined,
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       expect(state).toEqual({
@@ -94,7 +94,7 @@ describe("ConfigService", () => {
         configPath: "/config.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
         injectedConfigOptions: { rule: ["rule1", "rule2"] },
       });
 
@@ -102,7 +102,7 @@ describe("ConfigService", () => {
       expect(vi.mocked(configEnhancer.enhanceConfig)).toHaveBeenCalledWith(
         mockConfig,
         { rule: ["rule1", "rule2"] },
-        mockWorkflowState,
+        mockAgentFileState,
       );
 
       expect(state.config).toEqual(expectedConfig);
@@ -121,7 +121,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       // Switch to new config
@@ -151,7 +151,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       vi.mocked(configLoader.loadConfiguration).mockRejectedValue(
@@ -181,7 +181,7 @@ describe("ConfigService", () => {
         configPath: "/config.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       // Modify mock to return updated config
@@ -214,7 +214,7 @@ describe("ConfigService", () => {
         configPath: undefined,
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       await expect(
@@ -239,7 +239,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       // Mock service container
@@ -282,7 +282,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       vi.mocked(workos.loadAuthConfig).mockReturnValue({
@@ -304,7 +304,7 @@ describe("ConfigService", () => {
       expect(service.getDependencies()).toEqual([
         "auth",
         "apiClient",
-        "workflow",
+        "agent-file",
       ]);
     });
   });
@@ -320,7 +320,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       const listener = vi.fn();
@@ -354,7 +354,7 @@ describe("ConfigService", () => {
         configPath: "/old.yaml",
         _organizationId: "org-123",
         apiClient: mockApiClient as any,
-        workflowState: mockWorkflowState,
+        agentFileState: mockAgentFileState,
       });
 
       const errorListener = vi.fn();

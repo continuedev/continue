@@ -21,15 +21,15 @@ vi.mock("./hubLoader.js", () => ({
   modelProcessor: {},
 }));
 
-// Mock the service container to provide empty workflow state
+// Mock the service container to provide empty agent file state
 vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(() =>
       Promise.resolve({
-        workflowService: null,
-        workflowModelName: null,
-        workflowFile: null,
-        workflow: null,
+        agentFileService: null,
+        agentFileModelName: null,
+        agentFile: null,
+        slug: null,
       }),
     ),
   },
@@ -37,7 +37,7 @@ vi.mock("./services/ServiceContainer.js", () => ({
 
 vi.mock("./services/types.js", () => ({
   SERVICE_NAMES: {
-    WORKFLOW: "workflow",
+    AGENT_FILE: "agent-file",
   },
 }));
 
@@ -288,41 +288,41 @@ describe("ConfigEnhancer", () => {
     });
   });
 
-  it("should handle workflow integration gracefully when no workflow", async () => {
-    // The mocked service container returns null workflow state
+  it("should handle agent file integration gracefully when no agent file", async () => {
+    // The mocked service container returns null agent file state
     const options: BaseCommandOptions = {
       rule: ["test-rule"],
     };
 
     const config = await enhancer.enhanceConfig(mockConfig, options);
 
-    // Should work normally when no workflow is active
+    // Should work normally when no agent file is active
     expect(config.rules).toEqual(["test-rule"]);
   });
 
-  it("should handle workflow integration when workflow is active", async () => {
-    // Mock service container to return active workflow
+  it("should handle agent file integration when agent file is active", async () => {
+    // Mock service container to return active agent file
     const options: BaseCommandOptions = {
       rule: ["user-rule"],
       prompt: ["user-prompt"],
     };
 
     const config = await enhancer.enhanceConfig(mockConfig, options, {
-      workflowFile: {
-        name: "Test Workflow",
+      agentFile: {
+        name: "Test Agent",
         prompt: "You are a test assistant",
         rules: "Always be helpful",
         model: "gpt-4",
         tools: "bash,read",
       },
-      slug: "owner/test-workflow",
-      workflowModelName: null,
-      workflowService: null,
+      slug: "owner/test-agent",
+      agentFileModelName: null,
+      agentFileService: null,
     });
 
-    // Should have both workflow and user rules
+    // Should have both agent file and user rules
     expect(config.rules).toHaveLength(2);
-    expect(config.rules?.[0]).toBe("Always be helpful"); // Workflow rule first
+    expect(config.rules?.[0]).toBe("Always be helpful"); // Agent file rule first
     expect(config.rules?.[1]).toBe("user-rule"); // User rule second
   });
 });
