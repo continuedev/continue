@@ -1,0 +1,359 @@
+---
+title: "Creating Workflow Agents"
+description: "Learn how to create Continuous AI workflow agents in the Continue Hub"
+---
+
+Continue Hub allows you to create custom workflow configurations that can be reused across different repositories and shared with your team.
+
+## Workflow Creation Interface
+
+NEEDS_IMAGE
+
+Access the workflow creation interface by:
+
+1. Navigate to the [Continue Hub](https://hub.continue.dev)
+2. Click "New Agent" or use the "+ New Workflow" button
+3. Choose "Workflow" as the agent type
+
+## Workflow Configuration
+
+### Basic Information
+
+<Card title="Workflow Metadata" icon="info">
+
+  **Name**: Display name for your workflow (required)
+  - Used in the workflow selector dropdown
+  - Should be descriptive and concise
+  - Example: "Create Custom Ticket", "Fix TypeScript Errors"
+
+  **Description**: Brief explanation of what the workflow does
+  - Helps team members understand the workflow's purpose
+  - Displayed in workflow listings and previews
+
+  **Slug**: URL-friendly identifier (auto-generated)
+  - Automatically created from the workflow name
+  - Can be customized if needed
+  - Must be unique within your organization/account
+
+</Card>
+
+### Core Configuration
+
+<Card title="Essential Settings" icon="settings">
+
+  **Prompt** (Required): The main instructions for the AI agent
+  - This is the core logic of your workflow
+  - Can include variable placeholders
+  - Should be specific and actionable
+  - Example: "Given the following user request, create a GitHub issue with proper labels and assignees"
+
+  **Model**: Specific AI model to use
+  - Optional - defaults to organization/account settings
+  - Can specify different models for different workflows
+  - Choose based on task complexity and requirements
+
+</Card>
+
+### Advanced Configuration
+
+#### Tools Integration
+
+<Card title="Tool Selection" icon="wrench">
+
+  Configure which tools your workflow can access:
+
+  **Built-in Tools**:
+  - File system operations
+  - Git commands
+  - Code analysis tools
+  - Web search capabilities
+
+  **MCP Servers**: Model Context Protocol servers for extended functionality
+  - Format: `owner/package-name` for all tools from a server
+  - Format: `owner/package-name:tool-name` for specific tools
+  - Examples: `continuedev/filesystem`, `anthropic/mcp-server-git:commit`
+
+  **Tool String Format**:
+  ```yaml
+  tools: "built_in, owner/mcp-server, owner/server:specific-tool"
+  ```
+
+</Card>
+
+#### Rules and Context
+
+<Card title="Rule Configuration" icon="book">
+
+  **Rules**: Predefined context and constraints
+  - Coding standards and style guides
+  - Organization-specific policies
+  - Security and compliance requirements
+  - Format: `owner/rule-name` (e.g., `myorg/typescript-standards`)
+
+  **Rule Benefits**:
+  - Consistent output across workflows
+  - Reduced prompt engineering
+  - Organizational best practices enforcement
+
+</Card>
+
+### Workflow File Structure
+
+Workflows are stored as Markdown files with YAML frontmatter:
+
+```yaml
+---
+name: Create Custom Ticket
+description: Create a GitHub issue based on user requirements
+model: claude-3-5-sonnet-20241022
+tools: built_in, continuedev/github
+rules: myorg/ticket-standards, myorg/security-review
+---
+
+Given the following user request, create a detailed GitHub issue following these guidelines:
+
+1. **Title**: Create a clear, concise title
+2. **Description**: Include comprehensive details
+3. **Labels**: Apply appropriate labels based on content
+4. **Assignees**: Suggest relevant team members
+5. **Priority**: Assess and set priority level
+
+Always follow the organization's ticket creation standards and ensure all security considerations are addressed.
+```
+
+## Creation Workflow
+
+### Step-by-Step Process
+
+<Card title="Workflow Creation Steps" icon="list">
+
+  1. **Start with the Sidebar**: Configure basic metadata and settings
+  2. **Write the Prompt**: Develop clear, actionable instructions
+  3. **Select Tools**: Choose appropriate tools for the task
+  4. **Add Rules**: Include relevant organizational rules
+  5. **Configure Model**: Select optimal AI model if needed
+  6. **Preview**: Use the preview tab to see the final configuration
+  7. **Test**: Run the workflow on a test repository
+  8. **Publish**: Save and make available to your team
+
+</Card>
+
+### Form Interface
+
+NEEDS_IMAGE
+
+The workflow creation form provides:
+
+<CardGroup cols={2}>
+  <Card title="Left Sidebar" icon="sidebar">
+
+    **Configuration Panel**:
+    - Name and description fields
+    - Model selector with organization models
+    - Tools multi-select with MCP integration
+    - Rules multi-select with validation
+    - Visibility and permissions settings
+
+  </Card>
+
+  <Card title="Main Editor" icon="edit">
+
+    **Content Editor**:
+    - Tabbed interface (Markdown/Preview)
+    - Syntax highlighting
+    - Real-time preview
+    - Auto-sync between form fields and markdown
+
+  </Card>
+</CardGroup>
+
+### Validation and Testing
+
+<Card title="Quality Assurance" icon="check">
+
+  **Automatic Validation**:
+  - YAML frontmatter syntax checking
+  - Required field validation
+  - Tool reference validation
+  - Rule slug format verification
+
+  **Testing Recommendations**:
+  - Test with the [Continue CLI](../../guides/cli) first
+  - Start with simple, known-working scenarios
+  - Validate on multiple repository types
+  - Get team feedback before wide deployment
+
+</Card>
+
+## Sharing and Collaboration
+
+### Visibility Options
+
+<Card title="Access Control" icon="eye">
+
+  **Public**: Available to all Continue Hub users
+  - Discoverable in community workflows
+  - Can be forked and modified by others
+  - Good for open-source contributions
+
+  **Organization**: Limited to organization members
+  - Shared across team members
+  - Maintains organizational standards
+  - Can include proprietary logic
+
+  **Private**: Only accessible to you
+  - Personal workflows and experiments
+  - Can be promoted to organization later
+
+</Card>
+
+### Version Management
+
+<Info>
+
+  Workflows support versioning - updates create new versions while maintaining backward compatibility for existing automations.
+
+</Info>
+
+## Best Practices
+
+### Prompt Design
+
+<Card title="Effective Prompting" icon="message-square">
+
+  **Be Specific**: Include exact requirements and constraints
+  - Bad: "Fix the bugs"
+  - Good: "Fix TypeScript compilation errors in the src/ directory, ensuring all type annotations are correct"
+
+  **Include Context**: Provide necessary background information
+  - Project structure expectations
+  - Coding standards to follow
+  - Integration requirements
+
+  **Define Success**: Clearly state what constitutes completion
+  - Expected outputs
+  - Quality criteria
+  - Testing requirements
+
+</Card>
+
+### Tool Selection
+
+<Card title="Tool Strategy" icon="wrench">
+
+  **Principle of Least Privilege**: Only include necessary tools
+  - Reduces potential for unintended actions
+  - Improves security posture
+  - Simplifies troubleshooting
+
+  **Layer Tools Appropriately**: 
+  - Start with built-in tools
+  - Add specific MCP tools as needed
+  - Consider tool interactions and dependencies
+
+</Card>
+
+### Organizational Guidelines
+
+<Card title="Team Workflows" icon="users">
+
+  **Naming Conventions**: Establish consistent naming patterns
+  - Use descriptive, action-oriented names
+  - Include context about the workflow's purpose
+  - Follow team/organization naming standards
+
+  **Documentation**: Include comprehensive descriptions
+  - Document expected inputs and outputs
+  - Explain any prerequisites or setup requirements
+  - Provide usage examples
+
+  **Testing Protocol**: Establish testing procedures
+  - Test on representative repositories
+  - Validate with different team members
+  - Monitor performance and adjust as needed
+
+</Card>
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="YAML Parsing Errors">
+
+    **Symptoms**: Configuration fails to save or load
+
+    **Solutions**:
+    - Check YAML syntax in the preview tab
+    - Ensure proper indentation and structure
+    - Validate special characters are properly escaped
+    - Use the form interface to avoid syntax errors
+
+  </Accordion>
+
+  <Accordion title="Tool Reference Errors">
+
+    **Symptoms**: Tools not available during workflow execution
+
+    **Solutions**:
+    - Verify MCP server slug format (`owner/package`)
+    - Check tool name spelling and availability
+    - Ensure proper permissions for MCP servers
+    - Test with built-in tools first
+
+  </Accordion>
+
+  <Accordion title="Rule Validation Failures">
+
+    **Symptoms**: Rule references marked as invalid
+
+    **Solutions**:
+    - Verify rule exists and is accessible
+    - Check slug format (`owner/rule-name`)
+    - Ensure proper permissions to referenced rules
+    - Contact rule owner if access needed
+
+  </Accordion>
+</AccordionGroup>
+
+## Migration and Updates
+
+### Updating Existing Workflows
+
+<Card title="Version Management" icon="git">
+
+  **Creating Updates**: 
+  - Edit existing workflows to create new versions
+  - Previous versions remain available
+  - Gradual rollout possible
+
+  **Breaking Changes**: 
+  - Test thoroughly before deploying updates
+  - Communicate changes to team members
+  - Consider deprecation periods for major changes
+
+</Card>
+
+### Import/Export
+
+<Info>
+
+  Workflows can be exported as Markdown files for version control, backup, or sharing across different Continue Hub instances.
+
+</Info>
+
+## After Creation
+
+Once your workflow is created, you can:
+
+<Card title="Next Steps" icon="arrow-right">
+
+  **Test and Refine**: Use your workflow in the agents interface and refine based on results
+
+  **Share with Team**: Make workflows available to organization members
+
+  **Edit and Update**: [Modify workflows](./editing-workflow-agents) as requirements change
+
+  **Monitor Performance**: Track usage and effectiveness over time
+
+</Card>

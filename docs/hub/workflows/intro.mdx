@@ -1,10 +1,12 @@
 ---
-title: "Introduction"
-description: "Run Continuous AI workflows in the background"
+title: "Workflows - Intro"
+description: "Run Continuous AI workflows in the background using the Continue Hub agents interface with GitHub integration and customizable prompts"
 ---
 
 <Info>
+
   Workflows are in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
+
 </Info>
 
 Workflows are a way to run and manage background agents in Continue. You can use them for:
@@ -15,16 +17,19 @@ Workflows are a way to run and manage background agents in Continue. You can use
 - Running repeatable tasks with your own rules, prompts, and MCP servers
 - Much more!
 
-## Quickstart
+## Getting Started
 
-To run your first workflow
+To run your first workflow:
 
 1. Go to [hub.continue.dev/agents](https://hub.continue.dev/agents)
-
-![Agent Setup](/images/hub/workflows/images/workflows-setup.png)
-
-2. Connect with your GitHub account
-3. Enter the prompt for your agent
+![Workflows Github and Model setup](/images/hub/workflows/images/workflows-onboarding.png)
+2. **Connect with your GitHub account** - This is required to enable repository access and branch selection
+3. **Set up a model** - You can either provide an Anthropic API key, or follow the instructions to add a different model
+![Workflows Interface](/images/hub/workflows/images/workflows-setup.png)
+4. **Select a repository** - Choose which codebase the workflow should operate on
+5. **Choose a branch** - Pick the specific branch for the workflow to work with
+6. **Enter your prompt** - Describe the task you want the AI agent to accomplish
+7. **Click the send button** or press enter to kick off your workflow
 
 ## Example Workflow Tasks
 
@@ -86,12 +91,74 @@ Here are some example tasks you can try with your workflows:
   </Accordion>
 </AccordionGroup>
 
-## How to use background agents
 
-The practice of using background agents, which we call Continuous AI, requires practice and forethought to set up the right guiderails and habits to fit your development workflow, much like learning to work with a larger engineering team. We are constantly sharing our learnings on the [Continuous AI Blog](https://blog.continue.dev), but these few high-level tips are a great way to quickly become successful with workflows:
 
-- Practice first with the [Continue CLI](../../guides/cli) in "TUI mode". The same agent that powers our CLI is used for workflows, so you can easily test your prompts locally.
-- Identify and begin with tasks that you are confident can be accomplished by Continue. For example, ask Continue to fix a small bug where you already know the solution is simple.
-- Once you have merged a PR created by Continue, be increasingly ambitious with your tasks. By being willing to start tasks that might not succeed on the first try, you will learn about prompting best practices and limitations of current language models.
-- Use thorough prompts. Workflows can run for a long time to complete their task, so it is worthwhile to invest in sharing all of the important details.
-- Discuss the use of workflows with your team. Truly embracing Continuous AI likely means acknowledging that a higher volume of PRs will be created and adjusting your code review habits.
+## Workflow Documentation
+
+<CardGroup cols={2}>
+  <Card title="Creating Workflow Agents" icon="plus" href="./creating-workflow-agents">
+
+    Build custom workflow configurations with tools, rules, and prompts
+
+  </Card>
+
+  <Card title="Editing Workflow Agents" icon="pencil" href="./editing-workflow-agents">
+
+    Modify existing workflows and manage versions
+
+  </Card>
+
+  <Card title="Continue CLI" icon="terminal" href="../../guides/cli">
+
+    Test workflow agents locally before deploying
+
+  </Card>
+
+  <Card title="Continuous AI Blog" icon="book-open" href="https://blog.continue.dev">
+
+    Latest insights and best practices for using AI workflows
+
+  </Card>
+</CardGroup>
+
+## Best Practices for Continuous AI
+
+The practice of using background agents, which we call Continuous AI, requires practice and forethought to set up the right guiderails and habits to fit your development workflow, much like learning to work with a larger engineering team. We are constantly sharing our learnings on the [Continuous AI Blog](https://blog.continue.dev).
+
+<Card title="Getting Started Successfully" icon="rocket">
+
+  **Start Local**: Practice running workflows locally using the [Continue CLI](../../guides/cli) `--workflow` flag in "TUI mode". The Continue CLI is used to run workflows in the hub, so you can also test your workflow agents and prompts locally.
+
+  **Begin Small**: Identify and begin with tasks that you are confident can be accomplished by Continue, e.g., a small bug with a simple and isolated fix.
+
+  **Iterate and Improve**: Once you have merged a PR created by Continue, try larger tasks. By being willing to start tasks that might not succeed on the first try; you will learn about prompting best practices and limitations of current language models.
+
+</Card>
+
+<Card title="Effective Prompting" icon="message-circle">
+
+  **Be Thorough**: Workflows can run for a long time to complete their task, so it is worthwhile to invest in sharing all of the important details.
+
+  **Provide Context**: Include information about:
+  - Project structure and conventions
+  - Expected coding standards
+  - Integration requirements
+  - Success criteria
+
+  **Use Examples**: When possible, reference existing code patterns or provide examples of desired output.
+
+</Card>
+
+<Card title="Team Integration" icon="users">
+
+  **Communicate with Your Team**: Truly embracing Continuous AI likely means acknowledging that a higher volume of PRs will be created and adjusting your code review habits.
+
+  **Establish Guidelines**: Work with your team to establish:
+  - When to use workflows vs manual development
+  - Code review standards for AI-generated code
+  - Testing requirements for workflow outputs
+  - Rollback procedures if issues arise
+
+  **Monitor and Adjust**: Regularly assess workflow effectiveness and adjust prompts, tools, and processes based on team feedback.
+
+</Card>
