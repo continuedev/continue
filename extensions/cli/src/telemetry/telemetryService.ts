@@ -17,7 +17,7 @@ import {
 } from "@opentelemetry/semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
 
-import { ContinueErrorReason } from "../../../core/util/errors.js";
+import { ContinueErrorReason } from "../../../../core/util/errors.js";
 import { isHeadlessMode } from "../util/cli.js";
 import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
