@@ -94,7 +94,7 @@ export const callToolById = createAsyncThunk<
       output = result.content.contextItems;
       error = result.content.errorMessage
         ? new ContinueError(
-            (result.content.errorReason as ContinueErrorReason) || ContinueErrorReason.Unspecified,
+            result.content.errorReason || ContinueErrorReason.Unspecified,
             result.content.errorMessage,
           )
         : undefined;
