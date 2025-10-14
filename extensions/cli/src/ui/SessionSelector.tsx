@@ -1,8 +1,7 @@
+import type { Session } from "core/index.js";
 import { format, isThisWeek, isThisYear, isToday, isYesterday } from "date-fns";
 import { Box, Text, useInput } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
-
-import type { Session } from "core/index.js";
 
 import { ExtendedSessionMetadata, loadSessionById } from "../session.js";
 

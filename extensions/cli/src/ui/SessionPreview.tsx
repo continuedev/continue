@@ -1,7 +1,6 @@
+import type { ChatHistoryItem } from "core/index.js";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
-
-import type { ChatHistoryItem } from "core/index.js";
 
 import { defaultBoxStyles } from "./styles.js";
 
