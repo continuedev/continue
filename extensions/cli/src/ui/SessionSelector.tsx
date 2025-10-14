@@ -179,14 +179,18 @@ export function SessionSelector({
 
       {/* Right side: Preview panel */}
       {showPreview && (
-        <Box marginLeft={1} flexGrow={1}>
+        <Box marginLeft={1} flexGrow={1} width="100%">
           {previewSession ? (
             <SessionPreview
               chatHistory={previewSession.history}
               sessionTitle={previewSession.title}
             />
           ) : (
-            <Box {...defaultBoxStyles("blue")} flexDirection="column">
+            <Box
+              {...defaultBoxStyles("blue")}
+              flexDirection="column"
+              width="100%"
+            >
               <Text color="blue" bold>
                 Preview
               </Text>

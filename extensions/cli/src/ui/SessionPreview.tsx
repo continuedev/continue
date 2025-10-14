@@ -38,7 +38,7 @@ export function SessionPreview({
 
   if (previewMessages.length === 0) {
     return (
-      <Box {...defaultBoxStyles("blue")} flexDirection="column">
+      <Box {...defaultBoxStyles("blue")} flexDirection="column" width="100%">
         <Text color="blue" bold>
           Preview
         </Text>
@@ -48,7 +48,7 @@ export function SessionPreview({
   }
 
   return (
-    <Box {...defaultBoxStyles("blue")} flexDirection="column">
+    <Box {...defaultBoxStyles("blue")} flexDirection="column" width="100%">
       <Text color="blue" bold>
         {sessionTitle}
       </Text>
