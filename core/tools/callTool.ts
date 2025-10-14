@@ -216,7 +216,7 @@ export async function callTool(
     };
   } catch (e) {
     let errorMessage = `${e}`;
-    let errorReason: string | undefined;
+    let errorReason: ContinueErrorReason | undefined;
 
     if (e instanceof ContinueError) {
       errorMessage = e.message;
