@@ -24,35 +24,26 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const { session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentOrg = useAppSelector(selectCurrentOrg);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [agents, setAgents] = useState<Agent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAgents() {
       if (!session) {
         setAgents([]);
-        setIsLoading(false);
         return;
       }
 
       try {
-        setIsLoading(true);
-        // Request agent list from IDE
         const organizationId =
           currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
         const result = await ideMessenger.request("listBackgroundAgents", {
           organizationId,
         });
 
-        // Handle wrapped response format
         if ("status" in result && result.status === "success") {
-          if (Array.isArray(result.content)) {
-            setAgents(result.content);
-            setError(null);
-          } else {
-            setAgents([]);
-          }
+          setAgents(Array.isArray(result.content) ? result.content : []);
+          setError(null);
         } else if ("error" in result) {
           setError(result.error);
           setAgents([]);
@@ -63,8 +54,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
         console.error("Failed to fetch agents:", err);
         setError(err.message || "Failed to load agents");
         setAgents([]);
-      } finally {
-        setIsLoading(false);
       }
     }
 
@@ -78,18 +67,18 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
     return () => clearInterval(interval);
   }, [session, ideMessenger, currentOrg]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <ArrowPathIcon className="text-description-muted h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="text-error px-2 py-4 text-sm">
         Error loading agents: {error}
+      </div>
+    );
+  }
+
+  if (agents === null) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <ArrowPathIcon className="text-description-muted h-6 w-6 animate-spin" />
       </div>
     );
   }
