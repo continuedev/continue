@@ -472,15 +472,15 @@ export class VsCodeMessenger {
           await configHandler.controlPlaneClient.getAgentSession(
             agentSessionId,
           );
-        if (!agentSession || !agentSession.metadata) {
+        if (!agentSession) {
           vscode.window.showErrorMessage(
             "Failed to load agent session details.",
           );
           return;
         }
 
-        const repoUrl = agentSession.metadata.repoUrl || agentSession.repoUrl;
-        const branch = agentSession.metadata.branchName || agentSession.branch;
+        const repoUrl = agentSession.repoUrl;
+        const branch = agentSession.branch;
 
         if (!repoUrl || !branch) {
           vscode.window.showErrorMessage(
