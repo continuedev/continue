@@ -81,11 +81,11 @@ export function BlockSettingsTopToolbar() {
             <div
               role="button"
               tabIndex={0}
-              onClick={() => navigate(CONFIG_ROUTES.AGENTS)}
+              onClick={() => navigate(CONFIG_ROUTES.CONFIGS)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(CONFIG_ROUTES.AGENTS);
+                  navigate(CONFIG_ROUTES.CONFIGS);
                 }
               }}
               data-testid="block-settings-toolbar-icon-error"
@@ -135,7 +135,7 @@ export function BlockSettingsTopToolbar() {
         )}
       </div>
 
-      <ToolTip place="top" content="Select Agent">
+      <ToolTip place="top" content="Select Config">
         <div>
           <AssistantAndOrgListbox variant="lump" />
         </div>

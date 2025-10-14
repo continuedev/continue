@@ -881,9 +881,9 @@ export class Core {
         });
       }
 
-      // If it's a local agent being created, we want to reload all agent so it shows up in the list
+      // If it's a local config being created, we want to reload all configs so it shows up in the list
       if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
-        await this.configHandler.refreshAll("Local assistant file created");
+        await this.configHandler.refreshAll("Local config file created");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
           ".continue config-related file created",
@@ -913,9 +913,9 @@ export class Core {
         });
       }
 
-      // If it's a local agent being deleted, we want to reload all agent so it disappears from the list
+      // If it's a local config being deleted, we want to reload all configs so it disappears from the list
       if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
-        await this.configHandler.refreshAll("Local assistant file deleted");
+        await this.configHandler.refreshAll("Local config file deleted");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
           ".continue config-related file deleted",

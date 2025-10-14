@@ -8,12 +8,12 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { ConfigHeader } from "../components/ConfigHeader";
 
-export function AgentsSection() {
+export function ConfigsSection() {
   const { profiles, selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const configError = useAppSelector((state) => state.config.configError);
 
-  function handleAddAgent() {
+  function handleAddConfig() {
     void ideMessenger.request("config/newAssistantFile", undefined);
   }
 
@@ -24,9 +24,9 @@ export function AgentsSection() {
   return (
     <>
       <ConfigHeader
-        title="Agents"
-        onAddClick={handleAddAgent}
-        addButtonTooltip="Add agent"
+        title="Configs"
+        onAddClick={handleAddConfig}
+        addButtonTooltip="Add config"
       />
 
       <Card>
@@ -61,7 +61,7 @@ export function AgentsSection() {
                       )}
                     </div>
                   </div>
-                  <ToolTip content="Configure agent">
+                  <ToolTip content="Open configuration">
                     <Button
                       onClick={() => handleConfigureAgent(profile.id)}
                       variant="ghost"
