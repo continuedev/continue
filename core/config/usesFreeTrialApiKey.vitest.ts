@@ -10,6 +10,7 @@ vi.mock("@continuedev/config-yaml", () => ({
     User: "user",
     Organization: "organization",
     FreeTrial: "free_trial",
+    ModelsAddOn: "models_add_on",
   },
   decodeSecretLocation: mockDecodeSecretLocation,
 }));
@@ -261,6 +262,66 @@ describe("usesFreeTrialApiKey", () => {
     expect(result).toBe(true);
   });
 
+  test("usesFreeTrialApiKey should return true when at least one model uses ModelsAddOn API key", () => {
+    const config: BrowserSerializedContinueConfig = {
+      modelsByRole: {
+        chat: [
+          {
+            title: "Model 1",
+            provider: "test",
+            model: "test-model",
+            apiKeyLocation: "user:testuser/api-key",
+            underlyingProviderName: "test",
+          },
+          {
+            title: "Models Add-on Model",
+            provider: "test",
+            model: "models-addon-model",
+            apiKeyLocation: "models_add_on:owner/package/api-key",
+            underlyingProviderName: "test",
+          },
+        ],
+        edit: [],
+        apply: [],
+        summarize: [],
+        autocomplete: [],
+        rerank: [],
+        embed: [],
+      },
+      selectedModelByRole: {
+        chat: null,
+        edit: null,
+        apply: null,
+        summarize: null,
+        autocomplete: null,
+        rerank: null,
+        embed: null,
+      },
+      contextProviders: [],
+      slashCommands: [],
+      tools: [],
+      mcpServerStatuses: [],
+      usePlatform: false,
+      rules: [],
+    };
+
+    mockDecodeSecretLocation
+      .mockReturnValueOnce({
+        secretType: SecretType.User,
+        userSlug: "testuser",
+        secretName: "api-key",
+      })
+      .mockReturnValueOnce({
+        secretType: SecretType.ModelsAddOn,
+        blockSlug: { ownerSlug: "owner", packageSlug: "package" },
+        secretName: "api-key",
+      });
+
+    const result = usesFreeTrialApiKey(config);
+    expect(result).toBe(true);
+    expect(mockDecodeSecretLocation).toHaveBeenCalledTimes(2);
+  });
+
   test("usesFreeTrialApiKey should return false and log error when decodeSecretLocation throws", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -306,7 +367,7 @@ describe("usesFreeTrialApiKey", () => {
     const result = usesFreeTrialApiKey(config);
     expect(result).toBe(false);
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Error checking for free trial API key:",
+      "Error decoding secret location for model Model 1:",
       expect.any(Error),
     );
 
