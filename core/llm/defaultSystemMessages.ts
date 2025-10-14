@@ -71,8 +71,6 @@ ${BRIEF_LAZY_INSTRUCTIONS}
 
 However, only output codeblocks for suggestion and demonstration purposes, for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
 
-If a file edit or creation operation will be quite large, split it into multiple smaller tool calls to prevent errors with long output streams.
-
 </important_rules>`;
 
 // The note about read-only tools is for MCP servers
