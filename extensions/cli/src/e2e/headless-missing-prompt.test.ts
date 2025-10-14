@@ -147,4 +147,73 @@ models:
       "A prompt is required when using the -p/--print flag",
     );
   });
+
+  it("should not require prompt with -p flag when --agent flag is provided", async () => {
+    await createTestConfig(
+      context,
+      `name: Test Assistant
+version: 1.0.0
+schema: v1
+models:
+  - model: gpt-4
+    provider: openai
+    apiKey: test-key
+    roles:
+      - chat`,
+    );
+
+    // This test verifies that the initial validation passes when --agent is provided
+    // The actual agent file loading would fail (since we're using a fake slug), but
+    // we should get past the "prompt required" check
+    const result = await runCLI(context, {
+      args: [
+        "-p",
+        "--config",
+        context.configPath,
+        "--agent",
+        "owner/test-agent",
+      ],
+      env: { OPENAI_API_KEY: "test-key" },
+      expectError: true, // Will fail when trying to load the agent file
+      timeout: 5000,
+    });
+
+    // Should NOT show the "prompt required" error message from index.ts
+    const output = result.stderr + result.stdout;
+    expect(output).not.toContain(
+      "A prompt is required when using the -p/--print flag",
+    );
+
+    // Should show usage examples in the error message
+    expect(output).not.toContain('cn -p "analyze the code in src/"');
+  });
+
+  it("should show updated usage examples including --agent flag", async () => {
+    await createTestConfig(
+      context,
+      `name: Test Assistant
+version: 1.0.0
+schema: v1
+models:
+  - model: gpt-4
+    provider: openai
+    apiKey: test-key
+    roles:
+      - chat`,
+    );
+
+    const result = await runCLI(context, {
+      args: ["-p", "--config", context.configPath],
+      env: { OPENAI_API_KEY: "test-key" },
+      expectError: true,
+      timeout: 5000,
+    });
+
+    // Should exit with non-zero exit code
+    expect(result.exitCode).toBe(1);
+
+    // Should include the new usage example with --agent flag
+    const output = result.stderr + result.stdout;
+    expect(output).toContain("cn -p --agent owner/agent-name");
+  });
 });

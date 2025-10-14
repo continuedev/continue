@@ -489,6 +489,13 @@ async function runHeadlessMode(
     initialPrompt,
   );
 
+  // Validate that we have a prompt in headless mode
+  if (!initialUserInput) {
+    throw new Error(
+      "A prompt is required in headless mode. Provide a prompt via command line argument, --prompt flag, or ensure the agent file (--agent) contains a prompt.",
+    );
+  }
+
   let isFirstMessage = true;
   while (true) {
     // When in headless mode, don't ask for user input
