@@ -25,12 +25,14 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const [agents, setAgents] = useState<Agent[] | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAgents() {
       if (!session) {
         setAgents([]);
+        setTotalCount(0);
         return;
       }
 
@@ -39,21 +41,30 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
           currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
         const result = await ideMessenger.request("listBackgroundAgents", {
           organizationId,
+          limit: 5,
         });
 
         if ("status" in result && result.status === "success") {
-          setAgents(Array.isArray(result.content) ? result.content : []);
+          const content = result.content as {
+            agents: Agent[];
+            totalCount: number;
+          };
+          setAgents(content.agents || []);
+          setTotalCount(content.totalCount || 0);
           setError(null);
         } else if ("error" in result) {
           setError(result.error);
           setAgents([]);
+          setTotalCount(0);
         } else {
           setAgents([]);
+          setTotalCount(0);
         }
       } catch (err: any) {
         console.error("Failed to fetch agents:", err);
         setError(err.message || "Failed to load agents");
         setAgents([]);
+        setTotalCount(0);
       }
     }
 
@@ -127,6 +138,21 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
             </div>
           </div>
         ))}
+        {totalCount > agents.length && (
+          <div className="mt-2">
+            <button
+              onClick={() => {
+                ideMessenger.post("controlPlane/openUrl", {
+                  path: "agents",
+                  orgSlug: currentOrg?.slug,
+                });
+              }}
+              className="text-link w-full cursor-pointer border-none bg-transparent p-0 text-center text-sm font-medium no-underline hover:underline"
+            >
+              See all {totalCount} tasks →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

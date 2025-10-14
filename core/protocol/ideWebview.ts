@@ -62,17 +62,20 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     void,
   ];
   listBackgroundAgents: [
-    { organizationId?: string },
-    Array<{
-      id: string;
-      name: string | null;
-      status: string;
-      repoUrl: string;
-      createdAt: string;
-      metadata?: {
-        github_repo?: string;
-      };
-    }>,
+    { organizationId?: string; limit?: number },
+    {
+      agents: Array<{
+        id: string;
+        name: string | null;
+        status: string;
+        repoUrl: string;
+        createdAt: string;
+        metadata?: {
+          github_repo?: string;
+        };
+      }>;
+      totalCount: number;
+    },
   ];
 };
 

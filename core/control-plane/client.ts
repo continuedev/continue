@@ -501,9 +501,13 @@ export class ControlPlaneClient {
   /**
    * List all background agents for the current user or organization
    * @param organizationId - Optional organization ID to filter agents by organization scope
+   * @param limit - Optional limit for number of agents to return (default: 5)
    */
-  public async listBackgroundAgents(organizationId?: string): Promise<
-    Array<{
+  public async listBackgroundAgents(
+    organizationId?: string,
+    limit?: number,
+  ): Promise<{
+    agents: Array<{
       id: string;
       name: string | null;
       status: string;
@@ -512,43 +516,56 @@ export class ControlPlaneClient {
       metadata?: {
         github_repo?: string;
       };
-    }>
-  > {
+    }>;
+    totalCount: number;
+  }> {
     if (!(await this.isSignedIn())) {
-      return [];
+      return { agents: [], totalCount: 0 };
     }
 
     try {
-      // Build URL with optional organizationId query parameter
-      let url = "agents";
+      // Build URL with query parameters
+      const params = new URLSearchParams();
       if (organizationId) {
-        url += `?organizationId=${encodeURIComponent(organizationId)}`;
+        params.set("organizationId", organizationId);
       }
+      if (limit !== undefined) {
+        params.set("limit", limit.toString());
+      }
+
+      const url = `agents${params.toString() ? `?${params.toString()}` : ""}`;
 
       const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
 
-      const agents = (await resp.json()) as any[];
+      const result = (await resp.json()) as {
+        agents: any[];
+        totalCount: number;
+      };
 
-      return agents.map((agent: any) => ({
-        id: agent.id,
-        name: agent.name || agent.metadata?.name || null,
-        status: agent.status,
-        repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
-        createdAt:
-          agent.created_at || agent.create_time_ms
-            ? new Date(agent.created_at || agent.create_time_ms).toISOString()
-            : new Date().toISOString(),
-        metadata: {
-          github_repo: agent.metadata?.github_repo || agent.metadata?.repo_url,
-        },
-      }));
+      return {
+        agents: result.agents.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name || agent.metadata?.name || null,
+          status: agent.status,
+          repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
+          createdAt:
+            agent.created_at || agent.create_time_ms
+              ? new Date(agent.created_at || agent.create_time_ms).toISOString()
+              : new Date().toISOString(),
+          metadata: {
+            github_repo:
+              agent.metadata?.github_repo || agent.metadata?.repo_url,
+          },
+        })),
+        totalCount: result.totalCount,
+      };
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_list_background_agents",
       });
-      return [];
+      return { agents: [], totalCount: 0 };
     }
   }
 }
