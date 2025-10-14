@@ -161,24 +161,7 @@ export async function* llmStreamChat(
       return next.value;
     }
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("premature close")
-    ) {
-      void Telemetry.capture(
-        "stream_premature_close_error",
-        {
-          model: model.model,
-          provider: model.providerName,
-          errorMessage: error.message,
-          context: legacySlashCommandData ? "slash_command" : "regular_chat",
-          ...(legacySlashCommandData && {
-            command: legacySlashCommandData.command.name,
-          }),
-        },
-        false,
-      );
-    }
+    // Moved error handling that was here to GUI, keeping try/catch for clean diff
     throw error;
   }
 }

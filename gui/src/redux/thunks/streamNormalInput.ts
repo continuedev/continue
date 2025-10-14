@@ -7,6 +7,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
@@ -23,6 +24,7 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+import posthog from "posthog-js";
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
@@ -177,69 +179,111 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(setIsPruned(didPrune));
     dispatch(setContextPercentage(contextPercentage));
 
-    // Send request and stream response
+    const start = Date.now();
     const streamAborter = state.session.streamAborter;
-    let gen = extra.ideMessenger.llmStreamChat(
-      {
-        completionOptions,
-        title: selectedChatModel.title,
-        messages: compiledChatMessages,
-        legacySlashCommandData,
-        messageOptions: { precompiled: true },
-      },
-      streamAborter.signal,
-    );
-    if (systemToolsFramework && activeTools.length > 0) {
-      gen = interceptSystemToolCalls(gen, streamAborter, systemToolsFramework);
-    }
-
-    let next = await gen.next();
-    while (!next.done) {
-      if (!getState().session.isStreaming) {
-        dispatch(abortStream());
-        break;
+    try {
+      let gen = extra.ideMessenger.llmStreamChat(
+        {
+          completionOptions,
+          title: selectedChatModel.title,
+          messages: compiledChatMessages,
+          legacySlashCommandData,
+          messageOptions: { precompiled: true },
+        },
+        streamAborter.signal,
+      );
+      if (systemToolsFramework && activeTools.length > 0) {
+        gen = interceptSystemToolCalls(
+          gen,
+          streamAborter,
+          systemToolsFramework,
+        );
       }
 
-      dispatch(streamUpdate(next.value));
-      next = await gen.next();
-    }
+      let next = await gen.next();
+      while (!next.done) {
+        if (!getState().session.isStreaming) {
+          dispatch(abortStream());
+          break;
+        }
 
-    // Attach prompt log and end thinking for reasoning models
-    if (next.done && next.value) {
-      dispatch(addPromptCompletionPair([next.value]));
+        dispatch(streamUpdate(next.value));
+        next = await gen.next();
+      }
 
-      try {
-        extra.ideMessenger.post("devdata/log", {
-          name: "chatInteraction",
-          data: {
-            prompt: next.value.prompt,
-            completion: next.value.completion,
-            modelProvider: selectedChatModel.underlyingProviderName,
-            modelName: selectedChatModel.title,
-            modelTitle: selectedChatModel.title,
-            sessionId: state.session.id,
-            ...(!!activeTools.length && {
-              tools: activeTools.map((tool) => tool.function.name),
+      // Attach prompt log and end thinking for reasoning models
+      if (next.done && next.value) {
+        dispatch(addPromptCompletionPair([next.value]));
+
+        try {
+          extra.ideMessenger.post("devdata/log", {
+            name: "chatInteraction",
+            data: {
+              prompt: next.value.prompt,
+              completion: next.value.completion,
+              modelProvider: selectedChatModel.underlyingProviderName,
+              modelName: selectedChatModel.title,
+              modelTitle: selectedChatModel.title,
+              sessionId: state.session.id,
+              ...(!!activeTools.length && {
+                tools: activeTools.map((tool) => tool.function.name),
+              }),
+              ...(appliedRules.length > 0 && {
+                rules: appliedRules.map((rule) => ({
+                  id: getRuleId(rule),
+                  rule: rule.rule,
+                  slug: rule.slug,
+                })),
+              }),
+            },
+          });
+        } catch (e) {
+          console.error("Failed to send dev data interaction log", e);
+        }
+      }
+    } catch (e) {
+      const toolCallsToCancel = selectCurrentToolCalls(getState());
+      posthog.capture("stream_premature_close_error", {
+        duration: (Date.now() - start) / 1000,
+        model: selectedChatModel.model,
+        provider: selectedChatModel.underlyingProviderName,
+        context: legacySlashCommandData ? "slash_command" : "regular_chat",
+        ...(legacySlashCommandData && {
+          command: legacySlashCommandData.command.name,
+        }),
+      });
+      if (
+        toolCallsToCancel.length > 0 &&
+        e instanceof Error &&
+        e.message.toLowerCase().includes("premature close")
+      ) {
+        for (const tc of toolCallsToCancel) {
+          dispatch(
+            errorToolCall({
+              toolCallId: tc.toolCallId,
+              output: [
+                {
+                  name: "Tool Call Error",
+                  description: "Premature Close",
+                  content: `"Premature Close" error: this tool call was aborted mid-stream because the arguments took too long to stream or there were network issues. Please re-attempt by breaking the operation into smaller chunks or trying something else`,
+                  icon: "problems",
+                },
+              ],
             }),
-            ...(appliedRules.length > 0 && {
-              rules: appliedRules.map((rule) => ({
-                id: getRuleId(rule),
-                rule: rule.rule,
-                slug: rule.slug,
-              })),
-            }),
-          },
-        });
-      } catch (e) {
-        console.error("Failed to send dev data interaction log", e);
+          );
+        }
+      } else {
+        throw e;
       }
     }
 
     // Tool call sequence:
     // 1. Mark generating tool calls as generated
     const state1 = getState();
+    if (streamAborter.signal.aborted || !state1.session.isStreaming) {
+      return;
+    }
     const originalToolCalls = selectCurrentToolCalls(state1);
-
     const generatingCalls = originalToolCalls.filter(
       (tc) => tc.status === "generating",
     );
@@ -285,7 +329,7 @@ export const streamNormalInput = createAsyncThunk<
     if (originalToolCalls.length === 0 || anyRequireApproval) {
       dispatch(setInactive());
     } else {
-      // auto stream cases increase thunk depth by 1
+      // auto stream cases increase thunk depth by 1 for debugging
       const state4 = getState();
       const generatedCalls4 = selectPendingToolCalls(state4);
       if (streamAborter.signal.aborted || !state4.session.isStreaming) {
@@ -311,7 +355,10 @@ export const streamNormalInput = createAsyncThunk<
         for (const { toolCallId } of originalToolCalls) {
           unwrapResult(
             await dispatch(
-              streamResponseAfterToolCall({ toolCallId, depth: depth + 1 }),
+              streamResponseAfterToolCall({
+                toolCallId,
+                depth: depth + 1,
+              }),
             ),
           );
         }
