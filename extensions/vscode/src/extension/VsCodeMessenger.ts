@@ -429,6 +429,43 @@ export class VsCodeMessenger {
       const configHandler = await configHandlerPromise;
       const { agentSessionId } = msg.data;
 
+      // Helper function to normalize repository URLs
+      const normalizeRepoUrl = (url: string): string => {
+        if (!url) return "";
+
+        let normalized = url.trim();
+
+        // Convert SSH to HTTPS: git@github.com:owner/repo.git -> https://github.com/owner/repo
+        if (normalized.startsWith("git@github.com:")) {
+          normalized = normalized.replace(
+            "git@github.com:",
+            "https://github.com/",
+          );
+        }
+
+        // Convert shorthand owner/repo to full URL
+        if (
+          normalized.includes("/") &&
+          !normalized.startsWith("http") &&
+          !normalized.startsWith("git@")
+        ) {
+          normalized = `https://github.com/${normalized}`;
+        }
+
+        // Remove .git suffix
+        if (normalized.endsWith(".git")) {
+          normalized = normalized.slice(0, -4);
+        }
+
+        // Remove trailing slash
+        if (normalized.endsWith("/")) {
+          normalized = normalized.slice(0, -1);
+        }
+
+        // Normalize to lowercase
+        return normalized.toLowerCase();
+      };
+
       try {
         // First, fetch the agent session to get repo URL and branch
         const agentSession =
@@ -459,20 +496,14 @@ export class VsCodeMessenger {
           return;
         }
 
+        const normalizedAgentRepo = normalizeRepoUrl(repoUrl);
+
         // Find the workspace that matches the agent's repo URL
         let matchingWorkspace: string | null = null;
         for (const workspaceDir of workspaceDirs) {
           const repoName = await this.ide.getRepoName(workspaceDir);
           if (repoName) {
-            // Normalize repo URLs for comparison
-            const normalizedRepoName =
-              repoName.includes("/") && !repoName.startsWith("http")
-                ? `https://github.com/${repoName}`
-                : repoName;
-            const normalizedAgentRepo =
-              repoUrl.includes("/") && !repoUrl.startsWith("http")
-                ? `https://github.com/${repoUrl}`
-                : repoUrl;
+            const normalizedRepoName = normalizeRepoUrl(repoName);
 
             if (normalizedRepoName === normalizedAgentRepo) {
               matchingWorkspace = workspaceDir;

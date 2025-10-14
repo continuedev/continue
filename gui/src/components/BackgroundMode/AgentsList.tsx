@@ -20,6 +20,40 @@ interface AgentsListProps {
   isCreatingAgent?: boolean;
 }
 
+// Robust URL normalization function
+const normalizeRepoUrl = (url: string | undefined | null): string => {
+  if (!url) return "";
+
+  let normalized = url.trim();
+
+  // Convert SSH to HTTPS: git@github.com:owner/repo.git -> https://github.com/owner/repo
+  if (normalized.startsWith("git@github.com:")) {
+    normalized = normalized.replace("git@github.com:", "https://github.com/");
+  }
+
+  // Convert shorthand owner/repo to full URL
+  if (
+    normalized.includes("/") &&
+    !normalized.startsWith("http") &&
+    !normalized.startsWith("git@")
+  ) {
+    normalized = `https://github.com/${normalized}`;
+  }
+
+  // Remove .git suffix
+  if (normalized.endsWith(".git")) {
+    normalized = normalized.slice(0, -4);
+  }
+
+  // Remove trailing slash
+  if (normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  // Normalize to lowercase
+  return normalized.toLowerCase();
+};
+
 export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const { session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -44,16 +78,14 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
               dir,
             });
             if (repoNameResult.status === "success" && repoNameResult.content) {
-              // Normalize repo URL
-              const repoName = repoNameResult.content;
-              const normalizedUrl =
-                repoName.includes("/") && !repoName.startsWith("http")
-                  ? `https://github.com/${repoName}`
-                  : repoName;
-              repoUrls.push(normalizedUrl);
+              const normalizedUrl = normalizeRepoUrl(repoNameResult.content);
+              if (normalizedUrl) {
+                repoUrls.push(normalizedUrl);
+              }
             }
           }
           setWorkspaceRepoUrls(repoUrls);
+          console.log("Workspace repo URLs:", repoUrls);
         }
       } catch (err) {
         console.error("Failed to fetch workspace repos:", err);
@@ -113,14 +145,18 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   }, [session, ideMessenger, currentOrg]);
 
   // Helper function to check if an agent's repo matches any workspace repo
-  const isAgentInCurrentWorkspace = (agentRepoUrl: string): boolean => {
-    const normalizedAgentRepo =
-      agentRepoUrl.includes("/") && !agentRepoUrl.startsWith("http")
-        ? `https://github.com/${agentRepoUrl}`
-        : agentRepoUrl;
+  const isAgentInCurrentWorkspace = (agent: Agent): boolean => {
+    // Get all possible agent repo URLs (both repoUrl and metadata.github_repo)
+    const agentUrls = [agent.repoUrl, agent.metadata?.github_repo]
+      .filter(Boolean)
+      .map(normalizeRepoUrl)
+      .filter((url) => url !== "");
 
-    return workspaceRepoUrls.some(
-      (workspaceUrl) => workspaceUrl === normalizedAgentRepo,
+    console.log("Agent URLs:", agentUrls, "Workspace URLs:", workspaceRepoUrls);
+
+    // Check if any of the agent URLs match any workspace URL
+    return workspaceRepoUrls.some((workspaceUrl) =>
+      agentUrls.some((agentUrl) => agentUrl === workspaceUrl),
     );
   };
 
@@ -160,7 +196,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
       </div>
       <div className="flex flex-col gap-1 px-2">
         {agents.map((agent) => {
-          const isInWorkspace = isAgentInCurrentWorkspace(agent.repoUrl);
+          const isInWorkspace = isAgentInCurrentWorkspace(agent);
           const canOpenLocally = isInWorkspace;
 
           return (
