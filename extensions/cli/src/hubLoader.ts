@@ -1,6 +1,7 @@
 import { AgentFile, parseAgentFile } from "@continuedev/config-yaml";
 import JSZip from "jszip";
 
+import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
@@ -111,6 +112,8 @@ export const agentFileProcessor: HubPackageProcessor<AgentFile> = {
 
 /**
  * Generic hub package loader
+ * Automatically includes authentication headers when user is logged in,
+ * enabling access to private packages.
  */
 export async function loadPackageFromHub<T>(
   slug: string,
@@ -142,7 +145,17 @@ export async function loadPackageFromHub<T>(
   }
 
   try {
-    const response = await fetch(downloadUrl);
+    // Load auth config and get access token for private package access
+    const authConfig = loadAuthConfig();
+    const accessToken = getAccessToken(authConfig);
+
+    // Prepare headers with optional authorization
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(downloadUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
