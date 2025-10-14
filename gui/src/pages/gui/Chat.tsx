@@ -191,7 +191,7 @@ export function Chat() {
         }
 
         // Create agent and track loading state
-        (async () => {
+        void (async () => {
           try {
             await ideMessenger.request("createBackgroundAgent", {
               editorState,
