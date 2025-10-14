@@ -3,6 +3,7 @@ import ignore from "ignore";
 import { ToolImpl } from ".";
 import { walkDir } from "../../indexing/walkDir";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export function resolveLsToolDirPath(dirPath: string | undefined) {
   if (!dirPath || dirPath === ".") {
@@ -20,7 +21,8 @@ export const lsToolImpl: ToolImpl = async (args, extras) => {
   const dirPath = resolveLsToolDirPath(args?.dirPath);
   const uri = await resolveRelativePathInDir(dirPath, extras.ide);
   if (!uri) {
-    throw new Error(
+    throw new ContinueError(
+      ContinueErrorReason.DirectoryNotFound,
       `Directory ${args.dirPath} not found. Make sure to use forward-slash paths`,
     );
   }
