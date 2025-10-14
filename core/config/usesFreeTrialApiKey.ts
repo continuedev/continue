@@ -36,7 +36,5 @@ const modelUsesCreditsBasedApiKey = (model: ModelDescription) => {
 
   const secretType = decodeSecretLocation(model.apiKeyLocation).secretType;
 
-  return (
-    secretType === SecretType.FreeTrial || secretType === SecretType.ModelsAddOn
-  );
+  return secretType === SecretType.FreeTrial;
 };
