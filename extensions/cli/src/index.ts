@@ -216,8 +216,9 @@ addCommonOptions(program)
       }
     }
 
-    // In headless mode, ensure we have a prompt
-    if (options.print && !prompt) {
+    // In headless mode, ensure we have a prompt unless using --agent flag
+    // Agent files can provide their own prompts
+    if (options.print && !prompt && !options.agent) {
       safeStderr(
         "Error: A prompt is required when using the -p/--print flag.\n\n",
       );
@@ -225,6 +226,7 @@ addCommonOptions(program)
       safeStderr('  cn -p "please review my current git diff"\n');
       safeStderr('  echo "hello" | cn -p\n');
       safeStderr('  cn -p "analyze the code in src/"\n');
+      safeStderr("  cn -p --agent owner/package\n");
       await gracefulExit(1);
     }
 
