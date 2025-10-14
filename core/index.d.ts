@@ -1789,7 +1789,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  tools: Omit<Tool, "preprocessArgs", "evaluatePolicy">[];
+  tools: Omit<Tool, "preprocessArgs", "evaluateToolCallPolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   usePlatform: boolean;
