@@ -1,10 +1,13 @@
 import { format, isThisWeek, isThisYear, isToday, isYesterday } from "date-fns";
 import { Box, Text, useInput } from "ink";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { ExtendedSessionMetadata } from "../session.js";
+import type { Session } from "core/index.js";
+
+import { ExtendedSessionMetadata, loadSessionById } from "../session.js";
 
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
+import { SessionPreview } from "./SessionPreview.js";
 import { defaultBoxStyles } from "./styles.js";
 
 interface SessionSelectorProps {
@@ -40,7 +43,19 @@ export function SessionSelector({
   onExit,
 }: SessionSelectorProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { rows: terminalHeight } = useTerminalSize();
+  const [previewSession, setPreviewSession] = useState<Session | null>(null);
+  const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
+
+  // Load the selected session for preview
+  useEffect(() => {
+    const selectedSession = sessions[selectedIndex];
+    if (selectedSession && !selectedSession.isRemote) {
+      const session = loadSessionById(selectedSession.sessionId);
+      setPreviewSession(session);
+    } else {
+      setPreviewSession(null);
+    }
+  }, [selectedIndex, sessions]);
 
   // Calculate how many sessions we can display based on terminal height and scrolling
   const { displaySessions, scrollOffset } = useMemo(() => {
@@ -104,54 +119,86 @@ export function SessionSelector({
   const hasMoreAbove = scrollOffset > 0;
   const hasMoreBelow = scrollOffset + displaySessions.length < sessions.length;
 
+  // Determine if we should show preview (only if terminal is wide enough)
+  const showPreview = terminalWidth > 100;
+  const listWidth = showPreview
+    ? Math.floor(terminalWidth * 0.45)
+    : terminalWidth;
+
   return (
-    <Box {...defaultBoxStyles("blue")}>
-      <Text color="blue" bold>
-        Recent Sessions{" "}
-        {sessions.length > displaySessions.length &&
-          `(${selectedIndex + 1}/${sessions.length})`}
-      </Text>
-      <Text color="gray">↑/↓ to navigate, Enter to select, Esc to exit</Text>
-      <Text> </Text>
-
-      {hasMoreAbove && (
-        <Text color="gray" italic>
-          ⬆ {scrollOffset} more sessions above...
+    <Box flexDirection="row" width={terminalWidth}>
+      {/* Left side: Session list */}
+      <Box {...defaultBoxStyles("blue")} width={listWidth}>
+        <Text color="blue" bold>
+          Recent Sessions{" "}
+          {sessions.length > displaySessions.length &&
+            `(${selectedIndex + 1}/${sessions.length})`}
         </Text>
-      )}
+        <Text color="gray">↑/↓ to navigate, Enter to select, Esc to exit</Text>
+        <Text> </Text>
 
-      {displaySessions.map((session, index) => {
-        const globalIndex = index + scrollOffset;
-        const isSelected = globalIndex === selectedIndex;
-        const indicator = isSelected ? "➤ " : "  ";
-        const color = isSelected ? "blue" : "white";
+        {hasMoreAbove && (
+          <Text color="gray" italic>
+            ⬆ {scrollOffset} more sessions above...
+          </Text>
+        )}
 
-        return (
-          <Box key={session.sessionId} flexDirection="column">
-            <Box paddingRight={3}>
-              <Text bold={isSelected} color={color} wrap="truncate-end">
-                {indicator}
-                {formatMessage(session.title)}
-              </Text>
+        {displaySessions.map((session, index) => {
+          const globalIndex = index + scrollOffset;
+          const isSelected = globalIndex === selectedIndex;
+          const indicator = isSelected ? "➤ " : "  ";
+          const color = isSelected ? "blue" : "white";
+
+          return (
+            <Box key={session.sessionId} flexDirection="column">
+              <Box paddingRight={3}>
+                <Text bold={isSelected} color={color} wrap="truncate-end">
+                  {indicator}
+                  {formatMessage(session.title)}
+                </Text>
+              </Box>
+              <Box marginLeft={2}>
+                <Text color="gray">
+                  {formatTimestamp(new Date(session.dateCreated))}
+                  {session.isRemote ? " (remote)" : " (local)"}
+                </Text>
+              </Box>
+              {index < displaySessions.length - 1 && (
+                <Text key={`spacer-${session.sessionId}`}> </Text>
+              )}
             </Box>
-            <Box marginLeft={2}>
+          );
+        })}
+
+        {hasMoreBelow && (
+          <Text color="gray" italic>
+            ⬇ {sessions.length - scrollOffset - displaySessions.length} more
+            sessions below...
+          </Text>
+        )}
+      </Box>
+
+      {/* Right side: Preview panel */}
+      {showPreview && (
+        <Box marginLeft={1} flexGrow={1}>
+          {previewSession ? (
+            <SessionPreview
+              chatHistory={previewSession.history}
+              sessionTitle={previewSession.title}
+            />
+          ) : (
+            <Box {...defaultBoxStyles("blue")} flexDirection="column">
+              <Text color="blue" bold>
+                Preview
+              </Text>
               <Text color="gray">
-                {formatTimestamp(new Date(session.dateCreated))}
-                {session.isRemote ? " (remote)" : " (local)"}
+                {sessions[selectedIndex]?.isRemote
+                  ? "(remote session preview not available)"
+                  : "(loading...)"}
               </Text>
             </Box>
-            {index < displaySessions.length - 1 && (
-              <Text key={`spacer-${session.sessionId}`}> </Text>
-            )}
-          </Box>
-        );
-      })}
-
-      {hasMoreBelow && (
-        <Text color="gray" italic>
-          ⬇ {sessions.length - scrollOffset - displaySessions.length} more
-          sessions below...
-        </Text>
+          )}
+        </Box>
       )}
     </Box>
   );
