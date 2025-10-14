@@ -56,14 +56,37 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     },
   },
   "config/getSerializedProfileInfo": {
-    organizations: [],
-    profileId: "test-profile",
+    organizations: [
+      {
+        id: "personal",
+        profiles: [
+          {
+            title: "Local Agent",
+            id: "local",
+            errors: [],
+            profileType: "local",
+            uri: "",
+            iconUrl: "",
+            fullSlug: {
+              ownerSlug: "",
+              packageSlug: "",
+              versionSlug: "",
+            },
+          },
+        ],
+        slug: "",
+        selectedProfileId: "local",
+        name: "Personal",
+        iconUrl: "",
+      },
+    ],
+    profileId: "local",
     result: {
       config: undefined,
       errors: [],
       configLoadInterrupted: false,
     },
-    selectedOrgId: "local",
+    selectedOrgId: "personal",
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
@@ -102,6 +125,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     },
   ],
+  listBackgroundAgents: [],
 };
 
 const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {
