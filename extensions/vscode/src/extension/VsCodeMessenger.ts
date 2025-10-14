@@ -265,30 +265,12 @@ export class VsCodeMessenger {
 
     this.onWebview("createBackgroundAgent", async (msg) => {
       const configHandler = await configHandlerPromise;
-      const { editorState, organizationId } = msg.data;
+      const { content, contextItems, selectedCode, organizationId } = msg.data;
 
-      // Import utilities for processing editor content
-      const { stripImages } = await import("core/util/messageContent");
+      // Convert resolved content to plain text prompt
+      const prompt = stripImages(content);
 
-      // Extract text from editor state
-      // editorState is a TipTap JSONContent object
-      let prompt = "";
-      if (editorState && editorState.content) {
-        // Simple extraction - concatenate text from paragraphs
-        for (const node of editorState.content) {
-          if (node.type === "paragraph" && node.content) {
-            for (const child of node.content) {
-              if (child.type === "text" && child.text) {
-                prompt += child.text;
-              }
-            }
-            prompt += "\n";
-          }
-        }
-        prompt = prompt.trim();
-      }
-
-      if (!prompt) {
+      if (!prompt || prompt.trim().length === 0) {
         vscode.window.showErrorMessage(
           "Please enter a prompt to create a background agent",
         );
@@ -356,6 +338,8 @@ export class VsCodeMessenger {
           prompt: prompt.substring(0, 50) + "...",
           repoUrl,
           branch,
+          contextItemsCount: contextItems?.length || 0,
+          selectedCodeCount: selectedCode?.length || 0,
         });
 
         const result =
@@ -365,6 +349,8 @@ export class VsCodeMessenger {
             name,
             branch,
             organizationId,
+            contextItems,
+            selectedCode,
           );
 
         vscode.window.showInformationMessage(

@@ -6,8 +6,10 @@ import {
   AddToChatPayload,
   ApplyState,
   ApplyToFilePayload,
+  ContextItemWithId,
   HighlightedCodePayload,
   MessageContent,
+  RangeInFile,
   RangeInFileWithContents,
   SetCodeToEditPayload,
   ShowFilePayload,
@@ -50,7 +52,15 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
   "session/share": [{ sessionId: string }, void];
-  createBackgroundAgent: [{ editorState: any; organizationId?: string }, void];
+  createBackgroundAgent: [
+    {
+      content: MessageContent;
+      contextItems: ContextItemWithId[];
+      selectedCode: RangeInFile[];
+      organizationId?: string;
+    },
+    void,
+  ];
   listBackgroundAgents: [
     { organizationId?: string },
     Array<{

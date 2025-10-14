@@ -450,6 +450,8 @@ export class ControlPlaneClient {
     name: string,
     branch?: string,
     organizationId?: string,
+    contextItems?: any[],
+    selectedCode?: any[],
   ): Promise<{ id: string }> {
     if (!(await this.isSignedIn())) {
       throw new Error("Not signed in to Continue");
@@ -464,6 +466,25 @@ export class ControlPlaneClient {
 
     if (organizationId) {
       requestBody.organizationId = organizationId;
+    }
+
+    // Include context items if provided
+    if (contextItems && contextItems.length > 0) {
+      requestBody.contextItems = contextItems.map((item) => ({
+        content: item.content,
+        description: item.description,
+        name: item.name,
+        uri: item.uri,
+      }));
+    }
+
+    // Include selected code if provided
+    if (selectedCode && selectedCode.length > 0) {
+      requestBody.selectedCode = selectedCode.map((code) => ({
+        filepath: code.filepath,
+        range: code.range,
+        contents: code.contents,
+      }));
     }
 
     const resp = await this.requestAndHandleError("agents", {

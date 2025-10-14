@@ -49,6 +49,7 @@ import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundMo
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -193,8 +194,26 @@ export function Chat() {
         // Create agent and track loading state
         void (async () => {
           try {
+            // Resolve context items from editor content (same as normal chat)
+            const defaultContextProviders =
+              stateSnapshot.config.config.experimental?.defaultContext ?? [];
+
+            const { selectedContextItems, selectedCode, content } =
+              await resolveEditorContent({
+                editorState,
+                modifiers,
+                ideMessenger,
+                defaultContextProviders,
+                availableSlashCommands:
+                  stateSnapshot.config.config.slashCommands,
+                dispatch,
+                getState: () => reduxStore.getState(),
+              });
+
             await ideMessenger.request("createBackgroundAgent", {
-              editorState,
+              content,
+              contextItems: selectedContextItems,
+              selectedCode,
               organizationId,
             });
             setIsCreatingAgent(false);
