@@ -19,12 +19,12 @@ vi.mock("../hubLoader.js", () => ({
   modelProcessor: {},
 }));
 
-// Mock the service container to provide empty workflow state
+// Mock the service container to provide empty agent file state
 vi.mock("../services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(() =>
       Promise.resolve({
-        workflowFile: null,
+        agentFile: null,
         slug: null,
       }),
     ),
@@ -33,7 +33,7 @@ vi.mock("../services/ServiceContainer.js", () => ({
 
 vi.mock("../services/types.js", () => ({
   SERVICE_NAMES: {
-    WORKFLOW: "workflow",
+    AGENT_FILE: "agentFile",
   },
 }));
 

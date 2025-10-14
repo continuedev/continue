@@ -54,7 +54,7 @@ const renderTabButton = (
         data-testid={`onboarding-tab-${tabTitle}`}
       >
         <ContinueSignet width={32} height={32} className="-mb-2.5" />
-        Upgrade
+        Credits
       </button>
     );
   }

@@ -226,7 +226,7 @@ export function processToolCallDelta(
     toolCallsMap.set(toolCallId, {
       id: toolCallId,
       name: "",
-      arguments: null,
+      arguments: {},
       argumentsStr: "",
       startNotified: false,
     });

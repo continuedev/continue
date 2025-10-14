@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { WorkflowService } from "./WorkflowService.js";
+import { AgentFileService } from "./AgentFileService.js";
 
 import { initializeServices, services } from "./index.js";
 
@@ -50,9 +50,9 @@ describe("initializeServices", () => {
         },
         {
           slug: null,
-          workflowFile: null,
-          workflowModelName: null,
-          workflowService: expect.any(WorkflowService),
+          agentFile: null,
+          agentFileModelName: null,
+          agentFileService: expect.any(AgentFileService),
         },
       );
     });
