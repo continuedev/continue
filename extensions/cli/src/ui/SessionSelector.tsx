@@ -122,7 +122,7 @@ export function SessionSelector({
   // Determine if we should show preview (only if terminal is wide enough)
   const showPreview = terminalWidth > 100;
   const listWidth = showPreview
-    ? Math.floor(terminalWidth * 0.45)
+    ? Math.floor(terminalWidth * 0.3)
     : terminalWidth;
 
   return (
