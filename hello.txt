@@ -1,0 +1,7 @@
+Hello in 5 languages:
+
+1. English: Hello
+2. Spanish: Hola
+3. French: Bonjour
+4. German: Hallo
+5. Japanese: こんにちは (Konnichiwa)
