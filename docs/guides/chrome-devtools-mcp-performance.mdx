@@ -68,7 +68,7 @@ After completing **Quick Setup** above, you have two paths to get started:
         Visit the [Chrome DevTools Continuous Agent](https://hub.continue.dev/continuedev/chrome-dev-continuous) on Continue Hub and click **"Install Agent"** or run:
         
         ```bash
-        cn --agent continuedev/chrome-dev-continuous
+        cn --config continuedev/chrome-dev-continuous
         ```
 
         This agent includes:
@@ -438,7 +438,7 @@ jobs:
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          cn --agent continuedev/chrome-dev-continuous \
+          cn --config continuedev/chrome-dev-continuous \
              -p "Navigate to http://localhost:3000 and:
              1. Record performance trace with reload
              2. Extract LCP, FID, CLS values

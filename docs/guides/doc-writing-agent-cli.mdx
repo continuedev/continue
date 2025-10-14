@@ -202,7 +202,7 @@ jobs:
     - name: Generate documentation with Continue CLI
       run: |
         echo "Running Continue agent to generate documentation..."
-        cn --agent <continue-user>/<agent-config> \
+        cn --config <continue-user>/<agent-config> \
            --auto \
            --allow Write \
            -p \

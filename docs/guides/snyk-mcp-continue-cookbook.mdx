@@ -65,7 +65,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your project directory and run:
         ```bash
-        cn --agent continuedev/snyk-continuous-ai
+        cn --config continuedev/snyk-continuous-ai
         ```
 
         This agent includes:
@@ -442,7 +442,7 @@ jobs:
             # Use Continue CLI to generate mitigation suggestions
             PROMPT="Analyze these Snyk security findings and provide specific, actionable mitigation steps for each issue. Focus on: 1) Root cause, 2) Immediate fix, 3) Long-term prevention. Findings: $FINDINGS_SUMMARY. Provide clear, prioritized recommendations."
 
-            cn --agent continuedev/snyk-continuous-ai -p "$PROMPT" --auto > mitigation-suggestions.md || {
+            cn --config continuedev/snyk-continuous-ai -p "$PROMPT" --auto > mitigation-suggestions.md || {
               echo "⚠️ Warning: Could not generate AI suggestions"
               exit 0
             }

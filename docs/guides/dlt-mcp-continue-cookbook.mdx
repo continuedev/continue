@@ -53,7 +53,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your pipeline project directory and run:
         ```bash
-        cn --agent dlthub/dlt-assistant
+        cn --config dlthub/dlt-assistant
         ```
 
         This agent includes:
@@ -342,7 +342,7 @@ jobs:
       - name: Validate Pipeline Schema
         run: |
           echo "🔍 Validating pipeline schema..."
-          cn --agent dlthub/dlt-assistant \
+          cn --config dlthub/dlt-assistant \
              -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes." \
              --auto
@@ -350,7 +350,7 @@ jobs:
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
-          cn --agent dlthub/dlt-assistant \
+          cn --config dlthub/dlt-assistant \
              -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention." \
              --auto
@@ -360,7 +360,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --agent dlthub/dlt-assistant \
+          REPORT=$(cn --config dlthub/dlt-assistant \
              -p "Generate a concise summary (200 words or less) of:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings

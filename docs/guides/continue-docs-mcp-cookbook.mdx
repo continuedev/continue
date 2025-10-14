@@ -31,7 +31,7 @@ Before starting, ensure you have:
   <Tab title="⚡ Quick Start (Recommended)">
     ```bash
     # From your Continue docs directory
-    cn --agent continuedev/docs-mintlify
+    cn --config continuedev/docs-mintlify
     ```
 
     This agent includes:
@@ -74,7 +74,7 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
 <Steps>
   <Step title="Research Existing Cookbooks">
     ```bash
-    cn --agent continuedev/docs-mintlify
+    cn --config continuedev/docs-mintlify
     ```
 
     **Prompt:**
@@ -395,7 +395,7 @@ jobs:
           If no updates needed, respond with 'NO_DOCS_NEEDED'.
           Be specific and concise."
 
-          cn --agent continuedev/docs-mintlify -p "$PROMPT" --auto > analysis.md || {
+          cn --config continuedev/docs-mintlify -p "$PROMPT" --auto > analysis.md || {
             echo "⚠️ Analysis failed"
             echo "needs_docs=false" >> $GITHUB_OUTPUT
             exit 0
