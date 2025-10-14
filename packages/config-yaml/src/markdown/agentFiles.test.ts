@@ -70,13 +70,13 @@ describe("parseAgentFile", () => {
 
   test("throws error when name field is missing", () => {
     expect(() => parseAgentFile(invalidExample)).toThrow(
-      "Agent File file must contain YAML frontmatter with a 'name' field",
+      "Agent file must contain YAML frontmatter with a 'name' field",
     );
   });
 
   test("throws error when no frontmatter is present", () => {
     expect(() => parseAgentFile(noFrontmatterExample)).toThrow(
-      "Agent File file must contain YAML frontmatter with a 'name' field",
+      "Agent file must contain YAML frontmatter with a 'name' field",
     );
   });
 
@@ -303,7 +303,7 @@ Prompt
 `.trim();
 
     expect(() => parseAgentFile(emptyNameExample)).toThrow(
-      "Agent File file must contain YAML frontmatter with a 'name' field",
+      "Agent file must contain YAML frontmatter with a 'name' field",
     );
   });
 
@@ -316,7 +316,7 @@ Prompt
 `.trim();
 
     expect(() => parseAgentFile(nullNameExample)).toThrow(
-      "Agent File file must contain YAML frontmatter with a 'name' field",
+      "Agent file must contain YAML frontmatter with a 'name' field",
     );
   });
 });
