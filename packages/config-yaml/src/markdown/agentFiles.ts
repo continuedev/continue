@@ -3,28 +3,26 @@ import z from "zod";
 import { parseMarkdownRule } from "./markdownToRule.js";
 
 /* 
-    Experimental/internal config format for workflows
+    Experimental/internal config format for agents
 */
-const workflowFileFrontmatterSchema = z.object({
+const agentFileFrontmatterSchema = z.object({
   name: z.string().min(1, "Name cannot be empty"),
   description: z.string().optional(),
   model: z.string().optional(),
   tools: z.string().optional(), // TODO also accept yaml array
   rules: z.string().optional(), // TODO also accept yaml array
 });
-export type WorkflowFileFrontmatter = z.infer<
-  typeof workflowFileFrontmatterSchema
->;
+export type AgentFileFrontmatter = z.infer<typeof agentFileFrontmatterSchema>;
 
-const workflowFileSchema = workflowFileFrontmatterSchema.extend({
+const agentFileSchema = agentFileFrontmatterSchema.extend({
   prompt: z.string(),
 });
-export type WorkflowFile = z.infer<typeof workflowFileSchema>;
+export type AgentFile = z.infer<typeof agentFileSchema>;
 
 /**
- * Parsed workflow tool reference
+ * Parsed agent tool reference
  */
-export interface WorkflowToolReference {
+export interface AgentToolReference {
   /** MCP server slug (owner/package) if this is an MCP tool */
   mcpServer?: string;
   /** Specific tool name - either MCP tool name or built-in tool name */
@@ -32,11 +30,11 @@ export interface WorkflowToolReference {
 }
 
 /**
- * Parsed workflow tools configuration
+ * Parsed agent tools configuration
  */
-export interface ParsedWorkflowTools {
+export interface ParsedAgentTools {
   /** All tool references */
-  tools: WorkflowToolReference[];
+  tools: AgentToolReference[];
   /** Unique MCP server slugs that need to be added to config */
   mcpServers: string[];
   /** Whether all built-in tools are allowed */
@@ -44,25 +42,25 @@ export interface ParsedWorkflowTools {
 }
 
 /**
- * Parses and validates a workflow file from markdown content
- * Workflow files must have frontmatter with at least a name
+ * Parses and validates an agent file from markdown content
+ * Agent files must have frontmatter with at least a name
  */
-export function parseWorkflowFile(content: string): WorkflowFile {
+export function parseAgentFile(content: string): AgentFile {
   const { frontmatter, markdown } = parseMarkdownRule(content);
 
   if (!frontmatter.name) {
     throw new Error(
-      "Workflow file must contain YAML frontmatter with a 'name' field",
+      "Agent file must contain YAML frontmatter with a 'name' field",
     );
   }
 
-  const validationResult = workflowFileFrontmatterSchema.safeParse(frontmatter);
+  const validationResult = agentFileFrontmatterSchema.safeParse(frontmatter);
 
   if (!validationResult.success) {
     const errorDetails = validationResult.error.issues
       .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
       .join(", ");
-    throw new Error(`Invalid workflow file frontmatter: ${errorDetails}`);
+    throw new Error(`Invalid agent file frontmatter: ${errorDetails}`);
   }
 
   return {
@@ -72,10 +70,10 @@ export function parseWorkflowFile(content: string): WorkflowFile {
 }
 
 /**
- * Serializes a Workflow file back to markdown with YAML frontmatter
+ * Serializes an Agent file back to markdown with YAML frontmatter
  */
-export function serializeWorkflowFile(workflowFile: WorkflowFile): string {
-  const { prompt, ...frontmatter } = workflowFile;
+export function serializeAgentFile(agentFile: AgentFile): string {
+  const { prompt, ...frontmatter } = agentFile;
 
   // Filter out undefined values from frontmatter
   const cleanFrontmatter = Object.fromEntries(
@@ -88,7 +86,7 @@ export function serializeWorkflowFile(workflowFile: WorkflowFile): string {
 }
 
 /**
- * Parse workflow tools string into structured format
+ * Parse agent tools string into structured format
  *
  * Supports formats:
  * - owner/package - all tools from MCP server
@@ -99,12 +97,12 @@ export function serializeWorkflowFile(workflowFile: WorkflowFile): string {
  * @param toolsString Comma-separated tools string
  * @returns Parsed tools configuration
  */
-export function parseWorkflowTools(toolsString?: string): ParsedWorkflowTools {
+export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
   if (!toolsString?.trim()) {
     return { tools: [], mcpServers: [], allBuiltIn: false };
   }
 
-  const tools: WorkflowToolReference[] = [];
+  const tools: AgentToolReference[] = [];
   const mcpServerSet = new Set<string>();
   let allBuiltIn = false;
 

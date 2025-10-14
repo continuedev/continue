@@ -2,8 +2,8 @@ import { vi } from "vitest";
 
 import { ConfigEnhancer } from "../configEnhancer.js";
 
+import { AgentFileService } from "./AgentFileService.js";
 import { ModelService } from "./ModelService.js";
-import { WorkflowService } from "./WorkflowService.js";
 
 // Mock the hubLoader module
 vi.mock("../hubLoader.js", () => ({
@@ -12,8 +12,8 @@ vi.mock("../hubLoader.js", () => ({
   mcpProcessor: {},
   modelProcessor: {},
   processRule: vi.fn(),
-  workflowProcessor: {
-    type: "workflow",
+  agentFileProcessor: {
+    type: "agentFile",
     expectedFileExtensions: [".md"],
     parseContent: vi.fn(),
     validateContent: vi.fn(),
@@ -40,8 +40,8 @@ vi.mock("../auth/workos.js", () => ({
   getModelName: vi.fn(),
 }));
 
-describe("Workflow Integration Tests", () => {
-  let workflowService: WorkflowService;
+describe("Agent file Integration Tests", () => {
+  let agentFileService: AgentFileService;
   let modelService: ModelService;
   let configEnhancer: ConfigEnhancer;
   let mockLoadPackageFromHub: any;
@@ -51,13 +51,13 @@ describe("Workflow Integration Tests", () => {
   let mockGetLlmApi: any;
   let mockModelProcessor: any;
 
-  const mockWorkflowFile = {
-    name: "Test Workflow",
-    description: "A test workflow for integration testing",
-    model: "gpt-4-workflow",
+  const mockAgentFile = {
+    name: "Test Agent File",
+    description: "A test agent for integration testing",
+    model: "gpt-4-agent",
     tools: "bash,read,write",
     rules: "Always be helpful and concise",
-    prompt: "You are a workflow assistant.",
+    prompt: "You are an assistant.",
   };
 
   const mockAssistant = {
@@ -94,7 +94,7 @@ describe("Workflow Integration Tests", () => {
     mockGetLlmApi = configModule.getLlmApi as any;
 
     // Create service instances
-    workflowService = new WorkflowService();
+    agentFileService = new AgentFileService();
     modelService = new ModelService();
     configEnhancer = new ConfigEnhancer();
 
@@ -112,74 +112,74 @@ describe("Workflow Integration Tests", () => {
     ]);
   });
 
-  describe("Workflow models are injected via ConfigEnhancer", () => {
-    it("should add workflow model to options when workflow is active", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+  describe("Agent file models are injected via ConfigEnhancer", () => {
+    it("should add agent file model to options when agent file active", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile?.model).toBe("gpt-4-agent");
 
-      // Mock loadPackageFromHub to return a model for the workflow model
+      // Mock loadPackageFromHub to return a model for the agent file model
       mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
 
-      // Test that ConfigEnhancer adds the workflow model to options
+      // Test that ConfigEnhancer adds the agent file model to options
       const baseConfig = { models: [] };
       const baseOptions = {}; // No --model flag
 
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowState,
+        agentFileState,
       );
 
-      // Should have loaded the workflow model directly via loadPackageFromHub
+      // Should have loaded the agent file model directly via loadPackageFromHub
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
-        "gpt-4-workflow",
+        "gpt-4-agent",
         mockModelProcessor,
       );
 
-      // The workflow model should be prepended to the models array
+      // The agent file model should be prepended to the models array
       expect(enhancedConfig.models).toHaveLength(1);
       expect(enhancedConfig.models?.[0]).toEqual({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
     });
 
-    it("should not add workflow model when no workflow is active", async () => {
-      // Initialize workflow service without workflow
-      await workflowService.initialize();
+    it("should not add agent file model when no agent file active", async () => {
+      // Initialize agent file service without agent
+      await agentFileService.initialize();
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile).toBeNull();
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile).toBeNull();
 
-      // Test that ConfigEnhancer doesn't add any workflow models
+      // Test that ConfigEnhancer doesn't add any agent file models
       const baseConfig = { models: [] };
       const baseOptions = {};
 
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowState,
+        agentFileState,
       );
 
       // Should not have enhanced with any models
       expect(enhancedConfig.models).toEqual([]);
     });
 
-    it("should respect --model flag priority over workflow model", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+    it("should respect --model flag priority over agent file model", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
-      // Mock loadPackageFromHub for workflow model and loadPackagesFromHub for user models
+      // Mock loadPackageFromHub for agent file model and loadPackagesFromHub for user models
       mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
       mockLoadPackagesFromHub.mockResolvedValueOnce([
@@ -196,7 +196,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
       // Should process the user model via loadPackagesFromHub
@@ -205,9 +205,9 @@ describe("Workflow Integration Tests", () => {
         mockModelProcessor,
       );
 
-      // Should also load the workflow model
+      // Should also load the agent file model
       expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
-        "gpt-4-workflow",
+        "gpt-4-agent",
         mockModelProcessor,
       );
 
@@ -218,17 +218,17 @@ describe("Workflow Integration Tests", () => {
         provider: "anthropic",
       });
       expect(enhancedConfig.models?.[1]).toEqual({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
     });
   });
 
-  describe("WorkflowService affects ConfigEnhancer", () => {
-    it("should inject workflow rules when workflow is active", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+  describe("AgentFileService affects ConfigEnhancer", () => {
+    it("should inject agent file rules when agent file active", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         rules: ["existing rule"],
@@ -237,22 +237,19 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Rules should be processed normally since workflow rules are now added to options.rule
-      expect(mockProcessRule).toHaveBeenCalledWith(mockWorkflowFile.rules);
+      // Rules should be processed normally since agent file rules are now added to options.rule
+      expect(mockProcessRule).toHaveBeenCalledWith(mockAgentFile.rules);
       expect(enhancedConfig.rules).toHaveLength(2);
-      // The workflow rule is processed first, then existing rules
-      expect(mockProcessRule).toHaveBeenNthCalledWith(
-        1,
-        mockWorkflowFile.rules,
-      );
+      // The agent file rule is processed first, then existing rules
+      expect(mockProcessRule).toHaveBeenNthCalledWith(1, mockAgentFile.rules);
     });
 
-    it("should not inject workflow rules when workflow is inactive", async () => {
-      // Initialize workflow service without workflow
-      await workflowService.initialize();
+    it("should not inject agent file rules when agent file inactive", async () => {
+      // Initialize agent file service without agent file
+      await agentFileService.initialize();
 
       const baseConfig = {
         rules: ["existing rule"],
@@ -261,7 +258,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
       expect(mockProcessRule).not.toHaveBeenCalled();
@@ -269,14 +266,14 @@ describe("Workflow Integration Tests", () => {
       expect(enhancedConfig?.rules?.[0]).toBe("existing rule");
     });
 
-    it("should not inject workflow rules when workflow has no rules", async () => {
-      const workflowWithoutRules = {
-        ...mockWorkflowFile,
+    it("should not inject agent file rules when agent file has no rules", async () => {
+      const agentFileWithoutRules = {
+        ...mockAgentFile,
         rules: undefined,
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(workflowWithoutRules);
-      await workflowService.initialize("owner/workflow");
+      mockLoadPackageFromHub.mockResolvedValue(agentFileWithoutRules);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         rules: ["existing rule"],
@@ -285,7 +282,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
       expect(mockProcessRule).not.toHaveBeenCalled();
@@ -294,10 +291,10 @@ describe("Workflow Integration Tests", () => {
     });
   });
 
-  describe("Workflow model constraints", () => {
-    it("should filter available models to only workflow model when specified", async () => {
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+  describe("Agent file model constraints", () => {
+    it("should filter available models to only agent file model when specified", async () => {
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
       await modelService.initialize(
         mockAssistant as any,
@@ -314,8 +311,8 @@ describe("Workflow Integration Tests", () => {
       ]);
     });
 
-    it("should allow all models when no workflow is active", async () => {
-      await workflowService.initialize();
+    it("should allow all models when no agent file active", async () => {
+      await agentFileService.initialize();
 
       await modelService.initialize(
         mockAssistant as any,
@@ -332,13 +329,13 @@ describe("Workflow Integration Tests", () => {
   });
 
   describe("Error handling", () => {
-    it("should handle workflow loading errors gracefully", async () => {
+    it("should handle agent loading errors gracefully", async () => {
       mockLoadPackageFromHub.mockRejectedValue(new Error("Network error"));
 
-      await workflowService.initialize("owner/workflow");
+      await agentFileService.initialize("owner/agent");
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile).toBeNull();
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile).toBeNull();
 
       // Model service should work normally
       await modelService.initialize(
@@ -348,11 +345,11 @@ describe("Workflow Integration Tests", () => {
       expect(mockGetLlmApi).toHaveBeenCalled();
     });
 
-    it("should handle workflow rule processing errors gracefully", async () => {
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
+    it("should handle agent rule processing errors gracefully", async () => {
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
       mockProcessRule.mockRejectedValue(new Error("Rule processing failed"));
 
-      await workflowService.initialize("owner/workflow");
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         rules: ["existing rule"],
@@ -361,21 +358,21 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Should not inject workflow rule but should preserve existing rules
+      // Should not inject agent file rule but should preserve existing rules
       expect(enhancedConfig.rules).toHaveLength(1);
       expect(enhancedConfig.rules?.[0]).toBe("existing rule");
     });
 
-    // Removed test for missing service container since workflow service
+    // Removed test for missing service container since agent file service
     // should always be initialized before ConfigEnhancer is called
 
-    it("should inject workflow prompt when workflow is active", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+    it("should inject agent file prompt when agent file active", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         rules: ["existing rule"],
@@ -385,23 +382,23 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Workflow prompt should be added to config.prompts
+      // Agent file prompt should be added to config.prompts
       expect(enhancedConfig.prompts).toBeDefined();
       expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
       expect(enhancedConfig.prompts?.[0]).toMatchObject({
-        prompt: "You are a workflow assistant.",
-        name: expect.stringContaining("Test Workflow"),
+        prompt: "You are an assistant.",
+        name: expect.stringContaining("Test Agent"),
       });
       expect(enhancedConfig.rules).toHaveLength(2);
     });
 
-    it("should add workflow prompt to config alongside other prompts", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+    it("should add agent file prompt to config alongside other prompts", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         prompts: [{ name: "Existing", prompt: "existing-prompt" }],
@@ -411,14 +408,14 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Workflow prompt should be prepended to existing prompts
+      // Agent file prompt should be prepended to existing prompts
       expect(enhancedConfig.prompts).toHaveLength(2);
       expect(enhancedConfig.prompts?.[0]).toMatchObject({
-        name: expect.stringContaining("Test Workflow"),
-        prompt: "You are a workflow assistant.",
+        name: expect.stringContaining("Test Agent"),
+        prompt: "You are an assistant.",
       });
       expect(enhancedConfig.prompts?.[1]).toMatchObject({
         name: "Existing",
@@ -426,14 +423,14 @@ describe("Workflow Integration Tests", () => {
       });
     });
 
-    it("should not add workflow prompt when workflow has no prompt", async () => {
-      const workflowWithoutPrompt = {
-        ...mockWorkflowFile,
+    it("should not add agent file prompt when agent file has no prompt", async () => {
+      const agentFileWithoutPrompt = {
+        ...mockAgentFile,
         prompt: undefined,
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(workflowWithoutPrompt);
-      await workflowService.initialize("owner/workflow");
+      mockLoadPackageFromHub.mockResolvedValue(agentFileWithoutPrompt);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         prompts: [{ name: "Existing", prompt: "existing-prompt" }],
@@ -443,10 +440,10 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Should only have the existing prompt, no workflow prompt added
+      // Should only have the existing prompt, no agent file prompt added
       expect(enhancedConfig.prompts).toHaveLength(1);
       expect(enhancedConfig.prompts?.[0]).toMatchObject({
         name: "Existing",
@@ -456,111 +453,105 @@ describe("Workflow Integration Tests", () => {
   });
 
   describe("ConfigEnhancer prompt integration", () => {
-    it("should add workflow prompt to config.prompts when workflow is active", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+    it("should add agent file prompt to config.prompts when agent file active", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
       const baseOptions = { prompt: ["user-prompt"] };
       const baseConfig = { prompts: [] };
 
-      // Enhance config with workflow state
+      // Enhance config with agent file state
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // Verify that the workflow prompt was added to config.prompts
+      // Verify that the agent file prompt was added to config.prompts
       expect(enhancedConfig.prompts).toBeDefined();
       expect(enhancedConfig.prompts).toHaveLength(1);
       expect(enhancedConfig.prompts?.[0]).toMatchObject({
-        name: expect.stringContaining("Test Workflow"),
-        prompt: "You are a workflow assistant.",
-        description: "A test workflow for integration testing",
+        name: expect.stringContaining("Test Agent"),
+        prompt: "You are an assistant.",
+        description: "A test agent for integration testing",
       });
     });
 
-    it("should work end-to-end with workflow prompt in config", async () => {
-      // Setup workflow service with active workflow
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+    it("should work end-to-end with agent file prompt in config", async () => {
+      // Setup agent file service with active agent file
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile?.prompt).toBe(
-        "You are a workflow assistant.",
-      );
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile?.prompt).toBe("You are an assistant.");
 
       const baseConfig = { prompts: [] };
       const baseOptions = { prompt: ["Tell me about TypeScript"] };
 
-      // Enhance config with workflow
+      // Enhance config with agent file
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         baseOptions,
-        workflowState,
+        agentFileState,
       );
 
-      // Verify workflow prompt is added to config.prompts
+      // Verify agent file prompt is added to config.prompts
       expect(enhancedConfig.prompts).toBeDefined();
       expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
-      expect(enhancedConfig.prompts?.[0]?.prompt).toBe(
-        "You are a workflow assistant.",
-      );
-      expect(enhancedConfig.prompts?.[0]?.name).toContain("Test Workflow");
+      expect(enhancedConfig.prompts?.[0]?.prompt).toBe("You are an assistant.");
+      expect(enhancedConfig.prompts?.[0]?.name).toContain("Test Agent");
     });
   });
 
-  describe("Workflow data extraction", () => {
-    it("should correctly extract all workflow properties", async () => {
-      mockLoadPackageFromHub.mockResolvedValue(mockWorkflowFile);
-      await workflowService.initialize("owner/workflow");
+  describe("Agent file data extraction", () => {
+    it("should correctly extract all agent file properties", async () => {
+      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+      await agentFileService.initialize("owner/agent");
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile?.model).toBe("gpt-4-workflow");
-      expect(workflowState.workflowFile?.tools).toBe("bash,read,write");
-      expect(workflowState.workflowFile?.rules).toBe(
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile?.model).toBe("gpt-4-agent");
+      expect(agentFileState.agentFile?.tools).toBe("bash,read,write");
+      expect(agentFileState.agentFile?.rules).toBe(
         "Always be helpful and concise",
       );
-      expect(workflowState.workflowFile?.prompt).toBe(
-        "You are a workflow assistant.",
-      );
-      expect(workflowState.slug).toBe("owner/workflow");
+      expect(agentFileState.agentFile?.prompt).toBe("You are an assistant.");
+      expect(agentFileState.slug).toBe("owner/agent");
     });
 
-    it("should handle partial workflow data", async () => {
-      const partialWorkflow = {
-        name: "Partial Workflow",
+    it("should handle partial agent file data", async () => {
+      const partialAgentFile = {
+        name: "Partial Agent File",
         model: "gpt-3.5-turbo",
         prompt: "Partial prompt",
         // No tools or rules
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(partialWorkflow);
-      await workflowService.initialize("owner/partial");
+      mockLoadPackageFromHub.mockResolvedValue(partialAgentFile);
+      await agentFileService.initialize("owner/partial");
 
-      const workflowState = workflowService.getState();
-      expect(workflowState.workflowFile?.model).toBe("gpt-3.5-turbo");
-      expect(workflowState.workflowFile?.tools).toBeUndefined();
-      expect(workflowState.workflowFile?.rules).toBeUndefined();
-      expect(workflowState.workflowFile?.prompt).toBe("Partial prompt");
+      const agentFileState = agentFileService.getState();
+      expect(agentFileState.agentFile?.model).toBe("gpt-3.5-turbo");
+      expect(agentFileState.agentFile?.tools).toBeUndefined();
+      expect(agentFileState.agentFile?.rules).toBeUndefined();
+      expect(agentFileState.agentFile?.prompt).toBe("Partial prompt");
     });
   });
 
-  describe("Workflow tools integration", () => {
-    it("should inject MCP servers from workflow tools", async () => {
-      const workflowWithTools = {
-        ...mockWorkflowFile,
+  describe("Agent file tools integration", () => {
+    it("should inject MCP servers from agent file tools", async () => {
+      const agentFileWithTools = {
+        ...mockAgentFile,
         tools: "owner/mcp1, another/mcp2:specific_tool",
       };
 
       // Clear the default mock and setup specific mocks
       mockLoadPackageFromHub.mockReset();
-      // First call loads the workflow file
-      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithTools);
-      // Second call loads the workflow model
+      // First call loads the agent file
+      mockLoadPackageFromHub.mockResolvedValueOnce(agentFileWithTools);
+      // Second call loads the agent file model
       mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
       // Third call loads mcp1
@@ -568,7 +559,7 @@ describe("Workflow Integration Tests", () => {
       // Fourth call loads mcp2
       mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp2" });
 
-      await workflowService.initialize("owner/workflow");
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         mcpServers: [{ name: "existing-mcp" }],
@@ -577,7 +568,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
       expect(enhancedConfig.mcpServers).toHaveLength(3);
@@ -587,15 +578,15 @@ describe("Workflow Integration Tests", () => {
       expect(enhancedConfig.mcpServers?.[2]).toEqual({ name: "existing-mcp" });
     });
 
-    it("should not inject MCP servers when workflow has no tools", async () => {
-      const workflowWithoutTools = {
-        ...mockWorkflowFile,
+    it("should not inject MCP servers when agent file has no tools", async () => {
+      const agentWithoutTools = {
+        ...mockAgentFile,
         tools: undefined,
       };
 
       mockLoadPackageFromHub.mockReset();
-      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithoutTools);
-      await workflowService.initialize("owner/workflow");
+      mockLoadPackageFromHub.mockResolvedValueOnce(agentWithoutTools);
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         mcpServers: [{ name: "existing-mcp" }],
@@ -604,7 +595,7 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
       expect(enhancedConfig.mcpServers).toHaveLength(1);
@@ -612,24 +603,24 @@ describe("Workflow Integration Tests", () => {
     });
 
     it("should deduplicate MCP servers", async () => {
-      const workflowWithDuplicateTools = {
-        ...mockWorkflowFile,
+      const agentFileWithDuplicateTools = {
+        ...mockAgentFile,
         tools: "owner/mcp1, owner/mcp1:tool1, owner/mcp1:tool2",
       };
 
       // Clear the default mock and setup specific mocks
       mockLoadPackageFromHub.mockReset();
-      // First call loads the workflow file
-      mockLoadPackageFromHub.mockResolvedValueOnce(workflowWithDuplicateTools);
-      // Second call loads the workflow model
+      // First call loads the agent file
+      mockLoadPackageFromHub.mockResolvedValueOnce(agentFileWithDuplicateTools);
+      // Second call loads the agent file model
       mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-workflow",
+        name: "gpt-4-agent",
         provider: "openai",
       });
-      // Third call: The parseWorkflowTools will extract only unique MCP servers, so only one loadPackageFromHub call
+      // Third call: The parseAgentFileTools will extract only unique MCP servers, so only one loadPackageFromHub call
       mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp1" });
 
-      await workflowService.initialize("owner/workflow");
+      await agentFileService.initialize("owner/agent");
 
       const baseConfig = {
         mcpServers: [{ name: "existing-mcp" }], // Changed to avoid confusion
@@ -638,10 +629,10 @@ describe("Workflow Integration Tests", () => {
       const enhancedConfig = await configEnhancer.enhanceConfig(
         baseConfig as any,
         {},
-        workflowService.getState(),
+        agentFileService.getState(),
       );
 
-      // parseWorkflowTools deduplicates, so we only get mcp1 once
+      // parseAgentFileTools deduplicates, so we only get mcp1 once
       expect(enhancedConfig.mcpServers).toHaveLength(2);
       expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
       expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "existing-mcp" });

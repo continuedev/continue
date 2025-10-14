@@ -1,7 +1,7 @@
 import {
+  AgentFile,
   AssistantUnrolled,
   ModelConfig,
-  WorkflowFile,
 } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { AssistantConfig } from "@continuedev/sdk";
@@ -12,8 +12,8 @@ import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode } from "../permissions/types.js";
 
+import { AgentFileService } from "./AgentFileService.js";
 import { type MCPService } from "./MCPService.js";
-import { WorkflowService } from "./WorkflowService.js";
 
 /**
  * Service lifecycle states
@@ -116,11 +116,11 @@ export interface StorageSyncServiceState {
   lastError?: string | null;
 }
 
-export interface WorkflowServiceState {
-  workflowFile: WorkflowFile | null;
+export interface AgentFileServiceState {
+  agentFile: AgentFile | null;
   slug: string | null;
-  workflowModelName: string | null;
-  workflowService: WorkflowService | null;
+  agentFileModelName: string | null;
+  agentFileService: AgentFileService | null;
 }
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";
@@ -142,7 +142,7 @@ export const SERVICE_NAMES = {
   CHAT_HISTORY: "chatHistory",
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
-  WORKFLOW: "workflow",
+  AGENT_FILE: "agentFile",
 } as const;
 
 /**

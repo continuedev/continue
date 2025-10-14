@@ -357,8 +357,12 @@ describe("ModelService", () => {
   });
 
   describe("getDependencies()", () => {
-    test("should declare auth, config, and workflow dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "config", "workflow"]);
+    test("should declare auth, config, and agent-file dependencies", () => {
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "config",
+        "agentFile",
+      ]);
     });
   });
 

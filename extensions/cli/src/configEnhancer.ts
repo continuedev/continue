@@ -1,6 +1,6 @@
 import {
   AssistantUnrolled,
-  parseWorkflowTools,
+  parseAgentFileTools,
   Rule,
 } from "@continuedev/config-yaml";
 
@@ -12,7 +12,7 @@ import {
   modelProcessor,
   processRule,
 } from "./hubLoader.js";
-import { WorkflowServiceState } from "./services/types.js";
+import { AgentFileServiceState } from "./services/types.js";
 import { logger } from "./util/logger.js";
 
 /**
@@ -20,16 +20,16 @@ import { logger } from "./util/logger.js";
  */
 export class ConfigEnhancer {
   // added this for lint complexity rule
-  private async enhanceConfigFromWorkflow(
+  private async enhanceConfigFromAgentFile(
     config: AssistantUnrolled,
     _options: BaseCommandOptions | undefined,
-    workflowState?: WorkflowServiceState,
+    agentFileState?: AgentFileServiceState,
   ) {
     const enhancedConfig = { ...config };
     const options = { ..._options };
 
-    if (workflowState?.workflowFile) {
-      const { rules, model, tools, prompt } = workflowState?.workflowFile;
+    if (agentFileState?.agentFile) {
+      const { rules, model, tools, prompt } = agentFileState?.agentFile;
       if (rules) {
         options.rule = [
           ...rules
@@ -42,38 +42,41 @@ export class ConfigEnhancer {
 
       if (tools) {
         try {
-          const parsedTools = parseWorkflowTools(tools);
+          const parsedTools = parseAgentFileTools(tools);
           if (parsedTools.mcpServers.length > 0) {
             options.mcp = [...parsedTools.mcpServers, ...(options.mcp || [])];
           }
         } catch (e) {
-          logger.error("Failed to parse workflow tools", e);
+          logger.error("Failed to parse agent file tools", e);
         }
       }
 
-      // --model takes precedence over workflow model
+      // --model takes precedence over agent file model
       if (model) {
         try {
-          const workflowModel = await loadPackageFromHub(model, modelProcessor);
+          const agentFileModel = await loadPackageFromHub(
+            model,
+            modelProcessor,
+          );
           enhancedConfig.models = [
-            workflowModel,
+            agentFileModel,
             ...(enhancedConfig.models ?? []),
           ];
-          workflowState?.workflowService?.setWorkflowModelName(
-            workflowModel.name,
+          agentFileState?.agentFileService?.setagentFileModelName(
+            agentFileModel.name,
           );
         } catch (e) {
-          logger.error("Failed to load workflow model", e);
+          logger.error("Failed to load agent model", e);
         }
       }
 
-      // Workflow prompt is included as a slash command, initial kickoff is handled elsewhere
+      // Agent file prompt is included as a slash command, initial kickoff is handled elsewhere
       if (prompt) {
         enhancedConfig.prompts = [
           {
-            name: `Workflow prompt (${workflowState.workflowFile.name})`,
+            name: `Agent prompt (${agentFileState.agentFile.name})`,
             prompt,
-            description: workflowState.workflowFile.description,
+            description: agentFileState.agentFile.description,
           },
           ...(enhancedConfig.prompts ?? []),
         ];
@@ -87,12 +90,12 @@ export class ConfigEnhancer {
   async enhanceConfig(
     config: AssistantUnrolled,
     _options?: BaseCommandOptions,
-    workflowState?: WorkflowServiceState,
+    agentFileState?: AgentFileServiceState,
   ): Promise<AssistantUnrolled> {
-    const enhanced = await this.enhanceConfigFromWorkflow(
+    const enhanced = await this.enhanceConfigFromAgentFile(
       config,
       _options,
-      workflowState,
+      agentFileState,
     );
     let { enhancedConfig } = enhanced;
     const { options } = enhanced;
