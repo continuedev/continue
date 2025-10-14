@@ -194,13 +194,13 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "Agents",
+                "group": "Configs",
                 "icon": "robot",
                 "pages": [
-                  "hub/agents/intro",
-                  "hub/agents/use-an-agent",
-                  "hub/agents/create-an-agent",
-                  "hub/agents/edit-an-agent"
+                  "hub/configs/intro",
+                  "hub/configs/use-a-config",
+                  "hub/configs/create-a-config",
+                  "hub/configs/edit-a-config"
                 ]
               },
               {
@@ -1217,19 +1217,35 @@
     },
     {
       "source": "/hub/assistants/intro",
-      "destination": "/hub/agents/intro"
+      "destination": "/hub/configs/intro"
     },
     {
       "source": "/hub/assistants/use-an-assistant",
-      "destination": "/hub/agents/use-an-agent"
+      "destination": "/hub/configs/use-a-config"
     },
     {
       "source": "/hub/assistants/create-an-assistant",
-      "destination": "/hub/agents/create-an-agent"
+      "destination": "/hub/configs/create-a-config"
     },
     {
       "source": "/hub/assistants/edit-an-assistant",
-      "destination": "/hub/agents/edit-an-agent"
+      "destination": "/hub/configs/edit-a-config"
+    },
+    {
+      "source": "/hub/agents/intro",
+      "destination": "/hub/configs/intro"
+    },
+    {
+      "source": "/hub/agents/use-an-agent",
+      "destination": "/hub/configs/use-a-config"
+    },
+    {
+      "source": "/hub/agents/create-an-agent",
+      "destination": "/hub/configs/create-a-config"
+    },
+    {
+      "source": "/hub/agents/edit-an-agent",
+      "destination": "/hub/configs/edit-a-config"
     },
     {
       "source": "/guides/understanding-assistants",
