@@ -1,9 +1,9 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { formatGrepSearchResults } from "../../util/grepSearch";
 import { prepareQueryForRipgrep } from "../../util/regexValidator";
 import { getStringArg } from "../parseArgs";
-import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 const DEFAULT_GREP_SEARCH_RESULTS_LIMIT = 100;
 const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 7500; // ~1500 tokens, will keep truncation simply for now
@@ -66,7 +66,7 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
 
     throw new ContinueError(
       ContinueErrorReason.SearchExecutionFailed,
-      errorMessage
+      errorMessage,
     );
   }
 

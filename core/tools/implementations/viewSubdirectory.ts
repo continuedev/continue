@@ -2,8 +2,8 @@ import generateRepoMap from "../../util/generateRepoMap";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
-import { getStringArg } from "../parseArgs";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { getStringArg } from "../parseArgs";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const directory_path = getStringArg(args, "directory_path");
@@ -13,7 +13,7 @@ export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   if (!uri) {
     throw new ContinueError(
       ContinueErrorReason.DirectoryNotFound,
-      `Directory path "${directory_path}" does not exist.`
+      `Directory path "${directory_path}" does not exist.`,
     );
   }
 
