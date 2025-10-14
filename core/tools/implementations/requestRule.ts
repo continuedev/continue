@@ -1,4 +1,5 @@
 import { ToolImpl } from ".";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { getStringArg } from "../parseArgs";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
@@ -8,7 +9,10 @@ export const requestRuleImpl: ToolImpl = async (args, extras) => {
   const rule = extras.config.rules.find((r) => r.name === name);
 
   if (!rule || !rule.sourceFile) {
-    throw new Error(`Rule with name "${name}" not found or has no file path`);
+    throw new ContinueError(
+      ContinueErrorReason.RuleNotFound,
+      `Rule with name "${name}" not found or has no file path`,
+    );
   }
 
   return [
