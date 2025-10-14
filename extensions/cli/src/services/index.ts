@@ -231,7 +231,7 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         agentFileState,
       );
     },
-    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH, SERVICE_NAMES.AGENT_FILE], // Depends on config, auth, and agent-file
+    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH, SERVICE_NAMES.AGENT_FILE], // Depends on config, auth, and agentFile
   );
 
   serviceContainer.register(

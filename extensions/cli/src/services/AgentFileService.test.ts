@@ -9,7 +9,7 @@ vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
   HubPackageProcessor: vi.fn(),
   agentFileProcessor: {
-    type: "agent-file",
+    type: "agentFile",
     expectedFileExtensions: [".md"],
     parseContent: vi.fn(),
     validateContent: vi.fn(),
@@ -226,7 +226,7 @@ describe("AgentFileService", () => {
 
 describe("agentFileProcessor", () => {
   it("should have correct type and extensions", () => {
-    expect(agentFileProcessor.type).toBe("agent-file");
+    expect(agentFileProcessor.type).toBe("agentFile");
     expect(agentFileProcessor.expectedFileExtensions).toEqual([".md"]);
   });
 

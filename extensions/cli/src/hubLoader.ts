@@ -12,7 +12,7 @@ const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 /**
  * Hub package type definitions
  */
-export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "agent-file";
+export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "agentFile";
 
 /**
  * Hub package processor interface
@@ -101,7 +101,7 @@ export const promptProcessor: HubPackageProcessor<string> = {
 };
 
 export const agentFileProcessor: HubPackageProcessor<AgentFile> = {
-  type: "agent-file",
+  type: "agentFile",
   expectedFileExtensions: [".md"],
   parseContent: (content: string) => parseAgentFile(content),
   validateContent: (agentFile: AgentFile) => {

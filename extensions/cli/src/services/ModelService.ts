@@ -32,7 +32,7 @@ export class ModelService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return ["auth", "config", "agent-file"];
+    return ["auth", "config", "agentFile"];
   }
 
   /**
@@ -59,10 +59,10 @@ export class ModelService
     let preferredModelName: string | null | undefined = null;
     let modelSource = "default";
 
-    // Priority = agent-file -> last selected model
+    // Priority = agentFile -> last selected model
     if (agentFileServiceState?.agentFileModelName) {
       preferredModelName = agentFileServiceState.agentFileModelName;
-      modelSource = "agent-file";
+      modelSource = "agentFile";
     } else {
       preferredModelName = getModelName(authConfig);
       if (preferredModelName) {
@@ -70,7 +70,7 @@ export class ModelService
       }
     }
 
-    // Try to use the preferred model (agent-file or persisted)
+    // Try to use the preferred model (agent file or persisted)
     if (preferredModelName) {
       // During initialization, we need to check against availableModels directly
       const modelIndex = this.availableModels.findIndex((model) => {

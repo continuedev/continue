@@ -13,7 +13,7 @@ vi.mock("../hubLoader.js", () => ({
   modelProcessor: {},
   processRule: vi.fn(),
   agentFileProcessor: {
-    type: "agent-file",
+    type: "agentFile",
     expectedFileExtensions: [".md"],
     parseContent: vi.fn(),
     validateContent: vi.fn(),

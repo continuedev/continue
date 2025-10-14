@@ -304,7 +304,7 @@ describe("ConfigService", () => {
       expect(service.getDependencies()).toEqual([
         "auth",
         "apiClient",
-        "agent-file",
+        "agentFile",
       ]);
     });
   });

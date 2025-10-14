@@ -37,7 +37,7 @@ vi.mock("./services/ServiceContainer.js", () => ({
 
 vi.mock("./services/types.js", () => ({
   SERVICE_NAMES: {
-    AGENT_FILE: "agent-file",
+    AGENT_FILE: "agentFile",
   },
 }));
 

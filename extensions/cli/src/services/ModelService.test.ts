@@ -361,7 +361,7 @@ describe("ModelService", () => {
       expect(service.getDependencies()).toEqual([
         "auth",
         "config",
-        "agent-file",
+        "agentFile",
       ]);
     });
   });
