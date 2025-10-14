@@ -11,12 +11,10 @@ import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import { AgentsList } from "./AgentsList";
 
 interface BackgroundModeViewProps {
-  onCreateAgent: (editorState: any) => void;
   isCreatingAgent?: boolean;
 }
 
 export function BackgroundModeView({
-  onCreateAgent,
   isCreatingAgent = false,
 }: BackgroundModeViewProps) {
   const { session, login } = useAuth();

@@ -514,13 +514,7 @@ export function Chat() {
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {mode === "background" ? (
-            <BackgroundModeView
-              onCreateAgent={() => {
-                // This callback is kept for compatibility but not used
-                // Agent creation is now handled in sendInput for better loading state management
-              }}
-              isCreatingAgent={isCreatingAgent}
-            />
+            <BackgroundModeView isCreatingAgent={isCreatingAgent} />
           ) : (
             history.length === 0 && (
               <EmptyChatBody showOnboardingCard={onboardingCard.show} />
