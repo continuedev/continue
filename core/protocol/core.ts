@@ -307,7 +307,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
-    { contextItems: ContextItem[]; errorMessage?: string; errorReason?: string },
+    { contextItems: ContextItem[]; errorMessage?: string; errorReason?: ContinueErrorReason },
   ];
   "tools/evaluatePolicy": [
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
