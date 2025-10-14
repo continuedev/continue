@@ -148,7 +148,7 @@ Prompt content
     const toolsOnlyExample = `
 ---
 name: Tools Only Agent File
-description: A agent file that uses tools but no rules
+description: An agent file that uses tools but no rules
 tools: git, filesystem, search
 ---
 This agent file uses tools but doesn't define any rules.
@@ -157,7 +157,7 @@ This agent file uses tools but doesn't define any rules.
     const result = parseAgentFile(toolsOnlyExample);
     expect(result).toEqual({
       name: "Tools Only Agent File",
-      description: "A agent file that uses tools but no rules",
+      description: "An agent file that uses tools but no rules",
       tools: "git, filesystem, search",
       prompt: "This agent file uses tools but doesn't define any rules.",
     });

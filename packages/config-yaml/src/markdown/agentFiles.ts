@@ -42,7 +42,7 @@ export interface ParsedAgentTools {
 }
 
 /**
- * Parses and validates a agent file from markdown content
+ * Parses and validates an agent file from markdown content
  * Agent files must have frontmatter with at least a name
  */
 export function parseAgentFile(content: string): AgentFile {
@@ -70,7 +70,7 @@ export function parseAgentFile(content: string): AgentFile {
 }
 
 /**
- * Serializes a Agent file back to markdown with YAML frontmatter
+ * Serializes an Agent file back to markdown with YAML frontmatter
  */
 export function serializeAgentFile(agentFile: AgentFile): string {
   const { prompt, ...frontmatter } = agentFile;
