@@ -85,7 +85,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
             }
           }
           setWorkspaceRepoUrls(repoUrls);
-          console.log("Workspace repo URLs:", repoUrls);
         }
       } catch (err) {
         console.error("Failed to fetch workspace repos:", err);
@@ -151,8 +150,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
       .filter(Boolean)
       .map(normalizeRepoUrl)
       .filter((url) => url !== "");
-
-    console.log("Agent URLs:", agentUrls, "Workspace URLs:", workspaceRepoUrls);
 
     // Check if any of the agent URLs match any workspace URL
     return workspaceRepoUrls.some((workspaceUrl) =>

@@ -562,25 +562,69 @@ export class VsCodeMessenger {
           }
         }
 
-        // Switch to the agent's branch
+        // Check if we're already on the target branch
         try {
-          await vscode.window.withProgress(
-            {
-              location: vscode.ProgressLocation.Notification,
-              title: `Switching to branch ${branch}...`,
-              cancellable: false,
-            },
-            async () => {
-              await this.ide.subprocess(
-                `git checkout ${branch}`,
-                matchingWorkspace,
-              );
-            },
+          const currentBranch = await this.ide.getBranch(matchingWorkspace);
+          console.log(
+            `Current branch: ${currentBranch}, Target branch: ${branch}`,
           );
-        } catch (e) {
+
+          if (currentBranch !== branch) {
+            // Try to switch to the branch
+            await vscode.window.withProgress(
+              {
+                location: vscode.ProgressLocation.Notification,
+                title: `Switching to branch ${branch}...`,
+                cancellable: false,
+              },
+              async () => {
+                try {
+                  // First try a simple checkout
+                  await this.ide.subprocess(
+                    `git checkout ${branch}`,
+                    matchingWorkspace,
+                  );
+                } catch (checkoutError: any) {
+                  console.log(
+                    "Simple checkout failed, trying to fetch and checkout...",
+                    checkoutError,
+                  );
+
+                  // If that fails, try fetching and then checking out
+                  try {
+                    await this.ide.subprocess(
+                      `git fetch origin ${branch}:${branch}`,
+                      matchingWorkspace,
+                    );
+                    await this.ide.subprocess(
+                      `git checkout ${branch}`,
+                      matchingWorkspace,
+                    );
+                  } catch (fetchError: any) {
+                    console.log(
+                      "Fetch and checkout failed, trying checkout with tracking...",
+                      fetchError,
+                    );
+
+                    // Last attempt: checkout with tracking
+                    await this.ide.subprocess(
+                      `git checkout -b ${branch} origin/${branch}`,
+                      matchingWorkspace,
+                    );
+                  }
+                }
+              },
+            );
+            vscode.window.showInformationMessage(
+              `Switched to branch ${branch}`,
+            );
+          } else {
+            console.log("Already on target branch, skipping checkout");
+          }
+        } catch (e: any) {
           console.error("Failed to switch branch:", e);
           vscode.window.showErrorMessage(
-            `Failed to switch to branch ${branch}. Please ensure the branch exists.`,
+            `Failed to switch to branch ${branch}: ${e.message || "Unknown error"}`,
           );
           return;
         }
