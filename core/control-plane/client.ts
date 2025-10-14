@@ -452,6 +452,7 @@ export class ControlPlaneClient {
     organizationId?: string,
     contextItems?: any[],
     selectedCode?: any[],
+    agent?: string,
   ): Promise<{ id: string }> {
     if (!(await this.isSignedIn())) {
       throw new Error("Not signed in to Continue");
@@ -485,6 +486,11 @@ export class ControlPlaneClient {
         range: code.range,
         contents: code.contents,
       }));
+    }
+
+    // Include agent configuration if provided
+    if (agent) {
+      requestBody.agent = agent;
     }
 
     const resp = await this.requestAndHandleError("agents", {

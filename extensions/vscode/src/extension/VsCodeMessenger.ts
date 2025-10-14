@@ -1,3 +1,4 @@
+import { encodeFullSlug } from "@continuedev/config-yaml";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { DataLogger } from "core/data/log";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
@@ -331,6 +332,22 @@ export class VsCodeMessenger {
 
       // debugger;
 
+      // Get the current agent configuration from the selected profile
+      let agent: string | undefined;
+      try {
+        const currentProfile = configHandler.currentProfile;
+        if (
+          currentProfile &&
+          currentProfile.profileDescription.profileType !== "local"
+        ) {
+          // Encode the full slug to pass as the agent parameter
+          agent = encodeFullSlug(currentProfile.profileDescription.fullSlug);
+        }
+      } catch (e) {
+        console.error("Error getting agent configuration from profile:", e);
+        // Continue without agent config - will use default
+      }
+
       // Create the background agent
       try {
         console.log("Creating background agent with:", {
@@ -340,6 +357,7 @@ export class VsCodeMessenger {
           branch,
           contextItemsCount: contextItems?.length || 0,
           selectedCodeCount: selectedCode?.length || 0,
+          agent: agent || "default",
         });
 
         const result =
@@ -351,6 +369,7 @@ export class VsCodeMessenger {
             organizationId,
             contextItems,
             selectedCode,
+            agent,
           );
 
         vscode.window.showInformationMessage(

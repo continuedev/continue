@@ -58,6 +58,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       contextItems: ContextItemWithId[];
       selectedCode: RangeInFile[];
       organizationId?: string;
+      agent?: string;
     },
     void,
   ];
