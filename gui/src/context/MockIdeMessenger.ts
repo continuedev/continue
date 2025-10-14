@@ -125,7 +125,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     },
   ],
-  listBackgroundAgents: [],
+  listBackgroundAgents: { agents: [], totalCount: 0 },
 };
 
 const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {
