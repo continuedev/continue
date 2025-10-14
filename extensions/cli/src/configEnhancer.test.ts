@@ -21,15 +21,15 @@ vi.mock("./hubLoader.js", () => ({
   modelProcessor: {},
 }));
 
-// Mock the service container to provide empty workflow state
+// Mock the service container to provide empty agent file state
 vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(() =>
       Promise.resolve({
-        workflowService: null,
-        workflowModelName: null,
-        workflowFile: null,
-        workflow: null,
+        agentFileService: null,
+        agentFileModelName: null,
+        agentFile: null,
+        slug: null,
       }),
     ),
   },
@@ -37,7 +37,7 @@ vi.mock("./services/ServiceContainer.js", () => ({
 
 vi.mock("./services/types.js", () => ({
   SERVICE_NAMES: {
-    WORKFLOW: "workflow",
+    AGENT_FILE: "agentFile",
   },
 }));
 
@@ -196,11 +196,12 @@ describe("ConfigEnhancer", () => {
   });
 
   it("should prepend MCPs from --mcp flag", async () => {
-    // Mock loadPackagesFromHub to return test MCPs
-    const { loadPackagesFromHub } = await import("./hubLoader.js");
-    (loadPackagesFromHub as any).mockResolvedValueOnce([
-      { name: "New-MCP", command: "new-mcp" },
-    ]);
+    // Mock loadPackageFromHub to return test MCP (singular call for each MCP)
+    const { loadPackageFromHub } = await import("./hubLoader.js");
+    (loadPackageFromHub as any).mockResolvedValueOnce({
+      name: "New-MCP",
+      command: "new-mcp",
+    });
 
     // Set up existing MCPs in config
     mockConfig.mcpServers = [{ name: "Existing-MCP", command: "existing-mcp" }];
@@ -223,41 +224,105 @@ describe("ConfigEnhancer", () => {
     });
   });
 
-  it("should handle workflow integration gracefully when no workflow", async () => {
-    // The mocked service container returns null workflow state
+  it("should handle URLs in --mcp flag as streamable-http servers", async () => {
+    // Set up existing MCPs in config
+    mockConfig.mcpServers = [{ name: "Existing-MCP", command: "existing-mcp" }];
+
+    const options: BaseCommandOptions = {
+      mcp: ["https://docs.continue.dev/mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // URL should be converted to streamable-http MCP configuration
+    expect(config.mcpServers).toHaveLength(2);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "docs.continue.dev",
+      type: "streamable-http",
+      url: "https://docs.continue.dev/mcp",
+    });
+    expect(config.mcpServers?.[1]).toEqual({
+      name: "Existing-MCP",
+      command: "existing-mcp",
+    });
+  });
+
+  it("should handle mix of URLs and hub slugs in --mcp flag", async () => {
+    // Mock loadPackageFromHub to return test MCP for hub slug
+    const { loadPackageFromHub } = await import("./hubLoader.js");
+    (loadPackageFromHub as any).mockResolvedValueOnce({
+      name: "Hub-MCP",
+      command: "hub-mcp",
+    });
+
+    const options: BaseCommandOptions = {
+      mcp: ["https://example.com/mcp", "test/hub-mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    expect(config.mcpServers).toHaveLength(2);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "example.com",
+      type: "streamable-http",
+      url: "https://example.com/mcp",
+    });
+    expect(config.mcpServers?.[1]).toEqual({
+      name: "Hub-MCP",
+      command: "hub-mcp",
+    });
+  });
+
+  it("should handle http:// URLs in --mcp flag", async () => {
+    const options: BaseCommandOptions = {
+      mcp: ["http://localhost:8080/mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    expect(config.mcpServers).toHaveLength(1);
+    expect(config.mcpServers?.[0]).toEqual({
+      name: "localhost",
+      type: "streamable-http",
+      url: "http://localhost:8080/mcp",
+    });
+  });
+
+  it("should handle agent file integration gracefully when no agent file", async () => {
+    // The mocked service container returns null agent file state
     const options: BaseCommandOptions = {
       rule: ["test-rule"],
     };
 
     const config = await enhancer.enhanceConfig(mockConfig, options);
 
-    // Should work normally when no workflow is active
+    // Should work normally when no agent file is active
     expect(config.rules).toEqual(["test-rule"]);
   });
 
-  it("should handle workflow integration when workflow is active", async () => {
-    // Mock service container to return active workflow
+  it("should handle agent file integration when agent file is active", async () => {
+    // Mock service container to return active agent file
     const options: BaseCommandOptions = {
       rule: ["user-rule"],
       prompt: ["user-prompt"],
     };
 
     const config = await enhancer.enhanceConfig(mockConfig, options, {
-      workflowFile: {
-        name: "Test Workflow",
+      agentFile: {
+        name: "Test Agent",
         prompt: "You are a test assistant",
         rules: "Always be helpful",
         model: "gpt-4",
         tools: "bash,read",
       },
-      slug: "owner/test-workflow",
-      workflowModelName: null,
-      workflowService: null,
+      slug: "owner/test-agent",
+      agentFileModelName: null,
+      agentFileService: null,
     });
 
-    // Should have both workflow and user rules
+    // Should have both agent file and user rules
     expect(config.rules).toHaveLength(2);
-    expect(config.rules?.[0]).toBe("Always be helpful"); // Workflow rule first
+    expect(config.rules?.[0]).toBe("Always be helpful"); // Agent file rule first
     expect(config.rules?.[1]).toBe("user-rule"); // User rule second
   });
 });

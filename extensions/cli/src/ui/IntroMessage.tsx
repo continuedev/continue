@@ -13,6 +13,7 @@ interface IntroMessageProps {
   config?: AssistantUnrolled;
   model?: ModelConfig;
   mcpService?: MCPService;
+  organizationName?: string;
 }
 
 // Helper function to extract rule names
@@ -26,6 +27,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   config,
   model,
   mcpService,
+  organizationName,
 }) => {
   // Get MCP prompts directly (not memoized since they can change after first render)
   const mcpPrompts = mcpService?.getState().prompts ?? [];
@@ -97,6 +99,13 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       {/* Tips Display - shown randomly 1 in 5 times */}
       {showTip && <TipsDisplay />}
+
+      {/* Organization name */}
+      {organizationName && (
+        <Text color="blue">
+          <Text bold>Org:</Text> <Text color="white">{organizationName}</Text>
+        </Text>
+      )}
 
       {/* Agent name */}
       {config && (

@@ -43,14 +43,16 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { useStore } from "react-redux";
+import { CliInstallBanner } from "../../components/CliInstallBanner";
+
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
-import { useStore } from "react-redux";
-import { RootState } from "../../redux/store";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -118,6 +120,9 @@ export function Chat() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const allSessionMetadata = useAppSelector(
+    (state) => state.session.allSessionMetadata,
+  );
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
@@ -192,30 +197,6 @@ export function Chat() {
       if (isCurrentlyInEdit && codeToEditSnapshot.length === 0) {
         return;
       }
-
-      // TODO - hook up with hub to detect free trial progress
-      // if (model.provider === "free-trial") {
-      //   const newCount = incrementFreeTrialCount();
-
-      //   if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
-      //     posthog?.capture("ftc_reached");
-      //   }
-      //   if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
-      //     // Show this message whether using platform or not
-      //     // So that something happens if in new chat
-      //     void ideMessenger.ide.showToast(
-      //       "error",
-      //       "You've reached the free trial limit. Please configure a model to continue.",
-      //     );
-
-      //     // If history, show the dialog, which will automatically close if there is not history
-      //     if (history.length) {
-      //       dispatch(setDialogMessage(<FreeTrialOverDialog />));
-      //       dispatch(setShowDialog(true));
-      //     }
-      //     return;
-      //   }
-      // }
 
       if (isCurrentlyInEdit) {
         void dispatch(
@@ -347,7 +328,7 @@ export function Chat() {
               redactedThinking={message.redactedThinking}
               index={index}
               prevItem={index > 0 ? history[index - 1] : null}
-              inProgress={index === history.length - 1}
+              inProgress={index === history.length - 1 && isStreaming}
               signature={message.signature}
             />
           </div>
@@ -375,7 +356,7 @@ export function Chat() {
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen],
+    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
@@ -421,6 +402,12 @@ export function Chat() {
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 
+        <CliInstallBanner
+          sessionCount={allSessionMetadata.length}
+          sessionThreshold={3}
+          permanentDismissal={true}
+        />
+
         <div
           style={{
             pointerEvents: isStreaming ? "none" : "auto",
@@ -431,11 +418,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >

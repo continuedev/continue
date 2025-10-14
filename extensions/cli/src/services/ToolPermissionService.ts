@@ -1,4 +1,4 @@
-import { parseWorkflowTools } from "@continuedev/config-yaml";
+import { parseAgentFileTools } from "@continuedev/config-yaml";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
@@ -11,7 +11,7 @@ import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES, WorkflowServiceState } from "./types.js";
+import { AgentFileServiceState, SERVICE_NAMES } from "./types.js";
 
 export interface InitializeToolServiceOverrides {
   allow?: string[];
@@ -26,7 +26,7 @@ export interface ToolPermissionServiceState {
   currentMode: PermissionMode;
   isHeadless: boolean;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
-  workflowPolicyCount?: number;
+  agentFilePolicyCount?: number;
   originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
 
@@ -61,21 +61,21 @@ export class ToolPermissionService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return [SERVICE_NAMES.WORKFLOW];
+    return [SERVICE_NAMES.AGENT_FILE];
   }
 
   /**
-   * Generate workflow-specific policies if a workflow is active
+   * Generate agent-file-specific policies if an agent file is active
    */
-  private generateWorkflowPolicies(
-    workflowServiceState?: WorkflowServiceState,
+  private generateAgentFilePolicies(
+    agentFileServiceState?: AgentFileServiceState,
   ): undefined | ToolPermissionPolicy[] {
-    if (!workflowServiceState?.workflowFile?.tools) {
+    if (!agentFileServiceState?.agentFile?.tools) {
       return undefined;
     }
 
-    const parsedTools = parseWorkflowTools(
-      workflowServiceState.workflowFile.tools,
+    const parsedTools = parseAgentFileTools(
+      agentFileServiceState.agentFile.tools,
     );
     if (parsedTools.tools.length === 0) {
       return undefined;
@@ -101,7 +101,7 @@ export class ToolPermissionService
     }
 
     if (policies.length > 0) {
-      logger.debug(`Generated ${policies.length} workflow tool policies`);
+      logger.debug(`Generated ${policies.length} agent file tool policies`);
     }
 
     if (parsedTools.allBuiltIn) {
@@ -164,7 +164,7 @@ export class ToolPermissionService
    */
   initializeSync(
     runtimeOverrides?: InitializeToolServiceOverrides,
-    workflowServiceState?: WorkflowServiceState,
+    agentFileServiceState?: AgentFileServiceState,
   ): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService");
 
@@ -178,16 +178,17 @@ export class ToolPermissionService
       this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
-    const workflowPolicies =
-      this.generateWorkflowPolicies(workflowServiceState);
+    const agentFilePolicies = this.generateAgentFilePolicies(
+      agentFileServiceState,
+    );
     const modePolicies = this.generateModePolicies();
 
     // For plan and auto modes, use ONLY mode policies (absolute override)
     // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
-    if (workflowPolicies) {
-      // Workflow policies take full precedence on init
-      allPolicies = workflowPolicies;
+    if (agentFilePolicies) {
+      // Agent file policies take full precedence on init
+      allPolicies = agentFilePolicies;
     } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto"
@@ -209,7 +210,7 @@ export class ToolPermissionService
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-      workflowPolicyCount: (workflowPolicies ?? []).length,
+      agentFilePolicyCount: (agentFilePolicies ?? []).length,
     });
 
     (this as any).isInitialized = true;
@@ -222,12 +223,12 @@ export class ToolPermissionService
    */
   async doInitialize(
     runtimeOverrides?: InitializeToolServiceOverrides,
-    workflowServiceState?: WorkflowServiceState,
+    agentFileServiceState?: AgentFileServiceState,
   ): Promise<ToolPermissionServiceState> {
     await ensurePermissionsYamlExists();
 
     // Use the synchronous version after ensuring the file exists
-    return this.initializeSync(runtimeOverrides, workflowServiceState);
+    return this.initializeSync(runtimeOverrides, agentFileServiceState);
   }
 
   /**

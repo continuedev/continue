@@ -4,7 +4,7 @@ import posthog from "posthog-js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import {
   errorToolCall,
-  setToolCallArgs,
+  setProcessedToolCallArgs,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch } from "../store";
@@ -61,7 +61,7 @@ export async function preprocessToolCalls(
         );
       } else if (preprocessedArgs) {
         dispatch(
-          setToolCallArgs({
+          setProcessedToolCallArgs({
             toolCallId: tcState.toolCallId,
             newArgs: preprocessedArgs,
           }),

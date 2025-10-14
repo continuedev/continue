@@ -2,6 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
+  "banner": {
+    "content": "Continue CLI v1.4.49 is live 🚀 Learn how you can [leverage the CLI with our MCP Cookbooks](/guides/overview#mcp-integration-cookbooks)",
+    "dismissable": true
+  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -16,66 +20,69 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": [
-              "index",
-              "getting-started/overview",
-              "getting-started/install",
-              "getting-started/quick-start"
-            ]
+            "pages": ["index"]
           },
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quick-start",
+              "cli/guides"
+            ]
           },
           {
-            "group": "Features",
+            "group": "IDE Extensions",
             "icon": "star",
+            "expanded": false,
             "pages": [
+              "ide-extensions/install",
+              "ide-extensions/quick-start",
               {
                 "group": "Agent",
                 "icon": "robot",
                 "pages": [
-                  "features/agent/quick-start",
-                  "features/agent/how-it-works",
-                  "features/agent/plan-mode",
-                  "features/agent/model-setup",
-                  "features/agent/how-to-customize",
-                  "features/agent/context-selection"
+                  "ide-extensions/agent/quick-start",
+                  "ide-extensions/agent/how-it-works",
+                  "ide-extensions/agent/plan-mode",
+                  "ide-extensions/agent/model-setup",
+                  "ide-extensions/agent/how-to-customize",
+                  "ide-extensions/agent/context-selection"
                 ]
               },
               {
                 "group": "Chat",
                 "icon": "messages",
                 "pages": [
-                  "features/chat/quick-start",
-                  "features/chat/how-it-works",
-                  "features/chat/model-setup",
-                  "features/chat/how-to-customize",
-                  "features/chat/context-selection"
+                  "ide-extensions/chat/quick-start",
+                  "ide-extensions/chat/how-it-works",
+                  "ide-extensions/chat/model-setup",
+                  "ide-extensions/chat/how-to-customize",
+                  "ide-extensions/chat/context-selection"
                 ]
               },
               {
                 "group": "Autocomplete",
                 "icon": "sparkles",
                 "pages": [
-                  "features/autocomplete/quick-start",
-                  "features/autocomplete/how-it-works",
-                  "features/autocomplete/model-setup",
-                  "features/autocomplete/how-to-customize",
-                  "features/autocomplete/context-selection",
-                  "features/autocomplete/next-edit"
+                  "ide-extensions/autocomplete/quick-start",
+                  "ide-extensions/autocomplete/how-it-works",
+                  "ide-extensions/autocomplete/model-setup",
+                  "ide-extensions/autocomplete/how-to-customize",
+                  "ide-extensions/autocomplete/context-selection",
+                  "ide-extensions/autocomplete/next-edit"
                 ]
               },
               {
                 "group": "Edit",
                 "icon": "pen-to-square",
                 "pages": [
-                  "features/edit/quick-start",
-                  "features/edit/how-it-works",
-                  "features/edit/model-setup",
-                  "features/edit/how-to-customize",
-                  "features/edit/context-selection"
+                  "ide-extensions/edit/quick-start",
+                  "ide-extensions/edit/how-it-works",
+                  "ide-extensions/edit/model-setup",
+                  "ide-extensions/edit/how-to-customize",
+                  "ide-extensions/edit/context-selection"
                 ]
               }
             ]
@@ -130,6 +137,7 @@
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/asksage",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
@@ -252,7 +260,8 @@
               "guides/instinct",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model"
+              "guides/how-to-self-host-a-model",
+              "guides/notion-continue-guide"
             ]
           },
           {
@@ -261,6 +270,7 @@
             "pages": [
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
+              "guides/github-mcp-continue-cookbook",
               "guides/sanity-mcp-continue-cookbook",
               "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
@@ -328,7 +338,7 @@
   "navbar": {
     "links": [
       {
-        "label": "Explore",
+        "label": "🚀 Get Started",
         "href": "https://hub.continue.dev/"
       }
     ],
@@ -395,11 +405,11 @@
     },
     {
       "source": "/install/vscode",
-      "destination": "/getting-started/install"
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/install/jetbrains",
-      "destination": "/getting-started/install"
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/customize/model-types",
@@ -447,23 +457,27 @@
     },
     {
       "source": "/model-setup/overview",
-      "destination": "/getting-started/overview"
+      "destination": "/customize/model-roles/"
     },
     {
       "source": "/model-setup/select-model",
-      "destination": "/getting-started/overview"
+      "destination": "/customize/model-roles/00-intro#selecting-model-roles"
     },
     {
       "source": "/model-setup/configuration",
-      "destination": "/getting-started/overview"
+      "destination": "/customize/deep-dives/configuration"
     },
     {
       "source": "/quickstart",
-      "destination": "/getting-started/overview"
+      "destination": "/"
     },
     {
       "source": "/how-to-use-continue",
-      "destination": "/getting-started/overview"
+      "destination": "/"
+    },
+    {
+      "source": "/getting-started/overview",
+      "destination": "/"
     },
     {
       "source": "/setup/select-provider",
@@ -863,51 +877,51 @@
     },
     {
       "source": "/chat",
-      "destination": "/features/chat/quick-start"
+      "destination": "/ide-extensions/chat/quick-start"
     },
     {
       "source": "/chat/how-to-use-it",
-      "destination": "/features/chat/quick-start"
+      "destination": "/ide-extensions/chat/quick-start"
     },
     {
       "source": "/agent",
-      "destination": "/features/agent/quick-start"
+      "destination": "/ide-extensions/agent/quick-start"
     },
     {
       "source": "/agent/how-to-use-it",
-      "destination": "/features/agent/quick-start"
+      "destination": "/ide-extensions/agent/quick-start"
     },
     {
       "source": "/features/agent/how-to-use-it",
-      "destination": "/features/agent/quick-start"
+      "destination": "/ide-extensions/agent/quick-start"
     },
     {
       "source": "/edit",
-      "destination": "/features/edit/quick-start"
+      "destination": "/ide-extensions/edit/quick-start"
     },
     {
       "source": "/edit/how-to-use-it",
-      "destination": "/features/edit/quick-start"
+      "destination": "/ide-extensions/edit/quick-start"
     },
     {
       "source": "/features/edit/how-to-use-it",
-      "destination": "/features/edit/quick-start"
+      "destination": "/ide-extensions/edit/quick-start"
     },
     {
       "source": "/autocomplete",
-      "destination": "/features/autocomplete/quick-start"
+      "destination": "/ide-extensions/autocomplete/quick-start"
     },
     {
       "source": "/autocomplete/how-to-use-it",
-      "destination": "/features/autocomplete/quick-start"
+      "destination": "/ide-extensions/autocomplete/quick-start"
     },
     {
       "source": "/features/autocomplete/how-to-use-it",
-      "destination": "/features/autocomplete/quick-start"
+      "destination": "/ide-extensions/autocomplete/quick-start"
     },
     {
-      "source": "/getting-started",
-      "destination": "/getting-started/install"
+      "source": "/getting-started/install",
+      "destination": "/ide-extensions/install"
     },
     {
       "source": "/customize/deep-dives/prompt-files",
@@ -915,19 +929,19 @@
     },
     {
       "source": "/chat/how-it-works",
-      "destination": "/features/chat/how-it-works"
+      "destination": "/ide-extensions/chat/how-it-works"
     },
     {
       "source": "/autocomplete/how-it-works",
-      "destination": "/features/autocomplete/how-it-works"
+      "destination": "/ide-extensions/autocomplete/how-it-works"
     },
     {
       "source": "/edit/how-it-works",
-      "destination": "/features/edit/how-it-works"
+      "destination": "/ide-extensions/edit/how-it-works"
     },
     {
       "source": "/agent/how-it-works",
-      "destination": "/features/agent/how-it-works"
+      "destination": "/ide-extensions/agent/how-it-works"
     },
     {
       "source": "/telemetry",
@@ -967,55 +981,55 @@
     },
     {
       "source": "/autocomplete/model-setup",
-      "destination": "/features/autocomplete/model-setup"
+      "destination": "/ide-extensions/autocomplete/model-setup"
     },
     {
       "source": "/autocomplete/how-to-customize",
-      "destination": "/features/autocomplete/how-to-customize"
+      "destination": "/ide-extensions/autocomplete/how-to-customize"
     },
     {
       "source": "/autocomplete/context-selection",
-      "destination": "/features/autocomplete/context-selection"
+      "destination": "/ide-extensions/autocomplete/context-selection"
     },
     {
       "source": "/chat/model-setup",
-      "destination": "/features/chat/model-setup"
+      "destination": "/ide-extensions/chat/model-setup"
     },
     {
       "source": "/chat/how-to-customize",
-      "destination": "/features/chat/how-to-customize"
+      "destination": "/ide-extensions/chat/how-to-customize"
     },
     {
       "source": "/chat/context-selection",
-      "destination": "/features/chat/context-selection"
+      "destination": "/ide-extensions/chat/context-selection"
     },
     {
       "source": "/features/chat/how-to-use-it",
-      "destination": "/features/chat/quick-start"
+      "destination": "/ide-extensions/chat/quick-start"
     },
     {
       "source": "/edit/model-setup",
-      "destination": "/features/edit/model-setup"
+      "destination": "/ide-extensions/edit/model-setup"
     },
     {
       "source": "/edit/how-to-customize",
-      "destination": "/features/edit/how-to-customize"
+      "destination": "/ide-extensions/edit/how-to-customize"
     },
     {
       "source": "/edit/context-selection",
-      "destination": "/features/edit/context-selection"
+      "destination": "/ide-extensions/edit/context-selection"
     },
     {
       "source": "/agent/model-setup",
-      "destination": "/features/agent/model-setup"
+      "destination": "/ide-extensions/agent/model-setup"
     },
     {
       "source": "/agent/how-to-customize",
-      "destination": "/features/agent/how-to-customize"
+      "destination": "/ide-extensions/agent/how-to-customize"
     },
     {
       "source": "/agent/context-selection",
-      "destination": "/features/agent/context-selection"
+      "destination": "/ide-extensions/agent/context-selection"
     },
     {
       "source": "/customize/context/codebase",
@@ -1195,7 +1209,11 @@
     },
     {
       "source": "/features/edit/next-edit",
-      "destination": "/features/autocomplete/next-edit"
+      "destination": "/ide-extensions/autocomplete/next-edit"
+    },
+    {
+      "source": "/features/plan/quick-start",
+      "destination": "/ide-extensions/agent/plan-mode"
     },
     {
       "source": "/hub/assistants/intro",
@@ -1216,6 +1234,102 @@
     {
       "source": "/guides/understanding-assistants",
       "destination": "/guides/understanding-agents"
+    },
+    {
+      "source": "/features",
+      "destination": "/ide-extensions"
+    },
+    {
+      "source": "/features/agent/quick-start",
+      "destination": "/ide-extensions/agent/quick-start"
+    },
+    {
+      "source": "/features/agent/how-it-works",
+      "destination": "/ide-extensions/agent/how-it-works"
+    },
+    {
+      "source": "/features/agent/plan-mode",
+      "destination": "/ide-extensions/agent/plan-mode"
+    },
+    {
+      "source": "/features/agent/model-setup",
+      "destination": "/ide-extensions/agent/model-setup"
+    },
+    {
+      "source": "/features/agent/how-to-customize",
+      "destination": "/ide-extensions/agent/how-to-customize"
+    },
+    {
+      "source": "/features/agent/context-selection",
+      "destination": "/ide-extensions/agent/context-selection"
+    },
+    {
+      "source": "/features/chat/quick-start",
+      "destination": "/ide-extensions/chat/quick-start"
+    },
+    {
+      "source": "/features/chat/how-it-works",
+      "destination": "/ide-extensions/chat/how-it-works"
+    },
+    {
+      "source": "/features/chat/model-setup",
+      "destination": "/ide-extensions/chat/model-setup"
+    },
+    {
+      "source": "/features/chat/how-to-customize",
+      "destination": "/ide-extensions/chat/how-to-customize"
+    },
+    {
+      "source": "/features/chat/context-selection",
+      "destination": "/ide-extensions/chat/context-selection"
+    },
+    {
+      "source": "/features/autocomplete/quick-start",
+      "destination": "/ide-extensions/autocomplete/quick-start"
+    },
+    {
+      "source": "/features/autocomplete/how-it-works",
+      "destination": "/ide-extensions/autocomplete/how-it-works"
+    },
+    {
+      "source": "/features/autocomplete/model-setup",
+      "destination": "/ide-extensions/autocomplete/model-setup"
+    },
+    {
+      "source": "/features/autocomplete/how-to-customize",
+      "destination": "/ide-extensions/autocomplete/how-to-customize"
+    },
+    {
+      "source": "/features/autocomplete/context-selection",
+      "destination": "/ide-extensions/autocomplete/context-selection"
+    },
+    {
+      "source": "/features/autocomplete/next-edit",
+      "destination": "/ide-extensions/autocomplete/next-edit"
+    },
+    {
+      "source": "/features/edit/quick-start",
+      "destination": "/ide-extensions/edit/quick-start"
+    },
+    {
+      "source": "/features/edit/how-it-works",
+      "destination": "/ide-extensions/edit/how-it-works"
+    },
+    {
+      "source": "/features/edit/model-setup",
+      "destination": "/ide-extensions/edit/model-setup"
+    },
+    {
+      "source": "/features/edit/how-to-customize",
+      "destination": "/ide-extensions/edit/how-to-customize"
+    },
+    {
+      "source": "/features/edit/context-selection",
+      "destination": "/ide-extensions/edit/context-selection"
+    },
+    {
+      "source": "/getting-started/quick-start",
+      "destination": "/ide-extensions/quick-start"
     }
   ]
 }

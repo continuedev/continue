@@ -26,7 +26,7 @@ export function getRuleSourceDisplayName(rule: RuleWithSource): string {
       return "Base System Plan Message";
     case "model-options-chat":
       return "Base System Chat Message";
-    case "agent-file":
+    case "agentFile":
       if (rule.sourceFile) {
         return getLastNPathParts(rule.sourceFile, 2);
       } else {

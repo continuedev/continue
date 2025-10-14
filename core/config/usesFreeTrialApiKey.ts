@@ -1,12 +1,12 @@
 import { decodeSecretLocation, SecretType } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig } from "..";
+import { BrowserSerializedContinueConfig, ModelDescription } from "..";
 
 /**
- * Helper function to determine if the config uses a free trial API key
+ * Helper function to determine if the config uses an API key that relies on Continue credits (free trial or models add-on)
  * @param config The serialized config object
  * @returns true if the config is using any free trial models
  */
-export function usesFreeTrialApiKey(
+export function usesCreditsBasedApiKey(
   config: BrowserSerializedContinueConfig | null,
 ): boolean {
   if (!config) {
@@ -19,12 +19,7 @@ export function usesFreeTrialApiKey(
 
   // Check if any of the chat models use free-trial provider
   try {
-    const hasFreeTrial = allModels?.some(
-      (model) =>
-        model.apiKeyLocation &&
-        decodeSecretLocation(model.apiKeyLocation).secretType ===
-          SecretType.FreeTrial,
-    );
+    const hasFreeTrial = allModels?.some(modelUsesCreditsBasedApiKey);
 
     return hasFreeTrial;
   } catch (e) {
@@ -33,3 +28,15 @@ export function usesFreeTrialApiKey(
 
   return false;
 }
+
+const modelUsesCreditsBasedApiKey = (model: ModelDescription) => {
+  if (!model.apiKeyLocation) {
+    return false;
+  }
+
+  const secretType = decodeSecretLocation(model.apiKeyLocation).secretType;
+
+  return (
+    secretType === SecretType.FreeTrial || secretType === SecretType.ModelsAddOn
+  );
+};
