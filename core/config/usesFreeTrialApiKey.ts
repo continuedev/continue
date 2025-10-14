@@ -29,6 +29,31 @@ export function usesCreditsBasedApiKey(
   return false;
 }
 
+/**
+ * Helper function to determine if the config uses specifically a free trial API key (not models add-on)
+ * @param config The serialized config object
+ * @returns true if the config is using any free trial models
+ */
+export function usesFreeTrialApiKey(
+  config: BrowserSerializedContinueConfig | null,
+): boolean {
+  if (!config) {
+    return false;
+  }
+
+  const modelsByRole = config.modelsByRole;
+  const allModels = [...Object.values(modelsByRole)].flat();
+
+  try {
+    const hasFreeTrial = allModels?.some(modelUsesFreeTrialApiKey);
+    return hasFreeTrial;
+  } catch (e) {
+    console.error("Error checking for free trial API key:", e);
+  }
+
+  return false;
+}
+
 const modelUsesCreditsBasedApiKey = (model: ModelDescription) => {
   if (!model.apiKeyLocation) {
     return false;
@@ -39,4 +64,14 @@ const modelUsesCreditsBasedApiKey = (model: ModelDescription) => {
   return (
     secretType === SecretType.FreeTrial || secretType === SecretType.ModelsAddOn
   );
+};
+
+const modelUsesFreeTrialApiKey = (model: ModelDescription) => {
+  if (!model.apiKeyLocation) {
+    return false;
+  }
+
+  const secretType = decodeSecretLocation(model.apiKeyLocation).secretType;
+
+  return secretType === SecretType.FreeTrial;
 };
