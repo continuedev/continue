@@ -239,6 +239,16 @@ export async function unrollAssistant(
   return result;
 }
 
+export function replaceInputsWithSecrets(yamlContent: string): string {
+  const inputsToSecrets = Object.fromEntries(
+    getTemplateVariables(yamlContent)
+      .filter((v) => v.startsWith("inputs."))
+      .map((v) => [v, `\${{ ${v.replace("inputs.", "secrets.")} }}`]),
+  );
+
+  return renderTemplateData(yamlContent, { secrets: inputsToSecrets });
+}
+
 function renderTemplateData(
   rawYaml: string,
   templateData: Partial<TemplateData>,

@@ -153,3 +153,10 @@ export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
     allBuiltIn,
   };
 }
+
+export function parseAgentFileRules(rules: string) {
+  return rules
+    .split(",")
+    .filter(Boolean)
+    .map((r) => r.trim());
+}

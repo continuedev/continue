@@ -2,9 +2,17 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { configEnhancer } from "../configEnhancer.js";
+import { loadConfiguration } from "../configLoader.js";
 import { logger } from "../util/logger.js";
 
+import {
+  AssistantUnrolled,
+  decodePackageIdentifier,
+  mergeUnrolledAssistants,
+  PackageIdentifier,
+} from "@continuedev/config-yaml";
+import { isStringRule } from "src/hubLoader.js";
+import { getErrorString } from "src/util/error.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -17,7 +25,6 @@ import {
 interface ConfigServiceInit {
   authConfig: AuthConfig;
   configPath: string | undefined;
-  _organizationId: string | null;
   apiClient: DefaultApiInterface;
   agentFileState: AgentFileServiceState;
   injectedConfigOptions?: BaseCommandOptions;
@@ -48,97 +55,166 @@ export class ConfigService
     ];
   }
 
+  getAdditionalBlocksFromOptions(
+    injectedConfigOptions: BaseCommandOptions | undefined,
+    agentFileState: AgentFileServiceState | undefined,
+  ): {
+    injected: PackageIdentifier[];
+    additional: AssistantUnrolled;
+  } {
+    const packageIdentifiers: PackageIdentifier[] = [];
+    const additional: AssistantUnrolled = {
+      name: "hidden",
+      version: "1.0.0",
+      rules: [],
+      mcpServers: [],
+      prompts: [],
+    };
+
+    const {
+      model = [],
+      mcp = [],
+      rule = [],
+      prompt = [],
+    } = injectedConfigOptions || {};
+
+    // Models: all models will be package identifiers
+    if (agentFileState?.agentFile?.model) {
+      model.push(agentFileState.agentFile.model);
+    }
+    for (const _model of model) {
+      try {
+        packageIdentifiers.push(decodePackageIdentifier(_model));
+      } catch (e) {
+        logger.warn(`Failed to add modl "${_model}": ${getErrorString(e)}`);
+      }
+    }
+
+    // MCPs can be package identifiers or URLs
+    mcp.push(...(agentFileState?.parsedTools?.mcpServers || []));
+    for (const _mcp of mcp) {
+      try {
+        if (_mcp.startsWith("http://") || _mcp.startsWith("https://")) {
+          additional.mcpServers!.push({
+            name: new URL(_mcp).hostname,
+            url: _mcp,
+            // type: "streamable-http", // no need to exclude sse yet
+          });
+        } else {
+          packageIdentifiers.push(decodePackageIdentifier(_mcp));
+        }
+      } catch (e) {
+        logger.warn(`Failed to add MCP server "${_mcp}": ${getErrorString(e)}`);
+      }
+    }
+
+    // agent file rules can only be package identifiers
+    for (const r of agentFileState?.parsedRules || []) {
+      try {
+        packageIdentifiers.push(decodePackageIdentifier(r));
+      } catch (e) {
+        logger.warn(
+          `Failed to get rule "${r} (from agent file)": ${getErrorString(e)}`,
+        );
+      }
+    }
+
+    // Rule and prompt flags can be either package identifiers or strings
+    for (const _rule of [...rule, ...prompt]) {
+      try {
+        if (isStringRule(_rule)) {
+          additional.rules!.push(_rule);
+        } else {
+          packageIdentifiers.push(decodePackageIdentifier(_rule));
+        }
+      } catch (e) {
+        logger.warn(
+          `Failed to load rule or prompt "${_rule}": ${getErrorString(e)}`,
+        );
+      }
+    }
+
+    // Agent file prompt can only be a string
+    if (agentFileState?.agentFile?.prompt) {
+      additional.prompts!.push({
+        name: `Agent prompt (${agentFileState.agentFile.name})`,
+        prompt: agentFileState.agentFile.prompt,
+        description: agentFileState.agentFile.description,
+      });
+    }
+
+    // Todo ensure --model models take priority over config models
+    return {
+      injected: packageIdentifiers,
+      additional,
+    };
+  }
+
+  private async loadConfig(
+    init: ConfigServiceInit,
+  ): Promise<ConfigServiceState> {
+    const {
+      authConfig,
+      configPath,
+      apiClient,
+      injectedConfigOptions,
+      agentFileState,
+    } = init;
+    const { injected, additional } = this.getAdditionalBlocksFromOptions(
+      injectedConfigOptions,
+      agentFileState,
+    );
+
+    const result = await loadConfiguration(
+      authConfig,
+      configPath,
+      apiClient,
+      injected,
+    );
+
+    const loadedConfig = result.config;
+    const merged = mergeUnrolledAssistants(loadedConfig, additional);
+
+    // Config URI persistence is now handled by the streamlined loader
+    logger.debug("ConfigService initialized successfully");
+
+    const state = {
+      config: merged,
+      configPath,
+    };
+    this.setState(state);
+
+    return state;
+  }
+
   /**
    * Initialize the config service
    */
-  async doInitialize({
-    apiClient,
-    authConfig,
-    configPath,
-    agentFileState,
-    injectedConfigOptions,
-  }: ConfigServiceInit): Promise<ConfigServiceState> {
-    // Use the new streamlined config loader
-    const { loadConfiguration } = await import("../configLoader.js");
-    const result = await loadConfiguration(authConfig, configPath, apiClient);
-
-    let config = result.config;
-
-    // Apply injected config if provided
-    if (
-      agentFileState?.agentFile ||
-      (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions))
-    ) {
-      config = await configEnhancer.enhanceConfig(
-        config,
-        injectedConfigOptions,
-        agentFileState,
-      );
-
-      logger.debug("Applied injected configuration");
-    }
+  async doInitialize(init: ConfigServiceInit): Promise<ConfigServiceState> {
+    const result = await this.loadConfig(init);
 
     // Config URI persistence is now handled by the streamlined loader
-
     logger.debug("ConfigService initialized successfully");
 
-    return {
-      config,
-      configPath,
-    };
+    return result;
   }
 
   /**
    * Switch to a new configuration
    */
-  async switchConfig(
-    newConfigPath: string,
-    authConfig: AuthConfig,
-    _organizationId: string | null,
-    apiClient: DefaultApiInterface,
-    injectedConfigOptions?: BaseCommandOptions,
-  ): Promise<ConfigServiceState> {
+  async switchConfig(init: ConfigServiceInit): Promise<ConfigServiceState> {
     logger.debug("Switching configuration", {
       from: this.currentState.configPath,
-      to: newConfigPath,
+      to: init.configPath,
     });
 
     try {
-      // Use the new streamlined config loader
-      const { loadConfiguration } = await import("../configLoader.js");
-      const result = await loadConfiguration(
-        authConfig,
-        newConfigPath,
-        apiClient,
-      );
-
-      let config = result.config;
-
-      // Apply injected config if provided
-      if (
-        injectedConfigOptions &&
-        this.hasInjectedConfig(injectedConfigOptions)
-      ) {
-        config = await configEnhancer.enhanceConfig(
-          config,
-          injectedConfigOptions,
-        );
-
-        logger.debug("Applied injected configuration");
-      }
-
-      this.setState({
-        config,
-        configPath: newConfigPath,
-      });
-
-      // Config URI persistence is now handled by the streamlined loader
-
+      const state = await this.loadConfig(init);
       logger.debug("Configuration switched successfully", {
-        newConfigPath,
+        newConfigPath: init.configPath,
       });
 
-      return this.getState();
+      return state;
     } catch (error: any) {
       logger.error("Failed to switch configuration:", error);
       this.emit("error", error);
@@ -150,10 +226,7 @@ export class ConfigService
    * Reload the current configuration
    */
   async reload(
-    authConfig: AuthConfig,
-    _organizationId: string | null,
-    apiClient: DefaultApiInterface,
-    injectedConfigOptions?: BaseCommandOptions,
+    init: Omit<ConfigServiceInit, "configPath">,
   ): Promise<ConfigServiceState> {
     if (!this.currentState.configPath) {
       throw new Error("No configuration path available for reload");
@@ -161,25 +234,10 @@ export class ConfigService
 
     logger.debug("Reloading current configuration");
 
-    return this.switchConfig(
-      this.currentState.configPath,
-      authConfig,
-      _organizationId,
-      apiClient,
-      injectedConfigOptions,
-    );
-  }
-
-  /**
-   * Check if injected config options contain any config to inject
-   */
-  private hasInjectedConfig(options: BaseCommandOptions): boolean {
-    return !!(
-      (options.rule && options.rule.length > 0) ||
-      (options.mcp && options.mcp.length > 0) ||
-      (options.model && options.model.length > 0) ||
-      (options.prompt && options.prompt.length > 0)
-    );
+    return this.switchConfig({
+      ...init,
+      configPath: this.currentState.configPath,
+    });
   }
 
   /**
@@ -195,32 +253,25 @@ export class ConfigService
     try {
       // Get current auth and API client state needed for config loading
       const authConfig = loadAuthConfig();
-      const apiClientState = await serviceContainer.get<ApiClientServiceState>(
+      const { apiClient } = await serviceContainer.get<ApiClientServiceState>(
         SERVICE_NAMES.API_CLIENT,
       );
 
-      if (!apiClientState.apiClient) {
+      if (!apiClient) {
         throw new Error("API client not available");
       }
 
-      // Load the new configuration using streamlined loader
-      const { loadConfiguration } = await import("../configLoader.js");
-      const result = await loadConfiguration(
-        authConfig,
-        newConfigPath,
-        apiClientState.apiClient,
+      const agentFileState = await serviceContainer.get<AgentFileServiceState>(
+        SERVICE_NAMES.AGENT_FILE,
       );
 
-      // Update internal state
-      this.setState({
-        config: result.config,
+      const result = await this.loadConfig({
+        agentFileState,
+        apiClient,
+        authConfig,
         configPath: newConfigPath,
+        injectedConfigOptions: {},
       });
-
-      // Config URI persistence is now handled by the streamlined loader
-
-      // Update the CONFIG service in the container
-      serviceContainer.set(SERVICE_NAMES.CONFIG, this.getState());
 
       // Manually reload dependent services (MODEL, MCP) to pick up the new config
       await serviceContainer.reload(SERVICE_NAMES.MODEL);
@@ -228,12 +279,17 @@ export class ConfigService
 
       logger.debug("Configuration path updated successfully", {
         newConfigPath,
-        configName: result.config.name,
+        configName: result.config?.name,
       });
     } catch (error: any) {
       logger.error("Failed to update configuration path:", error);
       this.emit("error", error);
       throw error;
     }
+  }
+
+  setState(newState: Partial<ConfigServiceState>): void {
+    super.setState(newState);
+    serviceContainer.set(SERVICE_NAMES.CONFIG, this.currentState);
   }
 }

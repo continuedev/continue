@@ -1,125 +1,129 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
-import { describe, expect, it, vi } from "vitest";
+import { decodePackageIdentifier } from "@continuedev/config-yaml";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { isStringRule } from "src/hubLoader.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { ConfigEnhancer } from "../configEnhancer.js";
+import { ConfigService } from "../services/ConfigService.js";
 
-// Mock the processRule function to avoid network calls
-vi.mock("../hubLoader.js", () => ({
-  processRule: vi.fn((rule: string) => {
-    // Simulate hub slug loading - return content for hub slugs
-    if (rule.includes("/") && !rule.startsWith(".") && !rule.startsWith("/")) {
-      return Promise.resolve(`Content for ${rule}`);
-    }
-    // Return as-is for direct content
-    return Promise.resolve(rule);
-  }),
-  loadPackagesFromHub: vi.fn(() => Promise.resolve([])),
-  mcpProcessor: {},
-  modelProcessor: {},
+// Mock the required functions - need to match the import path used by ConfigService
+vi.mock("src/hubLoader.js", () => ({
+  isStringRule: vi.fn(),
 }));
 
-// Mock the service container to provide empty agent file state
-vi.mock("../services/ServiceContainer.js", () => ({
-  serviceContainer: {
-    get: vi.fn(() =>
-      Promise.resolve({
-        agentFile: null,
-        slug: null,
-      }),
-    ),
-  },
+vi.mock("@continuedev/config-yaml", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@continuedev/config-yaml")>()),
+  decodePackageIdentifier: vi.fn((id) => ({
+    type: "slug" as const,
+    slug: id,
+    version: undefined,
+  })),
 }));
 
-vi.mock("../services/types.js", () => ({
-  SERVICE_NAMES: {
-    AGENT_FILE: "agentFile",
+vi.mock("../configLoader.js", () => ({
+  loadConfiguration: vi.fn(),
+}));
+
+vi.mock("../auth/workos.js", () => ({
+  loadAuthConfig: vi.fn(),
+}));
+
+vi.mock("../util/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
 describe("Rule duplication integration test", () => {
-  it("should not duplicate rules when using --rule flag", async () => {
-    const enhancer = new ConfigEnhancer();
+  let configService: ConfigService;
 
-    // Initial config without any rules
-    const initialConfig: AssistantUnrolled = {
-      name: "Test Assistant",
-      rules: [],
-    } as any;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    configService = new ConfigService();
+
+    // Reset mocks to their default behavior
+    vi.mocked(decodePackageIdentifier).mockImplementation((id) => ({
+      uriType: "slug",
+      fullSlug: {
+        ownerSlug: "owner",
+        packageSlug: "package",
+        versionSlug: "version",
+      },
+    }));
+
+    // Reset isStringRule mock
+    vi.mocked(isStringRule).mockImplementation((rule: string) => {
+      // Default implementation - string rules contain spaces/newlines or are local paths
+      return (
+        rule.includes(" ") ||
+        rule.includes("\n") ||
+        rule.startsWith(".") ||
+        rule.startsWith("/") ||
+        !rule.includes("/")
+      );
+    });
+  });
+
+  it("should not duplicate rules when using --rule flag", () => {
+    // Setup mocks
+    vi.mocked(isStringRule).mockReturnValue(false); // "nate/spanish" is a package identifier
 
     // Simulate command-line options with --rule flag
     const options: BaseCommandOptions = {
       rule: ["nate/spanish"],
     };
 
-    // Enhance config with command-line rules
-    const enhancedConfig = await enhancer.enhanceConfig(initialConfig, options);
+    // Process the options through the config service
+    const { injected, additional } =
+      configService.getAdditionalBlocksFromOptions(options, undefined);
 
-    // Verify the rule was added exactly once as a RuleObject
-    expect(enhancedConfig.rules).toHaveLength(1);
-    expect(enhancedConfig.rules).toEqual([
-      { name: "nate/spanish", rule: "Content for nate/spanish" },
-    ]);
+    // The rule should be processed as a package identifier
+    expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+      "nate/spanish",
+    );
+    expect(injected).toHaveLength(1);
+    expect(additional.rules).toHaveLength(0); // Package identifier rules go into injected
   });
 
-  it("should merge command-line rules with existing config rules", async () => {
-    const enhancer = new ConfigEnhancer();
-
-    // Initial config with existing rules
-    const initialConfig: AssistantUnrolled = {
-      name: "Test Assistant",
-      rules: ["existing-rule"],
-    } as any;
+  it("should merge command-line rules with existing config rules", () => {
+    // Setup mocks for different rule types
+    vi.mocked(isStringRule)
+      .mockReturnValueOnce(false) // "nate/spanish" is a package identifier
+      .mockReturnValueOnce(true); // "direct-rule" is a string rule
 
     // Simulate command-line options with --rule flag
     const options: BaseCommandOptions = {
       rule: ["nate/spanish", "direct-rule"],
     };
 
-    // Enhance config with command-line rules
-    const enhancedConfig = await enhancer.enhanceConfig(initialConfig, options);
+    // Process the options through the config service
+    const { injected, additional } =
+      configService.getAdditionalBlocksFromOptions(options, undefined);
 
-    // Verify all rules are present without duplication
-    expect(enhancedConfig.rules).toHaveLength(3);
-    expect(enhancedConfig.rules).toEqual([
-      "existing-rule",
-      { name: "nate/spanish", rule: "Content for nate/spanish" },
-      "direct-rule",
-    ]);
+    // "nate/spanish" should be a package identifier, "direct-rule" should be a string rule
+    expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+      "nate/spanish",
+    );
+    expect(injected).toHaveLength(1); // nate/spanish
+    expect(additional.rules).toEqual(["direct-rule"]); // direct-rule as string
   });
 
-  it("should handle rule content with frontmatter", async () => {
-    const enhancer = new ConfigEnhancer();
-
-    // Mock processRule to return content with frontmatter
-    const { processRule } = await import("../hubLoader.js");
-    (processRule as any).mockImplementation((rule: string) => {
-      if (rule === "nate/spanish") {
-        return Promise.resolve(`---
-alwaysApply: true
----
-
-Always respond in Spanish.`);
-      }
-      return Promise.resolve(rule);
-    });
-
-    const initialConfig: AssistantUnrolled = {
-      name: "Test Assistant",
-      rules: [],
-    } as any;
+  it("should process package identifiers for hub rules", () => {
+    // Setup mock - all rules are package identifiers
+    vi.mocked(isStringRule).mockReturnValue(false);
 
     const options: BaseCommandOptions = {
       rule: ["nate/spanish"],
     };
 
-    const enhancedConfig = await enhancer.enhanceConfig(initialConfig, options);
+    const { injected, additional } =
+      configService.getAdditionalBlocksFromOptions(options, undefined);
 
-    // Hub rules should be stored as RuleObject with name and content
-    expect(enhancedConfig.rules).toHaveLength(1);
-    const ruleObj = enhancedConfig.rules?.[0] as any;
-    expect(ruleObj.name).toBe("nate/spanish");
-    expect(ruleObj.rule).toContain("Always respond in Spanish.");
-    expect(ruleObj.rule).toContain("alwaysApply: true");
+    // Hub rules should be processed as package identifiers, not string rules
+    expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+      "nate/spanish",
+    );
+    expect(injected).toHaveLength(1);
+    expect(additional.rules).toHaveLength(0); // Package identifier rules don't go into additional.rules
   });
 });

@@ -146,6 +146,7 @@ export async function initializeWithOnboarding(
         authConfig,
         configPath,
         getApiClient(authConfig?.accessToken),
+        [],
       );
     } catch (errorMessage) {
       throw new Error(

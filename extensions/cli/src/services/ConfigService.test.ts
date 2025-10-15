@@ -3,11 +3,16 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // Mock modules
 vi.mock("../auth/workos.js");
 vi.mock("../configLoader.js");
-vi.mock("../configEnhancer.js");
+vi.mock("../util/logger.js");
 vi.mock("./ServiceContainer.js");
+vi.mock("@continuedev/config-yaml");
+// Don't mock hubLoader - use real isStringRule implementation
 
+import {
+  decodePackageIdentifier,
+  mergeUnrolledAssistants,
+} from "@continuedev/config-yaml";
 import * as workos from "../auth/workos.js";
-import { configEnhancer } from "../configEnhancer.js";
 import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
@@ -26,12 +31,24 @@ describe("ConfigService", () => {
   const mockAgentFileState: AgentFileServiceState = {
     slug: null,
     agentFile: null,
-    agentFileModelName: null,
-    agentFileService: null,
+    agentFileModel: null,
+    parsedRules: null,
+    parsedTools: null,
   };
   beforeEach(() => {
     vi.clearAllMocks();
     service = new ConfigService();
+
+    // Setup mocks
+    vi.mocked(mergeUnrolledAssistants).mockReturnValue(mockConfig as any);
+    vi.mocked(decodePackageIdentifier).mockImplementation((id) => ({
+      uriType: "slug",
+      fullSlug: {
+        ownerSlug: "owner",
+        packageSlug: "package",
+        versionSlug: "version",
+      },
+    }));
   });
 
   describe("State Management", () => {
@@ -41,10 +58,9 @@ describe("ConfigService", () => {
         source: { type: "cli-flag", path: "/path/to/config.yaml" } as any,
       });
 
-      const state = await service.initialize({
+      const state = await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/path/to/config.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -53,6 +69,16 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         configPath: "/path/to/config.yaml",
       });
+      expect(vi.mocked(mergeUnrolledAssistants)).toHaveBeenCalledWith(
+        mockConfig,
+        expect.objectContaining({
+          name: "hidden",
+          version: "1.0.0",
+          rules: [],
+          mcpServers: [],
+          prompts: [],
+        }),
+      );
     });
 
     test("should initialize with undefined config path", async () => {
@@ -61,10 +87,9 @@ describe("ConfigService", () => {
         source: { type: "default-agent" } as any,
       });
 
-      const state = await service.initialize({
+      const state = await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: undefined,
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -75,7 +100,7 @@ describe("ConfigService", () => {
       });
     });
 
-    test("should inject rules into config", async () => {
+    test("should inject rules into config using mergeUnrolledAssistants", async () => {
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
@@ -83,26 +108,29 @@ describe("ConfigService", () => {
 
       const expectedConfig = {
         ...mockConfig,
-        systemMessage:
-          "Test system message\n\nProcessed: rule1\n\nProcessed: rule2",
+        rules: ["rule1", "rule2"],
       };
 
-      vi.mocked(configEnhancer.enhanceConfig).mockResolvedValue(expectedConfig);
+      vi.mocked(mergeUnrolledAssistants).mockReturnValue(expectedConfig);
 
-      const state = await service.initialize({
+      const state = await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/config.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
         injectedConfigOptions: { rule: ["rule1", "rule2"] },
       });
 
-      // Verify configEnhancer was called with the right parameters
-      expect(vi.mocked(configEnhancer.enhanceConfig)).toHaveBeenCalledWith(
+      // Verify mergeUnrolledAssistants was called with the right parameters
+      expect(vi.mocked(mergeUnrolledAssistants)).toHaveBeenCalledWith(
         mockConfig,
-        { rule: ["rule1", "rule2"] },
-        mockAgentFileState,
+        expect.objectContaining({
+          name: "hidden",
+          version: "1.0.0",
+          rules: ["rule1", "rule2"],
+          mcpServers: [],
+          prompts: [],
+        }),
       );
 
       expect(state.config).toEqual(expectedConfig);
@@ -116,10 +144,9 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -130,13 +157,14 @@ describe("ConfigService", () => {
         config: newConfig,
         source: { type: "cli-flag", path: "/new.yaml" } as any,
       });
+      vi.mocked(mergeUnrolledAssistants).mockReturnValue(newConfig);
 
-      const state = await service.switchConfig(
-        "/new.yaml",
-        { accessToken: "token" } as any,
-        "org-123",
-        mockApiClient as any,
-      );
+      const state = await service.switchConfig({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/new.yaml",
+        apiClient: mockApiClient as any,
+        agentFileState: mockAgentFileState,
+      });
 
       expect(state).toEqual({
         config: newConfig,
@@ -146,10 +174,9 @@ describe("ConfigService", () => {
     });
 
     test("should handle switch config errors", async () => {
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -159,12 +186,12 @@ describe("ConfigService", () => {
       );
 
       await expect(
-        service.switchConfig(
-          "/bad.yaml",
-          { accessToken: "token" } as any,
-          "org-123",
-          mockApiClient as any,
-        ),
+        service.switchConfig({
+          authConfig: { accessToken: "token" } as any,
+          configPath: "/bad.yaml",
+          apiClient: mockApiClient as any,
+          agentFileState: mockAgentFileState,
+        }),
       ).rejects.toThrow("Config not found");
     });
   });
@@ -176,10 +203,9 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/config.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -190,12 +216,13 @@ describe("ConfigService", () => {
         config: updatedConfig,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
+      vi.mocked(mergeUnrolledAssistants).mockReturnValue(updatedConfig);
 
-      const state = await service.reload(
-        { accessToken: "token" } as any,
-        "org-123",
-        mockApiClient as any,
-      );
+      const state = await service.reload({
+        authConfig: { accessToken: "token" } as any,
+        apiClient: mockApiClient as any,
+        agentFileState: mockAgentFileState,
+      });
 
       expect(state).toEqual({
         config: updatedConfig,
@@ -209,20 +236,19 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "default-agent" } as any,
       });
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: undefined,
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
 
       await expect(
-        service.reload(
-          { accessToken: "token" } as any,
-          "org-123",
-          mockApiClient as any,
-        ),
+        service.reload({
+          authConfig: { accessToken: "token" } as any,
+          apiClient: mockApiClient as any,
+          agentFileState: mockAgentFileState,
+        }),
       ).rejects.toThrow("No configuration path available for reload");
     });
   });
@@ -234,10 +260,9 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -247,9 +272,9 @@ describe("ConfigService", () => {
         accessToken: "token",
         organizationId: "org-123",
       } as any);
-      vi.mocked(serviceContainer.get).mockResolvedValue({
-        apiClient: mockApiClient,
-      });
+      vi.mocked(serviceContainer.get)
+        .mockResolvedValueOnce({ apiClient: mockApiClient })
+        .mockResolvedValueOnce(mockAgentFileState);
 
       // Mock new config load
       const newConfig = { ...mockConfig, name: "new-assistant" } as any;
@@ -257,6 +282,7 @@ describe("ConfigService", () => {
         config: newConfig,
         source: { type: "cli-flag", path: "/new.yaml" } as any,
       });
+      vi.mocked(mergeUnrolledAssistants).mockReturnValue(newConfig);
 
       await service.updateConfigPath("/new.yaml");
 
@@ -277,10 +303,9 @@ describe("ConfigService", () => {
     });
 
     test("should handle missing API client", async () => {
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -299,12 +324,89 @@ describe("ConfigService", () => {
     });
   });
 
+  describe("getAdditionalBlocksFromOptions()", () => {
+    test("should process command line options correctly", () => {
+      const options = {
+        rule: ["rule1", "owner/package-rule"],
+        prompt: ["prompt1"],
+        model: ["gpt-4"],
+        mcp: ["owner/mcp-server", "https://example.com/mcp"],
+      };
+      const agentFileState = {
+        agentFile: {
+          name: "test-agent",
+          model: "agent-model",
+          prompt: "Agent prompt",
+        },
+        parsedRules: ["agent/rule"],
+        parsedTools: {
+          mcpServers: ["agent/mcp"],
+        },
+      } as any;
+
+      const result = service.getAdditionalBlocksFromOptions(
+        options,
+        agentFileState,
+      );
+
+      // Should have package identifiers from models, MCPs, and non-string rules
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith("gpt-4");
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+        "agent-model",
+      );
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+        "owner/package-rule",
+      );
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+        "owner/mcp-server",
+      );
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+        "agent/rule",
+      );
+      expect(vi.mocked(decodePackageIdentifier)).toHaveBeenCalledWith(
+        "agent/mcp",
+      );
+
+      // Should have additional blocks with string rules and URL MCPs
+      expect(result.additional.rules).toContain("rule1");
+      expect(result.additional.rules).toContain("prompt1");
+      expect(result.additional.mcpServers).toEqual([
+        expect.objectContaining({
+          name: "example.com",
+          url: "https://example.com/mcp",
+        }),
+      ]);
+      expect(result.additional.prompts).toEqual([
+        expect.objectContaining({
+          name: "Agent prompt (test-agent)",
+          prompt: "Agent prompt",
+        }),
+      ]);
+    });
+
+    test("should handle empty options", () => {
+      const result = service.getAdditionalBlocksFromOptions(
+        undefined,
+        undefined,
+      );
+
+      expect(result.injected).toEqual([]);
+      expect(result.additional).toEqual({
+        name: "hidden",
+        version: "1.0.0",
+        rules: [],
+        mcpServers: [],
+        prompts: [],
+      });
+    });
+  });
+
   describe("getDependencies()", () => {
-    test("should declare auth and apiClient dependencies", () => {
+    test("should declare auth, apiClient, and agentFile dependencies", () => {
       expect(service.getDependencies()).toEqual([
-        "auth",
-        "apiClient",
-        "agentFile",
+        SERVICE_NAMES.AUTH,
+        SERVICE_NAMES.API_CLIENT,
+        SERVICE_NAMES.AGENT_FILE,
       ]);
     });
   });
@@ -315,10 +417,9 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
       });
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -331,13 +432,14 @@ describe("ConfigService", () => {
         config: newConfig,
         source: { type: "cli-flag", path: "/new.yaml" } as any,
       });
+      vi.mocked(mergeUnrolledAssistants).mockReturnValue(newConfig);
 
-      await service.switchConfig(
-        "/new.yaml",
-        { accessToken: "token" } as any,
-        "org-123",
-        mockApiClient as any,
-      );
+      await service.switchConfig({
+        authConfig: { accessToken: "token" } as any,
+        configPath: "/new.yaml",
+        apiClient: mockApiClient as any,
+        agentFileState: mockAgentFileState,
+      });
 
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({ config: newConfig, configPath: "/new.yaml" }),
@@ -349,10 +451,9 @@ describe("ConfigService", () => {
     });
 
     test("should emit error on switch failure", async () => {
-      await service.initialize({
+      await service.doInitialize({
         authConfig: { accessToken: "token" } as any,
         configPath: "/old.yaml",
-        _organizationId: "org-123",
         apiClient: mockApiClient as any,
         agentFileState: mockAgentFileState,
       });
@@ -364,12 +465,12 @@ describe("ConfigService", () => {
       vi.mocked(configLoader.loadConfiguration).mockRejectedValue(error);
 
       await expect(
-        service.switchConfig(
-          "/bad.yaml",
-          { accessToken: "token" } as any,
-          "org-123",
-          mockApiClient as any,
-        ),
+        service.switchConfig({
+          authConfig: { accessToken: "token" } as any,
+          configPath: "/bad.yaml",
+          apiClient: mockApiClient as any,
+          agentFileState: mockAgentFileState,
+        }),
       ).rejects.toThrow();
       expect(errorListener).toHaveBeenCalledWith(error);
     });

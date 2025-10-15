@@ -60,8 +60,8 @@ export class ModelService
     let modelSource = "default";
 
     // Priority = agentFile -> last selected model
-    if (agentFileServiceState?.agentFileModelName) {
-      preferredModelName = agentFileServiceState.agentFileModelName;
+    if (agentFileServiceState?.agentFileModel?.name) {
+      preferredModelName = agentFileServiceState.agentFileModel?.name;
       modelSource = "agentFile";
     } else {
       preferredModelName = getModelName(authConfig);
