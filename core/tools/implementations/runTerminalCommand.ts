@@ -2,6 +2,7 @@ import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
 import util from "node:util";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
   if (process.platform === "win32") {
@@ -337,7 +338,8 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 if (code === 0) {
                   resolve({ stdout, stderr });
                 } else {
-                  const error = new Error(
+                  const error = new ContinueError(
+                    ContinueErrorReason.CommandExecutionFailed,
                     `Command failed with exit code ${code}`,
                   );
                   (error as any).stderr = stderr;

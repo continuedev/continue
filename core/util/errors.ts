@@ -47,6 +47,20 @@ export enum ContinueErrorReason {
   FileWriteError = "file_write_error",
   FileIsSecurityConcern = "file_is_security_concern",
   ParentDirectoryNotFound = "parent_directory_not_found",
+  FileTooLarge = "file_too_large",
+  PathResolutionFailed = "path_resolution_failed",
+  InvalidLineNumber = "invalid_line_number",
+  DirectoryNotFound = "directory_not_found",
+
+  // Terminal/Command execution
+  CommandExecutionFailed = "command_execution_failed",
+  CommandNotAvailableInRemote = "command_not_available_in_remote",
+
+  // Search
+  SearchExecutionFailed = "search_execution_failed",
+
+  // Rules
+  RuleNotFound = "rule_not_found",
 
   // Other
   Unspecified = "unspecified", // I.e. a known error but no specific code for it

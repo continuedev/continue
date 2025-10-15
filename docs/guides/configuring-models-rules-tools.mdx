@@ -5,7 +5,7 @@ description: "Learn how to work with Continue's configuration system. Understand
 
 ## What Are Models, Rules, and Tools?
 
-Continue agents are built from three main types of configuration:
+Continue configs are built from three main types of configuration:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
@@ -35,14 +35,14 @@ Pre-built models, rules, and tools from the Continue community that you can impo
 
 ## Local
 
-Local configurations let you create custom models, rules, and tools that automatically apply to multiple agents, reducing duplication and ensuring consistency across your setup.
+Local configurations let you create custom models, rules, and tools that automatically apply to multiple configs, reducing duplication and ensuring consistency across your setup.
 
 <Columns cols={2}>
 <Card title="Global" icon="globe">
-Applied to all agents across all workspaces. Ideal for personal preferences, universal coding standards, or tools you use everywhere.
+Applied to all configs across all workspaces. Ideal for personal preferences, universal coding standards, or tools you use everywhere.
 </Card>
 <Card title="Workspace" icon="folder-open">
-Applied automatically to all agents when working in a specific project.
+Applied automatically to all configs when working in a specific project.
 
 Perfect for project-specific setups like TypeScript rules for web apps or the Playwright MCP tool.
 
@@ -59,7 +59,7 @@ For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthrop
 Import from the hub using the `uses` syntax alongside your custom configurations:
 
 ```yaml config.yaml highlight={6}
-name: Team Agent
+name: Team Config
 version: 1.0.0
 schema: v1
 
@@ -125,7 +125,7 @@ This pattern is inspired by GitHub Actions, where inputs provide an abstraction 
 You can directly override properties using the `override` syntax:
 
 ```yaml title="config.yaml" highlight={10-13}
-name: myprofile/custom-agent
+name: myprofile/custom-config
 version: 1.0.0
 schema: v1
 
@@ -161,7 +161,7 @@ models:
 Users then map their secret to this input using a `${{ secrets.SECRET_NAME }}` value that maps to a property name which matches the required input, e.g. `SECRET_NAME`.
 
 ```yaml title="config.yaml" highlight={8}
-name: myprofile/custom-agent
+name: myprofile/custom-config
 version: 1.0.0
 schema: v1
 
