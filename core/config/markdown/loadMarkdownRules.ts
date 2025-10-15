@@ -3,7 +3,7 @@ import {
   markdownToRule,
 } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
-import { RULES_DIR_NAME } from "../../promptFiles";
+import { PROMPTS_DIR_NAME, RULES_DIR_NAME } from "../../promptFiles";
 import { joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
@@ -54,8 +54,8 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     }
   }
 
-  // Load markdown files from both .continue/rules
-  const dirsToCheck = [RULES_DIR_NAME];
+  // Load markdown files from both .continue/rules and .continue/prompts
+  const dirsToCheck = [RULES_DIR_NAME, PROMPTS_DIR_NAME];
 
   for (const dirName of dirsToCheck) {
     try {
