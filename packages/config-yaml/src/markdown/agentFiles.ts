@@ -157,6 +157,6 @@ export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
 export function parseAgentFileRules(rules: string) {
   return rules
     .split(",")
-    .filter(Boolean)
-    .map((r) => r.trim());
+    .map((r) => r.trim())
+    .filter(Boolean);
 }

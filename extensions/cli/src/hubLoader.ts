@@ -302,7 +302,10 @@ export function isStringRule(rule: string) {
   if (rule.includes(" ") || rule.includes("\n")) {
     return true;
   }
-  if (["file:/", ".", "/", "~"].some((prefix) => rule.startsWith(prefix))) {
+  if (
+    ["file:/", ".", "/", "~"].some((prefix) => rule.startsWith(prefix)) ||
+    rule.includes("\\")
+  ) {
     return false;
   }
   if (HUB_SLUG_PATTERN.test(rule)) {

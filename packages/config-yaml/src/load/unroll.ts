@@ -240,13 +240,15 @@ export async function unrollAssistant(
 }
 
 export function replaceInputsWithSecrets(yamlContent: string): string {
-  const inputsToSecrets = Object.fromEntries(
-    getTemplateVariables(yamlContent)
-      .filter((v) => v.startsWith("inputs."))
-      .map((v) => [v, `\${{ ${v.replace("inputs.", "secrets.")} }}`]),
-  );
+  const inputsToSecretsMap: Record<string, string> = {};
 
-  return renderTemplateData(yamlContent, { secrets: inputsToSecrets });
+  getTemplateVariables(yamlContent)
+    .filter((v) => v.startsWith("inputs."))
+    .forEach((v) => {
+      inputsToSecretsMap[v] = `\${{ ${v.replace("inputs.", "secrets.")} }}`;
+    });
+
+  return fillTemplateVariables(yamlContent, inputsToSecretsMap);
 }
 
 function renderTemplateData(
@@ -539,19 +541,13 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
-            // Replace inputs with secrets for injected blocks since they can't render inputs
             const blockConfigYamlWithSecrets =
               replaceInputsWithSecrets(blockConfigYaml);
-            const parsedBlock = parseMarkdownRuleOrConfigYaml(
+            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
               blockConfigYamlWithSecrets,
               injectBlock,
             );
-            const blockType = getBlockType(parsedBlock);
-            const resolvedBlock = await resolveBlock(
-              injectBlock,
-              undefined,
-              registry,
-            );
+            const blockType = getBlockType(resolvedBlock);
 
             return {
               blockType,
