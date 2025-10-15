@@ -222,8 +222,8 @@ function InputToolbar(props: InputToolbarProps) {
                   props.onEnter({
                     useCodebase: false,
                     noContext: useActiveFile
-                      ? !(isMetaEquivalentKeyPressed(e as any) || e.altKey)
-                      : isMetaEquivalentKeyPressed(e as any) || e.altKey,
+                      ? isMetaEquivalentKeyPressed(e as any) || e.altKey
+                      : !isMetaEquivalentKeyPressed(e as any) || e.altKey,
                   });
                 }
               }}
