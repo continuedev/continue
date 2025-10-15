@@ -382,6 +382,7 @@ export async function unrollPackageIdentifiersAsConfigYaml(
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       renderSecrets: true,
       injectBlocks: packageIdentifiers,
+      replaceInputsWithSecrets: true,
     },
   );
   if (!unrollResult?.config) {
@@ -515,7 +516,7 @@ async function loadAssistantSlug(
     }
   }
 
-  return result.config as AssistantUnrolled;
+  return apiConfig;
 }
 
 /**

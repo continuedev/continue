@@ -1,24 +1,20 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-
-// Mock modules
-vi.mock("../auth/workos.js");
-vi.mock("../configLoader.js");
-vi.mock("../util/logger.js");
-vi.mock("./ServiceContainer.js");
-vi.mock("@continuedev/config-yaml");
-// Don't mock hubLoader - use real isStringRule implementation
-
 import {
   decodePackageIdentifier,
   mergeUnrolledAssistants,
 } from "@continuedev/config-yaml";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import * as workos from "../auth/workos.js";
 import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { AgentFileServiceState, SERVICE_NAMES } from "./types.js";
-
+vi.mock("../auth/workos.js");
+vi.mock("../configLoader.js");
+vi.mock("../util/logger.js");
+vi.mock("./ServiceContainer.js");
+vi.mock("@continuedev/config-yaml");
 describe("ConfigService", () => {
   let service: ConfigService;
   const mockConfig = {

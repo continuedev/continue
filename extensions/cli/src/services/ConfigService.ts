@@ -1,18 +1,19 @@
-import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
-
-import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
-import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { loadConfiguration } from "../configLoader.js";
-import { logger } from "../util/logger.js";
-
 import {
   AssistantUnrolled,
   decodePackageIdentifier,
   mergeUnrolledAssistants,
   PackageIdentifier,
 } from "@continuedev/config-yaml";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
+
 import { isStringRule } from "src/hubLoader.js";
 import { getErrorString } from "src/util/error.js";
+
+import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
+import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
+import { loadConfiguration } from "../configLoader.js";
+import { logger } from "../util/logger.js";
+
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -71,70 +72,118 @@ export class ConfigService
       prompts: [],
     };
 
-    const {
-      model = [],
-      mcp = [],
-      rule = [],
-      prompt = [],
-    } = injectedConfigOptions || {};
+    const options = injectedConfigOptions || {};
 
-    // Models: all models will be package identifiers
+    this.processModels(options.model || [], agentFileState, packageIdentifiers);
+    this.processMcpServers(
+      options.mcp || [],
+      agentFileState,
+      packageIdentifiers,
+      additional,
+    );
+    this.processAgentFileRules(agentFileState, packageIdentifiers);
+    this.processRulesAndPrompts(
+      options.rule || [],
+      options.prompt || [],
+      packageIdentifiers,
+      additional,
+    );
+    this.processAgentFilePrompt(agentFileState, additional);
+
+    return {
+      injected: packageIdentifiers,
+      additional,
+    };
+  }
+
+  private processModels(
+    models: string[],
+    agentFileState: AgentFileServiceState | undefined,
+    packageIdentifiers: PackageIdentifier[],
+  ): void {
+    const allModels = [...models];
     if (agentFileState?.agentFile?.model) {
-      model.push(agentFileState.agentFile.model);
+      allModels.push(agentFileState.agentFile.model);
     }
-    for (const _model of model) {
+
+    for (const model of allModels) {
       try {
-        packageIdentifiers.push(decodePackageIdentifier(_model));
+        packageIdentifiers.push(decodePackageIdentifier(model));
       } catch (e) {
-        logger.warn(`Failed to add modl "${_model}": ${getErrorString(e)}`);
+        logger.warn(`Failed to add model "${model}": ${getErrorString(e)}`);
       }
     }
+  }
 
-    // MCPs can be package identifiers or URLs
-    mcp.push(...(agentFileState?.parsedTools?.mcpServers || []));
-    for (const _mcp of mcp) {
+  private processMcpServers(
+    mcps: string[],
+    agentFileState: AgentFileServiceState | undefined,
+    packageIdentifiers: PackageIdentifier[],
+    additional: AssistantUnrolled,
+  ): void {
+    const allMcps = [
+      ...mcps,
+      ...(agentFileState?.parsedTools?.mcpServers || []),
+    ];
+
+    for (const mcp of allMcps) {
       try {
-        if (_mcp.startsWith("http://") || _mcp.startsWith("https://")) {
+        if (this.isUrl(mcp)) {
           additional.mcpServers!.push({
-            name: new URL(_mcp).hostname,
-            url: _mcp,
-            // type: "streamable-http", // no need to exclude sse yet
+            name: new URL(mcp).hostname,
+            url: mcp,
           });
         } else {
-          packageIdentifiers.push(decodePackageIdentifier(_mcp));
+          packageIdentifiers.push(decodePackageIdentifier(mcp));
         }
       } catch (e) {
-        logger.warn(`Failed to add MCP server "${_mcp}": ${getErrorString(e)}`);
+        logger.warn(`Failed to add MCP server "${mcp}": ${getErrorString(e)}`);
       }
     }
+  }
 
-    // agent file rules can only be package identifiers
-    for (const r of agentFileState?.parsedRules || []) {
+  private processAgentFileRules(
+    agentFileState: AgentFileServiceState | undefined,
+    packageIdentifiers: PackageIdentifier[],
+  ): void {
+    for (const rule of agentFileState?.parsedRules || []) {
       try {
-        packageIdentifiers.push(decodePackageIdentifier(r));
+        packageIdentifiers.push(decodePackageIdentifier(rule));
       } catch (e) {
         logger.warn(
-          `Failed to get rule "${r} (from agent file)": ${getErrorString(e)}`,
+          `Failed to get rule "${rule} (from agent file)": ${getErrorString(e)}`,
         );
       }
     }
+  }
 
-    // Rule and prompt flags can be either package identifiers or strings
-    for (const _rule of [...rule, ...prompt]) {
+  private processRulesAndPrompts(
+    rules: string[],
+    prompts: string[],
+    packageIdentifiers: PackageIdentifier[],
+    additional: AssistantUnrolled,
+  ): void {
+    const allRulesAndPrompts = [...rules, ...prompts];
+
+    for (const item of allRulesAndPrompts) {
       try {
-        if (isStringRule(_rule)) {
-          additional.rules!.push(_rule);
+        if (isStringRule(item)) {
+          additional.rules!.push(item);
         } else {
-          packageIdentifiers.push(decodePackageIdentifier(_rule));
+          packageIdentifiers.push(decodePackageIdentifier(item));
         }
       } catch (e) {
         logger.warn(
-          `Failed to load rule or prompt "${_rule}": ${getErrorString(e)}`,
+          `Failed to load rule or prompt "${item}": ${getErrorString(e)}`,
         );
       }
     }
+  }
 
-    // Agent file prompt can only be a string
+  private processAgentFilePrompt(
+    agentFileState: AgentFileServiceState | undefined,
+    additional: AssistantUnrolled,
+  ): void {
     if (agentFileState?.agentFile?.prompt) {
       additional.prompts!.push({
         name: `Agent prompt (${agentFileState.agentFile.name})`,
@@ -142,12 +191,10 @@ export class ConfigService
         description: agentFileState.agentFile.description,
       });
     }
+  }
 
-    // Todo ensure --model models take priority over config models
-    return {
-      injected: packageIdentifiers,
-      additional,
-    };
+  private isUrl(value: string): boolean {
+    return value.startsWith("http://") || value.startsWith("https://");
   }
 
   private async loadConfig(

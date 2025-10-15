@@ -1,6 +1,6 @@
+import { Configuration, DefaultApi } from "@continuedev/sdk/dist/api";
 import { vi } from "vitest";
 
-import { Configuration, DefaultApi } from "@continuedev/sdk/dist/api";
 import { initializeServices, services } from "./index.js";
 
 // Mock the onboarding module

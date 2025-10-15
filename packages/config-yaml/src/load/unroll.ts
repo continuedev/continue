@@ -215,6 +215,7 @@ export interface DoNotRenderSecretsUnrollAssistantOptions
 export interface RenderSecretsUnrollAssistantOptions
   extends BaseUnrollAssistantOptions {
   renderSecrets: true;
+  replaceInputsWithSecrets?: boolean;
   orgScopeId: string | null;
   currentUserSlug: string;
   platformClient: PlatformClient;
@@ -294,7 +295,7 @@ export async function unrollAssistantFromContent(
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
-  const templatedYaml = renderTemplateData(rawUnrolledYaml, {
+  let templatedYaml = renderTemplateData(rawUnrolledYaml, {
     secrets: extractFQSNMap(rawUnrolledYaml, [id]),
   });
 
@@ -304,6 +305,10 @@ export async function unrollAssistantFromContent(
       errors: [],
       configLoadInterrupted: false,
     };
+  }
+
+  if (options.replaceInputsWithSecrets) {
+    templatedYaml = replaceInputsWithSecrets(templatedYaml);
   }
 
   // Render secret values/locations for client

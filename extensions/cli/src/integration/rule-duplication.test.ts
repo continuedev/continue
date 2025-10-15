@@ -2,6 +2,7 @@ import { decodePackageIdentifier } from "@continuedev/config-yaml";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { isStringRule } from "src/hubLoader.js";
+
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { ConfigService } from "../services/ConfigService.js";
 
