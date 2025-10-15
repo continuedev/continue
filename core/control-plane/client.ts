@@ -614,7 +614,7 @@ export class ControlPlaneClient {
     messageQueueLength: number;
     pendingPermission: any;
   } | null> {
-    debugger;
+    // debugger;
     if (!(await this.isSignedIn())) {
       return null;
     }
