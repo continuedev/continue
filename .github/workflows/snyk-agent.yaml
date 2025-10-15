@@ -25,6 +25,6 @@ jobs:
         run: npm install -g @continuedev/cli@latest
 
       - name: Run Snyk Agent
-        run: cd extensions/cli && cn --agent continuedev/snyk-code-scan-agent "The current directory"
+        run: cd extensions/cli && cn -p --agent continuedev/snyk-code-scan-agent "The current directory"
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
