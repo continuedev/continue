@@ -24,7 +24,9 @@ export async function getPromptFilesFromDir(
     const uris = await walkDir(dir, ide, {
       source: "get dir prompt files",
     });
-    const promptFilePaths = uris.filter((p) => p.endsWith(".prompt"));
+    const promptFilePaths = uris.filter(
+      (p) => p.endsWith(".prompt") || p.endsWith(".md"),
+    );
     const results = promptFilePaths.map(async (uri) => {
       const content = await ide.readFile(uri); // make a try catch
       return { path: uri, content };
@@ -60,6 +62,8 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
+  console.log("debug1 prompt files", promptFiles);
+
   // Also read from ~/.continue/prompts and ~/.continue/rules
   promptFiles.push(...readAllGlobalPromptFiles());
 
@@ -68,10 +72,12 @@ export async function getAllPromptFiles(
   );
   promptFiles.push(...promptFilesFromRulesDirectory);
 
-  return await Promise.all(
+  const result = await Promise.all(
     promptFiles.map(async (file) => {
       const content = await ide.readFile(file.path);
       return { path: file.path, content };
     }),
   );
+  console.log("debug1 result", result);
+  return result;
 }
