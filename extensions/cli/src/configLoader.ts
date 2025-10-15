@@ -382,7 +382,6 @@ export async function unrollPackageIdentifiersAsConfigYaml(
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       renderSecrets: true,
       injectBlocks: packageIdentifiers,
-      replaceInputsWithSecrets: true,
     },
   );
   if (!unrollResult?.config) {

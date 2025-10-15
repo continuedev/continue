@@ -215,7 +215,6 @@ export interface DoNotRenderSecretsUnrollAssistantOptions
 export interface RenderSecretsUnrollAssistantOptions
   extends BaseUnrollAssistantOptions {
   renderSecrets: true;
-  replaceInputsWithSecrets?: boolean;
   orgScopeId: string | null;
   currentUserSlug: string;
   platformClient: PlatformClient;
@@ -305,10 +304,6 @@ export async function unrollAssistantFromContent(
       errors: [],
       configLoadInterrupted: false,
     };
-  }
-
-  if (options.replaceInputsWithSecrets) {
-    templatedYaml = replaceInputsWithSecrets(templatedYaml);
   }
 
   // Render secret values/locations for client
@@ -544,8 +539,11 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
+            // Replace inputs with secrets for injected blocks since they can't render inputs
+            const blockConfigYamlWithSecrets =
+              replaceInputsWithSecrets(blockConfigYaml);
             const parsedBlock = parseMarkdownRuleOrConfigYaml(
-              blockConfigYaml,
+              blockConfigYamlWithSecrets,
               injectBlock,
             );
             const blockType = getBlockType(parsedBlock);

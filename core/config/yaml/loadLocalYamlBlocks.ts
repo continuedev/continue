@@ -37,7 +37,6 @@ export async function unrollLocalYamlBlocks(
           ide,
         ),
         renderSecrets: true,
-        replaceInputsWithSecrets: true,
         injectBlocks: packageIdentifiers,
       },
     );
