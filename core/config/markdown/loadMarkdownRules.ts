@@ -37,7 +37,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
           });
           rules.push({
             ...rule,
-            source: "agent-file",
+            source: "agentFile",
             sourceFile: agentFileUri,
             alwaysApply: true,
           });

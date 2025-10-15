@@ -7,7 +7,6 @@ import {
 import {
   Configuration,
   DefaultApi,
-  DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import {
@@ -15,9 +14,7 @@ import {
   getAccessToken,
   getOrganizationId,
 } from "./auth/workos.js";
-import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
-import { MCPService } from "./services/MCPService.js";
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
@@ -95,24 +92,4 @@ export function getApiClient(
       accessToken: accessToken ?? undefined,
     }),
   );
-}
-
-export async function initialize(
-  authConfig: AuthConfig,
-  configPath: string | undefined,
-): Promise<{
-  config: AssistantUnrolled;
-  llmApi: BaseLlmApi;
-  model: ModelConfig;
-  mcpService: MCPService;
-  apiClient: DefaultApiInterface;
-}> {
-  const apiClient = getApiClient(authConfig?.accessToken);
-  const result = await loadConfiguration(authConfig, configPath, apiClient);
-  const config = result.config;
-  const [llmApi, model] = getLlmApi(config, authConfig);
-  const mcpService = new MCPService();
-  await mcpService.initialize(config, false);
-
-  return { config, llmApi, model, mcpService, apiClient };
 }

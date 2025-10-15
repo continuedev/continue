@@ -1,6 +1,7 @@
-import { parseWorkflowFile, WorkflowFile } from "@continuedev/config-yaml";
+import { AgentFile, parseAgentFile } from "@continuedev/config-yaml";
 import JSZip from "jszip";
 
+import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
@@ -12,7 +13,7 @@ const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 /**
  * Hub package type definitions
  */
-export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "workflow";
+export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "agentFile";
 
 /**
  * Hub package processor interface
@@ -100,17 +101,19 @@ export const promptProcessor: HubPackageProcessor<string> = {
   parseContent: (content: string) => content,
 };
 
-export const workflowProcessor: HubPackageProcessor<WorkflowFile> = {
-  type: "workflow",
+export const agentFileProcessor: HubPackageProcessor<AgentFile> = {
+  type: "agentFile",
   expectedFileExtensions: [".md"],
-  parseContent: (content: string) => parseWorkflowFile(content),
-  validateContent: (workflowFile: WorkflowFile) => {
-    return !!workflowFile.name;
+  parseContent: (content: string) => parseAgentFile(content),
+  validateContent: (agentFile: AgentFile) => {
+    return !!agentFile.name;
   },
 };
 
 /**
  * Generic hub package loader
+ * Automatically includes authentication headers when user is logged in,
+ * enabling access to private packages.
  */
 export async function loadPackageFromHub<T>(
   slug: string,
@@ -142,7 +145,17 @@ export async function loadPackageFromHub<T>(
   }
 
   try {
-    const response = await fetch(downloadUrl);
+    // Load auth config and get access token for private package access
+    const authConfig = loadAuthConfig();
+    const accessToken = getAccessToken(authConfig);
+
+    // Prepare headers with optional authorization
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(downloadUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

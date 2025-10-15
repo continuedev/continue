@@ -3,6 +3,7 @@ import { inferResolvedUriFromRelativePath } from "../../util/ideUtils";
 import { ToolImpl } from ".";
 import { getCleanUriPath, getUriPathBasename } from "../../util/uri";
 import { getStringArg } from "../parseArgs";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const createNewFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
@@ -15,7 +16,8 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
   if (resolvedFileUri) {
     const exists = await extras.ide.fileExists(resolvedFileUri);
     if (exists) {
-      throw new Error(
+      throw new ContinueError(
+        ContinueErrorReason.FileAlreadyExists,
         `File ${filepath} already exists. Use the edit tool to edit this file`,
       );
     }
@@ -37,6 +39,9 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
       },
     ];
   } else {
-    throw new Error("Failed to resolve path");
+    throw new ContinueError(
+      ContinueErrorReason.PathResolutionFailed,
+      "Failed to resolve path",
+    );
   }
 };

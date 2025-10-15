@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { FromCoreProtocol } from "core/protocol";
@@ -22,7 +22,7 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
-import { refreshSessionMetadata } from "../redux/thunks/session";
+import { loadSession, refreshSessionMetadata } from "../redux/thunks/session";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import {
   setDocumentStylesFromLocalStorage,
@@ -45,6 +45,8 @@ function ParallelListeners() {
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
+  const lastSessionId = useAppSelector((store) => store.session.lastSessionId);
+  const [initialSessionId] = useState(sessionId || lastSessionId);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -104,6 +106,14 @@ function ParallelListeners() {
         await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
+      if (initialSessionId) {
+        await dispatch(
+          loadSession({
+            sessionId: initialSessionId,
+            saveCurrentSession: false,
+          }),
+        );
+      }
     }
     void initialLoadConfig();
     const interval = setInterval(() => {
@@ -121,7 +131,7 @@ function ParallelListeners() {
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasDoneInitialConfigLoad, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, ideMessenger, initialSessionId]);
 
   useWebviewListener(
     "configUpdate",

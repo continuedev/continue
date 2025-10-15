@@ -246,6 +246,10 @@ export class NextEditLoggingService {
           }),
         },
       );
-    } catch (error) {}
+      const text = await resp.text();
+      console.debug("Feedback: ", text);
+    } catch (error: any) {
+      console.debug(`Error capturing feedback: ${error.message}`);
+    }
   }
 }

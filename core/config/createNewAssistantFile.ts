@@ -1,17 +1,14 @@
 import { IDE } from "..";
 import { joinPathsToUri } from "../util/uri";
 
-const DEFAULT_ASSISTANT_FILE = `# This is an example agent configuration file
-# It is used to define custom AI agents within Continue
-# Each agent file can be accessed by selecting it from the agent dropdown
-
+const DEFAULT_ASSISTANT_FILE = `# This is an example configuration file
 # To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
 
-name: Example Agent
+name: Example Config
 version: 1.0.0
 schema: v1
 
-# Models define which AI models this agent can use
+# Define which models can be used
 # https://docs.continue.dev/customization/models
 models:
   - name: my gpt-5
@@ -23,7 +20,7 @@ models:
     with:
       ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}
 
-# MCP Servers the agent can use
+# MCP Servers that Continue can access
 # https://docs.continue.dev/customization/mcp-tools
 mcpServers:
   - uses: anthropic/memory-mcp
@@ -50,7 +47,7 @@ export async function createNewAssistantFile(
   let assistantFileUri: string;
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
-    assistantFileUri = joinPathsToUri(baseDirUri, `new-agent${suffix}.yaml`);
+    assistantFileUri = joinPathsToUri(baseDirUri, `new-config${suffix}.yaml`);
     counter++;
   } while (await ide.fileExists(assistantFileUri));
 

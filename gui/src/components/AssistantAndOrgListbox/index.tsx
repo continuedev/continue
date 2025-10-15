@@ -80,8 +80,8 @@ export function AssistantAndOrgListbox({
     close();
   }
 
-  function onAgentsConfig() {
-    navigate(CONFIG_ROUTES.AGENTS);
+  function onConfigsConfig() {
+    navigate(CONFIG_ROUTES.CONFIGS);
     close();
   }
 
@@ -155,7 +155,7 @@ export function AssistantAndOrgListbox({
           >
             <div className="flex items-center justify-between px-1.5 py-1">
               <span className="text-description text-xs font-medium">
-                Agents
+                Configs
               </span>
               <div className="flex items-center gap-0.5">
                 <Button
@@ -172,7 +172,7 @@ export function AssistantAndOrgListbox({
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAgentsConfig();
+                    onConfigsConfig();
                   }}
                   variant="ghost"
                   size="sm"
@@ -291,7 +291,7 @@ export function AssistantAndOrgListbox({
             <div>
               <div className="text-description flex items-center justify-start px-2 py-1">
                 <span className="block" style={{ fontSize: tinyFont }}>
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle config
                 </span>
               </div>
             </div>

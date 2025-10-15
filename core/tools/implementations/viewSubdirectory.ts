@@ -2,6 +2,7 @@ import generateRepoMap from "../../util/generateRepoMap";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { getStringArg } from "../parseArgs";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
@@ -10,7 +11,10 @@ export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const uri = await resolveRelativePathInDir(directory_path, extras.ide);
 
   if (!uri) {
-    throw new Error(`Directory path "${directory_path}" does not exist.`);
+    throw new ContinueError(
+      ContinueErrorReason.DirectoryNotFound,
+      `Directory path "${directory_path}" does not exist.`,
+    );
   }
 
   const repoMap = await generateRepoMap(extras.llm, extras.ide, {

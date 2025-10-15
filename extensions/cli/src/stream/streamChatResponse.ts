@@ -299,7 +299,7 @@ export async function processStreamingResponse(
 
   // Validate tool calls have complete arguments
   const validToolCalls = toolCalls.filter((tc) => {
-    if (!tc.arguments || !tc.name) {
+    if (!tc.name) {
       logger.error("Incomplete tool call", {
         id: tc.id,
         name: tc.name,
