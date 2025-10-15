@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import chalk from "chalk";
+import { setConfigFilePermissions } from "core/util/paths.js";
 import open from "open";
 
 import { env } from "./env.js";
@@ -31,7 +32,8 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     : "";
 
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
-  fs.writeFileSync(CONFIG_PATH, updatedContent, { mode: 0o600 });
+  fs.writeFileSync(CONFIG_PATH, updatedContent);
+  setConfigFilePermissions(CONFIG_PATH);
 }
 
 /**

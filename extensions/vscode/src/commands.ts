@@ -8,16 +8,20 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { startLocalLemonade } from "core/util/lemonadeHelper";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getConfigYamlPath,
+  setConfigFilePermissions,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
-import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -715,9 +719,8 @@ const getCommandsMap: (
       const configYaml = convertJsonToYamlConfig(parsed);
 
       const configYamlPath = getConfigYamlPath();
-      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml), {
-        mode: 0o600,
-      });
+      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+      setConfigFilePermissions(configYamlPath);
 
       // Open config.yaml
       await openEditorAndRevealRange(

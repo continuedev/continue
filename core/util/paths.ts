@@ -14,6 +14,16 @@ import Types from "../config/types";
 
 dotenv.config();
 
+export function setConfigFilePermissions(filePath: string): void {
+  try {
+    if (os.platform() !== "win32") {
+      fs.chmodSync(filePath, 0o600);
+    }
+  } catch (error) {
+    console.warn(`Failed to set permissions on ${filePath}:`, error);
+  }
+}
+
 const CONTINUE_GLOBAL_DIR = (() => {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
@@ -113,10 +123,11 @@ export function getConfigYamlPath(ideType?: IdeType): string {
       // https://github.com/continuedev/continue/pull/7224
       // This was here because we had different context provider support between jetbrains and vs code
       // Leaving so we could differentiate later but for now configs are the same between IDEs
-      fs.writeFileSync(p, YAML.stringify(defaultConfig), { mode: 0o600 });
+      fs.writeFileSync(p, YAML.stringify(defaultConfig));
     } else {
-      fs.writeFileSync(p, YAML.stringify(defaultConfig), { mode: 0o600 });
+      fs.writeFileSync(p, YAML.stringify(defaultConfig));
     }
+    setConfigFilePermissions(p);
   }
   return p;
 }
@@ -261,7 +272,8 @@ function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
   // Check if it's an object
   if (typeof configYaml === "object" && configYaml !== null) {
     configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(configPath, YAML.stringify(configYaml), { mode: 0o600 });
+    fs.writeFileSync(configPath, YAML.stringify(configYaml));
+    setConfigFilePermissions(configPath);
   } else {
     console.warn("config.yaml is not a valid object");
   }
