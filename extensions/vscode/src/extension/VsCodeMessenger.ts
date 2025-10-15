@@ -632,8 +632,26 @@ export class VsCodeMessenger {
         // Fetch the agent state
         const agentState =
           await configHandler.controlPlaneClient.getAgentState(agentSessionId);
-        if (!agentState || !agentState.session) {
-          vscode.window.showErrorMessage("Failed to load agent session state.");
+
+        // Debug what we got back
+        debugger;
+        console.log("Agent state response:", agentState);
+
+        if (!agentState) {
+          vscode.window.showErrorMessage(
+            "Failed to fetch agent state from API. The agent may not exist or you may not have permission.",
+          );
+          return;
+        }
+
+        if (!agentState.session) {
+          console.error(
+            "Agent state is missing session field. Full response:",
+            agentState,
+          );
+          vscode.window.showErrorMessage(
+            "Agent state returned but missing session data. This may be a backend issue.",
+          );
           return;
         }
 

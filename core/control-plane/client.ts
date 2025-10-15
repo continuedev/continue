@@ -12,10 +12,10 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import {
+  BaseSessionMetadata,
   IDE,
   ModelDescription,
   Session,
-  BaseSessionMetadata,
 } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
@@ -614,6 +614,7 @@ export class ControlPlaneClient {
     messageQueueLength: number;
     pendingPermission: any;
   } | null> {
+    debugger;
     if (!(await this.isSignedIn())) {
       return null;
     }
@@ -626,12 +627,13 @@ export class ControlPlaneClient {
         },
       );
 
-      return (await resp.json()) as {
+      const result = (await resp.json()) as {
         session: Session;
         isProcessing: boolean;
         messageQueueLength: number;
         pendingPermission: any;
       };
+      return result;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_get_agent_state",
