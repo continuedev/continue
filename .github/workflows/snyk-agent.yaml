@@ -28,3 +28,4 @@ jobs:
         run: cd extensions/cli && cn -p --agent continuedev/snyk-code-scan-agent "The current directory"
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
