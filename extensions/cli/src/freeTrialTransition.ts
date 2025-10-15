@@ -31,7 +31,7 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     : "";
 
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
-  fs.writeFileSync(CONFIG_PATH, updatedContent);
+  fs.writeFileSync(CONFIG_PATH, updatedContent, { mode: 0o600 });
 }
 
 /**
