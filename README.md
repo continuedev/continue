@@ -6,7 +6,7 @@
 
 <h1 align="center">Continue</h1>
 
-<div align="center">
+<div align="ce
 
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 22px;" />
