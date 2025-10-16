@@ -84,7 +84,7 @@ export function BackgroundModeView({
     }
 
     void checkGitHubAuth();
-  }, [session, ideMessenger]);
+  }, [session, ideMessenger, currentOrg]);
 
   if (!session) {
     return (
