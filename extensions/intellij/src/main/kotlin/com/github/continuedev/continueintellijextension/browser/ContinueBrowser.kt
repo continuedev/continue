@@ -13,13 +13,19 @@ import com.intellij.ui.jcef.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
+import kotlinx.coroutines.*
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
 
 class ContinueBrowser(private val project: Project): Disposable {
 
     private val log = Logger.getInstance(ContinueBrowser::class.java.simpleName)
-    private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
+    private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
     private val myJSQueryOpenInBrowser = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val maintenanceExecutor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private var lastInteractionTime = System.currentTimeMillis()
 
     init {
         CefApp.getInstance().registerSchemeHandlerFactory("http", "continue", CustomSchemeHandlerFactory())
@@ -68,6 +74,9 @@ class ContinueBrowser(private val project: Project): Disposable {
         }
 
         browser.createImmediately()
+        
+        // Schedule periodic maintenance to prevent freezing during idle periods
+        startMaintenanceScheduler()
     }
 
     fun getComponent(): JComponent =
@@ -82,6 +91,7 @@ class ContinueBrowser(private val project: Project): Disposable {
     }
 
     fun sendToWebview(messageType: String, data: Any? = null, messageId: String = uuid()) {
+        updateLastInteractionTime()
         val json = Gson().toJson(BrowserMessage(messageType, messageId, data))
         val jsCode = """window.postMessage($json, "*");"""
         try {
@@ -101,7 +111,52 @@ class ContinueBrowser(private val project: Project): Disposable {
         browser.cefBrowser.executeJavaScript(script, getGuiUrl(), 0)
     }
 
+    private fun updateLastInteractionTime() {
+        lastInteractionTime = System.currentTimeMillis()
+    }
+    
+    private fun startMaintenanceScheduler() {
+        // Run maintenance every 30 minutes
+        maintenanceExecutor.scheduleAtFixedRate({
+            try {
+                performMaintenance()
+            } catch (e: Exception) {
+                log.warn("Error during browser maintenance", e)
+            }
+        }, 30, 30, TimeUnit.MINUTES)
+    }
+    
+    private fun performMaintenance() {
+        val idleTime = System.currentTimeMillis() - lastInteractionTime
+        val oneHour = 60 * 60 * 1000L
+        
+        // If idle for more than 1 hour, perform maintenance
+        if (idleTime > oneHour) {
+            log.info("Performing browser maintenance after ${idleTime / 1000 / 60} minutes of idle time")
+            
+            // Force garbage collection in the browser
+            try {
+                browser.executeJavaScriptAsync(
+                    """if (window.gc) { window.gc(); } else if (window.webkitGC) { window.webkitGC(); }"""
+                )
+            } catch (e: Exception) {
+                log.warn("Could not trigger browser GC", e)
+            }
+            
+            // Clear any accumulated message queues
+            browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 200)
+        }
+    }
+    
     override fun dispose() {
+        maintenanceExecutor.shutdown()
+        try {
+            if (!maintenanceExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                maintenanceExecutor.shutdownNow()
+            }
+        } catch (e: InterruptedException) {
+            maintenanceExecutor.shutdownNow()
+        }
         Disposer.dispose(myJSQueryOpenInBrowser)
         Disposer.dispose(browser)
     }
