@@ -539,10 +539,13 @@ export class VsCodeMessenger {
                 cancellable: false,
               },
               async () => {
-                // Use git command to stash
+                // Convert URI to file system path
+                const workspacePath =
+                  vscode.Uri.parse(matchingWorkspace).fsPath;
+
                 await this.ide.subprocess(
                   `git stash push -m "Continue: Stashed before opening agent ${agentSessionId}"`,
-                  matchingWorkspace,
+                  workspacePath,
                 );
               },
             );
