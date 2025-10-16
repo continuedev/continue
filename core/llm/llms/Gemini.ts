@@ -317,15 +317,6 @@ class Gemini extends BaseLLM {
     let buffer = "";
     for await (const chunk of stream) {
       buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
-      }
 
       const parts = buffer.split("\n,");
 
@@ -415,7 +406,7 @@ class Gemini extends BaseLLM {
       signal,
     });
 
-    for await (const chunk of streamSse(response)) {
+    for await (const chunk of this.processGeminiResponse(streamSse(response))) {
       yield chunk;
     }
   }
