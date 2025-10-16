@@ -1,17 +1,18 @@
-import { vi } from "vitest";
-
-import { ConfigEnhancer } from "../configEnhancer.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AgentFileService } from "./AgentFileService.js";
+import { ConfigService } from "./ConfigService.js";
 import { ModelService } from "./ModelService.js";
 
 // Mock the hubLoader module
 vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
   loadPackagesFromHub: vi.fn(),
+  loadModelFromHub: vi.fn(),
   mcpProcessor: {},
   modelProcessor: {},
   processRule: vi.fn(),
+  isStringRule: vi.fn(),
   agentFileProcessor: {
     type: "agentFile",
     expectedFileExtensions: [".md"],
@@ -38,18 +39,50 @@ vi.mock("../config.js", () => ({
 // Mock auth module
 vi.mock("../auth/workos.js", () => ({
   getModelName: vi.fn(),
+  loadAuthConfig: vi.fn(),
+}));
+
+// Mock the config-yaml package
+vi.mock("@continuedev/config-yaml", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@continuedev/config-yaml")>();
+  return {
+    ...actual,
+    decodePackageIdentifier: vi.fn((id) => ({
+      type: "slug",
+      slug: id,
+      version: undefined,
+    })),
+  };
+});
+
+// Mock configLoader
+vi.mock("../configLoader.js", () => ({
+  loadConfiguration: vi.fn(),
+}));
+
+// Mock service container
+vi.mock("./ServiceContainer.js", () => ({
+  serviceContainer: {
+    get: vi.fn(),
+    set: vi.fn(),
+    reload: vi.fn(),
+  },
 }));
 
 describe("Agent file Integration Tests", () => {
   let agentFileService: AgentFileService;
   let modelService: ModelService;
-  let configEnhancer: ConfigEnhancer;
+  let configService: ConfigService;
   let mockLoadPackageFromHub: any;
   let mockLoadPackagesFromHub: any;
   let mockProcessRule: any;
   let mockCreateLlmApi: any;
   let mockGetLlmApi: any;
   let mockModelProcessor: any;
+  let mockDecodePackageIdentifier: any;
+  let mockLoadModelFromHub: any;
+  let mockIsStringRule: any;
 
   const mockAgentFile = {
     name: "Test Agent File",
@@ -90,20 +123,31 @@ describe("Agent file Integration Tests", () => {
     mockLoadPackagesFromHub = hubLoaderModule.loadPackagesFromHub as any;
     mockProcessRule = hubLoaderModule.processRule as any;
     mockModelProcessor = hubLoaderModule.modelProcessor;
+    mockLoadModelFromHub = hubLoaderModule.loadModelFromHub as any;
+    mockIsStringRule = hubLoaderModule.isStringRule as any;
     mockCreateLlmApi = configModule.createLlmApi as any;
     mockGetLlmApi = configModule.getLlmApi as any;
+
+    // Get mock functions from config-yaml
+    const configYaml = await import("@continuedev/config-yaml");
+    mockDecodePackageIdentifier = configYaml.decodePackageIdentifier as any;
 
     // Create service instances
     agentFileService = new AgentFileService();
     modelService = new ModelService();
-    configEnhancer = new ConfigEnhancer();
+    configService = new ConfigService();
 
     // Setup default mocks
     mockProcessRule.mockResolvedValue("Processed rule content");
     mockLoadPackagesFromHub.mockResolvedValue([{ name: "test-mcp" }]);
-    mockLoadPackageFromHub.mockResolvedValue({
-      name: "test-model",
+    mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+    mockLoadModelFromHub.mockResolvedValue({
+      name: "gpt-4-agent",
       provider: "openai",
+    });
+    mockIsStringRule.mockImplementation((rule: string) => {
+      // String rules are those that don't look like package identifiers
+      return rule.includes(" ") || rule.includes("\n") || !rule.includes("/");
     });
     mockCreateLlmApi.mockReturnValue({ mock: "llmApi" });
     mockGetLlmApi.mockReturnValue([
@@ -112,158 +156,157 @@ describe("Agent file Integration Tests", () => {
     ]);
   });
 
-  describe("Agent file models are injected via ConfigEnhancer", () => {
-    it("should add agent file model to options when agent file active", async () => {
+  describe("Agent file models are injected via ConfigService", () => {
+    it("should add agent file model when agent file is active", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
+
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
+      );
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile?.model).toBe("gpt-4-agent");
 
-      // Mock loadPackageFromHub to return a model for the agent file model
-      mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
-
-      // Test that ConfigEnhancer adds the agent file model to options
-      const baseConfig = { models: [] };
+      // Test that ConfigService processes the agent file model
       const baseOptions = {}; // No --model flag
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileState,
-      );
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
 
-      // Should have loaded the agent file model directly via loadPackageFromHub
-      expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
-        "gpt-4-agent",
-        mockModelProcessor,
-      );
-
-      // The agent file model should be prepended to the models array
-      expect(enhancedConfig.models).toHaveLength(1);
-      expect(enhancedConfig.models?.[0]).toEqual({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
+      // Should have processed the agent file model as a package identifier
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("gpt-4-agent");
+      expect(injected).toHaveLength(2); // Agent file model + parsed rules become package identifiers
     });
 
     it("should not add agent file model when no agent file active", async () => {
       // Initialize agent file service without agent
-      await agentFileService.initialize();
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        undefined,
+        authServiceState,
+        apiClientState,
+      );
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile).toBeNull();
 
-      // Test that ConfigEnhancer doesn't add any agent file models
-      const baseConfig = { models: [] };
+      // Test that ConfigService doesn't add any agent file models
       const baseOptions = {};
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileState,
-      );
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
 
-      // Should not have enhanced with any models
-      expect(enhancedConfig.models).toEqual([]);
+      // Should not have processed any models
+      expect(injected).toHaveLength(0);
+      expect(additional.models || []).toHaveLength(0);
     });
 
-    it("should respect --model flag priority over agent file model", async () => {
+    it("should process both --model flag and agent file model", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
 
-      // Mock loadPackageFromHub for agent file model and loadPackagesFromHub for user models
-      mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
-      mockLoadPackagesFromHub.mockResolvedValueOnce([
-        {
-          name: "user-specified-model",
-          provider: "anthropic",
-        },
-      ]);
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
 
-      // Test that --model flag takes precedence
-      const baseConfig = { models: [] };
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
+      );
+
+      // Test that --model flag and agent file model are both processed
       const baseOptions = { model: ["user-specified-model"] }; // User specified --model
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileService.getState(),
-      );
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileService.getState(),
+        );
 
-      // Should process the user model via loadPackagesFromHub
-      expect(mockLoadPackagesFromHub).toHaveBeenCalledWith(
-        ["user-specified-model"],
-        mockModelProcessor,
+      // Should process both the user model and agent file model as package identifiers
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith(
+        "user-specified-model",
       );
-
-      // Should also load the agent file model
-      expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
-        "gpt-4-agent",
-        mockModelProcessor,
-      );
-
-      // Both models should be in the config, with user model first (takes precedence)
-      expect(enhancedConfig.models).toHaveLength(2);
-      expect(enhancedConfig.models?.[0]).toEqual({
-        name: "user-specified-model",
-        provider: "anthropic",
-      });
-      expect(enhancedConfig.models?.[1]).toEqual({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("gpt-4-agent");
+      expect(injected).toHaveLength(3); // User model + agent file model + parsed rules as package identifiers
     });
   });
 
-  describe("AgentFileService affects ConfigEnhancer", () => {
+  describe("AgentFileService affects ConfigService", () => {
     it("should inject agent file rules when agent file active", async () => {
-      // Setup agent file service with active agent file
-      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
-
-      const baseConfig = {
-        rules: ["existing rule"],
+      // Mock the agent file with parsed rules
+      const agentFileStateWithRules = {
+        agentFile: mockAgentFile,
+        parsedRules: ["agent/rule1"], // Parsed rules from agent file
+        parsedTools: null,
+        slug: null,
+        agentFileModel: null,
       };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
+      const baseOptions = {};
 
-      // Rules should be processed normally since agent file rules are now added to options.rule
-      expect(mockProcessRule).toHaveBeenCalledWith(mockAgentFile.rules);
-      expect(enhancedConfig.rules).toHaveLength(2);
-      // The agent file rule is processed first, then existing rules
-      expect(mockProcessRule).toHaveBeenNthCalledWith(1, mockAgentFile.rules);
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithRules,
+        );
+
+      // Agent file rules should be processed as package identifiers
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("agent/rule1");
+      expect(injected).toHaveLength(2); // Model + rule
     });
 
     it("should not inject agent file rules when agent file inactive", async () => {
       // Initialize agent file service without agent file
-      await agentFileService.initialize();
-
-      const baseConfig = {
-        rules: ["existing rule"],
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
       };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
+      await agentFileService.initialize(
+        undefined,
+        authServiceState,
+        apiClientState,
       );
 
-      expect(mockProcessRule).not.toHaveBeenCalled();
-      expect(enhancedConfig.rules).toHaveLength(1);
-      expect(enhancedConfig?.rules?.[0]).toBe("existing rule");
+      const baseOptions = {};
+      const agentFileState = agentFileService.getState();
+
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
+
+      // Should not process any rules since no agent file is active
+      expect(injected).toHaveLength(0);
+      expect(additional.rules).toHaveLength(0);
     });
 
     it("should not inject agent file rules when agent file has no rules", async () => {
@@ -272,29 +315,46 @@ describe("Agent file Integration Tests", () => {
         rules: undefined,
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(agentFileWithoutRules);
-      await agentFileService.initialize("owner/agent");
-
-      const baseConfig = {
-        rules: ["existing rule"],
+      // Mock agent file state with no parsed rules
+      const agentFileStateWithoutRules = {
+        agentFile: agentFileWithoutRules,
+        parsedRules: [], // No parsed rules
+        parsedTools: null,
+        slug: null,
+        agentFileModel: null,
       };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
+      const baseOptions = {};
 
-      expect(mockProcessRule).not.toHaveBeenCalled();
-      expect(enhancedConfig.rules).toHaveLength(1);
-      expect(enhancedConfig.rules?.[0]).toBe("existing rule");
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithoutRules,
+        );
+
+      // Should only have the model, no rules
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("gpt-4-agent"); // Only the model
+      expect(injected).toHaveLength(1); // Only the model
+      expect(additional.rules).toHaveLength(0);
     });
   });
 
   describe("Agent file model constraints", () => {
     it("should filter available models to only agent file model when specified", async () => {
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
+
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
+      );
 
       await modelService.initialize(
         mockAssistant as any,
@@ -312,7 +372,18 @@ describe("Agent file Integration Tests", () => {
     });
 
     it("should allow all models when no agent file active", async () => {
-      await agentFileService.initialize();
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        undefined,
+        authServiceState,
+        apiClientState,
+      );
 
       await modelService.initialize(
         mockAssistant as any,
@@ -332,7 +403,21 @@ describe("Agent file Integration Tests", () => {
     it("should handle agent loading errors gracefully", async () => {
       mockLoadPackageFromHub.mockRejectedValue(new Error("Network error"));
 
-      await agentFileService.initialize("owner/agent");
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      // The service should throw the error, not handle it gracefully
+      await expect(
+        agentFileService.initialize(
+          "owner/agent",
+          authServiceState,
+          apiClientState,
+        ),
+      ).rejects.toThrow("Network error");
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile).toBeNull();
@@ -345,25 +430,34 @@ describe("Agent file Integration Tests", () => {
       expect(mockGetLlmApi).toHaveBeenCalled();
     });
 
-    it("should handle agent rule processing errors gracefully", async () => {
-      mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      mockProcessRule.mockRejectedValue(new Error("Rule processing failed"));
+    it("should handle package identifier decoding errors gracefully", async () => {
+      // Mock decoding to throw an error
+      mockDecodePackageIdentifier.mockImplementation((id: string) => {
+        if (id === "invalid-rule") {
+          throw new Error("Invalid package identifier");
+        }
+        return { type: "slug", slug: id, version: undefined };
+      });
 
-      await agentFileService.initialize("owner/agent");
-
-      const baseConfig = {
-        rules: ["existing rule"],
+      const agentFileStateWithInvalidRules = {
+        agentFile: mockAgentFile,
+        parsedRules: ["invalid-rule"], // This will throw an error when decoded
+        parsedTools: null,
+        slug: null,
+        agentFileModel: null,
       };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
+      const baseOptions = {};
 
-      // Should not inject agent file rule but should preserve existing rules
-      expect(enhancedConfig.rules).toHaveLength(1);
-      expect(enhancedConfig.rules?.[0]).toBe("existing rule");
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithInvalidRules,
+        );
+
+      // Should handle the error gracefully and only include valid package identifiers
+      expect(injected).toHaveLength(1); // Only the model should be included
+      expect(additional.rules).toHaveLength(0);
     });
 
     // Removed test for missing service container since agent file service
@@ -372,142 +466,209 @@ describe("Agent file Integration Tests", () => {
     it("should inject agent file prompt when agent file active", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
 
-      const baseConfig = {
-        rules: ["existing rule"],
-        prompts: [],
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
       };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
       );
 
-      // Agent file prompt should be added to config.prompts
-      expect(enhancedConfig.prompts).toBeDefined();
-      expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
-      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+      const baseOptions = {};
+      const agentFileState = agentFileService.getState();
+
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
+
+      // Agent file prompt should be added to additional.prompts
+      expect(additional.prompts).toBeDefined();
+      expect(additional.prompts?.length).toBeGreaterThan(0);
+      expect(additional.prompts?.[0]).toMatchObject({
         prompt: "You are an assistant.",
         name: expect.stringContaining("Test Agent"),
       });
-      expect(enhancedConfig.rules).toHaveLength(2);
     });
 
-    it("should add agent file prompt to config alongside other prompts", async () => {
+    it("should prepare agent file prompt for merging with other prompts", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
 
-      const baseConfig = {
-        prompts: [{ name: "Existing", prompt: "existing-prompt" }],
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
       };
-      const baseOptions = {};
+      const apiClientState = { apiClient: { mock: "apiClient" } };
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileService.getState(),
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
       );
 
-      // Agent file prompt should be prepended to existing prompts
-      expect(enhancedConfig.prompts).toHaveLength(2);
-      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+      const baseOptions = {};
+      const agentFileState = agentFileService.getState();
+
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
+
+      // Agent file prompt should be in additional block ready for merging
+      expect(additional.prompts).toHaveLength(1);
+      expect(additional.prompts?.[0]).toMatchObject({
         name: expect.stringContaining("Test Agent"),
         prompt: "You are an assistant.",
       });
-      expect(enhancedConfig.prompts?.[1]).toMatchObject({
-        name: "Existing",
-        prompt: "existing-prompt",
-      });
+
+      // mergeUnrolledAssistants would combine this with base config prompts
+      const { mergeUnrolledAssistants } = await import(
+        "@continuedev/config-yaml"
+      );
+      const baseConfig = {
+        name: "original",
+        version: "1.0.0",
+        prompts: [{ name: "Existing", prompt: "existing-prompt" }],
+      };
+
+      const merged = mergeUnrolledAssistants(baseConfig, additional);
+      expect(merged.prompts).toHaveLength(2);
     });
 
     it("should not add agent file prompt when agent file has no prompt", async () => {
       const agentFileWithoutPrompt = {
         ...mockAgentFile,
-        prompt: undefined,
+        prompt: "",
       };
 
-      mockLoadPackageFromHub.mockResolvedValue(agentFileWithoutPrompt);
-      await agentFileService.initialize("owner/agent");
-
-      const baseConfig = {
-        prompts: [{ name: "Existing", prompt: "existing-prompt" }],
+      const agentFileStateWithoutPrompt = {
+        agentFile: agentFileWithoutPrompt,
+        parsedRules: [],
+        parsedTools: null,
+        slug: null,
+        agentFileModel: null,
       };
+
       const baseOptions = {};
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileService.getState(),
-      );
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithoutPrompt,
+        );
 
-      // Should only have the existing prompt, no agent file prompt added
-      expect(enhancedConfig.prompts).toHaveLength(1);
-      expect(enhancedConfig.prompts?.[0]).toMatchObject({
-        name: "Existing",
-        prompt: "existing-prompt",
-      });
+      // Should not have any prompts in additional block
+      expect(additional.prompts).toHaveLength(0);
     });
   });
 
-  describe("ConfigEnhancer prompt integration", () => {
-    it("should add agent file prompt to config.prompts when agent file active", async () => {
+  describe("ConfigService prompt integration", () => {
+    it("should process agent file prompt and user prompts together", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
 
-      const baseOptions = { prompt: ["user-prompt"] };
-      const baseConfig = { prompts: [] };
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
 
-      // Enhance config with agent file state
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileService.getState(),
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
       );
 
-      // Verify that the agent file prompt was added to config.prompts
-      expect(enhancedConfig.prompts).toBeDefined();
-      expect(enhancedConfig.prompts).toHaveLength(1);
-      expect(enhancedConfig.prompts?.[0]).toMatchObject({
+      const baseOptions = { prompt: ["user-prompt"] };
+      const agentFileState = agentFileService.getState();
+
+      // Process options with ConfigService
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
+
+      // Verify that the agent file prompt was added to additional block
+      expect(additional.prompts).toBeDefined();
+      expect(additional.prompts).toHaveLength(1);
+      expect(additional.prompts?.[0]).toMatchObject({
         name: expect.stringContaining("Test Agent"),
         prompt: "You are an assistant.",
         description: "A test agent for integration testing",
       });
+
+      // User prompts should be in additional.rules as string rules
+      expect(additional.rules).toContain("user-prompt");
     });
 
-    it("should work end-to-end with agent file prompt in config", async () => {
+    it("should work end-to-end with agent file prompt processing", async () => {
       // Setup agent file service with active agent file
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
+
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
+      );
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile?.prompt).toBe("You are an assistant.");
 
-      const baseConfig = { prompts: [] };
       const baseOptions = { prompt: ["Tell me about TypeScript"] };
 
-      // Enhance config with agent file
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        baseOptions,
-        agentFileState,
-      );
+      // Process with ConfigService
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileState,
+        );
 
-      // Verify agent file prompt is added to config.prompts
-      expect(enhancedConfig.prompts).toBeDefined();
-      expect(enhancedConfig.prompts?.length).toBeGreaterThan(0);
-      expect(enhancedConfig.prompts?.[0]?.prompt).toBe("You are an assistant.");
-      expect(enhancedConfig.prompts?.[0]?.name).toContain("Test Agent");
+      // Verify agent file prompt is prepared for merging
+      expect(additional.prompts).toBeDefined();
+      expect(additional.prompts?.length).toBeGreaterThan(0);
+      expect(additional.prompts?.[0]?.prompt).toBe("You are an assistant.");
+      expect(additional.prompts?.[0]?.name).toContain("Test Agent");
+
+      // User prompt should be a string rule
+      expect(additional.rules).toContain("Tell me about TypeScript");
     });
   });
 
   describe("Agent file data extraction", () => {
     it("should correctly extract all agent file properties", async () => {
       mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
-      await agentFileService.initialize("owner/agent");
+
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        "owner/agent",
+        authServiceState,
+        apiClientState,
+      );
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile?.model).toBe("gpt-4-agent");
@@ -528,7 +689,19 @@ describe("Agent file Integration Tests", () => {
       };
 
       mockLoadPackageFromHub.mockResolvedValue(partialAgentFile);
-      await agentFileService.initialize("owner/partial");
+
+      // Mock the required service states
+      const authServiceState = {
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+      };
+      const apiClientState = { apiClient: { mock: "apiClient" } };
+
+      await agentFileService.initialize(
+        "owner/partial",
+        authServiceState,
+        apiClientState,
+      );
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile?.model).toBe("gpt-3.5-turbo");
@@ -540,102 +713,88 @@ describe("Agent file Integration Tests", () => {
 
   describe("Agent file tools integration", () => {
     it("should inject MCP servers from agent file tools", async () => {
-      const agentFileWithTools = {
-        ...mockAgentFile,
-        tools: "owner/mcp1, another/mcp2:specific_tool",
+      const agentFileStateWithTools = {
+        agentFile: {
+          ...mockAgentFile,
+          tools: "owner/mcp1, another/mcp2:specific_tool",
+        },
+        parsedRules: [],
+        parsedTools: {
+          mcpServers: ["owner/mcp1", "another/mcp2"], // Parsed MCP servers
+          tools: [],
+          allBuiltIn: false,
+        },
+        slug: null,
+        agentFileModel: null,
       };
 
-      // Clear the default mock and setup specific mocks
-      mockLoadPackageFromHub.mockReset();
-      // First call loads the agent file
-      mockLoadPackageFromHub.mockResolvedValueOnce(agentFileWithTools);
-      // Second call loads the agent file model
-      mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
-      // Third call loads mcp1
-      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp1" });
-      // Fourth call loads mcp2
-      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp2" });
+      const baseOptions = {};
 
-      await agentFileService.initialize("owner/agent");
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithTools,
+        );
 
-      const baseConfig = {
-        mcpServers: [{ name: "existing-mcp" }],
-      };
-
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
-
-      expect(enhancedConfig.mcpServers).toHaveLength(3);
-      // MCPs are prepended in the order they are loaded
-      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
-      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "mcp2" });
-      expect(enhancedConfig.mcpServers?.[2]).toEqual({ name: "existing-mcp" });
+      // MCP servers should be processed as package identifiers
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("owner/mcp1");
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("another/mcp2");
+      expect(injected).toHaveLength(3); // model + 2 MCP servers
     });
 
     it("should not inject MCP servers when agent file has no tools", async () => {
-      const agentWithoutTools = {
-        ...mockAgentFile,
-        tools: undefined,
+      const agentFileStateWithoutTools = {
+        agentFile: {
+          ...mockAgentFile,
+          tools: undefined,
+        },
+        parsedRules: [],
+        parsedTools: null,
+        slug: null,
+        agentFileModel: null,
       };
 
-      mockLoadPackageFromHub.mockReset();
-      mockLoadPackageFromHub.mockResolvedValueOnce(agentWithoutTools);
-      await agentFileService.initialize("owner/agent");
+      const baseOptions = {};
 
-      const baseConfig = {
-        mcpServers: [{ name: "existing-mcp" }],
-      };
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithoutTools,
+        );
 
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
-
-      expect(enhancedConfig.mcpServers).toHaveLength(1);
-      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "existing-mcp" });
+      // Should only have the model, no MCP servers
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("gpt-4-agent"); // Only model
+      expect(injected).toHaveLength(1); // Only model
+      expect(additional.mcpServers).toHaveLength(0);
     });
 
-    it("should deduplicate MCP servers", async () => {
-      const agentFileWithDuplicateTools = {
-        ...mockAgentFile,
-        tools: "owner/mcp1, owner/mcp1:tool1, owner/mcp1:tool2",
+    it("should handle deduplicated MCP servers from parsing", async () => {
+      const agentFileStateWithDuplicateTools = {
+        agentFile: {
+          ...mockAgentFile,
+          tools: "owner/mcp1, owner/mcp1:tool1, owner/mcp1:tool2",
+        },
+        parsedRules: [],
+        parsedTools: {
+          mcpServers: ["owner/mcp1"], // parseAgentFileTools already deduplicated
+          tools: [],
+          allBuiltIn: false,
+        },
+        slug: null,
+        agentFileModel: null,
       };
 
-      // Clear the default mock and setup specific mocks
-      mockLoadPackageFromHub.mockReset();
-      // First call loads the agent file
-      mockLoadPackageFromHub.mockResolvedValueOnce(agentFileWithDuplicateTools);
-      // Second call loads the agent file model
-      mockLoadPackageFromHub.mockResolvedValueOnce({
-        name: "gpt-4-agent",
-        provider: "openai",
-      });
-      // Third call: The parseAgentFileTools will extract only unique MCP servers, so only one loadPackageFromHub call
-      mockLoadPackageFromHub.mockResolvedValueOnce({ name: "mcp1" });
+      const baseOptions = {};
 
-      await agentFileService.initialize("owner/agent");
+      const { injected, additional } =
+        configService.getAdditionalBlocksFromOptions(
+          baseOptions,
+          agentFileStateWithDuplicateTools,
+        );
 
-      const baseConfig = {
-        mcpServers: [{ name: "existing-mcp" }], // Changed to avoid confusion
-      };
-
-      const enhancedConfig = await configEnhancer.enhanceConfig(
-        baseConfig as any,
-        {},
-        agentFileService.getState(),
-      );
-
-      // parseAgentFileTools deduplicates, so we only get mcp1 once
-      expect(enhancedConfig.mcpServers).toHaveLength(2);
-      expect(enhancedConfig.mcpServers?.[0]).toEqual({ name: "mcp1" });
-      expect(enhancedConfig.mcpServers?.[1]).toEqual({ name: "existing-mcp" });
+      // Should only process the deduplicated MCP server once
+      expect(mockDecodePackageIdentifier).toHaveBeenCalledWith("owner/mcp1");
+      expect(injected).toHaveLength(2); // model + deduplicated MCP server
     });
   });
 });

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import chalk from "chalk";
+import { setConfigFilePermissions } from "core/util/paths.js";
 
 import { AuthConfig, login } from "./auth/workos.js";
 import { getApiClient } from "./config.js";
@@ -44,6 +45,7 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
 
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
+  setConfigFilePermissions(CONFIG_PATH);
 }
 
 export async function runOnboardingFlow(
@@ -146,6 +148,8 @@ export async function initializeWithOnboarding(
         authConfig,
         configPath,
         getApiClient(authConfig?.accessToken),
+        [],
+        false,
       );
     } catch (errorMessage) {
       throw new Error(

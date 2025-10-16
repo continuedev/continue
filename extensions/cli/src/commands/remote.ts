@@ -21,6 +21,7 @@ type RemoteCommandOptions = {
   branch?: string;
   repo?: string;
   config?: string;
+  agent?: string;
 };
 
 type TunnelResponse = {
@@ -169,7 +170,7 @@ function buildAgentRequestBody(
     repoUrl: options.repo ?? getRepoUrl(),
     name: `devbox-${Date.now()}`,
     prompt,
-    agent: options.config,
+    agent: options.agent,
     config: options.config,
   };
 

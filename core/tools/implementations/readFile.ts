@@ -5,6 +5,7 @@ import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { getStringArg } from "../parseArgs";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
@@ -12,7 +13,8 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
   // Resolve the path first to get the actual path for security check
   const resolvedPath = await resolveInputPath(extras.ide, filepath);
   if (!resolvedPath) {
-    throw new Error(
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
       `File "${filepath}" does not exist or is not accessible. You might want to check the path and try again.`,
     );
   }

@@ -353,7 +353,32 @@ describe("remote command", () => {
     expect(mockFetch).toHaveBeenCalledWith(
       new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
-        body: expect.stringContaining(`"agent":"${testConfig}"`),
+        body: expect.stringContaining(`"config":"${testConfig}"`),
+      }),
+    );
+  });
+
+  it("should include agent in request body when agent option is provided", async () => {
+    const testAgent = "test-agent";
+
+    await remote("test prompt", { agent: testAgent });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents", mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: expect.stringContaining(`"agent":"${testAgent}"`),
+      }),
+    );
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents", mockEnv.env.apiBase),
+      expect.objectContaining({
+        body: expect.stringContaining(`"agent":"${testAgent}"`),
       }),
     );
   });
@@ -375,8 +400,28 @@ describe("remote command", () => {
       name: expect.stringMatching(/^devbox-\d+$/),
       prompt: "test prompt",
       idempotencyKey: testIdempotencyKey,
-      agent: testConfig,
       config: testConfig,
+    });
+  });
+
+  it("should handle proper request body structure with agent field", async () => {
+    const testAgent = "my-agent";
+    const testIdempotencyKey = "test-with-config";
+
+    await remote("test prompt", {
+      agent: testAgent,
+      idempotencyKey: testIdempotencyKey,
+    });
+
+    const fetchCall = mockFetch.mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+
+    expect(requestBody).toEqual({
+      repoUrl: "https://github.com/user/test-repo.git",
+      name: expect.stringMatching(/^devbox-\d+$/),
+      prompt: "test prompt",
+      idempotencyKey: testIdempotencyKey,
+      agent: testAgent,
     });
   });
 

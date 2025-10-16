@@ -51,7 +51,6 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
   const commandOptions = initOptions.options || {};
-
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
     const authConfig = loadAuthConfig();
@@ -76,9 +75,39 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   }
 
   serviceContainer.register(
+    SERVICE_NAMES.AUTH,
+    async () => {
+      return await authService.initialize();
+    },
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.API_CLIENT,
+    async () => {
+      const authState = await serviceContainer.get<AuthServiceState>(
+        SERVICE_NAMES.AUTH,
+      );
+      return apiClientService.initialize(authState.authConfig);
+    },
+    [SERVICE_NAMES.AUTH], // Depends on auth
+  );
+
+  serviceContainer.register(
     SERVICE_NAMES.AGENT_FILE,
-    () => agentFileService.initialize(commandOptions.agent),
-    [],
+    async () => {
+      const [authState, apiClientState] = await Promise.all([
+        serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
+        serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
+      ]);
+
+      return await agentFileService.initialize(
+        commandOptions.agent,
+        authState,
+        apiClientState,
+      );
+    },
+    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT],
   );
 
   serviceContainer.register(
@@ -132,26 +161,9 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   );
 
   serviceContainer.register(
-    SERVICE_NAMES.AUTH,
-    () => authService.initialize(),
-    [], // No dependencies
-  );
-
-  serviceContainer.register(
     SERVICE_NAMES.UPDATE,
     () => updateService.initialize(),
     [], // No dependencies
-  );
-
-  serviceContainer.register(
-    SERVICE_NAMES.API_CLIENT,
-    async () => {
-      const authState = await serviceContainer.get<AuthServiceState>(
-        SERVICE_NAMES.AUTH,
-      );
-      return apiClientService.initialize(authState.authConfig);
-    },
-    [SERVICE_NAMES.AUTH], // Depends on auth
   );
 
   serviceContainer.register(
@@ -200,13 +212,14 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         }
       }
 
-      return configService.initialize({
+      return await configService.initialize({
         authConfig: finalAuthState.authConfig,
         configPath,
         // organizationId: finalAuthState.organizationId || null,
         apiClient: apiClientState.apiClient,
         agentFileState,
         injectedConfigOptions: commandOptions,
+        isHeadless: initOptions.headless,
       });
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.AGENT_FILE], // Dependencies
