@@ -20,44 +20,89 @@ runs:
       uses: actions/checkout@v4
 
     - name: Check Authorization
-      shell: bash
-      env:
-        # Only move the dangerous check to env to prevent shell injection
-        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-review') }}
-      run: |
-        # Check if this action should run based on event type and user permissions
-        SHOULD_RUN="false"
+      id: auth-check
+      uses: actions/github-script@v7
+      with:
+        script: |
+          let shouldRun = false;
+          let skipReason = '';
 
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          # Check if PR is a draft
-          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
-            echo "::notice::Skipping review - PR is a draft"
-          else
-            # Check PR author association
-            AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
-            if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
-              SHOULD_RUN="true"
-            else
-              echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
-            fi
-          fi
-        elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-          # Check if it's a PR comment with the trigger phrase
-          if [ "${{ github.event.issue.pull_request }}" != "" ] && [ "$HAS_TRIGGER_PHRASE" = "true" ]; then
-            COMMENTER_ASSOC="${{ github.event.comment.author_association }}"
-            if [ "$COMMENTER_ASSOC" = "OWNER" ] || [ "$COMMENTER_ASSOC" = "MEMBER" ] || [ "$COMMENTER_ASSOC" = "COLLABORATOR" ]; then
-              SHOULD_RUN="true"
-            else
-              echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
-            fi
-          else
-            echo "::notice::Skipping review - Comment does not contain @continue-review trigger, or is not on a PR"
-          fi
-        else
-          echo "::notice::Skipping review - Unsupported event type: ${{ github.event_name }}"
-        fi
+          if (context.eventName === 'pull_request') {
+            // Check if PR is a draft
+            if (context.payload.pull_request.draft) {
+              skipReason = 'PR is a draft';
+            } else {
+              // Check if user has write permission (includes admin, maintain, write)
+              const prAuthor = context.payload.pull_request.user.login;
+              try {
+                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: prAuthor
+                });
+                
+                const allowedPermissions = ['admin', 'maintain', 'write'];
+                if (allowedPermissions.includes(permission.permission)) {
+                  shouldRun = true;
+                  console.log(`PR author @${prAuthor} has ${permission.permission} permission`);
+                } else {
+                  skipReason = `PR author @${prAuthor} does not have write permission (has: ${permission.permission})`;
+                }
+              } catch (error) {
+                // If API call fails, fall back to checking author_association
+                const association = context.payload.pull_request.author_association;
+                const allowedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+                if (allowedAssociations.includes(association)) {
+                  shouldRun = true;
+                  console.log(`PR author @${prAuthor} association: ${association}`);
+                } else {
+                  skipReason = `PR author @${prAuthor} is not a team member (association: ${association})`;
+                }
+              }
+            }
+          } else if (context.eventName === 'issue_comment') {
+            // Check if it's a PR comment with the trigger phrase
+            const hasTrigger = context.payload.comment.body.includes('@continue-review');
+            if (context.payload.issue.pull_request && hasTrigger) {
+              const commenter = context.payload.comment.user.login;
+              try {
+                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: commenter
+                });
+                
+                const allowedPermissions = ['admin', 'maintain', 'write'];
+                if (allowedPermissions.includes(permission.permission)) {
+                  shouldRun = true;
+                  console.log(`Commenter @${commenter} has ${permission.permission} permission`);
+                } else {
+                  skipReason = `Commenter @${commenter} does not have write permission (has: ${permission.permission})`;
+                }
+              } catch (error) {
+                // If API call fails, fall back to checking author_association
+                const association = context.payload.comment.author_association;
+                const allowedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+                if (allowedAssociations.includes(association)) {
+                  shouldRun = true;
+                  console.log(`Commenter @${commenter} association: ${association}`);
+                } else {
+                  skipReason = `Commenter @${commenter} is not a team member (association: ${association})`;
+                }
+              }
+            } else {
+              skipReason = 'Comment does not contain @continue-review trigger, or is not on a PR';
+            }
+          } else {
+            skipReason = `Unsupported event type: ${context.eventName}`;
+          }
 
-        echo "SHOULD_RUN=$SHOULD_RUN" >> $GITHUB_ENV
+          if (skipReason) {
+            core.notice(`Skipping review - ${skipReason}`);
+          }
+
+          core.exportVariable('SHOULD_RUN', shouldRun.toString());
+          return shouldRun;
 
     - name: Setup Node.js
       if: env.SHOULD_RUN == 'true'
