@@ -570,7 +570,7 @@ export class VsCodeMessenger {
           );
 
           if (currentBranch !== branch) {
-            // Try to switch to the branch
+            // Try to switch to the branch using VS Code Git API
             await vscode.window.withProgress(
               {
                 location: vscode.ProgressLocation.Notification,
@@ -579,39 +579,16 @@ export class VsCodeMessenger {
               },
               async () => {
                 try {
-                  // First try a simple checkout
-                  await this.ide.subprocess(
-                    `git checkout ${branch}`,
-                    matchingWorkspace,
-                  );
+                  // Use VS Code Git API for checkout
+                  await repo.checkout(branch);
                 } catch (checkoutError: any) {
                   console.log(
-                    "Simple checkout failed, trying to fetch and checkout...",
+                    "Checkout failed, trying to fetch first...",
                     checkoutError,
                   );
-
-                  // If that fails, try fetching and then checking out
-                  try {
-                    await this.ide.subprocess(
-                      `git fetch origin ${branch}:${branch}`,
-                      matchingWorkspace,
-                    );
-                    await this.ide.subprocess(
-                      `git checkout ${branch}`,
-                      matchingWorkspace,
-                    );
-                  } catch (fetchError: any) {
-                    console.log(
-                      "Fetch and checkout failed, trying checkout with tracking...",
-                      fetchError,
-                    );
-
-                    // Last attempt: checkout with tracking
-                    await this.ide.subprocess(
-                      `git checkout -b ${branch} origin/${branch}`,
-                      matchingWorkspace,
-                    );
-                  }
+                  // If checkout fails, fetch and try again
+                  await repo.fetch();
+                  await repo.checkout(branch);
                 }
               },
             );
@@ -624,7 +601,7 @@ export class VsCodeMessenger {
         } catch (e: any) {
           console.error("Failed to switch branch:", e);
           vscode.window.showErrorMessage(
-            `Failed to switch to branch ${branch}: ${e.message || "Unknown error"}`,
+            `Failed to switch to branch ${branch}: ${e.message || String(e)}`,
           );
           return;
         }
