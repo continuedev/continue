@@ -4,6 +4,7 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
+import { Button } from "../ui";
 
 interface Agent {
   id: string;
@@ -219,26 +220,21 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                 </div>
                 <div className="ml-2 flex items-center gap-2">
                   <AgentStatusBadge status={agent.status} />
-                  <div className="group relative">
-                    <button
-                      onClick={(e) =>
-                        canOpenLocally && handleOpenLocally(agent, e)
-                      }
-                      disabled={!canOpenLocally}
-                      className={`rounded p-1.5 transition-colors ${
-                        canOpenLocally
-                          ? "text-link hover:bg-input-border cursor-pointer"
-                          : "text-description-muted cursor-not-allowed opacity-50"
-                      }`}
-                      title={
-                        canOpenLocally
-                          ? "Open this agent workflow locally"
-                          : "This agent is for a different repository. Open the correct workspace to take over this workflow."
-                      }
-                    >
-                      <ArrowDownTrayIcon className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <Button
+                    onClick={(e) =>
+                      canOpenLocally && handleOpenLocally(agent, e)
+                    }
+                    disabled={!canOpenLocally}
+                    variant="icon"
+                    size="lg"
+                    title={
+                      canOpenLocally
+                        ? "Open this agent workflow locally"
+                        : "This agent is for a different repository. Open the correct workspace to take over this workflow."
+                    }
+                  >
+                    <ArrowDownTrayIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
               <div className="text-description-muted mt-1 text-xs">
@@ -249,17 +245,18 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
         })}
         {totalCount > agents.length && (
           <div className="mt-2">
-            <button
+            <Button
               onClick={() => {
                 ideMessenger.post("controlPlane/openUrl", {
                   path: "agents",
                   orgSlug: currentOrg?.slug,
                 });
               }}
-              className="text-link w-full cursor-pointer border-none bg-transparent p-0 text-center text-sm font-medium no-underline hover:underline"
+              variant="ghost"
+              className="text-link my-0 w-full py-0 text-center text-sm font-medium hover:underline"
             >
               See all {totalCount} tasks →
-            </button>
+            </Button>
           </div>
         )}
       </div>
