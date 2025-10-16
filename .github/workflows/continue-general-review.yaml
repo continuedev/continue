@@ -25,4 +25,4 @@ jobs:
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
-          continue-config: "continuedev/review-bot"
+          continue-config: "continuedev/empty-agent"
