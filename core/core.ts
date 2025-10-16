@@ -1102,26 +1102,14 @@ export class Core {
           return { policy: basePolicy };
         }
 
-        // Preprocess args if preprocessor exists
-        let processedArgs = args;
-        if (tool.preprocessArgs) {
-          try {
-            processedArgs = await tool.preprocessArgs(args, { ide: this.ide });
-          } catch (e) {
-            // If preprocessing fails, use original args
-            console.warn(`Failed to preprocess args for ${toolName}:`, e);
-            processedArgs = args;
-          }
-        }
-
         // Extract display value for specific tools
         let displayValue: string | undefined;
-        if (toolName === "runTerminalCommand" && processedArgs.command) {
-          displayValue = processedArgs.command as string;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
         }
 
         if (tool.evaluateToolCallPolicy) {
-          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, processedArgs);
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
           return { policy: evaluatedPolicy, displayValue };
         }
         return { policy: basePolicy, displayValue };

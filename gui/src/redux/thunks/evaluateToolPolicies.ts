@@ -38,14 +38,14 @@ async function evaluateToolPolicy(
     )?.defaultToolPolicy ??
     DEFAULT_TOOL_SETTING;
 
-  // Use already parsed arguments
-  const parsedArgs = toolCallState.parsedArgs || {};
+  // Use preprocessed arguments if available, otherwise fall back to parsed arguments
+  const args = toolCallState.processedArgs || toolCallState.parsedArgs || {};
 
   const toolName = toolCallState.toolCall.function.name;
   const result = await ideMessenger.request("tools/evaluatePolicy", {
     toolName,
     basePolicy,
-    args: parsedArgs,
+    args,
   });
 
   // Evaluate the policy dynamically
