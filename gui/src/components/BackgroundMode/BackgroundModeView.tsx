@@ -55,7 +55,11 @@ export function BackgroundModeView({
         setCheckingGitHub(true);
         // Try to list agents - if this fails with GitHub token error,
         // we know GitHub isn't connected
-        const result = await ideMessenger.request("listBackgroundAgents", {});
+        const organizationId =
+          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
+        const result = await ideMessenger.request("listBackgroundAgents", {
+          organizationId,
+        });
 
         // Check for error response
         if ("error" in result) {
