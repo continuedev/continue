@@ -295,8 +295,15 @@ function AgentStatusBadge({ status }: { status: string }) {
 function formatRelativeTime(dateString: string): string {
   try {
     const date = new Date(dateString);
+    const timestamp = date.getTime();
+
+    // Guard against invalid dates (NaN)
+    if (isNaN(timestamp)) {
+      return dateString;
+    }
+
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now.getTime() - timestamp;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
