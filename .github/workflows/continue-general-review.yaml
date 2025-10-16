@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - nate/fix-continue-review-workflow-branch
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
