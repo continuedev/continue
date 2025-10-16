@@ -634,7 +634,7 @@ export class VsCodeMessenger {
           await configHandler.controlPlaneClient.getAgentState(agentSessionId);
 
         // Debug what we got back
-        debugger;
+        // debugger;
         console.log("Agent state response:", agentState);
 
         if (!agentState) {
@@ -657,7 +657,9 @@ export class VsCodeMessenger {
 
         // For MVP: Simply load the session by sending to webview
         // The webview will dispatch the newSession action with the session data
-        this.webviewProtocol.send("loadAgentSession", agentState.session);
+        this.webviewProtocol.send("loadAgentSession", {
+          session: agentState.session,
+        });
 
         vscode.window.showInformationMessage(
           `Successfully loaded agent workflow: ${agentState.session.title || "Untitled"}`,
