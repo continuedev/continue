@@ -982,10 +982,8 @@ const getCommandsMap: (
               )) {
                 generatedMessage += stripImages(chunk.content) ?? "";
                 progress.report({ message: "Generating..." });
-                repository.inputBox.value = generatedMessage.trim();
               }
-
-              // Focus the Source Control view so user can review and commit
+              repository.inputBox.value = generatedMessage.trim();
               await vscode.commands.executeCommand("workbench.view.scm");
             } catch (error) {
               if (abortController.signal.aborted) {
