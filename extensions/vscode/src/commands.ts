@@ -22,6 +22,7 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { stripImages } from "core/util/messageContent";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -38,6 +39,7 @@ import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewView
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { processDiff } from "./diff/processDiff";
 import { VerticalDiffManager } from "./diff/vertical/manager";
+import { GitExtension } from "./otherExtensions/git";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import {
@@ -882,6 +884,129 @@ const getCommandsMap: (
       await vscode.commands.executeCommand(
         "editor.action.inlineSuggest.trigger",
       );
+    },
+    "continue.generateCommitMessage": async () => {
+      captureCommandTelemetry("generateCommitMessage");
+
+      try {
+        const gitExtension =
+          vscode.extensions.getExtension<GitExtension>("vscode.git");
+
+        if (!gitExtension?.isActive) {
+          void vscode.window.showErrorMessage(
+            "Git extension is not active. Please ensure Git is installed and the repository is initialized.",
+          );
+          return;
+        }
+
+        const git = gitExtension.exports.getAPI(1);
+        const repositories = git.repositories;
+
+        if (repositories.length === 0) {
+          void vscode.window.showErrorMessage(
+            "No Git repositories found in the workspace.",
+          );
+          return;
+        }
+
+        // Handle multiple repositories - let user pick or use the active one
+        let repository = repositories[0];
+        if (repositories.length > 1) {
+          const activeEditor = vscode.window.activeTextEditor;
+          if (activeEditor) {
+            const activeRepo = git.getRepository(activeEditor.document.uri);
+            if (activeRepo) {
+              repository = activeRepo;
+            }
+          }
+        }
+
+        const stagedDiff = await repository.diff(true);
+        if (!stagedDiff || stagedDiff.trim().length === 0) {
+          void vscode.window.showInformationMessage(
+            "No staged changes found. Please stage your changes first.",
+          );
+          return;
+        }
+
+        const { config } = await configHandler.loadConfig();
+        if (!config) {
+          void vscode.window.showErrorMessage(
+            "Continue configuration not loaded.",
+          );
+          return;
+        }
+
+        const llm = config.selectedModelByRole.chat;
+        if (!llm) {
+          void vscode.window.showErrorMessage(
+            "No chat model selected. Please configure a model in Continue settings.",
+          );
+          return;
+        }
+
+        const originalValue = repository.inputBox.value;
+        if (originalValue && originalValue.trim().length > 0) {
+          const overwrite = await vscode.window.showWarningMessage(
+            "This will replace your current commit message. Continue?",
+            { modal: true },
+            "Generate",
+            "Cancel",
+          );
+
+          if (overwrite !== "Generate") {
+            return;
+          }
+        }
+
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Generating commit message...",
+            cancellable: true,
+          },
+          async (progress, token) => {
+            const prompt = `${stagedDiff}\n\nGenerate a concise commit message for the above changes.\nRules:\n- Output ONLY the commit message as plain text.\n- Do NOT include code blocks, backticks, diffs, or markdown.\n- First line: single sentence, max 80 chars (summary).\n- Then two line breaks.\n- Then up to 5 bullet points ("- "), each <= 40 chars.\n- No quotes, no prefixes like 'Commit message:'.`;
+
+            let generatedMessage = "";
+            const abortController = new AbortController();
+
+            token.onCancellationRequested(() => {
+              abortController.abort();
+            });
+
+            try {
+              for await (const chunk of llm.streamChat(
+                [{ role: "user", content: prompt }],
+                abortController.signal,
+              )) {
+                generatedMessage += stripImages(chunk.content) ?? "";
+                progress.report({ message: "Generating..." });
+                repository.inputBox.value = generatedMessage.trim();
+              }
+
+              // Focus the Source Control view so user can review and commit
+              await vscode.commands.executeCommand("workbench.view.scm");
+            } catch (error) {
+              if (abortController.signal.aborted) {
+                repository.inputBox.value = originalValue;
+                // User cancelled - no need for a notification
+              } else {
+                console.error("Error generating commit message:", error);
+                void vscode.window.showErrorMessage(
+                  `Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`,
+                );
+                repository.inputBox.value = originalValue;
+              }
+            }
+          },
+        );
+      } catch (error) {
+        console.error("Error in generateCommitMessage:", error);
+        void vscode.window.showErrorMessage(
+          `Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     },
   };
 };
