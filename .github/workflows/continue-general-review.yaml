@@ -3,7 +3,7 @@ name: Continue General Review
 on:
   push:
     branches:
-      - nate/fix-wf
+      - main
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
