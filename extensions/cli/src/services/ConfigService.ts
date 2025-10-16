@@ -11,11 +11,15 @@ import { getErrorString } from "src/util/error.js";
 
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { loadConfiguration } from "../configLoader.js";
+import {
+  loadConfiguration,
+  unrollPackageIdentifiersAsConfigYaml,
+} from "../configLoader.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { ToolPermissionServiceState } from "./ToolPermissionService.js";
 import {
   AgentFileServiceState,
   ApiClientServiceState,
@@ -23,12 +27,22 @@ import {
   SERVICE_NAMES,
 } from "./types.js";
 
+const DEFAULT_MODEL_IDENTIFIER: PackageIdentifier = {
+  uriType: "slug",
+  fullSlug: {
+    ownerSlug: "anthropic",
+    packageSlug: "claude-sonnet-4-5",
+    versionSlug: "1.0.0",
+  },
+};
+
 interface ConfigServiceInit {
   authConfig: AuthConfig;
   configPath: string | undefined;
   apiClient: DefaultApiInterface;
   agentFileState: AgentFileServiceState;
   injectedConfigOptions?: BaseCommandOptions;
+  isHeadless?: boolean;
 }
 /**
  * Service for managing configuration state and operations
@@ -197,6 +211,35 @@ export class ConfigService
     return value.startsWith("http://") || value.startsWith("https://");
   }
 
+  async addDefaultChatModelIfNone(
+    config: AssistantUnrolled,
+    apiClient: DefaultApiInterface,
+    authConfig: AuthConfig | undefined,
+  ): Promise<AssistantUnrolled> {
+    const hasChatModel = !!config.models?.find(
+      (m) => !!m && (!m.roles || m.roles.includes("chat")),
+    );
+    if (!hasChatModel) {
+      try {
+        const modelConfig = await unrollPackageIdentifiersAsConfigYaml(
+          [DEFAULT_MODEL_IDENTIFIER],
+          authConfig?.accessToken ?? null,
+          authConfig?.organizationId ?? null,
+          apiClient,
+        );
+        const defaultModel = modelConfig?.block?.models?.[0];
+        if (!defaultModel) {
+          throw new Error("Loaded default model contained no model block");
+        }
+        config.models = [...(config.models || []), defaultModel];
+      } catch (e) {
+        logger.error("Failed to load default model with no model specified", e);
+        throw new Error("No model specified and failed to load default model");
+      }
+    }
+    return config;
+  }
+
   private async loadConfig(
     init: ConfigServiceInit,
   ): Promise<ConfigServiceState> {
@@ -217,16 +260,23 @@ export class ConfigService
       configPath,
       apiClient,
       injected,
+      init.isHeadless,
     );
 
     const loadedConfig = result.config;
     const merged = mergeUnrolledAssistants(loadedConfig, additional);
 
+    const withModel = await this.addDefaultChatModelIfNone(
+      merged,
+      apiClient,
+      authConfig,
+    );
+
     // Config URI persistence is now handled by the streamlined loader
     logger.debug("ConfigService initialized successfully");
 
     const state = {
-      config: merged,
+      config: withModel,
       configPath,
     };
     this.setState(state);
@@ -312,12 +362,18 @@ export class ConfigService
         SERVICE_NAMES.AGENT_FILE,
       );
 
+      const toolPermissionsState =
+        await serviceContainer.get<ToolPermissionServiceState>(
+          SERVICE_NAMES.TOOL_PERMISSIONS,
+        );
+
       const result = await this.loadConfig({
         agentFileState,
         apiClient,
         authConfig,
         configPath: newConfigPath,
         injectedConfigOptions: {},
+        isHeadless: toolPermissionsState.isHeadless,
       });
 
       // Manually reload dependent services (MODEL, MCP) to pick up the new config

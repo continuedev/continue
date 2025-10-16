@@ -35,7 +35,8 @@ export type ConfigSource =
   | { type: "saved-uri"; uri: string }
   | { type: "user-assistant"; slug: string }
   | { type: "default-config-yaml" }
-  | { type: "default-agent" };
+  | { type: "default-agent" }
+  | { type: "no-config" };
 
 /**
  * Streamlined configuration loader that implements the specification
@@ -46,12 +47,17 @@ export async function loadConfiguration(
   cliConfigPath: string | undefined,
   apiClient: DefaultApiInterface,
   injectBlocks: PackageIdentifier[],
+  isHeadless: boolean | undefined,
 ): Promise<ConfigLoadResult> {
   const organizationId = getOrganizationId(authConfig);
   const accessToken = getAccessToken(authConfig);
 
   // Step 1: Determine config source using precedence rules
-  const configSource = determineConfigSource(authConfig, cliConfigPath);
+  const configSource = determineConfigSource(
+    authConfig,
+    cliConfigPath,
+    isHeadless,
+  );
 
   // Step 2: Load configuration from the determined source
   const config = await loadFromSource(
@@ -82,10 +88,16 @@ export async function loadConfiguration(
 function determineConfigSource(
   authConfig: AuthConfig,
   cliConfigPath: string | undefined,
+  isHeadless: boolean | undefined,
 ): ConfigSource {
   // Priority 1: CLI --config flag
   if (cliConfigPath) {
     return { type: "cli-flag", path: cliConfigPath };
+  }
+
+  // In headless, config fallback behavior isn't supported
+  if (isHeadless) {
+    return { type: "no-config" };
   }
 
   // Priority 2: Saved config URI (only for file-based auth)
@@ -163,6 +175,12 @@ async function loadFromSource(
           accessToken,
           injectBlocks,
         );
+
+      case "no-config":
+        return {
+          name: "No Config Specified",
+          version: "1.0.0",
+        };
 
       default:
         throw new Error(`Unknown config source type: ${(source as any).type}`);

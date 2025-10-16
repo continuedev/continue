@@ -212,13 +212,14 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         }
       }
 
-      return configService.initialize({
+      return await configService.initialize({
         authConfig: finalAuthState.authConfig,
         configPath,
         // organizationId: finalAuthState.organizationId || null,
         apiClient: apiClientState.apiClient,
         agentFileState,
         injectedConfigOptions: commandOptions,
+        isHeadless: initOptions.headless,
       });
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.AGENT_FILE], // Dependencies
