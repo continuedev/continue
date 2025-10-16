@@ -1,0 +1,374 @@
+---
+title: "Project Management & Issue Tracking with Linear MCP + Continue"
+description: "Use Continue CLI and the Linear MCP to automate issue creation, project management, and team workflows through natural-language prompts."
+sidebarTitle: "Linear with Continue"
+---
+
+<Card title="What You'll Build" icon="robot">
+
+  A comprehensive project management workflow that lets you create, update, and
+  manage Linear issues, projects, and team workflows from natural-language
+  prompts. Automate sprint planning, bug triage, feature tracking, and status
+  reporting – perfect for engineering teams using Linear for project management.
+
+</Card>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Connect the [Linear MCP](https://hub.continue.dev/linear/linear-mcp) to Continue for seamless issue management
+- Create and update Linear issues, projects, and cycles through AI prompts
+- Automate project workflows including sprint planning and bug triage
+- Generate status reports and project insights directly from your Linear workspace
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+<Steps>
+  <Step title="Continue CLI Setup">
+    Install the Continue CLI:
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+    
+    Verify installation:
+    ```bash
+    cn --version
+    ```
+    
+    <Tip>
+    
+      Need help with CLI setup? Check our [CLI guide](/guides/cli) for detailed instructions.
+    
+    </Tip>
+  </Step>
+
+  <Step title="Linear Account Requirements">
+    - [Linear workspace](https://linear.app) with Member (or higher) access
+    - Linear API key with appropriate permissions
+    - Node.js 18+ installed locally
+    - [Continue account](https://hub.continue.dev) with Hub access
+    
+    <Warning>
+    
+      **Agent usage requires credits** – create a Continue API key at
+      [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+      and store it as a secret.
+    
+    </Warning>
+  </Step>
+
+  <Step title="Generate Linear API Key">
+    1. Go to **[Linear Settings > API](https://linear.app/settings/api)**
+    2. Click **Create new API key**
+    3. Give it a descriptive name (e.g., "Continue MCP Integration")
+    4. Select appropriate scopes (read/write access to issues, projects, teams)
+    5. Copy the generated API key
+    
+    <Info>
+    
+      This token is your `LINEAR_API_KEY` secret.
+      Store it securely – you won't be able to view it again.
+    
+    </Info>
+  </Step>
+
+  <Step title="Add Secrets to Continue Hub">
+    1. Open **[Continue Hub Secrets](https://hub.continue.dev/settings/secrets)**
+    2. Click **+ New Secret** and add:
+       - **Key:** `LINEAR_API_KEY` → **Value:** `lin_api_...` (Your Linear API key)
+       - **Key:** `CONTINUE_API_KEY` → **Value:** `cont_api_...` (Your Continue API key)
+    
+    <Tip>
+    
+      Continue's secure storage means secrets are available in any prompt as
+      `$LINEAR_API_KEY` etc.
+    
+    </Tip>
+  </Step>
+</Steps>
+
+## Linear Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+
+  Skip the manual setup and use our pre-built Linear agent that includes
+  optimized prompts, issue management rules, and the Linear MCP for more
+  consistent project management results.
+
+</Card>
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate results with optimized prompts and built-in project management workflows
+
+    <Steps>
+      <Step title="Load the Pre-Built Agent">
+        Navigate to your project directory and run:
+        ```bash
+        cn --config continuedev/linear-continuous-ai
+        ```
+
+        This agent includes the **Pre-installed Linear MCP** for seamless integration
+      </Step>
+
+      <Step title="Run Your First Prompt">
+        ```bash
+        cn "Create a bug report for the login timeout issue I'm seeing in Chrome, assign it to the Auth team with high priority."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Linear MCP integration and pre-tested project management prompts.
+
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Install Linear MCP from Hub">
+        Browse to the [Linear MCP on Continue Hub](https://hub.continue.dev/linear/linear-mcp) and click **Add to Agent**.
+      </Step>
+      
+      <Step title="Create / Edit Your Agent on Hub">
+        1. Click **New Agent** on **[Continue Hub](https://hub.continue.dev)**
+        2. Add **Linear MCP** under **Tools**
+        3. Configure environment variables in [settings](https://hub.continue.dev/settings) with:
+           ```
+           LINEAR_API_KEY=$LINEAR_API_KEY
+           ```
+        4. Add any custom **rules** and **prompts** for your workflow
+      </Step>
+      
+      <Step title="Launch With Continue CLI">
+        ```bash
+        cn --config user/my-linear-agent
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+
+  To use the pre-built agent, you need either:
+  - **Continue CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Continue Hub secrets
+  
+  The agent will automatically detect and use your configuration.
+
+</Accordion>
+
+---
+
+## Example Prompts & Workflows
+
+Now you can use natural language prompts to automate Linear workflows. The Continue agent automatically calls the appropriate Linear MCP tools.
+
+<CardGroup cols={2}>
+  <Card title="Bug Report Creation" icon="bug">
+    **Prompt:**
+    ```
+    Create a bug report for the API timeout issue in the checkout flow.
+    Include steps to reproduce, assign to backend team, and set priority
+    to high. Add labels for 'api' and 'checkout'.
+    ```
+  </Card>
+  
+  <Card title="Feature Planning" icon="lightbulb">
+    **Prompt:**
+    ```
+    Create a new project for the mobile app redesign. Add issues for
+    user research, wireframes, component library updates, and
+    implementation phases. Set up a 6-week cycle.
+    ```
+  </Card>
+  
+  <Card title="Sprint Review" icon="chart-line">
+    **Prompt:**
+    ```
+    Generate a sprint summary for the current cycle. Show completed
+    issues, blocked items, and velocity metrics. Create a document
+    with team accomplishments and next priorities.
+    ```
+  </Card>
+  
+  <Card title="Code-Based Issue Creation" icon="code">
+    **Prompt:**
+    ```
+    Scan the codebase for TODO and FIXME comments in the last 30 days.
+    Create Linear issues for each one with the code context,
+    file location, and estimated complexity.
+    ```
+  </Card>
+</CardGroup>
+
+---
+
+## Advanced Project Management Workflows
+
+### Multi-Tool Integration
+
+Combine Linear with other tools for powerful automation:
+
+<CardGroup cols={2}>
+  <Card title="Linear + GitHub" icon="github">
+    ```
+    "Analyze merged PRs this week and create Linear issues for
+    any technical debt mentioned in PR descriptions. Link back
+    to the original PRs and assign to code owners."
+    ```
+  </Card>
+  
+  <Card title="Linear + Notion" icon="notion">
+    ```
+    "Export completed Linear issues from this sprint to create
+    a release notes document in Notion with feature summaries
+    and user impact descriptions."
+    ```
+    See the [Notion Integration Guide](/guides/notion-continue-cookbook)
+  </Card>
+  
+  <Card title="Automated Triage" icon="filter">
+    **🎯 Smart Workflow:**
+    ```
+    "Review all unassigned issues created in the last 24 hours.
+    Categorize by team (Frontend, Backend, Design), set appropriate
+    priorities based on user impact, and assign to team leads."
+    ```
+  </Card>
+  
+  <Card title="Cycle Planning" icon="calendar">
+    ```
+    "Create next sprint's cycle in Linear. Move high-priority
+    issues from the backlog, balance workload across team members,
+    and set realistic story point targets based on last cycle's velocity."
+    ```
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="Daily Standup Automation">
+    **Automate your daily standup reports:**
+    
+    ```bash
+    cn "Generate my standup update: show issues I worked on yesterday, 
+    what I'm planning today, and any blockers. Include progress on 
+    current cycle goals."
+    ```
+    
+    **The agent will:**
+    - Query your assigned issues
+    - Check recent activity and comments
+    - Identify blocked or in-review items
+    - Format a standup-ready summary
+  </Tab>
+
+  <Tab title="Bug Triage Assistant">
+    **Streamline bug reporting and triage:**
+    
+    ```bash
+    cn "Help me triage these user-reported bugs. Check for duplicates,
+    assign severity levels based on user impact, and route to appropriate
+    teams based on the affected components."
+    ```
+    
+    **The agent will:**
+    - Search for similar existing issues
+    - Analyze impact and set priorities
+    - Assign to correct teams
+    - Add relevant labels and milestones
+  </Tab>
+
+  <Tab title="Release Planning">
+    **Plan and track releases:**
+    
+    ```bash
+    cn "Create a release plan for version 2.5. Group issues by feature area,
+    identify dependencies, and create a project with milestones for
+    code freeze, testing, and deployment phases."
+    ```
+    
+    **The agent will:**
+    - Create structured project hierarchy
+    - Set up milestone tracking
+    - Identify issue dependencies
+    - Generate timeline estimates
+  </Tab>
+</Tabs>
+
+---
+
+## Security Best Practices
+
+<Warning>
+
+  **Protect Your API Keys:**
+  - Treat `LINEAR_API_KEY` like a password → rotate regularly
+  - Use minimal required scopes for your use case
+  - Store secrets in Continue Hub, never commit to git
+  - Monitor API usage for unusual activity
+  - Review team member access permissions regularly
+
+</Warning>
+
+---
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered Linear automation system** that:
+
+- **Automates issue management** - Create, update, and triage issues with natural language
+- **Streamlines project planning** - Set up cycles, projects, and milestones efficiently  
+- **Enhances team collaboration** - Generate reports, updates, and documentation automatically
+- **Integrates with your workflow** - Connect Linear data with other tools and repositories
+
+<Card title="Continuous AI" icon="rocket">
+
+  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine project management tasks with human oversight
+  through review and approval of generated issues and updates.
+
+</Card>
+
+---
+
+## Next Steps
+
+- Set up **GitHub Actions** to automatically create Linear issues from failed CI/CD runs
+- Integrate with **Slack** for real-time issue notifications and updates  
+- Create **custom templates** for different issue types and project structures
+- Explore **cross-tool workflows** connecting Linear with GitHub, Notion, or analytics tools
+
+---
+
+## Resources
+
+<CardGroup>
+  <Card title="Linear MCP Hub" icon="external-link" href="https://hub.continue.dev/linear/linear-mcp">
+    View the Linear MCP on Continue Hub with setup instructions.
+  </Card>
+  
+  <Card title="Continue CLI Reference" icon="terminal" href="/guides/cli">
+    A complete guide to using the Continue CLI with project management workflows.
+  </Card>
+  
+  <Card title="Pre-built Linear Agent" icon="robot" href="https://hub.continue.dev/agents/continuedev/linear-continuous-ai">
+    Access the pre-built agent optimized for Linear workflows.
+  </Card>
+  
+  <Card title="Linear API Documentation" icon="code" href="https://developers.linear.app/docs">
+    Complete Linear API reference and integration guides.
+  </Card>
+</CardGroup>
+
+Happy project managing!
