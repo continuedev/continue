@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -414,10 +414,9 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
+
+    for await (const chunk of streamSse(response)) {
+      yield chunk;
     }
   }
   private async *streamChatBison(
