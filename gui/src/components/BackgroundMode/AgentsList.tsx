@@ -32,6 +32,14 @@ const normalizeRepoUrl = (url: string | undefined | null): string => {
     normalized = normalized.replace("git@github.com:", "https://github.com/");
   }
 
+  // Convert SSH protocol to HTTPS: ssh://git@github.com/owner/repo.git -> https://github.com/owner/repo
+  // Also handles: ssh://git@github.com:owner/repo.git (less common)
+  if (normalized.startsWith("ssh://git@github.com")) {
+    normalized = normalized
+      .replace("ssh://git@github.com/", "https://github.com/")
+      .replace("ssh://git@github.com:", "https://github.com/");
+  }
+
   // Convert shorthand owner/repo to full URL
   if (
     normalized.includes("/") &&
