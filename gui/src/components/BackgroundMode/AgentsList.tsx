@@ -1,4 +1,4 @@
-import { ArrowPathIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -233,7 +233,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                         : "This agent is for a different repository. Open the correct workspace to take over this workflow."
                     }
                   >
-                    <ArrowDownTrayIcon className="h-4 w-4" />
+                    <PlayIcon className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
