@@ -288,15 +288,6 @@ export class GeminiApi implements BaseLlmApi {
     let usage: UsageInfo | undefined = undefined;
     for await (const chunk of streamResponse(response as any)) {
       buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
-      }
 
       const parts = buffer.split("\n,");
 
