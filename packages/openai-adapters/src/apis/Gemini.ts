@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -286,7 +286,7 @@ export class GeminiApi implements BaseLlmApi {
   async *handleStreamResponse(response: any, model: string) {
     let buffer = "";
     let usage: UsageInfo | undefined = undefined;
-    for await (const chunk of streamResponse(response as any)) {
+    for await (const chunk of streamSse(response as any)) {
       buffer += chunk;
 
       const parts = buffer.split("\n,");
