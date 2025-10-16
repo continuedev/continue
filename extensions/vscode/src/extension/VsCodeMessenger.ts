@@ -526,43 +526,56 @@ export class VsCodeMessenger {
           return;
         }
 
-        // Stash any uncommitted changes
+        // Ask user what to do with uncommitted changes
         if (
           repo.state.workingTreeChanges.length > 0 ||
           repo.state.indexChanges.length > 0
         ) {
-          try {
-            await vscode.window.withProgress(
-              {
-                location: vscode.ProgressLocation.Notification,
-                title: "Stashing local changes...",
-                cancellable: false,
-              },
-              async () => {
-                // Convert URI to file system path
-                const workspacePath =
-                  vscode.Uri.parse(matchingWorkspace).fsPath;
+          const changeCount =
+            repo.state.workingTreeChanges.length +
+            repo.state.indexChanges.length;
 
-                await this.ide.subprocess(
-                  `git stash push -m "Continue: Stashed before opening agent ${agentSessionId}"`,
-                  workspacePath,
-                );
-              },
-            );
-            vscode.window.showInformationMessage(
-              "Local changes have been stashed.",
-            );
-          } catch (e) {
-            console.error("Failed to stash changes:", e);
-            const choice = await vscode.window.showWarningMessage(
-              "Failed to stash changes. Continue anyway?",
-              "Yes",
-              "No",
-            );
-            if (choice !== "Yes") {
-              return;
+          const choice = await vscode.window.showWarningMessage(
+            `You have ${changeCount} uncommitted change(s). What would you like to do?`,
+            "Stash & Continue",
+            "Continue Without Stashing",
+            "Cancel",
+          );
+
+          if (choice === "Cancel" || !choice) {
+            return;
+          }
+
+          if (choice === "Stash & Continue") {
+            try {
+              await vscode.window.withProgress(
+                {
+                  location: vscode.ProgressLocation.Notification,
+                  title: "Stashing local changes...",
+                  cancellable: false,
+                },
+                async () => {
+                  const workspacePath =
+                    vscode.Uri.parse(matchingWorkspace).fsPath;
+                  await this.ide.subprocess(
+                    `git stash push -m "Continue: Stashed before opening agent ${agentSessionId}"`,
+                    workspacePath,
+                  );
+                },
+              );
+              vscode.window.showInformationMessage(
+                "Local changes have been stashed.",
+              );
+            } catch (e) {
+              console.error("Failed to stash changes:", e);
+              const errorMsg = e instanceof Error ? e.message : String(e);
+              vscode.window.showErrorMessage(
+                `Failed to stash changes: ${errorMsg}`,
+              );
+              return; // Stop on stash failure
             }
           }
+          // If "Continue Without Stashing" was chosen, just proceed
         }
 
         // Check if we're already on the target branch
