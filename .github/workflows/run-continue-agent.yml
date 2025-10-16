@@ -7,8 +7,8 @@ on:
         description: "The prompt to send to the Continue agent"
         required: true
         type: string
-      agent:
-        description: "The agent to use (e.g., continuedev/default-background-agent)"
+      config:
+        description: "The config to use (e.g., continuedev/default-background-agent)"
         required: false
         type: string
         default: "continuedev/default-background-agent"
@@ -33,7 +33,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CONTINUE_API_KEY }}" \
             -d '{
               "prompt": "${{ inputs.prompt }}",
-              "agent": "${{ inputs.agent }}",
+              "config": "${{ inputs.config }}",
               "branchName": "${{ inputs.branch_name }}",
               "repoUrl": "https://github.com/${{ github.repository }}"
             }')
