@@ -282,9 +282,9 @@ runs:
           echo "Prompt length: $(wc -c < "$PROMPT_FILE") characters"
           
           # Use timeout to prevent hanging (360 seconds = 6 minutes)
-          echo "Executing command: cn --config $CONTINUE_ORG/$CONTINUE_AGENT -p @$PROMPT_FILE --allow Bash"
+          echo "Executing command: cn --agent $CONTINUE_ORG/$CONTINUE_AGENT -p @$PROMPT_FILE --allow Bash"
           
-          if timeout 360 cn --config "$CONTINUE_ORG/$CONTINUE_AGENT" -p "@$PROMPT_FILE" --allow Bash > code_review_raw.md 2>cli_error.log; then
+          if timeout 360 cn --agent "$CONTINUE_ORG/$CONTINUE_AGENT" -p "@$PROMPT_FILE" --allow Bash > code_review_raw.md 2>cli_error.log; then
             echo "Continue CLI completed successfully"
             echo "Raw output length: $(wc -c < code_review_raw.md) characters"
             
