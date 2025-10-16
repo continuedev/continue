@@ -8,10 +8,10 @@ import { logger } from "../util/logger.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
+  AgentFileServiceState,
   ApiClientServiceState,
   ConfigServiceState,
   SERVICE_NAMES,
-  WorkflowServiceState,
 } from "./types.js";
 
 interface ConfigServiceInit {
@@ -19,7 +19,7 @@ interface ConfigServiceInit {
   configPath: string | undefined;
   _organizationId: string | null;
   apiClient: DefaultApiInterface;
-  workflowState: WorkflowServiceState;
+  agentFileState: AgentFileServiceState;
   injectedConfigOptions?: BaseCommandOptions;
 }
 /**
@@ -44,7 +44,7 @@ export class ConfigService
     return [
       SERVICE_NAMES.AUTH,
       SERVICE_NAMES.API_CLIENT,
-      SERVICE_NAMES.WORKFLOW,
+      SERVICE_NAMES.AGENT_FILE,
     ];
   }
 
@@ -55,7 +55,7 @@ export class ConfigService
     apiClient,
     authConfig,
     configPath,
-    workflowState,
+    agentFileState,
     injectedConfigOptions,
   }: ConfigServiceInit): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
@@ -66,13 +66,13 @@ export class ConfigService
 
     // Apply injected config if provided
     if (
-      workflowState?.workflowFile ||
+      agentFileState?.agentFile ||
       (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions))
     ) {
       config = await configEnhancer.enhanceConfig(
         config,
         injectedConfigOptions,
-        workflowState,
+        agentFileState,
       );
 
       logger.debug("Applied injected configuration");

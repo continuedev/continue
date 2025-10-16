@@ -48,10 +48,7 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import {
-  FreeTrialStatus,
-  RemoteSessionMetadata,
-} from "../control-plane/client";
+import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 import { ContinueErrorReason } from "../util/errors";
@@ -310,7 +307,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
-    { contextItems: ContextItem[]; errorMessage?: string },
+    {
+      contextItems: ContextItem[];
+      errorMessage?: string;
+      errorReason?: ContinueErrorReason;
+    },
   ];
   "tools/evaluatePolicy": [
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
@@ -327,11 +328,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
-  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
-  "controlPlane/getModelsAddOnUpgradeUrl": [
-    { vsCodeUriScheme?: string },
-    { url: string } | null,
-  ];
+  "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },

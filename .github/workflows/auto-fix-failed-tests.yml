@@ -97,7 +97,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 

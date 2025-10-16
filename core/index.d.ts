@@ -1853,7 +1853,7 @@ export type RuleSource =
   | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules"
-  | "agent-file";
+  | "agentFile";
 
 export interface RuleWithSource {
   name?: string;

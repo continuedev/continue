@@ -1,5 +1,12 @@
 import { vi } from "vitest";
 
+// Mock auth functions
+vi.mock("./auth/workos.js", () => ({
+  loadAuthConfig: vi.fn(),
+  getAccessToken: vi.fn(),
+}));
+
+import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
 import { processRule as processPromptOrRule } from "./hubLoader.js";
 describe("processPromptOrRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
@@ -16,6 +23,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
 
   beforeEach(() => {
     mockFetch.mockClear();
+    // Reset auth mocks to not authenticated state
+    (loadAuthConfig as any).mockReturnValue(null);
+    (getAccessToken as any).mockReturnValue(null);
   });
 
   describe("loadRuleFromHub", () => {
@@ -43,6 +53,7 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
           "v0/continuedev/sentry-nextjs/latest/download",
           "https://api.continue.dev/",
         ),
+        { headers: {} },
       );
     });
 

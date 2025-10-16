@@ -19,9 +19,8 @@ export const FatalErrorIndicator = () => {
 
   const configLoading = useAppSelector((state) => state.config.loading);
   const showConfigPage = () => {
-    navigate(CONFIG_ROUTES.AGENTS);
+    navigate(CONFIG_ROUTES.CONFIGS);
   };
-  // const onAgentsPage = location.
   const currentPath = `${location.pathname}${location.search}`;
 
   const { selectedProfile } = useAuth();
@@ -33,7 +32,7 @@ export const FatalErrorIndicator = () => {
   const displayName = selectedProfile
     ? (selectedProfile.title ??
       `${selectedProfile.fullSlug?.ownerSlug}/${selectedProfile.fullSlug?.packageSlug}`)
-    : "agent";
+    : "config";
 
   return (
     <Alert type="error" className="mx-2 my-1 px-2">
@@ -65,7 +64,7 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-        {currentPath !== CONFIG_ROUTES.AGENTS && (
+        {currentPath !== CONFIG_ROUTES.CONFIGS && (
           <div onClick={showConfigPage} className="cursor-pointer underline">
             View
           </div>

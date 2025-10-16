@@ -1,0 +1,20 @@
+---
+title: "How Edit Works"
+description: "Using the highlighted code, the contents of the current file containing your highlight, and your input instructions, we prompt the model to edit the code according to your instructions. No other additional context is provided to the model."
+---
+
+## How Edit Functionality Works
+
+When you start an edit session, Continue:
+
+1. **Gathers Context**: Uses the highlighted code and the current file contents
+2. **Prompts the Model**: Sends the gathered context and your input instructions to the model
+3. **Applies Changes**: The model response is then streamed directly back to the highlighted range in your code, where we apply a diff formatting to show the proposed changes.
+
+If you accept the diff, we remove the previously highlighted lines, and if you reject the diff, we remove the proposed changes.
+
+<Info>
+**Looking for AI that predicts your next edit?** Check out [Next Edit](/ide-extensions/autocomplete/next-edit), an experimental feature that proactively suggests code changes before you even start typing, going beyond traditional autocomplete to anticipate entire code modifications.
+</Info>
+
+If you would like to view the exact prompt that is sent to the model during an edit, you can [find it in the prompt logs](/troubleshooting#check-the-logs).
