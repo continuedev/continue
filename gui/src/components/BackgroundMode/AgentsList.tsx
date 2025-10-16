@@ -116,7 +116,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
               // Open agent detail in browser
               ideMessenger.post("controlPlane/openUrl", {
                 path: `agents/${agent.id}`,
-                orgSlug: currentOrg?.slug,
               });
             }}
           >
