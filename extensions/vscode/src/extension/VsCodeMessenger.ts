@@ -342,8 +342,6 @@ export class VsCodeMessenger {
         name = `Agent for ${repoName || "repository"}`;
       }
 
-      // debugger;
-
       // Get the current agent configuration from the selected profile
       let agent: string | undefined;
       try {
@@ -617,10 +615,6 @@ export class VsCodeMessenger {
         // Fetch the agent state
         const agentState =
           await configHandler.controlPlaneClient.getAgentState(agentSessionId);
-
-        // Debug what we got back
-        // debugger;
-        console.log("Agent state response:", agentState);
 
         if (!agentState) {
           vscode.window.showErrorMessage(
