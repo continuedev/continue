@@ -37,6 +37,23 @@ export async function getUrlContextItems(
     const url = new URL(query);
     const icon = await fetchFavicon(url);
     const resp = await fetchFn(url);
+
+    // Check if the response is not OK
+    if (!resp.ok) {
+      return [
+        {
+          icon,
+          description: url.toString(),
+          content: `Failed to fetch URL: HTTP ${resp.status} ${resp.statusText}`,
+          name: `HTTP ${resp.status}`,
+          uri: {
+            type: "url",
+            value: url.toString(),
+          },
+        },
+      ];
+    }
+
     const html = await resp.text();
 
     const dom = new JSDOM(html);
@@ -66,6 +83,18 @@ export async function getUrlContextItems(
     ];
   } catch (e) {
     console.log(e);
-    return [];
+    const errorMessage = e instanceof Error ? e.message : "Unknown error";
+
+    return [
+      {
+        description: `Error fetching ${query}`,
+        content: `Failed to fetch URL: ${errorMessage}`,
+        name: "Fetch Error",
+        uri: {
+          type: "url",
+          value: query,
+        },
+      },
+    ];
   }
 }
