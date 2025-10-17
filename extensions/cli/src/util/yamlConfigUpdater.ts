@@ -39,7 +39,7 @@ export function updateAnthropicModelInYaml(
     // If document is empty or has no content, create a new config
     if (!doc.contents || doc.contents === null) {
       const defaultConfig: ConfigStructure = {
-        name: "Local Config",
+        name: "AWS SDK Expert",
         version: "1.0.0",
         schema: "v1",
         models: [newModel],
@@ -75,7 +75,7 @@ export function updateAnthropicModelInYaml(
   } catch {
     // If parsing fails completely, create a new config
     const defaultConfig: ConfigStructure = {
-      name: "Local Config",
+      name: "AWS SDK Expert",
       version: "1.0.0",
       schema: "v1",
       models: [newModel],

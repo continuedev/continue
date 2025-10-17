@@ -462,7 +462,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent" | "plan" | "aws-sdk-expert";
+export type MessageModes = "aws-sdk-expert";
 
 export type ToolStatus =
   | "generating" // Tool call arguments are being streamed from the LLM

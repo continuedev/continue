@@ -32,7 +32,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       iconUrl: "",
       title: overrideAssistantFile?.path
         ? getUriPathBasename(overrideAssistantFile.path)
-        : "Local Config",
+        : "AWS SDK Expert",
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
