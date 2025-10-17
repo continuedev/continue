@@ -12,7 +12,7 @@ export function resolveInputPath(inputPath: string): string | null {
 
   // Expand tilde paths
   let expandedPath = trimmedPath;
-  if (trimmedPath.startsWith("~/")) {
+  if (trimmedPath.startsWith("~/") || trimmedPath.startsWith("~\\")) {
     expandedPath = path.join(os.homedir(), trimmedPath.slice(2));
   } else if (trimmedPath === "~") {
     expandedPath = os.homedir();
