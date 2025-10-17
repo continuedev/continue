@@ -281,8 +281,13 @@ class Bedrock extends BaseLLM {
     let toolConfig: undefined | ToolConfiguration = undefined;
     const availableTools = new Set<string>();
     if (supportsTools && options.tools && options.tools.length > 0) {
-      toolConfig = {
-        tools: options.tools.map((tool) => ({
+      const isClaudeModel = options.model.includes("claude");
+      
+      // For Claude models, filter out tools with a type property
+      // For other models, include all tools
+      const toolSpecs = options.tools
+        .filter((tool) => !isClaudeModel || !tool.function.type)
+        .map((tool) => ({
           toolSpec: {
             name: tool.function.name,
             description: tool.function.description,
@@ -290,12 +295,17 @@ class Bedrock extends BaseLLM {
               json: tool.function.parameters,
             },
           },
-        })),
-      } as ToolConfiguration;
-      const shouldCacheToolsConfig = this.completionOptions.promptCaching;
-      if (shouldCacheToolsConfig) {
-        toolConfig.tools!.push({ cachePoint: { type: "default" } });
+        }));
+
+      if (toolSpecs.length > 0) {
+        toolConfig = { tools: toolSpecs } as ToolConfiguration;
+        const shouldCacheToolsConfig = this.completionOptions.promptCaching;
+        if (shouldCacheToolsConfig) {
+          toolConfig.tools!.push({ cachePoint: { type: "default" } });
+        }
       }
+
+      // Add all tool names to availableTools set
       options.tools.forEach((tool) => {
         availableTools.add(tool.function.name);
       });
@@ -329,6 +339,14 @@ class Bedrock extends BaseLLM {
           .slice(0, 4),
       },
       additionalModelRequestFields: {
+        tools: options.model.includes("claude") && options.tools
+          ? options.tools
+              .filter((tool) => tool.function.type)
+              .map((tool) => ({
+                name: tool.function.name,
+                type: tool.function.type,
+              }))
+          : undefined,
         thinking: options.reasoning
           ? {
               type: "enabled",
@@ -336,7 +354,7 @@ class Bedrock extends BaseLLM {
             }
           : undefined,
         anthropic_beta: options.model.includes("claude")
-          ? ["fine-grained-tool-streaming-2025-05-14"]
+          ? ["fine-grained-tool-streaming-2025-05-14","context-management-2025-06-27"]
           : undefined,
       },
     };

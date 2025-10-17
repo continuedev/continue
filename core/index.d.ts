@@ -1081,6 +1081,7 @@ export interface Tool {
   type: "function";
   function: {
     name: string;
+    type?: string;
     description?: string;
     parameters?: Record<string, any>;
     strict?: boolean | null;
