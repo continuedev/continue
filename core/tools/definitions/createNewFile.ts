@@ -24,7 +24,7 @@ export const createNewFileTool: Tool = {
         filepath: {
           type: "string",
           description:
-            "The path where the new file should be created, relative to the root of the workspace",
+            "The path where the new file should be created. Can be a relative path (from workspace root), absolute path, tilde path (~/...), or file:// URI.",
         },
         contents: {
           type: "string",
