@@ -38,18 +38,12 @@ async function evaluateToolPolicy(
     )?.defaultToolPolicy ??
     DEFAULT_TOOL_SETTING;
 
-  // Merge parsed and preprocessed arguments to ensure we have both original args and any added metadata
-  // processedArgs may add metadata like _resolvedPath but should include all parsedArgs fields
-  const args = {
-    ...toolCallState.parsedArgs,
-    ...toolCallState.processedArgs,
-  };
-
   const toolName = toolCallState.toolCall.function.name;
   const result = await ideMessenger.request("tools/evaluatePolicy", {
     toolName,
     basePolicy,
-    args,
+    parsedArgs: toolCallState.parsedArgs,
+    processedArgs: toolCallState.processedArgs,
   });
 
   // Evaluate the policy dynamically

@@ -41,15 +41,15 @@ export const readFileTool: Tool = {
 
     // Store the resolved path info in args for policy evaluation
     return {
-      ...args,
-      _resolvedPath: resolvedPath,
+      resolvedPath,
     };
   },
   evaluateToolCallPolicy: (
     basePolicy: ToolPolicy,
-    parsedArgs: Record<string, unknown>,
+    _: Record<string, unknown>,
+    processedArgs?: Record<string, unknown>,
   ): ToolPolicy => {
-    const resolvedPath = parsedArgs._resolvedPath as
+    const resolvedPath = processedArgs?.resolvedPath as
       | ResolvedPath
       | null
       | undefined;

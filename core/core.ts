@@ -1091,7 +1091,7 @@ export class Core {
 
     on(
       "tools/evaluatePolicy",
-      async ({ data: { toolName, basePolicy, args } }) => {
+      async ({ data: { toolName, basePolicy, parsedArgs, processedArgs } }) => {
         const { config } = await this.configHandler.loadConfig();
         if (!config) {
           throw new Error("Config not loaded");
@@ -1104,12 +1104,16 @@ export class Core {
 
         // Extract display value for specific tools
         let displayValue: string | undefined;
-        if (toolName === "runTerminalCommand" && args.command) {
-          displayValue = args.command as string;
+        if (toolName === "runTerminalCommand" && parsedArgs.command) {
+          displayValue = parsedArgs.command as string;
         }
 
         if (tool.evaluateToolCallPolicy) {
-          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(
+            basePolicy,
+            parsedArgs,
+            processedArgs,
+          );
           return { policy: evaluatedPolicy, displayValue };
         }
         return { policy: basePolicy, displayValue };

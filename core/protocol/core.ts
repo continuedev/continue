@@ -314,7 +314,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "tools/evaluatePolicy": [
-    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    {
+      toolName: string;
+      basePolicy: ToolPolicy;
+      parsedArgs: Record<string, unknown>;
+      processedArgs?: Record<string, unknown>;
+    },
     { policy: ToolPolicy; displayValue?: string },
   ];
   "tools/preprocessArgs": [
