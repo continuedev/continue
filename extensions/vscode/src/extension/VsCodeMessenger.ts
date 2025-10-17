@@ -15,6 +15,10 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
+import {
+  sanitizeShellArgument,
+  validateGitHubRepoUrl,
+} from "core/util/sanitization";
 import * as vscode from "vscode";
 
 import { ApplyManager } from "../apply";
@@ -295,6 +299,13 @@ export class VsCodeMessenger {
         // Get repo name/URL
         const repoName = await this.ide.getRepoName(workspaceDir);
         if (repoName) {
+          // Validate repo URL to prevent injection attacks
+          if (!validateGitHubRepoUrl(repoName)) {
+            vscode.window.showErrorMessage(
+              "Invalid repository format. Please ensure you're using a valid GitHub repository.",
+            );
+            return;
+          }
           // If repo name looks like "owner/repo", convert to GitHub URL
           if (repoName.includes("/") && !repoName.startsWith("http")) {
             repoUrl = `https://github.com/${repoName}`;
@@ -565,8 +576,10 @@ export class VsCodeMessenger {
                 async () => {
                   const workspacePath =
                     vscode.Uri.parse(matchingWorkspace).fsPath;
+                  // Sanitize agentSessionId to prevent command injection
+                  const stashMessage = `Continue: Stashed before opening agent ${agentSessionId}`;
                   await this.ide.subprocess(
-                    `git stash push -m "Continue: Stashed before opening agent ${agentSessionId}"`,
+                    `git stash push -m ${sanitizeShellArgument(stashMessage)}`,
                     workspacePath,
                   );
                 },
