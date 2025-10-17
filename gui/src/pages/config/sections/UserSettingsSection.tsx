@@ -177,7 +177,7 @@ export function UserSettingsSection() {
           </div>
 
           {/* Telemetry Settings */}
-          <div>
+          {/* <div>
             <ConfigHeader title="Telemetry" variant="sm" />
             <Card>
               <div className="flex flex-col gap-4">
@@ -193,7 +193,7 @@ export function UserSettingsSection() {
                 />
               </div>
             </Card>
-          </div>
+          </div> */}
 
           {/* Appearance Settings */}
           <div>
@@ -217,7 +217,7 @@ export function UserSettingsSection() {
           </div>
 
           {/* Autocomplete Settings */}
-          <div>
+          {/* <div>
             <ConfigHeader title="Autocomplete" variant="sm" />
             <Card>
               <div className="flex flex-col gap-4">
@@ -262,7 +262,8 @@ export function UserSettingsSection() {
                   type="input"
                   title="Disable autocomplete in files"
                   description="List of comma-separated glob pattern to disable autocomplete in matching files."
-                  placeholder="**/*.(txt,md)"
+                  placeholder="**/
+          /*.(txt,md)"
                   value={formDisableAutocomplete}
                   onChange={setFormDisableAutocomplete}
                   onSubmit={handleDisableAutocompleteSubmit}
@@ -274,10 +275,10 @@ export function UserSettingsSection() {
                 />
               </div>
             </Card>
-          </div>
+          </div> */}
 
           {/* Experimental Settings */}
-          <div>
+          {/* <div>
             <ConfigHeader title="Experimental" variant="sm" />
             <Card>
               <Toggle
@@ -345,7 +346,7 @@ export function UserSettingsSection() {
                 </div>
               </Toggle>
             </Card>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

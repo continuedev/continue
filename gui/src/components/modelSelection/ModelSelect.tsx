@@ -76,7 +76,7 @@ function ModelOption({
 
   function handleConfigureClick(e: React.MouseEvent) {
     e.stopPropagation();
-    navigate(CONFIG_ROUTES.MODELS);
+    navigate(CONFIG_ROUTES.SETTINGS);
   }
 
   return (
@@ -227,7 +227,7 @@ function ModelSelect() {
 
     closeDropDown(buttonRef.current);
 
-    navigate(CONFIG_ROUTES.MODELS);
+    navigate(CONFIG_ROUTES.SETTINGS);
   }
 
   const hasNoModels = allModels?.length === 0;

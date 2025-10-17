@@ -27,20 +27,21 @@ export function AccountDropdown() {
   }
 
   if (!session) {
-    return (
-      <ToolTip content="Log in" className="text-xs md:!hidden">
-        <Button
-          variant="ghost"
-          className="text-description flex w-full flex-row items-center gap-2 px-2 py-1.5"
-          onClick={() => login(false)}
-        >
-          <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-          <span className="text-description hidden text-xs md:block">
-            Log in
-          </span>
-        </Button>
-      </ToolTip>
-    );
+    // return (
+    //   <ToolTip content="Log in" className="text-xs md:!hidden">
+    //     <Button
+    //       variant="ghost"
+    //       className="text-description flex w-full flex-row items-center gap-2 px-2 py-1.5"
+    //       onClick={() => login(false)}
+    //     >
+    //       <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+    //       <span className="text-description hidden text-xs md:block">
+    //         Log in
+    //       </span>
+    //     </Button>
+    //   </ToolTip>
+    // );
+    return;
   }
 
   return (

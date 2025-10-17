@@ -19,7 +19,7 @@ export const FatalErrorIndicator = () => {
 
   const configLoading = useAppSelector((state) => state.config.loading);
   const showConfigPage = () => {
-    navigate(CONFIG_ROUTES.CONFIGS);
+    navigate(CONFIG_ROUTES.SETTINGS);
   };
   const currentPath = `${location.pathname}${location.search}`;
 
@@ -64,7 +64,7 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-        {currentPath !== CONFIG_ROUTES.CONFIGS && (
+        {currentPath !== CONFIG_ROUTES.SETTINGS && (
           <div onClick={showConfigPage} className="cursor-pointer underline">
             View
           </div>

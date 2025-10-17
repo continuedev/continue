@@ -36,7 +36,7 @@ export function loadConfigContextProviders(
     new DiffContextProvider({}),
     new TerminalContextProvider({}),
     new ProblemsContextProvider({}),
-    new RulesContextProvider({}),
+    // new RulesContextProvider({}),
   ];
 
   // Add from config

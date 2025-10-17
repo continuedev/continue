@@ -85,16 +85,6 @@ export default function ResponseActions({
         </div>
       </HeaderButtonWithToolTip>
 
-      {isLast && ruleGenerationSupported && (
-        <HeaderButtonWithToolTip
-          tabIndex={-1}
-          text="Generate rule"
-          onClick={onGenerateRule}
-        >
-          <PencilSquareIcon className="text-description-muted h-3.5 w-3.5" />
-        </HeaderButtonWithToolTip>
-      )}
-
       {isTruncated && (
         <HeaderButtonWithToolTip
           tabIndex={-1}

@@ -1,19 +1,11 @@
 import {
   ArrowLeftIcon,
-  BuildingOfficeIcon,
   CircleStackIcon,
   Cog6ToothIcon,
-  CubeIcon,
-  DocumentIcon,
-  QuestionMarkCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { ConfigSection } from "./components/ConfigSection";
-import { ConfigsSection } from "./sections/ConfigsSection";
-import { HelpSection } from "./sections/HelpSection";
 import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
-import { ModelsSection } from "./sections/ModelsSection";
-import { OrganizationsSection } from "./sections/OrganizationsSection";
 import { ToolsSection } from "./sections/ToolsSection";
 import { UserSettingsSection } from "./sections/UserSettingsSection";
 
@@ -49,16 +41,6 @@ export const topTabSections: TabSection[] = [
     showTopDivider: true,
     tabs: [
       {
-        id: "models",
-        label: "Models",
-        component: (
-          <ConfigSection>
-            <ModelsSection />
-          </ConfigSection>
-        ),
-        icon: <CubeIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-      },
-      {
         id: "tools",
         label: "Tools",
         component: (
@@ -73,36 +55,8 @@ export const topTabSections: TabSection[] = [
     ],
   },
   {
-    id: "agents-orgs",
-    showTopDivider: true,
-    tabs: [
-      {
-        id: "configs",
-        label: "Configs",
-        component: (
-          <ConfigSection>
-            <ConfigsSection />
-          </ConfigSection>
-        ),
-        icon: <DocumentIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-      },
-      {
-        id: "organizations",
-        label: "Organizations",
-        component: (
-          <ConfigSection>
-            <OrganizationsSection />
-          </ConfigSection>
-        ),
-        icon: (
-          <BuildingOfficeIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-        ),
-      },
-    ],
-  },
-  {
     id: "indexing",
-    showTopDivider: true,
+    showTopDivider: false,
     tabs: [
       {
         id: "indexing",
@@ -133,18 +87,6 @@ export const bottomTabSections: TabSection[] = [
           </ConfigSection>
         ),
         icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-      },
-      {
-        id: "help",
-        label: "Help",
-        component: (
-          <ConfigSection>
-            <HelpSection />
-          </ConfigSection>
-        ),
-        icon: (
-          <QuestionMarkCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-        ),
       },
     ],
   },

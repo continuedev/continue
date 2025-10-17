@@ -71,7 +71,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   MCPContextProvider,
   GitCommitContextProvider,
   ClipboardContextProvider,
-  RulesContextProvider,
+  // RulesContextProvider,
 ];
 
 export function contextProviderClassFromName(

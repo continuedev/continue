@@ -163,17 +163,17 @@ export function getContextProviderDropdownOptions(
         .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
 
     if (contextProviderMatches.length) {
-      contextProviderMatches.push({
-        title: "Add more context providers",
-        type: "action",
-        action: () => {
-          ideMessenger.post(
-            "openUrl",
-            "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
-          );
-        },
-        description: "",
-      });
+      // contextProviderMatches.push({
+      //   title: "Add more context providers",
+      //   type: "action",
+      //   action: () => {
+      //     ideMessenger.post(
+      //       "openUrl",
+      //       "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
+      //     );
+      //   },
+      //   description: "",
+      // });
       return contextProviderMatches;
     }
 

@@ -68,7 +68,7 @@ function ConfigPage() {
             />
           ))}
 
-          <Divider />
+          {/* <Divider /> */}
 
           <AccountDropdown />
         </div>

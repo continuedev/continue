@@ -87,7 +87,7 @@ export function AssistantOption({
                 className="text-error hover:enabled:text-error my-0 h-4 w-4 p-0"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(CONFIG_ROUTES.CONFIGS);
+                  navigate(CONFIG_ROUTES.SETTINGS);
                 }}
               >
                 <ExclamationTriangleIcon className="h-3.5 w-3.5" />
