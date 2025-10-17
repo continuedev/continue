@@ -19,7 +19,7 @@ jobs:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           # When it goes "stale" an issue is created
           # We don't want this, so we delete first
-          days-before-stale: 61
+          days-before-stale: 60
           days-before-delete: 60
           pr-check: true
           dry-run: true
