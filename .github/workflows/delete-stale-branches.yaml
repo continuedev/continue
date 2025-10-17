@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Stale Branches
-        uses: crs-k/stale-branches@v5.0.0
+        uses: crs-k/stale-branches@v8.2.2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           pr-check: true
