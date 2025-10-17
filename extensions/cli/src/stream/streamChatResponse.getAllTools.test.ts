@@ -80,7 +80,7 @@ describe("getAllTools - Tool Filtering", () => {
     expect(toolNames).toContain("Bash");
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("Write");
-    expect(toolNames).toContain("Edit");
+    expect(toolNames).toContain("MultiEdit");
   });
 
   test("should include all tools in auto mode", async () => {
@@ -107,7 +107,7 @@ describe("getAllTools - Tool Filtering", () => {
     expect(toolNames).toContain("Bash");
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("Write");
-    expect(toolNames).toContain("Edit");
+    expect(toolNames).toContain("MultiEdit");
   });
 
   test("should respect explicit exclude in normal mode", async () => {

@@ -239,6 +239,18 @@ export async function unrollAssistant(
   return result;
 }
 
+export function replaceInputsWithSecrets(yamlContent: string): string {
+  const inputsToSecretsMap: Record<string, string> = {};
+
+  getTemplateVariables(yamlContent)
+    .filter((v) => v.startsWith("inputs."))
+    .forEach((v) => {
+      inputsToSecretsMap[v] = `\${{ ${v.replace("inputs.", "secrets.")} }}`;
+    });
+
+  return fillTemplateVariables(yamlContent, inputsToSecretsMap);
+}
+
 function renderTemplateData(
   rawYaml: string,
   templateData: Partial<TemplateData>,
@@ -284,7 +296,7 @@ export async function unrollAssistantFromContent(
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
-  const templatedYaml = renderTemplateData(rawUnrolledYaml, {
+  let templatedYaml = renderTemplateData(rawUnrolledYaml, {
     secrets: extractFQSNMap(rawUnrolledYaml, [id]),
   });
 
@@ -529,16 +541,13 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
-            const parsedBlock = parseMarkdownRuleOrConfigYaml(
-              blockConfigYaml,
+            const blockConfigYamlWithSecrets =
+              replaceInputsWithSecrets(blockConfigYaml);
+            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+              blockConfigYamlWithSecrets,
               injectBlock,
             );
-            const blockType = getBlockType(parsedBlock);
-            const resolvedBlock = await resolveBlock(
-              injectBlock,
-              undefined,
-              registry,
-            );
+            const blockType = getBlockType(resolvedBlock);
 
             return {
               blockType,

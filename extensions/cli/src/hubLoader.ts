@@ -1,4 +1,8 @@
-import { AgentFile, parseAgentFile } from "@continuedev/config-yaml";
+import {
+  AgentFile,
+  ModelConfig,
+  parseAgentFile,
+} from "@continuedev/config-yaml";
 import JSZip from "jszip";
 
 import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
@@ -8,7 +12,7 @@ import { logger } from "./util/logger.js";
 /**
  * Pattern to match valid hub slugs (owner/package format)
  */
-const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+export const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 
 /**
  * Hub package type definitions
@@ -66,7 +70,7 @@ export const mcpProcessor: HubPackageProcessor<any> = {
 /**
  * Model processor - handles JSON/YAML configuration files
  */
-export const modelProcessor: HubPackageProcessor<any> = {
+export const modelProcessor: HubPackageProcessor<ModelConfig> = {
   type: "model",
   expectedFileExtensions: [".json", ".yaml", ".yml"],
   parseContent: async (content: string, filename: string) => {
@@ -241,9 +245,6 @@ export const loadMcpFromHub = (slug: string) =>
 export const loadModelFromHub = (slug: string) =>
   loadPackageFromHub(slug, modelProcessor);
 
-export const loadPromptFromHub = (slug: string) =>
-  loadPackageFromHub(slug, promptProcessor);
-
 /**
  * Process a rule specification - supports file paths, hub slugs, or direct content
  */
@@ -295,6 +296,22 @@ export async function processRule(ruleSpec: string): Promise<string> {
 
   // Otherwise, treat it as direct string content
   return ruleSpec;
+}
+
+export function isStringRule(rule: string) {
+  if (rule.includes(" ") || rule.includes("\n")) {
+    return true;
+  }
+  if (
+    ["file:/", ".", "/", "~"].some((prefix) => rule.startsWith(prefix)) ||
+    rule.includes("\\")
+  ) {
+    return false;
+  }
+  if (HUB_SLUG_PATTERN.test(rule)) {
+    return false;
+  }
+  return true;
 }
 
 /**

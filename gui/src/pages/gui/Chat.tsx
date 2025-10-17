@@ -31,6 +31,7 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -44,10 +45,12 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
+import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -109,6 +112,7 @@ export function Chat() {
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -126,6 +130,8 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const mode = useAppSelector((state) => state.session.mode);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -170,6 +176,56 @@ export function Chat() {
       const codeToEditSnapshot = stateSnapshot.editModeState.codeToEdit;
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
+      const currentMode = stateSnapshot.session.mode;
+
+      // Handle background mode specially
+      if (currentMode === "background" && !isCurrentlyInEdit) {
+        // Background mode triggers agent creation instead of chat
+        const currentOrg = selectCurrentOrg(stateSnapshot);
+        const organizationId =
+          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
+
+        setIsCreatingAgent(true);
+
+        // Clear input immediately for better UX
+        if (editorToClearOnSend) {
+          editorToClearOnSend.commands.clearContent();
+        }
+
+        // Create agent and track loading state
+        void (async () => {
+          try {
+            // Resolve context items from editor content (same as normal chat)
+            const defaultContextProviders =
+              stateSnapshot.config.config.experimental?.defaultContext ?? [];
+
+            const { selectedContextItems, selectedCode, content } =
+              await resolveEditorContent({
+                editorState,
+                modifiers,
+                ideMessenger,
+                defaultContextProviders,
+                availableSlashCommands:
+                  stateSnapshot.config.config.slashCommands,
+                dispatch,
+                getState: () => reduxStore.getState(),
+              });
+
+            await ideMessenger.request("createBackgroundAgent", {
+              content,
+              contextItems: selectedContextItems,
+              selectedCode,
+              organizationId,
+            });
+            setIsCreatingAgent(false);
+          } catch (error) {
+            console.error("Failed to create background agent:", error);
+            setIsCreatingAgent(false);
+          }
+        })();
+
+        return;
+      }
 
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
@@ -213,7 +269,7 @@ export function Chat() {
         }
       }
     },
-    [dispatch, ideMessenger, reduxStore],
+    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
   );
 
   useWebviewListener(
@@ -430,8 +486,12 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {history.length === 0 && (
-            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+          {mode === "background" ? (
+            <BackgroundModeView isCreatingAgent={isCreatingAgent} />
+          ) : (
+            history.length === 0 && (
+              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+            )
           )}
         </div>
       </div>
