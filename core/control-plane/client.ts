@@ -55,6 +55,39 @@ export interface RemoteSessionMetadata extends BaseSessionMetadata {
   remoteId: string;
 }
 
+export interface AgentSessionMetadata {
+  createdBy: string;
+  github_repo: string;
+  organizationId?: string;
+  idempotencyKey?: string;
+  source?: string;
+  continueApiKeyId?: string;
+  s3Url?: string;
+  prompt?: string | null;
+  createdBySlug?: string;
+}
+
+export interface AgentSessionView {
+  id: string;
+  devboxId: string | null;
+  name: string | null;
+  icon: string | null;
+  status: string;
+  agentStatus: string | null;
+  unread: boolean;
+  state: string;
+  metadata: AgentSessionMetadata;
+  repoUrl: string;
+  branch: string | null;
+  pullRequestUrl: string | null;
+  pullRequestStatus: string | null;
+  tunnelUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  create_time_ms: string;
+  end_time_ms: string;
+}
+
 export class ControlPlaneClient {
   constructor(
     readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
@@ -546,23 +579,19 @@ export class ControlPlaneClient {
       });
 
       const result = (await resp.json()) as {
-        agents: any[];
+        agents: AgentSessionView[];
         totalCount: number;
       };
 
       return {
-        agents: result.agents.map((agent: any) => ({
+        agents: result.agents.map((agent) => ({
           id: agent.id,
-          name: agent.name || agent.metadata?.name || null,
+          name: agent.name,
           status: agent.status,
-          repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
-          createdAt:
-            agent.created_at || agent.create_time_ms
-              ? new Date(agent.created_at || agent.create_time_ms).toISOString()
-              : new Date().toISOString(),
+          repoUrl: agent.repoUrl,
+          createdAt: agent.createdAt,
           metadata: {
-            github_repo:
-              agent.metadata?.github_repo || agent.metadata?.repo_url,
+            github_repo: agent.metadata.github_repo,
           },
         })),
         totalCount: result.totalCount,
