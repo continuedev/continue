@@ -15,6 +15,7 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
+import { normalizeRepoUrl } from "core/util/repoUrl";
 import {
   sanitizeShellArgument,
   validateGitHubRepoUrl,
@@ -439,51 +440,6 @@ export class VsCodeMessenger {
     this.onWebview("openAgentLocally", async (msg) => {
       const configHandler = await configHandlerPromise;
       const { agentSessionId } = msg.data;
-
-      // Helper function to normalize repository URLs
-      const normalizeRepoUrl = (url: string): string => {
-        if (!url) return "";
-
-        let normalized = url.trim();
-
-        // Convert SSH to HTTPS: git@github.com:owner/repo.git -> https://github.com/owner/repo
-        if (normalized.startsWith("git@github.com:")) {
-          normalized = normalized.replace(
-            "git@github.com:",
-            "https://github.com/",
-          );
-        }
-
-        // Convert SSH protocol to HTTPS: ssh://git@github.com/owner/repo.git -> https://github.com/owner/repo
-        // Also handles: ssh://git@github.com:owner/repo.git (less common)
-        if (normalized.startsWith("ssh://git@github.com")) {
-          normalized = normalized
-            .replace("ssh://git@github.com/", "https://github.com/")
-            .replace("ssh://git@github.com:", "https://github.com/");
-        }
-
-        // Convert shorthand owner/repo to full URL
-        if (
-          normalized.includes("/") &&
-          !normalized.startsWith("http") &&
-          !normalized.startsWith("git@")
-        ) {
-          normalized = `https://github.com/${normalized}`;
-        }
-
-        // Remove .git suffix
-        if (normalized.endsWith(".git")) {
-          normalized = normalized.slice(0, -4);
-        }
-
-        // Remove trailing slash
-        if (normalized.endsWith("/")) {
-          normalized = normalized.slice(0, -1);
-        }
-
-        // Normalize to lowercase
-        return normalized.toLowerCase();
-      };
 
       try {
         // First, fetch the agent session to get repo URL and branch
