@@ -204,7 +204,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                 // Open agent detail in browser
                 ideMessenger.post("controlPlane/openUrl", {
                   path: `agents/${agent.id}`,
-                  orgSlug: currentOrg?.slug,
                 });
               }}
             >
@@ -250,7 +249,6 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
               onClick={() => {
                 ideMessenger.post("controlPlane/openUrl", {
                   path: "agents",
-                  orgSlug: currentOrg?.slug,
                 });
               }}
               variant="ghost"
