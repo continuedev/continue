@@ -47,6 +47,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { useStore } from "react-redux";
 import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
+
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
@@ -254,30 +255,6 @@ export function Chat() {
         return;
       }
 
-      // TODO - hook up with hub to detect free trial progress
-      // if (model.provider === "free-trial") {
-      //   const newCount = incrementFreeTrialCount();
-
-      //   if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
-      //     posthog?.capture("ftc_reached");
-      //   }
-      //   if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
-      //     // Show this message whether using platform or not
-      //     // So that something happens if in new chat
-      //     void ideMessenger.ide.showToast(
-      //       "error",
-      //       "You've reached the free trial limit. Please configure a model to continue.",
-      //     );
-
-      //     // If history, show the dialog, which will automatically close if there is not history
-      //     if (history.length) {
-      //       dispatch(setDialogMessage(<FreeTrialOverDialog />));
-      //       dispatch(setShowDialog(true));
-      //     }
-      //     return;
-      //   }
-      // }
-
       if (isCurrentlyInEdit) {
         void dispatch(
           streamEditThunk({
@@ -408,7 +385,7 @@ export function Chat() {
               redactedThinking={message.redactedThinking}
               index={index}
               prevItem={index > 0 ? history[index - 1] : null}
-              inProgress={index === history.length - 1}
+              inProgress={index === history.length - 1 && isStreaming}
               signature={message.signature}
             />
           </div>
@@ -436,7 +413,7 @@ export function Chat() {
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen],
+    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
@@ -498,11 +475,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >

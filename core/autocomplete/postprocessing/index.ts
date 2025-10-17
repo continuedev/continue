@@ -150,7 +150,7 @@ export function postprocessCompletion({
     completion = completion.replace(/^\n+|\n+$/g, "");
   }
 
-  if (llm.model.includes("mercury") || llm.model.includes("granite")) {
+  if (llm.model.includes("granite")) {
     // Granite tends to repeat the start of the line in the completion output
     let prefixEnd = prefix.split("\n").pop();
     if (prefixEnd) {

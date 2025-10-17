@@ -1,6 +1,5 @@
+import { Configuration, DefaultApi } from "@continuedev/sdk/dist/api";
 import { vi } from "vitest";
-
-import { WorkflowService } from "./WorkflowService.js";
 
 import { initializeServices, services } from "./index.js";
 
@@ -13,6 +12,15 @@ vi.mock("../onboarding.js", () => ({
 // Mock auth module
 vi.mock("../auth/workos.js", () => ({
   loadAuthConfig: vi.fn().mockReturnValue({}),
+  getConfigUri: vi.fn().mockReturnValue(null),
+}));
+
+// Mock the config loader
+vi.mock("../configLoader.js", () => ({
+  loadConfiguration: vi.fn().mockResolvedValue({
+    config: { name: "test", version: "1.0.0" },
+    source: { type: "test" },
+  }),
 }));
 
 describe("initializeServices", () => {
@@ -21,6 +29,37 @@ describe("initializeServices", () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
+
+    // Mock service methods to avoid actual initialization
+    vi.spyOn(services.auth, "initialize").mockResolvedValue({
+      authConfig: {
+        accessToken: "",
+        expiresAt: 123,
+        organizationId: "",
+        refreshToken: "",
+        userEmail: "",
+      },
+      isAuthenticated: false,
+    });
+    vi.spyOn(services.apiClient, "initialize").mockResolvedValue({
+      apiClient: new DefaultApi(
+        new Configuration({
+          basePath: "",
+          accessToken: "",
+        }),
+      ),
+    });
+    vi.spyOn(services.agentFile, "initialize").mockResolvedValue({
+      slug: null,
+      agentFile: null,
+      agentFileModel: null,
+      parsedRules: null,
+      parsedTools: null,
+    });
+    vi.spyOn(services.config, "initialize").mockResolvedValue({
+      config: { name: "test", version: "1.0.0" },
+      configPath: undefined,
+    });
   });
 
   afterEach(() => {
@@ -50,9 +89,10 @@ describe("initializeServices", () => {
         },
         {
           slug: null,
-          workflowFile: null,
-          workflowModelName: null,
-          workflowService: expect.any(WorkflowService),
+          agentFile: null,
+          agentFileModel: null,
+          parsedRules: null,
+          parsedTools: null,
         },
       );
     });

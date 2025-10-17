@@ -13,9 +13,9 @@ import { sentryService } from "../sentry.js";
 import { initializeServices, services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import {
+  AgentFileServiceState,
   ModelServiceState,
   SERVICE_NAMES,
-  WorkflowServiceState,
 } from "../services/types.js";
 import {
   loadSession,
@@ -478,11 +478,11 @@ async function runHeadlessMode(
   const { processAndCombinePrompts } = await import(
     "../util/promptProcessor.js"
   );
-  const workflowState = await serviceContainer.get<WorkflowServiceState>(
-    SERVICE_NAMES.WORKFLOW,
+  const agentFileState = await serviceContainer.get<AgentFileServiceState>(
+    SERVICE_NAMES.AGENT_FILE,
   );
   const initialPrompt =
-    `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+    `${agentFileState?.agentFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
     undefined;
   const initialUserInput = await processAndCombinePrompts(
     options.prompt,
@@ -521,6 +521,9 @@ async function runHeadlessMode(
       compactionIndex = result.compactionIndex;
     }
   }
+
+  // exit after headless mode completes
+  await gracefulExit(0);
 }
 
 export async function chat(prompt?: string, options: ChatOptions = {}) {
@@ -549,12 +552,12 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         toolPermissionOverrides: permissionOverrides,
       });
 
-      const workflowState = await serviceContainer.get<WorkflowServiceState>(
-        SERVICE_NAMES.WORKFLOW,
+      const agentFileState = await serviceContainer.get<AgentFileServiceState>(
+        SERVICE_NAMES.AGENT_FILE,
       );
 
       const initialPrompt =
-        `${workflowState?.workflowFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
+        `${agentFileState?.agentFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
         undefined;
 
       // Start TUI with skipOnboarding since we already handled it

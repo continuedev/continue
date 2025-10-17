@@ -881,6 +881,7 @@ export const sessionSlice = createSlice({
       state,
       action: PayloadAction<{
         toolCallId: string;
+        output?: ContextItem[]; // optional for convenience
       }>,
     ) => {
       const toolCallState = findToolCallById(
@@ -889,6 +890,9 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "errored";
+        if (action.payload.output) {
+          toolCallState.output = action.payload.output;
+        }
       }
     },
     acceptToolCall: (

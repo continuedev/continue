@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -312,84 +312,57 @@ class Gemini extends BaseLLM {
   }
 
   public async *processGeminiResponse(
-    stream: AsyncIterable<string>,
+    response: Response,
   ): AsyncGenerator<ChatMessage> {
-    let buffer = "";
-    for await (const chunk of stream) {
-      buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
+    for await (const chunk of streamSse(response)) {
+      let data: GeminiChatResponse;
+      try {
+        data = JSON.parse(chunk) as GeminiChatResponse;
+      } catch (e) {
+        continue;
       }
 
-      const parts = buffer.split("\n,");
+      if ("error" in data) {
+        throw new Error(data.error.message);
+      }
 
-      let foundIncomplete = false;
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        let data: GeminiChatResponse;
-        try {
-          data = JSON.parse(part) as GeminiChatResponse;
-        } catch (e) {
-          foundIncomplete = true;
-          continue; // yo!
+      const contentParts = data?.candidates?.[0]?.content?.parts;
+      if (contentParts) {
+        const textParts: MessagePart[] = [];
+        const toolCalls: ToolCallDelta[] = [];
+
+        for (const part of contentParts) {
+          if ("text" in part) {
+            textParts.push({ type: "text", text: part.text });
+          } else if ("functionCall" in part) {
+            toolCalls.push({
+              type: "function",
+              id: part.functionCall.id ?? uuidv4(),
+              function: {
+                name: part.functionCall.name,
+                arguments:
+                  typeof part.functionCall.args === "string"
+                    ? part.functionCall.args
+                    : JSON.stringify(part.functionCall.args),
+              },
+            });
+          } else {
+            console.warn("Unsupported gemini part type received", part);
+          }
         }
 
-        if ("error" in data) {
-          throw new Error(data.error.message);
+        const assistantMessage: AssistantChatMessage = {
+          role: "assistant",
+          content: textParts.length ? textParts : "",
+        };
+        if (toolCalls.length > 0) {
+          assistantMessage.toolCalls = toolCalls;
         }
-
-        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
-        const contentParts = data?.candidates?.[0]?.content?.parts;
-        if (contentParts) {
-          const textParts: MessagePart[] = [];
-          const toolCalls: ToolCallDelta[] = [];
-
-          for (const part of contentParts) {
-            if ("text" in part) {
-              textParts.push({ type: "text", text: part.text });
-            } else if ("functionCall" in part) {
-              toolCalls.push({
-                type: "function",
-                id: part.functionCall.id ?? uuidv4(),
-                function: {
-                  name: part.functionCall.name,
-                  arguments:
-                    typeof part.functionCall.args === "string"
-                      ? part.functionCall.args
-                      : JSON.stringify(part.functionCall.args),
-                },
-              });
-            } else {
-              // Note: function responses shouldn't be streamed, images not supported
-              console.warn("Unsupported gemini part type received", part);
-            }
-          }
-
-          const assistantMessage: AssistantChatMessage = {
-            role: "assistant",
-            content: textParts.length ? textParts : "",
-          };
-          if (toolCalls.length > 0) {
-            assistantMessage.toolCalls = toolCalls;
-          }
-          if (textParts.length || toolCalls.length) {
-            yield assistantMessage;
-          }
-        } else {
-          // Handle the case where the expected data structure is not found
-          console.warn("Unexpected response format:", data);
+        if (textParts.length || toolCalls.length) {
+          yield assistantMessage;
         }
-      }
-      if (foundIncomplete) {
-        buffer = parts[parts.length - 1];
       } else {
-        buffer = "";
+        console.warn("Unexpected response format:", data);
       }
     }
   }
@@ -414,10 +387,9 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
+
+    for await (const chunk of this.processGeminiResponse(response)) {
+      yield chunk;
     }
   }
   private async *streamChatBison(

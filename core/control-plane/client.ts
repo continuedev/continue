@@ -39,12 +39,11 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export interface FreeTrialStatus {
+export interface CreditStatus {
   optedInToFreeTrial: boolean;
-  chatCount?: number;
-  autocompleteCount?: number;
-  chatLimit: number;
-  autocompleteLimit: number;
+  hasCredits: boolean;
+  creditBalance: number;
+  hasPurchasedCredits: boolean;
 }
 
 export const TRIAL_PROXY_URL =
@@ -293,20 +292,20 @@ export class ControlPlaneClient {
     }
   }
 
-  public async getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
+  public async getCreditStatus(): Promise<CreditStatus | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
 
     try {
-      const resp = await this.requestAndHandleError("ide/free-trial-status", {
+      const resp = await this.requestAndHandleError("ide/credits", {
         method: "GET",
       });
-      return (await resp.json()) as FreeTrialStatus;
+      return (await resp.json()) as CreditStatus;
     } catch (e) {
       // Capture control plane API failures to Sentry
       Logger.error(e, {
-        context: "control_plane_free_trial_status",
+        context: "control_plane_credit_status",
       });
       return null;
     }
