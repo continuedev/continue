@@ -284,76 +284,58 @@ export class GeminiApi implements BaseLlmApi {
   }
 
   async *handleStreamResponse(response: any, model: string) {
-    let buffer = "";
     let usage: UsageInfo | undefined = undefined;
     for await (const chunk of streamSse(response as any)) {
-      buffer += chunk;
-
-      const parts = buffer.split("\n,");
-
-      let foundIncomplete = false;
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        let data;
-        try {
-          data = JSON.parse(part);
-        } catch (e) {
-          foundIncomplete = true;
-          continue; // yo!
-        }
-        if (data.error) {
-          throw new Error(data.error.message);
-        }
-
-        // Check for usage metadata
-        if (data.usageMetadata) {
-          usage = {
-            prompt_tokens: data.usageMetadata.promptTokenCount || 0,
-            completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
-            total_tokens: data.usageMetadata.totalTokenCount || 0,
-          };
-        }
-
-        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
-        const contentParts = data?.candidates?.[0]?.content?.parts;
-        if (contentParts) {
-          for (const part of contentParts) {
-            if ("text" in part) {
-              yield chatChunk({
-                content: part.text,
-                model,
-              });
-            } else if ("functionCall" in part) {
-              yield chatChunkFromDelta({
-                model,
-                delta: {
-                  tool_calls: [
-                    {
-                      index: 0,
-                      id: part.functionCall.id ?? uuidv4(),
-                      type: "function",
-                      function: {
-                        name: part.functionCall.name,
-                        arguments: JSON.stringify(part.functionCall.args),
-                      },
-                    },
-                  ],
-                },
-              });
-            }
-          }
-        } else {
-          console.warn("Unexpected response format:", data);
-        }
+      let data;
+      try {
+        data = JSON.parse(chunk);
+      } catch (e) {
+        continue;
       }
-      if (foundIncomplete) {
-        buffer = parts[parts.length - 1];
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      if (data.usageMetadata) {
+        usage = {
+          prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+          completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
+          total_tokens: data.usageMetadata.totalTokenCount || 0,
+        };
+      }
+
+      const contentParts = data?.candidates?.[0]?.content?.parts;
+      if (contentParts) {
+        for (const part of contentParts) {
+          if ("text" in part) {
+            yield chatChunk({
+              content: part.text,
+              model,
+            });
+          } else if ("functionCall" in part) {
+            yield chatChunkFromDelta({
+              model,
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: part.functionCall.id ?? uuidv4(),
+                    type: "function",
+                    function: {
+                      name: part.functionCall.name,
+                      arguments: JSON.stringify(part.functionCall.args),
+                    },
+                  },
+                ],
+              },
+            });
+          }
+        }
       } else {
-        buffer = "";
+        console.warn("Unexpected response format:", data);
       }
     }
 
-    // Emit usage at the end if we have it
     if (usage) {
       yield usageChatChunk({
         model,

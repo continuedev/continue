@@ -287,7 +287,7 @@ class VertexAI extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    yield* this.geminiInstance.processGeminiResponse(streamSse(response));
+    yield* this.geminiInstance.processGeminiResponse(response);
   }
 
   private async *streamChatBison(
