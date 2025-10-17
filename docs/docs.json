@@ -48,7 +48,8 @@
                   "ide-extensions/agent/plan-mode",
                   "ide-extensions/agent/model-setup",
                   "ide-extensions/agent/how-to-customize",
-                  "ide-extensions/agent/context-selection"
+                  "ide-extensions/agent/context-selection",
+                  "ide-extensions/agent/file-access-outside-workspace"
                 ]
               },
               {

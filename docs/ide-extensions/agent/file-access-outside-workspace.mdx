@@ -1,0 +1,230 @@
+---
+title: "File Access Outside Workspace"
+description: "Learn how Continue's Agent and Plan modes handle file access outside the IDE workspace, including permission requirements and supported path formats."
+---
+
+## Overview
+
+Continue's Agent and Plan modes can read files and list directories both within and outside your IDE workspace. For security, accessing files outside the workspace requires explicit user permission.
+
+## How File Access Works
+
+When you use tools like `read_file`, `ls`, `view_subdirectory`, or `read_file_range`, Continue:
+
+1. **Resolves the path** - Normalizes the provided path (relative, absolute, tilde, or file:// URI)
+2. **Checks workspace boundaries** - Determines if the path is within or outside your workspace
+3. **Applies access policy** - Files within workspace are read automatically; files outside require permission
+
+## Supported Path Formats
+
+Continue supports multiple path formats for flexible file access:
+
+### Relative Paths
+
+Paths relative to your workspace root:
+
+```
+src/components/Button.tsx
+../shared-utils/helpers.js
+```
+
+These are always resolved within the workspace and don't require permission.
+
+### Absolute Paths
+
+Full system paths:
+
+```
+/home/user/documents/notes.txt
+C:\Users\username\Desktop\config.json
+```
+
+### Tilde Paths
+
+Home directory expansion:
+
+```
+~/Documents/project-notes.md
+~/.ssh/config
+```
+
+The `~` expands to your home directory (e.g., `/home/user` or `C:\Users\username`).
+
+### File URIs
+
+File protocol URIs:
+
+```
+file:///home/user/documents/notes.txt
+file:///C:/Users/username/Desktop/config.json
+```
+
+These are automatically decoded and resolved to system paths.
+
+### Windows Network Paths
+
+UNC paths for network shares:
+
+```
+\\server\share\folder\file.txt
+```
+
+## Workspace Boundary Detection
+
+Continue determines workspace boundaries by checking if a resolved path starts with any of your IDE's workspace directories. This applies to:
+
+- Single-folder workspaces
+- Multi-root workspaces (e.g., VS Code multi-root)
+- Monorepo setups with multiple workspace directories
+
+### Example Scenarios
+
+**Scenario 1: Reading within workspace**
+
+```
+Workspace: /home/user/myproject
+Request: read_file("src/main.ts")
+Result: ✅ Allowed automatically (within workspace)
+```
+
+**Scenario 2: Reading outside workspace**
+
+```
+Workspace: /home/user/myproject
+Request: read_file("~/Documents/external-notes.md")
+Result: ⚠️ Requires user permission (outside workspace)
+```
+
+**Scenario 3: Reading with absolute path**
+
+```
+Workspace: /home/user/myproject
+Request: read_file("/etc/hosts")
+Result: ⚠️ Requires user permission (outside workspace)
+```
+
+## Security and Permissions
+
+### Permission Policy
+
+- **Within workspace**: Files are accessible without permission (policy: `allowedWithoutPermission`)
+- **Outside workspace**: Files require explicit user permission (policy: `allowedWithPermission`)
+- **Disabled tools**: Respects tool policy settings if explicitly disabled
+
+### User Experience
+
+When Agent or Plan mode attempts to access a file outside the workspace:
+
+1. The tool call is displayed with the full path
+2. A permission prompt appears asking for confirmation
+3. You can approve or deny the access
+4. Future accesses may still require permission depending on your settings
+
+### Best Practices
+
+<Warning>
+  Be cautious when granting permission to access files outside your workspace. Verify the path and ensure you trust the operation being performed.
+</Warning>
+
+- **Review paths carefully** - Check that file paths in permission prompts are expected
+- **Understand the context** - Know why the agent is requesting external file access
+- **Limit scope** - Consider moving frequently accessed external files into your workspace
+- **Use tool policies** - Configure tool policies in your settings to control access patterns
+
+## Available Tools with External Access
+
+The following tools support reading files outside the workspace:
+
+### Read-Only Tools (Plan & Agent Mode)
+
+- **read_file** - Read complete file contents
+- **read_file_range** - Read specific line ranges from a file
+- **ls** - List files and directories
+- **view_subdirectory** - View directory structure
+
+### Path Resolution
+
+All these tools use the same path resolution logic:
+
+1. Parse the input path (relative, absolute, tilde, URI)
+2. Resolve to an absolute system path
+3. Check workspace boundaries
+4. Apply appropriate permission policy
+
+## Examples
+
+### Reading Configuration Files
+
+```
+# Agent prompt
+"Read my SSH config file at ~/.ssh/config and summarize the hosts"
+
+# Continue resolves ~/. ssh/config to /home/user/.ssh/config
+# Prompts for permission since it's outside workspace
+# Reads and provides summary
+```
+
+### Listing External Directories
+
+```
+# Agent prompt
+"List all markdown files in ~/Documents/notes"
+
+# Continue resolves ~/Documents/notes
+# Prompts for permission
+# Lists .md files in that directory
+```
+
+### Comparing Files Across Locations
+
+```
+# Agent prompt
+"Compare src/config.json with /etc/app/default-config.json"
+
+# src/config.json - within workspace, reads immediately
+# /etc/app/default-config.json - outside workspace, prompts for permission
+```
+
+## Troubleshooting
+
+### Permission Denied Errors
+
+If you see permission denied errors:
+
+1. **Check file system permissions** - Ensure your user account can read the file
+2. **Verify path resolution** - Confirm the path resolves correctly for your OS
+3. **Review tool policies** - Check if the tool is disabled in settings
+
+### Path Not Found
+
+If paths aren't resolving:
+
+1. **Use absolute paths** - Try providing full system paths
+2. **Check tilde expansion** - Verify `~` expands to the correct home directory
+3. **Escape special characters** - Quote paths with spaces or special characters
+4. **Windows paths** - Use forward slashes or properly escaped backslashes
+
+### Unexpected Permission Prompts
+
+If you're prompted for files you expect to be in the workspace:
+
+1. **Verify workspace configuration** - Check your IDE's workspace settings
+2. **Check symbolic links** - Symlinks may resolve outside workspace boundaries
+3. **Review path normalization** - Ensure paths are being resolved correctly
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="How Agent Mode Works" icon="robot" href="/ide-extensions/agent/how-it-works">
+    Learn about tool handshakes and built-in tools
+  </Card>
+  <Card title="Plan Mode" icon="map" href="/ide-extensions/plan/how-it-works">
+    Understand read-only tool restrictions in Plan mode
+  </Card>
+  <Card title="Model Context Protocol" icon="plug" href="/customize/deep-dives/mcp">
+    Configure MCP servers for additional tools
+  </Card>
+  <Card title="Agent Customization" icon="sliders" href="/ide-extensions/agent/how-to-customize">
+    Configure tool policies and permissions
+  </Card>
+</CardGroup>
