@@ -49,7 +49,7 @@ export function normalizeRepoUrl(url: string): string {
   // Convert shorthand owner/repo to full URL
   if (
     normalized.includes("/") &&
-    !normalized.includes("://") &&
+    !/^[a-z]+:\/\//i.test(normalized) &&
     !normalized.startsWith("git@")
   ) {
     normalized = `https://github.com/${normalized}`;

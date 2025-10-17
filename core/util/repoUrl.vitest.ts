@@ -164,6 +164,19 @@ describe("normalizeRepoUrl", () => {
         "https://github.com/owner/repo-with-dashes-123",
       );
     });
+
+    it("should normalize shorthand with query parameters containing ://", () => {
+      // Regression test: :// in query params should not prevent normalization
+      expect(normalizeRepoUrl("owner/repo?redirect=https://example.com")).toBe(
+        "https://github.com/owner/repo?redirect=https://example.com",
+      );
+    });
+
+    it("should normalize shorthand with fragment containing ://", () => {
+      expect(normalizeRepoUrl("owner/repo#section=https://example.com")).toBe(
+        "https://github.com/owner/repo#section=https://example.com",
+      );
+    });
   });
 
   describe("real-world examples", () => {
