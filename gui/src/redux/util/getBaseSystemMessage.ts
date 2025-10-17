@@ -1,6 +1,7 @@
 import { ModelDescription, Tool } from "core";
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
+  DEFAULT_AWS_SDK_EXPERT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
@@ -19,11 +20,13 @@ export function getBaseSystemMessage(
     baseMessage = model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
   } else if (messageMode === "plan") {
     baseMessage = model.basePlanSystemMessage ?? DEFAULT_PLAN_SYSTEM_MESSAGE;
+  } else if (messageMode === "aws-sdk-expert") {
+    baseMessage = DEFAULT_AWS_SDK_EXPERT_SYSTEM_MESSAGE;
   } else {
     baseMessage = model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }
 
-  // Add no-tools warning for agent/plan modes when no tools are available
+  // Add no-tools warning for agent/plan/aws-sdk-expert modes when no tools are available
   if (messageMode !== "chat" && (!activeTools || activeTools.length === 0)) {
     baseMessage += NO_TOOL_WARNING;
   }

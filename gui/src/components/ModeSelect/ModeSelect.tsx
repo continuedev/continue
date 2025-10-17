@@ -39,6 +39,8 @@ export function ModeSelect() {
       dispatch(setMode("plan"));
     } else if (mode === "plan") {
       dispatch(setMode("agent"));
+    } else if (mode === "agent") {
+      dispatch(setMode("aws-sdk-expert"));
     } else {
       dispatch(setMode("chat"));
     }
@@ -96,7 +98,13 @@ export function ModeSelect() {
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
-            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
+            {mode === "chat"
+              ? "Chat"
+              : mode === "agent"
+                ? "Agent"
+                : mode === "plan"
+                  ? "Plan"
+                  : "AWS SDK Expert"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -162,6 +170,25 @@ export function ModeSelect() {
             {!isGoodAtAgentMode && notGreatAtAgent}
             <CheckIcon
               className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+            />
+          </ListboxOption>
+
+          <ListboxOption value="aws-sdk-expert" className={"gap-1"}>
+            <div className="flex flex-row items-center gap-1.5">
+              <ModeIcon mode="aws-sdk-expert" />
+              <span className="">AWS SDK Expert</span>
+              <ToolTip
+                style={{
+                  zIndex: 200001,
+                }}
+                content="All tools + AWS SDK specialization"
+              >
+                <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
+              </ToolTip>
+            </div>
+            {!isGoodAtAgentMode && notGreatAtAgent}
+            <CheckIcon
+              className={`ml-auto h-3 w-3 ${mode === "aws-sdk-expert" ? "" : "opacity-0"}`}
             />
           </ListboxOption>
 
