@@ -46,10 +46,10 @@ export function normalizeRepoUrl(url: string): string {
       .replace("ssh://git@github.com:", "https://github.com/");
   }
 
-  // Convert shorthand owner/repo to full URL (check case-insensitively)
+  // Convert shorthand owner/repo to full URL
   if (
     normalized.includes("/") &&
-    !normalized.toLowerCase().startsWith("http") &&
+    !normalized.includes("://") &&
     !normalized.startsWith("git@")
   ) {
     normalized = `https://github.com/${normalized}`;

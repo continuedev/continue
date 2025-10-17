@@ -146,6 +146,13 @@ describe("normalizeRepoUrl", () => {
       );
     });
 
+    it("should not convert non-GitHub SSH URLs to GitHub", () => {
+      // Regression test: SSH URLs with protocols should not be treated as shorthands
+      expect(normalizeRepoUrl("ssh://git@gitlab.com/owner/repo.git")).toBe(
+        "ssh://git@gitlab.com/owner/repo",
+      );
+    });
+
     it("should handle URLs with port numbers", () => {
       expect(normalizeRepoUrl("https://github.com:443/owner/repo")).toBe(
         "https://github.com:443/owner/repo",
