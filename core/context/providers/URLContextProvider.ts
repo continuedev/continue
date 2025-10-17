@@ -33,68 +33,40 @@ export async function getUrlContextItems(
   query: string,
   fetchFn: FetchFunction,
 ): Promise<ContextItem[]> {
-  try {
-    const url = new URL(query);
-    const icon = await fetchFavicon(url);
-    const resp = await fetchFn(url);
+  const url = new URL(query);
+  const icon = await fetchFavicon(url);
+  const resp = await fetchFn(url);
 
-    // Check if the response is not OK
-    if (!resp.ok) {
-      return [
-        {
-          icon,
-          description: url.toString(),
-          content: `Failed to fetch URL: HTTP ${resp.status} ${resp.statusText}`,
-          name: `HTTP ${resp.status}`,
-          uri: {
-            type: "url",
-            value: url.toString(),
-          },
-        },
-      ];
-    }
-
-    const html = await resp.text();
-
-    const dom = new JSDOM(html);
-    let reader = new Readability(dom.window.document);
-    let article = reader.parse();
-    const content = article?.content || "";
-    const markdown = NodeHtmlMarkdown.translate(
-      content,
-      {},
-      undefined,
-      undefined,
-    );
-
-    const title = article?.title || url.pathname;
-
-    return [
-      {
-        icon,
-        description: url.toString(),
-        content: markdown,
-        name: title,
-        uri: {
-          type: "url",
-          value: url.toString(),
-        },
-      },
-    ];
-  } catch (e) {
-    console.log(e);
-    const errorMessage = e instanceof Error ? e.message : "Unknown error";
-
-    return [
-      {
-        description: `Error fetching ${query}`,
-        content: `Failed to fetch URL: ${errorMessage}`,
-        name: "Fetch Error",
-        uri: {
-          type: "url",
-          value: query,
-        },
-      },
-    ];
+  // Check if the response is not OK
+  if (!resp.ok) {
+    throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
   }
+
+  const html = await resp.text();
+
+  const dom = new JSDOM(html);
+  let reader = new Readability(dom.window.document);
+  let article = reader.parse();
+  const content = article?.content || "";
+  const markdown = NodeHtmlMarkdown.translate(
+    content,
+    {},
+    undefined,
+    undefined,
+  );
+
+  const title = article?.title || url.pathname;
+
+  return [
+    {
+      icon,
+      description: url.toString(),
+      content: markdown,
+      name: title,
+      uri: {
+        type: "url",
+        value: url.toString(),
+      },
+    },
+  ];
 }
