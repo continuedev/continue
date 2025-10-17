@@ -96,6 +96,6 @@ test("fetchUrlContent should propagate errors when URL fetch fails", async () =>
   (getUrlContextItems as any).mockRejectedValue(new Error(errorMessage));
 
   await expect(
-    fetchUrlContentImpl({ url: "https://example.com/404" }, mockExtras)
+    fetchUrlContentImpl({ url: "https://example.com/404" }, mockExtras),
   ).rejects.toThrow(errorMessage);
 });
