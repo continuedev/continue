@@ -84,13 +84,13 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="xs:gap-1.5 flex flex-row items-center gap-1">
           {!isInEdit && (
-            <ToolTip place="top" content="Select Mode">
+            <ToolTip place="top" content="AWS SDK Expert">
               <HoverItem className="!p-0">
                 <ModeSelect />
               </HoverItem>
             </ToolTip>
           )}
-          <ToolTip place="top" content="Select Model">
+          <ToolTip place="top" content="">
             <HoverItem className="!p-0">
               <ModelSelect />
             </HoverItem>
