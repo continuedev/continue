@@ -5,7 +5,6 @@ import {
   Cog6ToothIcon,
   CubeIcon,
   DocumentIcon,
-  PencilIcon,
   QuestionMarkCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -15,7 +14,6 @@ import { HelpSection } from "./sections/HelpSection";
 import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
 import { ModelsSection } from "./sections/ModelsSection";
 import { OrganizationsSection } from "./sections/OrganizationsSection";
-import { RulesSection } from "./sections/RulesSection";
 import { ToolsSection } from "./sections/ToolsSection";
 import { UserSettingsSection } from "./sections/UserSettingsSection";
 
@@ -59,16 +57,6 @@ export const topTabSections: TabSection[] = [
           </ConfigSection>
         ),
         icon: <CubeIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-      },
-      {
-        id: "rules",
-        label: "Rules",
-        component: (
-          <ConfigSection>
-            <RulesSection />
-          </ConfigSection>
-        ),
-        icon: <PencilIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
       {
         id: "tools",

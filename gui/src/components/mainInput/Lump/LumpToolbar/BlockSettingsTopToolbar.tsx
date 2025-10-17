@@ -2,7 +2,6 @@ import {
   CubeIcon,
   ExclamationTriangleIcon,
   GiftIcon,
-  PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
@@ -42,16 +41,6 @@ export function BlockSettingsTopToolbar() {
 
   const { creditStatus, isUsingFreeTrial, refreshCreditStatus } =
     useCreditStatus();
-
-  const handleRulesClick = () => {
-    if (selectedProfile) {
-      dispatch(setSelectedProfile(selectedProfile.id));
-      ideMessenger.post("didChangeSelectedProfile", {
-        id: selectedProfile.id,
-      });
-    }
-    navigate(CONFIG_ROUTES.RULES);
-  };
 
   const handleToolsClick = () => {
     if (selectedProfile) {
@@ -113,12 +102,6 @@ export function BlockSettingsTopToolbar() {
                 </StarterCreditsPopover>
               </ToolTip>
             )}
-
-            <ToolTip content="Configure rules">
-              <HoverItem onClick={handleRulesClick} px={2}>
-                <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
-              </HoverItem>
-            </ToolTip>
 
             <ToolTip content="Configure tools">
               <HoverItem onClick={handleToolsClick} px={2}>

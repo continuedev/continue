@@ -90,11 +90,6 @@ export function AssistantAndOrgListbox({
     close();
   }
 
-  function onRulesConfig() {
-    navigate(CONFIG_ROUTES.RULES);
-    close();
-  }
-
   function onToolsConfig() {
     navigate(CONFIG_ROUTES.TOOLS);
     close();
