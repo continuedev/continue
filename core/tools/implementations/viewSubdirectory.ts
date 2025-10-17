@@ -17,6 +17,15 @@ export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
     );
   }
 
+  // Check if the resolved path actually exists
+  const exists = await extras.ide.fileExists(resolvedPath.uri);
+  if (!exists) {
+    throw new ContinueError(
+      ContinueErrorReason.DirectoryNotFound,
+      `Directory path "${directory_path}" does not exist or is not accessible.`,
+    );
+  }
+
   const repoMap = await generateRepoMap(extras.llm, extras.ide, {
     dirUris: [resolvedPath.uri],
     outputRelativeUriPaths: true,
