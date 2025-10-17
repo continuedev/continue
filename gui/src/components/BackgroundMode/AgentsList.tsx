@@ -22,6 +22,12 @@ interface AgentsListProps {
   isCreatingAgent?: boolean;
 }
 
+interface WorkspaceInfo {
+  repoUrl: string;
+  workspaceDir: string;
+  workspaceName: string;
+}
+
 export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const { session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -29,7 +35,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const [workspaceRepoUrls, setWorkspaceRepoUrls] = useState<string[]>([]);
+  const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
 
   // Fetch workspace repo URLs once on mount
   useEffect(() => {
@@ -40,7 +46,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
           undefined,
         );
         if (workspaceDirs.status === "success" && workspaceDirs.content) {
-          const repoUrls: string[] = [];
+          const workspaceInfos: WorkspaceInfo[] = [];
           for (const dir of workspaceDirs.content) {
             const repoNameResult = await ideMessenger.request("getRepoName", {
               dir,
@@ -48,11 +54,17 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
             if (repoNameResult.status === "success" && repoNameResult.content) {
               const normalizedUrl = normalizeRepoUrl(repoNameResult.content);
               if (normalizedUrl) {
-                repoUrls.push(normalizedUrl);
+                // Extract workspace name from directory path (last segment)
+                const workspaceName = dir.split("/").pop() || dir;
+                workspaceInfos.push({
+                  repoUrl: normalizedUrl,
+                  workspaceDir: dir,
+                  workspaceName,
+                });
               }
             }
           }
-          setWorkspaceRepoUrls(repoUrls);
+          setWorkspaces(workspaceInfos);
         }
       } catch (err) {
         console.error("Failed to fetch workspace repos:", err);
@@ -120,9 +132,28 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
       .filter((url) => url !== "");
 
     // Check if any of the agent URLs match any workspace URL
-    return workspaceRepoUrls.some((workspaceUrl) =>
-      agentUrls.some((agentUrl) => agentUrl === workspaceUrl),
+    return workspaces.some((workspace) =>
+      agentUrls.some((agentUrl) => agentUrl === workspace.repoUrl),
     );
+  };
+
+  // Helper function to get the agent's repository name (for display in tooltips)
+  const getAgentRepoName = (agent: Agent): string | null => {
+    // Try to extract repo name from the agent's repository URL
+    // Handles URLs like: https://github.com/org/repo or git@github.com:org/repo.git
+    const repoUrl = agent.metadata?.github_repo || agent.repoUrl;
+    if (!repoUrl) return null;
+
+    try {
+      // Remove .git suffix if present
+      const cleanUrl = repoUrl.replace(/\.git$/, "");
+      // Extract the last path segment (repo name)
+      const parts = cleanUrl.split("/");
+      const repoName = parts[parts.length - 1];
+      return repoName || null;
+    } catch {
+      return null;
+    }
   };
 
   const handleOpenLocally = (agent: Agent, e: React.MouseEvent) => {
@@ -163,6 +194,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
         {agents.map((agent) => {
           const isInWorkspace = isAgentInCurrentWorkspace(agent);
           const canOpenLocally = isInWorkspace;
+          const agentRepoName = getAgentRepoName(agent);
 
           return (
             <div
@@ -197,7 +229,9 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                     title={
                       canOpenLocally
                         ? "Open this agent workflow locally"
-                        : "This agent is for a different repository. Open the correct workspace to take over this workflow."
+                        : agentRepoName
+                          ? `This agent is for a different repository (${agentRepoName}). Open that workspace to take over this workflow.`
+                          : "This agent is for a different repository. Open the correct workspace to take over this workflow."
                     }
                   >
                     <PlayIcon className="h-3 w-3" />

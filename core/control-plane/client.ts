@@ -608,7 +608,9 @@ export class ControlPlaneClient {
    * @param agentSessionId - The ID of the agent session
    * @returns The agent session view including metadata and status
    */
-  public async getAgentSession(agentSessionId: string): Promise<any | null> {
+  public async getAgentSession(
+    agentSessionId: string,
+  ): Promise<AgentSessionView | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
@@ -621,7 +623,7 @@ export class ControlPlaneClient {
         },
       );
 
-      return await resp.json();
+      return (await resp.json()) as AgentSessionView;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_get_agent_session",
