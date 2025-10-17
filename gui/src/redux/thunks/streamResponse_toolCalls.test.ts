@@ -1949,9 +1949,9 @@ describe("streamResponseThunk - tool calls", () => {
         data,
       ) => {
         if (
-          "command" in data.args &&
-          typeof data.args.command === "string" &&
-          data.args.command?.toLowerCase().startsWith("echo")
+          "command" in data.parsedArgs &&
+          typeof data.parsedArgs.command === "string" &&
+          data.parsedArgs.command?.toLowerCase().startsWith("echo")
         ) {
           return { policy: "allowedWithPermission" };
         }
@@ -2268,7 +2268,7 @@ describe("streamResponseThunk - tool calls", () => {
       let numCalls = 0;
       mockTerminalIdeMessenger.responseHandlers["tools/evaluatePolicy"] =
         async (data) => {
-          const args = data.args || {};
+          const args = data.parsedArgs || {};
           numCalls++;
           if (
             numCalls <= 1 &&
