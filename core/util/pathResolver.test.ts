@@ -3,13 +3,15 @@ import * as path from "path";
 import { IDE } from "..";
 import { normalizeDisplayPath, resolveInputPath } from "./pathResolver";
 import * as ideUtils from "./ideUtils";
+import * as uri from "./uri";
 
 // Mock the resolveRelativePathInDir function
 jest.mock("./ideUtils");
+jest.mock("./uri");
 
 describe("resolveUserProvidedPath", () => {
   const mockIde = {
-    getWorkspaceDirs: jest.fn().mockResolvedValue(["/workspace"]),
+    getWorkspaceDirs: jest.fn().mockResolvedValue(["file:///workspace"]),
     fileExists: jest.fn(),
   } as unknown as IDE;
 
@@ -29,6 +31,24 @@ describe("resolveUserProvidedPath", () => {
         return null;
       }
     );
+
+    // Setup the mock for findUriInDirs
+    (uri.findUriInDirs as jest.Mock).mockImplementation((uri, dirUriCandidates) => {
+      for (const dir of dirUriCandidates) {
+        if (uri.startsWith(dir)) {
+          return {
+            uri,
+            relativePathOrBasename: uri.slice(dir.length + 1),
+            foundInDir: dir,
+          };
+        }
+      }
+      return {
+        uri,
+        relativePathOrBasename: uri.split('/').pop() || '',
+        foundInDir: null,
+      };
+    });
   });
 
   describe("file:// URIs", () => {

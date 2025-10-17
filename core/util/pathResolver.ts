@@ -3,6 +3,7 @@ import * as path from "path";
 import { IDE } from "..";
 import { resolveRelativePathInDir } from "./ideUtils";
 import { localPathToUri } from "./pathToUri";
+import { findUriInDirs } from "./uri";
 
 export interface ResolvedPath {
   uri: string;
@@ -12,23 +13,15 @@ export interface ResolvedPath {
 }
 
 /**
- * Checks if a path is within any of the workspace directories
+ * Checks if a URI is within any of the workspace directories
  */
-async function isPathWithinWorkspace(
+async function isUriWithinWorkspace(
   ide: IDE,
-  absolutePath: string
+  uri: string
 ): Promise<boolean> {
   const workspaceDirs = await ide.getWorkspaceDirs();
-  const normalizedPath = path.normalize(absolutePath).toLowerCase();
-
-  for (const dir of workspaceDirs) {
-    const normalizedDir = path.normalize(dir).toLowerCase();
-    if (normalizedPath.startsWith(normalizedDir)) {
-      return true;
-    }
-  }
-
-  return false;
+  const { foundInDir } = findUriInDirs(uri, workspaceDirs);
+  return foundInDir !== null;
 }
 
 /**
@@ -52,7 +45,7 @@ export async function resolveInputPath(
     const uri = trimmedPath;
     // Extract path from URI for display
     const displayPath = decodeURIComponent(uri.slice(7));
-    const isWithinWorkspace = await isPathWithinWorkspace(ide, displayPath);
+    const isWithinWorkspace = await isUriWithinWorkspace(ide, uri);
     return {
       uri,
       displayPath,
@@ -87,7 +80,7 @@ export async function resolveInputPath(
     if (expandedPath.startsWith("\\\\")) {
       const networkPath = expandedPath.replace(/\\/g, "/");
       const uri = "file:" + networkPath; // file://server/share format
-      const isWithinWorkspace = await isPathWithinWorkspace(ide, expandedPath);
+      const isWithinWorkspace = await isUriWithinWorkspace(ide, uri);
       return {
         uri,
         displayPath: expandedPath,
@@ -97,7 +90,7 @@ export async function resolveInputPath(
     }
     // Convert absolute path to URI
     const uri = localPathToUri(expandedPath);
-    const isWithinWorkspace = await isPathWithinWorkspace(ide, expandedPath);
+    const isWithinWorkspace = await isUriWithinWorkspace(ide, uri);
     return {
       uri,
       displayPath: expandedPath,

@@ -1,6 +1,6 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
 import { Tool } from "../..";
-import { resolveInputPath } from "../../util/pathResolver";
+import { ResolvedPath, resolveInputPath } from "../../util/pathResolver";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 import { evaluateFileAccessPolicy } from "../policies/fileAccess";
 
@@ -49,7 +49,10 @@ export const readFileTool: Tool = {
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
   ): ToolPolicy => {
-    const resolvedPath = parsedArgs._resolvedPath as any;
+    const resolvedPath = parsedArgs._resolvedPath as
+      | ResolvedPath
+      | null
+      | undefined;
     if (!resolvedPath) return basePolicy;
 
     return evaluateFileAccessPolicy(basePolicy, resolvedPath.isWithinWorkspace);
