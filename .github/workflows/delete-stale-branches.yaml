@@ -20,3 +20,4 @@ jobs:
           pr-check: true
           dry-run: true
           ignore-issue-interaction: true
+          branches-filter-regex: "cla-signatures"
