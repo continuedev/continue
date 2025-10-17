@@ -97,10 +97,13 @@ export function constructMessages(
         },
       });
     } else if (item.message.role === "thinking") {
-      msgs.push({
-        ctxItems: item.contextItems,
-        message: item.message,
-      });
+      // Only include thinking messages that are complete (either regular thinking with signature or if it is redacted thinking)
+      if (item.message.signature || item.message.redactedThinking) {
+        msgs.push({
+          ctxItems: item.contextItems,
+          message: item.message,
+        });
+      }
     } else if (item.message.role === "assistant") {
       // When using system message tools, convert tool calls/states to text content
       if (item.toolCallStates?.length && useSystemToolsFramework) {
