@@ -17,6 +17,8 @@ jobs:
         uses: crs-k/stale-branches@v8.2.2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          days-before-stale: 60
+          days-before-delete: 90
           pr-check: true
           dry-run: true
           ignore-issue-interaction: true
