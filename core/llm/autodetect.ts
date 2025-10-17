@@ -142,7 +142,10 @@ function modelSupportsReasoning(
   if (!model) {
     return false;
   }
-  if ("anthropic" === model.underlyingProviderName) {
+  if (
+    "anthropic" === model.underlyingProviderName &&
+    !model.model.includes("3-5")
+  ) {
     return true;
   }
   if (model.model.includes("deepseek-r")) {
