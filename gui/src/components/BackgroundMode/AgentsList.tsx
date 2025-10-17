@@ -1,5 +1,6 @@
 import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
+import { normalizeRepoUrl } from "core/util/repoUrl";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
@@ -20,48 +21,6 @@ interface Agent {
 interface AgentsListProps {
   isCreatingAgent?: boolean;
 }
-
-// Robust URL normalization function
-const normalizeRepoUrl = (url: string | undefined | null): string => {
-  if (!url) return "";
-
-  let normalized = url.trim();
-
-  // Convert SSH to HTTPS: git@github.com:owner/repo.git -> https://github.com/owner/repo
-  if (normalized.startsWith("git@github.com:")) {
-    normalized = normalized.replace("git@github.com:", "https://github.com/");
-  }
-
-  // Convert SSH protocol to HTTPS: ssh://git@github.com/owner/repo.git -> https://github.com/owner/repo
-  // Also handles: ssh://git@github.com:owner/repo.git (less common)
-  if (normalized.startsWith("ssh://git@github.com")) {
-    normalized = normalized
-      .replace("ssh://git@github.com/", "https://github.com/")
-      .replace("ssh://git@github.com:", "https://github.com/");
-  }
-
-  // Convert shorthand owner/repo to full URL
-  if (
-    normalized.includes("/") &&
-    !normalized.startsWith("http") &&
-    !normalized.startsWith("git@")
-  ) {
-    normalized = `https://github.com/${normalized}`;
-  }
-
-  // Remove .git suffix
-  if (normalized.endsWith(".git")) {
-    normalized = normalized.slice(0, -4);
-  }
-
-  // Remove trailing slash
-  if (normalized.endsWith("/")) {
-    normalized = normalized.slice(0, -1);
-  }
-
-  // Normalize to lowercase
-  return normalized.toLowerCase();
-};
 
 export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const { session } = useAuth();
@@ -156,7 +115,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const isAgentInCurrentWorkspace = (agent: Agent): boolean => {
     // Get all possible agent repo URLs (both repoUrl and metadata.github_repo)
     const agentUrls = [agent.repoUrl, agent.metadata?.github_repo]
-      .filter(Boolean)
+      .filter((url): url is string => Boolean(url))
       .map(normalizeRepoUrl)
       .filter((url) => url !== "");
 
