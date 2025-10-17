@@ -19,7 +19,6 @@ import {
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
-import { isEditTool } from "../../../util/toolCallState";
 
 interface ToolPolicyItemProps {
   tool: Tool;
@@ -38,10 +37,8 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const autoAcceptEditToolDiffs = useAppSelector(
     (state) => state.config.config.ui?.autoAcceptEditToolDiffs,
   );
-  const isAutoAcceptedToolCall =
-    isEditTool(props.tool.function.name) && autoAcceptEditToolDiffs;
 
-  const policy = isAutoAcceptedToolCall
+  const policy = autoAcceptEditToolDiffs
     ? "allowedWithoutPermission"
     : toolPolicy;
 
@@ -64,7 +61,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const fontSize = useFontSize(-2);
 
   const disabled =
-    isAutoAcceptedToolCall ||
+    autoAcceptEditToolDiffs ||
     !props.isGroupEnabled ||
     (mode === "plan" &&
       props.tool.group === BUILT_IN_GROUP_NAME &&
@@ -112,7 +109,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                     <InformationCircleIcon className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500" />
                   </ToolTip>
                 ) : null}
-                {isAutoAcceptedToolCall ? (
+                {autoAcceptEditToolDiffs ? (
                   <ToolTip
                     place="bottom"
                     className="flex flex-wrap items-center"
@@ -164,7 +161,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                   data-tooltip-id={disabled ? disabledTooltipId : undefined}
                 >
                   <span className="text-xs">
-                    {isAutoAcceptedToolCall
+                    {autoAcceptEditToolDiffs
                       ? "Automatic"
                       : disabled || policy === "disabled"
                         ? "Excluded"

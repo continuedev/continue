@@ -2,12 +2,14 @@ import {
   ChevronDownIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import { Tool } from "core";
 import { useMemo, useState } from "react";
 import ToggleSwitch from "../../../components/gui/Switch";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
+import { isEditTool } from "../../../util/toolCallState";
 import { ToolPolicyItem } from "./ToolPolicyItem";
 
 interface ToolPoliciesGroupProps {
@@ -28,9 +30,13 @@ export function ToolPoliciesGroup({
   const dispatch = useAppDispatch();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const availableTools = useAppSelector((state) => state.config.config.tools);
+  const availableTools = useAppSelector(
+    (state) => state.config.config.tools as Tool[],
+  );
   const tools = useMemo(() => {
-    return availableTools.filter((t) => t.group === groupName);
+    return availableTools
+      .filter((t) => t.group === groupName)
+      .filter((t) => !isEditTool(t.function.name));
   }, [availableTools, groupName]);
 
   const toolGroupSettings = useAppSelector(
