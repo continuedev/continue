@@ -462,7 +462,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent" | "plan";
+export type MessageModes = "chat" | "agent" | "plan" | "background";
 
 export type ToolStatus =
   | "generating" // Tool call arguments are being streamed from the LLM
@@ -1852,7 +1852,7 @@ export type RuleSource =
   | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules"
-  | "agent-file";
+  | "agentFile";
 
 export interface RuleWithSource {
   name?: string;

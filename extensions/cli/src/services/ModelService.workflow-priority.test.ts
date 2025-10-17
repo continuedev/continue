@@ -5,7 +5,7 @@ import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
 import { ModelService } from "./ModelService.js";
-import { WorkflowServiceState } from "./types.js";
+import { AgentFileServiceState } from "./types.js";
 
 // Mock the dependencies
 vi.mock("../auth/workos.js", () => ({
@@ -27,7 +27,7 @@ vi.mock("../util/logger.js", () => ({
   },
 }));
 
-describe("ModelService workflow model prioritization", () => {
+describe("ModelService agent file model prioritization", () => {
   let modelService: ModelService;
   let mockAssistant: AssistantUnrolled;
   let mockAuthConfig: AuthConfig;
@@ -52,16 +52,21 @@ describe("ModelService workflow model prioritization", () => {
     vi.clearAllMocks();
   });
 
-  it("should prioritize workflow model over default when workflow file has model specified", async () => {
-    const workflowServiceState: WorkflowServiceState = {
-      workflowFile: {
-        name: "test-workflow",
+  it("should prioritize agent file model over default when agent file has model specified", async () => {
+    const agentFileServiceState: AgentFileServiceState = {
+      agentFile: {
+        name: "test-agent",
         model: "gpt-4",
-        prompt: "Test workflow",
+        prompt: "Test agent",
       },
-      slug: "test/workflow",
-      workflowModelName: "gpt-4",
-      workflowService: null,
+      slug: "test/agent",
+      agentFileModel: {
+        name: "gpt-4",
+        model: "gpt-4",
+        provider: "openai",
+      },
+      parsedRules: null,
+      parsedTools: null,
     };
 
     // Mock createLlmApi to return different models based on the selected model
@@ -77,7 +82,7 @@ describe("ModelService workflow model prioritization", () => {
     const result = await modelService.doInitialize(
       mockAssistant,
       mockAuthConfig,
-      workflowServiceState,
+      agentFileServiceState,
     );
 
     expect(result.model).toEqual(
@@ -87,23 +92,24 @@ describe("ModelService workflow model prioritization", () => {
       }),
     );
 
-    // Should have called createLlmApi with the workflow-specified model
+    // Should have called createLlmApi with the agent-file-specified model
     expect(createLlmApiMock).toHaveBeenCalledWith(
       expect.objectContaining({ name: "gpt-4" }),
       mockAuthConfig,
     );
   });
 
-  it("should fall back to persisted model when no workflow model is specified", async () => {
-    const workflowServiceState: WorkflowServiceState = {
-      workflowFile: {
-        name: "test-workflow",
-        prompt: "Test workflow",
+  it("should fall back to persisted model when no agent file model is specified", async () => {
+    const agentFileServiceState: AgentFileServiceState = {
+      agentFile: {
+        name: "test-agent",
+        prompt: "Test agent file",
         // No model specified
       },
-      slug: "test/workflow",
-      workflowModelName: null,
-      workflowService: null,
+      slug: "test/agent",
+      agentFileModel: null,
+      parsedRules: null,
+      parsedTools: null,
     };
 
     // Mock getModelName to return a persisted model
@@ -122,7 +128,7 @@ describe("ModelService workflow model prioritization", () => {
     const result = await modelService.doInitialize(
       mockAssistant,
       mockAuthConfig,
-      workflowServiceState,
+      agentFileServiceState,
     );
 
     expect(result.model).toEqual(
@@ -138,16 +144,21 @@ describe("ModelService workflow model prioritization", () => {
     );
   });
 
-  it("should fall back to default model when workflow model is not available", async () => {
-    const workflowServiceState: WorkflowServiceState = {
-      workflowFile: {
-        name: "test-workflow",
+  it("should fall back to default model when agent file model is not available", async () => {
+    const agentFileServiceState: AgentFileServiceState = {
+      agentFile: {
+        name: "test-agent",
         model: "non-existent-model", // Model not in available models
-        prompt: "Test workflow",
+        prompt: "Test agent",
       },
-      slug: "test/workflow",
-      workflowModelName: "non-existent-model",
-      workflowService: null,
+      slug: "test/agent",
+      agentFileModel: {
+        name: "non-existent-model",
+        model: "non-existent",
+        provider: "nonexistent",
+      },
+      parsedRules: null,
+      parsedTools: null,
     };
 
     const getLlmApiMock = vi.mocked(config.getLlmApi);
@@ -159,7 +170,7 @@ describe("ModelService workflow model prioritization", () => {
     const result = await modelService.doInitialize(
       mockAssistant,
       mockAuthConfig,
-      workflowServiceState,
+      agentFileServiceState,
     );
 
     expect(result.model).toEqual(
@@ -173,12 +184,13 @@ describe("ModelService workflow model prioritization", () => {
     expect(getLlmApiMock).toHaveBeenCalledWith(mockAssistant, mockAuthConfig);
   });
 
-  it("should use default model when no workflow file exists", async () => {
-    const workflowServiceState: WorkflowServiceState = {
-      workflowFile: null,
+  it("should use default model when no agent file exists", async () => {
+    const agentFileServiceState: AgentFileServiceState = {
+      agentFile: null,
       slug: null,
-      workflowModelName: null,
-      workflowService: null,
+      agentFileModel: null,
+      parsedRules: null,
+      parsedTools: null,
     };
 
     // Make sure getModelName returns null (no persisted model)
@@ -194,7 +206,7 @@ describe("ModelService workflow model prioritization", () => {
     const result = await modelService.doInitialize(
       mockAssistant,
       mockAuthConfig,
-      workflowServiceState,
+      agentFileServiceState,
     );
 
     expect(result.model).toEqual(
@@ -207,16 +219,21 @@ describe("ModelService workflow model prioritization", () => {
     expect(getLlmApiMock).toHaveBeenCalledWith(mockAssistant, mockAuthConfig);
   });
 
-  it("should prioritize workflow model over persisted model", async () => {
-    const workflowServiceState: WorkflowServiceState = {
-      workflowFile: {
-        name: "test-workflow",
-        model: "gpt-4", // Workflow specifies gpt-4
-        prompt: "Test workflow",
+  it("should prioritize agent file model over persisted model", async () => {
+    const agentFileServiceState: AgentFileServiceState = {
+      agentFile: {
+        name: "test-agent",
+        model: "gpt-4", // Agent file specifies gpt-4
+        prompt: "Test agent",
       },
-      slug: "test/workflow",
-      workflowModelName: "gpt-4",
-      workflowService: null,
+      slug: "test/agent",
+      agentFileModel: {
+        name: "gpt-4",
+        model: "gpt-4",
+        provider: "openai",
+      },
+      parsedRules: null,
+      parsedTools: null,
     };
 
     // Mock getModelName to return a different persisted model
@@ -235,10 +252,10 @@ describe("ModelService workflow model prioritization", () => {
     const result = await modelService.doInitialize(
       mockAssistant,
       mockAuthConfig,
-      workflowServiceState,
+      agentFileServiceState,
     );
 
-    // Should use workflow model (gpt-4), not persisted model (claude-3-haiku)
+    // Should use agent file model (gpt-4), not persisted model (claude-3-haiku)
     expect(result.model).toEqual(
       expect.objectContaining({
         name: "gpt-4",

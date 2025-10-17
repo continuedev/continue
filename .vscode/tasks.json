@@ -108,7 +108,7 @@
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
       "command": "node",
-      "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
+      "args": ["scripts/prepackage.js"],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "group": "build-tasks",

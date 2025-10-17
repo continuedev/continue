@@ -34,7 +34,7 @@ export function SelectedAssistantButton({
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
           {selectedProfile === null ? (
-            "Create your first agent"
+            "Set up config file"
           ) : configLoading ? (
             <span className="text-description flex flex-row items-center">
               <ArrowPathIcon
@@ -47,7 +47,9 @@ export function SelectedAssistantButton({
             </span>
           ) : (
             <>
-              <AssistantIcon assistant={selectedProfile} size={iconSize} />
+              {selectedProfile.iconUrl && (
+                <AssistantIcon assistant={selectedProfile} size={iconSize} />
+              )}
               <span className={`xs:line-clamp-1 hidden select-none text-xs`}>
                 {selectedProfile.title}
               </span>

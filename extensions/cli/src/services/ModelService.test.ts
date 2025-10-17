@@ -100,45 +100,6 @@ describe("ModelService", () => {
     });
   });
 
-  describe("update()", () => {
-    test("should update model with new assistant config", async () => {
-      // Initialize first
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        mockLlmApi as any,
-        mockAssistant.models![0] as ModelConfig,
-      ]);
-      await service.initialize(mockAssistant, mockAuthConfig);
-
-      // Update with new assistant
-      const newAssistant = {
-        ...mockAssistant,
-        models: [
-          {
-            provider: "openai",
-            model: "gpt-4-turbo",
-            name: "GPT-4 Turbo",
-            apiKey: "new-key",
-            roles: ["chat"],
-          } as ModelConfig,
-        ],
-      };
-      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        newLlmApi as any,
-        newAssistant.models![0] as ModelConfig,
-      ]);
-
-      const state = await service.update(newAssistant, mockAuthConfig);
-
-      expect(state).toEqual({
-        llmApi: newLlmApi,
-        model: newAssistant.models![0],
-        assistant: newAssistant,
-        authConfig: mockAuthConfig,
-      });
-    });
-  });
-
   describe("switchModel()", () => {
     test("should switch to a different model by index", async () => {
       vi.mocked(config.getLlmApi).mockReturnValue([
@@ -357,8 +318,12 @@ describe("ModelService", () => {
   });
 
   describe("getDependencies()", () => {
-    test("should declare auth, config, and workflow dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "config", "workflow"]);
+    test("should declare auth, config, and agent-file dependencies", () => {
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "config",
+        "agentFile",
+      ]);
     });
   });
 

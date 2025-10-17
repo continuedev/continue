@@ -31,6 +31,7 @@ import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+import { encodeFullSlug } from "../../../../packages/config-yaml/dist";
 import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
@@ -261,6 +262,167 @@ export class VsCodeMessenger {
         "continue.shareSession",
         msg.data.sessionId,
       );
+    });
+
+    this.onWebview("createBackgroundAgent", async (msg) => {
+      const configHandler = await configHandlerPromise;
+      const { content, contextItems, selectedCode, organizationId } = msg.data;
+
+      // Convert resolved content to plain text prompt
+      const prompt = stripImages(content);
+
+      if (!prompt || prompt.trim().length === 0) {
+        vscode.window.showErrorMessage(
+          "Please enter a prompt to create a background agent",
+        );
+        return;
+      }
+
+      // Get workspace information
+      const workspaceDirs = await this.ide.getWorkspaceDirs();
+      if (workspaceDirs.length === 0) {
+        vscode.window.showErrorMessage(
+          "No workspace folder found. Please open a workspace to create a background agent.",
+        );
+        return;
+      }
+
+      const workspaceDir = workspaceDirs[0];
+      let repoUrl = "";
+      let branch = "";
+
+      try {
+        // Get repo name/URL
+        const repoName = await this.ide.getRepoName(workspaceDir);
+        if (repoName) {
+          // If repo name looks like "owner/repo", convert to GitHub URL
+          if (repoName.includes("/") && !repoName.startsWith("http")) {
+            repoUrl = `https://github.com/${repoName}`;
+          } else {
+            repoUrl = repoName;
+          }
+        }
+
+        // Get current branch
+        const branchInfo = await this.ide.getBranch(workspaceDir);
+        if (branchInfo) {
+          branch = branchInfo;
+        }
+      } catch (e) {
+        console.error("Error getting repo info:", e);
+      }
+
+      if (!repoUrl) {
+        vscode.window.showErrorMessage(
+          "Unable to determine repository URL. Make sure you're in a git repository.",
+        );
+        return;
+      }
+
+      // Generate a name from the prompt (first 50 chars, cleaned up)
+      let name = prompt.substring(0, 50).replace(/\n/g, " ").trim();
+      if (prompt.length > 50) {
+        name += "...";
+      }
+      // Fallback to a generic name if prompt is too short
+      if (name.length < 3) {
+        const repoName = await this.ide.getRepoName(workspaceDir);
+        name = `Agent for ${repoName || "repository"}`;
+      }
+
+      // debugger;
+
+      // Get the current agent configuration from the selected profile
+      let agent: string | undefined;
+      try {
+        const currentProfile = configHandler.currentProfile;
+        if (
+          currentProfile &&
+          currentProfile.profileDescription.profileType !== "local"
+        ) {
+          // Encode the full slug to pass as the agent parameter
+          agent = encodeFullSlug(currentProfile.profileDescription.fullSlug);
+        }
+      } catch (e) {
+        console.error("Error getting agent configuration from profile:", e);
+        // Continue without agent config - will use default
+      }
+
+      // Create the background agent
+      try {
+        console.log("Creating background agent with:", {
+          name,
+          prompt: prompt.substring(0, 50) + "...",
+          repoUrl,
+          branch,
+          contextItemsCount: contextItems?.length || 0,
+          selectedCodeCount: selectedCode?.length || 0,
+          agent: agent || "default",
+        });
+
+        const result =
+          await configHandler.controlPlaneClient.createBackgroundAgent(
+            prompt,
+            repoUrl,
+            name,
+            branch,
+            organizationId,
+            contextItems,
+            selectedCode,
+            agent,
+          );
+
+        vscode.window.showInformationMessage(
+          `Background agent created successfully! Agent ID: ${result.id}`,
+        );
+      } catch (e) {
+        console.error("Failed to create background agent:", e);
+        const errorMessage =
+          e instanceof Error ? e.message : "Unknown error occurred";
+
+        // Check if this is a GitHub authorization error
+        if (
+          errorMessage.includes("GitHub token") ||
+          errorMessage.includes("GitHub App")
+        ) {
+          const selection = await vscode.window.showErrorMessage(
+            "Background agents need GitHub access. Please connect your GitHub account to Continue.",
+            "Connect GitHub",
+            "Cancel",
+          );
+
+          if (selection === "Connect GitHub") {
+            await this.inProcessMessenger.externalRequest(
+              "controlPlane/openUrl",
+              {
+                path: "settings/integrations",
+                orgSlug: configHandler.currentOrg?.slug,
+              },
+            );
+          }
+        } else {
+          vscode.window.showErrorMessage(
+            `Failed to create background agent: ${errorMessage}`,
+          );
+        }
+      }
+    });
+
+    this.onWebview("listBackgroundAgents", async (msg) => {
+      const configHandler = await configHandlerPromise;
+      const { organizationId, limit } = msg.data;
+
+      try {
+        const result =
+          await configHandler.controlPlaneClient.listBackgroundAgents(
+            organizationId,
+            limit,
+          );
+        return result;
+      } catch (e) {
+        console.error("Error listing background agents:", e);
+        return { agents: [], totalCount: 0 };
+      }
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

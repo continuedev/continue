@@ -1,28 +1,26 @@
 ---
-title: "How to Configure Continue Agents"
-description: Learn how to access and manage Continue agent configurations through Hub or local YAML files
+title: "How to Configure Continue"
+description: Learn how to access and manage Continue configurations through Hub or local YAML files
 keywords: [config, settings, customize]
-sidebarTitle: "Agent Configuration"
+sidebarTitle: "Configuration"
 ---
 
-You can easily access your agent configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `new window` (hub agents) or `gear` (local agents) icon.
+You can easily access your configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `new window` (hub agents) or `gear` (local agents) icon.
 
-![configure an agent](/images/configure-continue.png)
+![configure](/images/configure-continue.png)
 
-## How to Manage Hub Agents
+## How to Manage Hub Configs
 
-Hub Agents can be managed in [the Hub](https://hub.continue.dev). See [Editing an Agent](../../hub/agents/edit-an-agent.md)
+  Hub Configs can be managed in [the Hub](https://hub.continue.dev). See [Editing a config](/hub/configs/edit-a-config)
 
-## How to Configure Local Agents with YAML
+## How to Configure Local Configs with YAML
 
 Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
 - `~/.continue/config.yaml` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.yaml` (Windows)
 
-Local workspace-level configuration is stored in root project: `.continue/agents/<agent-name>.yaml`
-
-To open this `config.yaml`, you need to open the agents dropdown in the top-right portion of the chat input. On that dropdown beside the "Local Agent" option, select the cog icon. It will open the local `config.yaml`.
+To open this `config.yaml`, you need to open the configs dropdown in the top-right portion of the chat input. On that dropdown beside the "Local Config" option, select the cog icon. It will open the local `config.yaml`.
 
 ![local-config-open-steps](/images/local-config-open-steps.png)
 

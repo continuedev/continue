@@ -1068,11 +1068,6 @@ describe("streamResponseThunk", () => {
         type: "session/abortStream",
         payload: undefined,
       },
-      // Stream end cleanup
-      {
-        type: "session/setInactive",
-        payload: undefined,
-      },
       {
         type: "chat/streamNormalInput/fulfilled",
         meta: {

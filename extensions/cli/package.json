@@ -104,7 +104,7 @@
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",
     "gradient-string": "^3.0.0",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.0",
     "ignore": "^7.0.5",
     "ignore-walk": "^7.0.0",
     "ink": "^6.1.0",

@@ -33,12 +33,11 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     contents: "Current file contents",
     path: "file:///Users/user/workspace1/current_file.py",
   },
-  "controlPlane/getFreeTrialStatus": {
-    autocompleteLimit: 1000,
+  "controlPlane/getCreditStatus": {
     optedInToFreeTrial: false,
-    chatLimit: 1000,
-    autocompleteCount: 0,
-    chatCount: 0,
+    creditBalance: 0,
+    hasCredits: false,
+    hasPurchasedCredits: false,
   },
   getWorkspaceDirs: [
     "file:///Users/user/workspace1",
@@ -56,14 +55,37 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     },
   },
   "config/getSerializedProfileInfo": {
-    organizations: [],
-    profileId: "test-profile",
+    organizations: [
+      {
+        id: "personal",
+        profiles: [
+          {
+            title: "Local Agent",
+            id: "local",
+            errors: [],
+            profileType: "local",
+            uri: "",
+            iconUrl: "",
+            fullSlug: {
+              ownerSlug: "",
+              packageSlug: "",
+              versionSlug: "",
+            },
+          },
+        ],
+        slug: "",
+        selectedProfileId: "local",
+        name: "Personal",
+        iconUrl: "",
+      },
+    ],
+    profileId: "local",
     result: {
       config: undefined,
       errors: [],
       configLoadInterrupted: false,
     },
-    selectedOrgId: "local",
+    selectedOrgId: "personal",
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
@@ -102,6 +124,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     },
   ],
+  listBackgroundAgents: { agents: [], totalCount: 0 },
 };
 
 const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {

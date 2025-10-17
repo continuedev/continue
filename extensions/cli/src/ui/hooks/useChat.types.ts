@@ -18,9 +18,9 @@ export interface UseChatProps {
   onShowUpdateSelector: () => void;
   onShowModelSelector?: () => void;
   onShowSessionSelector?: () => void;
-  onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   onClear?: () => void;
+  onRefreshStatic?: () => void;
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
@@ -38,6 +38,7 @@ export interface ActivePermissionRequest {
   toolArgs: any;
   requestId: string;
   toolCallPreview?: ToolCallPreview[];
+  hasDynamicEvaluation?: boolean;
 }
 
 export interface RemoteServerState {

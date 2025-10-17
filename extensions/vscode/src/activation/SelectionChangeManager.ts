@@ -330,9 +330,9 @@ export class SelectionChangeManager {
       return false;
     }
 
-    console.debug(
-      "defaultFallbackHandler: deleteChain called from onDidChangeTextEditorSelection",
-    );
+    // console.debug(
+    //   "defaultFallbackHandler: deleteChain called from onDidChangeTextEditorSelection",
+    // );
     await NextEditProvider.getInstance().deleteChain();
 
     if (!this.usingFullFileDiff) {

@@ -537,6 +537,7 @@ export class ConfigHandler {
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
+    const isSignedIn = await this.controlPlaneClient.isSignedIn();
 
     const profileDescription = this.currentProfile.profileDescription;
     const telemetryData: Record<string, any> = {
@@ -547,9 +548,14 @@ export class ConfigHandler {
       profileType: profileDescription.profileType,
       isPersonalOrg: this.currentOrg?.id === this.PERSONAL_ORG_DESC.id,
       errorCount: errors.length,
+      isSignedIn,
     };
 
     void Telemetry.capture("config_reload", telemetryData);
+
+    if (errors.length) {
+      Logger.error("Errors loading config: ", errors);
+    }
 
     return {
       config,
@@ -601,10 +607,6 @@ export class ConfigHandler {
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
-
-    if (config.errors?.length) {
-      Logger.error("Errors loading config: ", config.errors);
-    }
     return config;
   }
 
