@@ -521,6 +521,9 @@ async function runHeadlessMode(
       compactionIndex = result.compactionIndex;
     }
   }
+
+  // exit after headless mode completes
+  await gracefulExit(0);
 }
 
 export async function chat(prompt?: string, options: ChatOptions = {}) {
