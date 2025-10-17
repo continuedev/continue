@@ -66,7 +66,10 @@ export const readFileRangeTool: Tool = {
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
   ): ToolPolicy => {
-    const resolvedPath = parsedArgs._resolvedPath as ResolvedPath | null | undefined;
+    const resolvedPath = parsedArgs._resolvedPath as
+      | ResolvedPath
+      | null
+      | undefined;
     if (!resolvedPath) return basePolicy;
 
     return evaluateFileAccessPolicy(basePolicy, resolvedPath.isWithinWorkspace);

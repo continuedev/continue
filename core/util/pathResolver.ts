@@ -15,10 +15,7 @@ export interface ResolvedPath {
 /**
  * Checks if a URI is within any of the workspace directories
  */
-async function isUriWithinWorkspace(
-  ide: IDE,
-  uri: string
-): Promise<boolean> {
+async function isUriWithinWorkspace(ide: IDE, uri: string): Promise<boolean> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   const { foundInDir } = findUriInDirs(uri, workspaceDirs);
   return foundInDir !== null;

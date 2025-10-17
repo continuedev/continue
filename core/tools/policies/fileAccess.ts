@@ -9,7 +9,7 @@ import { ToolPolicy } from "@continuedev/terminal-security";
  */
 export function evaluateFileAccessPolicy(
   basePolicy: ToolPolicy,
-  isWithinWorkspace: boolean
+  isWithinWorkspace: boolean,
 ): ToolPolicy {
   // If tool is disabled, keep it disabled
   if (basePolicy === "disabled") {
