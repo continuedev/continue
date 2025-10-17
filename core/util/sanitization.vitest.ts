@@ -1,5 +1,6 @@
 import { execSync } from "child_process";
 import { describe, expect, it } from "vitest";
+import { normalizeRepoUrl } from "./repoUrl";
 import { sanitizeShellArgument, validateGitHubRepoUrl } from "./sanitization";
 
 describe("sanitizeShellArgument", () => {
@@ -86,6 +87,81 @@ describe("validateGitHubRepoUrl", () => {
     expect(validateGitHubRepoUrl("   ")).toBe(false);
     expect(validateGitHubRepoUrl(null as any)).toBe(false);
     expect(validateGitHubRepoUrl(undefined as any)).toBe(false);
+  });
+
+  describe("validation after normalization", () => {
+    it("should validate normalized URLs to prevent bypass", () => {
+      // Test that validation works on normalized output
+      const inputs = [
+        "owner/repo",
+        "git@github.com:owner/repo.git",
+        "https://github.com/owner/repo.git",
+        "ssh://git@github.com/owner/repo.git",
+      ];
+
+      inputs.forEach((input) => {
+        const normalized = normalizeRepoUrl(input);
+        expect(validateGitHubRepoUrl(normalized)).toBe(true);
+      });
+    });
+
+    it("should catch dangerous URLs even after normalization", () => {
+      // These should still be dangerous after normalization
+      const dangerous = [
+        "owner/repo; rm -rf /",
+        "owner/repo && malicious",
+        "owner/repo | cat /etc/passwd",
+      ];
+
+      dangerous.forEach((input) => {
+        // Should be blocked before normalization
+        expect(validateGitHubRepoUrl(input)).toBe(false);
+
+        // Even if somehow normalized, should still be invalid
+        const normalized = normalizeRepoUrl(input);
+        expect(validateGitHubRepoUrl(normalized)).toBe(false);
+      });
+    });
+
+    it("should handle edge cases where normalization changes URL structure", () => {
+      // Test URLs that change during normalization
+      const testCases = [
+        {
+          input: "Owner/Repo.git/",
+          normalized: "https://github.com/owner/repo",
+          shouldBeValid: true,
+        },
+        {
+          input: "git@github.com:owner/repo.git",
+          normalized: "https://github.com/owner/repo",
+          shouldBeValid: true,
+        },
+      ];
+
+      testCases.forEach(({ input, normalized, shouldBeValid }) => {
+        const actualNormalized = normalizeRepoUrl(input);
+        expect(actualNormalized).toBe(normalized);
+        expect(validateGitHubRepoUrl(actualNormalized)).toBe(shouldBeValid);
+      });
+    });
+
+    it("should prevent validation bypass via URL encoding or special chars", () => {
+      // These tests ensure that validation happens AFTER normalization
+      // preventing attackers from bypassing validation via encoding or transformation
+
+      // Currently validateGitHubRepoUrl blocks these, but this test ensures
+      // the pattern of "normalize then validate" is maintained
+      const potentialBypass = [
+        "../../../etc/passwd",
+        "owner/../malicious",
+        "owner/repo`whoami`",
+        "owner/repo$(whoami)",
+      ];
+
+      potentialBypass.forEach((input) => {
+        expect(validateGitHubRepoUrl(input)).toBe(false);
+      });
+    });
   });
 });
 

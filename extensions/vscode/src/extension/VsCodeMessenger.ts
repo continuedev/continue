@@ -300,19 +300,19 @@ export class VsCodeMessenger {
         // Get repo name/URL
         const repoName = await this.ide.getRepoName(workspaceDir);
         if (repoName) {
-          // Validate repo URL to prevent injection attacks
-          if (!validateGitHubRepoUrl(repoName)) {
+          // Normalize the URL first to get canonical form
+          const normalized = normalizeRepoUrl(repoName);
+
+          // Validate the normalized URL to prevent injection attacks
+          // This ensures we validate what we'll actually use, not just the input
+          if (!validateGitHubRepoUrl(normalized)) {
             vscode.window.showErrorMessage(
               "Invalid repository format. Please ensure you're using a valid GitHub repository.",
             );
             return;
           }
-          // If repo name looks like "owner/repo", convert to GitHub URL
-          if (repoName.includes("/") && !repoName.startsWith("http")) {
-            repoUrl = `https://github.com/${repoName}`;
-          } else {
-            repoUrl = repoName;
-          }
+
+          repoUrl = normalized;
         }
 
         // Get current branch
@@ -464,6 +464,14 @@ export class VsCodeMessenger {
           return;
         }
 
+        // Validate the repo URL from API response to prevent injection attacks
+        if (!validateGitHubRepoUrl(repoUrl)) {
+          vscode.window.showErrorMessage(
+            "Invalid repository URL from agent session. Please contact support.",
+          );
+          return;
+        }
+
         // Get workspace directories
         const workspaceDirs = await this.ide.getWorkspaceDirs();
         if (workspaceDirs.length === 0) {
@@ -471,7 +479,14 @@ export class VsCodeMessenger {
           return;
         }
 
+        // Normalize and validate again to ensure the normalized form is safe
         const normalizedAgentRepo = normalizeRepoUrl(repoUrl);
+        if (!validateGitHubRepoUrl(normalizedAgentRepo)) {
+          vscode.window.showErrorMessage(
+            "Invalid repository URL after normalization. Please contact support.",
+          );
+          return;
+        }
 
         // Find the workspace that matches the agent's repo URL
         let matchingWorkspace: string | null = null;
