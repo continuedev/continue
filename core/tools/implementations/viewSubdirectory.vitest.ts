@@ -6,12 +6,13 @@ describe("viewSubdirectoryImpl", () => {
   it("should throw DirectoryNotFound when resolveInputPath returns null", async () => {
     const mockExtras = {
       ide: {
-        fileExists: vi.fn().mockResolvedValue(true),
+        fileExists: vi.fn().mockResolvedValue(false),
+        getWorkspaceDirs: vi.fn().mockResolvedValue(["file:///workspace"]),
       },
       llm: {},
     };
 
-    // Mock resolveInputPath to return null (imported function would need to be mocked in actual test)
+    // resolveInputPath will return null when path doesn't exist
     await expect(
       viewSubdirectoryImpl(
         { directory_path: "/non/existent/path" },
@@ -24,6 +25,7 @@ describe("viewSubdirectoryImpl", () => {
     const mockExtras = {
       ide: {
         fileExists: vi.fn().mockResolvedValue(false), // Path doesn't exist
+        getWorkspaceDirs: vi.fn().mockResolvedValue(["file:///workspace"]),
       },
       llm: {},
     };
