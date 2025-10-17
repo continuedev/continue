@@ -14,8 +14,10 @@ import {
 } from "../redux/slices/profilesSlice";
 import {
   addContextItemsAtIndex,
+  newSession,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
+  setMode,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 
@@ -213,6 +215,11 @@ function ParallelListeners() {
 
   useWebviewListener("setInactive", async () => {
     void dispatch(cancelStream());
+  });
+
+  useWebviewListener("loadAgentSession", async (data) => {
+    dispatch(newSession(data.session));
+    dispatch(setMode("agent"));
   });
 
   useWebviewListener("setTTSActive", async (status) => {
