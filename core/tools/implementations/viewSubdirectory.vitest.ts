@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { viewSubdirectoryImpl } from "./viewSubdirectory";
+import { describe, expect, it, vi } from "vitest";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { viewSubdirectoryImpl } from "./viewSubdirectory";
 
 describe("viewSubdirectoryImpl", () => {
   it("should throw DirectoryNotFound when resolveInputPath returns null", async () => {
@@ -13,7 +13,10 @@ describe("viewSubdirectoryImpl", () => {
 
     // Mock resolveInputPath to return null (imported function would need to be mocked in actual test)
     await expect(
-      viewSubdirectoryImpl({ directory_path: "/non/existent/path" }, mockExtras as any)
+      viewSubdirectoryImpl(
+        { directory_path: "/non/existent/path" },
+        mockExtras as any,
+      ),
     ).rejects.toThrow(ContinueError);
   });
 
@@ -28,12 +31,19 @@ describe("viewSubdirectoryImpl", () => {
     // This test verifies the fix - even if resolveInputPath returns a valid object,
     // we still check if the path exists and throw if it doesn't
     try {
-      await viewSubdirectoryImpl({ directory_path: "/some/absolute/path" }, mockExtras as any);
+      await viewSubdirectoryImpl(
+        { directory_path: "/some/absolute/path" },
+        mockExtras as any,
+      );
       expect.fail("Should have thrown DirectoryNotFound error");
     } catch (error) {
       expect(error).toBeInstanceOf(ContinueError);
-      expect((error as ContinueError).reason).toBe(ContinueErrorReason.DirectoryNotFound);
-      expect((error as ContinueError).message).toContain("does not exist or is not accessible");
+      expect((error as ContinueError).reason).toBe(
+        ContinueErrorReason.DirectoryNotFound,
+      );
+      expect((error as ContinueError).message).toContain(
+        "does not exist or is not accessible",
+      );
     }
   });
 });
