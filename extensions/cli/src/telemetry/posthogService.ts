@@ -52,6 +52,14 @@ export class PosthogService {
   }
 
   get isEnabled() {
+    // Check for the unified telemetry control first
+    if (process.env.CONTINUE_TELEMETRY_ENABLED === "0") {
+      return false;
+    }
+    if (process.env.CONTINUE_TELEMETRY_ENABLED === "1") {
+      return true;
+    }
+    // Fall back to the legacy variable for backward compatibility
     return process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY !== "0";
   }
 
@@ -59,11 +67,11 @@ export class PosthogService {
   private async getClient() {
     if (!(await this.hasInternetConnection())) {
       this._client = undefined;
-      if (this._telemetryBlocked) {
+      if (this._telemetryBlocked && this.isEnabled) {
         loggers.warning(
-          "Telemetry appears to be blocked by your network. To disable telemetry entirely, set CONTINUE_ALLOW_ANONYMOUS_TELEMETRY=0",
+          "Telemetry appears to be blocked by your network. To disable telemetry entirely, set CONTINUE_TELEMETRY_ENABLED=0",
         );
-      } else {
+      } else if (this.isEnabled) {
         logger.warn("No internet connection, skipping telemetry");
       }
     } else if (this.isEnabled) {

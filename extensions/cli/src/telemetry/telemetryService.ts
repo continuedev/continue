@@ -71,8 +71,19 @@ class TelemetryService {
       process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ||
       process.env.OTEL_METRICS_EXPORTER
     );
-    const enabled =
-      process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0" && hasOtelConfig;
+
+    // Check for unified telemetry control first
+    let telemetryEnabled = true; // default to enabled if OTEL config exists
+    if (process.env.CONTINUE_TELEMETRY_ENABLED === "0") {
+      telemetryEnabled = false;
+    } else if (process.env.CONTINUE_TELEMETRY_ENABLED === "1") {
+      telemetryEnabled = true;
+    } else {
+      // Fall back to legacy variable for backward compatibility
+      telemetryEnabled = process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0";
+    }
+
+    const enabled = telemetryEnabled && hasOtelConfig;
     const sessionId = uuidv4();
 
     return {
