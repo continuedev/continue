@@ -1,4 +1,4 @@
-import { Text } from "ink";
+import { Box, Text } from "ink";
 import React, { useMemo } from "react";
 
 import { useServices } from "../hooks/useService.js";
@@ -9,6 +9,7 @@ import {
 } from "../services/types.js";
 
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
+import { LoadingAnimation } from "./LoadingAnimation.js";
 
 interface UpdateNotificationProps {
   isRemoteMode?: boolean;
@@ -46,6 +47,15 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
 
   if (!services.update?.isUpdateAvailable && isRemoteMode) {
     return <Text color="cyan">◉ Remote Mode</Text>;
+  }
+
+  if (services.update?.status === UpdateStatus.UPDATING) {
+    return (
+      <Box columnGap={1}>
+        <LoadingAnimation />
+        <Text color={color}>{`${text}`}</Text>
+      </Box>
+    );
   }
 
   return <Text color={color}>{`◉ ${text}`}</Text>;
