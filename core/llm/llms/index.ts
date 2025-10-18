@@ -9,6 +9,7 @@ import {
 } from "../..";
 import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
 import { BaseLLM } from "../index";
+import AIStupidLevel from "./AIStupidLevel";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
 import Azure from "./Azure";
@@ -66,6 +67,7 @@ import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 export const LLMClasses = [
+  AIStupidLevel,
   Anthropic,
   Cohere,
   CometAPI,
