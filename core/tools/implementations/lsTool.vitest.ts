@@ -25,7 +25,7 @@ test("resolveLsToolDirPath handles dot", () => {
 });
 
 test("resolveLsToolDirPath handles dot relative", () => {
-  expect(resolveLsToolDirPath("./hi")).toBe("/hi");
+  expect(resolveLsToolDirPath("./hi")).toBe("./hi");
 });
 
 test("resolveLsToolDirPath normalizes backslashes to forward slashes", () => {

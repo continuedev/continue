@@ -1110,6 +1110,7 @@ export interface Tool {
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
+    processedArgs?: Record<string, unknown>,
   ) => ToolPolicy;
 }
 
