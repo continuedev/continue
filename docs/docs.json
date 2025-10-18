@@ -203,16 +203,7 @@
                   "hub/configs/edit-a-config"
                 ]
               },
-              {
-                "group": "Blocks",
-                "icon": "cube",
-                "pages": [
-                  "hub/blocks/intro",
-                  "hub/blocks/use-a-block",
-                  "hub/blocks/block-types",
-                  "hub/blocks/create-a-block"
-                ]
-              },
+
               {
                 "group": "Governance",
                 "icon": "building",
@@ -389,7 +380,23 @@
     },
     {
       "source": "/hub/blocks",
-      "destination": "/hub/blocks/intro"
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/intro",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/use-a-block",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/block-types",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/create-a-block",
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customize",
@@ -1061,7 +1068,7 @@
     },
     {
       "source": "/hub/blocks/bundles",
-      "destination": "/hub/blocks/intro"
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customize/settings",
