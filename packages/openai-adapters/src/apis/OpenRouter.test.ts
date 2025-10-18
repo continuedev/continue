@@ -14,7 +14,7 @@ describe("OpenRouterApi Anthropic caching", () => {
     const api = new OpenRouterApi(baseConfig);
 
     const body: ChatCompletionCreateParams = {
-      model: "anthropic/claude-3.5-sonnet",
+      model: "anthropic/claude-sonnet-4-5",
       messages: [
         { role: "user", content: "First" },
         { role: "assistant", content: "Resp" },
@@ -161,7 +161,7 @@ describe("OpenRouterApi Anthropic caching", () => {
   describe("applyAnthropicCachingToOpenRouterBody", () => {
     it("mutates OpenAI chat body with system and tool caching", () => {
       const body: ChatCompletionCreateParams = {
-        model: "anthropic/claude-3.5-sonnet",
+        model: "anthropic/claude-sonnet-4-5",
         messages: [
           { role: "system", content: "You are helpful" },
           { role: "user", content: "Alpha" },
@@ -241,7 +241,7 @@ describe("OpenRouterApi Anthropic caching", () => {
 
     it("leaves system untouched when strategy is none while caching users", () => {
       const body: ChatCompletionCreateParams = {
-        model: "anthropic/claude-3.5-sonnet",
+        model: "anthropic/claude-sonnet-4-5",
         messages: [
           { role: "system", content: "Stay focused" },
           { role: "user", content: "Question" },
@@ -276,7 +276,7 @@ describe("OpenRouterApi Anthropic caching", () => {
 
     it("adds cache_control only to final text segment of user arrays", () => {
       const body: ChatCompletionCreateParams = {
-        model: "anthropic/claude-3.5-sonnet",
+        model: "anthropic/claude-sonnet-4-5",
         messages: [
           {
             role: "user",

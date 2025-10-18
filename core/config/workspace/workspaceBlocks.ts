@@ -1,9 +1,8 @@
 import {
   BlockType,
   ConfigYaml,
-  createRuleMarkdown,
   createPromptMarkdown,
-  RULE_FILE_EXTENSION,
+  createRuleMarkdown,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
@@ -41,9 +40,9 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.models = [
         {
           provider: "anthropic",
-          model: "claude-3-7-sonnet-latest",
+          model: "claude-sonnet-4-latest",
           apiKey: "${{ secrets.ANTHROPIC_API_KEY }}",
-          name: "Claude 3.7 Sonnet",
+          name: "Claude Sonnet 4",
           roles: ["chat", "edit"],
         },
       ];
