@@ -1,7 +1,7 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
-import { usesCreditsBasedApiKey } from "../config/usesFreeTrialApiKey";
+import { usesFreeTrialApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
@@ -178,7 +178,7 @@ async function checkForOutOfStarterCredits(
     if (
       config &&
       creditStatus &&
-      isOutOfStarterCredits(usesCreditsBasedApiKey(config), creditStatus)
+      isOutOfStarterCredits(usesFreeTrialApiKey(config), creditStatus)
     ) {
       void messenger.request("freeTrialExceeded", undefined);
     }
