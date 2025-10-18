@@ -1,6 +1,6 @@
 import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
-import { streamResponse, streamSse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -287,7 +287,7 @@ class VertexAI extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    yield* this.geminiInstance.processGeminiResponse(streamResponse(response));
+    yield* this.geminiInstance.processGeminiResponse(response);
   }
 
   private async *streamChatBison(

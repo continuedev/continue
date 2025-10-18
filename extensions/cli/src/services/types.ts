@@ -2,6 +2,8 @@ import {
   AgentFile,
   AssistantUnrolled,
   ModelConfig,
+  parseAgentFileRules,
+  parseAgentFileTools,
 } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { AssistantConfig } from "@continuedev/sdk";
@@ -12,7 +14,6 @@ import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode } from "../permissions/types.js";
 
-import { AgentFileService } from "./AgentFileService.js";
 import { type MCPService } from "./MCPService.js";
 
 /**
@@ -119,8 +120,9 @@ export interface StorageSyncServiceState {
 export interface AgentFileServiceState {
   agentFile: AgentFile | null;
   slug: string | null;
-  agentFileModelName: string | null;
-  agentFileService: AgentFileService | null;
+  agentFileModel: ModelConfig | null;
+  parsedTools: ReturnType<typeof parseAgentFileTools> | null;
+  parsedRules: ReturnType<typeof parseAgentFileRules> | null;
 }
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";
