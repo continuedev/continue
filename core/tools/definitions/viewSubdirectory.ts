@@ -1,5 +1,8 @@
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { Tool } from "../..";
+import { resolveInputPath } from "../../util/pathResolver";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { evaluateFileAccessPolicy } from "../policies/fileAccess";
 
 export const viewSubdirectoryTool: Tool = {
   type: "function",
@@ -31,4 +34,23 @@ export const viewSubdirectoryTool: Tool = {
   },
   defaultToolPolicy: "allowedWithPermission",
   toolCallIcon: "FolderOpenIcon",
+  preprocessArgs: async (args, { ide }) => {
+    const directoryPath = args.directory_path as string;
+    const resolvedPath = await resolveInputPath(ide, directoryPath);
+
+    // Store the resolved path info in args for policy evaluation
+    return {
+      ...args,
+      _resolvedPath: resolvedPath,
+    };
+  },
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    const resolvedPath = parsedArgs._resolvedPath as any;
+    if (!resolvedPath) return basePolicy;
+
+    return evaluateFileAccessPolicy(basePolicy, resolvedPath.isWithinWorkspace);
+  },
 };

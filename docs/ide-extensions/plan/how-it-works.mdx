@@ -29,17 +29,21 @@ When you select Plan mode:
 
 Plan mode includes these read-only built-in tools:
 
-- **Read file** (`read_file`): Read the contents of any file in the project
+- **Read file** (`read_file`): Read the contents of any file in the project (supports paths outside workspace with permission)
 - **Read currently open file** (`read_currently_open_file`): Read the contents of the currently open file
-- **List directory** (`ls`): List files and directories
+- **List directory** (`ls`): List files and directories (supports paths outside workspace with permission)
 - **Glob search** (`glob_search`): Search for files matching a pattern
 - **Grep search** (`grep_search`): Search file contents using regex patterns
 - **Fetch URL content** (`fetch_url_content`): Retrieve content from web URLs
 - **Search web** (`search_web`): Perform web searches for additional context
 - **View diff** (`view_diff`): View the current git diff
 - **View repo map** (`view_repo_map`): Get an overview of the repository structure
-- **View subdirectory** (`view_subdirectory`): Get a detailed view of a specific directory
+- **View subdirectory** (`view_subdirectory`): Get a detailed view of a specific directory (supports paths outside workspace with permission)
 - **Codebase tool** (`codebase_tool`): Advanced codebase analysis capabilities
+
+<Info>
+  Tools like `read_file`, `ls`, and `view_subdirectory` can access files outside your workspace with explicit permission. Learn more about [File Access Outside Workspace](/ide-extensions/agent/file-access-outside-workspace).
+</Info>
 
 ### MCP tools support
 

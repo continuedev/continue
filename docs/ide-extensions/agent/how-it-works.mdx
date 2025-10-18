@@ -29,17 +29,21 @@ Continue includes several built-in tools which provide the model access to IDE f
 
 In Plan mode, only these read-only tools are available:
 
-- **Read file** (`read_file`)
+- **Read file** (`read_file`) - Supports paths outside workspace with permission
 - **Read currently open file** (`read_currently_open_file`)
-- **List directory** (`ls`)
+- **List directory** (`ls`) - Supports paths outside workspace with permission
 - **Glob search** (`glob_search`)
 - **Grep search** (`grep_search`)
 - **Fetch URL content** (`fetch_url_content`)
 - **Search web** (`search_web`)
 - **View diff** (`view_diff`)
 - **View repo map** (`view_repo_map`)
-- **View subdirectory** (`view_subdirectory`)
+- **View subdirectory** (`view_subdirectory`) - Supports paths outside workspace with permission
 - **Codebase tool** (`codebase_tool`)
+
+<Info>
+  Tools like `read_file`, `ls`, and `view_subdirectory` can access files outside your workspace with explicit permission. Learn more about [File Access Outside Workspace](/ide-extensions/agent/file-access-outside-workspace).
+</Info>
 
 ### What Tools Are Available in Agent Mode (All Tools)
 
