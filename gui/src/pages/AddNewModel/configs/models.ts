@@ -1145,27 +1145,42 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  claude4Sonnet: {
-    title: "Claude 4 Sonnet",
+  claude45Sonnet: {
+    title: "Claude Sonnet 4.5",
     description:
-      "The most intelligent model in the Claude 4 series. Costing lesser than Claude 4 Opus.",
+      "Anthropic's smartest model for complex agents and coding with exceptional performance in reasoning and multilingual tasks.",
     params: {
-      model: "claude-4-sonnet-latest",
+      model: "claude-sonnet-4-5-20250929",
       contextLength: 200_000,
-      title: "Claude 4 Sonnet",
+      title: "Claude 4.5 Sonnet",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude41Opus: {
-    title: "Claude 4.1 Opus",
-    description: "The most capable model in the Claude 4 series",
+  claude45Haiku: {
+    title: "Claude Haiku 4.5",
+    description:
+      "Anthropic's fastest model with near-frontier intelligence, ideal for quick and accurate responses.",
     params: {
-      model: "claude-opus-4-1-20250805",
+      model: "claude-haiku-4-5-20251001",
       contextLength: 200_000,
-      title: "Claude 4.1 Opus",
+      title: "Claude Haiku 4.5",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude4Sonnet: {
+    title: "Claude Sonnet 4",
+    description:
+      "The most intelligent model in the Claude 4 series. Costing lesser than Claude Opus 4.",
+    params: {
+      model: "claude-4-sonnet-latest",
+      contextLength: 200_000,
+      title: "Claude 4 Sonnet",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
@@ -1186,6 +1201,20 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+  claude41Opus: {
+    title: "Claude Opus 4.1",
+    description: "The most capable model in the Claude 4 series",
+    params: {
+      model: "claude-opus-4-1-20250805",
+      contextLength: 200_000,
+      title: "Claude Opus 4.1",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+
   graniteChat: {
     title: "Granite Chat 13b",
     description:
@@ -1575,20 +1604,7 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  asksageclaude35Sonnet: {
-    title: "Claude 3.5 Sonnet",
-    description:
-      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
-    params: {
-      model: "claude-35-sonnet",
-      contextLength: 200_000,
-      title: "Claude 3.5 Sonnet",
-      apiKey: "",
-    },
-    providerOptions: ["askSage"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
+
   asksageclaude37sonnet: {
     title: "Claude 3.7 Sonnet",
     description: "Anthropic's 3.7 model.",
@@ -1615,19 +1631,7 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  asksageclaude35gov: {
-    title: "Claude 3.5 Sonnet gov*",
-    description: "Anthropic's 3.5 Sonnet model.",
-    params: {
-      model: "aws-bedrock-claude-35-sonnet-gov",
-      contextLength: 200_000,
-      title: "Claude 3.5 Sonnet gov*",
-      apiKey: "",
-    },
-    providerOptions: ["askSage"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
+
   asksageclaude4s: {
     title: "Claude 4 Sonnet",
     description: "Anthropic's Claude 4 Sonnet",
@@ -2320,18 +2324,59 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cometapi.png",
     isOpenSource: false,
   },
-  cometapiClaude35HaikuLatest: {
-    title: "Claude 3.5 Haiku Latest",
+  cometapiClaude45Sonnet: {
+    title: "Claude 4.5 Sonnet Latest",
     description:
-      "Claude 3.5 Haiku Latest via CometAPI - fast and efficient model from Anthropic.",
+      "Claude 4.5 Sonnet Latest via CometAPI - Anthropic's smartest model for complex agents and coding.",
     params: {
-      model: "claude-3-5-haiku-latest",
+      model: "claude-sonnet-4-5-20250929",
       contextLength: 200_000,
-      title: "Claude 3.5 Haiku Latest",
+      title: "Claude 4.5 Sonnet Latest",
       apiKey: "",
     },
     providerOptions: ["cometapi"],
     icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaude45Haiku: {
+    title: "Claude 4.5 Haiku Latest",
+    description:
+      "Claude 4.5 Haiku Latest via CometAPI - Anthropic's fastest model with near-frontier intelligence.",
+    params: {
+      model: "claude-haiku-4-5-20251001",
+      contextLength: 200_000,
+      title: "Claude 4.5 Haiku Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  asksageclaude35Sonnet: {
+    title: "Claude 3.5 Sonnet",
+    description:
+      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+    params: {
+      model: "claude-35-sonnet",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude35gov: {
+    title: "Claude 3.5 Sonnet gov*",
+    description: "Anthropic's 3.5 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-35-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
     isOpenSource: false,
   },
 

@@ -77,12 +77,13 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.cometapiO4Mini,
       models.cometapiO3Pro,
       // Anthropic Claude family
+      models.cometapiClaude45Sonnet,
+      models.cometapiClaude45Haiku,
       models.cometapiClaudeOpus41,
       models.cometapiClaudeOpus41Thinking,
       models.cometapiClaudeSonnet4,
       models.cometapiClaudeSonnet4Thinking,
       models.cometapiClaude37SonnetLatest,
-      models.cometapiClaude35HaikuLatest,
       // Google Gemini family
       models.cometapiGemini25Pro,
       models.cometapiGemini25Flash,
@@ -166,7 +167,13 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
         defaultValue: 100000,
       },
     ],
-    packages: [models.claude4Sonnet, models.claude41Opus, models.claude35Haiku],
+    packages: [
+      models.claude45Sonnet,
+      models.claude45Haiku,
+      models.claude41Opus,
+      models.claude4Sonnet,
+      models.claude35Haiku,
+    ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   moonshot: {
