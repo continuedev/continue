@@ -4,6 +4,18 @@ import React, { useMemo } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 
+const MAX_DESCRIPTION_LENGTH = 80;
+
+const truncateDescription = (description: string): string => {
+  if (description.length <= MAX_DESCRIPTION_LENGTH) {
+    return description;
+  }
+  return (
+    Array.from(description).slice(0, MAX_DESCRIPTION_LENGTH).join("").trim() +
+    "…"
+  );
+};
+
 interface SlashCommandUIProps {
   assistant?: AssistantConfig;
   filter: string;
@@ -74,7 +86,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
               {paddedCommandName}
               <Text color={isSelected ? "blue" : "gray"}>
                 {"    "}
-                {command.description}
+                {truncateDescription(command.description)}
               </Text>
             </Text>
           </Box>
