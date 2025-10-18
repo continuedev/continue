@@ -1773,6 +1773,7 @@ export interface ContinueConfig {
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
+  disableCommitSignature?: boolean;
 }
 
 export interface BrowserSerializedContinueConfig {
