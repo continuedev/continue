@@ -87,30 +87,36 @@ class Anthropic extends BaseLLM {
   private convertMessageContentToBlocks(
     content: MessageContent,
   ): ContentBlockParam[] {
+    const parts: ContentBlockParam[] = [];
     if (typeof content === "string") {
-      return [
-        {
+      if (content) {
+        parts.push({
           type: "text",
           text: content,
-        },
-      ];
-    }
-    return content.map((part) => {
-      if (part.type === "text") {
-        return {
-          type: "text",
-          text: part.text,
-        };
+        });
       }
-      return {
-        type: "image",
-        source: {
-          type: "base64",
-          media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
-          data: part.imageUrl.url.split(",")[1],
-        },
-      };
-    });
+    } else {
+      for (const part of content) {
+        if (part.type === "text") {
+          if (part.text) {
+            parts.push({
+              type: "text",
+              text: part.text,
+            });
+          }
+        } else {
+          parts.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
+              data: part.imageUrl.url.split(",")[1],
+            },
+          });
+        }
+      }
+    }
+    return parts;
   }
 
   private convertToolCallsToBlocks(
@@ -152,20 +158,30 @@ class Anthropic extends BaseLLM {
             },
           ];
         }
+        // Strip thinking that has no signature
+        const signature = message.signature;
+        if (!signature) {
+          return [];
+        }
         if (typeof message.content === "string") {
+          if (!message.content) {
+            return [];
+          }
           return [
             {
               type: "thinking",
               thinking: message.content,
-              signature: message.signature ?? "", // TODO - unsafe signature
+              signature,
             },
           ];
         }
-        const textParts = message.content.filter((p) => p.type === "text");
+        const textParts = message.content
+          .filter((p) => p.type === "text")
+          .filter((p) => !!p.text);
         return textParts.map((part) => ({
           type: "thinking",
           thinking: part.text,
-          signature: message.signature ?? "", // TODO - unsafe signature
+          signature,
         }));
       case "assistant":
         const blocks: ContentBlockParam[] = this.convertMessageContentToBlocks(
