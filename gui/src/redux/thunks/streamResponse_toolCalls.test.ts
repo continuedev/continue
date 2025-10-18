@@ -2010,7 +2010,7 @@ describe("streamResponseThunk - tool calls", () => {
           expect.objectContaining({
             toolName: terminalName,
             basePolicy: "allowedWithoutPermission",
-            args: { command: "echo hello" },
+            parsedArgs: { command: "echo hello" },
           }),
         );
 
@@ -2109,7 +2109,7 @@ describe("streamResponseThunk - tool calls", () => {
           expect.objectContaining({
             toolName: terminalName,
             basePolicy: "allowedWithPermission",
-            args: { command: "ls" },
+            parsedArgs: { command: "ls" },
           }),
         );
 
