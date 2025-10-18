@@ -5,6 +5,7 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
+  TextMessagePart,
   ToolCallDelta,
   ToolResultChatMessage,
 } from "../../index.js";
@@ -103,11 +104,30 @@ class WatsonX extends BaseLLM {
       }));
       delete message_.toolCalls;
       delete message_.content;
-    } else if (
-      message_.role === "user" &&
-      typeof message_.content === "string"
-    ) {
-      message_.content = [{ type: "text", text: message_.content }];
+    } else if (message_.role === "user") {
+      if (typeof message.content === "string") {
+        message_.content = [{ type: "text", text: message_.content }];
+      } else {
+        return {
+          role: "user",
+          content: !message.content.some((item) => item.type !== "text")
+            ? message.content
+                .map((item) => (item as TextMessagePart).text)
+                .join("") || " "
+            : message.content.map((part) => {
+                if (part.type === "imageUrl") {
+                  return {
+                    type: "image_url" as const,
+                    image_url: {
+                      url: part.imageUrl.url,
+                      detail: "auto" as const,
+                    },
+                  };
+                }
+                return part;
+              }),
+        };
+      }
     }
     return message_;
   }

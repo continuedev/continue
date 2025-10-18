@@ -105,6 +105,8 @@ const MODEL_SUPPORTS_IMAGES: RegExp[] = [
   /\bgemma-?3(?!n)/, // gemma3 supports vision, but gemma3n doesn't!
   /\b(pali|med)gemma/,
   /qwen(.*)vl/,
+  /mistral-small/,
+  /mistral-medium/,
 ];
 
 function modelSupportsImages(
