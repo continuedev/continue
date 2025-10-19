@@ -1,11 +1,11 @@
 import { CreditStatus } from "../../control-plane/client";
 
 export function isOutOfStarterCredits(
-  usingModelsAddOnApiKey: boolean,
+  usingFreeTrialApiKey: boolean,
   creditStatus: CreditStatus,
 ): boolean {
   return (
-    usingModelsAddOnApiKey &&
+    usingFreeTrialApiKey &&
     !creditStatus.hasCredits &&
     !creditStatus.hasPurchasedCredits
   );

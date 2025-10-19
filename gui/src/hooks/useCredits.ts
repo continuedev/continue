@@ -1,4 +1,7 @@
-import { usesCreditsBasedApiKey } from "core/config/usesFreeTrialApiKey";
+import {
+  usesCreditsBasedApiKey,
+  usesFreeTrialApiKey,
+} from "core/config/usesFreeTrialApiKey";
 import { CreditStatus } from "core/control-plane/client";
 import { isOutOfStarterCredits } from "core/llm/utils/starterCredits";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -13,9 +16,10 @@ export function useCreditStatus() {
 
   const hasExitedFreeTrial = getLocalStorage("hasExitedFreeTrial");
   const usingCreditsBasedApiKey = usesCreditsBasedApiKey(config);
+  const usingFreeTrialApiKey = usesFreeTrialApiKey(config);
   const isUsingFreeTrial = usingCreditsBasedApiKey && !hasExitedFreeTrial;
   const outOfStarterCredits = creditStatus
-    ? isOutOfStarterCredits(usingCreditsBasedApiKey, creditStatus)
+    ? isOutOfStarterCredits(usingFreeTrialApiKey, creditStatus)
     : false;
 
   const refreshCreditStatus = useCallback(async () => {
