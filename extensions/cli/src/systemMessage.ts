@@ -5,11 +5,12 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
+import { GlobalContext } from "core/util/GlobalContext.js";
+
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
-import { GlobalContext } from "core/util/GlobalContext.js";
 const { WalkerSync } = pkg;
 
 /**
@@ -166,7 +167,7 @@ export async function constructSystemMessage(
     }
   }
 
-  const { rules: configYamlRules, configState } = await getConfigYamlRules();
+  const { rules: configYamlRules } = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
   // Construct the comprehensive system message

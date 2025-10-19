@@ -1,6 +1,8 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 
+import { GlobalContext } from "core/util/GlobalContext.js";
+
 import {
   isAuthenticated,
   isAuthenticatedConfig,
@@ -14,7 +16,6 @@ import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
-import { GlobalContext } from "core/util/GlobalContext.js";
 
 type CommandHandler = (
   args: string[],
