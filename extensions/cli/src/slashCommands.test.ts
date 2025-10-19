@@ -77,6 +77,14 @@ vi.mock("path", () => ({
   join: vi.fn((...parts) => parts.join("/")),
 }));
 
+// Mock GlobalContext
+const mockGlobalContextUpdate = vi.fn();
+vi.mock("core/util/GlobalContext.js", () => ({
+  GlobalContext: class {
+    update = mockGlobalContextUpdate;
+  },
+}));
+
 // Mock session functions
 vi.mock("./session.js", () => ({
   getSessionFilePath: vi.fn(
@@ -428,6 +436,70 @@ describe("slashCommands", () => {
       expect(result?.newInput).toBe(
         "Analyze the following code for patterns: my code",
       );
+    });
+
+    it("should handle /set disableCommitSignature true", async () => {
+      mockGlobalContextUpdate.mockClear();
+
+      const result = await handleSlashCommands(
+        "/set disableCommitSignature true",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        "Preference updated: disableCommitSignature = true",
+      );
+      expect(result?.exit).toBe(false);
+      expect(mockGlobalContextUpdate).toHaveBeenCalledWith(
+        "disableCommitSignature",
+        true,
+      );
+    });
+
+    it("should handle /set disableCommitSignature false", async () => {
+      mockGlobalContextUpdate.mockClear();
+
+      const result = await handleSlashCommands(
+        "/set disableCommitSignature false",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        "Preference updated: disableCommitSignature = false",
+      );
+      expect(result?.exit).toBe(false);
+      expect(mockGlobalContextUpdate).toHaveBeenCalledWith(
+        "disableCommitSignature",
+        false,
+      );
+    });
+
+    it("should handle /set with unknown preference", async () => {
+      const result = await handleSlashCommands(
+        "/set unknownPreference value",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain("Unknown preference: unknownPreference");
+      expect(result?.output).toContain("Available preferences:");
+      expect(result?.output).toContain("disableCommitSignature");
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle /set with insufficient arguments", async () => {
+      const result = await handleSlashCommands(
+        "/set disableCommitSignature",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain("Usage: /set <preference> <value>");
+      expect(result?.output).toContain("Available preferences:");
+      expect(result?.output).toContain("disableCommitSignature");
+      expect(result?.exit).toBe(false);
     });
   });
 });

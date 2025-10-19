@@ -5,6 +5,8 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
+import { GlobalContext } from "core/util/GlobalContext.js";
+
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
@@ -98,21 +100,24 @@ ${getDirectoryStructure()}
 ${getGitStatus()}
 </context>`;
 
-async function getConfigYamlRules(): Promise<string[]> {
+async function getConfigYamlRules(): Promise<{
+  rules: string[];
+  configState: ConfigServiceState;
+}> {
   const configState = await serviceContainer.get<ConfigServiceState>(
     SERVICE_NAMES.CONFIG,
   );
+  let rules: string[] = [];
   if (configState.config?.rules) {
     // Extract systemMessage from the config if it exists
-    const rules = configState.config.rules;
-    return rules
+    rules = configState.config.rules
       .map((rule) => {
         return typeof rule === "string" ? rule : rule?.rule;
       })
       .filter((rule): rule is string => !!rule);
   }
 
-  return [];
+  return { rules, configState };
 }
 
 /**
@@ -162,7 +167,7 @@ export async function constructSystemMessage(
     }
   }
 
-  const configYamlRules = await getConfigYamlRules();
+  const { rules: configYamlRules } = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
   // Construct the comprehensive system message
@@ -173,12 +178,15 @@ export async function constructSystemMessage(
     systemMessage +=
       '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
   } else {
-    // TODO - make including this coauthor commit configurable
-    systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
+    const globalContext = new GlobalContext();
+    const disableSignature = globalContext.get("disableCommitSignature" as any);
+    if (!disableSignature) {
+      systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
 Generated with [Continue](https://continue.dev)
 
 Co-Authored-By: Continue <noreply@continue.dev>
 </context>\n`;
+    }
   }
 
   // In headless mode, add instructions to be concise and only provide final answers
