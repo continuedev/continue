@@ -41,11 +41,7 @@ export async function handleVSCodeResourceUrl(
     return undefined;
   }
 
-  console.log("Extracted filepath:", filepath);
-
   try {
-    console.log("Requesting readFileAsDataUrl for filepath:", filepath);
-    console.log("About to call ideMessenger.request...");
 
     // Add a timeout wrapper to prevent hanging
     const timeoutPromise = new Promise((_, reject) =>
@@ -59,12 +55,9 @@ export async function handleVSCodeResourceUrl(
       filepath,
     });
 
-    console.log("Request promise created, waiting for response...");
 
     const response = await Promise.race([requestPromise, timeoutPromise]);
 
-    console.log("Got response from ideMessenger.request:", response);
-    console.log("Response type:", typeof response);
 
     // The response should be a WebviewSingleMessage which has status and content
     if (response && typeof response === "object" && "status" in response) {
@@ -80,17 +73,12 @@ export async function handleVSCodeResourceUrl(
 
       if (typedResponse.status === "success" && typedResponse.content) {
         const dataUrl = typedResponse.content;
-        console.log(
-          "Successfully got data URL for file, content length:",
-          dataUrl.length,
-        );
         return dataUrl;
       }
     }
 
     // If response is directly a string (shouldn't happen based on protocol but just in case)
     if (typeof response === "string") {
-      console.log("Got direct string response, length:", response.length);
       return response;
     }
 
@@ -143,15 +131,12 @@ export async function handleVSCodeResourceFromHtml(
   ideMessenger: IIdeMessenger,
   html: string,
 ): Promise<string | undefined> {
-  console.log("Processing HTML for VS Code resource URL:", html);
 
   const vscodeResourceUrl = extractVSCodeResourceUrlFromHtml(html);
   if (!vscodeResourceUrl) {
-    console.log("No VS Code resource URL found in HTML");
     return undefined;
   }
 
-  console.log("Found VS Code resource URL:", vscodeResourceUrl);
   return await handleVSCodeResourceUrl(ideMessenger, vscodeResourceUrl);
 }
 
