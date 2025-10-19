@@ -13,6 +13,30 @@ import {
 
 import { Tool } from "./types.js";
 
+// Maximum number of lines and characters to return from command output
+const MAX_OUTPUT_LINES = 5000;
+const MAX_OUTPUT_CHARS = 200000;
+
+// Helper function to truncate command output by both lines and characters
+function truncateOutput(output: string): string {
+  const lines = output.split("\n");
+  let truncated = output;
+  let truncationMsg = "";
+
+  // First check character limit
+  if (output.length > MAX_OUTPUT_CHARS) {
+    truncated = output.substring(0, MAX_OUTPUT_CHARS);
+    truncationMsg = `\n\n[Output truncated to first ${MAX_OUTPUT_CHARS} characters of ${output.length} total]`;
+  }
+  // Then check line limit (only if not already truncated by characters)
+  else if (lines.length > MAX_OUTPUT_LINES) {
+    truncated = lines.slice(0, MAX_OUTPUT_LINES).join("\n");
+    truncationMsg = `\n\n[Output truncated to first ${MAX_OUTPUT_LINES} lines of ${lines.length} total]`;
+  }
+
+  return truncationMsg ? truncated + truncationMsg : truncated;
+}
+
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
@@ -99,18 +123,9 @@ Commands are automatically executed from the current working directory (${proces
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          // Truncate output if it has too many lines
-          const lines = output.split("\n");
-          if (lines.length > 5000) {
-            const truncatedOutput = lines.slice(0, 5000).join("\n");
-            resolve(
-              truncatedOutput +
-                `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-            );
-            return;
-          }
-
-          resolve(output);
+          // Truncate output by both lines and characters
+          const truncatedOutput = truncateOutput(output);
+          resolve(truncatedOutput);
         }, TIMEOUT_MS);
       };
 
@@ -155,18 +170,9 @@ Commands are automatically executed from the current working directory (${proces
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        // Truncate output if it has too many lines
-        const lines = output.split("\n");
-        if (lines.length > 5000) {
-          const truncatedOutput = lines.slice(0, 5000).join("\n");
-          resolve(
-            truncatedOutput +
-              `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-          );
-          return;
-        }
-
-        resolve(output);
+        // Truncate output by both lines and characters
+        const truncatedOutput = truncateOutput(output);
+        resolve(truncatedOutput);
       });
 
       child.on("error", (error) => {
