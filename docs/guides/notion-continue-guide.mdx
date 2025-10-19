@@ -1,0 +1,377 @@
+---
+title: "Developer & Team Workflows with Notion + Continue CLI"
+description: "Use Continue CLI with Notion to generate docs, manage tasks, and automate project workflows – all through natural-language prompts."
+sidebarTitle: "Notion with Continue"
+---
+
+<Card title="What You'll Build" icon="notion">
+
+  A workflow that lets you query, update, and create Notion pages or database
+  entries from natural-language prompts. Generate PRDs, sprint tasks, meeting
+  notes, or status reports automatically – perfect for individual developers
+  and cross-functional teams.
+
+</Card>
+
+## What You'll Learn
+
+This guide teaches you to:
+- Use natural language to connect to the Notion API directly with Continue CLI for powerful automation
+- Configure Notion API access with proper permissions and security
+- Run prompts in both TUI (interactive) and headless modes
+- Create automated workflows that generate docs, manage tasks, and sync data
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- [Continue CLI](https://docs.continue.dev/cli/overview) installed (`npm i -g @continuedev/cli`)
+- A [Notion workspace](https://notion.so) with Editor (or higher) access
+- Node.js 18+ installed locally
+- [Continue account](https://hub.continue.dev) with **Hub access**
+
+<Warning>
+
+  **Agent usage requires credits** – create a Continue API key at
+  [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+  and store it as a secret.
+
+</Warning>
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+    Verify installation:
+    ```bash
+    cn --version
+    ```
+  </Step>
+
+  <Step title="Create Notion Integration & Get API Key">
+    1. Go to **[Notion Integrations](https://www.notion.so/my-integrations)**
+    2. Click **+ New integration** → give it a name (e.g. "Continue Integration")
+    3. Select your workspace
+    4. Under **Content Capabilities**, enable:
+       - ✅ Read content
+       - ✅ Update content
+       - ✅ Insert content
+    5. Under **Comment Capabilities**, enable:
+       - ✅ Read comments
+       - ✅ Insert comments
+    6. Under **User Capabilities**, select:
+       - ✅ Read user information including email addresses
+    7. Click **Submit** and copy the **Internal Integration Secret** (starts with `secret_`)
+
+    <Info>
+
+      This token is your `NOTION_API_KEY`.
+      Keep it safe – you won't be able to view it again.
+
+    </Info>
+
+    8. In Notion, open each database or top-level page you want accessible → **Share** → **Invite** your new integration → **Full access**.
+  </Step>
+
+  <Step title="Configure API Access">
+    Set your Notion API key as an environment variable in your terminal:
+    
+    ```bash
+    export NOTION_API_KEY="secret_xxx"
+    ```
+
+    <Tip>
+
+    Running this command sets your API key for the current terminal session only.  
+    When you close the terminal, the variable won't persist. To test your API key, run the curl command below in the same session.
+
+     ```bash
+    curl -H "Authorization: Bearer $NOTION_API_KEY" \
+         -H "Notion-Version: 2022-06-28" \
+         https://api.notion.com/v1/databases
+    ```
+    </Tip>
+
+  </Step>
+  <Step title="Add Workspace Keys to Terminal Session">
+    Depending on what you want `cn` to accomplish, you'll need to add your Notion workspace keys to the terminal session. The workspace key is your Notion database ID. Run the following command:
+
+      ```bash
+      export NOTION_DATABASE_ID="your_database_id"
+      ```
+    <Tip>
+
+     You can find your database ID by:
+        1. Opening your Notion changelog database
+        2. Looking at the URL - it will be something like:
+        https://www.notion.so/your-workspace/DATABASE_ID?v=...
+        3. The DATABASE_ID is the long string of characters between the last / and the ?
+
+    </Tip>
+  </Step>
+</Steps>
+
+## Running Continue CLI with Notion API
+
+<Card title="🚀 Choose Your Interface" icon="zap">
+
+  Continue CLI offers two powerful modes for Notion automation:
+  **TUI mode** for interactive workflows and **Headless mode** for automated scripts.
+
+</Card>
+
+<Tabs>
+  <Tab title="🖥️ TUI Mode (Interactive)">
+
+    <Steps>
+      <Step title="Launch Interactive Mode">
+        Navigate to your project directory and run:
+        ```bash
+        cn 
+        ```
+      </Step>
+
+      <Step title="Run Your First Prompt">
+        In the TUI interface, enter:
+        ```
+        1. Fetch my Notion databases using the Notion API key
+        and Database ID stored in this terminal session.
+        2. Look at the last week of Merged GitHub PRs, and create
+        a changelog entry in Notion summarizing the features and breaking changes.
+        ```
+
+        <Tip>
+
+          TUI mode lets you review and approve each action before execution,
+          perfect for learning and debugging.
+
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="🤖 Headless Mode (Automated)">
+    <Steps>
+      <Step title="Run Automated Commands">
+        Execute prompts directly from the command line:
+        ```bash
+        cn -p --auto "
+        1. Fetch my Notion databases using the Notion API key
+        and Database ID stored in this terminal session.
+        2. Analyze all merged GitHub PRs from the past week.
+        3. Extract feature descriptions and breaking changes.
+        4. Create a technical changelog in Notion with PR links."
+        ```
+
+        **Flags explained:**
+        - `-p`: Run without TUI interface
+        - `--auto`: Execute without manual approval
+
+        <Warning>
+
+          Always test prompts in TUI mode first before running
+          them with `--auto` in production.
+
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Accordion title="API Connection Notes">
+
+  - Environment variable `NOTION_API_KEY` must be set before running Continue CLI
+  - Continue automatically uses the API key to authenticate with Notion
+  - No need for manual curl commands - just reference "the API key stored in this session"
+  - For complex workflows, Continue maintains the API connection throughout
+  - Consider creating aliases or scripts for frequently used prompts
+
+</Accordion>
+
+---
+
+## Quick Start Example
+
+Working example that demonstrates the power of Continue with Notion API:
+
+<Card title="📊 Weekly Sprint Summary" icon="chart-line">
+
+  **This exact command has been tested and works:**
+
+  ```bash
+  # Weekly Sprint Summary
+  cn -p --auto "
+  1. Fetch Notion Sprint database
+  2. Analyze completed tasks vs planned
+  3. Generate sprint retrospective page
+  4. Add velocity metrics and burndown chart"
+  ```
+
+  **What this does:**
+  1. Connects to your Notion workspace using the API key
+  2. Analyzes your sprint data
+  3. Calculates completion metrics
+  4. Creates a comprehensive retrospective with visualizations
+
+</Card>
+
+
+## Example Prompts & Workflows
+
+With the Notion API configured, you can use natural language prompts to automate your workspace. Here are examples for both TUI and headless modes:
+
+<CardGroup cols={1}>
+  <Card title="API Documentation" icon="code">
+    **TUI Mode:**
+    ```bash
+    cn "
+    1. Fetch my Notion databases using the API key and secrets stored in this session
+    2. Generate API documentation for all endpoints 
+    in src/api/routes with request/response schemas
+    3. Create a page in Technical Docs database
+    "
+    ```
+    
+    **Headless Mode:**
+    ```bash
+    cn -p --auto "Fetch my Notion databases using the API key and secrets stored in this session. Generate API docs 
+    for src/api/routes and save to Notion in Technical Docs database"
+    ```
+  </Card>
+  
+  <Card title="Sprint Planning from Code" icon="list-checks">
+    **Headless Mode (Automated):**
+    ```bash
+    cn -p --auto "
+    1. Fetch my Notion databases using the API key stored in this session
+    2. Scan codebase for TODO and FIXME comments
+    3. Create tasks in my Notion Engineering Backlog database
+    4. Include file paths and complexity estimates"
+    ```
+  </Card>
+  
+  <Card title="Changelog from PRs" icon="rocket">
+    ```bash
+        cn -p --auto "
+        1. Fetch my Notion databases using the API key stored in this session
+        2. Analyze all merged GitHub PRs from past month
+        3. In my Notion Launch Database, review the Launch Template.
+        4. Create an October Launch doc in Notion with a week of launches and materials based on the Launch documents based on the PR analysis and launch documents."
+    ```
+ 
+  </Card>
+  
+  <Card title="Daily Standup Automation" icon="comments">
+    ```bash
+    cn -p --auto "
+    1. Fetch my Tasks database from Notion using the API key
+    2. Find tasks completed yesterday
+    3. Find tasks in progress
+    4. Create standup note with: completed, 
+       in-progress, and blockers sections"
+    ```
+  </Card>
+</CardGroup>
+
+## Advanced Workflows
+
+<CardGroup cols={1}>
+  <Card title="Notion + GitHub" icon="github">
+    ```bash
+    cn -p --auto "
+    1. Connect to Notion using the API key in this session
+    2. Get merged PRs from last 7 days using GitHub
+    3. Extract feature descriptions and changes
+    4. Create formatted changelog in Notion
+    5. Add links back to GitHub PRs"
+    ```
+    
+    <Info>
+
+      Requires GitHub repository access. To add GitHub access, update your [integration settings](https://hub.continue.dev/settings/integrations).
+
+    </Info>
+  </Card>
+  
+  <Card title="Test Coverage Report" icon="chart-bar">
+    ```bash
+    cn -p --auto "
+    1. Connect to Notion using the API key in this session
+    2. Run test coverage report (npm test -- --coverage)
+    3. Parse coverage metrics
+    4. Update Test Metrics database in Notion
+    5. Flag files with coverage below 80%"
+    ```
+  </Card>
+  
+  <Card title="Blog Post Review" icon="magnifying-glass">
+    ```bash
+    cn "
+    1. Connect to Notion using the API key in this session
+    2. In my Blog Posts Database, find drafts tagged 'Review'
+    3. Review all blog posts for grammar and clarity and suggest improvements through comments.
+    ```
+  </Card>
+  
+  <Card title="Weekly Report Generation" icon="list">
+    ```bash
+    cn -p --auto "
+    1. Connect to Notion databases using API key
+    2. Aggregate completed tasks from the week
+    3. Calculate velocity and burndown metrics
+    4. Generate weekly report with charts
+    5. Share link in Slack #team-updates"
+    ```
+  </Card>
+</CardGroup>
+
+## Security Best Practices
+
+<Warning>
+
+  **Protect Your API Keys:**
+  - Never commit `NOTION_API_KEY` to version control
+  - Use environment variables or secure secret managers
+  - Rotate API keys every 90 days
+  - Grant integration access only to required databases/pages
+  - Monitor API usage through Notion's integration dashboard
+  - Use `.env` files with `.gitignore` for local development
+
+</Warning>
+
+
+## Next Steps
+
+- Create a **GitHub Actions** workflow to automate changelog generation on releases
+- Build a **daily standup bot** that runs every morning and posts to Slack
+- Set up **database templates** in Notion for consistent formatting
+- Explore **batch operations** to update multiple pages efficiently
+- Implement **error handling** for API rate limits and network issues
+
+---
+
+## Troubleshooting
+
+<Accordion title="Common Issues and Solutions">
+
+  **API Key Not Found:**
+  - Ensure `NOTION_API_KEY` is exported in your current shell session
+  - Check for typos in the environment variable name
+  - Verify the key starts with `secret_`
+
+  **Database Access Denied:**
+  - Share the specific database with your integration in Notion
+  - Ensure the integration has the correct permissions (Read, Write, Insert)
+
+  **Connection Issues:**
+  - Verify Continue CLI has internet access
+  - Check network connectivity to api.notion.com
+  - Ensure your Notion workspace allows API access
+
+  **Rate Limiting:**
+  - Notion API has rate limits (3 requests per second)
+  - Implement exponential backoff for automated scripts
+  - Consider batching operations when possible
+
+</Accordion>

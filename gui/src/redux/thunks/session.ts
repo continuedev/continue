@@ -1,5 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, Session, SessionMetadata } from "core";
+import { BaseSessionMetadata, ChatMessage, Session } from "core";
+import { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
@@ -29,8 +30,19 @@ export async function getSession(
   return result.content;
 }
 
+export async function getRemoteSession(
+  ideMessenger: IIdeMessenger,
+  remoteId: string,
+): Promise<Session> {
+  const result = await ideMessenger.request("history/loadRemote", { remoteId });
+  if (result.status === "error") {
+    throw new Error(result.error);
+  }
+  return result.content;
+}
+
 export const refreshSessionMetadata = createAsyncThunk<
-  SessionMetadata[],
+  RemoteSessionMetadata[] | BaseSessionMetadata[],
   {
     offset?: number;
     limit?: number;
@@ -55,11 +67,7 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
     dispatch(deleteSessionMetadata(id)); // optimistic
     const state = getState();
     if (id === state.session.id) {
-      await dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
+      await dispatch(loadLastSession());
     }
     const result = await extra.ideMessenger.request("history/delete", { id });
     if (result.status === "error") {
@@ -110,27 +118,55 @@ export const loadSession = createAsyncThunk<
   },
 );
 
-export const loadLastSession = createAsyncThunk<
+export const loadRemoteSession = createAsyncThunk<
   void,
   {
+    remoteId: string;
     saveCurrentSession: boolean;
   },
   ThunkApiType
 >(
-  "session/loadLast",
-  async ({ saveCurrentSession }, { extra, dispatch, getState }) => {
-    const state = getState();
-
-    if (state.session.id && saveCurrentSession) {
+  "session/loadRemote",
+  async ({ remoteId, saveCurrentSession: save }, { extra, dispatch }) => {
+    if (save) {
+      const result = await dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+          generateTitle: true,
+        }),
+      );
+      unwrapResult(result);
     }
-    const lastSessionId = getState().session.lastSessionId;
+    const session = await getRemoteSession(extra.ideMessenger, remoteId);
+    dispatch(newSession(session));
+  },
+);
+
+export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
+  "session/loadLast",
+  async (_, { extra, dispatch, getState }) => {
+    let lastSessionId = getState().session.lastSessionId;
+
+    // const lastSessionResult = await extra.ideMessenger.request("history/list", {
+    //   limit: 1,
+    // });
+    // if (lastSessionResult.status === "success") {
+    //   lastSessionId = lastSessionResult.content.at(0)?.sessionId;
+    // }
 
     if (!lastSessionId) {
       dispatch(newSession());
       return;
     }
 
-    const session = await getSession(extra.ideMessenger, lastSessionId);
+    let session: Session;
+    try {
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    } catch {
+      // retry again after 1 sec
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    }
     dispatch(newSession(session));
   },
 );

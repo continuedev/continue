@@ -2,6 +2,7 @@ import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
+
 export const editToolImpl: ClientToolImpl = async (
   args,
   toolCallId,
@@ -17,13 +18,13 @@ export const editToolImpl: ClientToolImpl = async (
     filepath = filepath.slice(2);
   }
 
-  const openFiles = await extras.ideMessenger.ide.getOpenFiles();
   let firstUriMatch = await resolveRelativePathInDir(
     filepath,
     extras.ideMessenger.ide,
   );
 
   if (!firstUriMatch) {
+    const openFiles = await extras.ideMessenger.ide.getOpenFiles();
     for (const uri of openFiles) {
       if (uri.endsWith(filepath)) {
         firstUriMatch = uri;
@@ -46,13 +47,7 @@ export const editToolImpl: ClientToolImpl = async (
   );
 
   return {
-    respondImmediately: true,
-    output: [
-      {
-        name: "File edited successfully",
-        content: `Successfully initiated edit for ${firstUriMatch}`,
-        description: "File edit operation started",
-      },
-    ],
+    respondImmediately: false,
+    output: undefined, // no immediate output - output for edit tools should be added based on apply state coming in
   };
 };

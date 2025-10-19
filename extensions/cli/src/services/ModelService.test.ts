@@ -1,14 +1,12 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import * as openaiAdapters from "@continuedev/openai-adapters";
-import { describe, expect, beforeEach, vi, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock dependencies before imports
-vi.mock("@continuedev/openai-adapters");
 vi.mock("../config.js");
 vi.mock("../auth/workos.js");
 
-import { AuthConfig } from "../auth/workos.js";
 import * as workos from "../auth/workos.js";
+import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
 import { ModelService } from "./ModelService.js";
@@ -81,9 +79,7 @@ describe("ModelService", () => {
 
     test("should initialize with persisted model if valid", async () => {
       vi.mocked(workos.getModelName).mockReturnValue("Claude 3");
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(
-        mockLlmApi as any,
-      );
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
 
       const state = await service.initialize(mockAssistant, mockAuthConfig);
 
@@ -104,45 +100,6 @@ describe("ModelService", () => {
     });
   });
 
-  describe("update()", () => {
-    test("should update model with new assistant config", async () => {
-      // Initialize first
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        mockLlmApi as any,
-        mockAssistant.models![0] as ModelConfig,
-      ]);
-      await service.initialize(mockAssistant, mockAuthConfig);
-
-      // Update with new assistant
-      const newAssistant = {
-        ...mockAssistant,
-        models: [
-          {
-            provider: "openai",
-            model: "gpt-4-turbo",
-            name: "GPT-4 Turbo",
-            apiKey: "new-key",
-            roles: ["chat"],
-          } as ModelConfig,
-        ],
-      };
-      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        newLlmApi as any,
-        newAssistant.models![0] as ModelConfig,
-      ]);
-
-      const state = await service.update(newAssistant, mockAuthConfig);
-
-      expect(state).toEqual({
-        llmApi: newLlmApi,
-        model: newAssistant.models![0],
-        assistant: newAssistant,
-        authConfig: mockAuthConfig,
-      });
-    });
-  });
-
   describe("switchModel()", () => {
     test("should switch to a different model by index", async () => {
       vi.mocked(config.getLlmApi).mockReturnValue([
@@ -152,9 +109,7 @@ describe("ModelService", () => {
       await service.initialize(mockAssistant, mockAuthConfig);
 
       const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(
-        newLlmApi as any,
-      );
+      vi.mocked(config.createLlmApi).mockReturnValue(newLlmApi as any);
 
       const state = await service.switchModel(1);
 
@@ -204,24 +159,14 @@ describe("ModelService", () => {
       ]);
       await service.initialize(mockAssistant, mockAuthConfig);
 
-      vi.mocked(workos.getAccessToken).mockReturnValue("proxy-token");
-      vi.mocked(workos.getOrganizationId).mockReturnValue("org-123");
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(
-        mockLlmApi as any,
-      );
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
 
       await service.switchModel(0);
 
-      expect(vi.mocked(openaiAdapters.constructLlmApi)).toHaveBeenCalledWith({
-        provider: "continue-proxy",
-        apiBase: "https://proxy.continue.dev",
-        apiKey: "proxy-token",
-        env: {
-          apiKeyLocation: "env.PROXY_KEY",
-          orgScopeId: "org-123",
-          proxyUrl: undefined,
-        },
-      });
+      expect(vi.mocked(config.createLlmApi)).toHaveBeenCalledWith(
+        proxyModel,
+        mockAuthConfig,
+      );
     });
   });
 
@@ -292,9 +237,7 @@ describe("ModelService", () => {
 
       expect(service.getCurrentModelIndex()).toBe(0);
 
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(
-        mockLlmApi as any,
-      );
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
       await service.switchModel(1);
       expect(service.getCurrentModelIndex()).toBe(1);
     });
@@ -375,8 +318,12 @@ describe("ModelService", () => {
   });
 
   describe("getDependencies()", () => {
-    test("should declare auth and config dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "config"]);
+    test("should declare auth, config, and agent-file dependencies", () => {
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "config",
+        "agentFile",
+      ]);
     });
   });
 
@@ -392,9 +339,7 @@ describe("ModelService", () => {
       service.on("stateChanged", listener);
 
       const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(
-        newLlmApi as any,
-      );
+      vi.mocked(config.createLlmApi).mockReturnValue(newLlmApi as any);
       await service.switchModel(1);
 
       expect(listener).toHaveBeenCalledWith(
@@ -419,7 +364,7 @@ describe("ModelService", () => {
       const errorListener = vi.fn();
       service.on("error", errorListener);
 
-      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(null as any);
+      vi.mocked(config.createLlmApi).mockReturnValue(null as any);
 
       await expect(service.switchModel(1)).rejects.toThrow(
         "Failed to initialize LLM",

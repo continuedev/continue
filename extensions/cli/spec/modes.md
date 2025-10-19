@@ -57,8 +57,7 @@ Users can switch modes during chat sessions using:
 
 Modes are implemented through the permission system:
 
-- **ModeService**: Singleton service managing the current mode and initialization
-- **ToolPermissionService**: Extended to support mode-specific policies with highest priority
+- **ToolPermissionService**: Rectifies current mode and tool policies
 - **ModeIndicator**: UI component showing current mode (hidden for normal mode)
 - **Keyboard shortcuts**: Shift+Tab cycles through modes instantly
 - **Backward compatibility**: Existing `--readonly` flag maps to plan mode

@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { AuthConfig } from "./auth/workos.js";
-import { runNormalFlow } from "./onboarding.js";
+import { initializeWithOnboarding } from "./onboarding.js";
 
 describe("onboarding config flag handling", () => {
   let tempDir: string;
@@ -40,7 +40,9 @@ describe("onboarding config flag handling", () => {
     expect(fs.existsSync(configPath)).toBe(false);
 
     // Should throw an error that mentions both the path and the failure
-    await expect(runNormalFlow(mockAuthConfig, configPath)).rejects.toThrow(
+    await expect(
+      initializeWithOnboarding(mockAuthConfig, configPath),
+    ).rejects.toThrow(
       /Failed to load config from ".*non-existent\.yaml": .*ENOENT/,
     );
   });
@@ -64,9 +66,9 @@ models:
     expect(fs.existsSync(configPath)).toBe(true);
 
     // Should throw an error mentioning the path and failure to load
-    await expect(runNormalFlow(mockAuthConfig, configPath)).rejects.toThrow(
-      /Failed to load config from ".*malformed\.yaml": .+/,
-    );
+    await expect(
+      initializeWithOnboarding(mockAuthConfig, configPath),
+    ).rejects.toThrow(/Failed to load config from ".*malformed\.yaml": .+/);
   });
 
   test("should fail loudly when --config points to file with missing required fields", async () => {
@@ -85,9 +87,9 @@ name: "Incomplete Config"
     expect(fs.existsSync(configPath)).toBe(true);
 
     // Should throw with our specific error format and include path
-    await expect(runNormalFlow(mockAuthConfig, configPath)).rejects.toThrow(
-      /^Failed to load config from ".*": .+/,
-    );
+    await expect(
+      initializeWithOnboarding(mockAuthConfig, configPath),
+    ).rejects.toThrow(/^Failed to load config from ".*": .+/);
   });
 
   test("should handle different config path formats with proper error messages", async () => {
@@ -99,16 +101,18 @@ name: "Incomplete Config"
     ];
 
     for (const configPath of testPaths) {
-      await expect(runNormalFlow(mockAuthConfig, configPath)).rejects.toThrow(
-        /Failed to load config from ".*": .+/,
-      );
+      await expect(
+        initializeWithOnboarding(mockAuthConfig, configPath),
+      ).rejects.toThrow(/Failed to load config from ".*": .+/);
     }
   });
 
   test("should handle empty string config path", async () => {
     // Empty string should be treated differently from undefined
     // Note: empty string triggers onboarding flow, but should still fail in our error format
-    await expect(runNormalFlow(mockAuthConfig, "")).rejects.toThrow();
+    await expect(
+      initializeWithOnboarding(mockAuthConfig, ""),
+    ).rejects.toThrow();
   });
 
   test("should not fall back to default config when explicit config fails", async () => {
@@ -117,7 +121,7 @@ name: "Incomplete Config"
     // Create a bad config file
     fs.writeFileSync(configPath, "invalid: yaml: content: [");
 
-    const promise = runNormalFlow(mockAuthConfig, configPath);
+    const promise = initializeWithOnboarding(mockAuthConfig, configPath);
 
     await expect(promise).rejects.toThrow();
 
@@ -144,19 +148,109 @@ name: "Incomplete Config"
     fs.writeFileSync(badConfigPath, "invalid yaml [");
 
     // Case 1: Explicit --config that fails should throw our specific error
-    await expect(runNormalFlow(mockAuthConfig, badConfigPath)).rejects.toThrow(
-      /^Failed to load config from "/,
-    );
+    await expect(
+      initializeWithOnboarding(mockAuthConfig, badConfigPath),
+    ).rejects.toThrow(/^Failed to load config from "/);
 
     // Case 2: No explicit config should follow different logic
     try {
-      await runNormalFlow(mockAuthConfig, undefined);
+      await initializeWithOnboarding(mockAuthConfig, undefined);
       // If it succeeds, that's fine - the point is it's different behavior
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       // This should NOT have our "Failed to load config from" prefix
       expect(errorMessage).not.toMatch(/^Failed to load config from "/);
+    }
+  });
+});
+
+// Separate describe block with its own mocking for BEDROCK tests
+describe("CONTINUE_USE_BEDROCK environment variable", () => {
+  const mockConsoleLog = vi.fn();
+  let mockAuthConfig: AuthConfig;
+  const originalEnv = process.env.CONTINUE_USE_BEDROCK;
+
+  // Mock initialize for these tests only
+  const mockInitialize = vi.fn().mockResolvedValue({
+    config: { name: "test-config", models: [], rules: [] },
+    llmApi: {},
+    model: { name: "test-model" },
+    mcpService: {},
+    apiClient: {},
+  });
+
+  beforeEach(() => {
+    mockConsoleLog.mockClear();
+    mockInitialize.mockClear();
+
+    // Spy on console.log for these tests
+    vi.spyOn(console, "log").mockImplementation(mockConsoleLog);
+
+    // Mock the config module
+    vi.doMock("./config.js", () => ({ initialize: mockInitialize }));
+
+    mockAuthConfig = {
+      userId: "test-user",
+      userEmail: "test@example.com",
+      accessToken: "test-token",
+      refreshToken: "test-refresh",
+      expiresAt: Date.now() + 3600000,
+      organizationId: "test-org",
+    };
+  });
+
+  afterEach(() => {
+    if (originalEnv) {
+      process.env.CONTINUE_USE_BEDROCK = originalEnv;
+    } else {
+      delete process.env.CONTINUE_USE_BEDROCK;
+    }
+    vi.restoreAllMocks();
+    vi.doUnmock("./config.js");
+  });
+
+  test("should bypass interactive options when CONTINUE_USE_BEDROCK=1", async () => {
+    process.env.CONTINUE_USE_BEDROCK = "1";
+
+    // Re-import to get the mocked version
+    vi.resetModules();
+    const { runOnboardingFlow } = await import("./onboarding.js");
+
+    const result = await runOnboardingFlow(undefined);
+
+    expect(result).toBe(true);
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+      ),
+    );
+  });
+
+  test("should not bypass when CONTINUE_USE_BEDROCK is not '1'", async () => {
+    process.env.CONTINUE_USE_BEDROCK = "0";
+
+    // Re-import to get the mocked version
+    vi.resetModules();
+    const { runOnboardingFlow } = await import("./onboarding.js");
+
+    // Mock non-interactive environment to avoid hanging
+    const originalIsTTY = process.stdin.isTTY;
+    process.stdin.isTTY = false;
+
+    try {
+      await runOnboardingFlow(undefined);
+
+      // Verify the Bedrock message was NOT called by checking all calls
+      const allCalls = mockConsoleLog.mock.calls.flat();
+      const hasBedrockMessage = allCalls.some((call) =>
+        String(call).includes(
+          "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+        ),
+      );
+      expect(hasBedrockMessage).toBe(false);
+    } finally {
+      process.stdin.isTTY = originalIsTTY;
     }
   });
 });

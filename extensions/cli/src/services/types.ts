@@ -1,4 +1,10 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import {
+  AgentFile,
+  AssistantUnrolled,
+  ModelConfig,
+  parseAgentFileRules,
+  parseAgentFileTools,
+} from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { AssistantConfig } from "@continuedev/sdk";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
@@ -6,9 +12,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
-import { PermissionMode, ToolPermissions } from "../permissions/types.js";
+import { PermissionMode } from "../permissions/types.js";
 
-import { MCPService } from "./MCPService.js";
+import { type MCPService } from "./MCPService.js";
 
 /**
  * Service lifecycle states
@@ -81,19 +87,46 @@ export interface MCPServiceState {
   prompts: MCPPrompt[];
 }
 
+export enum UpdateStatus {
+  IDLE = "idle",
+  CHECKING = "checking",
+  UPDATING = "updating",
+  UPDATED = "updated",
+  ERROR = "error",
+}
+
+export interface UpdateServiceState {
+  autoUpdate: boolean;
+  isAutoUpdate: boolean;
+  status: UpdateStatus;
+  message: string;
+  error?: Error | null;
+  isUpdateAvailable: boolean;
+  latestVersion: string | null;
+  currentVersion: string;
+}
+
 export interface ApiClientServiceState {
   apiClient: DefaultApiInterface | null;
 }
 
-export interface ToolPermissionServiceState {
-  permissions: ToolPermissions;
-  currentMode: PermissionMode;
-  modePolicyCount?: number;
-  originalPolicies?: ToolPermissions;
+export interface StorageSyncServiceState {
+  isEnabled: boolean;
+  storageId?: string;
+  lastUploadAt?: number;
+  lastError?: string | null;
 }
 
-export type { FileIndexServiceState } from "./FileIndexService.js";
+export interface AgentFileServiceState {
+  agentFile: AgentFile | null;
+  slug: string | null;
+  agentFileModel: ModelConfig | null;
+  parsedTools: ReturnType<typeof parseAgentFileTools> | null;
+  parsedRules: ReturnType<typeof parseAgentFileRules> | null;
+}
+
 export type { ChatHistoryState } from "./ChatHistoryService.js";
+export type { FileIndexServiceState } from "./FileIndexService.js";
 
 /**
  * Service names as constants to prevent typos
@@ -109,6 +142,9 @@ export const SERVICE_NAMES = {
   RESOURCE_MONITORING: "resourceMonitoring",
   SYSTEM_MESSAGE: "systemMessage",
   CHAT_HISTORY: "chatHistory",
+  UPDATE: "update",
+  STORAGE_SYNC: "storageSync",
+  AGENT_FILE: "agentFile",
 } as const;
 
 /**

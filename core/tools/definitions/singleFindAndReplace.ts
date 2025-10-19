@@ -1,6 +1,9 @@
 import { Tool } from "../..";
+import { validateSingleEdit } from "../../edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "../../edit/searchAndReplace/performReplace";
+import { validateSearchAndReplaceFilepath } from "../../edit/searchAndReplace/validateArgs";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { NO_PARALLEL_TOOL_CALLING_INTSRUCTION } from "./editFile";
+import { NO_PARALLEL_TOOL_CALLING_INSTRUCTION } from "./editFile";
 
 export interface SingleFindAndReplaceArgs {
   filepath: string;
@@ -12,9 +15,9 @@ export interface SingleFindAndReplaceArgs {
 export const singleFindAndReplaceTool: Tool = {
   type: "function",
   displayTitle: "Find and Replace",
-  wouldLikeTo: "find and replace in {{{ filepath }}}",
-  isCurrently: "finding and replacing in {{{ filepath }}}",
-  hasAlready: "found and replaced in {{{ filepath }}}",
+  wouldLikeTo: "edit {{{ filepath }}}",
+  isCurrently: "editing {{{ filepath }}}",
+  hasAlready: "edited {{{ filepath }}}",
   group: BUILT_IN_GROUP_NAME,
   readonly: false,
   isInstant: false,
@@ -24,7 +27,7 @@ export const singleFindAndReplaceTool: Tool = {
 
 IMPORTANT:
 - ALWAYS use the \`${BuiltInToolNames.ReadFile}\` tool just before making edits, to understand the file's up-to-date contents and context. The user can also edit the file while you are working with it.
-- ${NO_PARALLEL_TOOL_CALLING_INTSRUCTION}
+- ${NO_PARALLEL_TOOL_CALLING_INSTRUCTION}
 - When editing text from \`${BuiltInToolNames.ReadFile}\` tool output, ensure you preserve exact whitespace/indentation.
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
 - Use \`replace_all\` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable, for instance.
@@ -70,4 +73,31 @@ WARNINGS:
     ],
   },
   defaultToolPolicy: "allowedWithPermission",
+  preprocessArgs: async (args, extras) => {
+    const { oldString, newString, replaceAll } = validateSingleEdit(
+      args.old_string,
+      args.new_string,
+      args.replace_all,
+    );
+    const fileUri = await validateSearchAndReplaceFilepath(
+      args.filepath,
+      extras.ide,
+    );
+
+    const editingFileContents = await extras.ide.readFile(fileUri);
+    const newFileContents = executeFindAndReplace(
+      editingFileContents,
+      oldString,
+      newString,
+      replaceAll ?? false,
+      0,
+    );
+
+    return {
+      ...args,
+      fileUri,
+      editingFileContents,
+      newFileContents,
+    };
+  },
 };

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { machineIdSync } from "node-machine-id";
-import { vi, describe, it, beforeEach, afterEach, expect } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the auth module and node-machine-id
 vi.mock("../auth/workos.js", () => ({
@@ -21,9 +21,14 @@ vi.mock("node-machine-id", () => {
   };
 });
 
-// Import after mocks are set up
-import { loadAuthConfig, isAuthenticatedConfig } from "../auth/workos.js";
+// Mock dns/promises for connection checks
+vi.mock("dns/promises", () => {
+  const lookup = vi.fn();
+  return { default: { lookup } };
+});
 
+// eslint-disable-next-line import/order
+import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
 import { PosthogService } from "./posthogService.js";
 
 describe("PosthogService", () => {
@@ -37,7 +42,7 @@ describe("PosthogService", () => {
     vi.spyOn(os, "homedir").mockReturnValue(tempDir);
 
     // Clear environment variable
-    delete process.env.CONTINUE_CLI_ENABLE_TELEMETRY;
+    delete process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY;
 
     // Reset all mocks
     vi.clearAllMocks();
@@ -111,10 +116,41 @@ describe("PosthogService", () => {
       expect(service.isEnabled).toBe(true);
     });
 
-    it("should be disabled when CONTINUE_CLI_ENABLE_TELEMETRY is 0", () => {
-      process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
+    it("should be disabled when CONTINUE_ALLOW_ANONYMOUS_TELEMETRY is 0", () => {
+      process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
       const service = new PosthogService();
       expect(service.isEnabled).toBe(false);
+    });
+  });
+
+  describe("hasInternetConnection and offline client", () => {
+    let service: PosthogService;
+
+    beforeEach(() => {
+      service = new PosthogService();
+    });
+
+    it("returns false on DNS error, caches and refetches", async () => {
+      const dns: any = (await import("dns/promises")).default;
+      dns.lookup.mockRejectedValueOnce(new Error("offline"));
+      const first = await (service as any).hasInternetConnection();
+      expect(first).toBe(false);
+      dns.lookup.mockResolvedValueOnce({
+        address: "1.1.1.1",
+        family: 4,
+      } as any);
+      await (service as any).hasInternetConnection();
+      const second = (service as any)._hasInternetConnection;
+      expect(second).toBe(true);
+      expect(dns.lookup).toHaveBeenCalledTimes(2);
+    });
+
+    it("getClient returns undefined when offline", async () => {
+      const dns: any = (await import("dns/promises")).default;
+      dns.lookup.mockRejectedValueOnce(new Error("offline"));
+      const client = await (service as any).getClient();
+      expect(client).toBeUndefined();
+      expect(dns.lookup).toHaveBeenCalledTimes(1);
     });
   });
 });

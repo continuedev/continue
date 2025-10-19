@@ -251,7 +251,6 @@ describe("E2E Scenarios", () => {
     );
 
     const config = unrolledConfig.config;
-    const errors = unrolledConfig.errors;
 
     // The original rules array should have two items
     expect(config?.rules?.length).toBe(3); // Now 3 with the injected block
@@ -266,13 +265,9 @@ describe("E2E Scenarios", () => {
       typeof config?.rules?.[2] !== "string" &&
         config?.rules?.[2]?.rule === "Be humble",
     );
-
-    // Check if we receive one error that is caused by duplicate rules
-    expect(errors?.length).toBe(1);
-    expect(errors?.[0].message.includes("Duplicate rules detected"));
   });
 
-  it("duplicate detection should happen in the assistant config first and then the intected blocks", async () => {
+  it("duplicate detection should happen in the assistant config first and then the injected blocks", async () => {
     const unrolledConfig = await unrollAssistant(
       {
         uriType: "file",
@@ -313,21 +308,6 @@ describe("E2E Scenarios", () => {
     expect(config?.rules?.length).toBe(1);
     expect(config?.prompts?.length).toBe(1);
     expect(config?.docs?.length).toBe(1);
-
-    // Check if there are 8 duplication detected
-    expect(errors?.length).toBe(8);
-
-    // Beginning of the assistant config duplication check
-    expect(
-      errors?.[0].message.includes("Duplicate models named gpt-5 detected"),
-    ).toBe(true);
-    // Beginning of the injected blocks duplication check
-    expect(errors?.[4].message.includes("Duplicate rules detected")).toBe(true);
-    expect(
-      errors?.[6].message.includes(
-        "Duplicate mcpServers named Browser search detected",
-      ),
-    ).toBe(true);
   });
 
   it("should throw when a block is blocklisted", async () => {

@@ -92,6 +92,9 @@ class MessageTypes {
             "config/updateSharedConfig",
             "config/updateSelectedModel",
             "mcp/reloadServer",
+            "mcp/startAuthentication",
+            "mcp/removeAuthentication",
+            "mcp/setServerEnabled",
             "mcp/getPrompt",
             "context/getContextItems",
             "context/getSymbolsForFiles",
@@ -142,10 +145,12 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "tools/evaluatePolicy",
+            "tools/preprocessArgs",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

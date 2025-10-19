@@ -1,20 +1,19 @@
 ---
-title: How to make your agent aware of codebases and documentation
-description: Learn how to give your AI agent access to codebases and documentation for more context-aware assistance
+title: How to Make Agent mode Aware of Codebases and Documentation
+description: Learn how to give your Agent mode access to codebases and documentation for more context-aware assistance
 keywords: [agent, codebase, documentation, MCP, context, RAG, tools]
+sidebarTitle: Codebase and Documentation Awareness
 ---
 
-# How to make your agent aware of codebases and documentation
+Agent mode works best when it understands the context of your project. This guide shows you how to give agent mode access to codebases and documentation, making it more helpful and accurate.
 
-AI coding agents work best when they understand the context of your project. This guide shows you how to give your agent access to codebases and documentation, making it more helpful and accurate.
+## Make agent mode aware of your open codebase
 
-## Make your agent aware of your open codebase
+When agent mode understands your current codebase, it can provide more relevant suggestions and answers.
 
-When your agent understands your current codebase, it can provide more relevant suggestions and answers.
+### Let agent mode explore the codebase using tools
 
-### Let your agent explore the codebase using tools
-
-Your agent can use built-in tools to navigate and understand your code:
+Agent mode can use built-in tools to navigate and understand your code:
 
 1. **File exploration tools**: The agent can read files, search for patterns, and understand project structure
 2. **Code search**: Use search to find relevant code snippets
@@ -22,31 +21,34 @@ Your agent can use built-in tools to navigate and understand your code:
 
 ### Create rules to help the agent understand your codebase
 
-Rules guide your agent's behavior and understanding. Place markdown files in `.continue/rules` in your project to provide context:
+Rules guide agent mode's behavior and understanding. Place markdown files in `.continue/rules` in your project to provide context:
 
 ```markdown
 # Project Architecture
 
 This is a React application with:
+
 - Components in `/src/components`
 - API routes in `/src/api`
 - State management using Redux in `/src/store`
 
 ## Coding Standards
+
 - Use TypeScript for all new files
 - Follow the existing naming conventions
 - Write tests for all new features
 ```
 
 <Tip>
-    Place rules files at different levels of your project hierarchy to scope when they trigger
+  Place rules files at different levels of your project hierarchy to scope when
+  they trigger
 </Tip>
 
 Learn more about [rules configuration](/customize/deep-dives/rules).
 
-## Make your agent aware of other codebases
+## Make agent mode aware of other codebases
 
-Sometimes you need your agent to understand code beyond your current project.
+Sometimes you need agent mode to understand code beyond your current project.
 
 ### Public codebases
 
@@ -60,6 +62,7 @@ Create rules that point to external codebases:
 # External Dependencies
 
 Our authentication system is based on:
+
 - [Auth.js documentation](https://authjs.dev/)
 - [Example implementation](https://github.com/nextauthjs/next-auth-example)
 
@@ -68,7 +71,7 @@ When implementing auth features, reference these patterns.
 
 #### GitHub and GitLab CLIs
 
-Enable `gh` or `glab` CLI access for your agent to interact with repositories.
+Enable `gh` or `glab` CLI access for agent mode to interact with repositories.
 
 Add rules to guide CLI usage:
 
@@ -76,6 +79,7 @@ Add rules to guide CLI usage:
 # Repository Access
 
 You can use the `gh` CLI to:
+
 - Search for issues: `gh issue list --repo owner/repo`
 - View pull requests: `gh pr list --repo owner/repo`
 - Clone repositories: `gh repo clone owner/repo`
@@ -83,9 +87,10 @@ You can use the `gh` CLI to:
 
 #### DeepWiki MCP
 
-[DeepWiki MCP](https://hub.continue.dev/deepwiki/deepwiki-mcp) lets your agent explore any public GitHub repository.
+[DeepWiki MCP](https://hub.continue.dev/deepwiki/deepwiki-mcp) lets agent mode explore any public GitHub repository.
 
-Once configured, your agent can explore repositories like:
+Once configured, agent mode can explore repositories like:
+
 - "Explore the React repository structure"
 - "Find how authentication is implemented in NextAuth.js"
 
@@ -101,20 +106,21 @@ Create an MCP server that has access to your internal repositories.
 
 For faster retrieval and lower costs with very large internal codebases, consider implementing a [custom code RAG](/guides/custom-code-rag) system. This is an advanced approach that requires more setup but can provide performance benefits at scale.
 
-## Make your agent aware of relevant documentation
+## Make agent mode aware of relevant documentation
 
-Documentation provides crucial context for your agent to understand APIs, frameworks, and best practices.
+Documentation provides crucial context for agent mode to understand APIs, frameworks, and best practices.
 
 ### Public documentation
 
 #### Rules with documentation links
 
-Guide your agent to relevant documentation:
+Guide agent mode to relevant documentation:
 
 ```markdown
 # Documentation Resources
 
 For framework-specific questions, refer to:
+
 - React: https://react.dev/reference/react
 - Next.js: https://nextjs.org/docs
 - Tailwind CSS: https://tailwindcss.com/docs
@@ -124,9 +130,10 @@ Always cite documentation when explaining concepts.
 
 #### Context7 MCP
 
-[Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables your agent to search and retrieve information from public documentation:
+[Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables agent mode to search and retrieve information from public documentation:
 
-Your agent can then answer questions like:
+Agent mode can then answer questions like:
+
 - "How do I use React hooks?"
 - "What's the syntax for Tailwind CSS animations?"
 
@@ -142,6 +149,7 @@ Create rules that reference internal resources:
 # Internal Documentation
 
 Our team documentation is available at:
+
 - API Documentation: https://internal.docs/api
 - Architecture Guide: https://internal.docs/architecture
 - Deployment Process: https://internal.docs/deployment
@@ -161,7 +169,7 @@ If you were previously using the `@Codebase` or `@Docs` context providers, here'
 
 The `@Codebase` context provider has been deprecated. Instead:
 
-1. **Use built-in tools**: Your agent can now use file exploration and search tools to understand your codebase
+1. **Use built-in tools**: Agent mode can now use file exploration and search tools to understand your codebase
 2. **Add rules**: Create `.continue/rules` files to provide context about your project structure
 3. **Use MCP servers**: For external codebases, use DeepWiki MCP or custom MCP servers
 
@@ -173,10 +181,10 @@ The `@Docs` context provider has been deprecated. Instead:
 2. **Add documentation links in rules**: Create rules that reference documentation URLs
 3. **Use custom MCP servers**: For internal documentation, create an MCP server with access to your docs
 
-The new approach provides better integration with Continue's Agent features and more intelligent context selection.
+The new approach provides better integration with Continue's Agent mode features and more intelligent context selection.
 
 ## Next steps
 
 - Learn more about [MCP servers](/reference/continue-mcp)
 - Explore [rules configuration](/customize/deep-dives/rules)
-- Set up [custom assistants](/guides/understanding-assistants) with specific knowledge domains
+  - Set up [other custom configurations](/guides/understanding-configs) with specific knowledge domains

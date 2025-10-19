@@ -11,11 +11,13 @@ export const viewDiffTool: Tool = {
   displayName: "Diff",
   description: "View all uncommitted changes in the git repository",
   parameters: {
-    path: {
-      type: "string",
-      description:
-        "The path to the git repository (defaults to current directory)",
-      required: false,
+    type: "object",
+    properties: {
+      path: {
+        type: "string",
+        description:
+          "The path to the git repository (defaults to current directory)",
+      },
     },
   },
   readonly: true,

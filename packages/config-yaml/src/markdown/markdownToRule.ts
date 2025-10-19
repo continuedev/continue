@@ -1,4 +1,3 @@
-import path from "path";
 import * as YAML from "yaml";
 import {
   PackageIdentifier,
@@ -12,6 +11,7 @@ export interface RuleFrontmatter {
   name?: RuleObject["name"];
   description?: RuleObject["description"];
   alwaysApply?: RuleObject["alwaysApply"];
+  invokable?: RuleObject["invokable"];
 }
 
 /**
@@ -63,38 +63,31 @@ export function getRuleName(
     // Handle both forward slashes and backslashes, get the last two segments
     const segments = displayName.split(/[/\\]/);
     const lastTwoParts = segments.slice(-2);
-    return lastTwoParts.join("/");
+    return lastTwoParts.filter(Boolean).join("/");
   }
 
   // Otherwise return the display name as-is (for slug identifiers)
   return displayName;
 }
 
-function getGlobPattern(
-  globs: RuleFrontmatter["globs"],
-  id: PackageIdentifier,
-) {
-  if (id.uriType !== "file") {
+function getGlobPattern(globs: RuleFrontmatter["globs"], relativeDir?: string) {
+  if (relativeDir === undefined) {
     return globs;
   }
-  let dir = path.dirname(id.fileUri);
-
-  // TODO: This is likely causing bugs for Windows users.
-  // We can't access `core/util/uri.ts` from this package though.
-  if (dir.includes(".continue")) {
+  if (relativeDir.includes(".continue")) {
     return globs;
   }
-  if (!dir.endsWith("/")) {
-    dir = dir.concat("/");
+  if (!relativeDir.endsWith("/")) {
+    relativeDir = relativeDir.concat("/");
   }
   const prependDirAndApplyGlobstar = (glob: string) => {
     if (glob.startsWith("**")) {
-      return dir.concat(glob);
+      return relativeDir.concat(glob);
     }
-    return dir.concat("**/", glob);
+    return relativeDir.concat("**/", glob);
   };
   if (!globs) {
-    return dir.concat("**/*");
+    return relativeDir.concat("**/*");
   }
   if (Array.isArray(globs)) {
     return globs.map(prependDirAndApplyGlobstar);
@@ -105,16 +98,18 @@ function getGlobPattern(
 export function markdownToRule(
   rule: string,
   id: PackageIdentifier,
+  relativePathForGlobs?: string,
 ): RuleObject {
   const { frontmatter, markdown } = parseMarkdownRule(rule);
 
   return {
     name: getRuleName(frontmatter, id),
     rule: markdown,
-    globs: getGlobPattern(frontmatter.globs, id),
+    globs: getGlobPattern(frontmatter.globs, relativePathForGlobs),
     regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
+    invokable: frontmatter.invokable,
     sourceFile: id.uriType === "file" ? id.fileUri : undefined,
   };
 }

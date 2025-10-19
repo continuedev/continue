@@ -41,10 +41,11 @@ const SVG_CONFIG = {
   // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
   //       drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
   //       drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
-  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
-        drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
-        drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
-        drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+  //       drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
+  //       drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
+  //       drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
+  filter: "none",
   radius: 3,
   leftMargin: 40,
   defaultText: "",
@@ -164,7 +165,7 @@ export class NextEditWindowManager {
   private constructor() {
     this.theme = getThemeString();
 
-    console.log(
+    console.debug(
       "Next Edit Theme initialized:",
       this.theme
         ? `Theme exists: ${JSON.stringify(this.theme)}`
@@ -268,7 +269,7 @@ export class NextEditWindowManager {
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
-      console.log(
+      console.debug(
         "deleteChain from NextEditWindowManager.ts: hide next edit command",
       );
       NextEditProvider.getInstance().deleteChain();
@@ -413,6 +414,8 @@ export class NextEditWindowManager {
       );
     }
 
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
     // Create and apply decoration with the text.
     if (newEditRangeSlice !== "") {
       try {
@@ -423,6 +426,7 @@ export class NextEditWindowManager {
           newEditRangeSlice,
           this.editableRegionStartLine,
           diffLines,
+          diffChars,
         );
       } catch (error) {
         console.error("Failed to render window:", error);
@@ -431,8 +435,6 @@ export class NextEditWindowManager {
         return;
       }
     }
-
-    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
     this.renderDeletions(editor, diffChars);
 
@@ -614,7 +616,7 @@ export class NextEditWindowManager {
       ) {
         this.theme = getThemeString();
         await this.codeRenderer.setTheme(this.theme);
-        console.log(
+        console.debug(
           "Theme updated:",
           this.theme ? "Theme exists" : "Theme is undefined",
         );
@@ -628,7 +630,7 @@ export class NextEditWindowManager {
     vscode.window.onDidChangeActiveColorTheme(async () => {
       this.theme = getThemeString();
       await this.codeRenderer.setTheme(this.theme);
-      console.log(
+      console.debug(
         "Active theme changed:",
         this.theme ? "Theme exists" : "Theme is undefined",
       );
@@ -686,6 +688,7 @@ export class NextEditWindowManager {
     text: string,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -710,6 +713,7 @@ export class NextEditWindowManager {
         },
         currLineOffsetFromTop,
         newDiffLines,
+        diffChars,
       );
 
       return {
@@ -733,12 +737,14 @@ export class NextEditWindowManager {
     position: vscode.Position,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
       predictedCode,
       currLineOffsetFromTop,
       newDiffLines,
+      diffChars,
     );
     if (!uriAndDimensions) {
       return undefined;
@@ -786,7 +792,7 @@ export class NextEditWindowManager {
 
     // Check if line numbers are valid.
     if (range.start.line < 0 || range.start.line >= doc.lineCount) {
-      console.log(
+      console.debug(
         "Invalid start line:",
         range.start.line,
         "doc lines:",
@@ -796,7 +802,7 @@ export class NextEditWindowManager {
     }
 
     if (range.end.line < 0 || range.end.line >= doc.lineCount) {
-      console.log(
+      console.debug(
         "Invalid end line:",
         range.end.line,
         "doc lines:",
@@ -813,7 +819,7 @@ export class NextEditWindowManager {
       range.start.character < 0 ||
       range.start.character > startLine.text.length
     ) {
-      console.log(
+      console.debug(
         "Invalid start character:",
         range.start.character,
         "line length:",
@@ -823,7 +829,7 @@ export class NextEditWindowManager {
     }
 
     if (range.end.character < 0 || range.end.character > endLine.text.length) {
-      console.log(
+      console.debug(
         "Invalid end character:",
         range.end.character,
         "line length:",
@@ -857,6 +863,7 @@ export class NextEditWindowManager {
     predictedCode: string,
     editableRegionStartLine: number,
     newDiffLines: DiffLine[],
+    diffChars: DiffChar[],
   ) {
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
@@ -868,6 +875,7 @@ export class NextEditWindowManager {
       position,
       editableRegionStartLine,
       newDiffLines,
+      diffChars,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
@@ -876,7 +884,7 @@ export class NextEditWindowManager {
 
     // Check if document changed during async operation.
     if (editor.document.version !== docVersion) {
-      console.log("Document changed during decoration creation, aborting");
+      console.debug("Document changed during decoration creation, aborting");
       decoration.dispose();
       return;
     }
@@ -944,7 +952,6 @@ export class NextEditWindowManager {
 
     const deleteDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: "rgba(255, 0, 0, 0.5)",
-      textDecoration: "line-through",
     });
 
     editor.setDecorations(deleteDecorationType, charsToDelete);
@@ -984,7 +991,7 @@ export class NextEditWindowManager {
       "nextEditWindowManager",
       async (e, state) => {
         if (state.nextEditWindowAccepted) {
-          console.log(
+          console.debug(
             "NextEditWindowManager: Edit was just accepted, preserving chain",
           );
           return true;

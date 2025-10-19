@@ -10,8 +10,10 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
+  ERRORED_TOOL_CALL_OUTPUT_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "core/tools/constants";
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
@@ -20,8 +22,13 @@ import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
+  renderContextItemsWithStatus,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
+
+// Helper function to render context items and append status information
+// Helper function to render context items and append status information
+
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -120,20 +127,25 @@ export function constructMessages(
       });
 
       // Add a tool message for each tool call
-      if (item.message.toolCalls?.length) {
+      if (item.toolCallStates?.length) {
         // If the assistant message has tool calls, we need to insert tool messages
-        for (const toolCall of item.message.toolCalls) {
+        for (const toolCallState of item.toolCallStates) {
+          const { output, status, toolCall } = toolCallState;
           let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
 
-          // Find the corresponding tool call state for this specific tool call
-          const toolCallState = item.toolCallStates?.find(
-            (state) => state.toolCallId === toolCall.id,
-          );
-
-          if (toolCallState?.status === "canceled") {
+          if (status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (toolCallState?.output) {
-            content = renderContextItems(toolCallState.output);
+          } else if (output) {
+            if (
+              toolCall.function?.name == BuiltInToolNames.RunTerminalCommand
+            ) {
+              // Add status for tools containing detailed status outcomes per context item
+              content = renderContextItemsWithStatus(output);
+            } else {
+              content = renderContextItems(output);
+            }
+          } else if (toolCallState.status === "errored") {
+            content = ERRORED_TOOL_CALL_OUTPUT_MESSAGE;
           }
 
           msgs.push({

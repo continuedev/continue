@@ -1,6 +1,3 @@
-import * as os from "node:os";
-import * as path from "node:path";
-
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
@@ -12,14 +9,11 @@ import { isModelCapable } from "../utils/modelCapability.js";
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
 import { TipsDisplay, shouldShowTip } from "./TipsDisplay.js";
 
-// Export the warning message for testing
-export const HOME_DIRECTORY_WARNING =
-  "Run cn in a project directory for the best experience (currently in home directory)";
-
 interface IntroMessageProps {
   config?: AssistantUnrolled;
   model?: ModelConfig;
   mcpService?: MCPService;
+  organizationName?: string;
 }
 
 // Helper function to extract rule names
@@ -33,24 +27,13 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   config,
   model,
   mcpService,
+  organizationName,
 }) => {
   // Get MCP prompts directly (not memoized since they can change after first render)
   const mcpPrompts = mcpService?.getState().prompts ?? [];
 
   // Determine if we should show a tip (1 in 5 chance) - computed once on mount
   const showTip = useMemo(() => shouldShowTip(), []);
-
-  // Check if current working directory is the home directory
-  const isInHomeDirectory = useMemo(() => {
-    const cwd = process.cwd();
-    const homedir = os.homedir();
-    const resolvedCwd = path.resolve(cwd);
-    const resolvedHome = path.resolve(homedir);
-    if (process.platform === "win32") {
-      return resolvedCwd.toLowerCase() === resolvedHome.toLowerCase();
-    }
-    return resolvedCwd === resolvedHome;
-  }, []);
 
   // Memoize expensive operations to avoid running on every resize
   const { allRules, modelCapable } = useMemo(() => {
@@ -71,7 +54,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         {mcpPrompts.map((prompt, index) => (
           <Text key={`mcp-${index}`}>
             - <Text color="white">/{prompt.name}</Text>:{" "}
-            <Text color="gray">{prompt.description}</Text>
+            <Text color="dim">{prompt.description}</Text>
           </Text>
         ))}
         <Text> </Text>
@@ -117,6 +100,13 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {/* Tips Display - shown randomly 1 in 5 times */}
       {showTip && <TipsDisplay />}
 
+      {/* Organization name */}
+      {organizationName && (
+        <Text color="blue">
+          <Text bold>Org:</Text> <Text color="white">{organizationName}</Text>
+        </Text>
+      )}
+
       {/* Agent name */}
       {config && (
         <Text color="blue">
@@ -132,7 +122,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         </Text>
       ) : (
         <Text color="blue">
-          <Text bold>Model:</Text> <Text color="gray">Loading...</Text>
+          <Text bold>Model:</Text> <Text color="dim">Loading...</Text>
         </Text>
       )}
 
@@ -151,14 +141,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {renderMcpPrompts()}
       {renderRules()}
       {renderMcpServers()}
-
-      {/* Home directory warning */}
-      {isInHomeDirectory && (
-        <>
-          <Text color="yellow">{HOME_DIRECTORY_WARNING}</Text>
-          <Text> </Text>
-        </>
-      )}
     </Box>
   );
 };

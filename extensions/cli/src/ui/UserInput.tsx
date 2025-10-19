@@ -1,14 +1,18 @@
 /* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
-import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
-import { modeService } from "../services/ModeService.js";
+import {
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../services/index.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
@@ -94,6 +98,7 @@ const FileSearchMaybe: React.FC<{
 interface UserInputProps {
   onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
+  isCompacting?: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
@@ -104,11 +109,13 @@ interface UserInputProps {
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  onShowEditSelector?: () => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
   onSubmit,
   isWaitingForResponse,
+  isCompacting = false,
   inputMode,
   onInterrupt,
   assistant,
@@ -119,9 +126,11 @@ const UserInput: React.FC<UserInputProps> = ({
   hideNormalUI = false,
   isRemoteMode = false,
   onImageInClipboardChange,
+  onShowEditSelector,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+  const lastEscapePressRef = useRef<number>(0);
 
   // Stable callback for TextBuffer state changes to prevent race conditions
   const onStateChange = useCallback(() => {
@@ -164,8 +173,8 @@ const UserInput: React.FC<UserInputProps> = ({
   >([]);
   const { exit } = useApp();
 
-  // Get file index service
-  const { services } = useServices<{
+  // Get file index service state for reactive updates (unused but needed for service initialization)
+  useServices<{
     fileIndex: FileIndexServiceState;
   }>(["fileIndex"]);
 
@@ -187,17 +196,17 @@ const UserInput: React.FC<UserInputProps> = ({
   // Cycle through permission modes
   const cycleModes = async () => {
     const modes: PermissionMode[] = ["normal", "plan", "auto"];
-    const currentMode = modeService.getCurrentMode();
+    const currentMode = services.toolPermissions.getCurrentMode();
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     const nextMode = modes[nextIndex];
 
-    modeService.switchMode(nextMode);
+    services.toolPermissions.switchMode(nextMode);
 
     // Update the service container with the new tool permissions state
     // Since TOOL_PERMISSIONS was registered with registerValue(), we need to
     // update its value directly rather than reloading from a factory
-    const updatedState = modeService.getToolPermissionService().getState();
+    const updatedState = services.toolPermissions.getState();
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Show a brief indicator of the mode change
@@ -240,20 +249,24 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    // Get the complete slash command, not just the part before cursor
+    // Get the complete slash command from the text (not just before cursor)
     const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
     const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-    // Hide selector if we have an exact match and there's a space after cursor
+    // Hide selector if we have an exact match and there's any additional content
     if (exactMatch) {
-      const restOfText = text.slice(cursor);
-      // Only hide if there's a space or newline immediately after cursor
-      const shouldHide =
-        restOfText.startsWith(" ") || restOfText.startsWith("\n");
-      if (shouldHide) {
+      // Check if there's anything after the command name (space + args)
+      const commandWithSlash = "/" + exactMatch.name;
+      const textAfterCommand = trimmedText.slice(commandWithSlash.length);
+
+      // If there's any content after the command name (space + args), hide dropdown
+      if (
+        textAfterCommand.trim().length > 0 &&
+        beforeCursor.length >= commandWithSlash.length
+      ) {
         setShowSlashCommands(false);
         return;
       }
@@ -294,44 +307,38 @@ const UserInput: React.FC<UserInputProps> = ({
 
     // Check if we're in a file search context
     const beforeCursor = text.slice(0, cursor);
-    const lastAtIndex = beforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex === -1) {
-      setShowFileSearch(false);
-    } else {
-      // Check if there's any whitespace between the last @ and cursor
-      const afterAt = beforeCursor.slice(lastAtIndex + 1);
-
-      if (afterAt.includes(" ") || afterAt.includes("\n")) {
-        setShowFileSearch(false);
-      } else {
-        // We're in a file search context - check if there are matching files
-        const fileIndexService = services.fileIndex;
-        if (fileIndexService) {
-          const filteredFiles = fileIndexService.files.filter((file) => {
-            if (afterAt.length === 0) {
-              return true;
-            }
-            const lowerFilter = afterAt.toLowerCase();
-            return (
-              file.displayName.toLowerCase().includes(lowerFilter) ||
-              file.path.toLowerCase().includes(lowerFilter)
-            );
-          });
-
-          // If no files match, hide the dropdown to allow normal Enter behavior
-          if (filteredFiles.length === 0 && afterAt.length > 0) {
-            setShowFileSearch(false);
-            return;
+    // Find the first @ symbol that starts a file search context
+    // We need to find the last @ that has no space before it (or is at word boundary)
+    let firstAtIndex = -1;
+    for (let i = beforeCursor.length - 1; i >= 0; i--) {
+      if (beforeCursor[i] === "@") {
+        // Check if this @ is at the start of a word (preceded by space/newline or start of string)
+        const beforeAt = beforeCursor.slice(0, i);
+        const lastChar = beforeAt[beforeAt.length - 1];
+        if (i === 0 || lastChar === " " || lastChar === "\n") {
+          // Check if there's any space/newline between this @ and cursor
+          const afterThis = beforeCursor.slice(i + 1);
+          if (!afterThis.includes(" ") && !afterThis.includes("\n")) {
+            firstAtIndex = i;
+            break;
           }
         }
-
-        setShowFileSearch(true);
-        setFileSearchFilter(afterAt);
-        setSelectedFileIndex(0);
-        setShowSlashCommands(false);
-        setShowBashMode(false);
       }
+    }
+
+    if (firstAtIndex === -1) {
+      setShowFileSearch(false);
+    } else {
+      // Get ALL text after the @ symbol (including subsequent @ symbols)
+      const afterAt = beforeCursor.slice(firstAtIndex + 1);
+
+      // We're in a file search context
+      setShowFileSearch(true);
+      setFileSearchFilter(afterAt);
+      setSelectedFileIndex(0);
+      setShowSlashCommands(false);
+      setShowBashMode(false);
     }
   };
 
@@ -382,15 +389,32 @@ const UserInput: React.FC<UserInputProps> = ({
   // Handle file selection
   const selectFile = async (filePath: string) => {
     const beforeCursor = inputText.slice(0, cursorPosition);
-    const lastAtIndex = beforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex !== -1) {
-      const beforeAt = inputText.slice(0, lastAtIndex);
+    // Find the first @ symbol that starts a file search context (same logic as updateFileSearchState)
+    let firstAtIndex = -1;
+    for (let i = beforeCursor.length - 1; i >= 0; i--) {
+      if (beforeCursor[i] === "@") {
+        // Check if this @ is at the start of a word (preceded by space/newline or start of string)
+        const beforeAt = beforeCursor.slice(0, i);
+        const lastChar = beforeAt[beforeAt.length - 1];
+        if (i === 0 || lastChar === " " || lastChar === "\n") {
+          // Check if there's any space/newline between this @ and cursor
+          const afterThis = beforeCursor.slice(i + 1);
+          if (!afterThis.includes(" ") && !afterThis.includes("\n")) {
+            firstAtIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (firstAtIndex !== -1) {
+      const beforeAt = inputText.slice(0, firstAtIndex);
       const afterCursor = inputText.slice(cursorPosition);
 
       // Replace the partial file reference with the full file path
       const newText = beforeAt + "@" + filePath + " " + afterCursor;
-      const newCursorPos = lastAtIndex + 1 + filePath.length + 1;
+      const newCursorPos = firstAtIndex + 1 + filePath.length + 1;
 
       textBuffer.setText(newText);
       textBuffer.setCursor(newCursorPos);
@@ -407,7 +431,14 @@ const UserInput: React.FC<UserInputProps> = ({
           const content = await fs.readFile(absolutePath, "utf-8");
           onFileAttached(absolutePath, content);
         } catch (error) {
-          console.error(`Error reading file ${filePath}:`, error);
+          // If file doesn't exist, just attach the filename without content
+          if (error instanceof Error && (error as any).code === "ENOENT") {
+            const path = await import("path");
+            const absolutePath = path.resolve(filePath);
+            onFileAttached(absolutePath, filePath);
+          } else {
+            console.error(`Error reading file ${filePath}:`, error);
+          }
         }
       }
     }
@@ -515,7 +546,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       // Normal Enter behavior - submit if there's content
-      if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
+      if (textBuffer.text.trim() || wasInterrupted) {
         // Get images before expanding paste blocks
         const imageMap = textBuffer.getAllImages();
 
@@ -523,13 +554,16 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        // Only add to history if there's actual text (not when resuming)
-        if (submittedText) {
-          inputHistory.addEntry(submittedText);
-        }
+        inputHistory.addEntry(submittedText);
 
-        // Submit with images
-        onSubmit(submittedText, imageMap);
+        // We don't queue, we just send in remote mode because the server handles queueing
+        if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
+          // Process message later when LLM has responded or compaction is complete
+          void messageQueue.enqueueMessage(submittedText, imageMap);
+        } else {
+          // Submit with images
+          onSubmit(submittedText, imageMap);
+        }
 
         textBuffer.clear();
         setInputText("");
@@ -570,6 +604,12 @@ const UserInput: React.FC<UserInputProps> = ({
       return true;
     }
 
+    // Handle escape key to interrupt compaction (higher priority)
+    if (isCompacting && onInterrupt) {
+      onInterrupt();
+      return true;
+    }
+
     // Handle escape key to interrupt streaming
     if (isWaitingForResponse && onInterrupt) {
       onInterrupt();
@@ -587,6 +627,25 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowFileSearch(false);
       return true;
     }
+
+    // Handle double Esc to open edit message selector
+    const now = Date.now();
+    if (
+      inputMode &&
+      !showSlashCommands &&
+      !showFileSearch &&
+      !showBashMode &&
+      onShowEditSelector &&
+      now - lastEscapePressRef.current < 500
+    ) {
+      // Double escape detected
+      onShowEditSelector();
+      lastEscapePressRef.current = 0; // Reset to prevent triple-escape
+      return true;
+    }
+
+    // Track single escape press
+    lastEscapePressRef.current = now;
 
     return false;
   };
@@ -645,15 +704,6 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle escape key variations
     if (handleEscapeKey(key)) {
       return;
-    }
-
-    // Allow typing during streaming, but block submission
-    if (!inputMode) {
-      // Block only Enter key submission during streaming
-      if (key.return && !key.shift) {
-        return;
-      }
-      // Allow all other input (typing, navigation, etc.)
     }
 
     // Handle slash command navigation

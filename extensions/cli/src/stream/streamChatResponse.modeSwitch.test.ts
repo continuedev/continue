@@ -4,24 +4,16 @@ import {
   SERVICE_NAMES,
   initializeServices,
   serviceContainer,
+  services,
 } from "../services/index.js";
-import { modeService } from "../services/ModeService.js";
 
 import { getAllTools } from "./handleToolCalls.js";
 
 describe("streamChatResponse - Mode Switch During Streaming", () => {
+  const toolPermissionService = services.toolPermissions;
   beforeEach(async () => {
     // Clean up service container state before each test
-    const services = [
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      SERVICE_NAMES.AUTH,
-      SERVICE_NAMES.API_CLIENT,
-      SERVICE_NAMES.CONFIG,
-      SERVICE_NAMES.MODEL,
-      SERVICE_NAMES.MCP,
-    ];
-
-    services.forEach((service) => {
+    Object.values(SERVICE_NAMES).forEach((service) => {
       (serviceContainer as any).services.delete(service);
       (serviceContainer as any).factories.delete(service);
       (serviceContainer as any).dependencies.delete(service);
@@ -43,13 +35,13 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
     // Should include write tools in normal mode
     expect(toolNames).toContain("Write");
-    expect(toolNames).toContain("Edit");
+    expect(toolNames).toContain("MultiEdit");
 
     // Switch to plan mode (simulating Shift+Tab during streaming)
-    modeService.switchMode("plan");
+    toolPermissionService.switchMode("plan");
 
     // Update the service container (this is what UserInput.tsx does)
-    const updatedState = modeService.getToolPermissionService().getState();
+    const updatedState = toolPermissionService.getState();
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Recompute tools - should now exclude write tools
@@ -58,7 +50,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
     // Should exclude write tools in plan mode
     expect(toolNames).not.toContain("Write");
-    expect(toolNames).not.toContain("Edit");
+    expect(toolNames).not.toContain("MultiEdit");
 
     // Should still include read-only tools
     expect(toolNames).toContain("Read");
@@ -68,30 +60,30 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
   test("getAllTools reflects current mode immediately", async () => {
     // Start in normal mode
-    expect(modeService.getCurrentMode()).toBe("normal");
+    expect(toolPermissionService.getCurrentMode()).toBe("normal");
     let tools = await getAllTools();
     expect(tools.map((t) => t.function.name)).toContain("Write");
 
     // Switch to plan mode
-    modeService.switchMode("plan");
-    let updatedState = modeService.getToolPermissionService().getState();
+    toolPermissionService.switchMode("plan");
+    let updatedState = toolPermissionService.getState();
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
-    expect(modeService.getCurrentMode()).toBe("plan");
+    expect(toolPermissionService.getCurrentMode()).toBe("plan");
 
     // getAllTools should immediately reflect the new mode
     tools = await getAllTools();
     expect(tools.map((t) => t.function.name)).not.toContain("Write");
 
     // Switch to auto mode
-    modeService.switchMode("auto");
-    updatedState = modeService.getToolPermissionService().getState();
+    toolPermissionService.switchMode("auto");
+    updatedState = toolPermissionService.getState();
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
-    expect(modeService.getCurrentMode()).toBe("auto");
+    expect(toolPermissionService.getCurrentMode()).toBe("auto");
 
     // getAllTools should immediately reflect auto mode (all tools allowed)
     tools = await getAllTools();
     expect(tools.map((t) => t.function.name)).toContain("Write");
-    expect(tools.map((t) => t.function.name)).toContain("Edit");
+    expect(tools.map((t) => t.function.name)).toContain("MultiEdit");
     expect(tools.map((t) => t.function.name)).toContain("Read");
   });
 

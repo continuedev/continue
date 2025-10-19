@@ -1,7 +1,7 @@
 import { JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
 import { describe, expect, it, vi } from "vitest";
-import { createMockStore } from "../../util/test/mockStore";
+import { createMockStore, getEmptyRootState } from "../../util/test/mockStore";
 import { streamResponseThunk } from "./streamResponse";
 
 // Mock external dependencies only - let selectors run naturally
@@ -36,22 +36,16 @@ vi.mock(
   }),
 );
 
-import { ModelDescription } from "core";
+import { unwrapResult } from "@reduxjs/toolkit";
 import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import { getRootStateWithClaude } from "./streamResponse.test";
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
 const mockPosthog = vi.mocked(posthog);
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
-
-const mockClaudeModel: ModelDescription = {
-  title: "Claude 3.5 Sonnet",
-  model: "claude-3-5-sonnet-20241022",
-  provider: "anthropic",
-  underlyingProviderName: "anthropic",
-  completionOptions: { reasoningBudgetTokens: 2048 },
-};
 
 // Mock editor state (what user types in the input)
 const mockEditorState: JSONContent = {
@@ -70,12 +64,8 @@ const mockModifiers: InputModifiers = {
   noContext: false,
 };
 
-function setupTest() {
+beforeEach(() => {
   vi.clearAllMocks();
-
-  // Default mock implementations for external functions
-
-  // Default mock for resolveEditorContent (can be overridden in individual tests)
   mockResolveEditorContent.mockResolvedValue({
     selectedContextItems: [],
     selectedCode: [],
@@ -85,133 +75,25 @@ function setupTest() {
 
   // Mock getBaseSystemMessage to return simple system message for readable tests
   mockGetBaseSystemMessage.mockReturnValue("You are a helpful assistant.");
-
-  // Create store with realistic state that selectors can work with
-  const mockStore = createMockStore({
-    session: {
-      history: [
-        {
-          message: { id: "1", role: "user", content: "Hello" },
-          contextItems: [],
-        },
-      ],
-      hasReasoningEnabled: false,
-      isStreaming: true,
-      id: "session-123",
-      mode: "chat",
-      streamAborter: new AbortController(),
-      contextPercentage: 0,
-      isPruned: false,
-      isInEdit: false,
-      title: "",
-      lastSessionId: undefined,
-      isSessionMetadataLoading: false,
-      allSessionMetadata: [],
-      symbols: {},
-      codeBlockApplyStates: {
-        states: [],
-        curIndex: 0,
-      },
-      newestToolbarPreviewForInput: {},
-      compactionLoading: {},
-      inlineErrorMessage: undefined,
-    },
-    config: {
-      config: {
-        tools: [],
-        rules: [],
-        tabAutocompleteModel: undefined,
-        selectedModelByRole: {
-          chat: mockClaudeModel,
-          apply: null,
-          edit: null,
-          summarize: null,
-          autocomplete: null,
-          rerank: null,
-          embed: null,
-        },
-        experimental: {
-          onlyUseSystemMessageTools: false,
-        },
-      } as any,
-      lastSelectedModelByRole: {
-        chat: mockClaudeModel.title,
-      },
-    } as any,
-    ui: {
-      toolSettings: {},
-      ruleSettings: {},
-      showDialog: false,
-      dialogMessage: undefined,
-    } as any,
-  });
-
-  const mockIdeMessenger = mockStore.mockIdeMessenger;
-
-  return { mockStore, mockIdeMessenger };
-}
+});
 
 describe("streamResponseThunk", () => {
   it("should throw error when no chat model is selected", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
+    const noModelState = getEmptyRootState();
+    noModelState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
+      },
+    ];
 
     // Create store with no selected chat model
-    const mockStoreNoModel = createMockStore({
-      session: {
-        history: [
-          {
-            message: { id: "1", role: "user", content: "Hello" },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: null, // No model selected
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {},
-      } as any,
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
-    });
+    const mockStoreNoModel = createMockStore(noModelState);
+    const requestSpy = vi.spyOn(mockStoreNoModel.mockIdeMessenger, "request");
+    const chatSpy = vi.spyOn(
+      mockStoreNoModel.mockIdeMessenger,
+      "llmStreamChat",
+    );
 
     // Execute thunk and expect it to be rejected
     const result = await mockStoreNoModel.dispatch(
@@ -225,7 +107,7 @@ describe("streamResponseThunk", () => {
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify the complete error handling flow
-    const dispatchedActions = (mockStoreNoModel as any).getActions();
+    const dispatchedActions = mockStoreNoModel.getActions();
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -316,68 +198,22 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify no IDE messenger calls were made
-    expect(mockStoreNoModel.mockIdeMessenger.request).not.toHaveBeenCalled();
-    expect(
-      mockStoreNoModel.mockIdeMessenger.llmStreamChat,
-    ).not.toHaveBeenCalled();
+    expect(requestSpy).not.toHaveBeenCalled();
+    expect(chatSpy).not.toHaveBeenCalled();
 
     // Verify final state shows error dialog and inactive streaming
     const finalState = mockStoreNoModel.getState();
     expect(finalState).toEqual({
+      ...noModelState,
       session: {
-        history: [
-          {
-            contextItems: [],
-            isGatheringContext: false,
-            message: { id: "1", role: "user", content: "Hello" },
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: false, // Set to inactive after error
-        id: "session-123",
-        mode: "chat",
+        ...noModelState.session,
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: null, // No model selected
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {},
-        loading: false,
-        configError: undefined,
+        history: [
+          { ...noModelState.session.history[0], isGatheringContext: false },
+        ],
       },
       ui: {
-        toolSettings: {},
-        ruleSettings: {},
+        ...noModelState.ui,
         showDialog: true, // Error dialog is shown
         dialogMessage: expect.objectContaining({
           props: expect.objectContaining({
@@ -387,37 +223,33 @@ describe("streamResponseThunk", () => {
           }),
         }),
       },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
-      },
     });
   });
 
   it("should handle compilation error - not enough context", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
+      },
+    ];
+    initialState.session.id = "session-123";
+    const mockStore = createMockStore(initialState);
+    const mockIdeMessenger = mockStore.mockIdeMessenger;
+    const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+    const chatSpy = vi.spyOn(mockIdeMessenger, "llmStreamChat");
 
-    // Mock compilation failure with "Not enough context" error
-    mockIdeMessenger.request.mockResolvedValue({
-      status: "error",
-      error: "Not enough context available for this request",
+    requestSpy.mockImplementation(async (message, data) => {
+      if (message === "llm/compileChat") {
+        return {
+          done: true,
+          status: "error",
+          error: "Not enough context available for this request",
+        };
+      } else {
+        return await new MockIdeMessenger().request(message, data);
+      }
     });
 
     // Execute thunk
@@ -427,12 +259,13 @@ describe("streamResponseThunk", () => {
         modifiers: mockModifiers,
       }) as any,
     );
+    unwrapResult(result);
 
     // Verify thunk completed successfully (doesn't throw, handles error gracefully)
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact action sequence for this error path
-    const dispatchedActions = (mockStore as any).getActions();
+    const dispatchedActions = mockStore.getActions();
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -561,7 +394,7 @@ describe("streamResponseThunk", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Hello",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -573,7 +406,7 @@ describe("streamResponseThunk", () => {
         type: "session/updateSessionMetadata",
         payload: {
           sessionId: "session-123",
-          title: "New Session",
+          title: "Hello",
         },
       },
       {
@@ -586,21 +419,21 @@ describe("streamResponseThunk", () => {
         payload: undefined,
       },
       {
-        type: "session/refreshMetadata/rejected",
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: [],
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
         meta: {
-          aborted: false,
-          arg: {},
-          condition: false,
-          rejectedWithValue: false,
+          arg: expect.objectContaining({}),
           requestId: expect.any(String),
-          requestStatus: "rejected",
+          requestStatus: expect.any(String),
         },
-        payload: undefined,
-        error: {
-          message: "Not enough context available for this request",
-          name: "Error",
-          stack: expect.any(String),
-        },
+        payload: [],
       },
       {
         type: "session/update/fulfilled",
@@ -608,7 +441,7 @@ describe("streamResponseThunk", () => {
           arg: expect.objectContaining({
             history: expect.any(Array),
             sessionId: "session-123",
-            title: "New Session",
+            title: "Hello",
             workspaceDirectory: "",
           }),
           requestId: expect.any(String),
@@ -652,7 +485,7 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger was called for compilation but not streaming
-    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
       messages: [
         {
           role: "system",
@@ -679,12 +512,15 @@ describe("streamResponseThunk", () => {
       ],
       options: {},
     });
-    expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+    expect(chatSpy).not.toHaveBeenCalled();
 
     // Verify final state shows error condition
     const finalState = mockStore.getState();
     expect(finalState).toEqual({
+      ...initialState,
       session: {
+        ...initialState.session,
+        title: "Hello",
         history: [
           {
             contextItems: [],
@@ -727,88 +563,36 @@ describe("streamResponseThunk", () => {
             },
           },
         ],
-        hasReasoningEnabled: false,
-        isStreaming: false, // Should be inactive due to error
-        id: "session-123",
-        mode: "chat",
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0, // Unchanged - no successful compilation
-        isPruned: false, // Unchanged - no successful compilation
-        isInEdit: false,
-        title: "New Session",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
         inlineErrorMessage: "out-of-context", // Error message set
-      },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });
 
   it("should throw error for other compilation errors", async () => {
-    const { mockStore, mockIdeMessenger } = setupTest();
+    const initialState = getRootStateWithClaude();
+    initialState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
+      },
+    ];
+    const mockStore = createMockStore(initialState);
+    const mockIdeMessenger = mockStore.mockIdeMessenger;
+    const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+    const chatSpy = vi.spyOn(mockIdeMessenger, "llmStreamChat");
 
     // Mock compilation failure with generic error
-    mockIdeMessenger.request.mockResolvedValue({
-      status: "error",
-      error: "Model configuration is invalid",
+    requestSpy.mockImplementation(async (message, data) => {
+      if (message === "llm/compileChat") {
+        return {
+          done: true,
+          status: "error",
+          error: "Model configuration is invalid",
+        };
+      } else {
+        return await mockIdeMessenger.request(message, data);
+      }
     });
 
     // Execute thunk and expect it to be rejected
@@ -823,7 +607,7 @@ describe("streamResponseThunk", () => {
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact action sequence for compilation error with dialog
-    const dispatchedActions = (mockStore as any).getActions();
+    const dispatchedActions = mockStore.getActions();
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -1002,7 +786,7 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger was called for compilation but not streaming
-    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
       messages: [
         {
           role: "system",
@@ -1029,67 +813,19 @@ describe("streamResponseThunk", () => {
       ],
       options: {},
     });
-    expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+    expect(chatSpy).not.toHaveBeenCalled();
 
     // Verify final state shows error dialog and inactive streaming
     const finalState = mockStore.getState();
     expect(finalState).toEqual({
+      ...initialState,
       session: {
-        history: [
-          {
-            contextItems: [],
-            message: { id: "1", role: "user", content: "Hello" },
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: false, // Set to inactive after error
-        id: "session-123",
-        mode: "chat",
+        ...initialState.session,
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
-        },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
         mainEditorContentTrigger: mockEditorState, // Editor content that triggered the request
       },
-      config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        },
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
-        },
-        loading: false,
-        configError: undefined,
-      },
       ui: {
-        toolSettings: {},
-        ruleSettings: {},
+        ...initialState.ui,
         showDialog: true, // Error dialog is shown
         dialogMessage: expect.objectContaining({
           props: expect.objectContaining({
@@ -1098,27 +834,6 @@ describe("streamResponseThunk", () => {
             }),
           }),
         }),
-      },
-      editModeState: {
-        isInEdit: false,
-        returnToMode: "chat",
-      },
-      indexing: {
-        indexing: {
-          statuses: {},
-          hiddenChatPeekTypes: {
-            docs: false,
-          },
-        },
-      },
-      tabs: {
-        tabsItems: [],
-      },
-      profiles: {
-        organizations: [],
-        selectedProfileId: null,
-        selectedOrganizationId: null,
-        preferencesByProfileId: {},
       },
     });
   });

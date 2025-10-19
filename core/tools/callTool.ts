@@ -1,5 +1,7 @@
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+import { ContinueError, ContinueErrorReason } from "../util/errors";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
@@ -87,10 +89,14 @@ async function callToolFromUri(
       if (!client) {
         throw new Error("MCP connection not found");
       }
-      const response = await client.client.callTool({
-        name: toolName,
-        arguments: args,
-      });
+      const response = await client.client.callTool(
+        {
+          name: toolName,
+          arguments: args,
+        },
+        CallToolResultSchema,
+        { timeout: client.options.timeout },
+      );
 
       if (response.isError === true) {
         throw new Error(JSON.stringify(response.content));
@@ -192,6 +198,7 @@ export async function callTool(
 ): Promise<{
   contextItems: ContextItem[];
   errorMessage: string | undefined;
+  errorReason?: ContinueErrorReason;
 }> {
   try {
     const args = safeParseToolCallArgs(toolCall);
@@ -209,12 +216,19 @@ export async function callTool(
     };
   } catch (e) {
     let errorMessage = `${e}`;
-    if (e instanceof Error) {
+    let errorReason: ContinueErrorReason | undefined;
+
+    if (e instanceof ContinueError) {
+      errorMessage = e.message;
+      errorReason = e.reason;
+    } else if (e instanceof Error) {
       errorMessage = e.message;
     }
+
     return {
       contextItems: [],
       errorMessage,
+      errorReason,
     };
   }
 }

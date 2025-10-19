@@ -99,6 +99,8 @@ export interface ILLM
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
+  lastRequestId?: string;
+
   complete(
     prompt: string,
     signal: AbortSignal,
@@ -272,7 +274,7 @@ export interface Session {
   history: ChatHistoryItem[];
 }
 
-export interface SessionMetadata {
+export interface BaseSessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;
@@ -308,11 +310,6 @@ export interface FileEdit {
   filepath: string;
   range: Range;
   replacement: string;
-}
-
-export interface ContinueError {
-  title: string;
-  message: string;
 }
 
 export interface CompletionOptions extends BaseCompletionOptions {
@@ -465,7 +462,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent" | "plan";
+export type MessageModes = "chat" | "agent" | "plan" | "background";
 
 export type ToolStatus =
   | "generating" // Tool call arguments are being streamed from the LLM
@@ -481,6 +478,7 @@ interface ToolCallState {
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
+  processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;
 }
@@ -824,6 +822,8 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
+  getExternalUri?(uri: string): Promise<string>;
+
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
   saveFile(fileUri: string): Promise<void>;
@@ -921,7 +921,8 @@ export interface SlashCommand extends SlashCommandDescription {
 export interface SlashCommandWithSource extends SlashCommandDescription {
   run?: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>; // Optional - only needed for legacy
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   overrideSystemMessage?: string;
 }
 
@@ -939,7 +940,8 @@ export type SlashCommandSource =
 export interface SlashCommandDescWithSource extends SlashCommandDescription {
   isLegacy: boolean; // Maps to if slashcommand.run exists
   source: SlashCommandSource;
-  promptFile?: string;
+  sourceFile?: string;
+  slug?: string;
   mcpServerName?: string;
   mcpArgs?: MCPPromptArgs;
 }
@@ -1083,7 +1085,6 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-
   displayTitle: string;
   wouldLikeTo?: string;
   isCurrently?: string;
@@ -1099,6 +1100,13 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
+  toolCallIcon?: string;
+  preprocessArgs?: (
+    args: Record<string, unknown>,
+    extras: {
+      ide: IDE;
+    },
+  ) => Promise<Record<string, unknown>>;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
@@ -1248,7 +1256,6 @@ export interface StdioOptions {
   args: string[];
   env?: Record<string, string>;
   cwd?: string;
-  requestOptions?: RequestOptions;
 }
 
 export interface WebSocketOptions {
@@ -1275,15 +1282,8 @@ export type TransportOptions =
   | SSEOptions
   | StreamableHTTPOptions;
 
-export interface MCPOptions {
-  name: string;
-  id: string;
-  transport: TransportOptions;
-  faviconUrl?: string;
-  timeout?: number;
-}
-
 export type MCPConnectionStatus =
+  | "disabled"
   | "connecting"
   | "connected"
   | "error"
@@ -1330,17 +1330,57 @@ export interface MCPTool {
   };
 }
 
-export interface MCPServerStatus extends MCPOptions {
+type BaseInternalMCPOptions = {
+  id: string;
+  name: string;
+  faviconUrl?: string;
+  timeout?: number;
+  requestOptions?: RequestOptions;
+  sourceFile?: string;
+};
+
+export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
+  type?: "stdio";
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+};
+
+export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
+  type?: "streamable-http";
+  url: string;
+  apiKey?: string;
+};
+
+export type InternalSseMcpOptions = BaseInternalMCPOptions & {
+  type?: "sse";
+  url: string;
+  apiKey?: string;
+};
+
+export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
+  type: "websocket"; // websocket requires explicit type
+  url: string;
+};
+
+export type InternalMcpOptions =
+  | InternalStdioMcpOptions
+  | InternalStreamableHttpMcpOptions
+  | InternalSseMcpOptions
+  | InternalWebsocketMcpOptions;
+
+export type MCPServerStatus = InternalMcpOptions & {
   status: MCPConnectionStatus;
   errors: string[];
+  infos: string[];
   isProtectedResource: boolean;
-
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
   resourceTemplates: MCPResourceTemplate[];
   sourceFile?: string;
-}
+};
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
@@ -1387,9 +1427,12 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  autoFormattingDiff?: string;
 }
 
-export interface StreamDiffLinesPayload {
+export type StreamDiffLinesType = "edit" | "apply";
+interface StreamDiffLinesOptionsBase {
+  type: StreamDiffLinesType;
   prefix: string;
   highlighted: string;
   suffix: string;
@@ -1399,6 +1442,19 @@ export interface StreamDiffLinesPayload {
   includeRulesInSystemMessage: boolean;
   fileUri?: string;
 }
+
+interface StreamDiffLinesOptionsEdit extends StreamDiffLinesOptionsBase {
+  type: "edit";
+}
+
+interface StreamDiffLinesOptionsApply extends StreamDiffLinesOptionsBase {
+  type: "apply";
+  newCode: string;
+}
+
+type StreamDiffLinesPayload =
+  | StreamDiffLinesOptionsApply
+  | StreamDiffLinesOptionsEdit;
 
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
@@ -1733,7 +1789,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  tools: Tool[];
+  tools: Omit<Tool, "preprocessArgs", "evaluateToolCallPolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   usePlatform: boolean;
@@ -1795,7 +1851,8 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
-  | ".continuerules";
+  | ".continuerules"
+  | "agentFile";
 
 export interface RuleWithSource {
   name?: string;
@@ -1805,8 +1862,9 @@ export interface RuleWithSource {
   regex?: string | string[];
   rule: string;
   description?: string;
-  ruleFile?: string;
+  sourceFile?: string;
   alwaysApply?: boolean;
+  invokable?: boolean;
 }
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
@@ -1818,6 +1876,16 @@ export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
   didPrune: boolean;
   contextPercentage: number;
+}
+
+export interface AddToChatPayload {
+  data: AddToChatPayloadItem[];
+}
+
+interface AddToChatPayloadItem {
+  type: "file" | "folder";
+  fullPath: string;
+  name: string;
 }
 
 export interface MessageOption {

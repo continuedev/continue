@@ -78,7 +78,7 @@
         },
         "reasoning": {
           "title": "Reasoning",
-          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models",
           "type": "boolean"
         },
         "reasoningBudgetTokens": {
@@ -968,11 +968,6 @@
                 "enum": [
                   "chat-bison-001",
                   "gemini-pro",
-                  "gemini-1.5-pro-latest",
-                  "gemini-1.5-pro",
-                  "gemini-1.5-flash-latest",
-                  "gemini-1.5-flash",
-                  "gemini-1.5-flash-8b",
                   "gemini-2.0-flash-exp",
                   "gemini-2.0-flash",
                   "gemini-2.0-flash-thinking-exp-01-21",
@@ -980,7 +975,6 @@
                   "gemini-2.0-flash-lite-preview-02-05",
                   "gemini-2.0-flash-lite",
                   "gemini-2.0-flash-exp-image-generation",
-                  "gemini-2.5-pro-exp-03-25",
                   "gemini-2.5-pro-latest"
                 ]
               }
@@ -1624,12 +1618,7 @@
                       "command-r",
                       "command-r-plus",
                       "chat-bison-001",
-                      "gemini-pro",
-                      "gemini-1.5-pro-latest",
-                      "gemini-1.5-pro",
                       "gemini-2.5-pro",
-                      "gemini-1.5-flash-latest",
-                      "gemini-1.5-flash",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",

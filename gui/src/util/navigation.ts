@@ -3,7 +3,7 @@ export type ConfigTab =
   | "models"
   | "rules"
   | "tools"
-  | "agents"
+  | "configs"
   | "organizations"
   | "indexing"
   | "settings"
@@ -12,6 +12,7 @@ export type ConfigTab =
 // TODO: Move all the routes here
 export const ROUTES = {
   HOME: "/",
+  HOME_INDEX: "/index.html",
   CONFIG: "/config",
   THEME: "/theme",
   STATS: "/stats",
@@ -28,7 +29,7 @@ export const CONFIG_ROUTES = {
   MODELS: buildConfigRoute("models"),
   RULES: buildConfigRoute("rules"),
   TOOLS: buildConfigRoute("tools"),
-  AGENTS: buildConfigRoute("agents"),
+  CONFIGS: buildConfigRoute("configs"),
   ORGANIZATIONS: buildConfigRoute("organizations"),
   INDEXING: buildConfigRoute("indexing"),
   SETTINGS: buildConfigRoute("settings"),

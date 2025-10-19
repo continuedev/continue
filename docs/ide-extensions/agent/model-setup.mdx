@@ -1,0 +1,33 @@
+---
+title: "Model Setup for Agent Mode"
+description: "Learn how to set up models for Agent Mode in Continue, including recommended models and configuration options for optimal performance"
+sidebarTitle: "Model Setup"
+---
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+The models you set up for Chat mode will be used with Agent mode if the model supports tool calling. The recommended models and how to set them up can be found [here](/ide-extensions/chat/model-setup).
+
+## How System Message Tools Work
+
+Continue implements an innovative approach called **system message tools** that ensures consistent tool functionality across all models, regardless of their native capabilities. This allows Agent mode to work seamlessly with a wider range of models and providers.
+
+### How System Message Tools Function
+
+Instead of relying solely on native tool calling APIs (which vary between providers), Continue converts tools into XML format and includes them in the system message. The model generates tool calls as structured XML within its response, which Continue then parses and executes. This approach provides:
+
+- **Universal compatibility** - Any model capable of following instructions can use tools, not just those with native tool support
+- **Consistent behavior** - Tool calls work identically across OpenAI, Anthropic, local models, and others
+- **Better reliability** - Models that struggle with native tools often perform better with system message tools
+- **Seamless switching** - Change between providers without modifying your workflow
+
+## Recommended Agent Models
+
+<ModelRecommendations role="all" />
+
+### How to Configure Agent Mode
+
+Agent mode automatically determines whether to use native or system message tools based on the model's capabilities. No additional configuration is required - simply select your model and Continue handles the rest.
+
+## How to Check Model Compatibility
+
+To see which models support specific features like tool use (for Agent mode) and image input, check out our [Model Capabilities guide](/customize/deep-dives/model-capabilities).

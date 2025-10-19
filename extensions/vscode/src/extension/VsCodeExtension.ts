@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
@@ -10,6 +11,7 @@ import {
   getConfigJsonPath,
   getConfigTsPath,
   getConfigYamlPath,
+  getContinueGlobalPath,
 } from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -232,7 +234,9 @@ export class VsCodeExtension {
           timeSinceLastDocChange < this.ARBITRARY_TYPING_DELAY &&
           !NextEditWindowManager.getInstance().hasAccepted()
         ) {
-          console.log("VsCodeExtension: typing in progress, preserving chain");
+          // console.debug(
+          //   "VsCodeExtension: typing in progress, preserving chain",
+          // );
           return true;
         }
 
@@ -463,6 +467,18 @@ export class VsCodeExtension {
       void this.configHandler.reloadConfig("config.ts updated - fs file watch");
     });
 
+    // watch global rules directory for changes
+    const globalRulesDir = path.join(getContinueGlobalPath(), "rules");
+    if (fs.existsSync(globalRulesDir)) {
+      fs.watch(globalRulesDir, { recursive: true }, (eventType, filename) => {
+        if (filename && filename.endsWith(".md")) {
+          void this.configHandler.reloadConfig(
+            "Global rules directory updated - fs file watch",
+          );
+        }
+      });
+    }
+
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (event.contentChanges.length > 0) {
         selectionManager.documentChanged();
@@ -503,8 +519,22 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+      const dirs = vscode.workspace.workspaceFolders?.map(
+        (folder) => folder.uri,
+      );
+
+      this.ideUtils.setWokspaceDirectories(dirs);
+
+      this.core.invoke("index/forceReIndex", {
+        dirs: [
+          ...event.added.map((folder) => folder.uri.toString()),
+          ...event.removed.map((folder) => folder.uri.toString()),
+        ],
+      });
+    });
+
     vscode.workspace.onDidOpenTextDocument(async (event) => {
-      console.log("onDidOpenTextDocument");
       const ast = await getAst(event.fileName, event.getText());
       if (ast) {
         DocumentHistoryTracker.getInstance().addDocument(

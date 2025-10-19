@@ -6,7 +6,7 @@ export const fetchUrlContentTool: Tool = {
   displayTitle: "Read URL",
   wouldLikeTo: "fetch {{{ url }}}",
   isCurrently: "fetching {{{ url }}}",
-  hasAlready: "viewed {{{ url }}}",
+  hasAlready: "fetched {{{ url }}}",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
@@ -30,4 +30,5 @@ export const fetchUrlContentTool: Tool = {
     prefix: `To fetch the content of a URL, use the ${BuiltInToolNames.FetchUrlContent} tool. For example, to read the contents of a webpage, you might respond with:`,
     exampleArgs: [["url", "https://example.com"]],
   },
+  toolCallIcon: "GlobeAltIcon",
 };
