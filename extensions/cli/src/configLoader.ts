@@ -103,14 +103,17 @@ function determineConfigSource(
 
     if (savedUri) {
       if (savedUri.startsWith("file:")) {
+        let exists = false; // wrote like this for nested depth linting rule lol
         try {
-          if (fs.existsSync(fileURLToPath(savedUri))) {
-            return { type: "saved-uri", uri: savedUri };
-          } else {
-            logger.warn("Saved config URI does not exist: " + savedUri);
-          }
+          const filepath = fileURLToPath(savedUri);
+          exists = fs.existsSync(filepath);
         } catch (e) {
-          logger.warn("Invalid saved file URI " + savedUri);
+          logger.warn("Invalid saved file URI " + savedUri, e);
+        }
+        if (exists) {
+          return { type: "saved-uri", uri: savedUri };
+        } else {
+          logger.warn("Saved config URI does not exist: " + savedUri);
         }
       } else {
         // slug
