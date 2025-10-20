@@ -109,7 +109,7 @@ function determineConfigSource(
       ) {
         return { type: "saved-uri", uri: savedUri };
       } else {
-        logger.warn("Saved URI does not exists");
+        logger.warn("Saved config URI does not exist: " + savedUri);
       }
     }
   }
