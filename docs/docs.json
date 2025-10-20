@@ -55,9 +55,9 @@
                 ]
               },
               {
-                "group": "Workflows",
+                "group": "Agents",
                 "icon": "cloud",
-                "pages": ["hub/workflows/intro"]
+                "pages": ["hub/agents/intro"]
               },
               "hub/sharing",
               "hub/source-control"
