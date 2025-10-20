@@ -9,7 +9,6 @@ import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
-import { isEditTool } from "../../../util/toolCallState";
 import { ToolPolicyItem } from "./ToolPolicyItem";
 
 interface ToolPoliciesGroupProps {
@@ -34,9 +33,7 @@ export function ToolPoliciesGroup({
     (state) => state.config.config.tools as Tool[],
   );
   const tools = useMemo(() => {
-    return availableTools
-      .filter((t) => t.group === groupName)
-      .filter((t) => !isEditTool(t.function.name));
+    return availableTools.filter((t) => t.group === groupName);
   }, [availableTools, groupName]);
 
   const toolGroupSettings = useAppSelector(
