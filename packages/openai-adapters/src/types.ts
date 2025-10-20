@@ -52,6 +52,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("msty"),
     z.literal("openrouter"),
     z.literal("sambanova"),
+    z.literal("stakd"),
     z.literal("text-gen-webui"),
     z.literal("vllm"),
     z.literal("xAI"),
@@ -174,6 +175,11 @@ export const InceptionConfigSchema = OpenAIConfigSchema.extend({
 });
 export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 
+export const StakdConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("stakd"),
+});
+export type StakdConfig = z.infer<typeof StakdConfigSchema>;
+
 export const VertexAIConfigSchema = BasePlusConfig.extend({
   provider: z.literal("vertexai"),
   env: z
@@ -201,6 +207,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  StakdConfigSchema,
   VertexAIConfigSchema,
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,

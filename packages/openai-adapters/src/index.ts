@@ -16,6 +16,7 @@ import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { OpenRouterApi } from "./apis/OpenRouter.js";
 import { RelaceApi } from "./apis/Relace.js";
+import { StakdApi } from "./apis/Stakd.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
@@ -140,6 +141,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.function.network/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
+    case "stakd":
+      return new StakdApi(config);
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
