@@ -13,6 +13,7 @@ import {
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
+import { fileURLToPath } from "node:url";
 import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
 import {
   AuthConfig,
@@ -24,6 +25,7 @@ import {
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
+import { logger } from "./util/logger.js";
 
 export interface ConfigLoadResult {
   config: AssistantUnrolled;
@@ -95,16 +97,20 @@ function determineConfigSource(
     return { type: "cli-flag", path: cliConfigPath };
   }
 
-  // In headless, config fallback behavior isn't supported
-  if (isHeadless) {
-    return { type: "no-config" };
-  }
-
   // Priority 2: Saved config URI (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const savedUri = getConfigUri(authConfig);
+
     if (savedUri) {
-      return { type: "saved-uri", uri: savedUri };
+      if (
+        fs.existsSync(
+          savedUri.startsWith("file:") ? fileURLToPath(savedUri) : savedUri,
+        )
+      ) {
+        return { type: "saved-uri", uri: savedUri };
+      } else {
+        logger.warn("Saved URI does not exists");
+      }
     }
   }
 
@@ -117,6 +123,10 @@ function determineConfigSource(
     }
     return { type: "default-agent" };
   } else {
+    // In headless, user assistant fallback behavior isn't supported
+    if (isHeadless) {
+      return { type: "no-config" };
+    }
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   }
