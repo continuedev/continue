@@ -143,7 +143,7 @@ function modelSupportsReasoning(
     return false;
   }
   // do not turn reasoning on by default for claude 3 models
-  if (model.model.includes("claude") && !model.model.includes("3")) {
+  if (model.model.includes("claude") && !model.model.includes("-3-")) {
     return true;
   }
   if (model.model.includes("deepseek-r")) {
