@@ -1,9 +1,9 @@
 export const DEFAULT_SYSTEM_MESSAGES_URL =
-  "https://raw.githubusercontent.com/frank-vega-studio/continue/main/core/llm/defaultSystemMessages.ts";
+  "https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts";
 
 export const CODEBLOCK_FORMATTING_INSTRUCTIONS = `\
   Always include the language and file name in the info string when you write code blocks.
-  If you are editing "src/main.py" for example, your code block should start with '```python src/main.py'
+  If you are editing "src/main.py" for example, your code block should start with '\\`\\`\\`python src/main.py'
 `;
 
 export const EDIT_CODE_INSTRUCTIONS = `\
