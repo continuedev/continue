@@ -1389,7 +1389,6 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
-  autoAcceptEditToolDiffs?: boolean;
   continueAfterToolRejection?: boolean;
 }
 
