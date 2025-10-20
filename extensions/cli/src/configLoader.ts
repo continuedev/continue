@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import * as path from "path";
 
 import {
@@ -13,7 +14,6 @@ import {
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
-import { fileURLToPath } from "node:url";
 import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
 import {
   AuthConfig,
