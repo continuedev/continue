@@ -3,4 +3,98 @@ title: "Introduction"
 description: "Custom configuration options include Models, MCP Servers, Rules, Prompts, etc."
 ---
 
-Following the [`config.yaml`](/reference) format, you can create a custom configuration for the Continue CLI and IDE extensions.
+
+## What Are Configs?
+
+Configs are flexible containers that combine multiple components to create powerful AI coding experiences using the Continue CLI or the Extensions. A single config can include:
+
+<CardGroup cols={2}>
+
+  <Card title="Models" icon="cube">
+    
+    Large Language Models for chat, autocomplete, editing, and more
+    
+  </Card>
+  
+  <Card title="MCPs" icon="wrench">
+    
+    Model Context Protocol servers that provide tools and capabilities
+    
+  </Card>
+  
+  <Card title="Rules" icon="shield">
+    
+    Guidelines that shape AI behavior and responses
+    
+  </Card>
+  
+  <Card title="Prompts" icon="message-square">
+    
+    Reusable instructions for common coding tasks
+    
+  </Card>
+
+</CardGroup>
+
+## How Configs Work
+
+Think of configs as recipes for AI assistance. Each config defines:
+
+- **What models** to use for different tasks (chat, autocomplete, code editing)
+- **Which tools** are available through MCP servers
+- **How the AI behaves** through rules and guidelines  
+- **Pre-built prompts** for common workflows
+
+This flexibility lets you create specialized setups for different contexts, like a Next.js config with React-specific rules and tools, or a data science config with Python analysis capabilities.
+
+## Config Permissions
+
+When creating configs, you can set visibility levels:
+
+- **Personal**: Only you can see and use the config
+- **Public**: Anyone can discover and use your config
+- **Organization**: Members of your organization can access the config
+
+## Working with Configs
+
+You can interact with configs in three main ways:
+
+- **Create**: Build a new config from scratch or start with a template
+- **Edit**: Modify your existing configs by adding/removing components
+- **Remix**: Take someone else's config and customize it for your needs
+
+## Getting Started
+
+<Steps>
+
+  <Step title="Explore existing configs">
+    
+    Browse the [Continue Hub](https://hub.continue.dev/?type=assistants) to see what configs others have built
+    
+  </Step>
+  
+  <Step title="Add a config to your account">
+    
+    Click "Install Config" (+) on any config that interests you
+    
+  </Step>
+  
+  <Step title="Customize as needed">
+    
+    Add your API keys and customize components to match your workflow
+    
+  </Step>
+  
+  <Step title="Use in your IDE">
+    
+    Select the config from the dropdown in your Continue extension, type `/config` in the CLI, or use `--config` with the CLI commands
+    
+  </Step>
+
+</Steps>
+
+## Config Format
+
+All configs follow the [`config.yaml`](/reference) format, whether you're using the hub interface or editing files locally. This ensures consistency between hub-managed and local configurations.
+
+
