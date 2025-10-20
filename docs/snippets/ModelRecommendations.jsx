@@ -88,12 +88,14 @@ export const ModelRecommendations = ({ role = "all" }) => {
       notes: "Closed models are slightly better than open models",
     },
     apply: {
-      open: ["N/A"],
+      open: [
+        "[FastApply](https://hub.continue.dev/mdpauley/fast-apply-15b-v10)",
+      ],
       closed: [
         "[Relace Instant Apply](https://hub.continue.dev/relace/instant-apply)",
         "[Morph Fast Apply](https://hub.continue.dev/morphllm/morph-v2)",
       ],
-      notes: "Open models are not good enough for this model role",
+      notes: "Closed models are better than open models",
     },
     embed: {
       open: [
