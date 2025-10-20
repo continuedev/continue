@@ -103,10 +103,14 @@ function determineConfigSource(
 
     if (savedUri) {
       if (savedUri.startsWith("file:")) {
-        if (fs.existsSync(fileURLToPath(savedUri))) {
-          return { type: "saved-uri", uri: savedUri };
-        } else {
-          logger.warn("Saved config URI does not exist: " + savedUri);
+        try {
+          if (fs.existsSync(fileURLToPath(savedUri))) {
+            return { type: "saved-uri", uri: savedUri };
+          } else {
+            logger.warn("Saved config URI does not exist: " + savedUri);
+          }
+        } catch (e) {
+          logger.warn("Invalid saved file URI " + savedUri);
         }
       } else {
         // slug
