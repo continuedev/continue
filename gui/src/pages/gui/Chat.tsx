@@ -187,11 +187,6 @@ export function Chat() {
 
         setIsCreatingAgent(true);
 
-        // Clear input immediately for better UX
-        if (editorToClearOnSend) {
-          editorToClearOnSend.commands.clearContent();
-        }
-
         // Create agent and track loading state
         void (async () => {
           try {
@@ -217,6 +212,12 @@ export function Chat() {
               selectedCode,
               organizationId,
             });
+
+            // Clear input only after successful API call
+            if (editorToClearOnSend) {
+              editorToClearOnSend.commands.clearContent();
+            }
+
             setIsCreatingAgent(false);
           } catch (error) {
             console.error("Failed to create background agent:", error);

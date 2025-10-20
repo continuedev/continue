@@ -89,3 +89,13 @@ test("fetchUrlContent should add truncation warning with multiple truncated item
   expect(result[1].content.length).toBe(DEFAULT_FETCH_URL_CHAR_LIMIT);
   expect(result[2].name).toBe("Truncation warning");
 });
+
+test("fetchUrlContent should propagate errors when URL fetch fails", async () => {
+  const errorMessage = "HTTP 404 Not Found";
+
+  (getUrlContextItems as any).mockRejectedValue(new Error(errorMessage));
+
+  await expect(
+    fetchUrlContentImpl({ url: "https://example.com/404" }, mockExtras),
+  ).rejects.toThrow(errorMessage);
+});
