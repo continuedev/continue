@@ -102,14 +102,15 @@ function determineConfigSource(
     const savedUri = getConfigUri(authConfig);
 
     if (savedUri) {
-      if (
-        fs.existsSync(
-          savedUri.startsWith("file:") ? fileURLToPath(savedUri) : savedUri,
-        )
-      ) {
-        return { type: "saved-uri", uri: savedUri };
+      if (savedUri.startsWith("file:")) {
+        if (fs.existsSync(fileURLToPath(savedUri))) {
+          return { type: "saved-uri", uri: savedUri };
+        } else {
+          logger.warn("Saved config URI does not exist: " + savedUri);
+        }
       } else {
-        logger.warn("Saved config URI does not exist: " + savedUri);
+        // slug
+        return { type: "saved-uri", uri: savedUri };
       }
     }
   }
