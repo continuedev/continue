@@ -76,7 +76,7 @@ Now test your rules by asking a question about a file in chat.
 
 ![pirate rule test](/images/pirate-rule-test.png)
 
-## How to Create Rules Blocks
+## How to Create Rules
 
 ### Creating Local Rules
 
@@ -85,7 +85,7 @@ Rules can be added locally using the "Add Rules" button.
 ![add local rules button](/images/add-local-rules.png)
 
 <Info>
-**Automatically create local rule blocks**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
+**Automatically create local rules**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 </Info>
@@ -135,7 +135,7 @@ To move local rules to the Hub:
   recommend Markdown.
 </Info>
 
-Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
+Rules can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
 
 - `name` (**required** for YAML): A display name/title for the rule
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
