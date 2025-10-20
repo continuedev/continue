@@ -898,20 +898,7 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
-  gemini25ProExp: {
-    title: "Gemini 2.5 Pro Experimental",
-    description:
-      "Experimental version of Gemini 2.5 Pro with enhanced capabilities and larger output limits.",
-    params: {
-      title: "Gemini 2.5 Pro Experimental",
-      model: "gemini-2.5-pro-exp-03-25",
-      contextLength: 1_048_576,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
+
   gemini25Pro: {
     title: "Gemini 2.5 Pro",
     description:
