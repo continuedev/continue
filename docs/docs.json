@@ -395,6 +395,10 @@
       "destination": "/hub/introduction"
     },
     {
+      "source": "/hub/workflows/intro",
+      "destination": "/hub/agents/intro"
+    },
+    {
       "source": "/hub/blocks/create-a-block",
       "destination": "/hub/introduction"
     },
