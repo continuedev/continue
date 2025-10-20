@@ -677,11 +677,14 @@ describe("ConfigService", () => {
           config,
           mockApiClient as any,
           { accessToken: "token" } as any,
+          true,
         ),
-      ).rejects.toThrow("No model specified and failed to load default model");
+      ).rejects.toThrow(
+        "No model specified in headless mode (and failed to load default model)",
+      );
     });
 
-    test("should throw error when loaded default model is empty", async () => {
+    test("should throw error when loaded default model is empty in headless", async () => {
       const config = {
         name: "test-config",
         version: "1.0.0",
@@ -704,8 +707,11 @@ describe("ConfigService", () => {
           config,
           mockApiClient as any,
           { accessToken: "token" } as any,
+          true,
         ),
-      ).rejects.toThrow("No model specified and failed to load default model");
+      ).rejects.toThrow(
+        "No model specified in headless mode (and failed to load default model)",
+      );
     });
 
     test("should work with null access token", async () => {
