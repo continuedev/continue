@@ -195,11 +195,12 @@ async function loadFromSource(
         );
 
       case "no-config":
-        return {
-          name: "No Config Specified",
-          version: "1.0.0",
-        };
-
+        return await unrollPackageIdentifiersAsConfigYaml(
+          injectBlocks,
+          accessToken,
+          organizationId,
+          apiClient,
+        );
       default:
         throw new Error(`Unknown config source type: ${(source as any).type}`);
     }
@@ -324,9 +325,7 @@ async function loadUserAssistantWithFallback(
         organizationId,
         apiClient,
       );
-      if (injectedConfig?.block) {
-        apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-      }
+      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
     }
 
     return apiConfig;
@@ -386,9 +385,7 @@ async function loadDefaultAgent(
       organizationId,
       apiClient,
     );
-    if (injectedConfig?.block) {
-      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-    }
+    apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
   }
 
   return apiConfig;
@@ -399,13 +396,13 @@ export async function unrollPackageIdentifiersAsConfigYaml(
   accessToken: string | null,
   organizationId: string | null,
   apiClient: DefaultApiInterface,
-): Promise<{ block: AssistantUnrolled | undefined } | null> {
+): Promise<AssistantUnrolled> {
   const unrollResult = await unrollAssistantFromContent(
     {
       uriType: "file",
       fileUri: "",
     },
-    "name: FILLER\nschema: v1\nversion: 0.0.1",
+    "name: Agent\nschema: v1\nversion: 0.0.1",
     new RegistryClient({
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
@@ -420,16 +417,17 @@ export async function unrollPackageIdentifiersAsConfigYaml(
       injectBlocks: packageIdentifiers,
     },
   );
-  if (!unrollResult?.config) {
+  if (unrollResult.errors) {
     const fatalError = unrollResult.errors?.find((e) => e.fatal);
     if (fatalError) {
-      throw new Error(`Error(s) unrolling package: ${fatalError.message}`);
+      throw new Error(`Failed to load config: ${fatalError.message}`);
     }
   }
+  if (!unrollResult?.config) {
+    throw new Error(`Failed to load config`);
+  }
 
-  return {
-    block: unrollResult?.config,
-  };
+  return unrollResult.config;
 }
 
 async function unrollAssistantWithConfig(
@@ -546,9 +544,7 @@ async function loadAssistantSlug(
       organizationId,
       apiClient,
     );
-    if (injectedConfig?.block) {
-      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-    }
+    apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
   }
 
   return apiConfig;

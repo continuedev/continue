@@ -68,11 +68,9 @@ describe("ConfigService", () => {
     vi.mocked(
       configLoader.unrollPackageIdentifiersAsConfigYaml,
     ).mockResolvedValue({
-      block: {
-        name: "default-chat-model",
-        version: "1.0.0",
-        models: [defaultModel],
-      },
+      name: "default-chat-model",
+      version: "1.0.0",
+      models: [defaultModel],
     });
   });
 
@@ -520,11 +518,9 @@ describe("ConfigService", () => {
       vi.mocked(
         configLoader.unrollPackageIdentifiersAsConfigYaml,
       ).mockResolvedValue({
-        block: {
-          name: "default",
-          version: "1.0.0",
-          models: [defaultModel],
-        },
+        name: "default",
+        version: "1.0.0",
+        models: [defaultModel],
       });
 
       const result = await service.addDefaultChatModelIfNone(
@@ -616,11 +612,9 @@ describe("ConfigService", () => {
       vi.mocked(
         configLoader.unrollPackageIdentifiersAsConfigYaml,
       ).mockResolvedValue({
-        block: {
-          name: "default",
-          version: "1.0.0",
-          models: [defaultModel],
-        },
+        name: "default",
+        version: "1.0.0",
+        models: [defaultModel],
       });
 
       const result = await service.addDefaultChatModelIfNone(
@@ -643,11 +637,9 @@ describe("ConfigService", () => {
       vi.mocked(
         configLoader.unrollPackageIdentifiersAsConfigYaml,
       ).mockResolvedValue({
-        block: {
-          name: "default",
-          version: "1.0.0",
-          models: [defaultModel],
-        },
+        name: "default",
+        version: "1.0.0",
+        models: [defaultModel],
       });
 
       const result = await service.addDefaultChatModelIfNone(
@@ -695,11 +687,9 @@ describe("ConfigService", () => {
       vi.mocked(
         configLoader.unrollPackageIdentifiersAsConfigYaml,
       ).mockResolvedValue({
-        block: {
-          name: "default",
-          version: "1.0.0",
-          models: [], // Empty models array
-        },
+        name: "default",
+        version: "1.0.0",
+        models: [], // Empty models array
       });
 
       await expect(
@@ -724,11 +714,9 @@ describe("ConfigService", () => {
       vi.mocked(
         configLoader.unrollPackageIdentifiersAsConfigYaml,
       ).mockResolvedValue({
-        block: {
-          name: "default",
-          version: "1.0.0",
-          models: [defaultModel],
-        },
+        name: "default",
+        version: "1.0.0",
+        models: [defaultModel],
       });
 
       const result = await service.addDefaultChatModelIfNone(

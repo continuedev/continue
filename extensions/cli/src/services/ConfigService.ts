@@ -228,7 +228,7 @@ export class ConfigService
           authConfig?.organizationId ?? null,
           apiClient,
         );
-        const defaultModel = modelConfig?.block?.models?.[0];
+        const defaultModel = modelConfig?.models?.[0];
         if (!defaultModel) {
           throw new Error("Loaded default model contained no model block");
         }
