@@ -61,10 +61,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
-    return;
-  }
-
   isWorkspaceRemote(): Promise<boolean> {
     return Promise.resolve(false);
   }

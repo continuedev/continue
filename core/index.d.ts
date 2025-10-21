@@ -884,9 +884,6 @@ export interface IDE {
   getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
   getReferences(location: Location): Promise<RangeInFile[]>;
   getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
-
-  // Callbacks
-  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
 }
 
 // Slash Commands

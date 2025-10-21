@@ -535,6 +535,7 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidOpenTextDocument(async (event) => {
+      console.log("DID OPEN TEXT DOCUMENT");
       const ast = await getAst(event.fileName, event.getText());
       if (ast) {
         DocumentHistoryTracker.getInstance().addDocument(
@@ -634,8 +635,12 @@ export class VsCodeExtension {
     );
     context.subscriptions.push(linkProvider);
 
-    this.ide.onDidChangeActiveTextEditor((filepath) => {
-      void this.core.invoke("files/opened", { uris: [filepath] });
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        this.core.invoke("files/opened", {
+          uris: [editor.document.uri.toString()],
+        });
+      }
     });
 
     // initializes openedFileLruCache with files that are already open when the extension is activated

@@ -746,9 +746,6 @@ declare global {
     getSignatureHelp(location: Location): Promise<SignatureHelp | null>;
     getReferences(location: Location): Promise<RangeInFile[]>;
     getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
-  
-    // Callbacks
-    onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
   }
   
   // Slash Commands

@@ -22,6 +22,8 @@ export class HelperVars {
   private _fileLines: string[] | undefined;
   private _fullPrefix: string | undefined;
   private _fullSuffix: string | undefined;
+  private _fullSuffixLines: string[] | undefined;
+  private _fullPrefixLines: string[] | undefined;
   private _prunedPrefix: string | undefined;
   private _prunedSuffix: string | undefined;
 
@@ -53,9 +55,11 @@ export class HelperVars {
       this.input,
       this._fileLines,
     );
+    this._fullPrefixLines = prefixLines;
     const fullPrefix = prefixLines.join("\n");
     this._fullPrefix = fullPrefix;
 
+    this._fullSuffixLines = suffixLines;
     const fullSuffix = suffixLines.join("\n");
     this._fullSuffix = fullSuffix;
 
@@ -135,6 +139,24 @@ export class HelperVars {
       );
     }
     return this._fileContents;
+  }
+
+  get fullSuffixLines(): string[] {
+    if (this._fullSuffixLines === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullSuffixLines",
+      );
+    }
+    return this.fullSuffixLines;
+  }
+
+  get fullPrefixLines(): string[] {
+    if (this._fullPrefixLines === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullPrefixLines",
+      );
+    }
+    return this._fullPrefixLines;
   }
 
   get fileLines(): string[] {

@@ -58,7 +58,6 @@ export class RecentlyVisitedRangesService {
   private cacheCurrentSelectionContext = async (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
-    console.log("changed");
     let securityCheck = this.securityChecks.get(
       event.textEditor.document.fileName,
     );

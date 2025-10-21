@@ -137,14 +137,6 @@ class VsCodeIde implements IDE {
     return result;
   }
 
-  onDidChangeActiveTextEditor(callback: (uri: string) => void): void {
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-        callback(editor.document.uri.toString());
-      }
-    });
-  }
-
   showToast: IDE["showToast"] = async (...params) => {
     const [type, message, ...otherParams] = params;
     const { showErrorMessage, showWarningMessage, showInformationMessage } =

@@ -64,10 +64,6 @@ export class MessageIde implements IDE {
     return this.request("getDocumentSymbols", { textDocumentIdentifier });
   }
 
-  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
-    this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
-  }
-
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
