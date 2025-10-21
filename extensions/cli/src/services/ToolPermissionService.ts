@@ -1,5 +1,4 @@
-import { parseAgentFileTools } from "@continuedev/config-yaml";
-
+import { ALL_BUILT_IN_TOOLS } from "src/tools/index.js";
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
 import {
@@ -11,7 +10,11 @@ import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { AgentFileServiceState, SERVICE_NAMES } from "./types.js";
+import {
+  AgentFileServiceState,
+  MCPServiceState,
+  SERVICE_NAMES,
+} from "./types.js";
 
 export interface InitializeToolServiceOverrides {
   allow?: string[];
@@ -61,7 +64,7 @@ export class ToolPermissionService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AGENT_FILE];
+    return [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP];
   }
 
   /**
@@ -69,47 +72,72 @@ export class ToolPermissionService
    */
   private generateAgentFilePolicies(
     agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
   ): undefined | ToolPermissionPolicy[] {
-    if (!agentFileServiceState?.agentFile?.tools) {
+    const parsedTools = agentFileServiceState?.parsedTools;
+    if (!parsedTools?.tools.length) {
       return undefined;
     }
 
-    const parsedTools = parseAgentFileTools(
-      agentFileServiceState.agentFile.tools,
-    );
-    if (parsedTools.tools.length === 0) {
-      return undefined;
-    }
     const policies: ToolPermissionPolicy[] = [];
+    const servers = mcpServiceState?.connections?.values() ?? [];
+    for (const mcpServer of parsedTools.mcpServers) {
+      const server = servers?.find(
+        (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
+      );
+      if (!server) {
+        console.warn("No connected MCP server found ");
+        continue;
+      }
 
-    for (const toolRef of parsedTools.tools) {
-      if (toolRef.mcpServer) {
-        if (toolRef.toolName) {
-          policies.push({
-            tool: `mcp:${toolRef.mcpServer}:${toolRef.toolName}`,
-            permission: "allow",
-          });
-        } else {
-          policies.push({
-            tool: `mcp:${toolRef.mcpServer}:*`,
-            permission: "allow",
-          });
-        }
-      } else if (toolRef.toolName) {
-        policies.push({ tool: toolRef.toolName, permission: "allow" });
+      const specificTools = parsedTools.tools.filter(
+        (t) => t.mcpServer && t.toolName && t.mcpServer === mcpServer,
+      );
+      // If ANY mcp tools are specifically called out, only allow those ones for that mcp server
+      if (specificTools.length) {
+        const specificSet = new Set(specificTools.map((t) => t.toolName));
+        const notMentioned = server.tools.filter(
+          (t) => !specificSet.has(t.name),
+        );
+        const allowed: ToolPermissionPolicy[] = specificTools.map((t) => ({
+          tool: t.toolName!,
+          permission: "allow",
+        }));
+        policies.push(...allowed);
+        const disallowed: ToolPermissionPolicy[] = notMentioned.map((t) => ({
+          tool: t.name,
+          permission: "exclude",
+        }));
+        policies.push(...disallowed);
       }
     }
 
-    if (policies.length > 0) {
-      logger.debug(`Generated ${policies.length} agent file tool policies`);
+    const hasMcp = !!parsedTools.mcpServers?.length;
+    const specificBuiltIns = parsedTools.tools
+      .filter((t) => !t.mcpServer)
+      .map((t) => t.toolName!);
+    if (specificBuiltIns.length || (hasMcp && !parsedTools.allBuiltIn)) {
+      const allowed: ToolPermissionPolicy[] = specificBuiltIns.map((tool) => ({
+        tool,
+        permission: "allow",
+      }));
+      policies.push(...allowed);
+      const specificBuiltInSet = new Set(specificBuiltIns);
+      const notMentioned = ALL_BUILT_IN_TOOLS.map((t) => t.name).filter(
+        (name) => !specificBuiltInSet.has(name),
+      );
+      const disallowed: ToolPermissionPolicy[] = notMentioned.map((tool) => ({
+        tool,
+        permission: "exclude",
+      }));
+      policies.push(...disallowed);
     }
 
-    if (parsedTools.allBuiltIn) {
-      policies.push({ tool: "*", permission: "allow" });
-      policies.push({ tool: "mcp:*", permission: "exclude" });
-    } else {
-      policies.push({ tool: "*", permission: "exclude" });
-    }
+    // Allow all other tools
+    policies.push({
+      tool: "*",
+      permission: "allow",
+    });
 
     return policies;
   }
@@ -121,32 +149,15 @@ export class ToolPermissionService
     switch (this.currentState.currentMode) {
       case "plan":
         // Plan mode: Complete override - exclude all write operations, allow only reads and bash
+        // TODO - RECONSIDER bash and MCP, maybe fall back to user settings for those
         return [
           // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
-          // Allow all read tools and bash
-          { tool: "Bash", permission: "allow" },
-          { tool: "Read", permission: "allow" },
-          { tool: "List", permission: "allow" },
-          { tool: "Search", permission: "allow" },
-          { tool: "Fetch", permission: "allow" },
-          { tool: "Diff", permission: "allow" },
-          { tool: "Checklist", permission: "allow" },
-          { tool: "NotebookRead", permission: "allow" },
-          { tool: "LS", permission: "allow" },
-          { tool: "Glob", permission: "allow" },
-          { tool: "Grep", permission: "allow" },
-          { tool: "WebFetch", permission: "allow" },
-          { tool: "WebSearch", permission: "allow" },
-          // Allow MCP tools (no way to know if they're read only but shouldn't disable mcp usage in plan)
-          { tool: "mcp:*", permission: "allow" },
-          // Default: exclude everything else to ensure no writes
-          { tool: "*", permission: "exclude" },
+          { tool: "*", permission: "allow" },
         ];
-
       case "auto":
         // Auto mode: Complete override - allow everything without asking
         return [{ tool: "*", permission: "allow" }];
@@ -165,6 +176,7 @@ export class ToolPermissionService
   initializeSync(
     runtimeOverrides?: InitializeToolServiceOverrides,
     agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
   ): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService");
 
@@ -180,6 +192,7 @@ export class ToolPermissionService
 
     const agentFilePolicies = this.generateAgentFilePolicies(
       agentFileServiceState,
+      mcpServiceState,
     );
     const modePolicies = this.generateModePolicies();
 
@@ -224,11 +237,16 @@ export class ToolPermissionService
   async doInitialize(
     runtimeOverrides?: InitializeToolServiceOverrides,
     agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
   ): Promise<ToolPermissionServiceState> {
     await ensurePermissionsYamlExists();
 
     // Use the synchronous version after ensuring the file exists
-    return this.initializeSync(runtimeOverrides, agentFileServiceState);
+    return this.initializeSync(
+      runtimeOverrides,
+      agentFileServiceState,
+      mcpServiceState,
+    );
   }
 
   /**

@@ -23,6 +23,47 @@
             "pages": ["index"]
           },
           {
+            "group": "Hub",
+            "icon": "globe",
+            "pages": [
+              "hub/introduction",
+              {
+                "group": "Configs",
+                "icon": "robot",
+                "pages": [
+                  "hub/configs/intro",
+                  "hub/configs/use-a-config",
+                  "hub/configs/create-a-config",
+                  "hub/configs/edit-a-config"
+                ]
+              },
+              {
+                "group": "Governance",
+                "icon": "building",
+                "pages": [
+                  "hub/governance/creating-an-org",
+                  "hub/governance/org-permissions",
+                  "hub/governance/pricing"
+                ]
+              },
+              {
+                "group": "Secrets",
+                "icon": "key",
+                "pages": [
+                  "hub/secrets/secret-types",
+                  "hub/secrets/secret-resolution"
+                ]
+              },
+              {
+                "group": "Agents",
+                "icon": "cloud",
+                "pages": ["hub/agents/intro"]
+              },
+              "hub/sharing",
+              "hub/source-control"
+            ]
+          },
+          {
             "group": "CLI",
             "icon": "terminal",
             "pages": [
@@ -90,6 +131,7 @@
           {
             "group": "Customization",
             "icon": "sliders",
+            "expanded": false,
             "pages": [
               "customization/overview",
               "customization/models",
@@ -102,6 +144,7 @@
           {
             "group": "Help",
             "icon": "book-open",
+            "expanded": false,
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
@@ -182,52 +225,6 @@
                 ]
               },
               "customize/telemetry"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Hub",
-        "groups": [
-          {
-            "group": "Hub",
-            "pages": [
-              "hub/introduction",
-              {
-                "group": "Configs",
-                "icon": "robot",
-                "pages": [
-                  "hub/configs/intro",
-                  "hub/configs/use-a-config",
-                  "hub/configs/create-a-config",
-                  "hub/configs/edit-a-config"
-                ]
-              },
-
-              {
-                "group": "Governance",
-                "icon": "building",
-                "pages": [
-                  "hub/governance/creating-an-org",
-                  "hub/governance/org-permissions",
-                  "hub/governance/pricing"
-                ]
-              },
-              {
-                "group": "Secrets",
-                "icon": "key",
-                "pages": [
-                  "hub/secrets/secret-types",
-                  "hub/secrets/secret-resolution"
-                ]
-              },
-              {
-                "group": "Workflows",
-                "icon": "cloud",
-                "pages": ["hub/workflows/intro"]
-              },
-              "hub/sharing",
-              "hub/source-control"
             ]
           }
         ]
@@ -1242,10 +1239,6 @@
     {
       "source": "/hub/assistants/edit-an-assistant",
       "destination": "/hub/configs/edit-a-config"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/configs/intro"
     },
     {
       "source": "/hub/agents/use-an-agent",

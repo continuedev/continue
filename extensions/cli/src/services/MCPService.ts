@@ -52,7 +52,7 @@ export class MCPService
   private isShuttingDown = false;
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG];
   }
   constructor() {
     super("MCPService", {
