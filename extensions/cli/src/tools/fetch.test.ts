@@ -136,14 +136,15 @@ describe("fetchTool", () => {
   });
 
   it("should have correct tool metadata", () => {
-    expect(fetchTool.name).toBe("Fetch");
+    expect(fetchTool.type).toBe("function");
+    expect(fetchTool.function.name).toBe("Fetch");
     expect(fetchTool.displayName).toBe("Fetch");
-    expect(fetchTool.description).toBe(
+    expect(fetchTool.function.description).toBe(
       "Fetches content from a URL, converts to markdown, and handles long content with truncation",
     );
     expect(fetchTool.readonly).toBe(true);
     expect(fetchTool.isBuiltIn).toBe(true);
-    expect(fetchTool.parameters).toEqual({
+    expect(fetchTool.function.parameters).toEqual({
       type: "object",
       required: ["url"],
       properties: {

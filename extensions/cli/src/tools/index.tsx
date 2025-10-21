@@ -110,7 +110,7 @@ export function getAllBuiltinTools(): Tool[] {
   // Apply capability-based filtering for edit tools
   // If model is capable, exclude editTool in favor of multiEditTool
   if (shouldExcludeEditTool()) {
-    builtinTools = builtinTools.filter((tool) => tool.name !== editTool.name);
+    builtinTools = builtinTools.filter((tool) => tool.function.name !== editTool.function.name);
     logger.debug(
       "Excluded Edit tool for capable model - MultiEdit will be used instead",
     );
@@ -121,7 +121,7 @@ export function getAllBuiltinTools(): Tool[] {
 
 export function getToolDisplayName(toolName: string): string {
   const allTools = getAllBuiltinTools();
-  const tool = allTools.find((t) => t.name === toolName);
+  const tool = allTools.find((t) => t.function.name === toolName);
   return tool?.displayName || toolName;
 }
 
@@ -158,17 +158,20 @@ export async function getAvailableTools() {
   const tools = mcpState.tools ?? [];
   const mcpTools: Tool[] =
     tools.map((t) => ({
-      name: t.name,
-      displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-      description: t.description ?? "",
-      parameters: {
-        type: "object",
-        properties: (t.inputSchema.properties ?? {}) as Record<
-          string,
-          ParameterSchema
-        >,
-        required: t.inputSchema.required,
+      type: "function",
+      function: {
+        name: t.name,
+        description: t.description ?? "",
+        parameters: {
+          type: "object",
+          properties: (t.inputSchema.properties ?? {}) as Record<
+            string,
+            ParameterSchema
+          >,
+          required: t.inputSchema.required,
+        },
       },
+      displayName: t.name.replace("mcp__", "").replace("ide__", ""),
       readonly: undefined, // MCP tools don't have readonly property
       isBuiltIn: false,
       run: async (args: any) => {
@@ -246,8 +249,8 @@ export async function executeToolCall(
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.function.parameters.required ?? [];
+  for (const [paramName] of Object.entries(tool.function.parameters)) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||

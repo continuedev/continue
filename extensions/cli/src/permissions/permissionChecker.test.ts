@@ -601,13 +601,16 @@ describe("Permission Checker", () => {
   describe("Hybrid Permission Model with Dynamic Evaluation", () => {
     // Mock the runTerminalCommand tool with evaluateToolCallPolicy
     const mockBashTool = {
-      name: "Bash",
-      displayName: "Bash",
-      description: "Execute bash commands",
-      parameters: {
-        type: "object" as const,
-        properties: {},
+      type: "function" as const,
+      function: {
+        name: "Bash",
+        description: "Execute bash commands",
+        parameters: {
+          type: "object" as const,
+          properties: {},
+        },
       },
+      displayName: "Bash",
       isBuiltIn: true,
       evaluateToolCallPolicy: vi.fn(),
       run: vi.fn(),
@@ -882,13 +885,16 @@ describe("Permission Checker", () => {
       it("should handle tools without dynamic evaluation", () => {
         // Mock a Read tool without evaluateToolCallPolicy
         const mockReadTool = {
-          name: "Read",
-          displayName: "Read",
-          description: "Read files",
-          parameters: {
-            type: "object" as const,
-            properties: {},
+          type: "function" as const,
+          function: {
+            name: "Read",
+            description: "Read files",
+            parameters: {
+              type: "object" as const,
+              properties: {},
+            },
           },
+          displayName: "Read",
           isBuiltIn: true,
           run: vi.fn(),
           // No evaluateToolCallPolicy

@@ -55,7 +55,7 @@ export async function handleHeadlessPermission(
   toolCall: PreprocessedToolCall,
 ): Promise<never> {
   const allBuiltinTools = getAllBuiltinTools();
-  const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
+  const tool = allBuiltinTools.find((t) => t.function.name === toolCall.name);
   const toolName = tool?.displayName || toolCall.name;
 
   // Import safeStderr to bypass console blocking in headless mode
@@ -334,7 +334,7 @@ export async function preprocessStreamedToolCalls(
   for (const toolCall of toolCalls) {
     const startTime = Date.now();
     try {
-      const tool = availableTools.find((t) => t.name === toolCall.name);
+      const tool = availableTools.find((t) => t.function.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool ${toolCall.name} not found`);
       }

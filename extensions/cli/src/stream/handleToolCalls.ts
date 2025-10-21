@@ -178,7 +178,7 @@ export async function handleToolCalls(
 export async function getAllTools() {
   // Get all available tool names
   const allBuiltinTools = getAllBuiltinTools();
-  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
+  const builtinToolNames = allBuiltinTools.map((tool) => tool.function.name);
 
   let mcpTools: MCPTool[] = [];
   let mcpToolNames: string[] = [];
@@ -223,18 +223,18 @@ export async function getAllTools() {
 
   // Filter builtin tools
   const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name),
+    allowedToolNamesSet.has(tool.function.name),
   );
 
   const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
     type: "function" as const,
     function: {
-      name: tool.name,
-      description: tool.description,
+      name: tool.function.name,
+      description: tool.function.description,
       parameters: {
         type: "object",
-        required: tool.parameters.required,
-        properties: tool.parameters.properties,
+        required: tool.function.parameters.required,
+        properties: tool.function.parameters.properties,
       },
     },
   }));

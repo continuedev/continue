@@ -27,12 +27,11 @@ export interface MultiEditArgs {
 }
 
 export const multiEditTool: Tool = {
-  name: "MultiEdit",
-  displayName: "MultiEdit",
-  readonly: false,
-  isBuiltIn: true,
-  description: `Use this tool to make multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently. 
-Prefer this tool over the ${editTool.name} tool when you need to make multiple edits to the same file.
+  type: "function",
+  function: {
+    name: "MultiEdit",
+    description: `Use this tool to make multiple edits to a single file in one operation. It allows you to perform multiple find-and-replace operations efficiently. 
+Prefer this tool over the ${editTool.function.name} tool when you need to make multiple edits to the same file.
 
 To make multiple edits to a file, provide the following:
 1. file_path: The absolute path to the file to modify. Relative paths can also be used (resolved against cwd) but absolute is preferred
@@ -49,7 +48,7 @@ IMPORTANT:
 - This tool is ideal when you need to make several changes to different parts of the same file
 
 CRITICAL REQUIREMENTS:
-1. ALWAYS use the ${readFileTool.name} tool just before making edits, to understand the file's up-to-date contents and context
+1. ALWAYS use the ${readFileTool.function.name} tool just before making edits, to understand the file's up-to-date contents and context
 2. When making edits:
 - Ensure all edits result in idiomatic, correct code
 - Do not leave the code in a broken state
@@ -62,46 +61,50 @@ WARNINGS:
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
 - The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
-- The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session
+- The tool will fail if you have not used the ${readFileTool.function.name} tool to read the file in this session
 - The tool will fail if the file does not exist - it cannot create new files
 - This tool cannot create new files - the file must already exist`,
-  parameters: {
-    type: "object",
-    required: ["file_path", "edits"],
-    properties: {
-      file_path: {
-        type: "string",
-        description:
-          "Absolute or relative path to the file to modify. Absolute preferred",
-      },
-      edits: {
-        type: "array",
-        description:
-          "Array of edit operations to perform sequentially on the file",
-        items: {
-          type: "object",
-          required: ["old_string", "new_string"],
-          properties: {
-            old_string: {
-              type: "string",
-              description:
-                "The text to replace (exact match including whitespace/indentation)",
-            },
-            new_string: {
-              type: "string",
-              description:
-                "The text to replace it with. MUST be different than old_string.",
-            },
-            replace_all: {
-              type: "boolean",
-              description:
-                "Replace all occurrences of old_string (default false) in the file",
+    parameters: {
+      type: "object",
+      required: ["file_path", "edits"],
+      properties: {
+        file_path: {
+          type: "string",
+          description:
+            "Absolute or relative path to the file to modify. Absolute preferred",
+        },
+        edits: {
+          type: "array",
+          description:
+            "Array of edit operations to perform sequentially on the file",
+          items: {
+            type: "object",
+            required: ["old_string", "new_string"],
+            properties: {
+              old_string: {
+                type: "string",
+                description:
+                  "The text to replace (exact match including whitespace/indentation)",
+              },
+              new_string: {
+                type: "string",
+                description:
+                  "The text to replace it with. MUST be different than old_string.",
+              },
+              replace_all: {
+                type: "boolean",
+                description:
+                  "Replace all occurrences of old_string (default false) in the file",
+              },
             },
           },
         },
       },
     },
   },
+  displayName: "MultiEdit",
+  readonly: false,
+  isBuiltIn: true,
   preprocess: async (args) => {
     const { resolvedPath } = validateAndResolveFilePath(args);
 
