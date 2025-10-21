@@ -147,7 +147,7 @@ export class HelperVars {
         "HelperVars must be initialized before accessing fullSuffixLines",
       );
     }
-    return this.fullSuffixLines;
+    return this._fullSuffixLines;
   }
 
   get fullPrefixLines(): string[] {
