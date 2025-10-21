@@ -21,7 +21,6 @@ export async function getAgentOptions(
     timeout,
     sessionTimeout: timeout,
     keepAlive: true,
-    keepAliveMsecs: timeout,
   };
 
   // Handle ClientCertificateOptions
