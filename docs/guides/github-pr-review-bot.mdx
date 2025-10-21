@@ -8,14 +8,14 @@ sidebarTitle: "Pull Request Review Bot"
   An automated pull request review system that:
   - Reviews code automatically when pull requests open or update
   - Applies your team's custom rules and standards
-  - Runs entirely in GitHub Actions (your code never leaves your repo)
+  - Runs in your GitHub Actions runner (code is sent directly to your configured LLM)
   - Posts actionable feedback as pull request comments
   - Responds to interactive review requests
 </Card>
 
 ## Why This Approach?
 
-**Privacy-First** - Unlike SaaS review tools, your code analysis happens in your GitHub Actions runner. Your code never leaves your infrastructure.
+**Privacy-First** - The Continue CLI runs in your GitHub Actions runner and sends code directly to your configured LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code - all logs and processing happen in your runner.
 
 **Customizable** - Define team-specific rules in `.continue/rules/` that automatically apply to every pull request.
 
@@ -33,16 +33,16 @@ Before starting, ensure you have:
 
 ## Quick Setup (10 Minutes)
 
-### Step 1: Configure Repository Secrets
+### Step 1: Configure Repository Secrets and Variables
 
 Add these to your repository settings (Settings → Secrets and variables → Actions):
 
-**Required:**
+**Required Secrets:**
 - `CONTINUE_API_KEY` - Your Continue API key from [hub.continue.dev](https://hub.continue.dev/settings/api-keys)
 
 **Optional (for better permissions):**
-- `APP_ID` - GitHub App ID (for enhanced API rate limits)
-- `APP_PRIVATE_KEY` - GitHub App private key
+- **Variables** tab: `APP_ID` - GitHub App ID (for enhanced API rate limits)
+- **Secrets** tab: `APP_PRIVATE_KEY` - GitHub App private key
 
 <Accordion title="Setting up a GitHub App (Optional but Recommended)">
   For better rate limits and permissions, create a GitHub App:
@@ -54,7 +54,8 @@ Add these to your repository settings (Settings → Secrets and variables → Ac
      - **Issues**: Write
   3. Generate a private key
   4. Install the app on your repository
-  5. Add `APP_ID` and `APP_PRIVATE_KEY` to repository secrets
+  5. Add `APP_ID` as a repository **variable** (Variables tab)
+  6. Add `APP_PRIVATE_KEY` as a repository **secret** (Secrets tab)
 
   Without a GitHub App, the action will use the default `GITHUB_TOKEN`.
 </Accordion>
@@ -430,7 +431,7 @@ Here's what a typical review comment looks like:
 After completing this setup, you have an **AI-powered code review system** that:
 
 - ✅ **Runs automatically** - Reviews every pull request without manual intervention
-- ✅ **Privacy-first** - Code analysis happens in your GitHub Actions, not external servers
+- ✅ **Privacy-first** - CLI runs in your GitHub Actions runner, code sent directly to your configured LLM
 - ✅ **Customizable** - Team-specific rules apply automatically
 - ✅ **Interactive** - Responds to focused review requests
 - ✅ **Continuous** - Updates reviews as pull requests change
