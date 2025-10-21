@@ -80,7 +80,7 @@ export class ToolPermissionService
     }
 
     const policies: ToolPermissionPolicy[] = [];
-    const servers = mcpServiceState?.connections?.values() ?? [];
+    const servers = Array.from(mcpServiceState?.connections?.values() ?? []);
     for (const mcpServer of parsedTools.mcpServers) {
       const server = servers?.find(
         (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
