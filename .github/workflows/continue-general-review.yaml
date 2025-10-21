@@ -33,5 +33,3 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
           continue-agent: "empty-agent"
-          app-id: ${{ secrets.CONTINUE_APP_ID }}
-          private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
