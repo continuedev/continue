@@ -221,7 +221,7 @@ export class AutocompleteLruCache {
     }
     await this.flush();
     await this.db.close();
+    AutocompleteLruCache.instancePromise = undefined;
   }
 }
-
 export default AutocompleteLruCache;

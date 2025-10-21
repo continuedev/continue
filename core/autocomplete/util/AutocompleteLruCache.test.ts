@@ -1,7 +1,11 @@
 import AutocompleteLruCache from "./AutocompleteLruCache";
 
-// Mock the external dependencies before importing
-jest.mock("async-mutex");
+jest.mock("async-mutex", () => {
+  const acquire = jest.fn().mockResolvedValue(jest.fn());
+  return {
+    Mutex: jest.fn().mockImplementation(() => ({ acquire })),
+  };
+});
 jest.mock("sqlite");
 jest.mock("sqlite3");
 
