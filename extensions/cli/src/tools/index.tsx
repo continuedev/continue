@@ -101,7 +101,8 @@ export async function getAllAvailableTools(
 }
 
 export function getToolDisplayName(toolName: string): string {
-  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
+  const allTools = getAllBuiltinTools();
+  const tool = allTools.find((t) => t.function.name === toolName);
   return tool?.displayName || toolName;
 }
 
@@ -146,6 +147,36 @@ export function convertToolToChatCompletionTool(
     },
   };
 }
+
+export async function getAvailableTools() {
+  // Load MCP tools
+  const mcpState = await serviceContainer.get<MCPServiceState>(
+    SERVICE_NAMES.MCP,
+  );
+  const tools = mcpState.tools ?? [];
+  const mcpTools: Tool[] =
+    tools.map((t) => ({
+      type: "function",
+      function: {
+        name: t.name,
+        description: t.description ?? "",
+        parameters: {
+          type: "object",
+          properties: (t.inputSchema.properties ?? {}) as Record<
+            string,
+            ParameterSchema
+          >,
+          required: t.inputSchema.required,
+        },
+      },
+      displayName: t.name.replace("mcp__", "").replace("ide__", ""),
+      readonly: undefined, // MCP tools don't have readonly property
+      isBuiltIn: false,
+      run: async (args: any) => {
+        const result = await mcpState.mcpService?.runTool(t.name, args);
+        return JSON.stringify(result?.content) ?? "";
+      },
+    })) || [];
 
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
@@ -234,8 +265,8 @@ export async function executeToolCall(
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.function.parameters.required ?? [];
+  for (const [paramName] of Object.entries(tool.function.parameters)) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||

@@ -12,19 +12,22 @@ export function markFileAsRead(filePath: string) {
 }
 
 export const readFileTool: Tool = {
-  name: "Read",
-  displayName: "Read",
-  description: "Read the contents of a file at the specified path",
-  parameters: {
-    type: "object",
-    required: ["filepath"],
-    properties: {
-      filepath: {
-        type: "string",
-        description: "The path to the file to read",
+  type: "function",
+  function: {
+    name: "Read",
+    description: "Read the contents of a file at the specified path",
+    parameters: {
+      type: "object",
+      required: ["filepath"],
+      properties: {
+        filepath: {
+          type: "string",
+          description: "The path to the file to read",
+        },
       },
     },
   },
+  displayName: "Read",
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {

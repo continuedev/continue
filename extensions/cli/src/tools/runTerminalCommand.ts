@@ -29,22 +29,25 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
 }
 
 export const runTerminalCommandTool: Tool = {
-  name: "Bash",
-  displayName: "Bash",
-  description: `Executes a terminal command and returns the output
+  type: "function",
+  function: {
+    name: "Bash",
+    description: `Executes a terminal command and returns the output
 
 Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 `,
-  parameters: {
-    type: "object",
-    required: ["command"],
-    properties: {
-      command: {
-        type: "string",
-        description: "The command to execute in the terminal.",
+    parameters: {
+      type: "object",
+      required: ["command"],
+      properties: {
+        command: {
+          type: "string",
+          description: "The command to execute in the terminal.",
+        },
       },
     },
   },
+  displayName: "Bash",
   readonly: false,
   isBuiltIn: true,
   evaluateToolCallPolicy: (

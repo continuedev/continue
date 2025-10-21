@@ -32,10 +32,14 @@ export interface PreprocessToolCallResult {
 }
 
 export interface Tool {
-  name: string;
+  type: "function";
+  function: {
+    name: string;
+    type?: string;
+    description?: string;
+    parameters: ToolParametersSchema;
+  };
   displayName: string;
-  description: string;
-  parameters: ToolParametersSchema;
   preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
   run: (args: any) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly

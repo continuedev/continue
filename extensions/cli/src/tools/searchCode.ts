@@ -10,27 +10,30 @@ const execPromise = util.promisify(child_process.exec);
 const DEFAULT_MAX_RESULTS = 100;
 
 export const searchCodeTool: Tool = {
-  name: "Search",
-  displayName: "Search",
-  description: "Search the codebase using ripgrep (rg) for a specific pattern",
-  parameters: {
-    type: "object",
-    required: ["pattern"],
-    properties: {
-      pattern: {
-        type: "string",
-        description: "The search pattern to look for",
-      },
-      path: {
-        type: "string",
-        description: "The path to search in (defaults to current directory)",
-      },
-      file_pattern: {
-        type: "string",
-        description: "Optional file pattern to filter results (e.g., '*.ts')",
+  type: "function",
+  function: {
+    name: "Search",
+    description: "Search the codebase using ripgrep (rg) for a specific pattern",
+    parameters: {
+      type: "object",
+      required: ["pattern"],
+      properties: {
+        pattern: {
+          type: "string",
+          description: "The search pattern to look for",
+        },
+        path: {
+          type: "string",
+          description: "The path to search in (defaults to current directory)",
+        },
+        file_pattern: {
+          type: "string",
+          description: "Optional file pattern to filter results (e.g., '*.ts')",
+        },
       },
     },
   },
+  displayName: "Search",
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
