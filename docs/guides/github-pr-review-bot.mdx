@@ -15,11 +15,22 @@ sidebarTitle: "Pull Request Review Bot"
 
 ## Why This Approach?
 
-**Privacy-First** - The Continue CLI runs in your GitHub Actions runner and sends code directly to your configured LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code - all logs and processing happen in your runner.
+<CardGroup cols={3}>
+  <Card title="Privacy-First" icon="shield">
+    The Continue CLI runs in your GitHub Actions runner and sends code directly to your configured LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code - all logs and processing happen in your runner.
 
-**Customizable** - Define team-specific rules in `.continue/rules/` that automatically apply to every pull request.
+  </Card>
 
-**Powered by Continue** - Leverage Continue's AI agent for intelligent, context-aware reviews with full control over your configuration.
+  <Card title="Customizable" icon="sliders">
+    Define team-specific rules in `.continue/rules/` that automatically apply to every pull request.
+
+  </Card>
+
+  <Card title="Context Awareness" icon="robot">
+    Leverage Continue's AI agent for intelligent, context-aware reviews with full control over your configuration.
+
+  </Card>
+</CardGroup>
 
 ## Prerequisites
 
