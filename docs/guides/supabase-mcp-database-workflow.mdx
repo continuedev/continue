@@ -242,29 +242,54 @@ Use Continue CLI to perform intelligent database analysis. Enter these prompts i
     ```
   </Tab>
 
-  <Tab title="Query Optimization">
+  <Tab title="RLS Security Audit">
     **Prompt:**
     ```
-    Help me optimize this query for better performance:
-    [paste your slow query here]
+    Perform a comprehensive RLS (Row Level Security) audit on my Supabase database:
     
-    Provide:
-    - Execution plan analysis
-    - Index recommendations
-    - Query rewrite suggestions
-    - Estimated performance improvement
+    For each table:
+    - Check if RLS is enabled
+    - List all existing RLS policies
+    - Identify tables without any RLS policies (security risk)
+    - Find overly permissive policies (e.g., allowing all operations)
+    - Suggest missing policies based on common patterns
+    - Generate SQL to fix identified security issues
+    
+    Prioritize findings by risk level:
+    1. Critical: Tables with sensitive data but no RLS
+    2. High: Overly permissive policies
+    3. Medium: Missing common policies (e.g., users can only see own data)
+    4. Low: Policy optimization opportunities
     ```
   </Tab>
 
-  <Tab title="Data Insights">
+  <Tab title="Fix RLS Policies">
     **Prompt:**
     ```
-    Analyze the data in my 'users' and 'posts' tables:
-    - User growth trends over time
-    - Most active users by post count
-    - Publishing patterns (draft vs published)
-    - Data quality issues (nulls, duplicates)
-    - Interesting correlations in the data
+    Based on the RLS audit, generate SQL migrations to fix all security issues:
+    
+    1. Enable RLS on all tables that don't have it:
+       - Include ALTER TABLE statements
+       - Add comment explaining why RLS is needed
+    
+    2. Create secure default policies for common patterns:
+       - Users can only read/update their own records
+       - Admins have full access (with role checking)
+       - Public read-only access where appropriate
+       - Proper INSERT policies for new records
+    
+    3. Fix overly permissive policies:
+       - Replace 'true' conditions with proper checks
+       - Add user_id or role-based restrictions
+       - Include USING clauses for read operations
+       - Include WITH CHECK clauses for write operations
+    
+    4. For each policy, include:
+       - Clear naming convention (e.g., 'users_select_own')
+       - Comments explaining the security model
+       - Rollback statements
+    
+    Generate the complete migration file with all fixes.
     ```
   </Tab>
 </Tabs>
@@ -282,21 +307,43 @@ Use Continue CLI to perform intelligent database analysis. Enter these prompts i
 
 Create and apply database migrations based on AI recommendations. Enter this prompt in the Continue CLI TUI:
 
-**Prompt:**
-```
-Based on the database analysis, generate SQL migrations to:
-1. Add missing indexes for foreign keys
-2. Create composite indexes for common query patterns
-3. Add check constraints for data validation
-4. Update RLS policies for better security
-5. Create database functions for complex operations
+**Example: Complete RLS Security Fix**
 
-For each migration:
-- Provide the SQL code
-- Explain the performance or security benefit
-- Include rollback statements
-- Add comments for documentation
 ```
+I need to secure my Supabase database. Please:
+
+1. First, audit all tables for RLS security issues
+2. Generate a complete migration to fix all issues found
+3. Create a security report I can share with my team
+
+Here's what I need fixed:
+- Enable RLS on all tables
+- Create policies so users can only access their own data
+- Ensure admins (role = 'admin') have full access
+- Add policies for service accounts (role = 'service')
+- Include audit logging for sensitive operations
+
+For the users table specifically:
+- Users can read their own profile
+- Users can update their own profile (except role field)
+- Only admins can view all users
+- Only admins can delete users
+- New users can insert their own record during signup
+
+Generate the complete migration with:
+- All SQL statements
+- Clear policy names and comments
+- Rollback statements
+- A summary of what each policy does
+```
+
+**Expected Output:**
+The AI will generate a complete SQL migration file that:
+- Enables RLS on all tables
+- Creates secure, well-documented policies
+- Follows Supabase security best practices
+- Includes rollback capabilities
+- Provides a security summary for your team
 
 <Tip>
   **Best Practice**: Always review AI-generated migrations before applying them. Test in a development branch first using Supabase's branching feature.
@@ -330,29 +377,34 @@ jobs:
           npm install -g @continuedev/cli
           echo "✅ Continue CLI installed"
 
-      - name: Analyze Database Health
+      - name: Analyze Database Security
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          echo "🔍 Analyzing database health..."
+          echo "🔍 Performing security audit..."
           
-          # Use Continue CLI to analyze database and generate report
-          cn -p "Using Supabase MCP, perform a comprehensive database health check:
-                 1. Check table sizes and growth rates
-                 2. Identify slow queries from the past 24 hours
-                 3. Find tables without proper indexes
-                 4. Review RLS policies for security gaps
-                 5. Check for data integrity issues
-                 6. Analyze connection pool usage
-                 7. Generate a health report with:
-                    - Critical issues requiring immediate attention
-                    - Performance optimization opportunities
-                    - Security recommendations
-                    - Suggested migrations for improvements
-                    - Metrics compared to last check
+          # Use Continue CLI to audit RLS and generate fixes
+          cn -p "Using Supabase MCP, perform a comprehensive RLS security audit:
+                 1. Check all tables for RLS enablement
+                 2. Identify tables with missing or weak RLS policies
+                 3. Find overly permissive policies (e.g., 'true' conditions)
+                 4. Check for common security anti-patterns:
+                    - Missing user_id checks
+                    - No role-based access control
+                    - Unrestricted DELETE operations
+                    - Missing WITH CHECK clauses
+                 5. Generate fixes for all security issues found
+                 6. Create a security report with:
+                    - Critical vulnerabilities (tables without RLS)
+                    - High-risk policies that need immediate fixes
+                    - SQL migrations to fix all issues
+                    - Best practice recommendations
+                    - Compliance checklist (GDPR, SOC2, etc.)
                  
-                 Format the output as a markdown report suitable for GitHub issues.
-                 If critical issues are found, create a GitHub issue with details."
+                 If critical security issues are found:
+                 - Generate the complete fix migration
+                 - Create a GitHub issue with severity labels
+                 - Tag security team members for review"
 
       - name: Save Health Report
         run: |
