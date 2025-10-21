@@ -58,6 +58,27 @@ interface ToolUseState {
   input: string;
 }
 
+/**
+ * Checks if a model supports the memory tool (Claude 4+ models only)
+ */
+function supportsMemoryTool(modelName: string | undefined): boolean {
+  if (!modelName) {
+    return false;
+  }
+
+  const normalized = modelName.toLowerCase();
+  
+  const supportedModels = [
+    "claude-sonnet-4-5-20250929",      // Claude Sonnet 4.5
+    "claude-sonnet-4-20250514",        // Claude Sonnet 4
+    "claude-haiku-4-5-20251001",       // Claude Haiku 4.5
+    "claude-opus-4-1-20250805",        // Claude Opus 4.1
+    "claude-opus-4-20250514",          // Claude Opus 4
+  ];
+
+  return supportedModels.some(model => normalized.includes(model));
+}
+
 export class BedrockApi implements BaseLlmApi {
   constructor(protected config: BedrockConfig) {
     if (config.env?.accessKeyId || config?.env?.secretAccessKey) {
@@ -249,11 +270,10 @@ export class BedrockApi implements BaseLlmApi {
         // TOOL CALLS
         if (message.tool_calls) {
           for (const toolCall of message.tool_calls) {
-            // Type guard for function tool calls
+            // Type guard for function tool calls (includes special types like memory)
             if (
-              toolCall.type === "function" &&
-              "function" in toolCall &&
               toolCall.id &&
+              "function" in toolCall &&
               toolCall.function?.name
             ) {
               if (availableTools.has(toolCall.function.name)) {
@@ -267,8 +287,10 @@ export class BedrockApi implements BaseLlmApi {
                     ),
                   },
                 });
+                // Only track IDs when we create a toolUse block
                 hasAddedToolCallIds.add(toolCall.id);
               } else {
+                // Tool not in current request, convert to text
                 const toolCallText = `Assistant tool call:\nTool name: ${toolCall.function.name}\nTool Call ID: ${toolCall.id}\nArguments: ${toolCall.function?.arguments ?? "{}"}`;
                 currentBlocks.push({
                   text: toolCallText,
@@ -276,7 +298,7 @@ export class BedrockApi implements BaseLlmApi {
               }
             } else {
               console.warn(
-                `Unsupported tool call type in Bedrock: ${toolCall.type}`,
+                `Unsupported tool call in Bedrock: ${JSON.stringify(toolCall)}`,
               );
             }
           }
@@ -318,6 +340,9 @@ export class BedrockApi implements BaseLlmApi {
   private _convertBody(
     oaiBody: ChatCompletionCreateParams,
   ): ConverseStreamCommandInput {
+    // Note: AWS Bedrock supports parallel tool calls natively through the Converse API.
+    // Unlike OpenAI, there is no explicit parameter to enable/disable parallel tool calls.
+    // The model will automatically handle multiple tool calls in parallel when appropriate.
     // Extract system message
     const systemMessage =
       oaiBody.messages.find((msg) => msg.role === "system")?.content || "";
@@ -334,11 +359,20 @@ export class BedrockApi implements BaseLlmApi {
     // Check for tools
     const availableTools = new Set<string>();
     let toolConfig: ToolConfiguration | undefined = undefined;
+    const isClaudeModel = oaiBody.model.includes("claude");
 
     if (oaiBody.tools && oaiBody.tools.length > 0) {
-      toolConfig = {
-        tools: oaiBody.tools.map((tool) => {
-          // Type guard for function tools
+      // For Claude models, filter out tools with a type property
+      // For other models, include all tools
+      const toolSpecs = oaiBody.tools
+        .filter((tool) => {
+          if (tool.type === "function" && "function" in tool) {
+            // For Claude: exclude tools with a type property, for others: include all
+            return !isClaudeModel || !(tool.function as any).type;
+          }
+          return false;
+        })
+        .map((tool) => {
           if (tool.type === "function" && "function" in tool) {
             return {
               toolSpec: {
@@ -352,16 +386,19 @@ export class BedrockApi implements BaseLlmApi {
           } else {
             throw new Error(`Unsupported tool type in Bedrock: ${tool.type}`);
           }
-        }),
-      } as ToolConfiguration;
+        });
 
-      // Add cache point if needed
-      // if (this.config.cacheBehavior?.cacheSystemMessage) {
-      //   toolConfig!.tools!.push({ cachePoint: { type: "default" } });
-      // }
+      if (toolSpecs.length > 0) {
+        toolConfig = { tools: toolSpecs } as ToolConfiguration;
+        // Add cache point if needed
+        // if (this.config.cacheBehavior?.cacheSystemMessage) {
+        //   toolConfig!.tools!.push({ cachePoint: { type: "default" } });
+        // }
+      }
 
+      // Add all tools to availableTools, including special types like memory_20250818
       oaiBody.tools.forEach((tool) => {
-        if (tool.type === "function" && "function" in tool) {
+        if ("function" in tool && tool.function?.name) {
           availableTools.add(tool.function.name);
         }
       });
@@ -401,17 +438,69 @@ export class BedrockApi implements BaseLlmApi {
       body.toolConfig = toolConfig;
     }
 
-    // Add reasoning if needed
-    // TODO REASONING
-    // if (this.c) {
-    //   body.additionalModelRequestFields = {
-    //     thinking: {
-    //       type: "enabled",
-    //       budget_tokens:
-    //         oaiBody.additionalModelRequestFields.reasoningBudgetTokens,
-    //     },
+    // Add additionalModelRequestFields for Claude models
+    const additionalFields: any = {};
+
+    // Add tools with type property for Claude 4+ models
+    // This includes special tools like memory (type: "memory_20250818") when experimental tools are enabled
+    // Memory tool is only supported on Claude 4+ models
+    if (isClaudeModel && oaiBody.tools && oaiBody.tools.length > 0) {
+      const typedTools = oaiBody.tools
+        .filter(
+          (tool) =>
+            tool.type != "function" &&
+            "function" in tool
+        )
+        .map((tool) => {
+          if (tool.type != "function" && "function" in tool) {
+            const toolType = tool.type as string;
+            const toolName = (tool.function as any).name;
+            
+            // Check if this is a memory tool - only allow for Claude 4+ models
+            if (toolType.startsWith("memory_")) {
+              if (!supportsMemoryTool(oaiBody.model)) {
+                console.warn(
+                  `Bedrock: Memory tool "${toolName}" (${toolType}) is only supported on Claude 4+ models, skipping for model: ${oaiBody.model}`
+                );
+                return null;
+              }
+            }
+            
+            return {
+              name: toolName,
+              type: toolType,
+            };
+          }
+          return null;
+        })
+        .filter((t) => t !== null);
+
+      // Only include tools if there are any (e.g., memory tool when experimental is enabled)
+      if (typedTools.length > 0) {
+        additionalFields.tools = typedTools;
+      }
+    }
+
+    // Add anthropic_beta for Claude models
+    if (isClaudeModel) {
+      additionalFields.anthropic_beta = [
+        "fine-grained-tool-streaming-2025-05-14",
+        "context-management-2025-06-27",
+      ];
+    }
+
+    // TODO: Enable when the backend is ready and reasoning_effort is aligned with
+    // reasoningBudgetTokens somehow?
+    // if (oaiBody.reasoning_effort) {
+    //   additionalFields.thinking = {
+    //     type: "enabled",
+    //     budget_tokens: oaiBody.reasoning_effort,
     //   };
     // }
+
+    if (Object.keys(additionalFields).length > 0) {
+      body.additionalModelRequestFields = additionalFields;
+    }
 
     return body;
   }
@@ -479,6 +568,8 @@ export class BedrockApi implements BaseLlmApi {
       for await (const chunk of response.stream) {
         if (chunk.contentBlockDelta?.delta) {
           const delta: any = chunk.contentBlockDelta.delta;
+          // Use contentBlockIndex to support parallel tool calls
+          const blockIndex = chunk.contentBlockDelta.contentBlockIndex ?? 0;
 
           // Handle text content
           if (delta.text) {
@@ -504,7 +595,7 @@ export class BedrockApi implements BaseLlmApi {
               delta: {
                 tool_calls: [
                   {
-                    index: 0,
+                    index: blockIndex,
                     id: delta.toolUse.toolUseId,
                     type: "function",
                     function: {
@@ -520,6 +611,8 @@ export class BedrockApi implements BaseLlmApi {
 
         if (chunk.contentBlockStart?.start) {
           const start: ContentBlockStart = chunk.contentBlockStart.start;
+          // Use contentBlockIndex to support parallel tool calls
+          const blockIndex = chunk.contentBlockStart.contentBlockIndex ?? 0;
 
           if (start.toolUse) {
             yield chatChunkFromDelta({
@@ -527,7 +620,7 @@ export class BedrockApi implements BaseLlmApi {
               delta: {
                 tool_calls: [
                   {
-                    index: 0,
+                    index: blockIndex,
                     id: start.toolUse.toolUseId,
                     type: "function",
                     function: {

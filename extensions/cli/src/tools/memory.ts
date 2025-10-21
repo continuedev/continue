@@ -75,13 +75,31 @@ async function ensureMemoryRoot(): Promise<string> {
 }
 
 function validatePath(memoryPath: string, memoryRoot: string): string {
-  if (!memoryPath.startsWith(`/${MEMORIES_ROOT_NAME}`)) {
+  if (!memoryPath || typeof memoryPath !== "string") {
+    throw new Error(
+      `Path is required and must be a string, got: ${memoryPath}`,
+    );
+  }
+
+  // Normalize ".", "", or just "memories" to "/memories"
+  let normalizedPath = memoryPath.trim();
+  if (normalizedPath === "." || normalizedPath === "" || normalizedPath === MEMORIES_ROOT_NAME) {
+    normalizedPath = `/${MEMORIES_ROOT_NAME}`;
+  }
+
+  // Add leading slash if missing
+  if (!normalizedPath.startsWith("/")) {
+    normalizedPath = `/${normalizedPath}`;
+  }
+
+  // Ensure path starts with /memories
+  if (!normalizedPath.startsWith(`/${MEMORIES_ROOT_NAME}`)) {
     throw new Error(
       `Path must start with /${MEMORIES_ROOT_NAME}, got: ${memoryPath}`,
     );
   }
 
-  const relative = memoryPath
+  const relative = normalizedPath
     .slice(MEMORIES_ROOT_NAME.length + 1)
     .replace(/^\/+/, "");
   const resolved = path.resolve(memoryRoot, relative.length ? relative : ".");
@@ -325,9 +343,10 @@ async function executeMemoryCommand(args: MemoryArgs): Promise<string> {
 
 export const memoryTool: Tool = {
   name: "memory",
+  type: "memory_20250818",
   displayName: "Memory",
   description:
-    "Interact with persistent /memories storage. Supports view, create, insert, str_replace, delete, and rename commands.",
+    "Anthropic claude memory tool",
   parameters: {
     type: "object",
     required: ["command"],
