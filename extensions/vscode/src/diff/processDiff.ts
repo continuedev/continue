@@ -46,6 +46,7 @@ export async function processDiff(
 
   if (streamId) {
     // Capture file content before save to detect autoformatting
+    console.log(`read file - processDiff preSave - ${newOrCurrentUri}`);
     const preSaveContent = await ide.readFile(newOrCurrentUri);
 
     // Record the edit outcome before updating the apply state
@@ -59,6 +60,7 @@ export async function processDiff(
     await ide.saveFile(newOrCurrentUri);
 
     // Capture file content after save to detect autoformatting
+    console.log(`read file - processDiff postSave - ${newOrCurrentUri}`);
     const postSaveContent = await ide.readFile(newOrCurrentUri);
 
     // Detect autoformatting by comparing normalized content

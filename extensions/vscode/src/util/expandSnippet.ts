@@ -20,6 +20,7 @@ export async function expandSnippet(
     return [];
   }
 
+  console.log(`read file - expandSnippet - ${fileUri}`);
   const fullFileContents = await ide.readFile(fileUri);
   const root: SyntaxNode = parser.parse(fullFileContents).rootNode;
 
@@ -101,6 +102,9 @@ export async function expandSnippet(
 
   const chunks = await Promise.all(
     callExpressionDefinitions.map(async (def) => {
+      console.log(
+        `read file - expandSnippet readRangeInFile - ${def.filepath}`,
+      );
       return {
         filepath: def.filepath,
         startLine: def.range.start.line,

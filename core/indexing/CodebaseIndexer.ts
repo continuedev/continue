@@ -268,7 +268,12 @@ export class CodebaseIndexer {
         await getComputeDeleteAddRemove(
           tag,
           { ...stats },
-          (filepath) => this.ide.readFile(filepath),
+          (filepath) => {
+            console.log(
+              `read file - CodebaseIndexer refreshFile - ${filepath}`,
+            );
+            return this.ide.readFile(filepath);
+          },
           repoName,
         );
 
@@ -581,7 +586,12 @@ export class CodebaseIndexer {
           await getComputeDeleteAddRemove(
             tag,
             { ...stats },
-            (filepath) => this.ide.readFile(filepath),
+            (filepath) => {
+              console.log(
+                `read file - CodebaseIndexer indexFiles - ${filepath}`,
+              );
+              return this.ide.readFile(filepath);
+            },
             repoName,
           );
         const totalOps = this.totalIndexOps(results);

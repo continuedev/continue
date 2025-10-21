@@ -273,6 +273,18 @@ function pruneLinesFromTop(
   modelName: string,
 ): string {
   const lines = prompt.split("\n");
+  const { pruned } = pruneFromTop(lines, maxTokens, modelName);
+  return pruned.join("\n");
+}
+
+function pruneFromTop(
+  lines: string[],
+  maxTokens: number,
+  modelName: string,
+): {
+  pruned: string[];
+  totalTokens: number;
+} {
   // Preprocess tokens for all lines and cache them.
   const lineTokens = lines.map((line) => countTokens(line, modelName));
   let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
@@ -293,7 +305,11 @@ function pruneLinesFromTop(
     start++;
   }
 
-  return lines.slice(start).join("\n");
+  const pruned = lines.slice(start);
+  return {
+    pruned,
+    totalTokens,
+  };
 }
 
 function pruneLinesFromBottom(
@@ -302,6 +318,18 @@ function pruneLinesFromBottom(
   modelName: string,
 ): string {
   const lines = prompt.split("\n");
+  const { pruned } = pruneFromBottom(lines, maxTokens, modelName);
+  return pruned.join("\n");
+}
+
+function pruneFromBottom(
+  lines: string[],
+  maxTokens: number,
+  modelName: string,
+): {
+  pruned: string[];
+  totalTokens: number;
+} {
   const lineTokens = lines.map((line) => countTokens(line, modelName));
   let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
   let end = lines.length;
@@ -320,7 +348,11 @@ function pruneLinesFromBottom(
     }
   }
 
-  return lines.slice(0, end).join("\n");
+  const pruned = lines.slice(0, end);
+  return {
+    pruned,
+    totalTokens,
+  };
 }
 
 function pruneStringFromBottom(
@@ -550,6 +582,8 @@ export {
   countTokens,
   countTokensAsync,
   extractToolSequence,
+  pruneFromBottom,
+  pruneFromTop,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,

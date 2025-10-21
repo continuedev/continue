@@ -128,6 +128,9 @@ const getSnippetsFromRecentlyOpenedFiles = async (
       // Create a promise that resolves to a snippet or null
       const readPromise = new Promise<AutocompleteCodeSnippet | null>(
         (resolve) => {
+          console.log(
+            `read file - getAllSnippets getSnippetsFromRecentlyOpenedFiles - ${fileUri}`,
+          );
           ide
             .readFile(fileUri)
             .then((fileContent) => {

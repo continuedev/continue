@@ -142,10 +142,15 @@ export class RootPathContextService {
 
           return !isIgnoredPath;
         })
-        .map(async (def) => ({
-          ...def,
-          contents: await this.ide.readRangeInFile(def.filepath, def.range),
-        })),
+        .map(async (def) => {
+          console.log(
+            `read file - RootPathContextService readRangeInFile - ${def.filepath}`,
+          );
+          return {
+            ...def,
+            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+          };
+        }),
     );
 
     return newSnippets;

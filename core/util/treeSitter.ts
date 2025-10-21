@@ -297,6 +297,7 @@ export async function getSymbolsForManyFiles(
 ): Promise<FileSymbolMap> {
   const filesAndSymbols = await Promise.all(
     uris.map(async (uri): Promise<[string, SymbolWithRange[]]> => {
+      console.log(`read file - treeSitter getSymbolsForManyFiles - ${uri}`);
       const contents = await ide.readFile(uri);
       let symbols = undefined;
       try {

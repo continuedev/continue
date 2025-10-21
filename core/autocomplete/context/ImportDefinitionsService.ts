@@ -58,6 +58,9 @@ export class ImportDefinitionsService {
       if (!foundInDir) {
         return null;
       } else {
+        console.log(
+          `read file - Import definition service _getFileInfo - ${filepath}`,
+        );
         fileContents = await this.ide.readFile(filepath);
       }
     } catch (err) {
@@ -101,10 +104,15 @@ export class ImportDefinitionsService {
         },
       });
       fileInfo.imports[match.captures[0].node.text] = await Promise.all(
-        defs.map(async (def) => ({
-          ...def,
-          contents: await this.ide.readRangeInFile(def.filepath, def.range),
-        })),
+        defs.map(async (def) => {
+          console.log(
+            `read file - ImportDefinitionsService readRangeInFile - ${def.filepath}`,
+          );
+          return {
+            ...def,
+            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+          };
+        }),
       );
     }
 

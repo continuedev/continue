@@ -223,6 +223,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       const compute = results.compute[i];
       let snippets: SnippetChunk[] = [];
       try {
+        console.log(
+          `read file - CodeSnippetsIndex update compute - ${compute.path}`,
+        );
         snippets = await this.getSnippetsInFile(
           compute.path,
           await this.ide.readFile(compute.path),
@@ -287,6 +290,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       const addTag = results.addTag[i];
       let snippets: SnippetChunk[] = [];
       try {
+        console.log(
+          `read file - CodeSnippetsIndex update addTag - ${addTag.path}`,
+        );
         snippets = await this.getSnippetsInFile(
           addTag.path,
           await this.ide.readFile(addTag.path),

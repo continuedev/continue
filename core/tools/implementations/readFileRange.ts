@@ -3,9 +3,9 @@ import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { getNumberArg, getStringArg } from "../parseArgs";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
-import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const readFileRangeImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");

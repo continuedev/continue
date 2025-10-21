@@ -8,25 +8,28 @@ import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
 
+interface RecentlyVisitedLine {
+  line: number;
+  timestamp: number;
+}
+
+type RecentlyVisitedRangeSnippet = AutocompleteCodeSnippet & {
+  timestamp: number;
+};
+
 /**
  * Service to keep track of recently visited ranges in files.
  */
 export class RecentlyVisitedRangesService {
-  private cache: LRUCache<
-    string,
-    Array<AutocompleteCodeSnippet & { timestamp: number }>
-  >;
+  private cache: LRUCache<string, Array<RecentlyVisitedLine>>;
   // Default value, we override in initWithPostHog
   private numSurroundingLines = 20;
   private maxRecentFiles = 3;
-  private maxSnippetsPerFile = 3;
+  private maxSnippetsPerFile = 3; // TODO - might have less if
   private isEnabled = true;
 
   constructor(private readonly ide: IDE) {
-    this.cache = new LRUCache<
-      string,
-      Array<AutocompleteCodeSnippet & { timestamp: number }>
-    >({
+    this.cache = new LRUCache<string, Array<RecentlyVisitedLine>>({
       max: this.maxRecentFiles,
     });
 
@@ -39,59 +42,55 @@ export class RecentlyVisitedRangesService {
         PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
       );
 
-    if (recentlyVisitedRangesNumSurroundingLines) {
+    if (true) {
       this.isEnabled = true;
       this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
+      vscode.window.onDidChangeTextEditorSelection(
+        this.cacheCurrentSelectionContext,
+      );
+    } else {
+      this.isEnabled = false;
     }
-
-    vscode.window.onDidChangeTextEditorSelection(
-      this.cacheCurrentSelectionContext,
-    );
   }
+
+  private securityChecks = new Map<string, boolean>();
 
   private cacheCurrentSelectionContext = async (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
-    const fsPath = event.textEditor.document.fileName;
-    if (isSecurityConcern(fsPath)) {
-      return;
-    }
-    const filepath = event.textEditor.document.uri.toString();
-    const line = event.selections[0].active.line;
-    const startLine = Math.max(0, line - this.numSurroundingLines);
-    const endLine = Math.min(
-      line + this.numSurroundingLines,
-      event.textEditor.document.lineCount - 1,
+    console.log("changed");
+    let securityCheck = this.securityChecks.get(
+      event.textEditor.document.fileName,
     );
-
-    try {
-      const fileContents = await this.ide.readFile(filepath);
-      const lines = fileContents.split("\n");
-      const relevantLines = lines
-        .slice(startLine, endLine + 1)
-        .join("\n")
-        .trim();
-
-      const snippet: AutocompleteCodeSnippet & { timestamp: number } = {
-        filepath,
-        content: relevantLines,
-        type: AutocompleteSnippetType.Code,
-        timestamp: Date.now(),
-      };
-
-      const existing = this.cache.get(filepath) || [];
-      const newSnippets = [...existing, snippet]
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, this.maxSnippetsPerFile);
-
-      this.cache.set(filepath, newSnippets);
-    } catch (err) {
-      console.error(
-        "Error caching recently visited ranges for autocomplete: ",
-        err,
+    if (securityCheck === null) {
+      securityCheck = isSecurityConcern(event.textEditor.document.fileName);
+      this.securityChecks.set(
+        event.textEditor.document.fileName,
+        securityCheck,
       );
+    }
+    if (securityCheck) {
       return;
     }
+
+    const filepath = event.textEditor.document.uri.toString();
+
+    // Exclude extension output panels
+    if (filepath.includes("output:extension-output")) {
+      // Just continue output: "output:extension-output-Continue.continue"
+      return;
+    }
+
+    const existing = this.cache.get(filepath) || [];
+    if (existing.length >= this.maxSnippetsPerFile) {
+      existing.pop();
+    }
+    existing.unshift({
+      timestamp: Date.now(),
+      line: event.selections[0].active.line,
+    });
+
+    this.cache.set(filepath, existing);
   };
 
   /**
@@ -99,35 +98,65 @@ export class RecentlyVisitedRangesService {
    * Excludes snippets from the currently active file.
    * @returns Array of code snippets from recently visited files
    */
-  public getSnippets(): AutocompleteCodeSnippet[] {
+  public async getSnippets(): Promise<AutocompleteCodeSnippet[]> {
     if (!this.isEnabled) {
       return [];
     }
 
-    const currentFilepath =
+    const currentFileUri =
       vscode.window.activeTextEditor?.document.uri.toString();
-    let allSnippets: Array<AutocompleteCodeSnippet & { timestamp: number }> =
-      [];
 
-    // Get most recent snippets from each file in cache
-    for (const filepath of Array.from(this.cache.keys())) {
-      const snippets = (this.cache.get(filepath) || [])
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, this.maxSnippetsPerFile);
-      allSnippets = [...allSnippets, ...snippets];
+    const files = Array.from(this.cache.keys()).filter(
+      (f) => f !== currentFileUri,
+    );
+    const fileReads = await Promise.allSettled(
+      files.map(async (uri) => {
+        console.log(
+          `read file - RecentlyVisitedRangesService cacheCurrentSelectionContext - ${uri}`,
+        );
+        const contents = await this.ide.readFile(uri);
+        const lines = contents.split("\n");
+        return {
+          uri,
+          lines,
+        };
+      }),
+    );
+
+    const successfulReads = fileReads
+      .filter((fr) => fr.status === "fulfilled")
+      .map((fr) => fr.value);
+
+    const snippets: RecentlyVisitedRangeSnippet[] = [];
+    for (const file of successfulReads) {
+      const recentVisits = this.cache.get(file.uri);
+      if (recentVisits) {
+        for (const recentVisit of recentVisits) {
+          const startLine = Math.max(
+            0,
+            recentVisit.line - this.numSurroundingLines,
+          );
+          const endLine = Math.min(
+            recentVisit.line + this.numSurroundingLines,
+            file.lines.length - 1,
+          );
+          const relevantLines = file.lines
+            .slice(startLine, endLine + 1)
+            .join("\n")
+            .trim();
+
+          const snippet: RecentlyVisitedRangeSnippet = {
+            filepath: file.uri,
+            content: relevantLines,
+            type: AutocompleteSnippetType.Code,
+            timestamp: recentVisit.timestamp,
+          };
+          snippets.push(snippet);
+        }
+      }
     }
 
-    return allSnippets
-      .filter(
-        (s) =>
-          !currentFilepath ||
-          (s.filepath !== currentFilepath &&
-            // Exclude Continue's own output as it makes it super-hard for users to test the autocomplete feature
-            // while looking at the prompts in the Continue's output
-            !s.filepath.startsWith(
-              "output:extension-output-Continue.continue",
-            )),
-      )
+    return snippets
       .sort((a, b) => b.timestamp - a.timestamp)
       .map(({ timestamp, ...snippet }) => snippet);
   }

@@ -114,6 +114,9 @@ export class RecentlyEditedTracker {
   private async _getContentsForRange(
     entry: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
   ): Promise<string> {
+    console.log(
+      `read file - recentlyEdited _getContentsForRange - ${entry.uri}`,
+    );
     const content = await this.ideUtils.readFile(entry.uri);
     if (content === null) {
       return "";
@@ -140,6 +143,9 @@ export class RecentlyEditedTracker {
     const results = await Promise.all(
       this.recentlyEditedDocuments.map(async (entry) => {
         try {
+          console.log(
+            `read file - recentlyEdited getRecentlyEditedDocuments - ${entry.uri}`,
+          );
           const contents = await vscode.workspace.fs
             .readFile(entry.uri)
             .then((content) => content.toString());

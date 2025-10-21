@@ -86,6 +86,7 @@ This is the question that you should select relevant files for: "${input}"`;
         if (!uri) {
           return undefined;
         }
+        console.log(`read file - requestFilesFromRepoMap - ${uri}`);
         const content = await ide.readFile(uri);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {

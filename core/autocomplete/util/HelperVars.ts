@@ -1,9 +1,5 @@
 import { IDE, TabAutocompleteOptions } from "../..";
-import {
-  countTokens,
-  pruneLinesFromBottom,
-  pruneLinesFromTop,
-} from "../../llm/countTokens";
+import { pruneFromBottom, pruneFromTop } from "../../llm/countTokens";
 import {
   AutocompleteLanguageInfo,
   languageForFilepath,
@@ -45,6 +41,7 @@ export class HelperVars {
     }
     this.workspaceUris = await this.ide.getWorkspaceDirs();
 
+    console.log(`read file - HelperVars init - ${this.filepath}`);
     this._fileContents =
       this.input.manuallyPassFileContents ??
       (await this.ide.readFile(this.filepath));
@@ -52,14 +49,22 @@ export class HelperVars {
     this._fileLines = this._fileContents.split("\n");
 
     // Construct full prefix/suffix (a few edge cases handled in here)
-    const { prefix: fullPrefix, suffix: fullSuffix } =
-      await constructInitialPrefixSuffix(this.input, this.ide);
+    const { prefixLines, suffixLines } = await constructInitialPrefixSuffix(
+      this.input,
+      this._fileLines,
+    );
+    const fullPrefix = prefixLines.join("\n");
     this._fullPrefix = fullPrefix;
+
+    const fullSuffix = suffixLines.join("\n");
     this._fullSuffix = fullSuffix;
 
-    const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix();
-    this._prunedPrefix = prunedPrefix;
-    this._prunedSuffix = prunedSuffix;
+    const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix(
+      prefixLines,
+      suffixLines,
+    );
+    this._prunedPrefix = prunedPrefix.join("\n");
+    this._prunedSuffix = prunedSuffix.join("\n");
 
     try {
       const ast = await getAst(this.filepath, fullPrefix + fullSuffix);
@@ -82,23 +87,24 @@ export class HelperVars {
     return instance;
   }
 
-  prunePrefixSuffix() {
+  prunePrefixSuffix(prefixLines: string[], suffixLines: string[]) {
     // Construct basic prefix
     const maxPrefixTokens =
       this.options.maxPromptTokens * this.options.prefixPercentage;
-    const prunedPrefix = pruneLinesFromTop(
-      this.fullPrefix,
+
+    const { pruned: prunedPrefix, totalTokens: prefixTokens } = pruneFromTop(
+      prefixLines,
       maxPrefixTokens,
       this.modelName,
     );
 
     // Construct suffix
     const maxSuffixTokens = Math.min(
-      this.options.maxPromptTokens - countTokens(prunedPrefix, this.modelName),
+      this.options.maxPromptTokens - prefixTokens,
       this.options.maxSuffixPercentage * this.options.maxPromptTokens,
     );
-    const prunedSuffix = pruneLinesFromBottom(
-      this.fullSuffix,
+    const { pruned: prunedSuffix } = pruneFromBottom(
+      suffixLines,
       maxSuffixTokens,
       this.modelName,
     );

@@ -141,6 +141,7 @@ export class VsCodeIdeUtils {
     }
 
     // If no open document found or if it's not dirty, fall back to reading from disk.
+    // console.log(`ideUtils readFile - ${uri}`);
     return await this.fsOperation(
       uri,
       async (u) => {

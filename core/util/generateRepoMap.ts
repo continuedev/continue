@@ -80,6 +80,7 @@ class RepoMapGenerator {
           let fileContent: string;
 
           try {
+            console.log(`read file - generateRepoMap - ${uri}`);
             fileContent = await this.ide.readFile(uri);
           } catch (err) {
             console.error(

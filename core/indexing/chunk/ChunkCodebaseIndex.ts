@@ -174,6 +174,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
+    console.log(`read file - ChunkCodebaseIndex packToChunks - ${pack.path}`);
     const contents = await this.readFile(pack.path);
     if (!shouldChunk(pack.path, contents)) {
       return [];

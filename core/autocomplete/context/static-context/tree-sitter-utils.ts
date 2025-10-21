@@ -55,6 +55,9 @@ export async function extractTopLevelDecls(
   currentFile: string,
   givenParser?: Parser,
 ) {
+  console.log(
+    `read file - tree-sitter-utils extractTopLevelDecls - ${currentFile}`,
+  );
   const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
   if (!ast) {
     throw new Error(`failed to get ast for file ${currentFile}`);
@@ -82,6 +85,9 @@ export async function extractTopLevelDeclsWithFormatting(
   currentFile: string,
   givenParser?: Parser,
 ) {
+  console.log(
+    `read file - tree-sitter-utils extractTopLevelDeclsWithFormatting - ${currentFile}`,
+  );
   const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
   if (!ast) {
     throw new Error(`failed to get ast for file ${currentFile}`);

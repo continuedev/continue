@@ -1,4 +1,3 @@
-import { IDE } from "../..";
 import { getRangeInString } from "../../util/ranges";
 import { languageForFilepath } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteInput } from "../util/types";
@@ -9,35 +8,45 @@ import { AutocompleteInput } from "../util/types";
  */
 export async function constructInitialPrefixSuffix(
   input: AutocompleteInput,
-  ide: IDE,
+  lines: string[],
 ): Promise<{
-  prefix: string;
-  suffix: string;
+  prefixLines: string[];
+  suffixLines: string[];
 }> {
   const lang = languageForFilepath(input.filepath);
 
-  const fileContents =
-    input.manuallyPassFileContents ?? (await ide.readFile(input.filepath));
-  const fileLines = fileContents.split("\n");
-  let prefix =
-    getRangeInString(fileContents, {
-      start: { line: 0, character: 0 },
-      end: input.selectedCompletionInfo?.range.start ?? input.pos,
-    }) + (input.selectedCompletionInfo?.text ?? "");
-
-  if (input.injectDetails) {
-    const lines = prefix.split("\n");
-    prefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.singleLineComment
-    } ${input.injectDetails
-      .split("\n")
-      .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
+  const prefixLines = getRangeInString(lines, {
+    start: { line: 0, character: 0 },
+    end: input.selectedCompletionInfo?.range.start ?? input.pos,
+  });
+  const selectedCompletionInfoText = input.selectedCompletionInfo?.text ?? "";
+  const selectedCompletionInfoLines = selectedCompletionInfoText.split("\n");
+  let i = 0;
+  for (const line of selectedCompletionInfoLines) {
+    if (i === 0) {
+      prefixLines[prefixLines.length - 1] =
+        prefixLines[prefixLines.length - 1] + line;
+    } else {
+      prefixLines.push(line);
+    }
+    i++;
   }
 
-  const suffix = getRangeInString(fileContents, {
-    start: input.pos,
-    end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
-  });
+  let prefix: string;
+  if (input.injectDetails) {
+    const lastLine = prefixLines.pop();
+    const detailsLines = input.injectDetails
+      .split("\n")
+      .map((line) => `${lang.singleLineComment} ${line}`);
+    prefixLines.push(...detailsLines);
+    if (lastLine !== undefined) {
+      prefixLines.push(lastLine);
+    }
+  }
 
-  return { prefix, suffix };
+  const suffixLines = getRangeInString(lines, {
+    start: input.pos,
+    end: { line: lines.length - 1, character: Number.MAX_SAFE_INTEGER },
+  });
+  return { prefixLines, suffixLines };
 }

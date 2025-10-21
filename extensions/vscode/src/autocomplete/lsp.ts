@@ -153,7 +153,10 @@ async function crawlTypes(
   // Get the file contents if not already attached
   const contents = isRifWithContents(rif)
     ? rif.contents
-    : await ide.readFile(rif.filepath);
+    : await (() => {
+        console.log(`read file - lsp crawlTypes - ${rif.filepath}`);
+        return ide.readFile(rif.filepath);
+      })();
 
   // Parse AST
   const ast = await getAst(rif.filepath, contents);
@@ -190,6 +193,9 @@ async function crawlTypes(
       continue;
     }
 
+    console.log(
+      `read file - lsp crawlTypes readRangeInFile - ${typeDef.filepath}`,
+    );
     const contents = await ide.readRangeInFile(typeDef.filepath, typeDef.range);
 
     definitions.push({
@@ -247,6 +253,9 @@ export async function getDefinitionsForNode(
 
       // Don't display a function of more than 15 lines
       // We can of course do something smarter here eventually
+      console.log(
+        `read file - lsp getDefinitionsForNode call_expression - ${funDef.filepath}`,
+      );
       let funcText = await ide.readRangeInFile(funDef.filepath, funDef.range);
       if (funcText.split("\n").length > 15) {
         let truncated = false;
@@ -309,6 +318,9 @@ export async function getDefinitionsForNode(
       if (!classDef) {
         break;
       }
+      console.log(
+        `read file - lsp getDefinitionsForNode new_expression - ${classDef.filepath}`,
+      );
       const contents = await ide.readRangeInFile(
         classDef.filepath,
         classDef.range,
@@ -347,6 +359,9 @@ export async function getDefinitionsForNode(
       rif.range = range;
 
       if (!isRifWithContents(rif)) {
+        console.log(
+          `read file - lsp getDefinitionsForNode final mapping - ${rif.filepath}`,
+        );
         return {
           ...rif,
           contents: await ide.readRangeInFile(rif.filepath, rif.range),

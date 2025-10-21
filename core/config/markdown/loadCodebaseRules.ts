@@ -25,6 +25,7 @@ export class CodebaseRulesCache {
     this.errors = errors;
   }
   async update(ide: IDE, uri: string) {
+    console.log(`read file - CodebaseRulesCache update - ${uri}`);
     const content = await ide.readFile(uri);
     const workspaceDirs = await ide.getWorkspaceDirs();
     const { relativePathOrBasename, foundInDir } = findUriInDirs(
@@ -84,6 +85,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
     // Process each rules.md file
     for (const filePath of rulesMdFiles) {
       try {
+        console.log(`read file - loadCodebaseRules - ${filePath}`);
         const content = await ide.readFile(filePath);
         const { relativePathOrBasename, foundInDir, uri } = findUriInDirs(
           filePath,

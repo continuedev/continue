@@ -276,7 +276,8 @@ export class ContinueCompletionProvider
 
       // const completionId = uuidv4();
       const filepath = document.uri.toString();
-      const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
+      const recentlyVisitedRanges =
+        await this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =
         await this.recentlyEditedTracker.getRecentlyEditedRanges();
 
@@ -372,7 +373,8 @@ export class ContinueCompletionProvider
           if (!this.usingFullFileDiff) {
             this.prefetchQueue.process({
               ...ctx,
-              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+              recentlyVisitedRanges:
+                await this.recentlyVisitedRanges.getSnippets(),
               recentlyEditedRanges:
                 await this.recentlyEditedTracker.getRecentlyEditedRanges(),
             });
@@ -393,7 +395,8 @@ export class ContinueCompletionProvider
           if (!this.usingFullFileDiff) {
             this.prefetchQueue.process({
               ...ctx,
-              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+              recentlyVisitedRanges:
+                await this.recentlyVisitedRanges.getSnippets(),
               recentlyEditedRanges:
                 await this.recentlyEditedTracker.getRecentlyEditedRanges(),
             });

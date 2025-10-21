@@ -70,7 +70,7 @@ export const handleTextDocumentChange = async (
     recentlyEditedRanges =
       await completionProvider.recentlyEditedTracker.getRecentlyEditedRanges();
     recentlyVisitedRanges =
-      completionProvider.recentlyVisitedRanges.getSnippets();
+      await completionProvider.recentlyVisitedRanges.getSnippets();
   }
 
   return {

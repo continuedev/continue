@@ -232,6 +232,9 @@ export class NextEditProvider {
     this.previousCompletions = [];
 
     if (this.previousRequest) {
+      console.log(
+        `read file - NextEditProvider deleteChain - ${this.previousRequest.filepath}`,
+      );
       const fileContent = (
         await this.ide.readFile(this.previousRequest.filepath)
       ).toString();

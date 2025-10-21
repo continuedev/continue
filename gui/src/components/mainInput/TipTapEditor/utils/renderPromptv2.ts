@@ -48,6 +48,9 @@ export async function getPromptV2ContextRequests(
         workspaceDirs,
       );
       if (resolvedFileUri) {
+        console.log(
+          `read file - renderPromptv2 getPromptV2ContextRequests - ${resolvedFileUri}`,
+        );
         const contents = await ideMessenger.ide.readFile(resolvedFileUri);
         if (name.endsWith(".prompt")) {
           if (visitedFiles.has(resolvedFileUri)) {
