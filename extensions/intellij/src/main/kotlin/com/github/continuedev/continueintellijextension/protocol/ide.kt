@@ -44,12 +44,6 @@ data class ShowLinesParams(
     val endLine: Int
 )
 
-data class ReadRangeInFileParams(
-    val filepath: String,
-    val range: Range
-)
-
-
 data class GetDiffParams(val includeUnstaged: Boolean)
 
 data class GetBranchParams(val dir: String)

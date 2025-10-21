@@ -11,7 +11,6 @@ import {
   IndexTag,
   Location,
   Problem,
-  Range,
   RangeInFile,
   SignatureHelp,
   TerminalOptions,
@@ -135,10 +134,6 @@ class FileSystemIde implements IDE {
       extensionVersion: "na",
       isPrerelease: false,
     });
-  }
-
-  readRangeInFile(fileUri: string, range: Range): Promise<string> {
-    return Promise.resolve("");
   }
 
   isTelemetryEnabled(): Promise<boolean> {

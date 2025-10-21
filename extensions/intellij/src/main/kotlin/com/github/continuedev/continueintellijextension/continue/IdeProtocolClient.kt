@@ -166,15 +166,6 @@ class IdeProtocolClient(
                         respond(isEnabled)
                     }
 
-                    "readRangeInFile" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            ReadRangeInFileParams::class.java
-                        )
-                        val contents = ide.readRangeInFile(params.filepath, params.range)
-                        respond(contents)
-                    }
-
                     "getWorkspaceDirs" -> {
                         val dirs = ide.getWorkspaceDirs()
                         respond(dirs)

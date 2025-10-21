@@ -1,5 +1,6 @@
 import { IDE, RangeInFileWithContents } from "../..";
 import { PrecalculatedLruCache } from "../../util/LruCache";
+import { readRangeInFile } from "../../util/rangeInFile";
 import {
   getFullLanguageName,
   getParserForFile,
@@ -106,12 +107,9 @@ export class ImportDefinitionsService {
       });
       fileInfo.imports[match.captures[0].node.text] = await Promise.all(
         defs.map(async (def) => {
-          console.log(
-            `read file - ImportDefinitionsService readRangeInFile - ${def.filepath}`,
-          );
           return {
             ...def,
-            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+            contents: await readRangeInFile(this.ide, def.filepath, def.range),
           };
         }),
       );

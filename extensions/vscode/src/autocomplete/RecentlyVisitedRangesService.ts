@@ -3,6 +3,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
+import { AutocompleteReadCache } from "core/autocomplete/util/AutocompleteReadCache";
 import { isSecurityConcern } from "core/indexing/ignore";
 import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
@@ -108,12 +109,12 @@ export class RecentlyVisitedRangesService {
     const files = Array.from(this.cache.keys()).filter(
       (f) => f !== currentFileUri,
     );
+    const readCache = AutocompleteReadCache.getInstance(
+      this.ide.readFile.bind(this.ide),
+    );
     const fileReads = await Promise.allSettled(
       files.map(async (uri) => {
-        console.log(
-          `read file - RecentlyVisitedRangesService cacheCurrentSelectionContext - ${uri}`,
-        );
-        const contents = await this.ide.readFile(uri);
+        const contents = await readCache.getOrRead(uri);
         const lines = contents.split("\n");
         return {
           uri,

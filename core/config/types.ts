@@ -696,8 +696,6 @@ declare global {
   
     readFile(filepath: string): Promise<string>;
   
-    readRangeInFile(filepath: string, range: Range): Promise<string>;
-  
     showLines(
       filepath: string,
       startLine: number,

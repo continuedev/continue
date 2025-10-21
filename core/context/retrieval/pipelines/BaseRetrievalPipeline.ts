@@ -73,9 +73,9 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       return;
     }
 
-    this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) => {
-      return this.options.ide.readFile(uri);
-    });
+    this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) =>
+      this.options.ide.readFile(uri),
+    );
   }
 
   protected async ensureLanceDbInitialized(): Promise<boolean> {

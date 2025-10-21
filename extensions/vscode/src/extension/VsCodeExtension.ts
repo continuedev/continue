@@ -535,7 +535,6 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidOpenTextDocument(async (event) => {
-      console.log("DID OPEN TEXT DOCUMENT");
       const ast = await getAst(event.fileName, event.getText());
       if (ast) {
         DocumentHistoryTracker.getInstance().addDocument(

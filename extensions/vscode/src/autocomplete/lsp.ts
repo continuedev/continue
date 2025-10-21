@@ -21,6 +21,7 @@ import type {
   RangeInFileWithContents,
   SignatureHelp,
 } from "core";
+import { readRangeInFile } from "core/util/rangeInFile";
 import type Parser from "web-tree-sitter";
 
 type GotoProviderName =
@@ -144,22 +145,14 @@ function findTypeIdentifiers(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
 }
 
 async function crawlTypes(
-  rif: RangeInFile | RangeInFileWithContents,
+  rif: RangeInFileWithContents,
   ide: IDE,
   depth: number = 1,
   results: RangeInFileWithContents[] = [],
   searchedLabels: Set<string> = new Set(),
 ): Promise<RangeInFileWithContents[]> {
-  // Get the file contents if not already attached
-  const contents = isRifWithContents(rif)
-    ? rif.contents
-    : await (() => {
-        console.log(`read file - lsp crawlTypes - ${rif.filepath}`);
-        return ide.readFile(rif.filepath);
-      })();
-
   // Parse AST
-  const ast = await getAst(rif.filepath, contents);
+  const ast = await getAst(rif.filepath, rif.contents);
   if (!ast) {
     return results;
   }
@@ -196,7 +189,11 @@ async function crawlTypes(
     console.log(
       `read file - lsp crawlTypes readRangeInFile - ${typeDef.filepath}`,
     );
-    const contents = await ide.readRangeInFile(typeDef.filepath, typeDef.range);
+    const contents = await readRangeInFile(
+      ide,
+      typeDef.filepath,
+      typeDef.range,
+    );
 
     definitions.push({
       ...typeDef,
@@ -256,7 +253,7 @@ export async function getDefinitionsForNode(
       console.log(
         `read file - lsp getDefinitionsForNode call_expression - ${funDef.filepath}`,
       );
-      let funcText = await ide.readRangeInFile(funDef.filepath, funDef.range);
+      let funcText = await readRangeInFile(ide, funDef.filepath, funDef.range);
       if (funcText.split("\n").length > 15) {
         let truncated = false;
         const funRootAst = await getAst(funDef.filepath, funcText);
@@ -321,7 +318,8 @@ export async function getDefinitionsForNode(
       console.log(
         `read file - lsp getDefinitionsForNode new_expression - ${classDef.filepath}`,
       );
-      const contents = await ide.readRangeInFile(
+      const contents = await readRangeInFile(
+        ide,
         classDef.filepath,
         classDef.range,
       );
@@ -364,7 +362,7 @@ export async function getDefinitionsForNode(
         );
         return {
           ...rif,
-          contents: await ide.readRangeInFile(rif.filepath, rif.range),
+          contents: await readRangeInFile(ide, rif.filepath, rif.range),
         };
       }
       return rif;

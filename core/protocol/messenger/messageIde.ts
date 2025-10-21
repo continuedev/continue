@@ -11,7 +11,6 @@ import type {
   IndexTag,
   Location,
   Problem,
-  Range,
   RangeInFile,
   SignatureHelp,
   TerminalOptions,
@@ -111,10 +110,6 @@ export class MessageIde implements IDE {
 
   getIdeInfo(): Promise<IdeInfo> {
     return this.request("getIdeInfo", undefined);
-  }
-
-  readRangeInFile(filepath: string, range: Range): Promise<string> {
-    return this.request("readRangeInFile", { filepath, range });
   }
 
   isTelemetryEnabled(): Promise<boolean> {

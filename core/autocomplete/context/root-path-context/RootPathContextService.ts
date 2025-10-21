@@ -4,6 +4,7 @@ import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 
 import { IDE } from "../../..";
+import { readRangeInFile } from "../../../util/rangeInFile";
 import {
   getFullLanguageName,
   getQueryForFile,
@@ -16,6 +17,7 @@ import {
 } from "../../snippets/types";
 import { AutocompleteSnippetDeprecated } from "../../types";
 import { AstPath } from "../../util/ast";
+import { AutocompleteReadCache } from "../../util/AutocompleteReadCache";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 
 // function getSyntaxTreeString(
@@ -133,6 +135,9 @@ export class RootPathContextService {
         character: endPosition.column,
       },
     });
+    const readCache = AutocompleteReadCache.getInstance(
+      this.ide.readFile.bind(this.ide),
+    );
     const newSnippets = await Promise.all(
       definitions
         .filter((definition) => {
@@ -143,12 +148,9 @@ export class RootPathContextService {
           return !isIgnoredPath;
         })
         .map(async (def) => {
-          console.log(
-            `read file - RootPathContextService readRangeInFile - ${def.filepath}`,
-          );
           return {
             ...def,
-            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+            contents: await readRangeInFile(this.ide, def.filepath, def.range),
           };
         }),
     );

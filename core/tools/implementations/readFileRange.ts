@@ -4,6 +4,7 @@ import { getUriPathBasename } from "../../util/uri";
 import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { readRangeInFile } from "../../util/rangeInFile";
 import { getNumberArg, getStringArg } from "../parseArgs";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 
@@ -44,8 +45,8 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
   // Security check on the resolved display path
   throwIfFileIsSecurityConcern(resolvedPath.displayPath);
 
-  // Use the IDE's readRangeInFile method with 0-based range (IDE expects 0-based internally)
-  const content = await extras.ide.readRangeInFile(resolvedPath.uri, {
+  // readRangeInFile expects 0-based range indexes
+  const content = await readRangeInFile(extras.ide, resolvedPath.uri, {
     start: {
       line: startLine - 1, // Convert from 1-based to 0-based
       character: 0,
