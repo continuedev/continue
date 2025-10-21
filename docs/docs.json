@@ -1240,10 +1240,6 @@
       "destination": "/hub/configs/edit-a-config"
     },
     {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/configs/intro"
-    },
-    {
       "source": "/hub/agents/use-an-agent",
       "destination": "/hub/configs/use-a-config"
     },
