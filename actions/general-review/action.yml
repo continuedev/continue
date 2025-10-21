@@ -12,24 +12,13 @@ inputs:
   continue-agent:
     description: 'Agent path to use (e.g., "myorg/review-bot")'
     required: true
-  app-id:
-    description: "GitHub App ID for authentication"
-    required: false
-  private-key:
-    description: "GitHub App private key for authentication"
-    required: false
+  github-token:
+    description: "GitHub token for API access"
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Generate GitHub App Token
-      if: inputs.app-id != '' && inputs.private-key != ''
-      id: generate-token
-      uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v2.0.0
-      with:
-        app-id: ${{ inputs.app-id }}
-        private-key: ${{ inputs.private-key }}
-
     - name: Checkout Repository
       uses: actions/checkout@v4
 
@@ -37,7 +26,7 @@ runs:
       id: auth-check
       uses: actions/github-script@v7
       with:
-        github-token: ${{ steps.generate-token.outputs.token || github.token }}
+        github-token: ${{ inputs.github-token }}
         script: |
           let shouldRun = false;
           let skipReason = '';
@@ -135,7 +124,7 @@ runs:
       id: initial-comment
       uses: actions/github-script@v7
       with:
-        github-token: ${{ steps.generate-token.outputs.token || github.token }}
+        github-token: ${{ inputs.github-token }}
         script: |
           const marker = '<!-- continue-agent-review -->';
 
@@ -221,7 +210,7 @@ runs:
       if: env.SHOULD_RUN == 'true'
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token || github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         # Get PR number based on event type
         if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -244,7 +233,7 @@ runs:
         CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
         CONTINUE_ORG: ${{ inputs.continue-org }}
         CONTINUE_AGENT: ${{ inputs.continue-agent }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token || github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         echo "Running Continue CLI with prompt:"
         echo "=================================="
@@ -355,7 +344,7 @@ runs:
       if: env.SHOULD_RUN == 'true' && always()
       uses: actions/github-script@v7
       with:
-        github-token: ${{ steps.generate-token.outputs.token || github.token }}
+        github-token: ${{ inputs.github-token }}
         script: |
           const fs = require('fs');
 

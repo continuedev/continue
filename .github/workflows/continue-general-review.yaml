@@ -33,3 +33,4 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
           continue-agent: "empty-agent"
+          github-token: ${{ steps.generate-token.outputs.token }}
