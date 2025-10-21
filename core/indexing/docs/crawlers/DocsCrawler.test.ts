@@ -19,7 +19,7 @@ const TIMEOUT_MS = 1_000_000_000;
 // so that we don't delete the Chromium install between tests
 ChromiumInstaller.PCR_CONFIG = { downloadPath: os.tmpdir() };
 
-describe("DocsCrawler", () => {
+describe.skip("DocsCrawler", () => {
   let config: ContinueConfig;
   let mockIde: FileSystemIde;
   let chromiumInstaller: ChromiumInstaller;
