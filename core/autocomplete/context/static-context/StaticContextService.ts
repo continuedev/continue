@@ -353,9 +353,6 @@ export class StaticContextService {
             if (foundContents.has(tdLocation.filepath)) {
               content = foundContents.get(tdLocation.filepath)!;
             } else {
-              console.log(
-                `read file - StaticContextService extractRelevantTypesHelper - ${tdLocation.filepath}`,
-              );
               content = await fs.readFile(
                 localPathOrUriToPath(tdLocation.filepath),
                 "utf8",

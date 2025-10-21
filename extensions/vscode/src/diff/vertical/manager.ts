@@ -545,9 +545,6 @@ export class VerticalDiffManager {
     fileAfterEdit: string | undefined;
   }) {
     // Get previous code content for outcome tracking
-    console.log(
-      `read file - VerticalDiffManager trackEditInteraction - ${filepath}`,
-    );
     const previousCode = await this.ide.readFile(filepath);
     const newCode = fileAfterEdit ?? "";
     const previousCodeLines = previousCode.split("\n").length;

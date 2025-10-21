@@ -311,10 +311,6 @@ export class QuickEdit {
     // Replace file references with the content of the file
     for (const fileRef of fileReferences) {
       const filePath = fileRef.slice(1); // Remove the '@' symbol
-
-      console.log(
-        `read file - QuickEditQuickPick _streamEditWithInputAndContext - ${filePath}`,
-      );
       const fileContent = await this.ide.readFile(filePath);
 
       prompt = prompt.replace(

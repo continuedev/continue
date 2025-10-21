@@ -124,7 +124,6 @@ export async function addEntireFileToContext(
   }
 
   // Get the contents of the file
-  console.log(`read file - addCode addEntireFileToContext - ${uri}`);
   const contents = (await vscode.workspace.fs.readFile(uri)).toString();
   const rangeInFileWithContents = {
     filepath: uri.toString(),

@@ -1,4 +1,3 @@
-import { RangeInFileWithContents } from "core";
 import { getSymbolsForSnippet } from "core/autocomplete/context/ranking";
 import { RecentlyEditedRange } from "core/autocomplete/util/types";
 import * as vscode from "vscode";
@@ -135,39 +134,5 @@ export class RecentlyEditedTracker {
         filepath: entry.uri.toString(),
       };
     });
-  }
-
-  public async getRecentlyEditedDocuments(): Promise<
-    RangeInFileWithContents[]
-  > {
-    const results = await Promise.all(
-      this.recentlyEditedDocuments.map(async (entry) => {
-        try {
-          console.log(
-            `read file - recentlyEdited getRecentlyEditedDocuments - ${entry.uri}`,
-          );
-          const contents = await vscode.workspace.fs
-            .readFile(entry.uri)
-            .then((content) => content.toString());
-          const lines = contents.split("\n");
-
-          return {
-            filepath: entry.uri.toString(),
-            contents,
-            range: {
-              start: { line: 0, character: 0 },
-              end: {
-                line: lines.length - 1,
-                character: lines[lines.length - 1].length,
-              },
-            },
-          };
-        } catch (e) {
-          return null;
-        }
-      }),
-    );
-
-    return results.filter((result) => result !== null) as any;
   }
 }

@@ -55,9 +55,6 @@ export async function extractTopLevelDecls(
   currentFile: string,
   givenParser?: Parser,
 ) {
-  console.log(
-    `read file - tree-sitter-utils extractTopLevelDecls - ${currentFile}`,
-  );
   const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
   if (!ast) {
     throw new Error(`failed to get ast for file ${currentFile}`);
@@ -79,89 +76,6 @@ export async function extractTopLevelDecls(
     );
   }
   return query.matches(ast.rootNode);
-}
-
-export async function extractTopLevelDeclsWithFormatting(
-  currentFile: string,
-  givenParser?: Parser,
-) {
-  console.log(
-    `read file - tree-sitter-utils extractTopLevelDeclsWithFormatting - ${currentFile}`,
-  );
-  const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
-  if (!ast) {
-    throw new Error(`failed to get ast for file ${currentFile}`);
-  }
-  let language;
-  if (givenParser) {
-    language = givenParser.getLanguage();
-  } else {
-    language = getFullLanguageName(currentFile);
-  }
-
-  const query = await getQueryForFile(
-    currentFile,
-    `static-context-queries/relevant-headers-queries/${language}-get-toplevel-headers.scm`,
-  );
-  if (!query) {
-    throw new Error(
-      `failed to get query for file ${currentFile} and language ${language}`,
-    );
-  }
-  const matches = query.matches(ast.rootNode);
-
-  const results = [];
-
-  for (const match of matches) {
-    const item: {
-      declaration: string;
-      nodeType: string;
-      name: string;
-      declaredType: string;
-      returnType?: string;
-    } = {
-      declaration: "",
-      nodeType: "",
-      name: "",
-      declaredType: "",
-    };
-
-    for (const { name, node } of match.captures) {
-      if (name === "top.var.decl") {
-        item.nodeType = "variable";
-        item.declaration = node.text;
-
-        // Attempt to get the declared type (e.g., const x: string = ...)
-        const typeNode = node.descendantsOfType("type_annotation")[0];
-        if (typeNode) {
-          item.declaredType = typeNode.text.replace(/^:\s*/, "");
-        }
-      } else if (name === "top.var.name" || name === "top.fn.name") {
-        item.name = node.text;
-      } else if (name === "top.fn.decl") {
-        item.nodeType = "function";
-        item.declaration = node.text;
-
-        // Get the return type (e.g., function foo(): string)
-        const returnTypeNode = node.childForFieldName("return_type");
-        if (returnTypeNode) {
-          item.returnType = returnTypeNode.text.replace(/^:\s*/, "");
-        }
-
-        // Get declaredType if needed (TypeScript style)
-        const nameNode = node.childForFieldName("name");
-        if (nameNode && nameNode.nextSibling?.type === "type_annotation") {
-          item.declaredType = nameNode.nextSibling.text.replace(/^:\s*/, "");
-        }
-      }
-    }
-
-    if (item.name && item.declaration) {
-      results.push(item);
-    }
-  }
-
-  return results;
 }
 
 export function extractFunctionTypeFromDecl(match: Parser.QueryMatch): string {

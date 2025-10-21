@@ -269,9 +269,6 @@ export class CodebaseIndexer {
           tag,
           { ...stats },
           (filepath) => {
-            console.log(
-              `read file - CodebaseIndexer refreshFile - ${filepath}`,
-            );
             return this.ide.readFile(filepath);
           },
           repoName,
@@ -587,9 +584,6 @@ export class CodebaseIndexer {
             tag,
             { ...stats },
             (filepath) => {
-              console.log(
-                `read file - CodebaseIndexer indexFiles - ${filepath}`,
-              );
               return this.ide.readFile(filepath);
             },
             repoName,

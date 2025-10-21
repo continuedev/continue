@@ -74,7 +74,6 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     }
 
     this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) => {
-      console.log(`read file - BaseRetrievalPipeline initLanceDb - ${uri}`);
       return this.options.ide.readFile(uri);
     });
   }
@@ -160,9 +159,6 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const chunks: Chunk[] = [];
 
     for (const filepath of recentlyEditedFilesSlice) {
-      console.log(
-        `read file - BaseRetrievalPipeline retrieveAndChunkRecentlyEditedFiles - ${filepath}`,
-      );
       const contents = await this.options.ide.readFile(filepath);
       const fileChunks = chunkDocument({
         filepath,

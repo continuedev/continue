@@ -152,7 +152,6 @@ export class LanceDbIndex implements CodebaseIndex {
 
     for (const item of items) {
       try {
-        console.log(`read file - LanceDbIndex collectChunks - ${item.path}`);
         const content = await this.readFile(item.path);
 
         if (!shouldChunk(item.path, content)) {
