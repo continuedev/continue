@@ -17,7 +17,7 @@ sidebarTitle: "Pull Request Review Bot"
 
 <CardGroup cols={3}>
   <Card title="Privacy-First" icon="shield">
-    The Continue CLI runs in your GitHub Actions runner and sends code directly to your configured LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code - all logs and processing happen in your runner.
+    All logs and processing happen in your runner: Continue CLI runs in GitHub Actions → code to your LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code.
 
   </Card>
 
@@ -44,36 +44,41 @@ Before starting, ensure you have:
 
 ## Quick Setup (10 Minutes)
 
-### Step 1: Configure Repository Secrets and Variables
+<Steps>
 
-Add these to your repository settings (Settings → Secrets and variables → Actions):
+<Step title="Configure Repository Secrets and Variables">
 
-**Required Secrets:**
-- `CONTINUE_API_KEY` - Your Continue API key from [hub.continue.dev](https://hub.continue.dev/settings/api-keys)
+    Navigate to your repository settings: **Settings → Secrets and variables → Actions**
 
-**Optional (for better permissions):**
-- **Variables** tab: `APP_ID` - GitHub App ID (for enhanced API rate limits)
-- **Secrets** tab: `APP_PRIVATE_KEY` - GitHub App private key
+    **Required Secrets:**
+    - `CONTINUE_API_KEY` - Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
 
-<Accordion title="Setting up a GitHub App (Optional but Recommended)">
-  For better rate limits and permissions, create a GitHub App:
+    **Optional (for better permissions):**
+    - **Variables** tab: `APP_ID` - GitHub App ID (for enhanced API rate limits)
+    - **Secrets** tab: `APP_PRIVATE_KEY` - GitHub App private key
 
-  1. Go to Settings → Developer settings → GitHub Apps → New GitHub App
-  2. Set permissions:
-     - **Contents**: Read
-     - **Pull Requests**: Write
-     - **Issues**: Write
-  3. Generate a private key
-  4. Install the app on your repository
-  5. Add `APP_ID` as a repository **variable** (Variables tab)
-  6. Add `APP_PRIVATE_KEY` as a repository **secret** (Secrets tab)
+    <Accordion title="Setting up a GitHub App (Optional but Recommended)">
 
-  Without a GitHub App, the action will use the default `GITHUB_TOKEN`.
-</Accordion>
+      For better rate limits and permissions, create a GitHub App:
 
-### Step 2: Add Workflow File
+      1. Go to Settings → Developer settings → GitHub Apps → New GitHub App
+      2. Set permissions:
+          - **Contents**: Read
+          - **Pull Requests**: Write
+          - **Issues**: Write
+      3. Generate a private key
+      4. Install the app on your repository
+      5. Add `APP_ID` as a repository **variable** (Variables tab)
+      6. Add `APP_PRIVATE_KEY` as a repository **secret** (Secrets tab)
 
-Create `.github/workflows/code-review.yml`:
+      Without a GitHub App, the action will use the default `GITHUB_TOKEN`.
+
+    </Accordion>
+
+  </Step>
+  <Step title="Add Workflow File">
+
+    Create a GitHub Actions workflow file at `.github/workflows/code-review.yml` with the provided configuration.
 
 ```yaml
 name: Continue Code Review
@@ -215,13 +220,16 @@ jobs:
               --body-file review_comment.md
           fi
 ```
+</Step >
 
-### Step 3: Create Custom Rules (Optional)
+<Step title="Create Custom Rules (Optional)" >
 
 Define your team's standards in `.continue/rules/`:
 
-#### Security Rule
-Create `.continue/rules/security.md`:
+<Tabs>
+  <Tab title="Security Rule">
+    
+ Create `.continue/rules/security.md`:
 
 ```markdown
 ---
@@ -239,27 +247,27 @@ alwaysApply: true
 - Sensitive data is properly encrypted
 - Error messages don't leak sensitive information
 ```
-
-#### TypeScript Standards
-Create `.continue/rules/typescript.md`:
+  </Tab>
+  <Tab title="TypeScript Standards">
+    Create `.continue/rules/typescript.md`:
 
 ```markdown
----
-globs: "**/*.{ts,tsx}"
-description: "TypeScript Best Practices"
----
+  ---
+  globs: "**/*.{ts,tsx}"
+  description: "TypeScript Best Practices"
+  ---
 
-# TypeScript Standards
+  # TypeScript Standards
 
-- Use strict type checking (avoid `any` types)
-- Prefer interfaces for object shapes
-- Use proper error handling with typed errors
-- Document complex types with JSDoc comments
-- Export types for public APIs
-- Use const assertions where appropriate
+  - Use strict type checking (avoid `any` types)
+  - Prefer interfaces for object shapes
+  - Use proper error handling with typed errors
+  - Document complex types with JSDoc comments
+  - Export types for public APIs
+  - Use const assertions where appropriate
 ```
-
-#### Testing Standards
+</Tab >
+<Tab title="Testing Standards">
 Create `.continue/rules/testing.md`:
 
 ```markdown
@@ -277,8 +285,8 @@ description: "Testing Requirements"
 - Mock external dependencies
 - Aim for meaningful assertions, not coverage metrics
 ```
-
-#### Python Standards
+</Tab>
+<Tab title="Python Standards">
 Create `.continue/rules/python.md`:
 
 ```markdown
@@ -296,7 +304,10 @@ description: "Python Code Standards"
 - Prefer list comprehensions for simple transformations
 - Handle exceptions explicitly, avoid bare except
 ```
-
+</Tab>
+</Tabs>
+</Step>
+</Steps>
 ## How It Works
 
 The workflow follows these steps:
@@ -322,85 +333,91 @@ Comment on any pull request to trigger focused reviews:
 The workflow will respond with a targeted review based on your request.
 
 ## Advanced Configuration
-
-### Use Your Own Continue Config
-
-Replace `continuedev/code-reviewer` with your own config:
-
-```yaml
-- name: Run Continue Review
-  env:
-    CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
-    CONTINUE_ORG: your-org-name      # Add your org
-    CONTINUE_CONFIG: username/config-name  # Add your config
-  run: |
-    cn --config $CONTINUE_ORG/$CONTINUE_CONFIG \
-       -p "$PROMPT" \
-       --auto > review_output.md
-```
-
-Store `CONTINUE_ORG` and `CONTINUE_CONFIG` as repository variables for easy updates.
-
-### Filter by File Types
-
-Only review specific file types in pull requests:
-
-```yaml
-on:
-  pull_request:
-    types: [opened, synchronize, ready_for_review]
-    paths:
-      - '**.ts'
-      - '**.tsx'
-      - '**.py'
-      - '**.go'
-```
-
-### Review Size Limits
-
-Skip large pull requests that would be expensive to review:
-
-```yaml
-- name: Check PR Size
-  id: size-check
-  env:
-    GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
-  run: |
-    ADDITIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json additions -q .additions)
-    DELETIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json deletions -q .deletions)
-    TOTAL=$((ADDITIONS + DELETIONS))
+<Tabs>
+  <Tab title="Use Your Own Continue Config">
     
-    if [ $TOTAL -gt 1000 ]; then
-      echo "skip=true" >> $GITHUB_OUTPUT
-      echo "⚠️  Pull request too large for automatic review ($TOTAL lines changed)"
-    else
-      echo "skip=false" >> $GITHUB_OUTPUT
-    fi
+  By default, the workflow uses the `continuedev/code-reviewer` config optimized for code reviews. Replace `continuedev/code-reviewer` with your own config:
 
-- name: Run Continue Review
-  if: steps.size-check.outputs.skip != 'true'
-  # ... rest of review step
-```
+  ```yaml
+  - name: Run Continue Review
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      CONTINUE_ORG: your-org-name      # Add your org
+      CONTINUE_CONFIG: username/config-name  # Add your config
+    run: |
+      cn --config $CONTINUE_ORG/$CONTINUE_CONFIG \
+        -p "$PROMPT" \
+        --auto > review_output.md
+  ```
 
+  Store `CONTINUE_ORG` and `CONTINUE_CONFIG` as repository variables for easy updates.
+</Tab>
+<Tab title="Filter by File Types">
+
+  Only review specific file types in pull requests:
+
+  ```yaml
+  on:
+    pull_request:
+      types: [opened, synchronize, ready_for_review]
+      paths:
+        - '**.ts'
+        - '**.tsx'
+        - '**.py'
+        - '**.go'
+  ```
+</Tab>
+
+<Tab title="Review Size Limits">
+
+  Skip large pull requests that would be expensive to review:
+
+  ```yaml
+  - name: Check PR Size
+    id: size-check
+    env:
+      GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+    run: |
+      ADDITIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json additions -q .additions)
+      DELETIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json deletions -q .deletions)
+      TOTAL=$((ADDITIONS + DELETIONS))
+      
+      if [ $TOTAL -gt 1000 ]; then
+        echo "skip=true" >> $GITHUB_OUTPUT
+        echo "⚠️  Pull request too large for automatic review ($TOTAL lines changed)"
+      else
+        echo "skip=false" >> $GITHUB_OUTPUT
+      fi
+
+  - name: Run Continue Review
+    if: steps.size-check.outputs.skip != 'true'
+    # ... rest of review step
+  ```
+
+</Tab>
+</Tabs>
 ## Troubleshooting
-
-**"Continue CLI not found"**
+<AccordionGroup>
+<Accordion title="Continue CLI not found">
 - The workflow installs the CLI automatically, but ensure Node.js 20+ is available
 - Check the "Install Continue CLI" step logs for errors
-
-**"Authentication failed"**
+</Accordion>
+<Accordion title="Authentication failed">
 - Verify your `CONTINUE_API_KEY` is valid
 - Check that GitHub token has required permissions
-
-**"No review generated"**
+</Accordion>
+<Accordion title="No review generated">
 - Verify your Continue config is accessible
 - Check Continue CLI logs in the workflow run
 - Try running locally: `cn -p "Test prompt" --auto`
-
-**Review comment not posted**
+</Accordion>
+<Accordion title="Review comment not posted">
 - Ensure `pull-requests: write` permission is set
 - Verify GitHub token has scope to comment on pull requests
 - Check if the repository requires signed commits
+</Accordion>
+</AccordionGroup>
+
 
 ## Example Output
 
