@@ -1,7 +1,8 @@
 import { vi } from "vitest";
 
-import { initializeServices, services } from "./index.js";
 import { MCPService } from "./MCPService.js";
+
+import { initializeServices, services } from "./index.js";
 
 describe("initializeServices", () => {
   describe("mode conversion", () => {
