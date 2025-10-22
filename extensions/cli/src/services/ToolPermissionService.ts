@@ -148,14 +148,15 @@ export class ToolPermissionService
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
-        // TODO - RECONSIDER bash and MCP, maybe fall back to user settings for those
+        // Plan mode: Complete override - exclude all write operations other than MCP
+        // TODO - RECONSIDER MCP, maybe fall back to user settings for MCP
         return [
           // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
+          { tool: "Bash", permission: "exclude" },
           { tool: "*", permission: "allow" },
         ];
       case "auto":

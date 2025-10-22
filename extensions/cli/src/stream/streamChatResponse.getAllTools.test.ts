@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import {
   getServiceSync,
@@ -25,6 +25,7 @@ describe("getAllTools - Tool Filtering", () => {
     // Initialize services in plan mode (simulating `cn -p`)
     await initializeServices({
       headless: true,
+      skipOnboarding: true,
       toolPermissionOverrides: {
         mode: "plan",
       },
@@ -41,9 +42,6 @@ describe("getAllTools - Tool Filtering", () => {
     const tools = await getAllTools();
     const toolNames = tools.map((t) => t.function.name);
 
-    // Bash should be allowed in plan mode
-    expect(toolNames).toContain("Bash");
-
     // Read-only tools should still be available
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("List");
@@ -54,12 +52,14 @@ describe("getAllTools - Tool Filtering", () => {
     // Write tools should be excluded
     expect(toolNames).not.toContain("Write");
     expect(toolNames).not.toContain("Edit");
+    expect(toolNames).not.toContain("Bash");
   });
 
   test("should include Bash tool in normal mode", async () => {
     // Initialize services in normal mode
     await initializeServices({
       headless: true,
+      skipOnboarding: true,
       toolPermissionOverrides: {
         mode: "normal",
       },
@@ -87,6 +87,7 @@ describe("getAllTools - Tool Filtering", () => {
     // Initialize services in auto mode
     await initializeServices({
       headless: true,
+      skipOnboarding: true,
       toolPermissionOverrides: {
         mode: "auto",
       },
@@ -114,6 +115,7 @@ describe("getAllTools - Tool Filtering", () => {
     // Initialize services in normal mode with Read tool explicitly excluded
     await initializeServices({
       headless: true,
+      skipOnboarding: true,
       toolPermissionOverrides: {
         mode: "normal",
         exclude: ["Read"],
@@ -138,6 +140,7 @@ describe("getAllTools - Tool Filtering", () => {
     // wasn't properly excluding tools despite being in plan mode
     await initializeServices({
       headless: true,
+      skipOnboarding: true,
       toolPermissionOverrides: {
         mode: "plan",
         allow: ["Write", "Edit"], // These should be ignored in plan mode
@@ -151,9 +154,7 @@ describe("getAllTools - Tool Filtering", () => {
     // This tests that plan mode policies have absolute precedence
     expect(toolNames).not.toContain("Write");
     expect(toolNames).not.toContain("Edit");
-
-    // Bash should be available in plan mode
-    expect(toolNames).toContain("Bash");
+    expect(toolNames).not.toContain("Bash");
 
     // Read-only tools should be available
     expect(toolNames).toContain("Read");

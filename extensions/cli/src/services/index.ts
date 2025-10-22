@@ -151,7 +151,7 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         );
       }
     },
-    [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP, SERVICE_NAMES.CONFIG],
+    [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP],
   );
 
   // Initialize SystemMessageService with command options

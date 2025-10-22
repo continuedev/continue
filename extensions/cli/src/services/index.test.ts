@@ -10,11 +10,14 @@ vi.mock("../onboarding.js", () => ({
 }));
 
 // Mock auth module
-vi.mock("../auth/workos.js", () => ({
-  loadAuthConfig: vi.fn().mockReturnValue({}),
-  getConfigUri: vi.fn().mockReturnValue(null),
-}));
-
+vi.mock("../auth/workos.js", async (importOriginal) => {
+  const actual = (await importOriginal()) as any;
+  return {
+    ...actual,
+    loadAuthConfig: vi.fn().mockReturnValue({}),
+    getConfigUri: vi.fn().mockReturnValue(null),
+  };
+});
 // Mock the config loader
 vi.mock("../configLoader.js", () => ({
   loadConfiguration: vi.fn().mockResolvedValue({
