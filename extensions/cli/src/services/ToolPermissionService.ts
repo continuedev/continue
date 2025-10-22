@@ -94,7 +94,19 @@ export class ToolPermissionService
       const specificTools = parsedTools.tools.filter(
         (t) => t.mcpServer && t.toolName && t.mcpServer === mcpServer,
       );
+
+      // In the `tools` key of an agent is comma separated strings like
+      // mcp/server, mcp/server2:tool_name, Bash
+      // - this would give the agent access to ALL tools from mcp/server, ONLY tool_name from mcp/server2, and Bash, and no other tools
+      // mcp/server
+      // - this would give the agent access to ALL tools from mcp/server, and no built-ins
+      // built_in, mcp/server
+      // - "built_in" keyword can be used to include all built ins
+      // Blank = all built-in tools
+
+      // Handle MCP first
       // If ANY mcp tools are specifically called out, only allow those ones for that mcp server
+      // Otherwise the blanket allow will cover all MCP tools
       if (specificTools.length) {
         const specificSet = new Set(specificTools.map((t) => t.toolName));
         const notMentioned = server.tools.filter(
@@ -113,6 +125,8 @@ export class ToolPermissionService
       }
     }
 
+    // If mcp servers or specific built-in tools are specified
+    // then we only inclue listed built-in tools and exclude all others
     const hasMcp = !!parsedTools.mcpServers?.length;
     const specificBuiltIns = parsedTools.tools
       .filter((t) => !t.mcpServer)
