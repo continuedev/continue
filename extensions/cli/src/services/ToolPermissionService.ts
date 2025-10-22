@@ -86,7 +86,7 @@ export class ToolPermissionService
         (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
       );
       if (!server) {
-        console.warn("No connected MCP server found ");
+        logger.warn("No connected MCP server found ");
         continue;
       }
 
