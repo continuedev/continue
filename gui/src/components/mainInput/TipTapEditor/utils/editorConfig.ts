@@ -196,6 +196,8 @@ export function createEditorConfig(options: {
         addKeyboardShortcuts() {
           return {
             Enter: () => {
+              console.log("debug1 here", inDropdownRef.current);
+
               if (inDropdownRef.current) {
                 return false;
               }
@@ -350,7 +352,7 @@ export function createEditorConfig(options: {
     if (!editor) {
       return;
     }
-    if (isStreaming || (codeToEdit.length === 0 && isInEdit)) {
+    if (isStreamingRef.current || (codeToEdit.length === 0 && isInEdit)) {
       return;
     }
 
