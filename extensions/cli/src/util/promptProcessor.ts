@@ -42,5 +42,8 @@ export function prependPrompt(
   prepend: string | undefined,
   original: string | undefined,
 ) {
-  return `${prepend ?? ""}\n\n${original ?? ""}`.trim() || undefined;
+  return (
+    `${(prepend ?? "").trim()}\n\n${(original ?? "").trim()}`.trim() ||
+    undefined
+  );
 }
