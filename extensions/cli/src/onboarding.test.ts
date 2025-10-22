@@ -108,11 +108,8 @@ name: "Incomplete Config"
   });
 
   test("should handle empty string config path", async () => {
-    // Empty string should be treated differently from undefined
-    // Note: empty string triggers onboarding flow, but should still fail in our error format
-    await expect(
-      initializeWithOnboarding(mockAuthConfig, ""),
-    ).rejects.toThrow();
+    // Loads default agent with no error
+    await initializeWithOnboarding(mockAuthConfig, "");
   });
 
   test("should not fall back to default config when explicit config fails", async () => {

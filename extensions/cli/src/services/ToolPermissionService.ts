@@ -1,4 +1,4 @@
-import { ALL_BUILT_IN_TOOLS } from "src/tools/index.js";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
@@ -71,7 +71,7 @@ export class ToolPermissionService
   /**
    * Generate agent-file-specific policies if an agent file is active
    */
-  private generateAgentFilePolicies(
+  generateAgentFilePolicies(
     agentFileServiceState?: AgentFileServiceState,
     mcpServiceState?: MCPServiceState,
   ): undefined | ToolPermissionPolicy[] {
@@ -163,17 +163,33 @@ export class ToolPermissionService
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations other than MCP
-        // TODO - RECONSIDER MCP, maybe fall back to user settings for MCP
+        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
         return [
           // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
-          { tool: "Bash", permission: "exclude" },
-          { tool: "*", permission: "allow" },
+          // Allow all read tools and bash
+          { tool: "Bash", permission: "allow" },
+          { tool: "Read", permission: "allow" },
+          { tool: "List", permission: "allow" },
+          { tool: "Search", permission: "allow" },
+          { tool: "Fetch", permission: "allow" },
+          { tool: "Diff", permission: "allow" },
+          { tool: "Checklist", permission: "allow" },
+          { tool: "NotebookRead", permission: "allow" },
+          { tool: "LS", permission: "allow" },
+          { tool: "Glob", permission: "allow" },
+          { tool: "Grep", permission: "allow" },
+          { tool: "WebFetch", permission: "allow" },
+          { tool: "WebSearch", permission: "allow" },
+          // Allow MCP tools (no way to know if they're read only but shouldn't disable mcp usage in plan)
+          { tool: "mcp:*", permission: "allow" },
+          // Default: exclude everything else to ensure no writes
+          { tool: "*", permission: "exclude" },
         ];
+
       case "auto":
         // Auto mode: Complete override - allow everything without asking
         return [{ tool: "*", permission: "allow" }];
@@ -194,6 +210,7 @@ export class ToolPermissionService
     agentFileServiceState?: AgentFileServiceState,
     mcpServiceState?: MCPServiceState,
   ): ToolPermissionServiceState {
+    console.log("TOOL PERMISSIONS");
     logger.debug("Synchronously initializing ToolPermissionService");
 
     // Set mode from overrides or default

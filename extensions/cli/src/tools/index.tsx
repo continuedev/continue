@@ -36,20 +36,6 @@ import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolCall, ToolParametersSchema };
 
-export const ALL_BUILT_IN_TOOLS = [
-  readFileTool,
-  editTool,
-  multiEditTool,
-  writeFileTool,
-  listFilesTool,
-  searchCodeTool,
-  runTerminalCommandTool,
-  fetchTool,
-  writeChecklistTool,
-  exitTool,
-  statusTool,
-];
-
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,

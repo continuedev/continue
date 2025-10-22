@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 
@@ -40,7 +40,7 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       expect(result.permission).toBe("exclude");
     });
 
-    it("should exclude Bash tool in plan mode", () => {
+    it("should allow Bash tool in plan mode", () => {
       const permissions = service.getPermissions();
       const toolCall = {
         name: "Bash",
@@ -49,7 +49,7 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       const result = checkToolPermission(toolCall, permissions);
 
       console.log(`Bash permission check result:`, result);
-      expect(result.permission).toBe("exclude");
+      expect(result.permission).toBe("allow");
     });
 
     it("should allow Read tool in plan mode", () => {
@@ -74,6 +74,18 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
 
       console.log(`List permission check result:`, result);
       expect(result.permission).toBe("allow");
+    });
+
+    it("should deny unknown tools in plan mode (wildcard exclude)", () => {
+      const permissions = service.getPermissions();
+      const toolCall = {
+        name: "unknown_write_tool",
+        arguments: {},
+      };
+      const result = checkToolPermission(toolCall, permissions);
+
+      console.log(`unknown_write_tool permission check result:`, result);
+      expect(result.permission).toBe("exclude");
     });
   });
 

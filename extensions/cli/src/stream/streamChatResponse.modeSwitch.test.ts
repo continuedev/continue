@@ -51,10 +51,10 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     // Should exclude write tools in plan mode
     expect(toolNames).not.toContain("Write");
     expect(toolNames).not.toContain("MultiEdit");
-    expect(toolNames).not.toContain("Bash");
 
     // Should still include read-only tools
     expect(toolNames).toContain("Read");
+    expect(toolNames).toContain("Bash");
     expect(toolNames).toContain("List");
   });
 

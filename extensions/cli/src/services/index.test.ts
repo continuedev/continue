@@ -2,6 +2,7 @@ import { Configuration, DefaultApi } from "@continuedev/sdk/dist/api";
 import { vi } from "vitest";
 
 import { initializeServices, services } from "./index.js";
+import { MCPService } from "./MCPService.js";
 
 // Mock the onboarding module
 vi.mock("../onboarding.js", () => ({
@@ -63,6 +64,18 @@ describe("initializeServices", () => {
       config: { name: "test", version: "1.0.0" },
       configPath: undefined,
     });
+    vi.spyOn(services.mcp, "initialize").mockResolvedValue({
+      connections: [],
+      mcpService: new MCPService(),
+      prompts: [],
+      tools: [],
+    });
+    // vi.spyOn(services.toolPermissions, "initialize").mockResolvedValue({
+    //   permissions: { policies: [] },
+    //   currentMode: "normal" as const,
+    //   isHeadless: false,
+    //   modePolicyCount: 0,
+    // });
   });
 
   afterEach(() => {
@@ -96,6 +109,12 @@ describe("initializeServices", () => {
           agentFileModel: null,
           parsedRules: null,
           parsedTools: null,
+        },
+        {
+          connections: [],
+          mcpService: expect.any(MCPService),
+          prompts: [],
+          tools: [],
         },
       );
     });
