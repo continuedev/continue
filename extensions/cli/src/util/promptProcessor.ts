@@ -36,3 +36,11 @@ export async function processAndCombinePrompts(
     ? `${combinedPrompts}\n\n${initialPrompt}`
     : combinedPrompts;
 }
+
+// Merges two prompts with new lines between them, handling undefined
+export function prependPrompt(
+  prepend: string | undefined,
+  original: string | undefined,
+) {
+  return `${prepend ?? ""}\n\n${original ?? ""}`.trim() || undefined;
+}
