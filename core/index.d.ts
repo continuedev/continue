@@ -830,8 +830,6 @@ export interface IDE {
 
   readFile(fileUri: string): Promise<string>;
 
-  readRangeInFile(fileUri: string, range: Range): Promise<string>;
-
   showLines(fileUri: string, startLine: number, endLine: number): Promise<void>;
 
   getOpenFiles(): Promise<string[]>;
@@ -884,9 +882,6 @@ export interface IDE {
   getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
   getReferences(location: Location): Promise<RangeInFile[]>;
   getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
-
-  // Callbacks
-  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
 }
 
 // Slash Commands

@@ -1,15 +1,13 @@
 import { Position, Range } from "../index.js";
 
-export function getRangeInString(content: string, range: Range): string {
-  const lines = content.split("\n");
-
+export function getRangeInString(lines: string[], range: Range): string[] {
   if (range.start.line === range.end.line) {
-    return (
+    return [
       lines[range.start.line]?.substring(
         range.start.character,
         range.end.character,
-      ) ?? ""
-    );
+      ) ?? "",
+    ];
   }
 
   const firstLine =
@@ -21,7 +19,7 @@ export function getRangeInString(content: string, range: Range): string {
   const lastLine =
     lines[range.end.line]?.substring(0, range.end.character) ?? "";
 
-  return [firstLine, ...middleLines, lastLine].join("\n");
+  return [firstLine, ...middleLines, lastLine];
 }
 
 export function intersection(a: Range, b: Range): Range | null {

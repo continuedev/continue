@@ -1,7 +1,6 @@
 import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
-import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { DEFAULT_IGNORES, defaultIgnoresGlob } from "core/indexing/ignore";
 import * as URI from "uri-js";
@@ -137,14 +136,6 @@ class VsCodeIde implements IDE {
     return result;
   }
 
-  onDidChangeActiveTextEditor(callback: (uri: string) => void): void {
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-        callback(editor.document.uri.toString());
-      }
-    });
-  }
-
   showToast: IDE["showToast"] = async (...params) => {
     const [type, message, ...otherParams] = params;
     const { showErrorMessage, showWarningMessage, showInformationMessage } =
@@ -207,16 +198,6 @@ class VsCodeIde implements IDE {
       extensionVersion: getExtensionVersion(),
       isPrerelease: isExtensionPrerelease(),
     });
-  }
-
-  readRangeInFile(fileUri: string, range: Range): Promise<string> {
-    return this.ideUtils.readRangeInFile(
-      vscode.Uri.parse(fileUri),
-      new vscode.Range(
-        new vscode.Position(range.start.line, range.start.character),
-        new vscode.Position(range.end.line, range.end.character),
-      ),
-    );
   }
 
   async getFileStats(files: string[]): Promise<FileStatsMap> {

@@ -8,7 +8,6 @@ import type {
   IndexTag,
   Location,
   Problem,
-  Range,
   RangeInFile,
   SignatureHelp,
   TerminalOptions,
@@ -50,7 +49,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
-  readRangeInFile: [{ filepath: string; range: Range }, string];
   getDiff: [{ includeUnstaged: boolean }, string[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];

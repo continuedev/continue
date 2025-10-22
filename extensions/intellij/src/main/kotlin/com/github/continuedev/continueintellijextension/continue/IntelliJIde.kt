@@ -348,24 +348,6 @@ class IntelliJIDE(
     override suspend fun readFile(filepath: String): String =
         fileUtils.readFile(filepath)
 
-    override suspend fun readRangeInFile(filepath: String, range: Range): String {
-        val fullContents = readFile(filepath)
-        val lines = fullContents.lines()
-        val startLine = range.start.line
-        val startCharacter = range.start.character
-        val endLine = range.end.line
-        val endCharacter = range.end.character
-
-        val firstLine = lines.getOrNull(startLine)?.substring(startCharacter) ?: ""
-        val lastLine = lines.getOrNull(endLine)?.substring(0, endCharacter) ?: ""
-        val betweenLines = if (endLine - startLine > 1) {
-            lines.subList(startLine + 1, endLine).joinToString("\n")
-        } else {
-            ""
-        }
-
-        return listOf(firstLine, betweenLines, lastLine).filter { it.isNotEmpty() }.joinToString("\n")
-    }
 
     override suspend fun showLines(filepath: String, startLine: Int, endLine: Int) {
         setFileOpen(filepath, true)

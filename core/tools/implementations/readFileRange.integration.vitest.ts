@@ -168,7 +168,7 @@ test("readFileRangeImpl handles normal ranges correctly", async () => {
   vi.mocked(throwIfFileExceedsHalfOfContext).mockResolvedValue(undefined);
 
   const mockIde = {
-    readRangeInFile: vi.fn().mockResolvedValue("line2\nline3\nline4"),
+    readFile: vi.fn().mockResolvedValue("line2\nline3\nline4"),
   };
 
   const mockExtras = {
@@ -197,7 +197,7 @@ test("readFileRangeImpl handles normal ranges correctly", async () => {
   });
 
   // Verify correct 0-based conversion
-  expect(mockIde.readRangeInFile).toHaveBeenCalledWith("file:///test.txt", {
+  expect(mockIde.readFile).toHaveBeenCalledWith("file:///test.txt", {
     start: { line: 1, character: 0 }, // 2 - 1
     end: { line: 3, character: Number.MAX_SAFE_INTEGER }, // 4 - 1
   });

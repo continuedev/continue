@@ -1,5 +1,6 @@
 import { IDE, RangeInFileWithContents } from "../..";
 import { PrecalculatedLruCache } from "../../util/LruCache";
+import { readRangeInFile } from "../../util/rangeInFile";
 import {
   getFullLanguageName,
   getParserForFile,
@@ -21,15 +22,16 @@ export class ImportDefinitionsService {
     );
 
   constructor(private readonly ide: IDE) {
-    ide.onDidChangeActiveTextEditor((filepath) => {
-      this.cache
-        .initKey(filepath)
-        .catch((e) =>
-          console.warn(
-            `Failed to initialize ImportDefinitionService: ${e.message}`,
-          ),
-        );
-    });
+    console.log("new import definitions service");
+    //  ide.onDidChangeActiveTextEditor((filepath) => {
+    //   this.cache
+    //     .initKey(filepath)
+    //     .catch((e) =>
+    //       console.warn(
+    //         `Failed to initialize ImportDefinitionService: ${e.message}`,
+    //       ),
+    //     );
+    // });
   }
 
   get(filepath: string): FileInfo | undefined {
@@ -58,6 +60,9 @@ export class ImportDefinitionsService {
       if (!foundInDir) {
         return null;
       } else {
+        console.log(
+          `read file - Import definition service _getFileInfo - ${filepath}`,
+        );
         fileContents = await this.ide.readFile(filepath);
       }
     } catch (err) {
@@ -101,10 +106,12 @@ export class ImportDefinitionsService {
         },
       });
       fileInfo.imports[match.captures[0].node.text] = await Promise.all(
-        defs.map(async (def) => ({
-          ...def,
-          contents: await this.ide.readRangeInFile(def.filepath, def.range),
-        })),
+        defs.map(async (def) => {
+          return {
+            ...def,
+            contents: await readRangeInFile(this.ide, def.filepath, def.range),
+          };
+        }),
       );
     }
 

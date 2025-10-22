@@ -634,8 +634,12 @@ export class VsCodeExtension {
     );
     context.subscriptions.push(linkProvider);
 
-    this.ide.onDidChangeActiveTextEditor((filepath) => {
-      void this.core.invoke("files/opened", { uris: [filepath] });
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        this.core.invoke("files/opened", {
+          uris: [editor.document.uri.toString()],
+        });
+      }
     });
 
     // initializes openedFileLruCache with files that are already open when the extension is activated

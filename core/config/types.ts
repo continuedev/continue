@@ -696,8 +696,6 @@ declare global {
   
     readFile(filepath: string): Promise<string>;
   
-    readRangeInFile(filepath: string, range: Range): Promise<string>;
-  
     showLines(
       filepath: string,
       startLine: number,
@@ -746,9 +744,6 @@ declare global {
     getSignatureHelp(location: Location): Promise<SignatureHelp | null>;
     getReferences(location: Location): Promise<RangeInFile[]>;
     getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
-  
-    // Callbacks
-    onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
   }
   
   // Slash Commands

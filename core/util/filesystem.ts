@@ -11,7 +11,6 @@ import {
   IndexTag,
   Location,
   Problem,
-  Range,
   RangeInFile,
   SignatureHelp,
   TerminalOptions,
@@ -59,10 +58,6 @@ class FileSystemIde implements IDE {
 
   getDocumentSymbols(fileUri: string): Promise<DocumentSymbol[]> {
     return Promise.resolve([]);
-  }
-
-  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
-    return;
   }
 
   isWorkspaceRemote(): Promise<boolean> {
@@ -139,10 +134,6 @@ class FileSystemIde implements IDE {
       extensionVersion: "na",
       isPrerelease: false,
     });
-  }
-
-  readRangeInFile(fileUri: string, range: Range): Promise<string> {
-    return Promise.resolve("");
   }
 
   isTelemetryEnabled(): Promise<boolean> {

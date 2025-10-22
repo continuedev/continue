@@ -673,19 +673,6 @@ export class VsCodeMessenger {
     // None right now
 
     /** BOTH CORE AND WEBVIEW **/
-    this.onWebviewOrCore("readRangeInFile", async (msg) => {
-      return await vscode.workspace
-        .openTextDocument(msg.data.filepath)
-        .then((document) => {
-          const start = new vscode.Position(0, 0);
-          const end = new vscode.Position(5, 0);
-          const range = new vscode.Range(start, end);
-
-          const contents = document.getText(range);
-          return contents;
-        });
-    });
-
     this.onWebviewOrCore("getIdeSettings", async (msg) => {
       return ide.getIdeSettings();
     });
