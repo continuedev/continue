@@ -210,7 +210,6 @@ export class ToolPermissionService
     agentFileServiceState?: AgentFileServiceState,
     mcpServiceState?: MCPServiceState,
   ): ToolPermissionServiceState {
-    console.log("TOOL PERMISSIONS");
     logger.debug("Synchronously initializing ToolPermissionService");
 
     // Set mode from overrides or default
