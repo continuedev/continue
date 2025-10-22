@@ -227,7 +227,7 @@ export async function getAllTools() {
   );
 
   const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
-    type: "function" as const,
+    type: tool.type || "function",
     function: {
       name: tool.name,
       description: tool.description,
