@@ -1,0 +1,233 @@
+name: Continue Code Review (Debug)
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@review-bot'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate App Token (Optional)
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        if: vars.APP_ID && secrets.APP_PRIVATE_KEY
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Continue API Key
+        run: |
+          echo "🔍 Checking if CONTINUE_API_KEY is set..."
+          if [ -z "${{ secrets.CONTINUE_API_KEY }}" ]; then
+            echo "❌ ERROR: CONTINUE_API_KEY secret is not set!"
+            echo "Please add it in Settings → Secrets and variables → Actions"
+            echo "Get your key from: https://hub.continue.dev/settings/api-keys"
+            exit 1
+          else
+            echo "✅ CONTINUE_API_KEY is set (length: ${#CONTINUE_API_KEY})"
+          fi
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Install Continue CLI
+        run: |
+          echo "📦 Installing Continue CLI..."
+          npm i -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+          echo "🔍 Checking Continue CLI version..."
+          cn --version || echo "⚠️ Warning: Could not get CLI version"
+
+      - name: Verify Continue CLI Installation
+        run: |
+          echo "🔍 Verifying Continue CLI installation..."
+          which cn || echo "❌ ERROR: cn command not found in PATH"
+          cn --help || echo "❌ ERROR: cn --help failed"
+
+      - name: Get PR Details
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token || github.token }}
+        run: |
+          echo "🔍 Getting PR details..."
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            PR_NUMBER=$(jq -r .issue.number "$GITHUB_EVENT_PATH")
+          else
+            PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
+          fi
+
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "✅ PR Number: $PR_NUMBER"
+
+          echo "📥 Fetching PR diff..."
+          gh pr diff $PR_NUMBER > pr.diff || {
+            echo "❌ ERROR: Failed to fetch PR diff"
+            exit 1
+          }
+          echo "✅ PR diff saved ($(wc -l < pr.diff) lines)"
+
+          echo "📁 Fetching changed files..."
+          gh pr view $PR_NUMBER --json files -q '.files[].path' > changed_files.txt || {
+            echo "❌ ERROR: Failed to fetch changed files"
+            exit 1
+          }
+          echo "✅ Changed files saved ($(wc -l < changed_files.txt) files)"
+
+          echo "📋 Changed files:"
+          cat changed_files.txt
+
+      - name: Check for Custom Rules
+        run: |
+          echo "🔍 Checking for custom rules in .continue/rules/..."
+          if [ -d ".continue/rules" ]; then
+            echo "✅ Found .continue/rules directory"
+            echo "📋 Custom rules:"
+            find .continue/rules -name "*.md" -o -name "*.txt" || echo "No rule files found"
+          else
+            echo "ℹ️ No custom rules directory found (this is optional)"
+          fi
+
+      - name: Run Continue Review
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          echo "🤖 Running Continue code review..."
+
+          CHANGED_FILES=$(cat changed_files.txt | tr '\n' ' ')
+          DIFF=$(cat pr.diff)
+
+          # Check if running from issue comment
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            COMMENT_BODY="${{ github.event.comment.body }}"
+            CUSTOM_REQUEST=$(echo "$COMMENT_BODY" | sed -n 's/.*@review-bot check for \(.*\)/\1/p')
+            if [ -n "$CUSTOM_REQUEST" ]; then
+              echo "📝 Custom review request: $CUSTOM_REQUEST"
+              FOCUS="Focus specifically on: $CUSTOM_REQUEST"
+            fi
+          fi
+
+          PROMPT="You are an expert code reviewer. Review the following pull request changes.
+
+Changed files:
+$CHANGED_FILES
+
+Diff:
+\`\`\`diff
+$DIFF
+\`\`\`
+
+${FOCUS:-Review the code for potential issues, bugs, security concerns, and improvements.}
+
+Provide your review in the following markdown format:
+
+## Summary
+Brief overview of the changes
+
+## Key Findings
+- List any issues, bugs, or security concerns
+- Suggest improvements
+
+## Positive Observations
+- Note good practices
+
+## Recommendations
+- Actionable suggestions"
+
+          echo "🔍 Prompt length: ${#PROMPT} characters"
+          echo "🔍 Running: cn --config continuedev/code-reviewer -p \"...\" --auto"
+
+          cn --config continuedev/code-reviewer \
+             -p "$PROMPT" \
+             --auto > review_output.md 2>&1 || {
+            EXIT_CODE=$?
+            echo "❌ ERROR: Continue review failed with exit code $EXIT_CODE"
+            echo "📋 Output:"
+            cat review_output.md
+            echo ""
+            echo "🔍 Debugging information:"
+            echo "  - Continue API Key length: ${#CONTINUE_API_KEY}"
+            echo "  - Config: continuedev/code-reviewer"
+            echo "  - Prompt length: ${#PROMPT}"
+            echo ""
+            echo "💡 Common issues:"
+            echo "  1. Invalid or expired CONTINUE_API_KEY"
+            echo "  2. Assistant 'continuedev/code-reviewer' not found or not accessible"
+            echo "  3. Continue Hub account issues"
+            echo ""
+            echo "🔧 Troubleshooting steps:"
+            echo "  1. Verify your API key at https://hub.continue.dev/settings/api-keys"
+            echo "  2. Check that you have access to the code-reviewer assistant"
+            echo "  3. Try creating a custom assistant for code reviews"
+            exit $EXIT_CODE
+          }
+
+          echo "✅ Review completed successfully"
+          echo "📋 Review output:"
+          cat review_output.md
+
+      - name: Post Review Comment
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token || github.token }}
+        run: |
+          echo "💬 Posting review comment..."
+
+          PR_NUMBER="${{ steps.pr.outputs.PR_NUMBER }}"
+          REVIEW_BODY=$(cat review_output.md)
+
+          COMMENT_BODY="## 🤖 AI Code Review
+
+$REVIEW_BODY
+
+---
+*Powered by Continue • Need a focused review? Comment \`@review-bot check for [specific concern]\`*"
+
+          # Check for existing review comment
+          EXISTING_COMMENT=$(gh api \
+            repos/${{ github.repository }}/issues/$PR_NUMBER/comments \
+            --jq '.[] | select(.body | contains("🤖 AI Code Review")) | .id' \
+            | head -n 1)
+
+          if [ -n "$EXISTING_COMMENT" ]; then
+            echo "🔄 Updating existing comment (ID: $EXISTING_COMMENT)..."
+            gh api \
+              --method PATCH \
+              repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT \
+              -f body="$COMMENT_BODY"
+            echo "✅ Comment updated"
+          else
+            echo "✨ Creating new comment..."
+            gh pr comment $PR_NUMBER --body "$COMMENT_BODY"
+            echo "✅ Comment created"
+          fi
+
+      - name: Upload Artifacts (Debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-debug-artifacts
+          path: |
+            pr.diff
+            changed_files.txt
+            review_output.md
+          retention-days: 7

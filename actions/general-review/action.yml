@@ -14,7 +14,8 @@ inputs:
     required: true
   github-token:
     description: "GitHub token for API access"
-    required: true
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: "composite"
@@ -26,7 +27,7 @@ runs:
       id: auth-check
       uses: actions/github-script@v7
       with:
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token || github.token }}
         script: |
           let shouldRun = false;
           let skipReason = '';
@@ -124,7 +125,7 @@ runs:
       id: initial-comment
       uses: actions/github-script@v7
       with:
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token || github.token }}
         script: |
           const marker = '<!-- continue-agent-review -->';
 
@@ -210,7 +211,7 @@ runs:
       if: env.SHOULD_RUN == 'true'
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
       run: |
         # Get PR number based on event type
         if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -233,7 +234,7 @@ runs:
         CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
         CONTINUE_ORG: ${{ inputs.continue-org }}
         CONTINUE_AGENT: ${{ inputs.continue-agent }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
       run: |
         echo "Running Continue CLI with prompt:"
         echo "=================================="
@@ -344,7 +345,7 @@ runs:
       if: env.SHOULD_RUN == 'true' && always()
       uses: actions/github-script@v7
       with:
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token || github.token }}
         script: |
           const fs = require('fs');
 
