@@ -30,13 +30,13 @@ import { gracefulExit } from "../util/exit.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import { question } from "../util/prompt.js";
+import { prependPrompt } from "../util/promptProcessor.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
   shouldAutoCompact,
 } from "../util/tokenizer.js";
 
-import { prependPrompt } from "../util/promptProcessor.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**

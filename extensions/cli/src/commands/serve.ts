@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { posthogService } from "src/telemetry/posthogService.js";
+import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
@@ -31,7 +32,6 @@ import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
-import { prependPrompt } from "src/util/promptProcessor.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import {
   streamChatResponseWithInterruption,
