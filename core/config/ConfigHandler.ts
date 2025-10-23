@@ -132,6 +132,17 @@ export class ConfigHandler {
         if (match) {
           selectedOrg = match;
         } else {
+          // Log when we fall back from a saved selection to prevent unexpected switches
+          Logger.log(
+            `Saved org selection (${currentSelection}) not found in available orgs. Falling back to ${fallback?.name ?? "none"} (${fallback?.id ?? "none"}). Reason: ${reason}`,
+          );
+          void Telemetry.capture("org_fallback", {
+            savedOrgId: currentSelection,
+            fallbackOrgId: fallback?.id ?? null,
+            fallbackOrgName: fallback?.name ?? null,
+            reason,
+            availableOrgIds: orgs.map((org) => org.id),
+          });
           selectedOrg = fallback;
         }
       } else {
@@ -140,6 +151,14 @@ export class ConfigHandler {
 
       if (signal.aborted) {
         return; // local only case, no`fetch to throw abort error
+      }
+
+      // Check if org is actually changing (not just reloading same org)
+      const isOrgChanging = this.currentOrg?.id !== selectedOrg?.id;
+      if (isOrgChanging) {
+        Logger.log(
+          `Organization change detected during cascadeInit. Previous: ${this.currentOrg?.name ?? "none"} (${this.currentOrg?.id ?? "none"}), New: ${selectedOrg?.name ?? "none"} (${selectedOrg?.id ?? "none"}). Reason: ${reason}`,
+        );
       }
 
       this.globalContext.update("lastSelectedOrgIdForWorkspace", {
@@ -442,8 +461,25 @@ export class ConfigHandler {
     }
     const org = this.organizations.find((org) => org.id === orgId);
     if (!org) {
+      Logger.error(`Attempted to switch to non-existent org: ${orgId}`);
       throw new Error(`Org ${orgId} not found`);
     }
+
+    // Log org switch for debugging
+    const previousOrgId = this.currentOrg?.id;
+    const previousOrgName = this.currentOrg?.name;
+    Logger.log(
+      `Switching organization from ${previousOrgName ?? "none"} (${previousOrgId ?? "none"}) to ${org.name} (${org.id})`,
+    );
+
+    // Track org switches for telemetry
+    void Telemetry.capture("org_switch", {
+      previousOrgId: previousOrgId ?? null,
+      previousOrgName: previousOrgName ?? null,
+      newOrgId: org.id,
+      newOrgName: org.name,
+      isSignedIn: await this.controlPlaneClient.isSignedIn(),
+    });
 
     const workspaceId = await this.getWorkspaceId();
     const selectedOrgs =
@@ -466,6 +502,9 @@ export class ConfigHandler {
   // Profile id: check id validity, save selection, switch and reload
   async setSelectedProfileId(profileId: string) {
     if (!this.currentOrg) {
+      Logger.error(
+        `Attempted to set profile without org selection. Profile ID: ${profileId}`,
+      );
       throw new Error(`No org selected`);
     }
     if (
@@ -478,8 +517,18 @@ export class ConfigHandler {
       (profile) => profile.profileDescription.id === profileId,
     );
     if (!profile) {
+      Logger.error(
+        `Attempted to switch to non-existent profile: ${profileId} in org: ${this.currentOrg.name} (${this.currentOrg.id})`,
+      );
       throw new Error(`Profile ${profileId} not found in current org`);
     }
+
+    // Log profile switch for debugging
+    const previousProfileId = this.currentProfile?.profileDescription.id;
+    const previousProfileTitle = this.currentProfile?.profileDescription.title;
+    Logger.log(
+      `Switching profile from ${previousProfileTitle ?? "none"} (${previousProfileId ?? "none"}) to ${profile.profileDescription.title} (${profile.profileDescription.id}) in org ${this.currentOrg.name}`,
+    );
 
     const profileKey = await this.getProfileKey(this.currentOrg.id);
     const selectedProfiles =
