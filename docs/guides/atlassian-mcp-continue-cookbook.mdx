@@ -408,109 +408,6 @@ Integrate actions across Jira, Confluence, and Compass for powerful cross-produc
 
 ---
 
-## Automate with GitHub Actions
-
-Run headless commands on a schedule or in PRs to keep teams informed.
-
-### Add GitHub Secrets
-
-Repository Settings → Secrets and variables → Actions:
-
-- `CONTINUE_API_KEY`: From [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
-
-<Note>
-  No Atlassian API keys needed! The Atlassian MCP uses OAuth, which is handled during the initial setup.
-</Note>
-
-### Example Workflow: Sprint Summary
-
-Create `.github/workflows/atlassian-sprint-summary.yml`:
-
-```yaml
-name: Weekly Sprint Summary
-
-on:
-  schedule:
-    - cron: "0 9 * * 1"  # Mondays 9:00 AM UTC
-  workflow_dispatch:
-
-jobs:
-  sprint-summary:
-    runs-on: ubuntu-latest
-    env:
-      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      - name: Install Continue CLI
-        run: npm i -g @continuedev/cli
-
-      - name: Generate Sprint Report
-        run: |
-          cn --agent continuedev/atlassian-continuous-ai-jira-agent \
-             "Summarize the current sprint: completed issues, in-progress work, blockers. Create a Confluence page in the Sprint Reports space." \
-             > sprint_summary.txt
-
-      - name: Save Summary Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: sprint-summary
-          path: sprint_summary.txt
-```
-
-### Example Workflow: Documentation Sync
-
-Create `.github/workflows/doc-sync-check.yml`:
-
-```yaml
-name: Documentation Sync Check
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-    paths:
-      - 'src/**'
-      - 'docs/**'
-
-jobs:
-  doc-check:
-    runs-on: ubuntu-latest
-    env:
-      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      - name: Install Continue CLI
-        run: npm i -g @continuedev/cli
-
-      - name: Check for Related Confluence Pages
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          REPORT=$(cn --agent continuedev/atlassian-continuous-ai-confluence-agent \
-            "Search Confluence for pages related to the files changed in PR #${PR_NUMBER}. Check if documentation needs updating.")
-          echo "REPORT<<EOF" >> $GITHUB_ENV
-          echo "$REPORT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 📚 Documentation Sync Check\n\n${process.env.REPORT}`
-            })
-```
-
----
-
 ## Troubleshooting
 
 <AccordionGroup>
@@ -562,7 +459,6 @@ After completing this guide, you have a complete **AI-powered Atlassian workflow
 - ✅ Uses natural language — Simple prompts for complex Atlassian operations
 - ✅ Spans multiple products — Seamlessly works across Jira, Confluence, and Compass
 - ✅ Respects permissions — Secure OAuth-based access with existing role enforcement
-- ✅ Automates workflows — Scheduled reports and PR-triggered documentation checks
 - ✅ Runs headlessly — Integrate into CI/CD pipelines and automation scripts
 
 <Card title="Continuous AI" icon="rocket">
@@ -577,9 +473,8 @@ After completing this guide, you have a complete **AI-powered Atlassian workflow
 1. **Explore your projects** - Try the Jira search and triage prompts
 2. **Organize documentation** - Use Confluence workflows to summarize and create pages
 3. **Map your services** - Query Compass for service dependencies
-4. **Set up automation** - Add GitHub Actions workflows for recurring tasks
-5. **Customize prompts** - Tailor workflows to your team's specific needs
-6. **Monitor usage** - Track how AI improves your Atlassian workflows
+4. **Customize prompts** - Tailor workflows to your team's specific needs
+5. **Monitor usage** - Track how AI improves your Atlassian workflows
 
 ## Additional Resources
 
