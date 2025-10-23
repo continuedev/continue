@@ -48,7 +48,7 @@ For all options, first:
 ## Atlassian MCP Workflow Options
 
 <Card title="🚀 Fastest Path to Success" icon="rocket">
-  Use the Atlassian Rovo MCP from Continue Hub for one-click setup, or configure it manually.
+  Use the pre-configured Atlassian Continuous AI agent from Continue Hub for instant Confluence workflows.
 </Card>
 
 After ensuring you meet the **Prerequisites** above, you have two paths to get started:
@@ -56,27 +56,27 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
-      <Step title="Install Atlassian MCP via Continue Hub">
-        Visit the [Atlassian Rovo MCP](https://hub.continue.dev/explore/mcp) on Continue Hub and search for "Atlassian" to find the official MCP listing. Click **Install** to add it to your agent.
+      <Step title="Use the Atlassian Continuous AI Agent">
+        Visit the [Atlassian Continuous AI - Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) on Continue Hub. This agent comes pre-configured with the Atlassian Rovo MCP.
 
-        The listing provides a pre-configured MCP block that connects to `https://mcp.atlassian.com/v1/sse`.
+        No installation needed - you can start using it immediately from the command line!
       </Step>
 
       <Step title="Complete OAuth Authorization">
         On first use, you'll be prompted to authorize the MCP server in your browser. This is a one-time setup that grants access based on your Atlassian permissions.
       </Step>
 
-      <Step title="Launch the Agent">
-        From your repo root:
+      <Step title="Run Your First Command">
+        From anywhere in your terminal:
         ```bash
-        cn --config your-atlassian-agent
+        cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Show me my open Jira issues in project PROJ"
         ```
-        Now try: "Show me my open Jira issues in project PROJ."
+        The agent will connect to your Atlassian site and return results.
       </Step>
     </Steps>
 
     <Info>
-      You can also attach an MCP to a one-off session: `cn --mcp atlassian/rovo-mcp`.
+      **Pro tip**: Use shorter commands by omitting `--agent` flag once you've set it as default, or create an alias in your shell config.
     </Info>
   </Tab>
 
@@ -148,7 +148,7 @@ Find all open bugs in Project Alpha.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Find all open bugs in Project Alpha" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Find all open bugs in Project Alpha"
 ```
 </Card>
 
@@ -162,7 +162,7 @@ Show me all issues assigned to me that are in progress
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Show me all issues assigned to me that are in progress" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Show me all issues assigned to me that are in progress"
 ```
 </Card>
 
@@ -177,7 +177,7 @@ Summarize the workload distribution and flag any overloaded team members.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "List all issues in the current sprint. Group by assignee and priority. Summarize the workload distribution." --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "List all issues in the current sprint. Group by assignee and priority. Summarize the workload distribution."
 ```
 </Card>
 
@@ -195,7 +195,7 @@ by reducing steps from 5 to 3. Target completion: Q3.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Create a story titled 'Redesign onboarding flow' in Project Alpha with description: simplify registration from 5 to 3 steps, target Q3" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a story titled 'Redesign onboarding flow' in Project Alpha with description: simplify registration from 5 to 3 steps, target Q3"
 ```
 </Card>
 
@@ -214,7 +214,7 @@ Create five Jira issues from these meeting notes:
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Create 5 Jira issues: 1) Fix login timeout bug 2) Update API docs 3) Dark mode toggle 4) Review security audit 5) Optimize DB queries" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create 5 Jira issues: 1) Fix login timeout bug 2) Update API docs 3) Dark mode toggle 4) Review security audit 5) Optimize DB queries"
 ```
 </Card>
 
@@ -229,7 +229,7 @@ Move PROJ-123 to In Progress and add a comment:
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Move PROJ-123 to In Progress with comment: Starting work today, ETA end of week" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Move PROJ-123 to In Progress with comment: Starting work today, ETA end of week"
 ```
 </Card>
 
@@ -251,7 +251,7 @@ Summarize the Q2 planning page from the Engineering space
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Summarize the Q2 planning page from the Engineering space" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Summarize the Q2 planning page from the Engineering space"
 ```
 </Card>
 
@@ -265,7 +265,7 @@ Find all pages about API authentication in our developer docs
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Find all pages about API authentication in our developer docs" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Find all pages about API authentication in our developer docs"
 ```
 </Card>
 
@@ -279,7 +279,7 @@ What Confluence spaces do I have access to?
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "What Confluence spaces do I have access to?" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "What Confluence spaces do I have access to?"
 ```
 </Card>
 
@@ -296,7 +296,7 @@ Include sections for: Objectives, Key Results, and Timeline.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Create a Confluence page 'Team Goals Q3' in Engineering space with sections: Objectives, Key Results, Timeline" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a Confluence page 'Team Goals Q3' in Engineering space with sections: Objectives, Key Results, Timeline"
 ```
 </Card>
 
@@ -311,7 +311,7 @@ about our code review process
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Update the Onboarding Guide page to add a section about code review process" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Update the Onboarding Guide page to add a section about code review process"
 ```
 </Card>
 
@@ -333,7 +333,7 @@ What services depend on the api-gateway component?
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "What services depend on the api-gateway component?" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "What services depend on the api-gateway component?"
 ```
 </Card>
 
@@ -348,7 +348,7 @@ Use the package.json to infer details.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Create a Compass service component for the current repository based on package.json" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a Compass service component for the current repository based on package.json"
 ```
 </Card>
 
@@ -363,7 +363,7 @@ Import Compass components and custom fields from this CSV:
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Import Compass components from services.csv in the current directory" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Import Compass components from services.csv in the current directory"
 ```
 </Card>
 
@@ -384,7 +384,7 @@ to the 'Sprint 23 Release Plan' Confluence page
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Link tickets PROJ-123, PROJ-456, PROJ-789 to Sprint 23 Release Plan page in Confluence" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Link tickets PROJ-123, PROJ-456, PROJ-789 to Sprint 23 Release Plan page in Confluence"
 ```
 </Card>
 
@@ -399,7 +399,7 @@ to the user-authentication Compass component
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Get Confluence docs for user-authentication Compass component" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Get Confluence docs for user-authentication Compass component"
 ```
 </Card>
 
@@ -418,7 +418,7 @@ Create a Confluence page in the Release Notes space with:
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Generate release notes Confluence page for Sprint 23 completed issues: features by epic, bug fixes, known issues, deployment" --auto
+cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Generate release notes Confluence page for Sprint 23 completed issues: features by epic, bug fixes, known issues, deployment"
 ```
 </Card>
 
@@ -465,9 +465,9 @@ jobs:
 
       - name: Generate Sprint Report
         run: |
-          cn --config your-atlassian-agent \
-             -p "Summarize the current sprint: completed issues, in-progress work, blockers. Create a Confluence page in the Sprint Reports space." \
-             --auto > sprint_summary.txt
+          cn --agent continuedev/atlassian-continuous-ai-confluence-agent \
+             "Summarize the current sprint: completed issues, in-progress work, blockers. Create a Confluence page in the Sprint Reports space." \
+             > sprint_summary.txt
 
       - name: Save Summary Artifact
         uses: actions/upload-artifact@v3
@@ -507,9 +507,8 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          REPORT=$(cn --config your-atlassian-agent \
-            -p "Search Confluence for pages related to the files changed in PR #${PR_NUMBER}. Check if documentation needs updating." \
-            --auto)
+          REPORT=$(cn --agent continuedev/atlassian-continuous-ai-confluence-agent \
+            "Search Confluence for pages related to the files changed in PR #${PR_NUMBER}. Check if documentation needs updating.")
           echo "REPORT<<EOF" >> $GITHUB_ENV
           echo "$REPORT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
