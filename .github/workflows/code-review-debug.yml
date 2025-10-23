@@ -26,8 +26,8 @@ jobs:
 
       - name: Generate App Token (Optional)
         id: generate_token
-        if: ${{ secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != '' }}
         uses: actions/create-github-app-token@v1
+        if: secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != ''
         with:
           app-id: ${{ secrets.CONTINUE_APP_ID }}
           private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
