@@ -45,19 +45,32 @@ For all options, first:
   All data access respects your existing Jira, Confluence, and Compass user permissions.
 </Warning>
 
-## Atlassian MCP Workflow Options
+## Choose Your Atlassian Agent
 
-<Card title="🚀 Fastest Path to Success" icon="rocket">
-  Use the pre-configured Atlassian Continuous AI agent from Continue Hub for instant Confluence workflows.
+<Card title="🚀 Two Specialized Agents" icon="rocket">
+  Continue provides dedicated agents for Jira and Confluence workflows. Choose the agent that matches your needs.
 </Card>
 
-After ensuring you meet the **Prerequisites** above, you have two paths to get started:
+### Agent Quick Reference
+
+| Agent | Best For | Use Cases | Link |
+|-------|----------|-----------|------|
+| **Jira Agent** | Issue Management | Search issues, create stories, sprint planning, status updates, bulk operations | [View Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) |
+| **Confluence Agent** | Documentation | Search pages, summarize docs, create/update pages, manage spaces | [View Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) |
+
+<Note>
+  **Cross-product workflows**: Both agents can work with Jira, Confluence, and Compass. Choose based on your primary focus area.
+</Note>
 
 <Tabs>
-  <Tab title="⚡ Quick Start (Recommended)">
+  <Tab title="📋 Jira Agent (Recommended for Issue Management)">
     <Steps>
-      <Step title="Use the Atlassian Continuous AI Agent">
-        Visit the [Atlassian Continuous AI - Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) on Continue Hub. This agent comes pre-configured with the Atlassian Rovo MCP.
+      <Step title="Use the Jira Agent">
+        Visit the [Atlassian Continuous AI - Jira Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) on Continue Hub. This agent is optimized for:
+        - Searching and filtering Jira issues
+        - Creating and updating issues
+        - Sprint planning and workload analysis
+        - Issue transitions and status updates
 
         No installation needed - you can start using it immediately from the command line!
       </Step>
@@ -69,14 +82,52 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Run Your First Command">
         From anywhere in your terminal:
         ```bash
-        cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Show me my open Jira issues in project PROJ"
+        cn --agent continuedev/atlassian-continuous-ai-jira-agent "Show me my open issues assigned to me"
         ```
         The agent will connect to your Atlassian site and return results.
       </Step>
     </Steps>
 
     <Info>
-      **Pro tip**: Use shorter commands by omitting `--agent` flag once you've set it as default, or create an alias in your shell config.
+      **Pro tip**: Create a shell alias for the Jira agent:
+      ```bash
+      alias jira-ai='cn --agent continuedev/atlassian-continuous-ai-jira-agent'
+      ```
+      Then use: `jira-ai "your prompt"`
+    </Info>
+  </Tab>
+
+  <Tab title="📄 Confluence Agent (Recommended for Documentation)">
+    <Steps>
+      <Step title="Use the Confluence Agent">
+        Visit the [Atlassian Continuous AI - Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) on Continue Hub. This agent is optimized for:
+        - Searching and summarizing documentation
+        - Creating and updating Confluence pages
+        - Managing spaces and content
+        - Documentation discovery
+
+        No installation needed - you can start using it immediately from the command line!
+      </Step>
+
+      <Step title="Complete OAuth Authorization">
+        On first use, you'll be prompted to authorize the MCP server in your browser. This is a one-time setup that grants access based on your Atlassian permissions.
+      </Step>
+
+      <Step title="Run Your First Command">
+        From anywhere in your terminal:
+        ```bash
+        cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Summarize the Q2 planning page"
+        ```
+        The agent will connect to your Atlassian site and return results.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Pro tip**: Create a shell alias for the Confluence agent:
+      ```bash
+      alias confluence-ai='cn --agent continuedev/atlassian-continuous-ai-confluence-agent'
+      ```
+      Then use: `confluence-ai "your prompt"`
     </Info>
   </Tab>
 
@@ -127,13 +178,17 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 ## Jira Workflows
 
+<Note>
+  **Using the Jira Agent**: All examples below use the [Jira Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) which is optimized for issue management.
+</Note>
+
 Use natural language to explore, triage, and manage Jira issues. The agent calls Atlassian MCP tools under the hood.
 
 <Info>
   **Where to run these workflows:**
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
+  - **Terminal (TUI mode)**: Run `cn --agent continuedev/atlassian-continuous-ai-jira-agent` to enter interactive mode
+  - **CLI (headless mode)**: Use `cn --agent continuedev/atlassian-continuous-ai-jira-agent "prompt"` for automation
 </Info>
 
 ### Search and Discovery
@@ -148,7 +203,7 @@ Find all open bugs in Project Alpha.
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Find all open bugs in Project Alpha"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Find all open bugs in Project Alpha"
 ```
 </Card>
 
@@ -162,7 +217,7 @@ Show me all issues assigned to me that are in progress
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Show me all issues assigned to me that are in progress"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Show me all issues assigned to me that are in progress"
 ```
 </Card>
 
@@ -177,7 +232,7 @@ Summarize the workload distribution and flag any overloaded team members.
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "List all issues in the current sprint. Group by assignee and priority. Summarize the workload distribution."
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "List all issues in the current sprint. Group by assignee and priority. Summarize the workload distribution."
 ```
 </Card>
 
@@ -195,7 +250,7 @@ by reducing steps from 5 to 3. Target completion: Q3.
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a story titled 'Redesign onboarding flow' in Project Alpha with description: simplify registration from 5 to 3 steps, target Q3"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create a story titled 'Redesign onboarding flow' in Project Alpha with description: simplify registration from 5 to 3 steps, target Q3"
 ```
 </Card>
 
@@ -214,7 +269,7 @@ Create five Jira issues from these meeting notes:
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create 5 Jira issues: 1) Fix login timeout bug 2) Update API docs 3) Dark mode toggle 4) Review security audit 5) Optimize DB queries"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create 5 Jira issues: 1) Fix login timeout bug 2) Update API docs 3) Dark mode toggle 4) Review security audit 5) Optimize DB queries"
 ```
 </Card>
 
@@ -229,13 +284,17 @@ Move PROJ-123 to In Progress and add a comment:
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Move PROJ-123 to In Progress with comment: Starting work today, ETA end of week"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Move PROJ-123 to In Progress with comment: Starting work today, ETA end of week"
 ```
 </Card>
 
 ---
 
 ## Confluence Workflows
+
+<Note>
+  **Using the Confluence Agent**: All examples below use the [Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) which is optimized for documentation management.
+</Note>
 
 Access, search, and manage your team's documentation directly from Continue.
 
@@ -319,6 +378,10 @@ cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Update the Onbo
 
 ## Compass Workflows
 
+<Note>
+  **Using Either Agent**: Compass workflows work with both agents. Use the Jira agent for component-to-issue workflows, or the Confluence agent for component-to-docs workflows.
+</Note>
+
 Query and manage your service architecture with Compass integration.
 
 ### Service Discovery
@@ -333,7 +396,7 @@ What services depend on the api-gateway component?
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "What services depend on the api-gateway component?"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "What services depend on the api-gateway component?"
 ```
 </Card>
 
@@ -348,7 +411,7 @@ Use the package.json to infer details.
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a Compass service component for the current repository based on package.json"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create a Compass service component for the current repository based on package.json"
 ```
 </Card>
 
@@ -363,13 +426,19 @@ Import Compass components and custom fields from this CSV:
 
 **Headless Mode Prompt:**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Import Compass components from services.csv in the current directory"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Import Compass components from services.csv in the current directory"
 ```
 </Card>
 
 ---
 
 ## Combined Workflows
+
+<Note>
+  **Cross-Product Workflows**: These workflows span multiple Atlassian products. Choose the agent based on your primary focus:
+  - Use **Jira Agent** when the workflow is issue-centric
+  - Use **Confluence Agent** when the workflow is documentation-centric
+</Note>
 
 Integrate actions across Jira, Confluence, and Compass for powerful cross-product workflows.
 
@@ -382,9 +451,9 @@ Link Jira tickets PROJ-123, PROJ-456, and PROJ-789
 to the 'Sprint 23 Release Plan' Confluence page
 ```
 
-**Headless Mode Prompt:**
+**Headless Mode Prompt (using Jira Agent for issue-centric workflow):**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Link tickets PROJ-123, PROJ-456, PROJ-789 to Sprint 23 Release Plan page in Confluence"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Link tickets PROJ-123, PROJ-456, PROJ-789 to Sprint 23 Release Plan page in Confluence"
 ```
 </Card>
 
@@ -397,7 +466,7 @@ Fetch the Confluence documentation page linked
 to the user-authentication Compass component
 ```
 
-**Headless Mode Prompt:**
+**Headless Mode Prompt (using Confluence Agent for docs-centric workflow):**
 ```bash
 cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Get Confluence docs for user-authentication Compass component"
 ```
@@ -416,9 +485,9 @@ Create a Confluence page in the Release Notes space with:
 - Deployment instructions
 ```
 
-**Headless Mode Prompt:**
+**Headless Mode Prompt (using Jira Agent to pull issue data, create in Confluence):**
 ```bash
-cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Generate release notes Confluence page for Sprint 23 completed issues: features by epic, bug fixes, known issues, deployment"
+cn --agent continuedev/atlassian-continuous-ai-jira-agent "Generate release notes Confluence page for Sprint 23 completed issues: features by epic, bug fixes, known issues, deployment"
 ```
 </Card>
 
@@ -465,7 +534,7 @@ jobs:
 
       - name: Generate Sprint Report
         run: |
-          cn --agent continuedev/atlassian-continuous-ai-confluence-agent \
+          cn --agent continuedev/atlassian-continuous-ai-jira-agent \
              "Summarize the current sprint: completed issues, in-progress work, blockers. Create a Confluence page in the Sprint Reports space." \
              > sprint_summary.txt
 
