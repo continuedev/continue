@@ -3,17 +3,22 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
-import { ToolCallRequest } from "../permissions/types.js";
-import { services } from "../services/index.js";
+import { ToolCallRequest, ToolPermissions } from "../permissions/types.js";
+import {
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { calculateTokenCost } from "../telemetry/utils.js";
 import {
   executeToolCall,
-  getAllBuiltinTools,
-  getAvailableTools,
+  getAllAvailableTools,
   Tool,
   validateToolCallArgsPresent,
 } from "../tools/index.js";
@@ -48,34 +53,6 @@ export function handlePermissionDenied(
 
   callbacks?.onToolResult?.(deniedMessage, toolCall.name, "canceled");
   logger.debug(`Tool call rejected (${reason}) - stopping stream`);
-}
-
-// Helper function to handle headless mode permission
-export async function handleHeadlessPermission(
-  toolCall: PreprocessedToolCall,
-): Promise<never> {
-  const allBuiltinTools = getAllBuiltinTools();
-  const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
-  const toolName = tool?.displayName || toolCall.name;
-
-  // Import safeStderr to bypass console blocking in headless mode
-  const { safeStderr } = await import("../init.js");
-  safeStderr(
-    `Error: Tool '${toolName}' requires permission but cn is running in headless mode.\n`,
-  );
-  safeStderr(
-    `If you want to allow all tools without asking, use cn -p --auto "your prompt".\n`,
-  );
-  safeStderr(`If you want to allow this tool, use --allow ${toolName}.\n`);
-  safeStderr(
-    `If you don't want the tool to be included, use --exclude ${toolName}.\n`,
-  );
-
-  // Use graceful exit to flush telemetry even in headless denial
-  const { gracefulExit } = await import("../util/exit.js");
-  await gracefulExit(1);
-  // This line will never be reached, but TypeScript needs it for the 'never' return type
-  throw new Error("Exiting due to headless permission requirement");
 }
 
 // Helper function to request user permission
@@ -128,17 +105,19 @@ export async function requestUserPermission(
 
 // Helper function to check if tool permission is needed
 export async function checkToolPermissionApproval(
+  permissions: ToolPermissions,
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
 ): Promise<{ approved: boolean; denialReason?: "user" | "policy" }> {
-  const permissionCheck = checkToolPermission(toolCall);
+  const permissionCheck = checkToolPermission(toolCall, permissions);
 
   if (permissionCheck.permission === "allow") {
     return { approved: true };
   } else if (permissionCheck.permission === "ask") {
     if (isHeadless) {
-      await handleHeadlessPermission(toolCall);
+      // "ask" tools are excluded in headless so can only get here by policy evaluation
+      return { approved: false, denialReason: "policy" };
     }
     const userApproved = await requestUserPermission(toolCall, callbacks);
     return userApproved
@@ -318,6 +297,7 @@ export function recordStreamTelemetry(options: {
  * @returns - Preprocessed tool calls that are ready for execution
  */
 export async function preprocessStreamedToolCalls(
+  isHeadless: boolean,
   toolCalls: ToolCall[],
   callbacks?: StreamCallbacks,
 ): Promise<{
@@ -328,12 +308,12 @@ export async function preprocessStreamedToolCalls(
   const errorChatEntries: ChatCompletionToolMessageParam[] = [];
 
   // Get all available tools
-  const availableTools: Tool[] = await getAvailableTools();
 
   // Process each tool call
   for (const toolCall of toolCalls) {
     const startTime = Date.now();
     try {
+      const availableTools: Tool[] = await getAllAvailableTools(isHeadless);
       const tool = availableTools.find((t) => t.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool ${toolCall.name} not found`);
@@ -447,7 +427,12 @@ export async function executeStreamedToolCalls(
       callbacks?.onToolStart?.(call.name, call.arguments);
 
       // Check tool permissions using helper
+      const permissionState =
+        await serviceContainer.get<ToolPermissionServiceState>(
+          SERVICE_NAMES.TOOL_PERMISSIONS,
+        );
       const permissionResult = await checkToolPermissionApproval(
+        permissionState.permissions,
         call,
         callbacks,
         isHeadless,

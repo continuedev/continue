@@ -1,18 +1,21 @@
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { stripImages } from "core/util/messageContent.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
-import type { ChatCompletionTool } from "openai/resources.mjs";
 
-import { filterExcludedTools } from "../permissions/index.js";
+import { checkToolPermission } from "src/permissions/permissionChecker.js";
+
 import {
-  getServiceSync,
-  MCPServiceState,
-  MCPTool,
   SERVICE_NAMES,
+  serviceContainer,
   services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import { getAllBuiltinTools, ToolCall } from "../tools/index.js";
+import {
+  convertToolToChatCompletionTool,
+  getAllAvailableTools,
+  Tool,
+  ToolCall,
+} from "../tools/index.js";
 import { logger } from "../util/logger.js";
 
 import {
@@ -91,7 +94,7 @@ export async function handleToolCalls(
 
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
-    await preprocessStreamedToolCalls(toolCalls, callbacks);
+    await preprocessStreamedToolCalls(isHeadless, toolCalls, callbacks);
 
   // Add any preprocessing errors to chat history
   // Convert error entries from OpenAI format to ChatHistoryItem format
@@ -175,85 +178,28 @@ export async function handleToolCalls(
   return false;
 }
 
-export async function getAllTools() {
-  // Get all available tool names
-  const allBuiltinTools = getAllBuiltinTools();
-  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
+export async function getRequestTools(isHeadless: boolean) {
+  const availableTools = await getAllAvailableTools(isHeadless);
 
-  let mcpTools: MCPTool[] = [];
-  let mcpToolNames: string[] = [];
-  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
-  if (mcpServiceResult.state === "ready") {
-    mcpTools = mcpServiceResult?.value?.tools ?? [];
-    mcpToolNames = mcpTools.map((t) => t.name);
-  } else {
-    // MCP is lazy
-    // throw new Error("MCP Service not initialized");
+  const permissionsState =
+    await serviceContainer.get<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+
+  const allowedTools: Tool[] = [];
+  for (const tool of availableTools) {
+    const result = checkToolPermission(
+      { name: tool.name, arguments: {} },
+      permissionsState.permissions,
+    );
+
+    if (
+      result.permission === "allow" ||
+      (result.permission === "ask" && !isHeadless)
+    ) {
+      allowedTools.push(tool);
+    }
   }
 
-  const allToolNames = [...builtinToolNames, ...mcpToolNames];
-
-  // Check if the ToolPermissionService is ready
-  const permissionsServiceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-  );
-
-  let allowedToolNames: string[];
-  if (
-    permissionsServiceResult.state === "ready" &&
-    permissionsServiceResult.value
-  ) {
-    // Filter out excluded tools based on permissions
-    allowedToolNames = filterExcludedTools(
-      allToolNames,
-      permissionsServiceResult.value.permissions,
-    );
-  } else {
-    // Service not ready - this is a critical error since tools should only be
-    // requested after services are properly initialized
-    logger.error(
-      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue",
-    );
-    throw new Error(
-      "ToolPermissionService not initialized. Services must be initialized before requesting tools.",
-    );
-  }
-
-  const allowedToolNamesSet = new Set(allowedToolNames);
-
-  // Filter builtin tools
-  const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name),
-  );
-
-  const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
-    type: "function" as const,
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: {
-        type: "object",
-        required: tool.parameters.required,
-        properties: tool.parameters.properties,
-      },
-    },
-  }));
-
-  // Add filtered MCP tools
-  const allowedMcpTools = mcpTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name),
-  );
-
-  allTools.push(
-    ...allowedMcpTools.map((tool) => ({
-      type: "function" as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.inputSchema,
-      },
-    })),
-  );
-
-  return allTools;
+  return allowedTools.map(convertToolToChatCompletionTool);
 }
