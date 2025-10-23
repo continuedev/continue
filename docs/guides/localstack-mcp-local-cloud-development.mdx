@@ -1,0 +1,593 @@
+---
+title: "Local Cloud Development with LocalStack MCP"
+description: "Build and test AWS infrastructure locally with AI-powered deployment, chaos engineering, and state management using LocalStack MCP and Continue."
+sidebarTitle: "LocalStack Local Cloud Development Cookbook"
+---
+
+<Card title="What You'll Build" icon="cloud">
+  An AI-powered local cloud development workflow that deploys infrastructure to LocalStack, runs chaos experiments, manages state with Cloud Pods, and analyzes IAM policies - all without touching AWS.
+</Card>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Deploy CDK and Terraform projects to LocalStack automatically
+- Run chaos experiments to test system resilience
+- Analyze LocalStack logs and auto-generate IAM policies from violations
+- Manage development state snapshots with Cloud Pods
+- Execute AWS CLI commands against LocalStack
+
+## Prerequisites
+
+- [LocalStack CLI](https://docs.localstack.cloud/getting-started/installation/#localstack-cli) installed
+- Docker installed and running
+- Node.js 22+ installed
+- [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
+- [LocalStack Auth Token](https://docs.localstack.cloud/aws/getting-started/auth-token/) (optional, for Pro features)
+- Either [cdklocal](https://github.com/localstack/aws-cdk-local) or [tflocal](https://github.com/localstack/terraform-local) for infrastructure deployment
+
+## Quick Setup
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+  <Step title="Install LocalStack CLI">
+    ```bash
+    # macOS with Homebrew
+    brew install localstack/tap/localstack-cli
+
+    # Or with pip
+    pip install localstack
+    ```
+  </Step>
+
+  <Step title="Install Infrastructure Tools (Optional)">
+    For CDK deployments:
+    ```bash
+    npm install -g aws-cdk-local aws-cdk
+    ```
+
+    For Terraform deployments:
+    ```bash
+    pip install terraform-local
+    ```
+  </Step>
+</Steps>
+
+## LocalStack Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built LocalStack Continuous AI agent that includes
+  optimized prompts, rules, and the LocalStack MCP for more consistent results.
+</Card>
+
+After completing **Quick Setup** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [LocalStack Continuous AI Agent](https://hub.continue.dev/localstack/localstack-continuous-ai) on Continue Hub and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --config localstack/localstack-continuous-ai
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for LocalStack infrastructure deployment and chaos testing
+        - **Built-in rules** for consistent infrastructure patterns
+        - **[LocalStack MCP](https://github.com/localstack/localstack-mcp-server)** for reliable container management
+        - **Automatic setup** for CDK/Terraform deployment tools
+      </Step>
+
+      <Step title="Start LocalStack and Deploy Infrastructure">
+        Navigate to your project directory with CDK or Terraform code and run:
+        
+        ```bash
+        cn "Start LocalStack and deploy my infrastructure, then show me what resources were created"
+        ```
+
+        That's it! The agent handles LocalStack container management, deployment, and resource inspection automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the LocalStack MCP integration and pre-tested infrastructure deployment prompts. The agent automatically detects whether you're using CDK or Terraform.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Add LocalStack MCP from Continue Hub">
+        Install the LocalStack MCP server from Continue Hub:
+
+        1. Visit [LocalStack MCP on Continue Hub](https://hub.continue.dev/localstack/localstack-mcp-server)
+        2. Click **"Install MCP"**
+        3. The MCP will be added to your Continue configuration automatically
+        4. (Optional) Add your LocalStack Auth Token as a secret in Continue Hub:
+           - Go to [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+           - Add a secret named `LOCALSTACK_AUTH_TOKEN` with your token value
+           - Required for Pro features: Cloud Pods, IAM Policy Analyzer, Chaos Engineering
+
+        <Info>
+          Get your LocalStack Auth Token at [app.localstack.cloud](https://app.localstack.cloud). The token unlocks Pro features like Cloud Pods, IAM Policy Analysis, and Chaos Engineering.
+        </Info>
+      </Step>
+
+      <Step title="Verify LocalStack Connection">
+        Test the MCP connection:
+        
+        ```bash
+        cn "Check LocalStack status and show available services"
+        ```
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+  To use the pre-built agent, you need either:
+  - **Continue CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Continue Hub secrets
+  
+  The agent will automatically detect and use your configuration along with the LocalStack MCP for container operations.
+</Accordion>
+
+---
+
+## Step 1: Start LocalStack and Verify Services
+
+Start your local cloud environment. Enter this prompt in Continue CLI TUI:
+
+```
+Start LocalStack with these services enabled:
+- S3 for object storage
+- DynamoDB for database
+- Lambda for serverless functions
+- API Gateway for HTTP APIs
+- CloudWatch for monitoring
+
+Check the status and confirm all services are healthy
+```
+
+<Tip>
+  **Pro Tip**: LocalStack automatically detects which services your infrastructure code uses. You don't need to specify services upfront - just start LocalStack and deploy!
+</Tip>
+
+## Step 2: Deploy Infrastructure Locally
+
+Deploy your CDK or Terraform infrastructure to LocalStack. Choose your infrastructure tool:
+
+<Tabs>
+  <Tab title="CDK Deployment">
+    **Prompt:**
+    ```
+    Deploy my CDK stack to LocalStack:
+    1. Run cdklocal bootstrap if needed
+    2. Deploy the stack with cdklocal deploy
+    3. Show me the CloudFormation stack status
+    4. List all resources that were created
+    5. Export stack outputs for reference
+    ```
+
+    <Info>
+      **CDK + LocalStack Benefits**:
+      - Test infrastructure changes instantly without AWS costs
+      - Iterate rapidly with hot-reload workflows
+      - Debug CloudFormation templates locally
+      - Validate IAM policies before production deployment
+    </Info>
+  </Tab>
+
+  <Tab title="Terraform Deployment">
+    **Prompt:**
+    ```
+    Deploy my Terraform configuration to LocalStack:
+    1. Initialize Terraform with tflocal init
+    2. Show me the execution plan with tflocal plan
+    3. Apply the configuration with tflocal apply -auto-approve
+    4. Display the state file and created resources
+    5. Show outputs and save them for later use
+    ```
+
+    <Info>
+      **Terraform + LocalStack Benefits**:
+      - Test multi-cloud configurations locally
+      - Validate resource dependencies
+      - Debug provider configurations
+      - Test state management workflows
+    </Info>
+  </Tab>
+</Tabs>
+
+<Warning>
+  **Infrastructure Code Required**: Make sure you have either:
+  - CDK app in TypeScript/Python with valid `cdk.json`
+  - Terraform configuration files (`.tf`) in your project directory
+  
+  The LocalStack MCP automatically detects your infrastructure tool based on project files.
+</Warning>
+
+## Step 3: Run Chaos Engineering Experiments
+
+Test your system's resilience by injecting faults. Enter this prompt in Continue CLI TUI:
+
+```
+Set up chaos engineering experiments for my Lambda functions:
+1. Inject 500ms latency into 20% of Lambda invocations
+2. Add random failures (HTTP 500) to 10% of API Gateway requests
+3. Simulate DynamoDB throttling errors
+4. Monitor CloudWatch logs for error patterns
+5. After 5 minutes, remove all fault injections
+6. Generate a report showing:
+   - Which services handled failures gracefully
+   - Which services need retry logic improvements
+   - Recommended resilience patterns
+
+Only proceed if I have a valid LocalStack Auth Token
+```
+
+<Info>
+  **Chaos Engineering with LocalStack**:
+  - **Service Faults**: Inject errors, latency, or throttling
+  - **Network Effects**: Simulate slow connections or packet loss
+  - **Targeted Testing**: Apply faults to specific services or operations
+  - **Safe Environment**: Test destructive scenarios without production risk
+
+  Requires LocalStack Pro with valid auth token.
+</Info>
+
+<Tip>
+  **Best Practice**: Start with small fault percentages (5-10%) and gradually increase as you validate your system's resilience mechanisms.
+</Tip>
+
+## Step 4: Analyze Logs and Auto-Generate IAM Policies
+
+Debug issues and automatically fix IAM permission errors. Enter this prompt in Continue CLI TUI:
+
+```
+Analyze LocalStack logs for the past hour:
+1. Show me a summary of all API calls grouped by service
+2. Identify any IAM permission errors
+3. For each permission error:
+   - Show the exact API call that failed
+   - Generate the minimal IAM policy needed to fix it
+   - Explain what permission is missing and why
+4. Create a consolidated IAM policy with all required permissions
+5. Offer to apply the policy to my LocalStack environment
+
+Search for patterns like:
+- AccessDenied errors
+- Missing permissions
+- Invalid credentials
+- Throttling issues
+```
+
+<Info>
+  **LocalStack Log Analysis Features**:
+  - **Error Grouping**: Automatically clusters similar errors
+  - **IAM Policy Generation**: Creates policies from access violations
+  - **API Metrics**: Shows request counts and failure rates
+  - **Service-Specific Analysis**: Filters by AWS service
+
+  IAM Policy Analyzer requires LocalStack Pro with valid auth token.
+</Info>
+
+## Step 5: Manage State with Cloud Pods
+
+Save and restore your LocalStack state across development sessions. Enter this prompt in Continue CLI TUI:
+
+```
+Manage my LocalStack development state with Cloud Pods:
+1. Show me all existing Cloud Pods for this project
+2. Save the current LocalStack state as a Cloud Pod named "feature-x-ready-for-testing"
+3. Include these services in the snapshot:
+   - S3 buckets with all objects
+   - DynamoDB tables with data
+   - Lambda function code and configuration
+   - API Gateway endpoints
+4. Add metadata describing what this state represents
+5. Show me the Cloud Pod size and storage location
+```
+
+<Tip>
+  **Cloud Pods Use Cases**:
+  - **Onboarding**: Share pre-configured environments with new developers
+  - **Testing**: Create snapshots before running destructive tests
+  - **CI/CD**: Start integration tests from known-good states
+  - **Debugging**: Save state when bugs occur for later analysis
+
+  Requires LocalStack Pro with valid auth token.
+</Tip>
+
+### Loading Cloud Pods
+
+Restore a previously saved state:
+
+```
+Load the Cloud Pod "feature-x-ready-for-testing" into my LocalStack:
+1. Show me what's in the Cloud Pod before loading
+2. Stop the current LocalStack instance
+3. Start fresh LocalStack
+4. Load the Cloud Pod
+5. Verify all services and data are restored
+6. Run a quick health check on critical resources
+```
+
+## Step 6: Execute AWS CLI Commands Locally
+
+Interact with LocalStack using AWS CLI commands. Enter this prompt in Continue CLI TUI:
+
+```
+Run these AWS CLI commands against LocalStack:
+1. List all S3 buckets
+2. Describe my DynamoDB tables
+3. List Lambda functions with their runtime and memory
+4. Get API Gateway REST APIs and their endpoints
+5. Fetch recent CloudWatch logs for my Lambda function
+
+Use awslocal for all commands to ensure they target LocalStack
+```
+
+<Info>
+  **LocalStack AWS CLI Integration**:
+  - Commands run via `awslocal` inside the LocalStack container
+  - Automatically configured to point to LocalStack endpoints
+  - Sanitized to prevent shell injection attacks
+  - Auto-detects when services aren't supported and links to docs
+</Info>
+
+## Advanced Workflows
+
+### Multi-Region Testing
+
+Test region-specific behavior locally:
+
+```
+Set up multi-region testing with LocalStack:
+1. Start LocalStack with us-east-1 and eu-west-1 regions
+2. Deploy the same infrastructure to both regions
+3. Create data in us-east-1 S3 and replicate to eu-west-1
+4. Test cross-region Lambda invocations
+5. Compare latency between regions (simulated)
+```
+
+### Integration Test Suite
+
+Create a complete integration test workflow:
+
+```
+Build an integration test suite for my microservices:
+1. Start LocalStack with required services
+2. Load the "integration-test-base" Cloud Pod
+3. Deploy latest infrastructure changes
+4. Run integration tests against LocalStack endpoints
+5. Inject chaos faults during tests to verify resilience
+6. Collect CloudWatch metrics and logs
+7. Generate test report with pass/fail for each service
+8. Clean up resources after tests complete
+```
+
+### CI/CD Pipeline Integration
+
+Integrate LocalStack into your CI/CD pipeline. Add this to `.github/workflows/localstack-tests.yml`:
+
+```yaml
+name: LocalStack Integration Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install LocalStack CLI
+        run: pip install localstack
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli
+
+      - name: Install Infrastructure Tools
+        run: |
+          npm install -g aws-cdk-local aws-cdk
+          # or: pip install terraform-local
+
+      - name: Start LocalStack
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+        run: |
+          localstack start -d
+          localstack wait -t 30
+
+      - name: Run Integration Tests with Continue CLI
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+        run: |
+          cn -p "Run integration tests:
+                 1. Deploy infrastructure to LocalStack
+                 2. Load test data from Cloud Pod 'ci-test-base'
+                 3. Execute test suite
+                 4. Inject chaos faults and verify error handling
+                 5. Collect metrics and generate report
+                 Output results in JSON format" > test-results.json
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.json
+
+      - name: Stop LocalStack
+        if: always()
+        run: localstack stop
+```
+
+<Warning>
+  **Required GitHub Secrets**:
+  - `CONTINUE_API_KEY`: Your Continue API key
+  - `LOCALSTACK_AUTH_TOKEN`: Your LocalStack auth token (for Pro features)
+
+  Add these at: **Repository Settings → Secrets and variables → Actions**
+</Warning>
+
+## LocalStack MCP Tools Reference
+
+The LocalStack MCP provides these tools:
+
+<CardGroup cols={2}>
+  <Card title="Container Management" icon="box">
+    **localstack-management**
+    - Start, stop, restart LocalStack
+    - Check container status
+    - Inject environment variables
+    - Configure auth tokens
+  </Card>
+
+  <Card title="Infrastructure Deployment" icon="rocket">
+    **localstack-deployer**
+    - Deploy CDK stacks with cdklocal
+    - Deploy Terraform with tflocal
+    - Parameterized deployments
+    - Deployment result processing
+  </Card>
+
+  <Card title="Log Analysis" icon="magnifying-glass">
+    **localstack-logs-analysis**
+    - Error summaries
+    - Request filtering
+    - API call metrics
+    - Service-specific analysis
+  </Card>
+
+  <Card title="IAM Policy Generator" icon="shield">
+    **localstack-iam-policy-analyzer**
+    - Set IAM enforcement levels
+    - Detect permission violations
+    - Auto-generate policies
+    - Fix access errors
+  </Card>
+
+  <Card title="Chaos Engineering" icon="bolt">
+    **localstack-chaos-injector**
+    - Inject service faults
+    - Add network latency
+    - Configure error rates
+    - Target by service/region
+  </Card>
+
+  <Card title="State Management" icon="database">
+    **localstack-cloud-pods**
+    - Save environment snapshots
+    - Load previous states
+    - Delete old Cloud Pods
+    - Reset to clean state
+  </Card>
+
+  <Card title="AWS CLI Execution" icon="terminal">
+    **localstack-aws-client**
+    - Run awslocal commands
+    - Execute in container
+    - Sanitized input
+    - Coverage detection
+  </Card>
+</CardGroup>
+
+## What You've Accomplished
+
+<Card title="Local Cloud Development Mastery" icon="graduation-cap">
+  You've built an AI-powered local cloud development workflow that:
+  - **Deploys infrastructure** instantly without AWS costs
+  - **Tests resilience** with chaos engineering experiments
+  - **Debugs IAM policies** by auto-generating fixes from errors
+  - **Manages state** with Cloud Pods for reproducible environments
+  - **Integrates with CI/CD** for automated testing
+
+  All running locally on your machine!
+</Card>
+
+## Troubleshooting
+
+### LocalStack Connection Issues
+
+| Issue | Solution |
+|:------|:---------|
+| Container won't start | Check Docker is running: `docker ps` |
+| Services not responding | Verify services are ready: `localstack status services` |
+| Port conflicts | Stop conflicting services or change LocalStack port |
+| Auth token not working | Verify token at [app.localstack.cloud](https://app.localstack.cloud) |
+
+### Deployment Issues
+
+| Issue | Solution |
+|:------|:---------|
+| CDK deployment fails | Run `cdklocal bootstrap` first |
+| Terraform init fails | Ensure `tflocal` is installed and in PATH |
+| Resources not created | Check LocalStack logs: `localstack logs` |
+| IAM errors | Enable IAM enforcement: `localstack config show` |
+
+### Cloud Pods Issues
+
+| Issue | Solution |
+|:------|:---------|
+| Can't save Cloud Pod | Verify auth token and LocalStack Pro subscription |
+| Load fails | Check Cloud Pod exists and is compatible with LocalStack version |
+| Large snapshot size | Exclude unnecessary services from Cloud Pod |
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Development Workflow" icon="code">
+    - Start with Cloud Pods for consistent state
+    - Use chaos engineering early in development
+    - Test IAM policies before AWS deployment
+    - Save Cloud Pods before major changes
+  </Card>
+
+  <Card title="Testing Strategy" icon="flask">
+    - Run integration tests on every commit
+    - Use Cloud Pods for test data isolation
+    - Inject faults to validate error handling
+    - Compare LocalStack vs AWS behavior
+  </Card>
+
+  <Card title="Team Collaboration" icon="users">
+    - Share Cloud Pods for onboarding
+    - Document infrastructure in code
+    - Use consistent service naming
+    - Version control Cloud Pod snapshots
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- Explore [LocalStack Pro features](https://docs.localstack.cloud/getting-started/pro-features/)
+- Set up [LocalStack Extensions](https://docs.localstack.cloud/user-guide/extensions/)
+- Configure [LocalStack CI Integrations](https://docs.localstack.cloud/user-guide/ci/)
+- Join the [LocalStack Community Slack](https://slack.localstack.cloud/)
+
+## Resources
+
+- [LocalStack MCP Server](https://github.com/localstack/localstack-mcp-server)
+- [LocalStack Documentation](https://docs.localstack.cloud)
+- [LocalStack Pro Features](https://docs.localstack.cloud/getting-started/pro-features/)
+- [Cloud Pods Documentation](https://docs.localstack.cloud/aws/capabilities/state-management/cloud-pods/)
+- [LocalStack Chaos Engineering](https://docs.localstack.cloud/user-guide/chaos-engineering/)
+- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
+- [CDK Local GitHub](https://github.com/localstack/aws-cdk-local)
+- [Terraform Local GitHub](https://github.com/localstack/terraform-local)
