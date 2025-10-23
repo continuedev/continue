@@ -25,9 +25,9 @@ jobs:
           fetch-depth: 0
 
       - name: Generate App Token (Optional)
+        if: secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != ''
         id: generate_token
         uses: actions/create-github-app-token@v1
-        if: secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != ''
         with:
           app-id: ${{ secrets.CONTINUE_APP_ID }}
           private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}

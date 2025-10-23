@@ -21,9 +21,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Generate GitHub App Token
+        if: secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != ''
         id: generate-token
         uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v2.0.0
-        if: secrets.CONTINUE_APP_ID != '' && secrets.CONTINUE_APP_PRIVATE_KEY != ''
         with:
           app-id: ${{ secrets.CONTINUE_APP_ID }}
           private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
