@@ -1,11 +1,15 @@
 // @ts-ignore
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+
+import { posthogService } from "src/telemetry/posthogService.js";
+
 import {
   getServiceSync,
   MCPServiceState,
   SERVICE_NAMES,
   serviceContainer,
+  services,
 } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import type { ModelServiceState } from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
@@ -19,16 +23,18 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
-  type ToolParameters,
+  type ToolParametersSchema,
+  ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolCall, ToolParameters };
+export type { Tool, ToolCall, ToolParametersSchema };
 
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
@@ -52,17 +58,13 @@ export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
 function getDynamicTools(): Tool[] {
   const dynamicTools: Tool[] = [];
 
-  // Add headless-specific tools if in headless mode
-  try {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-    const isHeadless = serviceResult.value?.isHeadless ?? false;
-    if (isHeadless) {
-      dynamicTools.push(exitTool);
-    }
-  } catch {
-    // Service not ready yet, no dynamic tools
+  if (services.toolPermissions.isHeadless()) {
+    dynamicTools.push(exitTool);
+  }
+
+  // Add beta status tool if --beta-status-tool flag is present
+  if (process.argv.includes("--beta-status-tool")) {
+    dynamicTools.push(statusTool);
   }
 
   return dynamicTools;
@@ -148,22 +150,6 @@ export function extractToolCalls(
   return toolCalls;
 }
 
-function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
-  const parameters: Record<
-    string,
-    { type: string; description: string; required: boolean }
-  > = {};
-  for (const [key, value] of Object.entries(inputSchema.properties)) {
-    const val = value as any;
-    parameters[key] = {
-      type: val.type,
-      description: val.description || "",
-      required: inputSchema.required?.includes(key) || false,
-    };
-  }
-  return parameters;
-}
-
 export async function getAvailableTools() {
   // Load MCP tools
   const mcpState = await serviceContainer.get<MCPServiceState>(
@@ -175,7 +161,14 @@ export async function getAvailableTools() {
       name: t.name,
       displayName: t.name.replace("mcp__", "").replace("ide__", ""),
       description: t.description ?? "",
-      parameters: convertInputSchemaToParameters(t.inputSchema),
+      parameters: {
+        type: "object",
+        properties: (t.inputSchema.properties ?? {}) as Record<
+          string,
+          ParameterSchema
+        >,
+        required: t.inputSchema.required,
+      },
       readonly: undefined, // MCP tools don't have readonly property
       isBuiltIn: false,
       run: async (args: any) => {
@@ -212,6 +205,11 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
+    void posthogService.capture("tool_call_outcome", {
+      succeeded: true,
+      toolName: toolCall.name,
+      duration_ms: duration,
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -222,23 +220,36 @@ export async function executeToolCall(
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorReason =
+      error instanceof ContinueError
+        ? error.reason
+        : ContinueErrorReason.Unknown;
 
     telemetryService.logToolResult({
       toolName: toolCall.name,
       success: false,
       durationMs: duration,
       error: errorMessage,
+      errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
+    });
+    void posthogService.capture("tool_call_outcome", {
+      succeeded: false,
+      toolName: toolCall.name,
+      duration_ms: duration,
+      errorReason,
     });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }
 }
 
+// Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.parameters.required ?? [];
+  for (const [paramName] of Object.entries(tool.parameters)) {
     if (
-      paramDef.required &&
+      requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||
         toolCall.arguments[paramName] === null)
     ) {

@@ -1,6 +1,6 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { RuleWithSource } from "core";
-import { getLastNPathParts } from "core/util/uri";
+import { getRuleSourceDisplayName } from "core/llm/rules/rules-utils";
 import { ComponentType, useMemo, useState } from "react";
 import ToggleDiv from "../../ToggleDiv";
 
@@ -12,36 +12,6 @@ interface RulesPeekProps {
 interface RulesPeekItemProps {
   rule: RuleWithSource;
 }
-
-// Convert technical source to user-friendly text
-const getSourceLabel = (rule: RuleWithSource): string => {
-  switch (rule.source) {
-    case "default-chat":
-      return "Default Chat";
-    case "default-agent":
-      return "Default Agent";
-    case "model-options-chat":
-      return "Model Chat Options";
-    case "model-options-plan":
-      return "Model Plan Options";
-    case "model-options-agent":
-      return "Model Agent Options";
-    case "rules-block":
-      return "Rules Block";
-    case "colocated-markdown":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
-      } else {
-        return "rules.md";
-      }
-    case "json-systemMessage":
-      return "System Message";
-    case ".continuerules":
-      return "Project Rules";
-    default:
-      return rule.source;
-  }
-};
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = rule.alwaysApply ?? !rule.globs;
@@ -102,7 +72,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
         )}
       </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
-        Source: {getSourceLabel(rule)}
+        Source: {getRuleSourceDisplayName(rule)}
       </div>
     </div>
   );

@@ -1,8 +1,98 @@
 ---
-title: "Introduction to Agents"
-description: "Custom AI code agents are configurations of building blocks that enable a coding experience tailored to your specific use cases."
+title: "Agents Introduction"
+description: "Run and manage background agents in Mission Control"
+sidebarTitle: "Agents"
 ---
 
-`config.yaml` is a format for defining custom AI code agents. An agent has some top-level properties (e.g. `name`, `version`), but otherwise consists of composable lists of **blocks** such as `models` and `rules`, which are the atomic building blocks of an agent.
+<Info>
+  Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
+</Info>
 
-The `config.yaml` is parsed by the open-source Continue IDE extensions to create custom agent experiences. When you log in to [hub.continue.dev](https://hub.continue.dev/), your agents will automatically be synced with the IDE extensions.
+Mission Control is a way to run and manage background agents in Continue. You can use it to kick off:
+- Addressing small nitpicks and bugs
+- Building boilerplate-heavy features
+- Investigating an issue to kickstart your work
+- [Automated security scanning](../../guides/snyk-mcp-continue-cookbook)
+- Running repeatable tasks with your own rules, prompts, and MCP servers
+- Much more!
+
+## Quickstart
+
+To kick off your first agent
+
+1. Go to [hub.continue.dev/agents](https://hub.continue.dev/agents)
+
+![Mission Control Setup](/images/hub/workflows/images/workflows-setup.png)
+
+2. Connect with your GitHub account
+3. Enter the prompt for your agent
+
+## Example Workflow Tasks
+
+Here are some example tasks you can try with your agents:
+
+<AccordionGroup>
+  <Accordion title="Bug Fixes & Code Quality">
+    
+    - "Fix the TypeError in api/users.ts where the user object might be undefined"
+    - "Add null checks to all database query results in the services/ directory"
+    - "Fix all ESLint warnings in the components folder"
+    - "Update deprecated React lifecycle methods to hooks in legacy components"
+    
+  </Accordion>
+
+  <Accordion title="Feature Development">
+    
+    - "Create a new REST endpoint for user profile updates with validation and error handling"
+    - "Add pagination to the products list page with previous/next buttons"
+    - "Implement dark mode toggle using Tailwind CSS classes across all pages"
+    - "Add unit tests for the authentication service using Jest"
+    
+  </Accordion>
+
+  <Accordion title="Security & Compliance">
+    
+    - "Scan the codebase for hardcoded API keys and move them to environment variables"
+    - "Add input sanitization to all user-facing form fields"
+    - "Update all npm packages with known security vulnerabilities"
+    - "Implement rate limiting on the /api/login endpoint"
+    
+  </Accordion>
+
+  <Accordion title="Documentation & Boilerplate">
+    
+    - "Add JSDoc comments to all exported functions in the utils/ directory"
+    - "Create a README.md for the new payment-processing module with setup instructions"
+    - "Generate TypeScript interfaces for all API response schemas"
+    - "Add error handling boilerplate to all async functions missing try-catch blocks"
+    
+  </Accordion>
+
+  <Accordion title="Investigation & Analysis">
+    
+    - "Investigate why the login API is returning 500 errors intermittently and suggest fixes"
+    - "Analyze the performance bottleneck in the data processing pipeline"
+    - "Review the database schema for the orders table and suggest optimizations"
+    - "Find all TODO comments related to authentication and create a summary"
+    
+  </Accordion>
+
+  <Accordion title="Refactoring">
+    
+    - "Extract the repeated validation logic in controllers into a shared utility function"
+    - "Convert all class components in src/legacy to functional components with hooks"
+    - "Rename all instances of 'userId' to 'accountId' across the codebase"
+    - "Split the 500-line UserService.ts into smaller, single-responsibility services"
+    
+  </Accordion>
+</AccordionGroup>
+
+## How to use background agents
+
+The practice of using background agents, which we call Continuous AI, requires practice and forethought to set up the right guiderails and habits to fit your development workflow, much like learning to work with a larger engineering team. We are constantly sharing our learnings on the [Continuous AI Blog](https://blog.continue.dev), but these few high-level tips are a great way to quickly become successful with agents:
+
+- Practice first with the [Continue CLI](../../guides/cli) in "TUI mode". The Continue CLI is used to run agents, so you can easily test your prompts locally.
+- Identify and begin with tasks that you are confident can be accomplished by Continue. For example, ask Continue to fix a small bug where you already know the solution is simple.
+- Once you have merged a PR created by Continue, be increasingly ambitious with your tasks. By being willing to start tasks that might not succeed on the first try, you will learn about prompting best practices and limitations of current language models.
+- Use thorough prompts. Workflows can run for a long time to complete their task, so it is worthwhile to invest in sharing all of the important details.
+- Discuss the use of agents with your team. Truly embracing Continuous AI likely means acknowledging that a higher volume of PRs will be created and adjusting your code review habits.

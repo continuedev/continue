@@ -30,6 +30,7 @@ import {
 } from "openai/resources/index";
 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import { fromStatic } from "@aws-sdk/token-providers";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
@@ -44,7 +45,7 @@ import {
 function getSecureID(): string {
   // Adding a type declaration for the static property
   if (!(getSecureID as any).uuid) {
-    (getSecureID as any).uuid = crypto.randomUUID();
+    (getSecureID as any).uuid = uuidv4();
   }
   return `<!-- SID: ${(getSecureID as any).uuid} -->`;
 }
@@ -81,7 +82,7 @@ export class BedrockApi implements BaseLlmApi {
         secretAccessKey: this.config.env.secretAccessKey,
       };
     }
-    const profile = this.config.env.profile ?? "bedrock";
+    const profile = this.config.env?.profile ?? "bedrock";
     try {
       return await fromNodeProviderChain({
         profile: profile,
@@ -95,9 +96,22 @@ export class BedrockApi implements BaseLlmApi {
     return await fromNodeProviderChain()();
   }
   async getClient(): Promise<BedrockRuntimeClient> {
+    const region = this.config.env?.region;
+
+    // If apiKey is provided, use bearer token authentication
+    if (this.config.apiKey) {
+      return new BedrockRuntimeClient({
+        region,
+        token: fromStatic({
+          token: { token: this.config.apiKey },
+        }),
+      });
+    }
+
+    // Otherwise use IAM credentials (existing behavior)
     const creds = await this.getCreds();
     return new BedrockRuntimeClient({
-      region: this.config.env.region,
+      region,
       credentials: creds,
     });
   }

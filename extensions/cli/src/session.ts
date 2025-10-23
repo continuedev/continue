@@ -162,6 +162,30 @@ export function getSessionPersistenceSnapshot(session: Session): Session {
 }
 
 /**
+ * Get the complete state snapshot that matches the /state endpoint format
+ */
+export interface StateSnapshot {
+  session: Session;
+  isProcessing: boolean;
+  messageQueueLength: number;
+  pendingPermission: any;
+}
+
+export function getCompleteStateSnapshot(
+  session: Session,
+  isProcessing: boolean = false,
+  messageQueueLength: number = 0,
+  pendingPermission: any = null,
+): StateSnapshot {
+  return {
+    session: getSessionPersistenceSnapshot(session),
+    isProcessing,
+    messageQueueLength,
+    pendingPermission,
+  };
+}
+
+/**
  * Save the current session to file
  */
 export function saveSession(): void {
@@ -321,7 +345,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
       return [];
     }
 
-    const response = await fetch(new URL("agents/devboxes", env.apiBase), {
+    const response = await fetch(new URL("agents", env.apiBase), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

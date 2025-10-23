@@ -119,7 +119,7 @@ describe("UpdateNotification", () => {
 
     const { lastFrame } = render(<UpdateNotification />);
 
-    expect(lastFrame()).toContain("◉ Updating to v1.0.1");
+    expect(lastFrame()).toContain("Updating to v1.0.1");
   });
 
   it("should show updated message when update completes", () => {

@@ -13,6 +13,30 @@ By implementing rules, you transform the AI from a generic coding agent into a k
 
 ## How Rules Work
 
-Your agent detects rules and applies the specified rules while in [Agent](/features/agent/quick-start), [Chat](/features/chat/quick-start), and [Edit](/features/edit/quick-start) modes.
+Your agent detects rules and applies the specified rules while in [Agent](/ide-extensions/agent/quick-start), [Chat](/ide-extensions/chat/quick-start), and [Edit](/ide-extensions/edit/quick-start) modes.
+
+## Where to Manage Rules
+
+<Columns cols={2}>
+<Card title="Local Rules (.continue/rules)" icon="folder">
+- Create files in `.continue/rules` folder
+- Automatically appear with Hub assistants
+- Edit directly in your file system
+- Version controlled alongside your code
+- Best for project-specific rules (e.g., "remember to generate migrations after modifying the db")
+</Card>
+
+<Card title="Hub Rules" icon="cloud">
+- Manage on [Continue Hub](https://hub.continue.dev)
+- Reference in config.yaml with `uses:`
+- Share with team and community
+- Easy to include in multiple agents
+- Best for organization-wide rules (e.g., "always use X library for Y task")
+</Card>
+</Columns>
+
+<Info>
+**Quick Setup**: Start with local rules for immediate use, then promote commonly used rules to the Hub for sharing and reuse.
+</Info>
 
 Learn more in the [rules deep dive](/customize/deep-dives/rules), and view [`rules`](/reference#rules) in the YAML Reference for more details.

@@ -1,14 +1,7 @@
-import { ToolPolicy } from "@continuedev/terminal-security";
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import {
-  LLMFullCompletionOptions,
-  ModelDescription,
-  Tool,
-  ToolCallState,
-} from "core";
+import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
-import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -23,174 +16,24 @@ import {
   setIsPruned,
   setToolGenerated,
   streamUpdate,
-  updateToolCallOutput,
 } from "../slices/sessionSlice";
-import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
+import posthog from "posthog-js";
+import {
+  selectCurrentToolCalls,
+  selectPendingToolCalls,
+} from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { enhanceParsedArgs } from "./enhanceParsedArgs";
-
-/**
- * Evaluates the tool policy for a tool call, including dynamic policy evaluation
- */
-async function evaluateToolPolicy(
-  toolCallState: ToolCallState,
-  toolSettings: Record<string, ToolPolicy>,
-  activeTools: Tool[],
-  ideMessenger: IIdeMessenger,
-): Promise<{ policy: ToolPolicy; displayValue?: string }> {
-  const basePolicy =
-    toolSettings[toolCallState.toolCall.function.name] ??
-    activeTools.find(
-      (tool) => tool.function.name === toolCallState.toolCall.function.name,
-    )?.defaultToolPolicy ??
-    DEFAULT_TOOL_SETTING;
-
-  // Use already parsed arguments
-  const parsedArgs = toolCallState.parsedArgs || {};
-
-  let result;
-  try {
-    result = await ideMessenger.request("tools/evaluatePolicy", {
-      toolName: toolCallState.toolCall.function.name,
-      basePolicy,
-      args: parsedArgs,
-    });
-  } catch (error) {
-    // If request fails, return disabled
-    return { policy: "disabled" };
-  }
-
-  // Evaluate the policy dynamically
-  if (!result || result.status === "error") {
-    // If evaluation fails, treat as disabled
-    return { policy: "disabled" };
-  }
-
-  const dynamicPolicy = result.content.policy;
-  const displayValue = result.content.displayValue;
-
-  // Ensure dynamic policy cannot be more lenient than base policy
-  // Policy hierarchy (most restrictive to least): disabled > allowedWithPermission > allowedWithoutPermission
-  if (basePolicy === "disabled") {
-    return { policy: "disabled", displayValue }; // Cannot override disabled
-  }
-  if (
-    basePolicy === "allowedWithPermission" &&
-    dynamicPolicy === "allowedWithoutPermission"
-  ) {
-    return { policy: "allowedWithPermission", displayValue }; // Cannot make more lenient
-  }
-
-  return { policy: dynamicPolicy, displayValue };
-}
-
-/**
- * Handles the execution of tool calls that may be automatically accepted.
- * Sets all tools as generated first, then executes auto-approved tool calls.
- */
-async function handleToolCallExecution(
-  dispatch: AppThunkDispatch,
-  getState: () => RootState,
-  activeTools: Tool[],
-  ideMessenger: IIdeMessenger,
-): Promise<boolean> {
-  // Return whether all tools were auto-approved
-  const newState = getState();
-  const toolSettings = newState.ui.toolSettings;
-  const allToolCallStates = selectCurrentToolCalls(newState);
-
-  // Only process tool calls that are in "generating" status (newly created during this streaming session)
-  const toolCallStates = allToolCallStates.filter(
-    (toolCallState) => toolCallState.status === "generating",
-  );
-
-  // If no generating tool calls, nothing to process
-  if (toolCallStates.length === 0) {
-    return false; // No tools to process, need to set inactive
-  }
-
-  // Check if ALL tool calls are auto-approved using dynamic evaluation
-  const policyResults = await Promise.all(
-    toolCallStates.map((toolCallState) =>
-      evaluateToolPolicy(
-        toolCallState,
-        toolSettings,
-        activeTools,
-        ideMessenger,
-      ),
-    ),
-  );
-
-  // Handle disabled tool calls and set others as generated
-  const autoApprovedResults = await Promise.all(
-    toolCallStates.map(async (toolCallState, index) => {
-      const { policy, displayValue } = policyResults[index];
-
-      if (policy === "disabled") {
-        // Mark as errored instead of generated
-        dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
-
-        // Use the displayValue from the policy evaluation, or fallback to function name
-        const command = displayValue || toolCallState.toolCall.function.name;
-
-        // Add error message explaining why it's disabled
-        dispatch(
-          updateToolCallOutput({
-            toolCallId: toolCallState.toolCallId,
-            contextItems: [
-              {
-                icon: "problems",
-                name: "Security Policy Violation",
-                description: "Command Disabled",
-                content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
-                hidden: false,
-              },
-            ],
-          }),
-        );
-        return false;
-      } else {
-        // Set as generated for non-disabled tools
-        dispatch(
-          setToolGenerated({
-            toolCallId: toolCallState.toolCallId,
-            tools: newState.config.config.tools,
-          }),
-        );
-        return policy === "allowedWithoutPermission";
-      }
-    }),
-  );
-
-  const allAutoApproved = autoApprovedResults.every(Boolean);
-
-  // Only run if we have auto-approve for all non-disabled tools
-  if (allAutoApproved && toolCallStates.length > 0) {
-    const nonDisabledToolCalls = toolCallStates.filter(
-      (_, index) => policyResults[index].policy !== "disabled",
-    );
-
-    const toolCallPromises = nonDisabledToolCalls.map(async (toolCallState) => {
-      const response = await dispatch(
-        callToolById({ toolCallId: toolCallState.toolCallId }),
-      );
-      unwrapResult(response);
-    });
-
-    await Promise.all(toolCallPromises);
-  }
-
-  return allAutoApproved;
-}
+import { evaluateToolPolicies } from "./evaluateToolPolicies";
+import { preprocessToolCalls } from "./preprocessToolCallArgs";
+import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 /**
  * Builds completion options with reasoning configuration based on session state and model capabilities.
@@ -228,11 +71,20 @@ export const streamNormalInput = createAsyncThunk<
   void,
   {
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
+    depth?: number;
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
+  async (
+    { legacySlashCommandData, depth = 0 },
+    { dispatch, extra, getState },
+  ) => {
+    if (process.env.NODE_ENV === "test" && depth > 50) {
+      const message = `Max stream depth of ${50} reached in test`;
+      console.error(message, JSON.stringify(getState(), null, 2));
+      throw new Error(message);
+    }
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -327,93 +179,190 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(setIsPruned(didPrune));
     dispatch(setContextPercentage(contextPercentage));
 
-    // Send request and stream response
+    const start = Date.now();
     const streamAborter = state.session.streamAborter;
-    let gen = extra.ideMessenger.llmStreamChat(
-      {
-        completionOptions,
-        title: selectedChatModel.title,
-        messages: compiledChatMessages,
-        legacySlashCommandData,
-        messageOptions: { precompiled: true },
-      },
-      streamAborter.signal,
-    );
-    if (systemToolsFramework && activeTools.length > 0) {
-      gen = interceptSystemToolCalls(gen, streamAborter, systemToolsFramework);
-    }
-
-    let next = await gen.next();
-    while (!next.done) {
-      if (!getState().session.isStreaming) {
-        dispatch(abortStream());
-        break;
+    try {
+      let gen = extra.ideMessenger.llmStreamChat(
+        {
+          completionOptions,
+          title: selectedChatModel.title,
+          messages: compiledChatMessages,
+          legacySlashCommandData,
+          messageOptions: { precompiled: true },
+        },
+        streamAborter.signal,
+      );
+      if (systemToolsFramework && activeTools.length > 0) {
+        gen = interceptSystemToolCalls(
+          gen,
+          streamAborter,
+          systemToolsFramework,
+        );
       }
 
-      dispatch(streamUpdate(next.value));
-      next = await gen.next();
-    }
+      let next = await gen.next();
+      while (!next.done) {
+        if (!getState().session.isStreaming) {
+          dispatch(abortStream());
+          break;
+        }
 
-    // Attach prompt log and end thinking for reasoning models
-    if (next.done && next.value) {
-      dispatch(addPromptCompletionPair([next.value]));
+        dispatch(streamUpdate(next.value));
+        next = await gen.next();
+      }
 
-      try {
-        extra.ideMessenger.post("devdata/log", {
-          name: "chatInteraction",
-          data: {
-            prompt: next.value.prompt,
-            completion: next.value.completion,
-            modelProvider: selectedChatModel.underlyingProviderName,
-            modelName: selectedChatModel.title,
-            modelTitle: selectedChatModel.title,
-            sessionId: state.session.id,
-            ...(!!activeTools.length && {
-              tools: activeTools.map((tool) => tool.function.name),
+      // Attach prompt log and end thinking for reasoning models
+      if (next.done && next.value) {
+        dispatch(addPromptCompletionPair([next.value]));
+
+        try {
+          extra.ideMessenger.post("devdata/log", {
+            name: "chatInteraction",
+            data: {
+              prompt: next.value.prompt,
+              completion: next.value.completion,
+              modelProvider: selectedChatModel.underlyingProviderName,
+              modelName: selectedChatModel.title,
+              modelTitle: selectedChatModel.title,
+              sessionId: state.session.id,
+              ...(!!activeTools.length && {
+                tools: activeTools.map((tool) => tool.function.name),
+              }),
+              ...(appliedRules.length > 0 && {
+                rules: appliedRules.map((rule) => ({
+                  id: getRuleId(rule),
+                  rule: rule.rule,
+                  slug: rule.slug,
+                })),
+              }),
+            },
+          });
+        } catch (e) {
+          console.error("Failed to send dev data interaction log", e);
+        }
+      }
+    } catch (e) {
+      const toolCallsToCancel = selectCurrentToolCalls(getState());
+      posthog.capture("stream_premature_close_error", {
+        duration: (Date.now() - start) / 1000,
+        model: selectedChatModel.model,
+        provider: selectedChatModel.underlyingProviderName,
+        context: legacySlashCommandData ? "slash_command" : "regular_chat",
+        ...(legacySlashCommandData && {
+          command: legacySlashCommandData.command.name,
+        }),
+      });
+      if (
+        toolCallsToCancel.length > 0 &&
+        e instanceof Error &&
+        e.message.toLowerCase().includes("premature close")
+      ) {
+        for (const tc of toolCallsToCancel) {
+          dispatch(
+            errorToolCall({
+              toolCallId: tc.toolCallId,
+              output: [
+                {
+                  name: "Tool Call Error",
+                  description: "Premature Close",
+                  content: `"Premature Close" error: this tool call was aborted mid-stream because the arguments took too long to stream or there were network issues. Please re-attempt by breaking the operation into smaller chunks or trying something else`,
+                  icon: "problems",
+                },
+              ],
             }),
-            ...(appliedRules.length > 0 && {
-              rules: appliedRules.map((rule) => ({
-                id: getRuleId(rule),
-                rule: rule.rule,
-                slug: rule.slug,
-              })),
-            }),
-          },
-        });
-      } catch (e) {
-        console.error("Failed to send dev data interaction log", e);
+          );
+        }
+      } else {
+        throw e;
       }
     }
 
-    // Check if we have any tool calls that were just generated
-    const newState = getState();
-    const toolSettings = newState.ui.toolSettings;
-    const allToolCallStates = selectCurrentToolCalls(newState);
-
-    await Promise.all(
-      allToolCallStates.map((tcState) =>
-        enhanceParsedArgs(
-          extra.ideMessenger,
-          dispatch,
-          tcState?.toolCall.function.name,
-          tcState.toolCallId,
-          tcState.parsedArgs,
-        ),
-      ),
+    // Tool call sequence:
+    // 1. Mark generating tool calls as generated
+    const state1 = getState();
+    if (streamAborter.signal.aborted || !state1.session.isStreaming) {
+      return;
+    }
+    const originalToolCalls = selectCurrentToolCalls(state1);
+    const generatingCalls = originalToolCalls.filter(
+      (tc) => tc.status === "generating",
     );
+    for (const { toolCallId } of generatingCalls) {
+      dispatch(
+        setToolGenerated({
+          toolCallId,
+          tools: state1.config.config.tools,
+        }),
+      );
+    }
 
-    // Handle tool call execution if there are any generating tool calls
-    const allAutoApproved = await handleToolCallExecution(
+    // 2. Pre-process args to catch invalid args before checking policies
+    const state2 = getState();
+    if (streamAborter.signal.aborted || !state2.session.isStreaming) {
+      return;
+    }
+    const generatedCalls2 = selectPendingToolCalls(state2);
+    await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
+
+    // 3. Security check: evaluate updated policies based on args
+    const state3 = getState();
+    if (streamAborter.signal.aborted || !state3.session.isStreaming) {
+      return;
+    }
+    const generatedCalls3 = selectPendingToolCalls(state3);
+    const toolPolicies = state3.ui.toolSettings;
+    const policies = await evaluateToolPolicies(
       dispatch,
-      getState,
-      activeTools,
       extra.ideMessenger,
+      activeTools,
+      generatedCalls3,
+      toolPolicies,
+      state3.config.config.ui?.autoAcceptEditToolDiffs,
+    );
+    const anyRequireApproval = policies.find(
+      ({ policy }) => policy === "allowedWithPermission",
     );
 
+    // 4. Execute remaining tool calls
     // Only set inactive if not all tools were auto-approved
     // This prevents UI flashing for auto-approved tools
-    if (!allAutoApproved) {
+    if (originalToolCalls.length === 0 || anyRequireApproval) {
       dispatch(setInactive());
+    } else {
+      // auto stream cases increase thunk depth by 1 for debugging
+      const state4 = getState();
+      const generatedCalls4 = selectPendingToolCalls(state4);
+      if (streamAborter.signal.aborted || !state4.session.isStreaming) {
+        return;
+      }
+      if (generatedCalls4.length > 0) {
+        // All that didn't fail are auto approved - call them
+        await Promise.all(
+          generatedCalls4.map(async ({ toolCallId }) => {
+            unwrapResult(
+              await dispatch(
+                callToolById({
+                  toolCallId,
+                  isAutoApproved: true,
+                  depth: depth + 1,
+                }),
+              ),
+            );
+          }),
+        );
+      } else {
+        // All failed - stream on
+        for (const { toolCallId } of originalToolCalls) {
+          unwrapResult(
+            await dispatch(
+              streamResponseAfterToolCall({
+                toolCallId,
+                depth: depth + 1,
+              }),
+            ),
+          );
+        }
+      }
     }
   },
 );

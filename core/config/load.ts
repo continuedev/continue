@@ -6,10 +6,10 @@ import path from "path";
 import {
   ConfigResult,
   ConfigValidationError,
+  mergeConfigYamlRequestOptions,
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
-import * as tar from "tar";
 
 import {
   BrowserSerializedContinueConfig,
@@ -25,6 +25,7 @@ import {
   IdeType,
   ILLM,
   ILLMLogger,
+  InternalMcpOptions,
   LLMOptions,
   ModelDescription,
   RerankerDescription,
@@ -57,9 +58,10 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { PolicySingleton } from "../control-plane/PolicySingleton";
+import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import { getBaseToolDefinitions } from "../tools";
+import { PolicySingleton } from "../control-plane/PolicySingleton";
+import { getBaseToolDefinitions, serializeTool } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
 import { loadConfigContextProviders } from "./loadContextProviders";
@@ -550,17 +552,27 @@ async function intermediateToFinalConfig({
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    mcpManager.setConnections(
-      (config.experimental?.modelContextProtocolServers ?? []).map(
-        (server, index) => ({
-          id: `continue-mcp-server-${index + 1}`,
-          name: `MCP Server`,
-          ...server,
-          requestOptions: config.requestOptions,
-        }),
+    const mcpOptions: InternalMcpOptions[] = (
+      config.experimental?.modelContextProtocolServers ?? []
+    ).map((server, index) => ({
+      id: `continue-mcp-server-${index + 1}`,
+      name: `MCP Server`,
+      requestOptions: mergeConfigYamlRequestOptions(
+        server.transport.type !== "stdio"
+          ? server.transport.requestOptions
+          : undefined,
+        config.requestOptions,
       ),
-      false,
+      ...server.transport,
+    }));
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
     );
+    errors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false);
   }
 
   // Handle experimental modelRole config values for apply and edit
@@ -659,7 +671,7 @@ async function finalToBrowserConfig(
     experimental: final.experimental,
     rules: final.rules,
     docs: final.docs,
-    tools: final.tools,
+    tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
@@ -683,102 +695,43 @@ function escapeSpacesInPath(p: string): string {
   return p.replace(/ /g, "\\ ");
 }
 
-async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
-  // JetBrains is currently the only IDE that we've reached the plugin size limit and
-  // therefore need to install esbuild manually to reduce the size
-  if (ideType !== "jetbrains") {
-    return;
-  }
+async function handleEsbuildInstallation(
+  ide: IDE,
+  _ideType: IdeType,
+): Promise<boolean> {
+  // Only check when config.ts is going to be used; never auto-install.
+  const installCmd = "npm i esbuild@x.x.x --prefix ~/.continue";
 
-  const globalContext = new GlobalContext();
-  if (globalContext.get("hasDismissedConfigTsNoticeJetBrains")) {
-    return;
-  }
-
-  const esbuildPath = getEsbuildBinaryPath();
-
-  if (fs.existsSync(esbuildPath)) {
-    return;
-  }
-
-  console.debug("No esbuild binary detected");
-
-  const shouldInstall = await promptEsbuildInstallation(ide);
-
-  if (shouldInstall) {
-    await downloadAndInstallEsbuild(ide);
-  }
-}
-
-async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
-  const installMsg = "Install esbuild";
-  const dismissMsg = "Dismiss";
-
-  const res = await ide.showToast(
-    "warning",
-    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
-    dismissMsg,
-    installMsg,
-  );
-
-  if (res === dismissMsg) {
-    const globalContext = new GlobalContext();
-    globalContext.update("hasDismissedConfigTsNoticeJetBrains", true);
-    return false;
-  }
-
-  return res === installMsg;
-}
-
-/**
- * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
- */
-async function downloadAndInstallEsbuild(ide: IDE) {
-  const esbuildPath = getEsbuildBinaryPath();
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
-
+  // Try to detect a user-installed esbuild (normal resolution)
   try {
-    const target = `${os.platform()}-${os.arch()}`;
-    const version = "0.19.11";
-    const url = `https://registry.npmjs.org/@esbuild/${target}/-/${target}-${version}.tgz`;
-    const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
-
-    console.debug(`Downloading esbuild from: ${url}`);
-    execSync(`curl -fo "${tgzPath}" "${url}"`);
-
-    console.debug(`Extracting tgz file to: ${tempDir}`);
-    await tar.x({
-      file: tgzPath,
-      cwd: tempDir,
-      strip: 2, // Remove the top two levels of directories
-    });
-
-    // Ensure the destination directory exists
-    const destDir = path.dirname(esbuildPath);
-    if (!fs.existsSync(destDir)) {
-      fs.mkdirSync(destDir, { recursive: true });
+    await import("esbuild");
+    return true; // available
+  } catch {
+    // Try resolving from ~/.continue/node_modules as a courtesy
+    try {
+      const userEsbuild = path.join(
+        os.homedir(),
+        ".continue",
+        "node_modules",
+        "esbuild",
+      );
+      const candidate = require.resolve("esbuild", { paths: [userEsbuild] });
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require(candidate);
+      return true; // available via ~/.continue
+    } catch {
+      // Not available → show friendly instructions and opt out of building
+      await ide.showToast(
+        "error",
+        [
+          "config.ts has been deprecated and esbuild is no longer automatically installed by Continue.",
+          "To use config.ts, install esbuild manually:",
+          "",
+          `    ${installCmd}`,
+        ].join("\n"),
+      );
+      return false;
     }
-
-    // Move the file
-    const extractedBinaryPath = path.join(tempDir, "esbuild");
-    fs.renameSync(extractedBinaryPath, esbuildPath);
-
-    // Ensure the binary is executable (not needed on Windows)
-    if (os.platform() !== "win32") {
-      fs.chmodSync(esbuildPath, 0o755);
-    }
-
-    // Clean up
-    fs.unlinkSync(tgzPath);
-    fs.rmSync(tempDir, { recursive: true });
-
-    await ide.showToast(
-      "info",
-      `'esbuild' successfully installed to ${esbuildPath}`,
-    );
-  } catch (error) {
-    console.error("Error downloading or saving esbuild binary:", error);
-    throw error;
   }
 }
 
@@ -853,8 +806,15 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
     return;
   }
 
-  await handleEsbuildInstallation(ide, ideType);
-  await tryBuildConfigTs();
+  // Only bother with esbuild if config.ts is actually customized
+  if (currentContent.trim() !== DEFAULT_CONFIG_TS_CONTENTS.trim()) {
+    const ok = await handleEsbuildInstallation(ide, ideType);
+    if (!ok) {
+      // esbuild not available → we already showed a friendly message; skip building
+      return;
+    }
+    await tryBuildConfigTs();
+  }
 
   return readConfigJs();
 }

@@ -1,7 +1,6 @@
-import { SparklesIcon } from "@heroicons/react/24/outline";
+import { ComputerDesktopIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { isLocalProfile } from "../../util";
-import { BotIcon } from "../svg/BotIcon";
 
 export interface AssistantIconProps {
   assistant: ProfileDescription;
@@ -13,7 +12,11 @@ export function AssistantIcon({
   size = "h-4 w-4",
 }: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
-    return <BotIcon className={`text-foreground ${size} flex-shrink-0`} />;
+    return (
+      <ComputerDesktopIcon
+        className={`text-foreground ${size} flex-shrink-0`}
+      />
+    );
   } else if (assistant.iconUrl) {
     return (
       <img

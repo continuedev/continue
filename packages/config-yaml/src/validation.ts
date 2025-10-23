@@ -3,6 +3,7 @@ import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 export interface ConfigValidationError {
   fatal: boolean;
   message: string;
+  uri?: string;
 }
 
 export interface ConfigResult<T> {

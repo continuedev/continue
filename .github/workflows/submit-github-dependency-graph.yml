@@ -19,7 +19,7 @@ jobs:
           distribution: "temurin"
           java-version: 17
       - name: Generate and submit dependency graph
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@v5
         with:
           # The gradle project is not in the root of the repository.
           build-root-directory: extensions/intellij

@@ -1,10 +1,11 @@
 import {
   CubeIcon,
   ExclamationTriangleIcon,
+  GiftIcon,
   PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -13,14 +14,12 @@ import {
   selectToolCallsByStatus,
 } from "../../../../redux/selectors/selectToolCalls";
 import { setSelectedProfile } from "../../../../redux/slices/profilesSlice";
-import FreeTrialButton from "../../../FreeTrialButton";
+import StarterCreditsPopover from "../../../StarterCreditsPopover";
 import { ToolTip } from "../../../gui/Tooltip";
 import HoverItem from "../../InputToolbar/HoverItem";
 
-import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
-import type { FreeTrialStatus } from "core/control-plane/client";
 import { useAuth } from "../../../../context/Auth";
-import { getLocalStorage } from "../../../../util/localStorage";
+import { useCreditStatus } from "../../../../hooks/useCredits";
 import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
@@ -30,7 +29,6 @@ export function BlockSettingsTopToolbar() {
   const { selectedProfile } = useAuth();
 
   const configError = useAppSelector((store) => store.config.configError);
-  const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
 
   const pendingToolCalls = useAppSelector(selectPendingToolCalls);
@@ -40,39 +38,10 @@ export function BlockSettingsTopToolbar() {
   const hasActiveContent =
     pendingToolCalls.length > 0 || callingToolCalls.length > 0;
 
-  const [freeTrialStatus, setFreeTrialStatus] =
-    useState<FreeTrialStatus | null>(null);
-  const hasExitedFreeTrial = getLocalStorage("hasExitedFreeTrial");
-  const isUsingFreeTrial = usesFreeTrialApiKey(config) && !hasExitedFreeTrial;
-
-  useEffect(() => {
-    const fetchFreeTrialStatus = () => {
-      ideMessenger
-        .request("controlPlane/getFreeTrialStatus", undefined)
-        .then((resp) => {
-          if (resp.status === "success") {
-            setFreeTrialStatus(resp.content);
-          }
-        })
-        .catch(() => {});
-    };
-
-    fetchFreeTrialStatus();
-
-    let intervalId: NodeJS.Timeout | null = null;
-
-    if (isUsingFreeTrial) {
-      intervalId = setInterval(fetchFreeTrialStatus, 15000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [ideMessenger, isUsingFreeTrial]);
-
   const shouldShowError = configError && configError?.length > 0;
+
+  const { creditStatus, isUsingFreeTrial, refreshCreditStatus } =
+    useCreditStatus();
 
   const handleRulesClick = () => {
     if (selectedProfile) {
@@ -105,18 +74,18 @@ export function BlockSettingsTopToolbar() {
   };
 
   return (
-    <div className="flex flex-1 items-center justify-between gap-1.5">
+    <div className="flex flex-1 items-center justify-between gap-3">
       <div className="flex items-center gap-1">
         {shouldShowError && (
           <ToolTip delayShow={700} content="View configuration errors">
             <div
               role="button"
               tabIndex={0}
-              onClick={() => navigate(CONFIG_ROUTES.AGENTS)}
+              onClick={() => navigate(CONFIG_ROUTES.CONFIGS)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(CONFIG_ROUTES.AGENTS);
+                  navigate(CONFIG_ROUTES.CONFIGS);
                 }
               }}
               data-testid="block-settings-toolbar-icon-error"
@@ -132,6 +101,19 @@ export function BlockSettingsTopToolbar() {
 
         {!hasActiveContent && (
           <div className="flex items-center gap-1.5">
+            {isUsingFreeTrial && (
+              <ToolTip content="View remaining starter credits">
+                <StarterCreditsPopover
+                  creditStatus={creditStatus}
+                  refreshCreditStatus={refreshCreditStatus}
+                >
+                  <HoverItem px={2}>
+                    <GiftIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+                  </HoverItem>
+                </StarterCreditsPopover>
+              </ToolTip>
+            )}
+
             <ToolTip content="Configure rules">
               <HoverItem onClick={handleRulesClick} px={2}>
                 <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
@@ -153,16 +135,9 @@ export function BlockSettingsTopToolbar() {
         )}
       </div>
 
-      <ToolTip
-        place="top"
-        content={isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
-      >
+      <ToolTip place="top" content="Select Config">
         <div>
-          {isUsingFreeTrial ? (
-            <FreeTrialButton freeTrialStatus={freeTrialStatus} />
-          ) : (
-            <AssistantAndOrgListbox variant="lump" />
-          )}
+          <AssistantAndOrgListbox variant="lump" />
         </div>
       </ToolTip>
     </div>

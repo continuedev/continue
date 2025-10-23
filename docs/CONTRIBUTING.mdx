@@ -1,0 +1,347 @@
+---
+title: "Contributing to Continue Documentation"
+sidebarTitle: "Docs Contributions"
+description: "Welcome to the Continue documentation! We're excited that you want to contribute. This guide will help you get started with our documentation workflow and tools."
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+1. **Node.js** (v20 or higher)
+2. **Git** for version control
+3. **GitHub CLI** - Install from [cli.github.com](https://cli.github.com/)
+
+### Setup Steps
+
+1. **Fork and clone the repository**
+
+   ```bash
+   # Fork the repository (this will also clone it locally)
+   gh repo fork continuedev/continue
+   cd continue/docs
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Start the local development server**
+   ```bash
+   npm run dev
+   ```
+   Your docs will be available at `http://localhost:3000`
+
+## 💬 Creating Discussions and Issues
+
+Before creating any issues, we ask that you start with a GitHub Discussion. This helps us organize feedback and determine the best path forward.
+
+### Starting a Discussion
+
+<Steps>
+  <Step title="Go to GitHub Discussions">
+    Visit the [Continue GitHub Discussions](https://github.com/continuedev/continue/discussions) page.
+  </Step>
+  
+  <Step title="Choose the right category">
+    Select the **Docs** category for documentation improvements, corrections, or suggestions.
+   
+  </Step>
+  
+  <Step title="Provide detailed information">
+    Include the following in your discussion:
+    - Clear description of the issue or suggestion
+    - Steps to reproduce (if applicable)
+    - Expected vs. actual behavior
+    - Screenshots or code examples when helpful
+    - Your environment (OS, IDE, Continue version)
+  </Step>
+</Steps>
+
+### Issue Escalation Process
+
+<Info>
+  
+  **Important**: All issues should start as discussions. The Continue team will determine if and when a discussion should be escalated to a GitHub issue.
+  
+</Info>
+
+The Continue team will review discussions and may:
+- Provide a solution or clarification directly in the discussion
+- Ask for additional information or testing
+- Convert the discussion to an issue if it requires code changes or is a confirmed bug
+- Close the discussion if it's resolved or not actionable
+
+### When Discussions Become Issues
+
+A discussion will typically be converted to an issue when:
+- A bug in the documentation is confirmed
+- A new feature or significant documentation change is approved
+- Community consensus supports the proposed change
+- Technical implementation is required
+
+## 🤖 AI-Powered Documentation with Continue
+
+We strongly encourage using Continue's AI assistance to maintain consistency and quality in our documentation. Here are three ways to set this up:
+
+### Option 1: Use the Pre-Built Documentation Agent (Recommended)
+
+The easiest way to get started is using our pre-configured documentation agent:
+
+<Steps>
+  <Step title="Install the agent from Continue Hub">
+    Visit [the Docs Assistant - Mintlify in the Hub](https://hub.continue.dev/continuedev/docs-mintlify) and click "Install" to add it to your Continue setup. This agent comes pre-configured with all our documentation standards.
+
+    <Info>
+    Learn more about Continue Configs in our [config documentation](/guides/understanding-configs).
+    </Info>
+  </Step>
+  
+  <Step title="Use the agent">
+    <Tabs>
+      <Tab title="Command Line">
+        ```bash
+        # Install the Continue CLI if you haven't already
+        npm install -g @continuedev/cli
+        
+        # Use the agent from the command line
+        cn "Create a new guide for using the Continue CLI with Linear" --config continuedev/docs-mintlify
+        ```
+      </Tab>
+      
+      <Tab title="IDE">
+        1. Open Continue in your IDE
+        2. Select the "Docs Assistant - Mintlify" agent from the model dropdown
+        3. Ask it to help you create or edit documentation
+        
+        Example prompts:
+        - "Create a new guide for using the Continue CLI with Linear"
+        - "Update the getting-started guide with the new installation process"
+        - "Format this documentation according to Mintlify standards"
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+<Tip>
+  You can also remix this config to customize it for your specific needs. Learn how to create your own remix in our [remix config documentation](/hub/configs/create-a-config#how-to-remix-a-config).
+</Tip>
+
+### Option 2: Create Your Own Custom Agent
+
+If you want more control or customization, you can create your own documentation agent:
+
+<Steps>
+      <Step title="Create a new config">
+          Follow our [config creation guide](/hub/configs/create-a-config) to set up your own config.
+  </Step>
+  
+  <Step title="Add the Continue Docs MCP">
+    Install from Continue Hub: https://hub.continue.dev/continuedev/continue-docs-mcp
+    
+    This MCP provides context about Continue's documentation structure and standards.
+  </Step>
+  
+  <Step title="Add Mintlify formatting rules">
+    Install from Continue Hub: https://hub.continue.dev/mintlify/technical-writing-rule
+    
+    This rule ensures proper Mintlify component formatting.
+  </Step>
+  
+  <Step title="Use your custom agent">
+    <Tabs>
+      <Tab title="Command Line">
+        ```bash
+        # Install the Continue CLI if you haven't already
+        npm install -g @continuedev/cli
+        
+        # Use your agent from the command line
+        cn --config your-org/your-agent-name "Create a new guide for API authentication"
+        ```
+      </Tab>
+      
+      <Tab title="IDE">
+        1. Open Continue in your IDE
+        2. Select your custom agent from the model dropdown
+        3. Ask it to help you create or edit documentation
+        
+        Example prompts:
+        - "Help me format this documentation according to Mintlify standards"
+        - "Create a troubleshooting section for this feature"
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## 📝 Documentation Standards
+
+### Mintlify Component Guidelines
+
+When using Mintlify components, follow these formatting rules:
+
+#### Cards and Info Boxes
+
+```mdx
+<Card title="Best Practice" icon="lightbulb">
+
+Always include blank lines and proper indentation:
+
+- Use 2-space indentation
+- Add blank lines after opening tags
+- Format lists as bullet points
+
+</Card>
+```
+
+#### Warning and Note Components
+
+```mdx
+<Warning>
+
+Important information should be formatted clearly:
+
+- Each point on its own line
+- Consistent indentation
+- Clear, concise language
+
+</Warning>
+```
+
+### Writing Style
+
+1. **Be concise**: Get to the point quickly
+2. **Use examples**: Show, don't just tell
+3. **Include code blocks**: Provide working examples
+4. **Add visuals**: Screenshots and diagrams help understanding
+5. **Test your changes**: Ensure all links and code examples work
+
+<Warning>
+If you are creating a new guide, please test the steps yourself to ensure accuracy.
+</Warning>
+
+## 🔧 Common Tasks
+
+### Adding a New Guide
+
+1. Create a new `.mdx` file in the guides directory
+2. Add frontmatter:
+   ```mdx
+   ---
+   title: "Your Guide Title"
+   description: "Brief description of what this guide covers"
+   ---
+   ```
+3. Use the Continue agent to help format your content
+4. Update `docs.json` to include your new page in the navigation
+
+<Tip>
+We have both guides and cookbooks. Use guides for step-by-step instructions and cookbooks for creating agents for the CLI.
+</Tip>
+
+### Updating Existing Documentation
+
+1. Use the Continue agent with prompts like:
+   - "Update the installation guide with the new npm package"
+   - "Add a troubleshooting section for connection issues"
+2. The agent will maintain consistent formatting automatically
+
+### Adding Code Examples
+
+Use language-specific code blocks:
+
+````mdx
+```typescript
+// Your TypeScript code here
+const example = "Hello, Continue!";
+```
+````
+
+## 🐛 Testing Your Changes
+
+1. **Local preview**: In the docs directory, run `npm run dev` and check your changes
+2. **Link validation**: Ensure all internal and external links work
+3. **Format check**: Use the Continue agent to validate Mintlify formatting
+4. **Build test**: Run `npm run build` to ensure no build errors
+
+## 📤 Submitting Your Contribution
+
+1. **Create a feature branch**
+
+   ```bash
+   git checkout -b docs/your-feature-name
+   ```
+
+2. **Commit your changes**
+
+   ```bash
+   git add .
+   git commit -m "docs: describe your changes"
+   ```
+
+3. **Push and create a Pull Request**
+
+   ```bash
+   # Push to your fork and create a PR
+   git push origin docs/your-feature-name
+   gh pr create --web
+   ```
+
+<Tip>
+
+  The `gh pr create` command will automatically:
+  - Push your branch to your fork
+  - Create a pull request to the main repository
+  - Allow you to add a title, description, and reference issues
+  - Open the PR in your browser if using `--web`
+
+</Tip>
+
+### Linking Your PR to Issues
+
+<Info>
+
+**Important**: When your PR addresses a specific issue, make sure to link it using GitHub keywords.
+
+</Info>
+
+To automatically link your PR to an issue and close it when the PR is merged, use one of these keywords in your PR description:
+
+- `closes #issue_number`
+- `fixes #issue_number`
+- `resolves #issue_number`
+
+**Example PR description:**
+```markdown
+Improved the installation guide with clearer steps for Windows users.
+
+Closes #1234
+```
+
+This helps us track which issues are being worked on and automatically closes them when your PR is merged.
+
+<Tip>
+
+Learn more about linking PRs to issues in the [GitHub documentation](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/using-keywords-in-issues-and-pull-requests).
+
+</Tip>
+
+## 💡 Tips for Success
+
+- **Use the Continue agent**: It knows our documentation standards and will save you time
+- **Preview frequently**: Check your changes in the local dev server
+- **Ask questions**: Open an issue or discussion if you need clarification
+- **Small PRs are better**: Focus on one topic or fix per PR
+- **Update examples**: Ensure code examples reflect the latest API
+
+
+## 🆘 Getting Help
+
+- **Start a Discussion**: Use [GitHub Discussions](https://github.com/continuedev/continue/discussions) for documentation issues, suggestions, or questions
+- **Continue agent questions**: Check the [Continue Hub page](https://hub.continue.dev/continuedev/docs-mintlify)
+- **Discord community**: Join our Discord for real-time help
+- **Existing docs**: Review similar pages for formatting examples
+---
+
+Thank you for contributing to Continue! Your efforts help make our documentation better for everyone. To learn more about contibuting to other parts of the project, check out our [main CONTRIBUTING guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md) 🎉
