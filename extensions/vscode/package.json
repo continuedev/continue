@@ -334,6 +334,13 @@
         "group": "Continue"
       },
       {
+        "command": "continue.generateCommitMessage",
+        "category": "Continue",
+        "title": "Generate Commit Message",
+        "icon": "media/icon.png",
+        "group": "Continue"
+      },
+      {
         "command": "continue.enterEnterpriseLicenseKey",
         "category": "Continue",
         "title": "Enter Enterprise License Key",
@@ -597,6 +604,13 @@
         {
           "command": "continue.debugTerminal",
           "group": "navigation@top"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "continue.generateCommitMessage",
+          "group": "navigation",
+          "when": "scmProvider == git"
         }
       ]
     },
