@@ -725,6 +725,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.codeLlamaInstruct,
       models.wizardCoder,
       models.mistralOs,
+      models.claude4Sonnet,
     ],
     apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
