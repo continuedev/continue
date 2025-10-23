@@ -116,24 +116,28 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                 flexDirection="column"
                 marginBottom={1}
               >
-                <Box>
-                  <Text
-                    color={
-                      isErrored
-                        ? "red"
-                        : isCompleted
-                          ? "green"
-                          : toolState.status === "generated"
-                            ? "yellow"
-                            : "white"
-                    }
-                  >
-                    {isCompleted || isErrored ? "●" : "○"}
-                  </Text>
-                  <Text color="white">
-                    {" "}
-                    <ToolCallTitle toolName={toolName} args={toolArgs} />
-                  </Text>
+                <Box width="100%">
+                  <Box flexShrink={0}>
+                    <Text
+                      color={
+                        isErrored
+                          ? "red"
+                          : isCompleted
+                            ? "green"
+                            : toolState.status === "generated"
+                              ? "yellow"
+                              : "white"
+                      }
+                    >
+                      {isCompleted || isErrored ? "●" : "○"}
+                    </Text>
+                  </Box>
+                  <Box flexGrow={1} flexShrink={1} minWidth={0}>
+                    <Text color="white">
+                      {" "}
+                      <ToolCallTitle toolName={toolName} args={toolArgs} />
+                    </Text>
+                  </Box>
                 </Box>
 
                 {isErrored ? (
