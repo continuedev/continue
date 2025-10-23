@@ -11,6 +11,7 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import {
   GeminiChatContent,
@@ -191,7 +192,9 @@ class Gemini extends BaseLLM {
       : {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
+            data: part.imageUrl?.url
+              ? extractBase64FromDataUrl(part.imageUrl.url)
+              : "",
           },
         };
   }

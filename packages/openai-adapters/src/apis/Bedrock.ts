@@ -31,6 +31,7 @@ import {
 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { fromStatic } from "@aws-sdk/token-providers";
+import { parseDataUrl } from "../../../../core/util/url.js";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
@@ -135,9 +136,9 @@ export class BedrockApi implements BaseLlmApi {
       case "image_url":
       default:
         try {
-          const [mimeType, base64Data] = (
-            part as ChatCompletionContentPartImage
-          ).image_url.url.split(",");
+          const { mimeType, base64Data } = parseDataUrl(
+            (part as ChatCompletionContentPartImage).image_url.url,
+          );
           const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
           if (
             format === ImageFormat.JPEG ||
