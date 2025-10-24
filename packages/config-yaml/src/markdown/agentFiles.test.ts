@@ -185,7 +185,7 @@ describe("serializeAgentFile", () => {
     const agentFile: AgentFile = {
       name: "Test Agent File",
       description: "A test agent file",
-      model: "anthropic/claude-3-sonnet",
+      model: "anthropic/claude-sonnet-4-5",
       tools: "tool1, tool2",
       rules: "rule1, rule2",
       prompt: "This is the test prompt",
