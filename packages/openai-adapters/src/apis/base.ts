@@ -10,6 +10,7 @@ import {
   EmbeddingCreateParams,
   Model,
 } from "openai/resources/index";
+import type { Response } from "openai/resources/responses/responses.js";
 
 export interface FimCreateParamsStreaming
   extends CompletionCreateParamsStreaming {
@@ -46,6 +47,16 @@ export interface BaseLlmApi {
 
   // Chat, stream
   chatCompletionStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk>;
+
+  responsesNonStream?(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<Response>;
+
+  responsesStream?(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk>;

@@ -1,4 +1,4 @@
-import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { BaseLlmApi, isResponsesModel } from "@continuedev/openai-adapters";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 
 import { error, warn } from "../logging.js";
@@ -173,6 +173,14 @@ export async function chatCompletionStreamWithBackoff(
         throw new Error("Request aborted");
       }
 
+      const useResponses =
+        typeof llmApi.responsesStream === "function" &&
+        isResponsesModel(params.model);
+
+      if (useResponses) {
+        return llmApi.responsesStream!(params, abortSignal);
+      }
+
       return llmApi.chatCompletionStream(params, abortSignal);
     } catch (err: any) {
       lastError = err;
@@ -189,6 +197,14 @@ export async function chatCompletionStreamWithBackoff(
 
       // Only retry if the error is retryable
       if (!isRetryableError(err)) {
+        // Log full error details for non-retryable errors
+        logger.error("Non-retryable LLM API error", err, {
+          status: err.status,
+          statusText: err.statusText,
+          message: err.message,
+          error: err.error,
+          model: params.model,
+        });
         throw err;
       }
 

@@ -11,9 +11,20 @@ import {
   CompletionCreateParamsStreaming,
   Model,
 } from "openai/resources/index";
+import type {
+  Response,
+  ResponseStreamEvent,
+} from "openai/resources/responses/responses.js";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
 import { customFetch } from "../util.js";
+import {
+  createResponsesStreamState,
+  fromResponsesChunk,
+  isResponsesModel,
+  responseToChatCompletion,
+  toResponsesParams,
+} from "./openaiResponses.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -63,6 +74,11 @@ export class OpenAIApi implements BaseLlmApi {
     return body;
   }
 
+  protected shouldUseResponsesEndpoint(model: string): boolean {
+    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
+    return isOfficialOpenAIAPI && isResponsesModel(model);
+  }
+
   modifyCompletionBody<
     T extends
       | CompletionCreateParamsNonStreaming
@@ -98,6 +114,10 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    if (this.shouldUseResponsesEndpoint(body.model)) {
+      const response = await this.responsesNonStream(body, signal);
+      return responseToChatCompletion(response);
+    }
     const response = await this.openai.chat.completions.create(
       this.modifyChatBody(body),
       {
@@ -111,6 +131,12 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    if (this.shouldUseResponsesEndpoint(body.model)) {
+      for await (const chunk of this.responsesStream(body, signal)) {
+        yield chunk;
+      }
+      return;
+    }
     const response = await this.openai.chat.completions.create(
       this.modifyChatBody(body),
       {
@@ -208,5 +234,43 @@ export class OpenAIApi implements BaseLlmApi {
 
   async list(): Promise<Model[]> {
     return (await this.openai.models.list()).data;
+  }
+
+  async responsesNonStream(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<Response> {
+    const params = toResponsesParams({
+      ...(body as ChatCompletionCreateParams),
+      stream: false,
+    });
+    return (await this.openai.responses.create(params, {
+      signal,
+    })) as Response;
+  }
+
+  async *responsesStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const params = toResponsesParams({
+      ...(body as ChatCompletionCreateParams),
+      stream: true,
+    });
+
+    const state = createResponsesStreamState({
+      model: body.model,
+    });
+
+    const stream = this.openai.responses.stream(params as any, {
+      signal,
+    });
+
+    for await (const event of stream as AsyncIterable<ResponseStreamEvent>) {
+      const chunk = fromResponsesChunk(state, event);
+      if (chunk) {
+        yield chunk;
+      }
+    }
   }
 }
