@@ -474,7 +474,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
               Ollama.SetIsThinking(false);
             }
             // When Streaming you can't have both thinking and content
-            console.log("THINKING TOKEN:", thinkingMessage.content);
             return [thinkingMessage];
           }
         }
