@@ -1,3 +1,5 @@
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+
 import {
   ApiRequestError,
   AuthenticationRequiredError,
@@ -53,7 +55,7 @@ You should use this tool to notify the user whenever the state of your work chan
         const errorMessage =
           "Agent ID is required. Please use the --id flag with cn serve.";
         logger.error(errorMessage);
-        return `Error: ${errorMessage}`;
+        throw new ContinueError(ContinueErrorReason.Unspecified, errorMessage);
       }
 
       // Call the API endpoint using shared client
@@ -62,19 +64,25 @@ You should use this tool to notify the user whenever the state of your work chan
       logger.info(`Status: ${args.status}`);
       return `Status set: ${args.status}`;
     } catch (error) {
+      if (error instanceof ContinueError) {
+        throw error;
+      }
+
       if (error instanceof AuthenticationRequiredError) {
         logger.error(error.message);
-        return "Error: Authentication required";
+        throw new Error("Error: Authentication required");
       }
 
       if (error instanceof ApiRequestError) {
-        return `Error setting status: ${error.status} ${error.response || error.statusText}`;
+        throw new Error(
+          `Error setting status: ${error.status} ${error.response || error.statusText}`,
+        );
       }
 
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       logger.error(`Error setting status: ${errorMessage}`);
-      return `Error setting status: ${errorMessage}`;
+      throw new Error(`Error setting status: ${errorMessage}`);
     }
   },
 };

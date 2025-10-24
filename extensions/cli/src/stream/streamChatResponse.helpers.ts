@@ -1,5 +1,6 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 
+import type { ToolStatus } from "core/index.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
@@ -26,6 +27,10 @@ import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
 import { StreamCallbacks } from "./streamChatResponse.types.js";
+
+export interface ToolResultWithStatus extends ChatCompletionToolMessageParam {
+  status: ToolStatus;
+}
 
 // Helper function to handle permission denied
 export function handlePermissionDenied(
@@ -389,7 +394,7 @@ export async function preprocessStreamedToolCalls(
  * Executes preprocessed tool calls, handling permissions and results
  * @param preprocessedCalls - The preprocessed tool calls ready for execution
  * @param callbacks - Optional callbacks for notifying of events
- * @returns - Chat history entries with tool results
+ * @returns - Chat history entries with tool results and status information
  */
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
@@ -397,7 +402,7 @@ export async function executeStreamedToolCalls(
   isHeadless?: boolean,
 ): Promise<{
   hasRejection: boolean;
-  chatHistoryEntries: ChatCompletionToolMessageParam[];
+  chatHistoryEntries: ToolResultWithStatus[];
 }> {
   // Strategy: queue permissions (preserve order), then run approved tools in parallel.
   // If any permission is rejected, cancel the remaining tools in this batch.
@@ -408,7 +413,7 @@ export async function executeStreamedToolCalls(
     call,
   }));
 
-  const entriesByIndex = new Map<number, ChatCompletionToolMessageParam>();
+  const entriesByIndex = new Map<number, ToolResultWithStatus>();
   const execPromises: Promise<void>[] = [];
 
   let hasRejection = false;
@@ -439,17 +444,18 @@ export async function executeStreamedToolCalls(
       );
 
       if (!permissionResult.approved) {
-        // Permission denied: record and mark rejection
+        // Permission denied: create entry with canceled status
         const denialReason = permissionResult.denialReason || "user";
         const deniedMessage =
           denialReason === "policy"
             ? `Command blocked by security policy`
             : `Permission denied by user`;
 
-        const deniedEntry: ChatCompletionToolMessageParam = {
+        const deniedEntry: ToolResultWithStatus = {
           role: "tool",
           tool_call_id: call.id,
           content: deniedMessage,
+          status: "canceled",
         };
         entriesByIndex.set(index, deniedEntry);
         callbacks?.onToolResult?.(
@@ -484,10 +490,11 @@ export async function executeStreamedToolCalls(
               arguments: call.arguments,
             });
             const toolResult = await executeToolCall(call);
-            const entry: ChatCompletionToolMessageParam = {
+            const entry: ToolResultWithStatus = {
               role: "tool",
               tool_call_id: call.id,
               content: toolResult,
+              status: "done",
             };
             entriesByIndex.set(index, entry);
             callbacks?.onToolResult?.(toolResult, call.name, "done");
@@ -511,6 +518,7 @@ export async function executeStreamedToolCalls(
               role: "tool",
               tool_call_id: call.id,
               content: errorMessage,
+              status: "errored",
             });
             callbacks?.onToolError?.(errorMessage, call.name);
             // Immediate service update for UI feedback
@@ -536,6 +544,7 @@ export async function executeStreamedToolCalls(
         role: "tool",
         tool_call_id: call.id,
         content: errorMessage,
+        status: "errored",
       });
       callbacks?.onToolError?.(errorMessage, call.name);
       // Treat permission errors like execution errors but do not stop the batch
@@ -552,9 +561,9 @@ export async function executeStreamedToolCalls(
   await Promise.all(execPromises);
 
   // Assemble final entries in original order
-  const chatHistoryEntries: ChatCompletionToolMessageParam[] = preprocessedCalls
+  const chatHistoryEntries: ToolResultWithStatus[] = preprocessedCalls
     .map((_, index) => entriesByIndex.get(index))
-    .filter((e): e is ChatCompletionToolMessageParam => !!e);
+    .filter((e): e is ToolResultWithStatus => !!e);
 
   return {
     hasRejection,
