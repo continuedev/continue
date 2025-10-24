@@ -41,12 +41,28 @@ class TestLLM extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    for (const char of HARDCODED_CHAT_RESPONSE) {
-      yield {
-        role: "assistant",
-        content: char,
-      };
+    // Look for test messages in the chat history
+    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+    let testResponse: string | undefined;
+
+    if (lastUserMessage) {
+      const content =
+        typeof lastUserMessage.content === "string"
+          ? lastUserMessage.content
+          : lastUserMessage.content
+              .map((part) => (part.type === "text" ? part.text : ""))
+              .join("");
+      testResponse = this.findResponse(content);
     }
+
+    const responseText = testResponse || HARDCODED_CHAT_RESPONSE;
+
+    // Yield the entire response at once instead of character by character
+    // This is important for edits to work properly
+    yield {
+      role: "assistant",
+      content: responseText,
+    };
   }
 }
 
