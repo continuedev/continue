@@ -101,11 +101,9 @@ export const searchCodeTool: Tool = {
         throw error;
       }
       if (error.code === 1) {
-        throw new Error(
-          `No matches found for pattern "${args.pattern}"${
-            args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
-          }.`,
-        );
+        return `No matches found for pattern "${args.pattern}"${
+          args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+        }.`;
       }
       if (error instanceof Error) {
         if (error.message.includes("command not found")) {
