@@ -90,7 +90,7 @@ export const OpenAi: ModelProvider = {
       contextLength: 500000,
       maxCompletionTokens: 150000,
       regex: /gpt-5-codex/,
-      recommendedFor: ["chat", "edit"],
+      recommendedFor: ["chat"],
     },
     // gpt-4o
     {
