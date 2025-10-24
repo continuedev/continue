@@ -173,13 +173,6 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
-      const { autoAcceptEditToolDiffs, ...withoutAutoApply } = migratedUI;
-      if (autoAcceptEditToolDiffs !== undefined) {
-        shareConfigUpdates.autoAcceptEditToolDiffs = autoAcceptEditToolDiffs;
-        migratedUI = withoutAutoApply;
-        effected = true;
-      }
-
       const { showChatScrollbar, ...withoutShowChatScrollbar } = migratedUI;
       if (showChatScrollbar !== undefined) {
         shareConfigUpdates.showChatScrollbar = showChatScrollbar;

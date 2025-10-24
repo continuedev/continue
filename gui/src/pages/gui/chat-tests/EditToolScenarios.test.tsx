@@ -1,9 +1,4 @@
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { generateToolCallButtonTestId } from "../../../components/mainInput/Lump/LumpToolbar/PendingToolCallToolbar";
-import {
-  addAndSelectMockLlm,
-  triggerConfigUpdate,
-} from "../../../util/test/config";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { renderWithProviders } from "../../../util/test/render";
 import { Chat } from "../Chat";
@@ -11,7 +6,6 @@ import { Chat } from "../Chat";
 import { waitFor } from "@testing-library/dom";
 import { act } from "@testing-library/react";
 import { ChatMessage } from "core";
-import { setToolPolicy } from "../../../redux/slices/uiSlice";
 import { setInactive } from "../../../redux/slices/sessionSlice";
 import {
   getElementByTestId,
@@ -132,12 +126,6 @@ test(
 
     await user.click(toggleCodeblockChevron);
     await getElementByText(EDIT_CHANGES);
-
-    // Pending tool call - find and click the accept button
-    const acceptToolCallButton = await getElementByTestId(
-      generateToolCallButtonTestId("accept", EDIT_TOOL_CALL_ID),
-    );
-    await user.click(acceptToolCallButton);
 
     // Tool call, check that applyToFile was called for edit
     await waitFor(() => {
