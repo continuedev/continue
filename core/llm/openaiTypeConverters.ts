@@ -9,37 +9,32 @@ import {
   CompletionCreateParams,
 } from "openai/resources/index";
 import type {
+  EasyInputMessage,
   Response as OpenAIResponse,
-  ResponseStreamEvent,
-  ResponseTextDeltaEvent,
-  ResponseTextDoneEvent,
-  ResponseReasoningSummaryTextDeltaEvent,
-  ResponseReasoningSummaryTextDoneEvent,
-  ResponseReasoningTextDeltaEvent,
-  ResponseReasoningTextDoneEvent,
+  ResponseFunctionToolCall,
   ResponseInput,
   ResponseInputItem,
   ResponseInputMessageContentList,
   ResponseOutputMessage,
   ResponseOutputText,
-  ResponseFunctionToolCall,
-  EasyInputMessage,
   ResponseReasoningItem,
+  ResponseReasoningSummaryTextDeltaEvent,
+  ResponseReasoningSummaryTextDoneEvent,
+  ResponseReasoningTextDeltaEvent,
+  ResponseReasoningTextDoneEvent,
+  ResponseStreamEvent,
+  ResponseTextDeltaEvent,
 } from "openai/resources/responses/responses.mjs";
 
 import {
+  AssistantChatMessage,
   ChatMessage,
   CompletionOptions,
+  MessageContent,
+  MessagePart,
   TextMessagePart,
   ThinkingChatMessage,
   ToolCallDelta,
-  AssistantChatMessage,
-  UserChatMessage,
-  SystemChatMessage,
-  ToolResultChatMessage,
-  MessageContent,
-  ImageMessagePart,
-  MessagePart,
 } from "..";
 
 function appendReasoningFieldsIfSupported(
@@ -329,8 +324,6 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
 export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
-  console.log("chunk", chunk);
-
   const delta = chunk.choices?.[0]?.delta as
     | (ChatCompletionChunk.Choice.Delta & {
         reasoning?: string;
