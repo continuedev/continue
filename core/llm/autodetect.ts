@@ -105,6 +105,8 @@ const MODEL_SUPPORTS_IMAGES: RegExp[] = [
   /\bgemma-?3(?!n)/, // gemma3 supports vision, but gemma3n doesn't!
   /\b(pali|med)gemma/,
   /qwen(.*)vl/,
+  /mistral-small/,
+  /mistral-medium/,
 ];
 
 function modelSupportsImages(
@@ -142,7 +144,12 @@ function modelSupportsReasoning(
   if (!model) {
     return false;
   }
-  if ("anthropic" === model.underlyingProviderName) {
+  // do not turn reasoning on by default for claude 3 models
+  if (
+    model.model.includes("claude") &&
+    !model.model.includes("-3-") &&
+    !model.model.includes("-3.5-")
+  ) {
     return true;
   }
   if (model.model.includes("deepseek-r")) {

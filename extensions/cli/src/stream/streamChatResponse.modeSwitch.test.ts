@@ -7,7 +7,7 @@ import {
   services,
 } from "../services/index.js";
 
-import { getAllTools } from "./handleToolCalls.js";
+import { getRequestTools } from "./handleToolCalls.js";
 
 describe("streamChatResponse - Mode Switch During Streaming", () => {
   const toolPermissionService = services.toolPermissions;
@@ -21,7 +21,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
     // Initialize services in normal mode
     await initializeServices({
-      headless: true,
+      headless: false,
       toolPermissionOverrides: {
         mode: "normal",
       },
@@ -30,12 +30,12 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
 
   test("should recompute tools on each iteration to handle mode switches", async () => {
     // Start in normal mode
-    let tools = await getAllTools();
+    let tools = await getRequestTools(false);
     let toolNames = tools.map((t) => t.function.name);
 
     // Should include write tools in normal mode
     expect(toolNames).toContain("Write");
-    expect(toolNames).toContain("Edit");
+    expect(toolNames).toContain("MultiEdit");
 
     // Switch to plan mode (simulating Shift+Tab during streaming)
     toolPermissionService.switchMode("plan");
@@ -45,12 +45,12 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Recompute tools - should now exclude write tools
-    tools = await getAllTools();
+    tools = await getRequestTools(true);
     toolNames = tools.map((t) => t.function.name);
 
     // Should exclude write tools in plan mode
     expect(toolNames).not.toContain("Write");
-    expect(toolNames).not.toContain("Edit");
+    expect(toolNames).not.toContain("MultiEdit");
 
     // Should still include read-only tools
     expect(toolNames).toContain("Read");
@@ -58,10 +58,10 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     expect(toolNames).toContain("List");
   });
 
-  test("getAllTools reflects current mode immediately", async () => {
+  test("getRequestTools reflects current mode immediately", async () => {
     // Start in normal mode
     expect(toolPermissionService.getCurrentMode()).toBe("normal");
-    let tools = await getAllTools();
+    let tools = await getRequestTools(false);
     expect(tools.map((t) => t.function.name)).toContain("Write");
 
     // Switch to plan mode
@@ -70,8 +70,8 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
     expect(toolPermissionService.getCurrentMode()).toBe("plan");
 
-    // getAllTools should immediately reflect the new mode
-    tools = await getAllTools();
+    // getRequestTools should immediately reflect the new mode
+    tools = await getRequestTools(false);
     expect(tools.map((t) => t.function.name)).not.toContain("Write");
 
     // Switch to auto mode
@@ -80,10 +80,10 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
     expect(toolPermissionService.getCurrentMode()).toBe("auto");
 
-    // getAllTools should immediately reflect auto mode (all tools allowed)
-    tools = await getAllTools();
+    // getRequestTools should immediately reflect auto mode (all tools allowed)
+    tools = await getRequestTools(false);
     expect(tools.map((t) => t.function.name)).toContain("Write");
-    expect(tools.map((t) => t.function.name)).toContain("Edit");
+    expect(tools.map((t) => t.function.name)).toContain("MultiEdit");
     expect(tools.map((t) => t.function.name)).toContain("Read");
   });
 
@@ -151,7 +151,7 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     const abortController = new AbortController();
 
     // Start in normal mode - tools should include Write
-    const initialTools = await getAllTools();
+    const initialTools = await getRequestTools(false);
     expect(initialTools.map((t) => t.function.name)).toContain("Write");
 
     // During streaming, if mode switches, subsequent iterations should use new tools

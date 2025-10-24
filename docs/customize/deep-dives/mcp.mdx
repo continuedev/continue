@@ -19,8 +19,8 @@ that can be set up with custom tools.
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
 
-MCP Servers can be added to hub configs using `mcpServers` blocks. You can
-explore available MCP server blocks
+MCP Servers can be added to hub configs using `mcpServers`. You can
+explore available MCP servers
 [here](https://hub.continue.dev/explore/mcp).
 
 <Info>MCP can only be used in the **agent** mode.</Info>
@@ -72,8 +72,7 @@ For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` 
 
 To set up your own MCP server, read the [MCP
 quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
-`mcpServers`
-block](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
+`mcpServers`](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
 server block to your [config file](./configuration.md):
 
 ```yaml title="config.yaml"
@@ -94,7 +93,7 @@ When creating a standalone block file in `.continue/mcpServers/`, remember to in
 
 ### How to Configure MCP Server Properties
 
-MCP blocks follow the established syntax for blocks, with a few additional properties specific to MCP servers.
+MCP components include a few additional properties specific to MCP servers.
 
 - `name`: A display name for the MCP server.
 - `type`: The type of the MCP server: `sse`, `stdio`, `streamable-http`

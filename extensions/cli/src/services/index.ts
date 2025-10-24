@@ -51,7 +51,6 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
   const commandOptions = initOptions.options || {};
-
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
     const authConfig = loadAuthConfig();
@@ -76,17 +75,48 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   }
 
   serviceContainer.register(
+    SERVICE_NAMES.AUTH,
+    async () => {
+      return await authService.initialize();
+    },
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.API_CLIENT,
+    async () => {
+      const authState = await serviceContainer.get<AuthServiceState>(
+        SERVICE_NAMES.AUTH,
+      );
+      return apiClientService.initialize(authState.authConfig);
+    },
+    [SERVICE_NAMES.AUTH], // Depends on auth
+  );
+
+  serviceContainer.register(
     SERVICE_NAMES.AGENT_FILE,
-    () => agentFileService.initialize(commandOptions.agent),
-    [],
+    async () => {
+      const [authState, apiClientState] = await Promise.all([
+        serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
+        serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
+      ]);
+
+      return await agentFileService.initialize(
+        commandOptions.agent,
+        authState,
+        apiClientState,
+      );
+    },
+    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT],
   );
 
   serviceContainer.register(
     SERVICE_NAMES.TOOL_PERMISSIONS,
     async () => {
-      const agentFileState = await serviceContainer.get<AgentFileServiceState>(
-        SERVICE_NAMES.AGENT_FILE,
-      );
+      const [mcpState, agentFileState] = await Promise.all([
+        serviceContainer.get<AuthServiceState>(SERVICE_NAMES.MCP),
+        serviceContainer.get<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
+      ]);
 
       // Initialize mode service with tool permission overrides
       if (initOptions.toolPermissionOverrides) {
@@ -99,13 +129,16 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
           exclude: overrides.exclude,
           isHeadless: initOptions.headless,
         };
-
         // Only set the boolean flag that corresponds to the mode
         if (overrides.mode) {
           initArgs.mode = overrides.mode;
         }
         // If mode is "normal" or undefined, no flags are set
-        return await toolPermissionService.initialize(initArgs, agentFileState);
+        return await toolPermissionService.initialize(
+          initArgs,
+          agentFileState,
+          mcpState,
+        );
       } else {
         // Even if no overrides, we need to initialize with defaults
         return await toolPermissionService.initialize(
@@ -113,10 +146,11 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
             isHeadless: initOptions.headless,
           },
           agentFileState,
+          mcpState,
         );
       }
     },
-    [SERVICE_NAMES.AGENT_FILE],
+    [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP],
   );
 
   // Initialize SystemMessageService with command options
@@ -132,26 +166,9 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   );
 
   serviceContainer.register(
-    SERVICE_NAMES.AUTH,
-    () => authService.initialize(),
-    [], // No dependencies
-  );
-
-  serviceContainer.register(
     SERVICE_NAMES.UPDATE,
     () => updateService.initialize(),
     [], // No dependencies
-  );
-
-  serviceContainer.register(
-    SERVICE_NAMES.API_CLIENT,
-    async () => {
-      const authState = await serviceContainer.get<AuthServiceState>(
-        SERVICE_NAMES.AUTH,
-      );
-      return apiClientService.initialize(authState.authConfig);
-    },
-    [SERVICE_NAMES.AUTH], // Depends on auth
   );
 
   serviceContainer.register(
@@ -200,13 +217,14 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         }
       }
 
-      return configService.initialize({
+      return await configService.initialize({
         authConfig: finalAuthState.authConfig,
         configPath,
         // organizationId: finalAuthState.organizationId || null,
         apiClient: apiClientState.apiClient,
         agentFileState,
         injectedConfigOptions: commandOptions,
+        isHeadless: initOptions.headless,
       });
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.AGENT_FILE], // Dependencies
@@ -244,7 +262,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       if (!configState.config) {
         throw new Error("Config not available for MCP service");
       }
-      return mcpService.initialize(configState.config, initOptions.headless);
+      return mcpService.initialize(
+        configState.config,
+        initOptions.headless || initOptions.options?.agent,
+      );
     },
     [SERVICE_NAMES.CONFIG], // Depends on config
   );
