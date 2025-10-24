@@ -57,15 +57,17 @@ class TestLLM extends BaseLLM {
 
     const responseText = testResponse || HARDCODED_CHAT_RESPONSE;
 
-    // Stream in word chunks like real LLM providers do
-    // This ensures compatibility with streamLines and streamDiff
-    const words = responseText.split(" ");
-    for (let i = 0; i < words.length; i++) {
-      const isLastWord = i === words.length - 1;
+    // Stream character by character with realistic network-like delays
+    // This simulates real provider behavior and prevents overwhelming the event loop
+    for (const char of responseText) {
       yield {
         role: "assistant",
-        content: words[i] + (isLastWord ? "" : " "),
+        content: char,
       };
+      // Add realistic delay to simulate network latency (10-30ms per chunk)
+      await new Promise((resolve) =>
+        setTimeout(resolve, 10 + Math.random() * 20),
+      );
     }
   }
 }
