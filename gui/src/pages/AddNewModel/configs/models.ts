@@ -1085,7 +1085,7 @@ export const models: { [key: string]: ModelPackage } = {
       "OpenAI's most advanced code generation model, optimized for programming tasks",
     params: {
       model: "gpt-5-codex",
-      contextLength: 500_000,
+      contextLength: 400_000,
       title: "GPT-5 Codex",
     },
     providerOptions: ["openai"],
