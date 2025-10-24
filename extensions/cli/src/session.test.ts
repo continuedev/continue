@@ -16,7 +16,6 @@ import {
   updateSessionHistory,
   updateSessionTitle,
 } from "./session.js";
-import type SessionManager from "./session.js";
 
 // Mock dependencies first, before any imports
 vi.mock("os", () => ({
