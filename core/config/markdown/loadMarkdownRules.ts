@@ -79,9 +79,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
             uriType: "file",
             fileUri: file.path,
           });
-          if (rule.invokable) {
-            // skip prompt files which are invokable
-          } else {
+          if (!rule.invokable) {
             rules.push({
               ...rule,
               source: "rules-block",
