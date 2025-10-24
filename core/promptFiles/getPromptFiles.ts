@@ -62,8 +62,6 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  console.log("debug1 prompt files", promptFiles);
-
   // Also read from ~/.continue/prompts and ~/.continue/rules
   promptFiles.push(...readAllGlobalPromptFiles());
 
@@ -78,6 +76,5 @@ export async function getAllPromptFiles(
       return { path: file.path, content };
     }),
   );
-  console.log("debug1 result", result);
   return result;
 }
