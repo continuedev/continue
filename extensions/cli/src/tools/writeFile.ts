@@ -162,7 +162,7 @@ export const writeFileTool: Tool = {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      return `Error writing to file: ${errorMessage}`;
+      throw new Error(`Error writing to file: ${errorMessage}`);
     }
   },
 };
