@@ -159,7 +159,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalled: Set<string> = new Set();
   private static modelsBeingInstalledMutex = new Mutex();
 
-  private static _isThinking: boolean = false;
   private fimSupported: boolean = false;
   constructor(options: LLMOptions) {
     super(options);
@@ -402,15 +401,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
     }
   }
 
-  static GetIsThinking(): boolean {
-    return this._isThinking;
-  }
-  static SetIsThinking(newValue: boolean): void {
-    if (this._isThinking !== newValue) {
-      this._isThinking = newValue;
-    }
-  }
-
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
@@ -450,7 +440,15 @@ class Ollama extends BaseLLM implements ModelInstaller {
       body: JSON.stringify(chatOptions),
       signal,
     });
-
+    let _isThinking: boolean = false;
+    function GetIsThinking(): boolean {
+      return _isThinking;
+    }
+    function SetIsThinking(newValue: boolean): void {
+      if (_isThinking !== newValue) {
+        _isThinking = newValue;
+      }
+    }
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
@@ -460,10 +458,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
         const { content } = res;
 
         if (content === "<think>") {
-          Ollama.SetIsThinking(true);
+          SetIsThinking(true);
         }
 
-        if (Ollama.GetIsThinking() && content) {
+        if (GetIsThinking() && content) {
           const thinkingMessage: ThinkingChatMessage = {
             role: "thinking",
             content: content,
@@ -471,7 +469,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
           if (thinkingMessage) {
             if (content === "</think>") {
-              Ollama.SetIsThinking(false);
+              SetIsThinking(false);
             }
             // When Streaming you can't have both thinking and content
             return [thinkingMessage];
