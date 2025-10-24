@@ -114,6 +114,18 @@ type OllamaErrorResponse = {
   error: string;
 };
 
+type N8nChatReponse = {
+  type: string;
+  content?: string;
+  metadata: {
+    nodeId: string;
+    nodeName: string;
+    itemIndex: number;
+    runIndex: number;
+    timestamps: number;
+  };
+};
+
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
@@ -124,7 +136,8 @@ type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
       message: OllamaChatMessage;
-    });
+    })
+  | N8nChatReponse;
 
 interface OllamaTool {
   type: "function";
@@ -146,6 +159,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalled: Set<string> = new Set();
   private static modelsBeingInstalledMutex = new Mutex();
 
+  private static _isThinking: boolean = false;
   private fimSupported: boolean = false;
   constructor(options: LLMOptions) {
     super(options);
@@ -388,6 +402,15 @@ class Ollama extends BaseLLM implements ModelInstaller {
     }
   }
 
+  static GetIsThinking(): boolean {
+    return this._isThinking;
+  }
+  static SetIsThinking(newValue: boolean): void {
+    if (this._isThinking !== newValue) {
+      this._isThinking = newValue;
+    }
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
@@ -431,6 +454,39 @@ class Ollama extends BaseLLM implements ModelInstaller {
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
+      }
+
+      if ("type" in res) {
+        const { content } = res;
+
+        if (content === "<think>") {
+          Ollama.SetIsThinking(true);
+        }
+
+        if (Ollama.GetIsThinking() && content) {
+          const thinkingMessage: ThinkingChatMessage = {
+            role: "thinking",
+            content: content,
+          };
+
+          if (thinkingMessage) {
+            if (content === "</think>") {
+              Ollama.SetIsThinking(false);
+            }
+            // When Streaming you can't have both thinking and content
+            console.log("THINKING TOKEN:", thinkingMessage.content);
+            return [thinkingMessage];
+          }
+        }
+
+        if (content) {
+          const chatMessage: ChatMessage = {
+            role: "assistant",
+            content: content,
+          };
+          return [chatMessage];
+        }
+        return [];
       }
 
       const { role, content, thinking, tool_calls: toolCalls } = res.message;
