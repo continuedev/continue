@@ -16,6 +16,7 @@ import {
   updateSessionHistory,
   updateSessionTitle,
 } from "./session.js";
+import type SessionManager from "./session.js";
 
 // Mock dependencies first, before any imports
 vi.mock("os", () => ({
@@ -399,6 +400,102 @@ describe("SessionManager", () => {
 
       expect(currentSession).toBe(newSession);
       expect(currentSession).not.toBe(originalSession);
+    });
+  });
+
+  describe("session isolation", () => {
+    it("should not pollute new sessions with previous session history", () => {
+      // Simulate first CLI session
+      vi.mocked(uuidv4).mockReturnValue("session-1" as any);
+      const session1 = createSession();
+      const history1: ChatHistoryItem[] = [
+        {
+          message: {
+            role: "user",
+            content: "Tell me about dogs",
+          },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: "Dogs are loyal companions...",
+          },
+          contextItems: [],
+        },
+      ];
+      updateSessionHistory(history1);
+
+      // Simulate starting a new CLI session (without --resume)
+      vi.mocked(uuidv4).mockReturnValue("session-2" as any);
+      const session2 = startNewSession([]);
+
+      // New session should have clean state
+      expect(session2.sessionId).toBe("session-2");
+      expect(session2.sessionId).not.toBe(session1.sessionId);
+      expect(session2.history).toEqual([]);
+      expect(session2.history.length).toBe(0);
+    });
+
+    it("should create independent sessions for concurrent operations", () => {
+      // Create first session with some data
+      vi.mocked(uuidv4).mockReturnValue("concurrent-1" as any);
+      const session1 = createSession();
+      updateSessionTitle("Session 1");
+      updateSessionHistory([
+        {
+          message: {
+            role: "user",
+            content: "First session message",
+          },
+          contextItems: [],
+        },
+      ]);
+
+      // Start a new session
+      vi.mocked(uuidv4).mockReturnValue("concurrent-2" as any);
+      const session2 = startNewSession([]);
+
+      // Verify session2 is clean
+      expect(session2.title).toBe("Untitled Session");
+      expect(session2.history).toEqual([]);
+      expect(session2.sessionId).not.toBe(session1.sessionId);
+    });
+
+    it("should properly clear session state when transitioning between sessions", () => {
+      // First session with complex history
+      vi.mocked(uuidv4).mockReturnValue("complex-session-1" as any);
+      const session1 = createSession();
+      updateSessionTitle("Complex Session");
+      const complexHistory: ChatHistoryItem[] = [
+        {
+          message: {
+            role: "user",
+            content: "What were we discussing?",
+          },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: "We were discussing dogs earlier.",
+          },
+          contextItems: [],
+        },
+      ];
+      updateSessionHistory(complexHistory);
+
+      // Verify first session has data
+      expect(getCurrentSession().history.length).toBe(2);
+
+      // Start fresh session
+      vi.mocked(uuidv4).mockReturnValue("fresh-session-2" as any);
+      const session2 = startNewSession([]);
+
+      // Verify clean state
+      expect(session2.history.length).toBe(0);
+      expect(session2.title).toBe("Untitled Session");
+      expect(getCurrentSession().sessionId).toBe("fresh-session-2");
     });
   });
 });
