@@ -196,8 +196,6 @@ export function createEditorConfig(options: {
         addKeyboardShortcuts() {
           return {
             Enter: () => {
-              console.log("debug1 here", inDropdownRef.current);
-
               if (inDropdownRef.current) {
                 return false;
               }
