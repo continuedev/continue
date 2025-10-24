@@ -23,6 +23,47 @@
             "pages": ["index"]
           },
           {
+            "group": "Hub",
+            "icon": "globe",
+            "pages": [
+              "hub/introduction",
+              {
+                "group": "Configs",
+                "icon": "robot",
+                "pages": [
+                  "hub/configs/intro",
+                  "hub/configs/use-a-config",
+                  "hub/configs/create-a-config",
+                  "hub/configs/edit-a-config"
+                ]
+              },
+              {
+                "group": "Governance",
+                "icon": "building",
+                "pages": [
+                  "hub/governance/creating-an-org",
+                  "hub/governance/org-permissions",
+                  "hub/governance/pricing"
+                ]
+              },
+              {
+                "group": "Secrets",
+                "icon": "key",
+                "pages": [
+                  "hub/secrets/secret-types",
+                  "hub/secrets/secret-resolution"
+                ]
+              },
+              {
+                "group": "Agents",
+                "icon": "cloud",
+                "pages": ["hub/agents/intro"]
+              },
+              "hub/sharing",
+              "hub/source-control"
+            ]
+          },
+          {
             "group": "CLI",
             "icon": "terminal",
             "pages": [
@@ -90,6 +131,7 @@
           {
             "group": "Customization",
             "icon": "sliders",
+            "expanded": false,
             "pages": [
               "customization/overview",
               "customization/models",
@@ -102,6 +144,7 @@
           {
             "group": "Help",
             "icon": "book-open",
+            "expanded": false,
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
@@ -187,61 +230,6 @@
         ]
       },
       {
-        "tab": "Hub",
-        "groups": [
-          {
-            "group": "Hub",
-            "pages": [
-              "hub/introduction",
-              {
-                "group": "Configs",
-                "icon": "robot",
-                "pages": [
-                  "hub/configs/intro",
-                  "hub/configs/use-a-config",
-                  "hub/configs/create-a-config",
-                  "hub/configs/edit-a-config"
-                ]
-              },
-              {
-                "group": "Blocks",
-                "icon": "cube",
-                "pages": [
-                  "hub/blocks/intro",
-                  "hub/blocks/use-a-block",
-                  "hub/blocks/block-types",
-                  "hub/blocks/create-a-block"
-                ]
-              },
-              {
-                "group": "Governance",
-                "icon": "building",
-                "pages": [
-                  "hub/governance/creating-an-org",
-                  "hub/governance/org-permissions",
-                  "hub/governance/pricing"
-                ]
-              },
-              {
-                "group": "Secrets",
-                "icon": "key",
-                "pages": [
-                  "hub/secrets/secret-types",
-                  "hub/secrets/secret-resolution"
-                ]
-              },
-              {
-                "group": "Workflows",
-                "icon": "cloud",
-                "pages": ["hub/workflows/intro"]
-              },
-              "hub/sharing",
-              "hub/source-control"
-            ]
-          }
-        ]
-      },
-      {
         "tab": "Guides",
         "groups": [
           {
@@ -261,7 +249,8 @@
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
               "guides/how-to-self-host-a-model",
-              "guides/notion-continue-guide"
+              "guides/notion-continue-guide",
+              "guides/github-pr-review-bot"
             ]
           },
           {
@@ -274,6 +263,7 @@
               "guides/sanity-mcp-continue-cookbook",
               "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
+              "guides/supabase-mcp-database-workflow",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
               "guides/chrome-devtools-mcp-performance"
@@ -389,7 +379,27 @@
     },
     {
       "source": "/hub/blocks",
-      "destination": "/hub/blocks/intro"
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/intro",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/use-a-block",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/blocks/block-types",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/workflows/intro",
+      "destination": "/hub/agents/intro"
+    },
+    {
+      "source": "/hub/blocks/create-a-block",
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customize",
@@ -1061,7 +1071,7 @@
     },
     {
       "source": "/hub/blocks/bundles",
-      "destination": "/hub/blocks/intro"
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customize/settings",
@@ -1230,10 +1240,6 @@
     {
       "source": "/hub/assistants/edit-an-assistant",
       "destination": "/hub/configs/edit-a-config"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/hub/configs/intro"
     },
     {
       "source": "/hub/agents/use-an-agent",
