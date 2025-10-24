@@ -115,6 +115,45 @@ runs:
       shell: bash
       run: npm install -g @continuedev/cli@latest
 
+    - name: Setup Action Scripts
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      run: |
+        # Create directory for scripts
+        mkdir -p .continue-action-scripts
+        
+        # Check if we're running in the Continue repo itself (scripts exist locally)
+        if [ -f "actions/general-review/scripts/buildPrompt.js" ] && [ -f "actions/general-review/scripts/writeMarkdown.js" ]; then
+          echo "Running in Continue repo - using local scripts from current checkout"
+          cp actions/general-review/scripts/buildPrompt.js .continue-action-scripts/buildPrompt.js
+          cp actions/general-review/scripts/writeMarkdown.js .continue-action-scripts/writeMarkdown.js
+        else
+          echo "Running in external repo - downloading scripts from Continue repo"
+          
+          # Download scripts from Continue repo
+          echo "Downloading buildPrompt.js..."
+          curl -sSL https://raw.githubusercontent.com/continuedev/continue/main/actions/general-review/scripts/buildPrompt.js \
+            -o .continue-action-scripts/buildPrompt.js
+          
+          echo "Downloading writeMarkdown.js..."
+          curl -sSL https://raw.githubusercontent.com/continuedev/continue/main/actions/general-review/scripts/writeMarkdown.js \
+            -o .continue-action-scripts/writeMarkdown.js
+        fi
+        
+        # Verify scripts exist
+        if [ ! -f .continue-action-scripts/buildPrompt.js ]; then
+          echo "Error: buildPrompt.js not found"
+          exit 1
+        fi
+        
+        if [ ! -f .continue-action-scripts/writeMarkdown.js ]; then
+          echo "Error: writeMarkdown.js not found"
+          exit 1
+        fi
+        
+        echo "Scripts ready:"
+        ls -lh .continue-action-scripts/
+
     - name: Post Initial Comment
       if: env.SHOULD_RUN == 'true'
       id: initial-comment
@@ -218,7 +257,7 @@ runs:
         # Gather PR context and build prompt without heredocs
         gh pr diff "$PR_NUMBER" > pr_diff.txt
         gh pr view "$PR_NUMBER" --json title,author,body,files > pr_data.json
-        node actions/general-review/scripts/buildPrompt.js "$PR_NUMBER"
+        node .continue-action-scripts/buildPrompt.js "$PR_NUMBER"
         rm -f pr_data.json
 
     - name: Run Continue CLI Review
@@ -241,7 +280,7 @@ runs:
         if [ -z "$CONTINUE_API_KEY" ]; then
           echo "Warning: CONTINUE_API_KEY environment variable is not set"
           # Create fallback review and continue
-          node actions/general-review/scripts/writeMarkdown.js code_review.md missing_api_key
+          node .continue-action-scripts/writeMarkdown.js code_review.md missing_api_key
           echo "SKIP_CLI=true" >> $GITHUB_ENV
         else
           echo "SKIP_CLI=false" >> $GITHUB_ENV
@@ -263,7 +302,7 @@ runs:
           echo "Testing Continue CLI..."
           if ! which cn > /dev/null 2>&1; then
             echo "Warning: Continue CLI not found or not working"
-            node actions/general-review/scripts/writeMarkdown.js code_review.md cli_install_failed
+            node .continue-action-scripts/writeMarkdown.js code_review.md cli_install_failed
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
             echo "Continue CLI found at: $(which cn)"
@@ -299,7 +338,7 @@ runs:
             # Check if output is empty
             if [ ! -s code_review.md ]; then
               echo "Warning: Continue CLI returned empty output"
-              node actions/general-review/scripts/writeMarkdown.js code_review.md empty_output
+              node .continue-action-scripts/writeMarkdown.js code_review.md empty_output
             fi
           else
             echo "Error: Continue CLI command failed with exit code $?"
@@ -308,13 +347,13 @@ runs:
             
             # Check for specific error patterns
             if grep -q "not found\|ENOENT" cli_error.log 2>/dev/null; then
-              node actions/general-review/scripts/writeMarkdown.js code_review.md cli_not_found
+              node .continue-action-scripts/writeMarkdown.js code_review.md cli_not_found
             elif grep -q "config\|assistant" cli_error.log 2>/dev/null; then
-              node actions/general-review/scripts/writeMarkdown.js code_review.md config_error
+              node .continue-action-scripts/writeMarkdown.js code_review.md config_error
             elif grep -q "api\|auth" cli_error.log 2>/dev/null; then
-              node actions/general-review/scripts/writeMarkdown.js code_review.md auth_error
+              node .continue-action-scripts/writeMarkdown.js code_review.md auth_error
             else
-              node actions/general-review/scripts/writeMarkdown.js code_review.md generic_failure
+              node .continue-action-scripts/writeMarkdown.js code_review.md generic_failure
             fi
           fi
           
