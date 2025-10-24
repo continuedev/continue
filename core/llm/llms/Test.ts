@@ -57,12 +57,16 @@ class TestLLM extends BaseLLM {
 
     const responseText = testResponse || HARDCODED_CHAT_RESPONSE;
 
-    // Yield the entire response at once instead of character by character
-    // This is important for edits to work properly
-    yield {
-      role: "assistant",
-      content: responseText,
-    };
+    // Stream in word chunks like real LLM providers do
+    // This ensures compatibility with streamLines and streamDiff
+    const words = responseText.split(" ");
+    for (let i = 0; i < words.length; i++) {
+      const isLastWord = i === words.length - 1;
+      yield {
+        role: "assistant",
+        content: words[i] + (isLastWord ? "" : " "),
+      };
+    }
   }
 }
 
