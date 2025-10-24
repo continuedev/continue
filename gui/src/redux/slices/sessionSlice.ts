@@ -24,7 +24,6 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -649,29 +648,6 @@ export const sessionSlice = createSlice({
             lastMessage.role === "assistant"
           ) {
             handleStreamingToolCallUpdates(message, lastItem);
-          }
-
-          // Attach Responses API output item id to the current assistant message if present
-          // fromResponsesChunk sets message.metadata.responsesOutputItemId when it sees output_item.added for messages
-          if (
-            message.role === "assistant" &&
-            lastMessage.role === "assistant" &&
-            message.metadata?.responsesOutputItemId
-          ) {
-            lastMessage.metadata = lastMessage.metadata || {};
-            lastMessage.metadata.responsesOutputItemId = message.metadata
-              .responsesOutputItemId as string;
-          }
-
-          if (
-            message.role === "thinking" &&
-            message.reasoning_details &&
-            lastMessage.role === "thinking"
-          ) {
-            lastMessage.reasoning_details = mergeReasoningDetails(
-              lastMessage.reasoning_details,
-              message.reasoning_details,
-            );
           }
         }
       }
