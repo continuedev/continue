@@ -266,7 +266,9 @@ export async function executeToolCall(
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   const requiredParams = tool.function.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.function.parameters)) {
+  for (const [paramName] of Object.entries(
+    tool.function.parameters.properties ?? {},
+  )) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||
