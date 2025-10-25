@@ -1,0 +1,168 @@
+---
+title: "How to Configure AIStupidLevel with Continue"
+sidebarTitle: "AIStupidLevel"
+---
+
+<Tip>
+  **AIStupidLevel is an intelligent AI router that automatically selects the best-performing model based on real-time benchmarks**
+</Tip>
+
+<Info>
+  Get your API key from [AIStupidLevel Router Dashboard](https://aistupidlevel.info/router)
+</Info>
+
+## What is AIStupidLevel?
+
+AIStupidLevel is a smart AI router that continuously benchmarks 25+ AI models across multiple providers (OpenAI, Anthropic, Google, xAI, and more) and automatically routes your requests to the best-performing model based on:
+
+- **Real-time performance data** from hourly speed tests and daily deep reasoning benchmarks
+- **7-axis scoring methodology** (Correctness, Spec Compliance, Code Quality, Efficiency, Stability, Refusal Rate, Recovery)
+- **Statistical degradation detection** to avoid poorly performing models
+- **Cost optimization** with automatic provider switching
+- **Intelligent routing strategies** for different use cases
+
+Instead of manually choosing between GPT-4, Claude, Gemini, or other models, AIStupidLevel automatically selects the optimal model for your task.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: AIStupidLevel Auto Coding
+      provider: aistupidlevel
+      model: auto-coding
+      apiKey: <YOUR_AISTUPIDLEVEL_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "AIStupidLevel Auto Coding",
+        "provider": "aistupidlevel",
+        "model": "auto-coding",
+        "apiKey": "<YOUR_AISTUPIDLEVEL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Routing Strategies
+
+AIStupidLevel offers different "auto" models that optimize for specific use cases:
+
+| Model | Description | Best For |
+|-------|-------------|----------|
+| `auto` | Best overall performance across all metrics | General-purpose tasks |
+| `auto-coding` | Optimized for code generation and quality | Software development, debugging |
+| `auto-reasoning` | Best for complex reasoning and problem-solving | Deep analysis, mathematical problems |
+| `auto-creative` | Optimized for creative writing quality | Content creation, storytelling |
+| `auto-cheapest` | Most cost-effective option | High-volume, budget-conscious tasks |
+| `auto-fastest` | Fastest response time | Real-time applications, quick queries |
+
+### Example: Multiple Routing Strategies
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Best for Coding
+      provider: aistupidlevel
+      model: auto-coding
+      apiKey: <YOUR_AISTUPIDLEVEL_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+    
+    - name: Best for Reasoning
+      provider: aistupidlevel
+      model: auto-reasoning
+      apiKey: <YOUR_AISTUPIDLEVEL_API_KEY>
+      roles:
+        - chat
+    
+    - name: Fastest Response
+      provider: aistupidlevel
+      model: auto-fastest
+      apiKey: <YOUR_AISTUPIDLEVEL_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Best for Coding",
+        "provider": "aistupidlevel",
+        "model": "auto-coding",
+        "apiKey": "<YOUR_AISTUPIDLEVEL_API_KEY>"
+      },
+      {
+        "title": "Best for Reasoning",
+        "provider": "aistupidlevel",
+        "model": "auto-reasoning",
+        "apiKey": "<YOUR_AISTUPIDLEVEL_API_KEY>"
+      },
+      {
+        "title": "Fastest Response",
+        "provider": "aistupidlevel",
+        "model": "auto-fastest",
+        "apiKey": "<YOUR_AISTUPIDLEVEL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## How It Works
+
+1. **Sign up** at [aistupidlevel.info](https://aistupidlevel.info) and navigate to the Router section
+2. **Add your provider API keys** (OpenAI, Anthropic, Google, xAI, etc.) to your AIStupidLevel dashboard
+3. **Generate a router API key** that Continue will use
+4. **Configure Continue** with your AIStupidLevel API key
+5. **Make requests** - AIStupidLevel automatically routes to the best model based on real-time performance
+
+When you make a request, AIStupidLevel:
+- Analyzes current model performance from continuous benchmarks
+- Selects the optimal model based on your chosen strategy
+- Routes your request using your configured provider API keys
+- Returns the response with metadata about which model was selected
+
+## Key Features
+
+- **Degradation Protection**: Automatically avoids models experiencing performance issues
+- **Cost Optimization**: Routes to cheaper models when performance is comparable
+- **Provider Diversity**: Access models from OpenAI, Anthropic, Google, xAI, DeepSeek, and more through one API
+- **Transparent Routing**: Response headers show which model was selected and why
+- **Performance Tracking**: Dashboard shows your usage, cost savings, and routing decisions
+- **Enterprise SLA**: 99.9% uptime guarantee with multi-region deployment
+
+## Response Headers
+
+AIStupidLevel includes custom headers in responses to show routing decisions:
+
+```
+X-AISM-Provider: anthropic
+X-AISM-Model: claude-sonnet-4-20250514
+X-AISM-Reasoning: Selected claude-sonnet-4-20250514 from anthropic for best coding capabilities (score: 42.3). Ranked #1 of 12 available models. Last updated 2h ago.
+```
+
+## Pricing
+
+AIStupidLevel charges only for the underlying model usage (at cost) plus a small routing fee. You can monitor costs in real-time through the dashboard.
+
+## Learn More
+
+- **Website**: [https://aistupidlevel.info](https://aistupidlevel.info)
+- **Router Dashboard**: [https://aistupidlevel.info/router](https://aistupidlevel.info/router)
+- **Live Benchmarks**: [https://aistupidlevel.info](https://aistupidlevel.info)
+- **Community**: [r/AIStupidLevel](https://www.reddit.com/r/AIStupidlevel)
+- **Twitter/X**: [@AIStupidlevel](https://x.com/AIStupidlevel)
