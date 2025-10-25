@@ -17,7 +17,7 @@
     "@aws-sdk/credential-providers": "^3.840.0",
     "@continuedev/config-types": "^1.0.14",
     "@continuedev/config-yaml": "^1.14.0",
-    "@continuedev/fetch": "^1.1.0",
+    "@continuedev/fetch": "^1.5.0",
     "dotenv": "^16.5.0",
     "google-auth-library": "^10.1.0",
     "json-schema": "^0.4.0",

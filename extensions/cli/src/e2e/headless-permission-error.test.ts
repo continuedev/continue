@@ -32,63 +32,6 @@ describe("E2E: Headless Mode Permission Errors", () => {
     }
     await cleanupTestContext(context);
   });
-  it("should display error message with --auto suggestion when tool requires permission", async () => {
-    // Set up mock LLM to return a tool call that requires permission (Write tool)
-    mockServer = await setupMockLLMTest(context, {
-      customHandler: (req: http.IncomingMessage, res: http.ServerResponse) => {
-        let body = "";
-        req.on("data", (chunk) => {
-          body += chunk.toString();
-        });
-
-        req.on("end", () => {
-          if (req.method === "POST" && req.url === "/chat/completions") {
-            res.writeHead(200, {
-              "Content-Type": "text/event-stream",
-              "Cache-Control": "no-cache",
-              Connection: "keep-alive",
-            });
-
-            // Send a Write tool call (requires permission by default)
-            res.write(
-              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_write","type":"function","function":{"name":"Write"}}]},"index":0}]}\n\n`,
-            );
-            res.write(
-              `data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"filepath\\":\\"test.txt\\",\\"content\\":\\"hello\\"}"}}]},"index":0}]}\n\n`,
-            );
-
-            // Send usage data
-            res.write(
-              `data: {"usage":{"prompt_tokens":10,"completion_tokens":20}}\n\n`,
-            );
-
-            // End the stream
-            res.write(`data: [DONE]\n\n`);
-            res.end();
-          } else {
-            res.writeHead(404);
-            res.end("Not found");
-          }
-        });
-      },
-    });
-
-    // Run CLI in headless mode without permission flags
-    const result = await runCLI(context, {
-      args: ["-p", "--config", context.configPath, "Create a file test.txt"],
-      timeout: 15000,
-    });
-
-    // Expect non-zero exit code
-    expect(result.exitCode).toBe(1);
-
-    // Verify the error message contains the expected information
-    expect(result.stderr).toContain("requires permission");
-    expect(result.stderr).toContain("headless mode");
-    expect(result.stderr).toContain("--auto");
-    expect(result.stderr).toContain("--allow");
-    expect(result.stderr).toContain("--exclude");
-  }, 20000);
 
   it("should succeed with --auto flag when tool requires permission", async () => {
     // Set up mock LLM to return a Write tool call

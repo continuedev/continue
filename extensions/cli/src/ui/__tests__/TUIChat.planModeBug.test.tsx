@@ -2,13 +2,7 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getAllTools } from "src/stream/handleToolCalls.js";
-
-import {
-  SERVICE_NAMES,
-  serviceContainer,
-  services,
-} from "../../services/index.js";
+import { services } from "../../services/index.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
 const toolPermissionService = services.toolPermissions;
@@ -140,42 +134,5 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
     } finally {
       unmount();
     }
-  });
-
-  it.skip("reproduces the 'ToolPermissionService not initialized' error when switching modes", async () => {
-    // This test specifically tests the service container interaction
-    // that causes the actual bug in production
-
-    // First, set up a realistic service state (not mocked)
-    await toolPermissionService.initialize({ isHeadless: false });
-
-    // Register the tool permissions service like the real app does
-    const initialState = toolPermissionService.getState();
-    serviceContainer.registerValue(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      initialState,
-    );
-
-    // Verify initial state works
-    expect(() => getAllTools()).not.toThrow();
-
-    // Switch modes WITHOUT updating the service container (this simulates the bug)
-    toolPermissionService.switchMode("plan");
-
-    // The service container still has the old state, so getAllTools() should not find
-    // the updated state with plan mode permissions. However, since the ToolPermissionService
-    // overrides isReady() to always return true, getAllTools() will actually work.
-    // The real bug would manifest when the service container has an out-of-sync state.
-
-    // To reproduce the ACTUAL bug, we need to simulate the case where the service
-    // container has a stale state that doesn't match the ToolPermissionService
-    const staleState = { ...initialState, currentMode: "normal" as const };
-    serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, staleState);
-
-    // Now getAllTools() should work because it gets the service state from the container
-    // and the container has a valid state (even if it's stale)
-    const tools = getAllTools();
-    expect(tools).toBeDefined();
-    expect(Array.isArray(tools)).toBe(true);
   });
 });

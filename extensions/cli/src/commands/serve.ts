@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { posthogService } from "src/telemetry/posthogService.js";
+import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
@@ -16,6 +17,7 @@ import {
   services,
 } from "../services/index.js";
 import {
+  AgentFileServiceState,
   AuthServiceState,
   ConfigServiceState,
   ModelServiceState,
@@ -73,11 +75,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Get initialized services from the service container
-  const [configState, modelState, permissionsState] = await Promise.all([
-    getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
-    getService<ModelServiceState>(SERVICE_NAMES.MODEL),
-    getService<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS),
-  ]);
+  const [configState, modelState, permissionsState, agentFileState] =
+    await Promise.all([
+      getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
+      getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+      getService<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS),
+      getService<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
+    ]);
 
   if (!configState.config || !modelState.llmApi || !modelState.model) {
     throw new Error("Failed to initialize required services");
@@ -389,9 +393,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     runEnvironmentInstallSafe();
 
     // If initial prompt provided, queue it for processing
-    if (actualPrompt) {
+    const initialPrompt = prependPrompt(
+      agentFileState?.agentFile?.prompt,
+      actualPrompt,
+    );
+    if (initialPrompt) {
       console.log(chalk.dim("\nProcessing initial prompt..."));
-      await messageQueue.enqueueMessage(actualPrompt);
+      await messageQueue.enqueueMessage(initialPrompt);
       processMessages(state, llmApi);
     }
   });

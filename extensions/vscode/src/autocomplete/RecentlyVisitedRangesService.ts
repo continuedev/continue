@@ -4,7 +4,6 @@ import {
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
 import { isSecurityConcern } from "core/indexing/ignore";
-import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
 
@@ -34,19 +33,18 @@ export class RecentlyVisitedRangesService {
   }
 
   private async initWithPostHog() {
-    const recentlyVisitedRangesNumSurroundingLines =
-      await Telemetry.getValueForFeatureFlag(
-        PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
-      );
-
-    if (recentlyVisitedRangesNumSurroundingLines) {
-      this.isEnabled = true;
-      this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
-    }
-
-    vscode.window.onDidChangeTextEditorSelection(
-      this.cacheCurrentSelectionContext,
-    );
+    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
+    // const recentlyVisitedRangesNumSurroundingLines =
+    //   await Telemetry.getValueForFeatureFlag(
+    //     PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
+    //   );
+    // if (recentlyVisitedRangesNumSurroundingLines) {
+    //   this.isEnabled = true;
+    //   this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
+    // }
+    // vscode.window.onDidChangeTextEditorSelection(
+    //   this.cacheCurrentSelectionContext,
+    // );
   }
 
   private cacheCurrentSelectionContext = async (

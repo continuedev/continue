@@ -42,6 +42,12 @@ Before starting, ensure you have:
 - A Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
 - Continue assistant configured for code reviews (or use our recommended default)
 
+<Info>
+  **Want to customize the review bot?**
+  
+  You can remix the default review bot configuration at [hub.continue.dev/continuedev/review-bot](https://hub.continue.dev/continuedev/review-bot) to create your own personalized version with custom prompts, rules, and behaviors.
+</Info>
+
 ## Quick Setup (10 Minutes)
 
 <Steps>
@@ -181,7 +187,7 @@ jobs:
           Format as markdown suitable for a GitHub pull request comment."
 
           # Run Continue CLI in headless mode
-          cn --config continuedev/code-reviewer \
+          cn --config continuedev/review-bot \
              -p "$PROMPT" \
              --auto > review_output.md
 
@@ -336,7 +342,7 @@ The workflow will respond with a targeted review based on your request.
 <Tabs>
   <Tab title="Use Your Own Continue Config">
     
-  By default, the workflow uses the `continuedev/code-reviewer` config optimized for code reviews. Replace `continuedev/code-reviewer` with your own config:
+  By default, the workflow uses the `continuedev/review-bot` config optimized for code reviews. Replace `continuedev/review-bot` with your own config:
 
   ```yaml
   - name: Run Continue Review

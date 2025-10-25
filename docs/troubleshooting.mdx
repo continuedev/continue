@@ -7,7 +7,8 @@ description: "Comprehensive guide to resolving common issues with Continue, incl
 2. [Try the latest pre-release](#download-the-latest-pre-release)
 3. [Download an older version](#download-an-older-version)
 4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
-5. [Check FAQs for common issues](/faqs)
+5. [MCP Server connection issues](#mcp-server-connection-issues)
+6. [Check FAQs for common issues](/faqs)
 
 ## Check the logs
 
@@ -78,6 +79,30 @@ If your keyboard shortcuts are not resolving, you may have other commands that a
 
 - [VSCode keyboard shortcuts docs](https://code.visualstudio.com/docs/getstarted/keybindings)
 - [IntelliJ keyboard shortcut docs](https://www.jetbrains.com/help/idea/configuring-keyboard-and-mouse-shortcuts.html)
+
+## MCP Server connection issues
+
+### "spawn ENAMETOOLONG" error on macOS
+
+If you're seeing an error like `Failed to connect to "<MCP Server Name>"` with `Error: spawn ENAMETOOLONG` when using MCP servers on macOS, this is due to the environment being too large when spawning the MCP process.
+
+**Workaround:** Use the full path to the command instead of relying on PATH resolution:
+
+```yaml
+mcpServers:
+  - name: Memory MCP server
+    command: /usr/local/bin/npx  # Use full path instead of just "npx"
+    args:
+      - -y
+      - "@modelcontextprotocol/server-memory"
+```
+
+To find the full path to a command on your system:
+- For `npx`: run `which npx`
+- For `docker`: run `which docker`
+- For `uv`/`uvx`: run `which uv` or `which uvx`
+
+This issue typically affects macOS users with large development environments and is being tracked in [#7870](https://github.com/continuedev/continue/issues/7870) and [#6699](https://github.com/continuedev/continue/issues/6699).
 
 
 ## Still having trouble?

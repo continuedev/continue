@@ -30,6 +30,7 @@ import { gracefulExit } from "../util/exit.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import { question } from "../util/prompt.js";
+import { prependPrompt } from "../util/promptProcessor.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
@@ -481,9 +482,11 @@ async function runHeadlessMode(
   const agentFileState = await serviceContainer.get<AgentFileServiceState>(
     SERVICE_NAMES.AGENT_FILE,
   );
-  const initialPrompt =
-    `${agentFileState?.agentFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
-    undefined;
+
+  const initialPrompt = prependPrompt(
+    agentFileState?.agentFile?.prompt,
+    prompt,
+  );
   const initialUserInput = await processAndCombinePrompts(
     options.prompt,
     initialPrompt,
@@ -556,9 +559,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         SERVICE_NAMES.AGENT_FILE,
       );
 
-      const initialPrompt =
-        `${agentFileState?.agentFile?.prompt ?? ""}\n\n${prompt ?? ""}`.trim() ||
-        undefined;
+      const initialPrompt = prependPrompt(
+        agentFileState?.agentFile?.prompt,
+        prompt,
+      );
 
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {
