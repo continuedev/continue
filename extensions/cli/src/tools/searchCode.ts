@@ -13,7 +13,8 @@ export const searchCodeTool: Tool = {
   type: "function",
   function: {
     name: "Search",
-    description: "Search the codebase using ripgrep (rg) for a specific pattern",
+    description:
+      "Search the codebase using ripgrep (rg) for a specific pattern",
     parameters: {
       type: "object",
       required: ["pattern"],
