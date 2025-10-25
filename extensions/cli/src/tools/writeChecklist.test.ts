@@ -17,8 +17,8 @@ describe("writeChecklistTool", () => {
     expect(writeChecklistTool.displayName).toBe("Checklist");
     expect(writeChecklistTool.readonly).toBe(false);
     expect(writeChecklistTool.isBuiltIn).toBe(true);
-    expect(writeChecklistTool.function.parameters.required?.includes("checklist")).toBe(
-      true,
-    );
+    expect(
+      writeChecklistTool.function.parameters.required?.includes("checklist"),
+    ).toBe(true);
   });
 });
