@@ -309,11 +309,13 @@ export async function preprocessStreamedToolCalls(
 
   // Get all available tools
 
+  // Get all available tools
+  const availableTools: Tool[] = await getAllAvailableTools(isHeadless);
+
   // Process each tool call
   for (const toolCall of toolCalls) {
     const startTime = Date.now();
     try {
-      const availableTools: Tool[] = await getAllAvailableTools(isHeadless);
       const tool = availableTools.find((t) => t.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool ${toolCall.name} not found`);

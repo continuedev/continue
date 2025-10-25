@@ -70,11 +70,10 @@ export async function getAllAvailableTools(
   const isCapable = isModelCapable(provider, name, model);
   if (isCapable) {
     tools.push(multiEditTool);
+    logger.debug("Using MultiEdit tool for capable model");
   } else {
     tools.push(editTool);
-    logger.debug(
-      "Excluded Edit tool for capable model - MultiEdit will be used instead",
-    );
+    logger.debug("Using Edit tool for basic model");
   }
 
   logger.debug("Capability-based tool filtering", {
@@ -234,8 +233,10 @@ export async function executeToolCall(
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.function.parameters.required ?? [];
+  for (const [paramName] of Object.entries(
+    tool.function.parameters.properties ?? {},
+  )) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||
