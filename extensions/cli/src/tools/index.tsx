@@ -110,7 +110,9 @@ export function getAllBuiltinTools(): Tool[] {
   // Apply capability-based filtering for edit tools
   // If model is capable, exclude editTool in favor of multiEditTool
   if (shouldExcludeEditTool()) {
-    builtinTools = builtinTools.filter((tool) => tool.function.name !== editTool.function.name);
+    builtinTools = builtinTools.filter(
+      (tool) => tool.function.name !== editTool.function.name,
+    );
     logger.debug(
       "Excluded Edit tool for capable model - MultiEdit will be used instead",
     );
@@ -250,7 +252,9 @@ export async function executeToolCall(
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   const requiredParams = tool.function.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.function.parameters)) {
+  for (const [paramName] of Object.entries(
+    tool.function.parameters.properties ?? {},
+  )) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||
