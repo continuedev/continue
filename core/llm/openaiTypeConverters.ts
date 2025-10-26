@@ -184,6 +184,16 @@ export function fromChatCompletionChunk(
 ): ChatMessage | undefined {
   const delta = chunk.choices?.[0]?.delta;
 
+  // Handle reasoning/thinking field (similar to Anthropic and Cohere)
+  // Only create thinking message if reasoning has actual content
+  const reasoning = (delta as any)?.reasoning;
+  if (reasoning && reasoning.trim()) {
+    return {
+      role: "thinking",
+      content: reasoning,
+    };
+  }
+
   if (delta?.content) {
     return {
       role: "assistant",

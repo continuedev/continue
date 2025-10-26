@@ -49,6 +49,11 @@ export async function* interceptSystemToolCalls(
         if (abortController.signal.aborted || parseState?.done) {
           break;
         }
+        // Skip thinking messages - pass them through unchanged
+        if (message.role === "thinking") {
+          yield [message];
+          continue;
+        }
         // Skip non-assistant messages or messages with native tool calls
         if (message.role !== "assistant" || message.toolCalls) {
           yield [message];
@@ -69,6 +74,7 @@ export async function* interceptSystemToolCalls(
 
         for (const chunk of chunks) {
           buffer += chunk;
+
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
               detectToolCallStart(buffer, systemToolFramework);
@@ -78,7 +84,8 @@ export async function* interceptSystemToolCalls(
             }
             if (isInToolCall) {
               parseState = getInitialToolCallParseState();
-              buffer = modifiedBuffer;
+              // Use modifiedBuffer for alternate formats, clear for standard format
+              buffer = modifiedBuffer === buffer ? "" : modifiedBuffer;
             }
           }
 

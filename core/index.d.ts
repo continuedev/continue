@@ -462,7 +462,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "aws-sdk-expert";
+export type MessageModes = "agent" | "plan";
 
 export type ToolStatus =
   | "generating" // Tool call arguments are being streamed from the LLM
@@ -1337,6 +1337,7 @@ type BaseInternalMCPOptions = {
   timeout?: number;
   requestOptions?: RequestOptions;
   sourceFile?: string;
+  readonly?: boolean; // Mark all tools from this MCP server as readonly
 };
 
 export type InternalStdioMcpOptions = BaseInternalMCPOptions & {

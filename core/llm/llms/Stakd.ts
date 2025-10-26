@@ -5,7 +5,6 @@ class Stakd extends OpenAI {
   static providerName = "stakd";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:8080/v1/",
-    model: "stakd-backend",
     useLegacyCompletionsEndpoint: false,
   };
 

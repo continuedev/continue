@@ -244,6 +244,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    stakd: (model) => {
+      // Stakd uses custom tool format, not native OpenAI tools
+      return false;
+    },
     openrouter: (model) => {
       // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
 

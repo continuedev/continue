@@ -233,7 +233,7 @@ export const INITIAL_SESSION_STATE: SessionState = {
   id: uuidv4(),
   streamAborter: new AbortController(),
   symbols: {},
-  mode: "aws-sdk-expert",
+  mode: "agent",
   isInEdit: false,
   codeBlockApplyStates: {
     states: [],
@@ -543,6 +543,25 @@ export const sessionSlice = createSlice({
             ? renderChatMessage(message)
             : "";
 
+          // Handle regular thinking messages (e.g., from stakd backend with reasoning field)
+          if (message.role === "thinking" && messageContent) {
+            // Check if last message is also thinking to accumulate content
+            if (lastMessage.role === "thinking") {
+              lastMessage.content += messageContent;
+            } else {
+              // Create new thinking message
+              state.history.push({
+                message: {
+                  role: "thinking",
+                  content: messageContent,
+                  id: uuidv4(),
+                },
+                contextItems: [],
+              });
+            }
+            continue;
+          }
+
           // OpenAI-compatible models in agent mode sometimes send
           // all of their data in one message, so we handle that case early.
           if (messageContent && message.role !== "tool") {
@@ -611,22 +630,28 @@ export const sessionSlice = createSlice({
                 active: true,
                 text: messageContent.replace("<think>", "").trim(),
               };
-            } else if (
-              lastItem.reasoning?.active &&
-              messageContent.includes("</think>")
-            ) {
-              const [reasoningEnd, answerStart] =
-                messageContent.split("</think>");
-              lastItem.reasoning.text += reasoningEnd.trimEnd();
-              lastItem.reasoning.active = false;
-              lastItem.reasoning.endAt = Date.now();
-              lastMessage.content += answerStart.trimStart();
             } else if (lastItem.reasoning?.active) {
-              if (
-                lastItem.reasoning.text.length > 0 ||
-                messageContent.trim().length > 0
-              ) {
-                lastItem.reasoning.text += messageContent;
+              // Fix: Accumulate chunk first, then check for closing tag in full text
+              // This handles cases where </think> is split across multiple chunks
+              const potentialReasoningText =
+                lastItem.reasoning.text + messageContent;
+
+              if (potentialReasoningText.includes("</think>")) {
+                // Closing tag found in accumulated text
+                const [fullReasoning, answerStart] =
+                  potentialReasoningText.split("</think>");
+                lastItem.reasoning.text = fullReasoning.trimEnd();
+                lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
+                lastMessage.content += answerStart.trimStart();
+              } else {
+                // Still accumulating thinking content
+                if (
+                  lastItem.reasoning.text.length > 0 ||
+                  messageContent.trim().length > 0
+                ) {
+                  lastItem.reasoning.text += messageContent;
+                }
               }
             } else {
               // Note this only works because new message above

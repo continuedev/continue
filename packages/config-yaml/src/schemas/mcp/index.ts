@@ -7,6 +7,7 @@ const baseMcpServerSchema = z.object({
   faviconUrl: z.string().optional(),
   sourceFile: z.string().optional(), // Added during loading
   connectionTimeout: z.number().gt(0).optional(),
+  readonly: z.boolean().optional(), // Mark all tools from this MCP server as readonly
 });
 
 const stdioMcpServerSchema = baseMcpServerSchema.extend({

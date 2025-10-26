@@ -9,15 +9,21 @@ Stakd is a custom backend provider that connects to your local backend API runni
 
 ## Configuration
 
-Add the following configuration to your `config.yaml` or `config.json`:
+Add the following configuration to your `config.yaml` or `config.json`. You can specify any model name - the provider will route all requests through your local backend:
 
 ### YAML Configuration
 
 ```yaml title="config.yaml"
 models:
-  - name: Stakd Backend
+  - name: GPT-4 via Stakd
     provider: stakd
-    model: stakd-backend
+    model: gpt-4o
+  - name: Claude via Stakd
+    provider: stakd
+    model: claude-3-5-sonnet-20241022
+  - name: Custom Model
+    provider: stakd
+    model: my-custom-model
 ```
 
 ### JSON Configuration (Deprecated)
@@ -26,9 +32,14 @@ models:
 {
   "models": [
     {
-      "title": "Stakd Backend",
+      "title": "GPT-4 via Stakd",
       "provider": "stakd",
-      "model": "stakd-backend"
+      "model": "gpt-4o"
+    },
+    {
+      "title": "Claude via Stakd",
+      "provider": "stakd",
+      "model": "claude-3-5-sonnet-20241022"
     }
   ]
 }
@@ -39,20 +50,31 @@ models:
 - **Hardcoded Backend URL**: Automatically connects to `http://localhost:8080/v1/`
 - **No Authentication Required**: No API keys needed for local development
 - **OpenAI-Compatible**: Supports standard OpenAI streaming chat completion format
-- **Backend-Controlled Models**: Model selection is handled entirely by your backend
+- **Flexible Model Selection**: You specify the model name, and your backend routes to the appropriate LLM
 
 ## Model Configuration
 
-The model parameter is set to `stakd-backend` by default. Your backend will receive this identifier and can route to the appropriate model internally:
+You can use any model identifier you want. The model parameter is passed directly to your backend, which can route to any LLM:
 
 ```yaml
 models:
-  - name: Stakd Backend
+  # Use OpenAI model identifiers
+  - name: GPT-4 Turbo
     provider: stakd
-    model: stakd-backend
+    model: gpt-4-turbo-preview
+
+  # Use Anthropic model identifiers
+  - name: Claude Opus
+    provider: stakd
+    model: claude-3-opus-20240229
+
+  # Use custom identifiers your backend understands
+  - name: My Fine-tuned Model
+    provider: stakd
+    model: company-model-v2
 ```
 
-**Note**: The model parameter is passed to your backend but model selection and routing should be handled by your backend implementation.
+**Note**: The model parameter you specify is sent to your backend in the request. Your backend is responsible for routing to the appropriate LLM based on this identifier.
 
 ## Backend Requirements
 

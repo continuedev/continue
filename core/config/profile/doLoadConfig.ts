@@ -229,7 +229,7 @@ export default async function doLoadConfig(options: {
           parameters: tool.inputSchema,
         },
         faviconUrl: server.faviconUrl,
-        readonly: false,
+        readonly: server.readonly ?? false, // Use server's readonly setting, default to false
         type: "function" as const,
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
