@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as os from "os";
 import * as path from "path";
 
 import {
@@ -314,7 +315,7 @@ async function loadUserAssistantWithFallback(
     if (errors?.some((e: any) => e.fatal)) {
       throw new Error(
         errors.map((e: any) => e.message).join("\n") ??
-          "Failed to load assistant.",
+        "Failed to load assistant.",
       );
     }
     let apiConfig = result.config as AssistantUnrolled;
@@ -533,7 +534,7 @@ async function loadAssistantSlug(
   if (errors?.some((e: any) => e.fatal)) {
     throw new Error(
       errors.map((e: any) => e.message).join("\n") ??
-        "Failed to load assistant.",
+      "Failed to load assistant.",
     );
   }
   let apiConfig = result.config as AssistantUnrolled;
@@ -570,14 +571,31 @@ function isFilePath(configPath: string): boolean {
 }
 
 /**
+ * Resolves a file path to an absolute path, handling tilde expansion
+ */
+function resolveFilePath(filePath: string): string {
+  // Handle tilde (~) expansion for home directory
+  if (filePath.startsWith("~/")) {
+    return path.join(os.homedir(), filePath.slice(2));
+  }
+
+  // Resolve relative paths to absolute paths
+  return path.resolve(filePath);
+}
+
+/**
  * Converts a config source back to a URI for persistence
+ * Ensures file paths are converted to absolute paths before creating URIs
  */
 function getUriFromSource(source: ConfigSource): string | null {
   switch (source.type) {
     case "cli-flag":
-      return isFilePath(source.path)
-        ? `file://${source.path}`
-        : `slug://${source.path}`;
+      if (isFilePath(source.path)) {
+        // Resolve relative paths and tilde to absolute paths before creating file:// URI
+        const absolutePath = resolveFilePath(source.path);
+        return `file://${absolutePath}`;
+      }
+      return `slug://${source.path}`;
     case "saved-uri":
       return source.uri;
     case "default-config-yaml":
