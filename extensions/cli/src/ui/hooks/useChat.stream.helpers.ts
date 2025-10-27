@@ -1,6 +1,6 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
-import { getAllBuiltinTools } from "src/tools/index.js";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 import { logger } from "src/util/logger.js";
 
 import { services } from "../../services/index.js";
@@ -65,6 +65,8 @@ export function createStreamCallbacks(
     },
 
     onToolStart: (toolName: string, toolArgs?: any) => {
+      // TODO service should always be ready, get rid of this code. If it's not ready throw error
+
       // When ChatHistoryService is ready, let handleToolCalls add entries
       const svc = services.chatHistory;
       const useService = typeof svc?.isReady === "function" && svc.isReady();
@@ -203,7 +205,7 @@ export function createStreamCallbacks(
       toolCallPreview?: any[],
     ) => {
       // Check if this tool has dynamic evaluation
-      const tool = getAllBuiltinTools().find((t: any) => t.name === toolName);
+      const tool = ALL_BUILT_IN_TOOLS.find((t: any) => t.name === toolName);
       const hasDynamicEvaluation = !!tool?.evaluateToolCallPolicy;
 
       setActivePermissionRequest({

@@ -215,6 +215,7 @@ export class ConfigService
     config: AssistantUnrolled,
     apiClient: DefaultApiInterface,
     authConfig: AuthConfig | undefined,
+    isHeadless?: boolean,
   ): Promise<AssistantUnrolled> {
     const hasChatModel = !!config.models?.find(
       (m) => !!m && (!m.roles || m.roles.includes("chat")),
@@ -227,14 +228,22 @@ export class ConfigService
           authConfig?.organizationId ?? null,
           apiClient,
         );
-        const defaultModel = modelConfig?.block?.models?.[0];
+        const defaultModel = modelConfig?.models?.[0];
         if (!defaultModel) {
           throw new Error("Loaded default model contained no model block");
         }
         config.models = [...(config.models || []), defaultModel];
       } catch (e) {
-        logger.error("Failed to load default model with no model specified", e);
-        throw new Error("No model specified and failed to load default model");
+        if (isHeadless) {
+          throw new Error(
+            "No model specified in headless mode (and failed to load default model)",
+          );
+        } else {
+          logger.error(
+            "Failed to load default model with no model specified",
+            e,
+          );
+        }
       }
     }
     return config;
@@ -270,6 +279,7 @@ export class ConfigService
       merged,
       apiClient,
       authConfig,
+      init.isHeadless,
     );
 
     // Config URI persistence is now handled by the streamlined loader

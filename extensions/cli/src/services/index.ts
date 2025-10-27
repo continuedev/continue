@@ -113,9 +113,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   serviceContainer.register(
     SERVICE_NAMES.TOOL_PERMISSIONS,
     async () => {
-      const agentFileState = await serviceContainer.get<AgentFileServiceState>(
-        SERVICE_NAMES.AGENT_FILE,
-      );
+      const [mcpState, agentFileState] = await Promise.all([
+        serviceContainer.get<AuthServiceState>(SERVICE_NAMES.MCP),
+        serviceContainer.get<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
+      ]);
 
       // Initialize mode service with tool permission overrides
       if (initOptions.toolPermissionOverrides) {
@@ -128,13 +129,16 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
           exclude: overrides.exclude,
           isHeadless: initOptions.headless,
         };
-
         // Only set the boolean flag that corresponds to the mode
         if (overrides.mode) {
           initArgs.mode = overrides.mode;
         }
         // If mode is "normal" or undefined, no flags are set
-        return await toolPermissionService.initialize(initArgs, agentFileState);
+        return await toolPermissionService.initialize(
+          initArgs,
+          agentFileState,
+          mcpState,
+        );
       } else {
         // Even if no overrides, we need to initialize with defaults
         return await toolPermissionService.initialize(
@@ -142,10 +146,11 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
             isHeadless: initOptions.headless,
           },
           agentFileState,
+          mcpState,
         );
       }
     },
-    [SERVICE_NAMES.AGENT_FILE],
+    [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP],
   );
 
   // Initialize SystemMessageService with command options
@@ -257,7 +262,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       if (!configState.config) {
         throw new Error("Config not available for MCP service");
       }
-      return mcpService.initialize(configState.config, initOptions.headless);
+      return mcpService.initialize(
+        configState.config,
+        initOptions.headless || initOptions.options?.agent,
+      );
     },
     [SERVICE_NAMES.CONFIG], // Depends on config
   );

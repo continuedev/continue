@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import * as path from "path";
 
 import {
@@ -24,6 +25,7 @@ import {
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
+import { logger } from "./util/logger.js";
 
 export interface ConfigLoadResult {
   config: AssistantUnrolled;
@@ -95,16 +97,28 @@ function determineConfigSource(
     return { type: "cli-flag", path: cliConfigPath };
   }
 
-  // In headless, config fallback behavior isn't supported
-  if (isHeadless) {
-    return { type: "no-config" };
-  }
-
   // Priority 2: Saved config URI (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const savedUri = getConfigUri(authConfig);
+
     if (savedUri) {
-      return { type: "saved-uri", uri: savedUri };
+      if (savedUri.startsWith("file:")) {
+        let exists = false; // wrote like this for nested depth linting rule lol
+        try {
+          const filepath = fileURLToPath(savedUri);
+          exists = fs.existsSync(filepath);
+        } catch (e) {
+          logger.warn("Invalid saved file URI " + savedUri, e);
+        }
+        if (exists) {
+          return { type: "saved-uri", uri: savedUri };
+        } else {
+          logger.warn("Saved config URI does not exist: " + savedUri);
+        }
+      } else {
+        // slug
+        return { type: "saved-uri", uri: savedUri };
+      }
     }
   }
 
@@ -117,6 +131,10 @@ function determineConfigSource(
     }
     return { type: "default-agent" };
   } else {
+    // In headless, user assistant fallback behavior isn't supported
+    if (isHeadless) {
+      return { type: "no-config" };
+    }
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   }
@@ -177,11 +195,12 @@ async function loadFromSource(
         );
 
       case "no-config":
-        return {
-          name: "No Config Specified",
-          version: "1.0.0",
-        };
-
+        return await unrollPackageIdentifiersAsConfigYaml(
+          injectBlocks,
+          accessToken,
+          organizationId,
+          apiClient,
+        );
       default:
         throw new Error(`Unknown config source type: ${(source as any).type}`);
     }
@@ -306,9 +325,7 @@ async function loadUserAssistantWithFallback(
         organizationId,
         apiClient,
       );
-      if (injectedConfig?.block) {
-        apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-      }
+      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
     }
 
     return apiConfig;
@@ -368,9 +385,7 @@ async function loadDefaultAgent(
       organizationId,
       apiClient,
     );
-    if (injectedConfig?.block) {
-      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-    }
+    apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
   }
 
   return apiConfig;
@@ -381,13 +396,13 @@ export async function unrollPackageIdentifiersAsConfigYaml(
   accessToken: string | null,
   organizationId: string | null,
   apiClient: DefaultApiInterface,
-): Promise<{ block: AssistantUnrolled | undefined } | null> {
+): Promise<AssistantUnrolled> {
   const unrollResult = await unrollAssistantFromContent(
     {
       uriType: "file",
       fileUri: "",
     },
-    "name: FILLER\nschema: v1\nversion: 0.0.1",
+    "name: Agent\nschema: v1\nversion: 0.0.1",
     new RegistryClient({
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
@@ -402,16 +417,17 @@ export async function unrollPackageIdentifiersAsConfigYaml(
       injectBlocks: packageIdentifiers,
     },
   );
-  if (!unrollResult?.config) {
+  if (unrollResult.errors) {
     const fatalError = unrollResult.errors?.find((e) => e.fatal);
     if (fatalError) {
-      throw new Error(`Error(s) unrolling package: ${fatalError.message}`);
+      throw new Error(`Failed to load config: ${fatalError.message}`);
     }
   }
+  if (!unrollResult?.config) {
+    throw new Error(`Failed to load config`);
+  }
 
-  return {
-    block: unrollResult?.config,
-  };
+  return unrollResult.config;
 }
 
 async function unrollAssistantWithConfig(
@@ -528,9 +544,7 @@ async function loadAssistantSlug(
       organizationId,
       apiClient,
     );
-    if (injectedConfig?.block) {
-      apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig.block);
-    }
+    apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
   }
 
   return apiConfig;
