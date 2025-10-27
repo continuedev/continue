@@ -122,15 +122,6 @@ class SessionManager {
     this.currentSession = null;
   }
 
-  /**
-   * Reset singleton instance for testing or to ensure clean state
-   */
-  static reset(): void {
-    if (SessionManager.instance) {
-      SessionManager.instance.currentSession = null;
-    }
-  }
-
   hasSession(): boolean {
     return this.currentSession !== null;
   }

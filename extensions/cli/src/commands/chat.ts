@@ -118,11 +118,6 @@ export async function initializeChatHistory(
     }
   }
 
-  // Starting a new session - ensure clean state
-  // This prevents context pollution from previous CLI sessions
-  const { startNewSession } = await import("../session.js");
-  startNewSession([]); // Creates a new session with empty history
-
   return [];
 }
 

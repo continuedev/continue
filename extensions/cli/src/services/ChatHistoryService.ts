@@ -81,11 +81,6 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     session?: any,
     isRemoteMode = false,
   ): Promise<ChatHistoryState> {
-    // Clear undo/redo stacks when initializing to prevent pollution
-    this.past = [];
-    this.future = [];
-    this._memoSnapshot = { stateRef: null, historyRef: null, snapshot: null };
-
     const activeSession = session || createSession([]);
 
     logger.debug("Initializing ChatHistoryService", {
