@@ -257,7 +257,7 @@
       {
         "command": "continue.viewLogs",
         "category": "Continue",
-        "title": "View History",
+        "title": "View Logs",
         "group": "Continue"
       },
       {
