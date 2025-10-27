@@ -14,3 +14,4 @@ config.yaml
 
 *.expect
 !demo.expect
+*.cast
