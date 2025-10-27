@@ -118,26 +118,18 @@ export async function handleToolCalls(
     return true; // Signal early return needed
   }
 
-  // Convert tool results and add them to the chat history with per-result status
+  // Convert tool results and add them to the chat history with status from execution
   toolResults.forEach((toolResult) => {
     const resultContent =
       typeof toolResult.content === "string" ? toolResult.content : "";
 
-    // Derive per-result status instead of applying batch-wide hasRejection
-    let status: ToolStatus = "done";
-    const lower = resultContent.toLowerCase();
-    if (
-      lower.includes("permission denied by user") ||
-      lower.includes("cancelled due to previous tool rejection") ||
-      lower.includes("canceled due to previous tool rejection")
-    ) {
-      status = "canceled";
-    } else if (
-      lower.startsWith("error executing tool") ||
-      lower.startsWith("error:")
-    ) {
-      status = "errored" as ToolStatus;
-    }
+    // Use the status from the tool execution result instead of text matching
+    const status = toolResult.status;
+
+    logger.debug("Tool result status", {
+      status,
+      toolCallId: toolResult.tool_call_id,
+    });
 
     if (useService) {
       chatHistorySvc.addToolResult(

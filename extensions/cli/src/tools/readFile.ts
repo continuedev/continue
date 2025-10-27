@@ -1,6 +1,7 @@
 import * as fs from "fs";
 
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
@@ -54,7 +55,10 @@ export const readFileTool: Tool = {
       }
 
       if (!fs.existsSync(filepath)) {
-        return `Error: File does not exist: ${filepath}`;
+        throw new ContinueError(
+          ContinueErrorReason.Unspecified,
+          `File does not exist: ${filepath}`,
+        );
       }
       const realPath = fs.realpathSync(filepath);
       const content = fs.readFileSync(realPath, "utf-8");
@@ -69,9 +73,14 @@ export const readFileTool: Tool = {
 
       return `Content of ${filepath}:\n${content}`;
     } catch (error) {
-      return `Error reading file: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      if (error instanceof ContinueError) {
+        throw error;
+      }
+      throw new Error(
+        `Error reading file: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   },
 };

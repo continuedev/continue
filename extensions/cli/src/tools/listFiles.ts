@@ -64,9 +64,11 @@ export const listFilesTool: Tool = {
 
       return `Files in ${args.dirpath}:\n${fileDetails.join("\n")}`;
     } catch (error) {
-      return `Error listing files: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      throw new Error(
+        `Error listing files: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   },
 };
