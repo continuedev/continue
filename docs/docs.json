@@ -132,19 +132,7 @@
               }
             ]
           },
-          {
-            "group": "Customization",
-            "icon": "sliders",
-            "expanded": false,
-            "pages": [
-              "customization/overview",
-              "customization/models",
-              "customization/mcp-tools",
-              "customization/rules",
-              "customization/prompts",
-              "customization/settings"
-            ]
-          },
+
           {
             "group": "Help",
             "icon": "book-open",
@@ -160,6 +148,11 @@
             "group": "Customize",
             "pages": [
               "customize/overview",
+              "customize/models",
+              "customize/mcp-tools",
+              "customize/rules",
+              "customize/prompts",
+              "customize/settings",
               {
                 "group": "Model Providers",
                 "icon": "server",
@@ -407,16 +400,36 @@
       "destination": "/hub/introduction"
     },
     {
-      "source": "/customize",
-      "destination": "/customization/overview"
+      "source": "/customization",
+      "destination": "/customize/overview"
     },
     {
-      "source": "/customization",
-      "destination": "/customization/overview"
+      "source": "/customization/overview",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customization/models",
+      "destination": "/customize/models"
+    },
+    {
+      "source": "/customization/mcp-tools",
+      "destination": "/customize/mcp-tools"
+    },
+    {
+      "source": "/customization/rules",
+      "destination": "/customize/rules"
+    },
+    {
+      "source": "/customization/prompts",
+      "destination": "/customize/prompts"
+    },
+    {
+      "source": "/customization/settings",
+      "destination": "/customize/settings"
     },
     {
       "source": "/customize/tools",
-      "destination": "/customization/mcp-tools"
+      "destination": "/customize/mcp-tools"
     },
     {
       "source": "/install/vscode",
