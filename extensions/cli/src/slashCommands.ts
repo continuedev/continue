@@ -1,6 +1,5 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
-
 import { GlobalContext } from "core/util/GlobalContext.js";
 
 import {

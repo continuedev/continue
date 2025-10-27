@@ -2,10 +2,9 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
+import { GlobalContext } from "core/util/GlobalContext.js";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
-
-import { GlobalContext } from "core/util/GlobalContext.js";
 
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
