@@ -44,15 +44,6 @@ export const handleApplyStateUpdate = createAsyncThunk<
 
       // Handle apply status updates - use toolCallId from event payload
       if (applyState.toolCallId) {
-        if (
-          applyState.status === "done" &&
-          getState().config.config?.ui?.autoAcceptEditToolDiffs
-        ) {
-          extra.ideMessenger.post("acceptDiff", {
-            streamId: applyState.streamId,
-            filepath: applyState.filepath,
-          });
-        }
         if (applyState.status === "closed") {
           // Find the tool call to check if it was canceled
           const toolCallState = findToolCallById(

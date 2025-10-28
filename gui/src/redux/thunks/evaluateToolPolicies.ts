@@ -21,13 +21,9 @@ async function evaluateToolPolicy(
   activeTools: Tool[],
   toolCallState: ToolCallState,
   toolPolicies: ToolPolicies,
-  autoAcceptEditToolDiffs: boolean | undefined,
 ): Promise<EvaluatedPolicy> {
-  // allow edit tool calls without permission if auto-accept is enabled
-  if (
-    isEditTool(toolCallState.toolCall.function.name) &&
-    autoAcceptEditToolDiffs
-  ) {
+  // allow edit tool calls without permission
+  if (isEditTool(toolCallState.toolCall.function.name)) {
     return { policy: "allowedWithoutPermission", toolCallState };
   }
 
@@ -81,7 +77,6 @@ export async function evaluateToolPolicies(
   activeTools: Tool[],
   generatedToolCalls: ToolCallState[],
   toolPolicies: ToolPolicies,
-  autoAcceptEditToolDiffs: boolean | undefined,
 ): Promise<EvaluatedPolicy[]> {
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   const policyResults = await Promise.all(
@@ -91,7 +86,6 @@ export async function evaluateToolPolicies(
         activeTools,
         toolCallState,
         toolPolicies,
-        autoAcceptEditToolDiffs,
       ),
     ),
   );
