@@ -149,7 +149,13 @@ class DiffStreamHandler(
         ) { response ->
             if (!isRunning) return@request
 
-            val diffLines = response as List<Map<String, Any>>
+            val diffLines = parseDiffLinesResponse(response) ?: run {
+                println("Error: Invalid response format for getDiffLines")
+                ApplicationManager.getApplication().invokeLater {
+                    setClosed()
+                }
+                return@request
+            }
             
             ApplicationManager.getApplication().invokeLater {
                 WriteCommandAction.runWriteCommandAction(project) {
@@ -169,6 +175,22 @@ class DiffStreamHandler(
                 }
             }
         }
+    }
+
+    private fun parseDiffLinesResponse(response: Any?): List<Map<String, Any>>? {
+        if (response !is List<*>) return null
+
+        val result = mutableListOf<Map<String, Any>>()
+        for (item in response) {
+            if (item !is Map<*, *>) return null
+
+            val type = item["type"] as? String ?: return null
+            val line = item["line"] as? String ?: return null
+
+            result.add(mapOf("type" to type, "line" to line))
+        }
+
+        return result
     }
 
     private fun applyAllDiffLines(diffLines: List<Map<String, Any>>) {
