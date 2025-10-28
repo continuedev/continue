@@ -387,6 +387,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt-5/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
+    [/claude/, /4-5/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
