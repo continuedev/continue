@@ -129,6 +129,8 @@ Use natural language to explore, triage, and act on open issues. The agent calls
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
+  
+  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 </Info>
 
 ### Triage and Summaries
@@ -141,10 +143,6 @@ Use natural language to explore, triage, and act on open issues. The agent calls
 List the 20 most recently updated open issues in this repo.
 Cluster by label and severity. Summarize top priorities.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 <Card title="Owner/Label Filters" icon="filter">
@@ -155,10 +153,6 @@ To run the command in headless mode, use cn -p "prompt"
 Show open issues labeled bug or security, assigned to @me.
 Summarize blockers and suggest next steps.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 ### Taking Action
@@ -176,10 +170,6 @@ Come up with a triage plan and draft a comment with:
 Then post the comment.
 ```
 
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
-
 <Note>
   Requires a token with permission to comment (`public_repo` or `repo`). The agent will confirm before posting unless `--auto` is used.
 </Note>
@@ -193,10 +183,6 @@ To run the command in headless mode, use cn -p "prompt"
 Find open issues with no activity in the last 30 days.
 Suggest action (close, needs-repro, or prioritize) and draft comments.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 ---
@@ -215,10 +201,6 @@ Analyze recently merged PRs for change awareness, release notes, and quality sig
 List PRs merged in the last 7 days.
 Group by area (label or path). Summarize impact and notable changes.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 ### Release Notes
@@ -231,10 +213,6 @@ To run the command in headless mode, use cn -p "prompt"
 Generate release notes for PRs merged since tag v1.2.0.
 Use keep-a-changelog sections and include PR numbers/authors.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 ### Deep Dives
@@ -248,10 +226,6 @@ Find the last merged PR with a significant amount of comments.
 Summarize the conversation, including goal, key changes,
 risk areas, and any follow-ups.
 ```
-
-<Info>
-To run the command in headless mode, use cn -p "prompt"
-</Info>
 </Card>
 
 ---

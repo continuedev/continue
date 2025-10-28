@@ -165,6 +165,8 @@ You can add prompts to your agent's configuration for easy access in future sess
   changes, test your prompts in plan mode (see the [Plan Mode
   Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it.
+  
+  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 </Info>
 
 <Info>
@@ -178,15 +180,10 @@ You can add prompts to your agent's configuration for easy access in future sess
 <Card title="Inspect Pipeline Execution" icon="magnifying-glass">
   Review pipeline execution details including load timing and file sizes.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Inspect my dlt pipeline execution and provide a summary of the load info.
 Show me the timing breakdown and file sizes for each table.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Inspect my dlt pipeline execution and provide a summary of the load info. Show me the timing breakdown and file sizes for each table." --auto
 ```
 
 </Card>
@@ -196,15 +193,10 @@ cn -p "Inspect my dlt pipeline execution and provide a summary of the load info.
 <Card title="Retrieve Schema Metadata" icon="diagram-project">
   Get detailed schema information for your pipeline's tables.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Show me the schema for my users table including all columns,
 data types, and any constraints.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Show me the schema for my users table including all columns, data types, and any constraints." --auto
 ```
 
 </Card>
@@ -214,15 +206,10 @@ cn -p "Show me the schema for my users table including all columns, data types, 
 <Card title="Query Dataset Records" icon="table">
   Retrieve and analyze records from your destination database.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Get the last 10 records from my orders table and show me
 the distribution of order statuses.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Get the last 10 records from my orders table and show me the distribution of order statuses." --auto
 ```
 
 </Card>
@@ -232,15 +219,10 @@ cn -p "Get the last 10 records from my orders table and show me the distribution
 <Card title="Analyze Load Errors" icon="triangle-exclamation">
   Investigate and understand pipeline load errors.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Check for any load errors in my last pipeline run. If there are errors,
 explain what went wrong and suggest fixes.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Check for any load errors in my last pipeline run. If there are errors, explain what went wrong and suggest fixes." --auto
 ```
 
 </Card>
@@ -250,15 +232,10 @@ cn -p "Check for any load errors in my last pipeline run. If there are errors, e
 <Card title="Build New Pipeline" icon="plus">
   Create a new dlt pipeline from an API or data source.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Help me create a new dlt pipeline that loads data from the
 JSONPlaceholder API users endpoint into DuckDB.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholder API users endpoint into DuckDB." --auto
 ```
 
 </Card>
@@ -268,15 +245,10 @@ cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholde
 <Card title="Handle Schema Changes" icon="code-branch">
   Review and manage schema evolution in your pipelines.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Check if my pipeline schema has evolved since the last run.
 Show me what columns were added or modified.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Check if my pipeline schema has evolved since the last run. Show me what columns were added or modified." --auto
 ```
 
 </Card>
