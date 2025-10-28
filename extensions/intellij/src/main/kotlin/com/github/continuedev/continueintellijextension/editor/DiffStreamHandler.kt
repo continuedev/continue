@@ -215,7 +215,7 @@ class DiffStreamHandler(
                 }
                 DiffLineType.NEW -> {
                     // Insert line
-                    val offset = editor.document.getLineStartOffset(currentLine)
+                    val offset = if (currentLine >= editor.document.lineCount) editor.document.textLength else editor.document.getLineStartOffset(currentLine)
                     editor.document.insertString(offset, text + "\n")
                     currentLine++
                 }
