@@ -566,7 +566,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     };
 
     const { preprocessedCalls, errorChatEntries } =
-      await preprocessStreamedToolCalls(toolCalls, callbacks);
+      await preprocessStreamedToolCalls(true, toolCalls, callbacks);
 
     // Should have one preprocessed call and no errors
     expect(preprocessedCalls).toHaveLength(1);
@@ -605,7 +605,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     };
 
     const { preprocessedCalls, errorChatEntries } =
-      await preprocessStreamedToolCalls(toolCalls, callbacks);
+      await preprocessStreamedToolCalls(true, toolCalls, callbacks);
 
     // Should have no preprocessed calls and one error
     expect(preprocessedCalls).toHaveLength(0);
@@ -632,7 +632,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     ];
 
     const { preprocessedCalls, errorChatEntries } =
-      await preprocessStreamedToolCalls(toolCalls);
+      await preprocessStreamedToolCalls(true, toolCalls);
 
     // Should have no preprocessed calls and one error
     expect(preprocessedCalls).toHaveLength(0);

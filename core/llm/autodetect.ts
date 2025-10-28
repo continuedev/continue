@@ -63,6 +63,47 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "watsonx",
   "nebius",
   "relace",
+  "openrouter",
+  "deepseek",
+  "xAI",
+  "groq",
+  "gemini",
+  "docker",
+  // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
+  // Asksage.ts
+  // Azure.ts
+  // BedrockImport.ts
+  // Cerebras.ts
+  // Cloudflare.ts
+  // CometAPI.ts
+  // CustomLLM.ts
+  // DeepInfra.ts
+  // Fireworks.ts
+  // Flowise.ts
+  // FunctionNetwork.ts
+  // HuggingFaceInferenceAPI.ts
+  // HuggingFaceTEI.ts
+  // HuggingFaceTGI.ts
+  // Inception.ts
+  // Kindo.ts
+  // LlamaCpp.ts
+  // LlamaStack.ts
+  // Llamafile.ts
+  // Mock.ts
+  // Moonshot.ts
+  // NCompass.ts
+  // OVHcloud.ts
+  // Replicate.ts
+  // Scaleway.ts
+  // SiliconFlow.ts
+  // TARS.ts
+  // Test.ts
+  // TextGenWebUI.ts
+  // TransformersJsEmbeddingsProvider.ts
+  // Venice.ts
+  // Vllm.ts
+  // Voyage.ts
+  // etc
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
@@ -144,7 +185,12 @@ function modelSupportsReasoning(
   if (!model) {
     return false;
   }
-  if ("anthropic" === model.underlyingProviderName) {
+  // do not turn reasoning on by default for claude 3 models
+  if (
+    model.model.includes("claude") &&
+    !model.model.includes("-3-") &&
+    !model.model.includes("-3.5-")
+  ) {
     return true;
   }
   if (model.model.includes("deepseek-r")) {
