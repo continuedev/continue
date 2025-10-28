@@ -1,7 +1,7 @@
 import path from "path";
 import { pathToFileURL } from "url";
 import Parser from "web-tree-sitter";
-import { FileType, IDE, Position } from "../../..";
+import { FileType, IDE, Position } from "../../../";
 import { localPathOrUriToPath } from "../../../util/pathToUri";
 import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
 import {
@@ -854,15 +854,14 @@ export class StaticContextService {
       try {
         const currentUri = pathToFileURL(currentPath).toString();
         const entries = await this.ide.listDir(currentUri);
-
         for (const [name, fileType] of entries) {
           const fullPath = localPathOrUriToPath(path.join(currentPath, name));
 
-          if (fileType === FileType.Directory) {
+          if (fileType === (2 as FileType.Directory)) {
             if (!shouldSkipDirectory(name)) {
               await scanRecursively(fullPath);
             }
-          } else if (fileType === FileType.File) {
+          } else if (fileType === (1 as FileType.File)) {
             const extension = path.extname(name).toLowerCase();
             if (tsExtensions.includes(extension)) {
               tsFiles.push(fullPath);
