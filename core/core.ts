@@ -70,6 +70,7 @@ import {
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
+import { myersDiff } from "./diff/myers";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
@@ -794,6 +795,10 @@ export class Core {
         undefined,
         data.includeRulesInSystemMessage ? config.rules : undefined,
       );
+    });
+
+    on("getDiffLines", (msg) => {
+      return myersDiff(msg.data.oldContent, msg.data.newContent);
     });
 
     on("cancelApply", async (msg) => {
