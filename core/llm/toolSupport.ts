@@ -112,7 +112,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
-      return ["grok-3", "grok-4"].some((val) => lowerCaseModel.includes(val));
+      return ["grok-3", "grok-4", "grok-code"].some((val) =>
+        lowerCaseModel.includes(val),
+      );
     },
     bedrock: (model) => {
       if (
@@ -383,6 +385,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt-5/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
+    [/grok-code/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {

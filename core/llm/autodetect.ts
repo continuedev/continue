@@ -185,6 +185,13 @@ function modelSupportsReasoning(
   if (!model) {
     return false;
   }
+  if (model.completionOptions?.reasoning !== undefined) {
+    // Reasoning support is forced at the config level. Model might not necessarily support it though!
+    return model.completionOptions.reasoning;
+  }
+  if (model.model.includes("grok-code")) {
+    return true;
+  }
   // do not turn reasoning on by default for claude 3 models
   if (
     model.model.includes("claude") &&
@@ -196,10 +203,7 @@ function modelSupportsReasoning(
   if (model.model.includes("deepseek-r")) {
     return true;
   }
-  if (model.completionOptions?.reasoning) {
-    // Reasoning support is forced at the config level. Model might not necessarily support it though!
-    return true;
-  }
+
   return false;
 }
 
