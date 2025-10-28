@@ -40,7 +40,7 @@ For all options, first:
 ## dlt MCP Workflow Options
 
 <Card title="🚀 Fastest Path to Success" icon="zap">
-  Skip the manual setup and use our pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) that includes
+  Skip the manual setup and use our pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) that includes
       the dlt MCP and optimized data pipeline workflows for more consistent results. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize it for your specific needs.
 </Card>
 
@@ -53,7 +53,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your pipeline project directory and run:
         ```bash
-        cn --config dlthub/dlt-assistant
+        cn --agent continuedev/dlt-agent
         ```
 
         This agent includes:
@@ -73,7 +73,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Steps>
 
     <Info>
-      **Why Use the Agent?** The pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering. You can [remix and customize this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) later to fit your team's specific workflow.
+      **Why Use the Agent?** The pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering. You can [remix and customize this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) later to fit your team's specific workflow.
     </Info>
 
   </Tab>
@@ -85,7 +85,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Step>
 
   <Step title="Connect dlt MCP via Continue Hub">
-    Visit the [dlt MCP on Continue Hub](https://hub.continue.dev/dlthub/dlt-mcp) and click **Install** to add it to the agent you created in the step above.
+    Visit the [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) and click **Install** to add it to the agent you created in the step above.
 
     This will add dlt MCP to your agent's available tools. The Hub listing automatically configures the MCP command.
 
@@ -117,7 +117,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant), you need either:
+    To use the pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent), you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** added to Continue Hub secrets (same as manual setup)
 
@@ -293,7 +293,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 - Any required database credentials for your destination
 
 <Info>
-      The workflow uses the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) with `--agent dlthub/dlt-assistant`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize the validation rules and prompts for your specific pipeline requirements.
+      The workflow uses the pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) with `--agent continuedev/dlt-agent`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize the validation rules and prompts for your specific pipeline requirements.
 </Info>
 
 ### Create Workflow File
@@ -342,7 +342,7 @@ jobs:
       - name: Validate Pipeline Schema
         run: |
           echo "🔍 Validating pipeline schema..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent continuedev/dlt-agent \
              -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes." \
              --auto
@@ -350,7 +350,7 @@ jobs:
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent continuedev/dlt-agent \
              -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention." \
              --auto
@@ -360,7 +360,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --config dlthub/dlt-assistant \
+          REPORT=$(cn --agent continuedev/dlt-agent \
              -p "Generate a concise summary (200 words or less) of:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings

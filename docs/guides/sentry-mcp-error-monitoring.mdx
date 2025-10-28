@@ -138,10 +138,10 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Sentry Continuous AI Agent](https://hub.continue.dev/continuedev/sentry-continuous-ai) on Continue Hub and click **"Install Agent"** or run:
+        Visit the [Sentry Continuous AI Agent](https://hub.continue.dev/continuedev/sentry-continuous-ai-agent) on Continue Hub and click **"Install Agent"** or run:
         
         ```bash
-        cn --config continuedev/sentry-continuous-ai
+        cn --agent continuedev/sentry-continuous-ai-agent
         ```
 
         This agent includes:
@@ -274,6 +274,10 @@ Use Continue CLI to perform intelligent error analysis. Enter these prompts in t
     ```
   </Tab>
 </Tabs>
+
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 <Info>
   **Available Sentry MCP Tools**:

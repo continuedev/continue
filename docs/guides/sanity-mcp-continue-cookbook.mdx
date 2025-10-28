@@ -72,10 +72,10 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
       <Step title="Load the Pre-Built Agent">
-        Visit the [Sanity Agent Config](https://hub.continue.dev/continuedev/sanity-agent-config) on Continue Hub and click **"Install Config"** or run:
+        Visit the [Sanity Assistant Agent](https://hub.continue.dev/continuedev/sanity-assistant-agent) on Continue Hub and click **"Install Config"** or run:
         
         ```bash
-        cn --config continuedev/sanity-agent-config
+        cn --agent continuedev/sanity-assistant-agent
         ```
 
         This agent includes:
@@ -245,16 +245,15 @@ You can add prompts to your agent's configuration for easy access in future sess
 <Card title="Explore Document Types" icon="diagram-project">
   Review and understand your content schema structure.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Show me all document types in my Sanity schema with their fields,
 validation rules, and relationships to other types.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Show me all document types in my Sanity schema with their fields, validation rules, and relationships to other types." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -263,16 +262,15 @@ cn -p "Show me all document types in my Sanity schema with their fields, validat
 <Card title="Execute GROQ Queries" icon="magnifying-glass">
   Run GROQ queries to fetch and analyze content.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Run a GROQ query to fetch all articles published in the last 30 days,
 including their titles, authors, categories, and view counts.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Run a GROQ query to fetch all articles published in the last 30 days, including their titles, authors, categories, and view counts." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -281,16 +279,15 @@ cn -p "Run a GROQ query to fetch all articles published in the last 30 days, inc
 <Card title="Bulk Content Updates" icon="arrows-rotate">
   Perform bulk operations on your content.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Find all blog posts with the category "News" and update their
 status to "archived" if they are older than 6 months.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Find all blog posts with the category 'News' and update their status to 'archived' if they are older than 6 months." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -299,16 +296,15 @@ cn -p "Find all blog posts with the category 'News' and update their status to '
 <Card title="Add Localization Support" icon="language">
   Set up and manage content translations.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Add localization support to my article document type for
 Spanish and French languages with appropriate field configurations.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Add localization support to my article document type for Spanish and French languages with appropriate field configurations." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -317,16 +313,15 @@ cn -p "Add localization support to my article document type for Spanish and Fren
 <Card title="Migrate Content Structure" icon="right-left">
   Migrate content between different schemas or environments.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Help me migrate my blog posts from the old schema structure
 to the new one, mapping the deprecated fields to the new format.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Help me migrate my blog posts from the old schema structure to the new one, mapping the deprecated fields to the new format." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -335,16 +330,15 @@ cn -p "Help me migrate my blog posts from the old schema structure to the new on
 <Card title="Generate Schema Documentation" icon="book">
   Automatically generate documentation for your content model.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Generate comprehensive documentation for my Sanity schema including
 all document types, their purposes, field descriptions, and usage examples.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Generate comprehensive documentation for my Sanity schema including all document types, their purposes, field descriptions, and usage examples." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -353,16 +347,15 @@ cn -p "Generate comprehensive documentation for my Sanity schema including all d
 <Card title="Manage Content Releases" icon="rocket">
   Work with Sanity's content release feature.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 List all active releases in my dataset and show me the content
 changes scheduled for each release.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "List all active releases in my dataset and show me the content changes scheduled for each release." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -371,16 +364,15 @@ cn -p "List all active releases in my dataset and show me the content changes sc
 <Card title="Analyze Query Performance" icon="gauge-high">
   Optimize GROQ queries for better performance.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Analyze the performance of my most frequent GROQ queries and
 suggest optimizations to improve response times.
 ```
 
-**Headless Mode Prompt:**
-```bash
-cn -p "Analyze the performance of my most frequent GROQ queries and suggest optimizations to improve response times." --auto
-```
+<Info>
+To run prompts in headless mode, use cn -p "prompt"
+</Info>
 
 </Card>
 
@@ -399,7 +391,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 - `MCP_USER_ROLE`: Your MCP user role (typically "admin" or "editor")
 
 <Info>
-  The workflow uses the [Sanity Agent Config](https://hub.continue.dev/continuedev/sanity-agent-config) with environment variable authentication via [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
+  The workflow uses the [Sanity Assistant Agent](https://hub.continue.dev/continuedev/sanity-assistant-agent) with environment variable authentication via [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
 </Info>
 
 ### Create Workflow File
@@ -447,7 +439,7 @@ jobs:
       - name: Validate Schema Structure
         run: |
           echo "🔍 Validating schema structure..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-assistant-agent \
              -p "Analyze the Sanity schema for any structural issues,
                  missing required fields, or broken references between document types." \
              --auto
@@ -455,7 +447,7 @@ jobs:
       - name: Check Content Integrity
         run: |
           echo "📊 Checking content integrity..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-assistant-agent \
              -p "Run GROQ queries to identify any orphaned documents,
                  broken references, or missing required fields in the content." \
              --auto
@@ -463,7 +455,7 @@ jobs:
       - name: Generate Schema Documentation
         run: |
           echo "📝 Generating schema documentation..."
-          cn --config continuedev/sanity-agent-config \
+          cn --agent continuedev/sanity-assistant-agent \
              -p "Generate a markdown summary of all schema changes
                  in this PR and their potential impact on existing content." \
              --auto > schema-changes.md
@@ -473,7 +465,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --config continuedev/sanity-agent-config \
+          REPORT=$(          cn --agent continuedev/sanity-assistant-agent \
              -p "Generate a concise summary (200 words or less) of:
                  - Schema validation results
                  - Content integrity checks
