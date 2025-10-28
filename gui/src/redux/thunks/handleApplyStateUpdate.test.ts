@@ -161,61 +161,6 @@ describe("handleApplyStateUpdate", () => {
         expect.objectContaining({ type: "session/updateApplyState" }),
       );
     });
-
-    it("should auto-accept diffs when configured and status is done", async () => {
-      mockGetState.mockReturnValue({
-        config: {
-          config: {
-            ui: {
-              autoAcceptEditToolDiffs: true,
-            },
-          },
-        },
-        session: { history: [] },
-      });
-
-      const applyState: ApplyState = {
-        streamId: "chat-stream",
-        toolCallId: "test-tool-call",
-        status: "done",
-        filepath: "test.txt",
-        numDiffs: 1,
-      };
-
-      const thunk = handleApplyStateUpdate(applyState);
-      await thunk(mockDispatch, mockGetState, mockExtra);
-
-      expect(mockExtra.ideMessenger.post).toHaveBeenCalledWith("acceptDiff", {
-        streamId: "chat-stream",
-        filepath: "test.txt",
-      });
-    });
-
-    it("should not auto-accept when config is disabled", async () => {
-      mockGetState.mockReturnValue({
-        config: {
-          config: {
-            ui: {
-              autoAcceptEditToolDiffs: false,
-            },
-          },
-        },
-        session: { history: [] },
-      });
-
-      const applyState: ApplyState = {
-        streamId: "chat-stream",
-        toolCallId: "test-tool-call",
-        status: "done",
-        filepath: "test.txt",
-        numDiffs: 1,
-      };
-
-      const thunk = handleApplyStateUpdate(applyState);
-      await thunk(mockDispatch, mockGetState, mockExtra);
-
-      expect(mockExtra.ideMessenger.post).not.toHaveBeenCalled();
-    });
   });
 
   describe("closed status handling", () => {

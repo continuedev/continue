@@ -20,7 +20,7 @@ import {
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
-import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
+import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 import {
   processChunkContent,
@@ -381,7 +381,7 @@ export async function streamChatResponse(
     }
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getAllTools();
+    const tools = await getRequestTools(isHeadless);
 
     logger.debug("Tools prepared", {
       toolCount: tools.length,
@@ -473,4 +473,3 @@ export async function streamChatResponse(
   // Otherwise, return the full response
   return isHeadless ? finalResponse : fullResponse;
 }
-export { getAllTools };
