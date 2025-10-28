@@ -189,9 +189,10 @@ function modelSupportsReasoning(
     // Reasoning support is forced at the config level. Model might not necessarily support it though!
     return model.completionOptions.reasoning;
   }
-  if (model.model.includes("grok-code")) {
-    return true;
-  }
+  // Seems our current way of disabling reasoning is not working for grok code so results in useless lightbulb
+  // if (model.model.includes("grok-code")) {
+  //   return true;
+  // }
   // do not turn reasoning on by default for claude 3 models
   if (
     model.model.includes("claude") &&
