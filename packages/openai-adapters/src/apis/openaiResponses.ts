@@ -1,18 +1,23 @@
+import type { CompletionUsage } from "openai/resources/index.js";
 import {
   ChatCompletion,
+  ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
+  ChatCompletionContentPart,
+  ChatCompletionContentPartImage,
+  ChatCompletionContentPartInputAudio,
+  ChatCompletionContentPartRefusal,
+  ChatCompletionContentPartText,
   ChatCompletionCreateParams,
-  ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources/index.js";
-import type { CompletionUsage } from "openai/resources/index.js";
 import {
   Response,
   ResponseCreateParams,
   ResponseFunctionCallArgumentsDoneEvent,
-  ResponseFunctionCallArgumentsDeltaEvent,
   ResponseIncompleteEvent,
   ResponseInput,
   ResponseInputAudio,
@@ -25,9 +30,7 @@ import {
   ResponseOutputRefusal,
   ResponseOutputText,
   ResponseReasoningSummaryTextDeltaEvent,
-  ResponseReasoningTextDeltaEvent,
   ResponseStreamEvent,
-  ResponseTextDeltaEvent,
   ResponseUsage,
 } from "openai/resources/responses/responses.js";
 
@@ -37,97 +40,55 @@ export function isResponsesModel(model: string): boolean {
   return !!model && RESPONSES_MODEL_REGEX.test(model);
 }
 
-function ensureText(value: string | null | undefined): string {
-  if (value === undefined || value === null) {
-    return " ";
-  }
-  return value === "" ? " " : value;
-}
-
 function convertTextPart(text: string): ResponseInputText {
   return {
+    text,
     type: "input_text",
-    text: ensureText(text),
   };
 }
 
 function convertImagePart(
-  image: ChatCompletionMessageParam["content"],
-): ResponseInputImage | undefined {
-  if (
-    Array.isArray(image) ||
-    !image ||
-    typeof image !== "object" ||
-    (image as any).type !== "image_url"
-  ) {
-    return undefined;
-  }
-  const imageUrlPart = image as any;
+  image: ChatCompletionContentPartImage,
+): ResponseInputImage {
   const converted: ResponseInputImage = {
     type: "input_image",
-    image_url: imageUrlPart.image_url?.url,
-    detail: imageUrlPart.image_url?.detail ?? "auto",
+    image_url: image.image_url.url,
+    detail: image.image_url.detail ?? "auto",
   };
-  if (imageUrlPart.image_url?.file_id) {
-    (converted as any).file_id = imageUrlPart.image_url.file_id;
+  if ((image.image_url as any).file_id) {
+    (converted as any).file_id = (image.image_url as any).file_id;
   }
   return converted;
 }
 
 function convertAudioPart(
-  part: ChatCompletionMessageParam["content"],
-): ResponseInputAudio | undefined {
-  if (
-    Array.isArray(part) ||
-    !part ||
-    typeof part !== "object" ||
-    (part as any).type !== "input_audio"
-  ) {
-    return undefined;
-  }
-  const audio = part as any;
-  if (!audio.input_audio) {
-    return undefined;
-  }
+  part: ChatCompletionContentPartInputAudio,
+): ResponseInputAudio {
   return {
     type: "input_audio",
     input_audio: {
-      data: audio.input_audio.data,
-      format: audio.input_audio.format,
+      data: part.input_audio.data,
+      format: part.input_audio.format,
     },
   };
 }
 
 function convertFilePart(
-  part: ChatCompletionMessageParam["content"],
-): ResponseInputFile | undefined {
-  if (
-    Array.isArray(part) ||
-    !part ||
-    typeof part !== "object" ||
-    (part as any).type !== "file"
-  ) {
-    return undefined;
-  }
-
-  const filePart = part as any;
-  const file = filePart.file;
-  if (!file) {
-    return undefined;
-  }
+  part: ChatCompletionContentPart.File,
+): ResponseInputFile {
   return {
     type: "input_file",
-    file_id: file.file_id ?? undefined,
-    file_data: file.file_data ?? undefined,
-    filename: file.filename ?? undefined,
-    file_url: file.file_url ?? undefined,
+    file_id: part.file.file_id ?? undefined,
+    file_data: part.file.file_data ?? undefined,
+    filename: part.file.filename ?? undefined,
+    file_url: (part.file as any).file_url ?? undefined,
   };
 }
 
 function convertMessageContentPart(
-  part: any,
+  part: ChatCompletionContentPart | ChatCompletionContentPartRefusal,
 ): ResponseInputContent | undefined {
-  switch (part?.type) {
+  switch (part.type) {
     case "text":
       return convertTextPart(part.text);
     case "image_url":
@@ -136,6 +97,9 @@ function convertMessageContentPart(
       return convertAudioPart(part);
     case "file":
       return convertFilePart(part);
+    case "refusal":
+      // Skip refusal parts - they're not input content
+      return undefined;
     default:
       return undefined;
   }
@@ -168,14 +132,13 @@ function createOutputTextPart(
   text: string,
   source?: Partial<ResponseOutputText>,
 ): AssistantContentPart {
-  const normalizedText = ensureText(text);
   const annotations =
     Array.isArray(source?.annotations) && source.annotations.length > 0
       ? source.annotations
       : [];
   const part: ResponseOutputText = {
+    text,
     type: "output_text",
-    text: normalizedText,
     annotations,
   };
   if (Array.isArray(source?.logprobs) && source.logprobs.length > 0) {
@@ -186,8 +149,8 @@ function createOutputTextPart(
 
 function createRefusalPart(refusal: string): AssistantContentPart {
   return {
+    refusal,
     type: "refusal",
-    refusal: ensureText(refusal),
   };
 }
 
@@ -203,29 +166,33 @@ function collectAssistantContentParts(
     }
   } else if (Array.isArray(content)) {
     for (const rawPart of content) {
-      const part: any = rawPart as any;
+      // Content array should be ChatCompletionContentPartText | ChatCompletionContentPartRefusal
+      // but we handle "output_text" type which may come from Response API conversions
+      const part = rawPart as
+        | ChatCompletionContentPartText
+        | ChatCompletionContentPartRefusal
+        | { type: "output_text"; text: string };
       if (!part) {
         continue;
       }
-      if (typeof part === "string") {
-        if (part.trim().length > 0) {
-          parts.push(createOutputTextPart(part));
-        }
-        continue;
-      }
-      const partType: string | undefined = part.type;
+
+      const partType = part.type;
       if (partType === "text") {
-        const textValue = part.text;
-        if (typeof textValue === "string" && textValue.trim().length > 0) {
-          parts.push(createOutputTextPart(textValue, part));
+        const textPart = part as ChatCompletionContentPartText;
+        if (
+          typeof textPart.text === "string" &&
+          textPart.text.trim().length > 0
+        ) {
+          parts.push(createOutputTextPart(textPart.text));
         }
       } else if (partType === "output_text") {
-        const textValue = part.text;
+        const textValue = (part as { type: "output_text"; text: string }).text;
         if (typeof textValue === "string" && textValue.trim().length > 0) {
-          parts.push(createOutputTextPart(textValue, part));
+          parts.push(createOutputTextPart(textValue));
         }
       } else if (partType === "refusal") {
-        const refusalText = part.refusal ?? part.text;
+        const refusalPart = part as ChatCompletionContentPartRefusal;
+        const refusalText = refusalPart.refusal;
         if (typeof refusalText === "string" && refusalText.trim().length > 0) {
           parts.push(createRefusalPart(refusalText));
         }
@@ -364,9 +331,10 @@ export function toResponsesInput(
     }
 
     if (message.role === "assistant") {
+      const assistantMessage = message as ChatCompletionAssistantMessageParam;
       const assistantContentParts = collectAssistantContentParts(
-        message.content,
-        (message as any).refusal ?? (message as any).declination ?? null,
+        assistantMessage.content,
+        assistantMessage.refusal ?? null,
       );
       if (assistantContentParts.length > 0) {
         const providedId = (message as any).id;
@@ -382,16 +350,15 @@ export function toResponsesInput(
           status: "completed",
         } as ResponseOutputMessage as any);
       }
-      if (message.tool_calls?.length) {
-        message.tool_calls.forEach((toolCall, index) => {
-          if (toolCall.type === "function" && (toolCall as any).function) {
-            const func = (toolCall as any).function;
+      if (assistantMessage.tool_calls?.length) {
+        assistantMessage.tool_calls.forEach((toolCall, index) => {
+          if (toolCall.type === "function") {
             const callId = toolCall.id ?? `tool_call_${index}`;
             const functionCall: any = {
               type: "function_call",
               call_id: callId,
-              name: func.name ?? "",
-              arguments: func.arguments ?? "{}",
+              name: toolCall.function.name ?? "",
+              arguments: toolCall.function.arguments ?? "{}",
             };
             if (
               typeof toolCall.id === "string" &&

@@ -4,20 +4,6 @@ import type { ChatHistoryItem } from "core/index.js";
 import type { ChatCompletionChunk } from "openai/resources/chat/completions.mjs";
 import { vi } from "vitest";
 
-vi.mock("fdir", () => ({
-  fdir: class {
-    withBasePath() {
-      return this;
-    }
-    filter() {
-      return this;
-    }
-    crawl() {
-      return new Set<string>();
-    }
-  },
-}));
-
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCall } from "../tools/index.js";
 import { readFileTool } from "../tools/readFile.js";
