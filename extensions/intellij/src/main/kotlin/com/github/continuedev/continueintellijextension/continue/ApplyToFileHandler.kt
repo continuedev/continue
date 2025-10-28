@@ -83,7 +83,7 @@ class ApplyToFileHandler(
         val diffStreamHandler = createDiffStreamHandler(editorUtils.editor, startLine, endLine)
         diffStreamService.register(diffStreamHandler, editorUtils.editor)
 
-        diffStreamHandler.instantApplyMyersDiff(currentContent, newContent)
+        diffStreamHandler.instantApplyDiffLines(currentContent, newContent)
     }
 
     private fun notifyStreamStarted() {
