@@ -178,10 +178,15 @@ class DiffStreamHandler(
     }
 
     private fun parseDiffLinesResponse(response: Any?): List<Map<String, Any>>? {
-        if (response !is List<*>) return null
+        if (response !is Map<*, *>) return null
+        
+        val success = response["status"] as? String
+        if (success != "success") return null
+        
+        val content = response["content"] as? List<*> ?: return null
 
         val result = mutableListOf<Map<String, Any>>()
-        for (item in response) {
+        for (item in content) {
             if (item !is Map<*, *>) return null
 
             val type = item["type"] as? String ?: return null
