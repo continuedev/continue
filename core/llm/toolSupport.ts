@@ -29,6 +29,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
+      const lower = model.toLowerCase();
       if (
         [
           "claude-3-5",
@@ -38,8 +39,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-sonnet-4",
           "claude-4-sonnet",
           "claude-opus-4",
-        ].some((part) => model.toLowerCase().startsWith(part))
+        ].some((part) => lower.startsWith(part))
       ) {
+        return true;
+      }
+      if (lower.includes("claude") && lower.includes("4-5")) {
         return true;
       }
 
