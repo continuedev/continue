@@ -138,6 +138,8 @@ export const streamNormalInput = createAsyncThunk<
       return { ...item, message: messageWithoutId };
     });
 
+    console.log("[zoro][System Message]", systemMessage);
+
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
       systemMessage,

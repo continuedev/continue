@@ -462,7 +462,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "agent" | "plan";
+export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
   | "generating" // Tool call arguments are being streamed from the LLM

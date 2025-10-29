@@ -4,6 +4,7 @@ import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
+import { replaceSystemMessageVariables } from "core/llm/replaceSystemMessageVariables";
 
 export const NO_TOOL_WARNING =
   "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE. The user can provide tools by enabling them in the Tool Policies section of the notch (wrench icon)";
@@ -48,5 +49,9 @@ export function getBaseSystemMessage(
     baseMessage += NO_TOOL_WARNING;
   }
 
-  return baseMessage;
+  console.log("[zoro] message mode: ", messageMode);
+  console.log("[zoro] message: ", baseMessage);
+
+  // Replace template variables (e.g., {{SDK_NAME}}) with actual values
+  return replaceSystemMessageVariables(baseMessage);
 }
