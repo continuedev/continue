@@ -1208,6 +1208,10 @@ declare global {
     experimental?: ExperimentalConfig;
     /** Analytics configuration */
     analytics?: AnalyticsConfig;
+    /** Array of built-in MCP server IDs to disable (e.g., ['builtin-context7']) */
+    disableBuiltInMcpServers?: string[];
+    /** If set to true, all built-in MCP servers will be disabled */
+    disableAllBuiltInMcpServers?: boolean;
   }
   
   // in the actual Continue source code

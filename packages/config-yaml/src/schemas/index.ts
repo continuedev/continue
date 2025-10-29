@@ -261,6 +261,8 @@ export const configSchema = z.object({
   api_key: z.string().optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  disableBuiltInMcpServers: z.array(z.string()).optional(),
+  disableAllBuiltInMcpServers: z.boolean().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

@@ -12,6 +12,7 @@ import {
   StdioMcpServer,
 } from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
+import { getBuiltInMcpServers } from "../../../../core/context/mcp/builtinServers.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
@@ -72,9 +73,20 @@ export class MCPService
     assistant: AssistantConfig,
     waitForConnections = false,
   ): Promise<MCPServiceState> {
+    // Load built-in MCP servers
+    const builtInServers = getBuiltInMcpServers(
+      assistant.disableBuiltInMcpServers ?? [],
+      assistant.disableAllBuiltInMcpServers ?? false,
+    );
+
+    // Merge with user-configured servers
+    const allServers = [...builtInServers, ...(assistant.mcpServers ?? [])];
+
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
-      serverCount: assistant.mcpServers?.length || 0,
+      builtInServerCount: builtInServers.length,
+      userServerCount: assistant.mcpServers?.length || 0,
+      totalServerCount: allServers.length,
     });
 
     await this.shutdownConnections();
@@ -82,12 +94,12 @@ export class MCPService
     this.assistant = assistant;
     this.connections.clear();
 
-    if (assistant.mcpServers?.length) {
+    if (allServers.length) {
       logger.debug("Starting MCP server connections", {
-        serverCount: assistant.mcpServers.length,
+        serverCount: allServers.length,
       });
     }
-    const connectionPromises = assistant.mcpServers?.map(async (config) => {
+    const connectionPromises = allServers.map(async (config) => {
       if (config) {
         return await this.connectServer(config);
       }

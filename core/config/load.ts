@@ -35,6 +35,7 @@ import {
 import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/built-in-legacy";
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
+import { getBuiltInMcpServers } from "../context/mcp/builtinServers";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { useHub } from "../control-plane/env";
 import { BaseLLM } from "../llm";
@@ -552,7 +553,14 @@ async function intermediateToFinalConfig({
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    const mcpOptions: InternalMcpOptions[] = (
+    // Load built-in MCP servers (like Context7)
+    const builtInServers = getBuiltInMcpServers(
+      config.disableBuiltInMcpServers ?? [],
+      config.disableAllBuiltInMcpServers ?? false,
+    );
+
+    // Load user-configured MCP servers
+    const userMcpOptions: InternalMcpOptions[] = (
       config.experimental?.modelContextProtocolServers ?? []
     ).map((server, index) => ({
       id: `continue-mcp-server-${index + 1}`,
@@ -565,14 +573,28 @@ async function intermediateToFinalConfig({
       ),
       ...server.transport,
     }));
-    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
-      ide,
-      true,
-      config.requestOptions,
-    );
+
+    // Load JSON-based MCP configs
+    const { errors: jsonMcpErrors, mcpServers: jsonMcpServers } =
+      await loadJsonMcpConfigs(ide, true, config.requestOptions);
     errors.push(...jsonMcpErrors);
-    mcpOptions.push(...mcpServers);
-    mcpManager.setConnections(mcpOptions, false);
+
+    // Merge servers with deduplication: user configs override built-ins
+    // Create a map for deduplication by server name
+    const serverMap = new Map<string, InternalMcpOptions>();
+
+    // Add built-in servers first
+    builtInServers.forEach((server) => {
+      serverMap.set(server.name.toLowerCase(), server);
+    });
+
+    // Override with user configs (both experimental and JSON)
+    [...userMcpOptions, ...jsonMcpServers].forEach((server) => {
+      serverMap.set(server.name.toLowerCase(), server);
+    });
+
+    const allMcpOptions = Array.from(serverMap.values());
+    mcpManager.setConnections(allMcpOptions, false);
   }
 
   // Handle experimental modelRole config values for apply and edit

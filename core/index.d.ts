@@ -1338,6 +1338,7 @@ type BaseInternalMCPOptions = {
   requestOptions?: RequestOptions;
   sourceFile?: string;
   readonly?: boolean; // Mark all tools from this MCP server as readonly
+  isBuiltIn?: boolean; // Mark if this is a built-in MCP server
 };
 
 export type InternalStdioMcpOptions = BaseInternalMCPOptions & {
@@ -1750,6 +1751,10 @@ export interface Config {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   data?: DataDestination[];
+  /** Array of built-in MCP server IDs to disable (e.g., ['builtin-context7']) */
+  disableBuiltInMcpServers?: string[];
+  /** If set to true, all built-in MCP servers will be disabled */
+  disableAllBuiltInMcpServers?: boolean;
 }
 
 // in the actual Continue source code
