@@ -595,6 +595,10 @@ async function intermediateToFinalConfig({
 
     const allMcpOptions = Array.from(serverMap.values());
     mcpManager.setConnections(allMcpOptions, false);
+
+    // Wait for MCP servers to connect before proceeding with config
+    // This ensures built-in servers like Context7 are ready and their tools are available
+    await mcpManager.refreshConnections(false);
   }
 
   // Handle experimental modelRole config values for apply and edit

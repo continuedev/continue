@@ -32,6 +32,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { getBuiltInMcpServers } from "../../context/mcp/builtinServers";
 import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
@@ -394,18 +395,42 @@ export async function configYamlToContinueConfig(options: {
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
-    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+    // Load built-in MCP servers (like Context7)
+    // Note: Built-in servers are always loaded for YAML configs
+    // Users can configure individual server settings if needed
+    const builtInServers = getBuiltInMcpServers([], false);
+
+    // Load user-configured MCP servers from YAML
+    const userMcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
       (server) =>
         convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
     );
-    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
-      ide,
-      true,
-      config.requestOptions,
-    );
+
+    // Load JSON-based MCP configs
+    const { errors: jsonMcpErrors, mcpServers: jsonMcpServers } =
+      await loadJsonMcpConfigs(ide, true, config.requestOptions);
     localErrors.push(...jsonMcpErrors);
-    mcpOptions.push(...mcpServers);
-    mcpManager.setConnections(mcpOptions, false, { ide });
+
+    // Merge servers with deduplication: user configs override built-ins
+    // Create a map for deduplication by server name
+    const serverMap = new Map<string, InternalMcpOptions>();
+
+    // Add built-in servers first
+    builtInServers.forEach((server) => {
+      serverMap.set(server.name.toLowerCase(), server);
+    });
+
+    // Override with user configs (both YAML and JSON)
+    [...userMcpOptions, ...jsonMcpServers].forEach((server) => {
+      serverMap.set(server.name.toLowerCase(), server);
+    });
+
+    const allMcpOptions = Array.from(serverMap.values());
+    mcpManager.setConnections(allMcpOptions, false, { ide });
+
+    // Wait for MCP servers to connect before proceeding with config
+    // This ensures built-in servers like Context7 are ready and their tools are available
+    await mcpManager.refreshConnections(false);
   }
 
   return { config: continueConfig, errors: localErrors };
