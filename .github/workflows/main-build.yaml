@@ -101,7 +101,7 @@ jobs:
           echo "✅ Successfully downloaded artifact"
 
       - name: Republish as main branch artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: vscode-extension-build-${{ matrix.platform }}
           path: ./temp-download/*
