@@ -1,0 +1,386 @@
+---
+title: "Create and Edit Agents"
+description: "Build custom AI workflows with prompts, rules, and tools through the Continue Hub interface"
+sidebarTitle: "Create & Edit"
+---
+
+<Card title="🧱 Creating Custom Agents" icon="wrench">
+  You can only create and edit Agents through Mission Control in the Continue Hub web interface. 
+  This ensures proper validation, versioning, and team collaboration features.
+</Card>
+
+## Creating an Agent
+
+<Steps>
+  <Step title="🧭 Navigate to Create Agent">
+    From the Continue Hub top navigation bar, select **"+"** → **"New Agent"**.
+    
+    This opens the **Create an Agent (beta)** form with all required fields.
+  </Step>
+
+  <Step title="🧩 Fill Out the Agent Form">
+    Configure your agent with the following fields:
+
+    | Field | What to Enter | Example |
+    |-------|---------------|---------|
+    | **Name** | Display name shown in the Hub | `Open PR with Fix` |
+    | **Prompt** | First instruction the agent receives | `Open a GitHub PR to fix the specified issue.` |
+    | **Description** | What the agent does | `Creates a pull request and includes AI-generated summaries.` |
+    | **Tools (MCPs)** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase` |
+    | **Rules** | Add any organizational rules | `continuedev/gh-pr-commit-workflow, continuedev/summarization` |
+    | **Model** | Choose a default LLM | `Claude Sonnet 3.5` |
+    | **Owner + Slug** | Determines namespace | `my-org/github-pr-agent` |
+    | **Visibility** | Access level | `Public, Organization, or Private` |
+
+    <Info>
+      **Tip**: Start with a simple prompt and add complexity through rules and tools. The prompt should be a clear, single instruction that defines the agent's primary goal.
+    </Info>
+  </Step>
+
+  <Step title="💡 Preview the Configuration">
+    As you fill in the fields, the right-hand panel shows a live preview of your agent's YAML configuration:
+
+    ```yaml
+    name: Open PR with Fix
+    description: Open a GitHub PR to fix the specified issue
+    tools: built_in
+    rules:
+      - continuedev/gh-pr-commit-workflow
+      - continuedev/summarization
+    model: Claude Sonnet 3.5
+    visibility: public
+    ```
+
+    This preview helps you verify the configuration before creating the agent.
+  </Step>
+
+  <Step title="✅ Create and Test">
+    Click **"Create Agent"** to save and publish it.
+    
+    Your agent is immediately available to run in:
+    - Mission Control web interface
+    - TUI mode: `cn --agent your-org/your-agent-name`
+    - Headless mode: `cn --agent your-org/your-agent-name "prompt" --auto`
+  </Step>
+</Steps>
+
+## Editing an Agent
+
+You can edit any agent you own or that belongs to your organization.
+
+<Steps>
+  <Step title="🧭 Access the Agent">
+    From the **Agents** page or Mission Control view, click your agent's name, then select **"Edit Agent"**.
+  </Step>
+
+  <Step title="🔧 Update Configuration">
+    You can modify any of these components:
+
+    <Tabs>
+      <Tab title="Prompt">
+        **Refine task behavior**
+        
+        ```
+        # Before
+        Fix the bug in the authentication system
+        
+        # After  
+        Fix the authentication bug by:
+        1. Identifying the root cause
+        2. Implementing a secure solution
+        3. Adding appropriate tests
+        4. Opening a PR with detailed explanation
+        ```
+      </Tab>
+
+      <Tab title="Rules">
+        **Enforce team standards**
+        
+        Add or remove organizational rules:
+        - `continuedev/security-first` - Always scan for vulnerabilities
+        - `continuedev/test-coverage` - Require tests for new code
+        - `my-org/style-guide` - Follow company coding standards
+      </Tab>
+
+      <Tab title="Tools (MCPs)">
+        **Connect additional systems**
+        
+        - Add GitHub MCP for repository operations
+        - Include Sentry MCP for error monitoring  
+        - Connect Supabase MCP for database operations
+        - Use custom MCPs for internal tools
+      </Tab>
+
+      <Tab title="Model & Visibility">
+        **Adjust behavior and access**
+        
+        - **Model**: Switch between Claude, GPT-4, or other supported LLMs
+        - **Visibility**: Control who can see and use the agent
+          - Public: Anyone can discover and use
+          - Organization: Only your team members
+          - Private: Only you can access
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="💾 Save Changes">
+    Click **"Update Agent"** when finished.
+    
+    The updated version is instantly available to your team with automatic versioning for change tracking.
+  </Step>
+</Steps>
+
+## Agent Components Deep Dive
+
+### Writing Effective Prompts
+
+Your prompt is the agent's primary instruction. Follow these patterns for best results:
+
+<AccordionGroup>
+  <Accordion title="Task-Oriented Prompts">
+    **Good**: Clear, actionable instructions
+    ```
+    Analyze the Sentry errors from the past 24 hours and create GitHub issues 
+    for any critical bugs with suggested fixes and reproduction steps.
+    ```
+    
+    **Avoid**: Vague or open-ended requests  
+    ```
+    Look at errors and do something about them.
+    ```
+  </Accordion>
+
+  <Accordion title="Context-Aware Prompts">
+    **Good**: Include relevant context and constraints
+    ```
+    Review the React components in src/components/ for accessibility issues.
+    Focus on ARIA labels, keyboard navigation, and color contrast.
+    Create a summary report with specific file locations and fix suggestions.
+    ```
+    
+    **Avoid**: Assumptions about available context
+    ```
+    Fix the accessibility problems.
+    ```
+  </Accordion>
+
+  <Accordion title="Multi-Step Workflows">
+    **Good**: Break complex tasks into clear steps
+    ```
+    For the user authentication refactor:
+    1. Audit current auth implementation for security issues
+    2. Design improved architecture with proper session management  
+    3. Create migration plan with backwards compatibility
+    4. Open PR with implementation and comprehensive tests
+    ```
+    
+    **Avoid**: Complex tasks without structure
+    ```
+    Refactor the authentication system to be better.
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Choosing Rules
+
+Rules enforce consistent behavior across all agent runs. Popular rule categories:
+
+| Rule Type | Purpose | Example |
+|-----------|---------|---------|
+| **Code Quality** | Maintain standards | `continuedev/test-coverage`, `continuedev/code-review-checklist` |
+| **Security** | Apply security practices | `continuedev/security-first`, `continuedev/vulnerability-scanning` |
+| **Team Workflow** | Follow processes | `continuedev/pr-template`, `continuedev/commit-conventions` |
+| **Custom** | Organization-specific | `my-org/deployment-rules`, `my-org/documentation-standards` |
+
+### Selecting Tools (MCPs)
+
+MCPs provide agents with external system access:
+
+<CardGroup cols={2}>
+  <Card title="Development Tools" icon="code">
+    - **GitHub MCP**: Repository operations, PRs, issues
+    - **GitLab MCP**: Similar to GitHub for GitLab users  
+    - **Linear MCP**: Issue tracking and project management
+  </Card>
+  
+  <Card title="Analytics & Monitoring" icon="chart-line">
+    - **PostHog MCP**: User analytics and feature flags
+    - **Sentry MCP**: Error tracking and performance monitoring
+    - **DataDog MCP**: Infrastructure and application monitoring
+  </Card>
+  
+  <Card title="Security & Compliance" icon="shield-check">
+    - **Snyk MCP**: Vulnerability scanning and dependency analysis
+    - **SonarQube MCP**: Code quality and security analysis
+    - **Aqua MCP**: Container security scanning
+  </Card>
+  
+  <Card title="Data & Infrastructure" icon="database">
+    - **Supabase MCP**: Database operations and schema management
+    - **dlt MCP**: Data pipeline development and monitoring
+    - **Terraform MCP**: Infrastructure as code management
+  </Card>
+</CardGroup>
+
+## Testing Your Agent
+
+Before deploying agents for team use, test thoroughly:
+
+<Steps>
+  <Step title="🧪 Local Testing">
+    Use TUI mode to interact with your agent:
+    
+    ```bash
+    cn --agent your-org/new-agent
+    # Chat interactively to test behavior
+    # Verify tool integrations work correctly
+    # Check that rules are applied properly
+    ```
+  </Step>
+
+  <Step title="🔍 Edge Case Testing">
+    Test with various scenarios:
+    
+    ```bash
+    # Test with minimal input
+    cn --agent your-org/new-agent "Fix authentication"
+    
+    # Test with detailed context  
+    cn --agent your-org/new-agent "Fix the authentication timeout issue in src/auth/session.js affecting mobile users"
+    
+    # Test error handling
+    cn --agent your-org/new-agent "Invalid request that should fail gracefully"
+    ```
+  </Step>
+
+  <Step title="🎯 Production Readiness">
+    Verify production requirements:
+    
+    - [ ] Agent completes tasks without manual intervention
+    - [ ] Error handling is robust and informative
+    - [ ] Output format meets team expectations
+    - [ ] Security and permissions are properly configured
+    - [ ] Performance is acceptable for intended use cases
+  </Step>
+</Steps>
+
+## Example Agent Configurations
+
+Here are proven agent patterns you can adapt:
+
+<AccordionGroup>
+  <Accordion title="Security Scanner Agent">
+    ```yaml
+    name: Weekly Security Scan
+    description: Runs comprehensive security analysis and creates remediation PRs
+    prompt: |
+      Run a complete security scan including:
+      1. Snyk dependency analysis
+      2. Code vulnerability scanning  
+      3. Container image security check
+      4. Create GitHub issues for critical findings with fix suggestions
+    tools:
+      - snyk-mcp
+      - github-mcp
+    rules:
+      - continuedev/security-first
+      - my-org/vulnerability-reporting
+    model: Claude Sonnet 3.5
+    visibility: organization
+    ```
+  </Accordion>
+
+  <Accordion title="Documentation Generator">
+    ```yaml
+    name: API Documentation Update
+    description: Generates and updates API documentation from code changes
+    prompt: |
+      Analyze recent API changes and update documentation:
+      1. Scan for new or modified endpoints
+      2. Generate OpenAPI specifications
+      3. Update README and integration guides
+      4. Create PR with comprehensive docs
+    tools:
+      - github-mcp
+      - openapi-mcp
+    rules:
+      - continuedev/documentation-standards
+      - my-org/api-guidelines
+    model: GPT-4
+    visibility: organization
+    ```
+  </Accordion>
+
+  <Accordion title="Performance Monitor">
+    ```yaml
+    name: Performance Regression Detector  
+    description: Monitors performance metrics and alerts on regressions
+    prompt: |
+      Analyze recent performance data:
+      1. Check Core Web Vitals trends
+      2. Identify performance regressions
+      3. Correlate with recent deployments
+      4. Create detailed performance report with recommendations
+    tools:
+      - netlify-mcp
+      - datadog-mcp
+      - github-mcp
+    rules:
+      - continuedev/performance-monitoring
+      - my-org/sla-requirements  
+    model: Claude Sonnet 3.5
+    visibility: private
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Simple" icon="play">
+    Begin with basic prompts and single tools. Add complexity gradually as you learn what works for your use cases.
+  </Card>
+  
+  <Card title="Use Descriptive Names" icon="tag">
+    Choose clear, specific names that indicate the agent's purpose: `security-scanner-weekly` vs `scanner`.
+  </Card>
+  
+  <Card title="Version Control" icon="git-branch">
+    Make incremental changes and test thoroughly. Agent versioning helps track what works.
+  </Card>
+  
+  <Card title="Team Feedback" icon="users">
+    Involve your team in agent design. The best agents solve real workflow pain points.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+Common issues and solutions:
+
+| Problem | Solution |
+|---------|----------|
+| **Agent doesn't complete tasks** | Simplify the prompt, add more specific instructions, verify tool permissions |
+| **Tools aren't working** | Check MCP configuration, verify API keys and permissions in Hub settings |
+| **Inconsistent behavior** | Add rules to enforce consistent patterns, test with various input scenarios |
+| **Performance issues** | Consider model choice, simplify complex multi-step workflows, optimize tool usage |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Your Agent" icon="rocket" href="/hub/agents/overview#ways-to-run-agents">
+    Learn to run your agent in TUI, headless, or Mission Control modes
+  </Card>
+  
+  <Card title="Webhook Integration" icon="webhook" href="/hub/agents/overview#webhook-integrations">
+    Set up automated triggers for CI/CD and monitoring systems
+  </Card>
+  
+  <Card title="Browse Examples" icon="book-open" href="/guides/overview#mcp-integration-cookbooks">
+    Explore cookbook agents for inspiration and best practices
+  </Card>
+  
+  <Card title="Team Management" icon="users-gear" href="/hub/sharing">
+    Configure team access and collaboration workflows
+  </Card>
+</CardGroup>
