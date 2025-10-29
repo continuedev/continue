@@ -511,29 +511,32 @@ export function ToolsSection() {
           <Card>
             <EmptyState message="MCP servers are disabled in your organization" />
           </Card>
-        ) : mode === "chat" ? (
-          <Alert type="info" size="sm">
-            <span className="text-2xs italic">
-              All MCPs are disabled in Chat, switch to Plan or Agent mode to use
-              MCPs
-            </span>
-          </Alert>
-        ) : mergedBlocks.length > 0 ? (
-          mergedBlocks.map(({ block, blockFromYaml }) => {
-            return (
-              <MCPServerPreview
-                key={block.name}
-                server={block}
-                serverFromYaml={blockFromYaml}
-                allToolsOff={allToolsOff}
-                duplicateDetection={duplicateDetection}
-              />
-            );
-          })
         ) : (
-          <Card>
-            <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
-          </Card>
+          <>
+            {mode === "chat" && (
+              <Alert type="info" size="sm">
+                <span className="text-2xs italic">
+                  All MCPs are disabled in Chat, switch to Plan or Agent mode to
+                  use MCPs
+                </span>
+              </Alert>
+            )}
+            {mergedBlocks.length > 0 ? (
+              mergedBlocks.map(({ block, blockFromYaml }) => (
+                <MCPServerPreview
+                  key={block.name}
+                  server={block}
+                  serverFromYaml={blockFromYaml}
+                  allToolsOff={allToolsOff}
+                  duplicateDetection={duplicateDetection}
+                />
+              ))
+            ) : (
+              <Card>
+                <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
+              </Card>
+            )}
+          </>
         )}
       </div>
     </>
