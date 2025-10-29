@@ -173,5 +173,9 @@ export class ReverseMessageIde {
     this.on("getBranch", (data) => {
       return this.ide.getBranch(data.dir);
     });
+
+    this.on("updateTelemetryEnabled", (data) => {
+      return this.ide.updateTelemetryEnabled(data.enabled);
+    });
   }
 }

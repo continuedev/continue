@@ -270,6 +270,10 @@ class FileSystemIde implements IDE {
   async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return ["", ""];
   }
+
+  async updateTelemetryEnabled(enabled: boolean): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export default FileSystemIde;

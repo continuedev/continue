@@ -901,6 +901,8 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
+
+  updateTelemetryEnabled(enabled: boolean): Promise<void>;
 }
 
 // Slash Commands

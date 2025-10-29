@@ -177,9 +177,10 @@ export function UserSettingsSection() {
                   description="Allows Continue to send anonymous telemetry."
                   value={allowAnonymousTelemetry}
                   disabled={disableTelemetryToggle}
-                  onChange={(value) =>
-                    handleUpdate({ allowAnonymousTelemetry: value })
-                  }
+                  onChange={(value) => {
+                    handleUpdate({ allowAnonymousTelemetry: value });
+                    void ideMessenger.ide.updateTelemetryEnabled(value);
+                  }}
                 />
               </div>
             </Card>
