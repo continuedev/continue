@@ -98,6 +98,19 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     cohere: (model) => {
       return model.toLowerCase().startsWith("command");
     },
+    stakd: (model) => {
+      // Stakd backend routes to various models
+      // Check if the model name indicates tool support
+      const lower = model.toLowerCase();
+      return (
+        lower.includes("gpt-oss") || // Reasoning models like gpt-oss-120b
+        lower.startsWith("gpt-4") ||
+        lower.startsWith("gpt-5") ||
+        lower.startsWith("o3") ||
+        lower.startsWith("claude-3") ||
+        lower.startsWith("claude-4")
+      );
+    },
     gemini: (model) => {
       // All gemini models support function calling
       return model.toLowerCase().includes("gemini");
