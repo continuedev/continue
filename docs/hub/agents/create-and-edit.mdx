@@ -16,6 +16,8 @@ sidebarTitle: "Create & Edit"
     From the Continue Hub top navigation bar, select **"+"** → **"New Agent"**.
     
     This opens the **Create an Agent (beta)** form with all required fields.
+
+    ![Create an agent screenshot](/docs/images/hub/create-an-agent.gif)
   </Step>
 
   <Step title="🧩 Fill Out the Agent Form">
@@ -28,7 +30,7 @@ sidebarTitle: "Create & Edit"
     | **Description** | What the agent does | `Creates a pull request and includes AI-generated summaries.` |
     | **Tools (MCPs)** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase` |
     | **Rules** | Add any organizational rules | `continuedev/gh-pr-commit-workflow, continuedev/summarization` |
-    | **Model** | Choose a default LLM | `Claude Sonnet 3.5` |
+    | **Model** | Choose a default LLM | `Claude Sonnet 4.5` |
     | **Owner + Slug** | Determines namespace | `my-org/github-pr-agent` |
     | **Visibility** | Access level | `Public, Organization, or Private` |
 
@@ -47,7 +49,7 @@ sidebarTitle: "Create & Edit"
     rules:
       - continuedev/gh-pr-commit-workflow
       - continuedev/summarization
-    model: Claude Sonnet 3.5
+    model: Claude Sonnet 4.5
     visibility: public
     ```
 
@@ -285,7 +287,7 @@ Here are proven agent patterns you can adapt:
     rules:
       - continuedev/security-first
       - my-org/vulnerability-reporting
-    model: Claude Sonnet 3.5
+    model: Claude Sonnet 4.5
     visibility: organization
     ```
   </Accordion>
@@ -328,7 +330,7 @@ Here are proven agent patterns you can adapt:
     rules:
       - continuedev/performance-monitoring
       - my-org/sla-requirements  
-    model: Claude Sonnet 3.5
+    model: Claude Sonnet 4.5
     visibility: private
     ```
   </Accordion>
