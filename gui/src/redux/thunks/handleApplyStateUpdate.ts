@@ -44,13 +44,24 @@ export const handleApplyStateUpdate = createAsyncThunk<
 
       // Handle apply status updates - use toolCallId from event payload
       if (applyState.toolCallId) {
-        if (applyState.status === "closed") {
-          // Find the tool call to check if it was canceled
-          const toolCallState = findToolCallById(
-            getState().session.history,
-            applyState.toolCallId,
-          );
+        const toolCallState = findToolCallById(
+          getState().session.history,
+          applyState.toolCallId,
+        );
 
+        if (
+          applyState.status === "done" &&
+          toolCallState?.toolCall.function.name &&
+          getState().ui.toolSettings[toolCallState.toolCall.function.name] ===
+            "allowedWithoutPermission"
+        ) {
+          extra.ideMessenger.post("acceptDiff", {
+            streamId: applyState.streamId,
+            filepath: applyState.filepath,
+          });
+        }
+
+        if (applyState.status === "closed") {
           if (toolCallState) {
             const accepted = toolCallState.status !== "canceled";
 
