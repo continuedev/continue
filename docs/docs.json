@@ -260,9 +260,11 @@
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
               "guides/github-mcp-continue-cookbook",
+              "guides/atlassian-mcp-continue-cookbook",
               "guides/sanity-mcp-continue-cookbook",
               "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
+              "guides/supabase-mcp-database-workflow",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
               "guides/chrome-devtools-mcp-performance"

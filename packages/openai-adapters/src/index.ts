@@ -188,3 +188,5 @@ export {
   getAnthropicHeaders,
   getAnthropicMediaTypeFromDataUrl,
 } from "./apis/AnthropicUtils.js";
+
+export { isResponsesModel } from "./apis/openaiResponses.js";

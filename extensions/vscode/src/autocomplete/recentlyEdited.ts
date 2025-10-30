@@ -24,25 +24,24 @@ export class RecentlyEditedTracker {
   private static maxRecentlyEditedDocuments = 10;
 
   constructor(private ideUtils: VsCodeIdeUtils) {
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      event.contentChanges.forEach((change) => {
-        const editedRange = {
-          uri: event.document.uri,
-          range: new vscode.Range(
-            new vscode.Position(change.range.start.line, 0),
-            new vscode.Position(change.range.end.line + 1, 0),
-          ),
-          timestamp: Date.now(),
-        };
-        this.insertRange(editedRange);
-      });
-
-      this.insertDocument(event.document.uri);
-    });
-
-    setInterval(() => {
-      this.removeOldEntries();
-    }, 1000 * 15);
+    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
+    // vscode.workspace.onDidChangeTextDocument((event) => {
+    //   event.contentChanges.forEach((change) => {
+    //     const editedRange = {
+    //       uri: event.document.uri,
+    //       range: new vscode.Range(
+    //         new vscode.Position(change.range.start.line, 0),
+    //         new vscode.Position(change.range.end.line + 1, 0),
+    //       ),
+    //       timestamp: Date.now(),
+    //     };
+    //     this.insertRange(editedRange);
+    //   });
+    //   this.insertDocument(event.document.uri);
+    // });
+    // setInterval(() => {
+    //   this.removeOldEntries();
+    // }, 1000 * 15);
   }
 
   private async insertRange(
