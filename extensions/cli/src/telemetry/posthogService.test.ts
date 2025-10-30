@@ -27,7 +27,7 @@ vi.mock("dns/promises", () => {
   return { default: { lookup } };
 });
 
-// Imports must come after vi.mock calls in vitest
+// eslint-disable-next-line import/order
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
 
 import { PosthogService } from "./posthogService.js";
