@@ -189,7 +189,7 @@ export async function getRequestTools(isHeadless: boolean) {
   const allowedTools: Tool[] = [];
   for (const tool of availableTools) {
     const result = checkToolPermission(
-      { name: tool.name, arguments: {} },
+      { name: tool.function.name, arguments: {} },
       permissionsState.permissions,
     );
 

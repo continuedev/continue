@@ -316,7 +316,9 @@ export async function preprocessStreamedToolCalls(
   for (const toolCall of toolCalls) {
     const startTime = Date.now();
     try {
-      const tool = availableTools.find((t) => t.name === toolCall.name);
+      const tool = availableTools.find(
+        (t) => t.function.name === toolCall.name,
+      );
       if (!tool) {
         throw new Error(`Tool ${toolCall.name} not found`);
       }
