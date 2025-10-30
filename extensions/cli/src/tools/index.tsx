@@ -70,11 +70,10 @@ export async function getAllAvailableTools(
   const isCapable = isModelCapable(provider, name, model);
   if (isCapable) {
     tools.push(multiEditTool);
+    logger.debug("Using MultiEdit tool for capable model");
   } else {
     tools.push(editTool);
-    logger.debug(
-      "Excluded Edit tool for capable model - MultiEdit will be used instead",
-    );
+    logger.debug("Using Edit tool for basic model");
   }
 
   logger.debug("Capability-based tool filtering", {
@@ -101,7 +100,7 @@ export async function getAllAvailableTools(
 }
 
 export function getToolDisplayName(toolName: string): string {
-  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
+  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.function.name === toolName);
   return tool?.displayName || toolName;
 }
 
@@ -136,12 +135,12 @@ export function convertToolToChatCompletionTool(
   return {
     type: "function" as const,
     function: {
-      name: tool.name,
-      description: tool.description,
+      name: tool.function.name,
+      description: tool.function.description,
       parameters: {
         type: "object",
-        required: tool.parameters.required,
-        properties: tool.parameters.properties,
+        required: tool.function.parameters.required,
+        properties: tool.function.parameters.properties,
       },
     },
   };
@@ -149,17 +148,20 @@ export function convertToolToChatCompletionTool(
 
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
-    name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
-    description: mcpTool.description ?? "",
-    parameters: {
-      type: "object",
-      properties: (mcpTool.inputSchema.properties ?? {}) as Record<
-        string,
-        ParameterSchema
-      >,
-      required: mcpTool.inputSchema.required,
+    type: "function",
+    function: {
+      name: mcpTool.name,
+      description: mcpTool.description ?? "",
+      parameters: {
+        type: "object",
+        properties: (mcpTool.inputSchema.properties ?? {}) as Record<
+          string,
+          ParameterSchema
+        >,
+        required: mcpTool.inputSchema.required,
+      },
     },
+    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
     readonly: undefined, // MCP tools don't have readonly property
     isBuiltIn: false,
     run: async (args: any) => {
@@ -234,8 +236,10 @@ export async function executeToolCall(
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  const requiredParams = tool.function.parameters.required ?? [];
+  for (const [paramName] of Object.entries(
+    tool.function.parameters.properties ?? {},
+  )) {
     if (
       requiredParams.includes(paramName) &&
       (toolCall.arguments[paramName] === undefined ||

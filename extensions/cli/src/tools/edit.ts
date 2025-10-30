@@ -50,7 +50,7 @@ export function validateAndResolveFilePath(args: any): {
   if (!readFilesSet.has(resolvedPath)) {
     throw new ContinueError(
       ContinueErrorReason.EditToolFileNotRead,
-      `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
+      `You must use the ${readFileTool.function.name} tool to read ${file_path} before editing it.`,
     );
   }
 
@@ -62,47 +62,50 @@ export interface EditArgs extends EditOperation {
 }
 
 export const editTool: Tool = {
-  name: "Edit",
-  displayName: "Edit",
-  readonly: false,
-  isBuiltIn: true,
-  description: `Performs exact string replacements in a file.
+  type: "function",
+  function: {
+    name: "Edit",
+    description: `Performs exact string replacements in a file.
 
 USAGE: 
-- ALWAYS use the \`${readFileTool.name}\` tool just before making edits, to understand the file's up-to-date contents and context.
-- When editing text from ${readFileTool.name} tool output, ensure you preserve exact whitespace/indentation.
+- ALWAYS use the \`${readFileTool.function.name}\` tool just before making edits, to understand the file's up-to-date contents and context.
+- When editing text from ${readFileTool.function.name} tool output, ensure you preserve exact whitespace/indentation.
 - Always prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
 - Use \`replace_all\` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable, for instance.
 
 WARNINGS:
 - When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
-- The edit will FAIL if you have not recently used the \`${readFileTool.name}\` tool to view up-to-date file contents.`,
-  parameters: {
-    type: "object",
-    required: ["file_path", "old_string", "new_string"],
-    properties: {
-      file_path: {
-        type: "string",
-        description:
-          "Absolute or relative path to the file to modify. Absolute preferred",
-      },
-      old_string: {
-        type: "string",
-        description:
-          "The text to replace - must be exact including whitespace/indentation",
-      },
-      new_string: {
-        type: "string",
-        description:
-          "The text to replace it with (MUST be different from old_string)",
-      },
-      replace_all: {
-        type: "boolean",
-        description: "Replace all occurrences of old_string (default false)",
+- The edit will FAIL if you have not recently used the \`${readFileTool.function.name}\` tool to view up-to-date file contents.`,
+    parameters: {
+      type: "object",
+      required: ["file_path", "old_string", "new_string"],
+      properties: {
+        file_path: {
+          type: "string",
+          description:
+            "Absolute or relative path to the file to modify. Absolute preferred",
+        },
+        old_string: {
+          type: "string",
+          description:
+            "The text to replace - must be exact including whitespace/indentation",
+        },
+        new_string: {
+          type: "string",
+          description:
+            "The text to replace it with (MUST be different from old_string)",
+        },
+        replace_all: {
+          type: "boolean",
+          description: "Replace all occurrences of old_string (default false)",
+        },
       },
     },
   },
+  displayName: "Edit",
+  readonly: false,
+  isBuiltIn: true,
   preprocess: async (args) => {
     const { old_string, new_string, replace_all } = args as EditArgs;
 
