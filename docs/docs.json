@@ -379,6 +379,10 @@
       "destination": "/hub/secrets/secret-types"
     },
     {
+      "source": "/hub/governance/pricing",
+      "destination": "https://hub.continue.dev/pricing"
+    },
+    {
       "source": "/hub/blocks",
       "destination": "/hub/introduction"
     },
