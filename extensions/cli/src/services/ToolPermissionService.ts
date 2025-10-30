@@ -86,12 +86,10 @@ export class ToolPermissionService
     }
 
     const policies: ToolPermissionPolicy[] = [];
-    const servers = Array.from(mcpServiceState?.connections ?? []);
+    const servers = Array.from(mcpServiceState?.connections?.values() ?? []);
     for (const mcpServer of parsedTools.mcpServers) {
       const server = servers?.find(
-        (s) =>
-          (s.config as any)?.sourceSlug &&
-          (s.config as any).sourceSlug === mcpServer,
+        (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
       );
       if (!server) {
         logger.warn("No connected MCP server found ");
