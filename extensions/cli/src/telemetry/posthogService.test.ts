@@ -27,7 +27,6 @@ vi.mock("dns/promises", () => {
   return { default: { lookup } };
 });
 
-// eslint-disable-next-line import/order
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
 
 import { PosthogService } from "./posthogService.js";
