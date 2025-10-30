@@ -189,6 +189,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "llama3-groq",
           "granite3",
           "granite-3",
+          "granite4",
+          "granite-4",
           "aya-expanse",
           "firefunction-v2",
           "mistral",
