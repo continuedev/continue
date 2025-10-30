@@ -1,4 +1,4 @@
-import { BaseLlmApi, isResponsesModel } from "@continuedev/openai-adapters";
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 
 import { error, warn } from "../logging.js";
@@ -171,14 +171,6 @@ export async function chatCompletionStreamWithBackoff(
       // Check if we should abort before making the request
       if (abortSignal.aborted) {
         throw new Error("Request aborted");
-      }
-
-      const useResponses =
-        typeof llmApi.responsesStream === "function" &&
-        isResponsesModel(params.model);
-
-      if (useResponses) {
-        return llmApi.responsesStream!(params, abortSignal);
       }
 
       return llmApi.chatCompletionStream(params, abortSignal);
