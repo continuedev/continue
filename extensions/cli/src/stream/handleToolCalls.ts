@@ -186,7 +186,7 @@ export async function getAllTools() {
   const allowedTools: Tool[] = [];
   for (const tool of availableTools) {
     const result = checkToolPermission(
-      { name: tool.name, arguments: {} },
+      { name: tool.function.name, arguments: {} },
       permissionsState.permissions,
     );
 

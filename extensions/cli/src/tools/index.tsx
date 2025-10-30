@@ -137,12 +137,12 @@ export function convertToolToChatCompletionTool(
   return {
     type: "function" as const,
     function: {
-      name: tool.name,
-      description: tool.description,
+      name: tool.function.name,
+      description: tool.function.description,
       parameters: {
         type: "object",
-        required: tool.parameters.required,
-        properties: tool.parameters.properties,
+        required: tool.function.parameters.required,
+        properties: tool.function.parameters.properties,
       },
     },
   };
@@ -180,17 +180,20 @@ export async function getAvailableTools() {
 
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
-    name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
-    description: mcpTool.description ?? "",
-    parameters: {
-      type: "object",
-      properties: (mcpTool.inputSchema.properties ?? {}) as Record<
-        string,
-        ParameterSchema
-      >,
-      required: mcpTool.inputSchema.required,
+    type: "function",
+    function: {
+      name: mcpTool.name,
+      description: mcpTool.description ?? "",
+      parameters: {
+        type: "object",
+        properties: (mcpTool.inputSchema.properties ?? {}) as Record<
+          string,
+          ParameterSchema
+        >,
+        required: mcpTool.inputSchema.required,
+      },
     },
+    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
     readonly: undefined, // MCP tools don't have readonly property
     isBuiltIn: false,
     run: async (args: any) => {
