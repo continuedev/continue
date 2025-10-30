@@ -6,6 +6,7 @@ const baseMcpServerSchema = z.object({
   serverName: z.string().optional(),
   faviconUrl: z.string().optional(),
   sourceFile: z.string().optional(), // Added during loading
+  sourceSlug: z.string().optional(), // Added during loading
   connectionTimeout: z.number().gt(0).optional(),
 });
 

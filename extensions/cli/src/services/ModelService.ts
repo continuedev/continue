@@ -64,8 +64,9 @@ export class ModelService
       preferredModelName = agentFileServiceState.agentFileModel?.name;
       modelSource = "agentFile";
     } else {
-      preferredModelName = getModelName(authConfig);
-      if (preferredModelName) {
+      const persistedName = getModelName(authConfig);
+      if (persistedName) {
+        preferredModelName = persistedName;
         modelSource = "persisted";
       }
     }

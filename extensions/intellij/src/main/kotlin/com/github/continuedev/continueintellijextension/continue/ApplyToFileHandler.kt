@@ -83,17 +83,7 @@ class ApplyToFileHandler(
         val diffStreamHandler = createDiffStreamHandler(editorUtils.editor, startLine, endLine)
         diffStreamService.register(diffStreamHandler, editorUtils.editor)
 
-        // Stream the diffs between current and new content
-        // For search/replace, we pass the new content as "input" and current as "highlighted"
-        diffStreamHandler.streamDiffLinesToEditor(
-            input = newContent,           // The new content (full rewrite)
-            prefix = "",                  // No prefix since we're rewriting the whole file
-            highlighted = currentContent, // Current file content
-            suffix = "",                  // No suffix since we're rewriting the whole file
-            modelTitle = null,            // No model needed for search/replace instant apply
-            includeRulesInSystemMessage = false, // No LLM involved, just diff generation
-            isApply = true
-        )
+        diffStreamHandler.instantApplyDiffLines(currentContent, newContent)
     }
 
     private fun notifyStreamStarted() {

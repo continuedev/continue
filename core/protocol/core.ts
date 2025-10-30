@@ -241,6 +241,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  getDiffLines: [{ oldContent: string; newContent: string }, DiffLine[]];
   "llm/compileChat": [
     { messages: ChatMessage[]; options: LLMFullCompletionOptions },
     CompiledMessagesResult,
@@ -314,7 +315,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "tools/evaluatePolicy": [
-    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    {
+      toolName: string;
+      basePolicy: ToolPolicy;
+      parsedArgs: Record<string, unknown>;
+      processedArgs?: Record<string, unknown>;
+    },
     { policy: ToolPolicy; displayValue?: string },
   ];
   "tools/preprocessArgs": [

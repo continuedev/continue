@@ -79,7 +79,40 @@ export function UserSetting(props: UserSettingProps) {
             <input
               type="number"
               value={props.value}
-              onChange={(e) => props.onChange(Number(e.target.value))}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                // Allow temporary invalid values during input
+                props.onChange(value);
+              }}
+              onBlur={(e) => {
+                // Apply min/max constraints when input loses focus
+                const value = Number(e.target.value);
+                const min = props.min ?? 0;
+                const max = props.max ?? 100;
+
+                if (value < min) {
+                  props.onChange(min);
+                } else if (value > max) {
+                  props.onChange(max);
+                }
+              }}
+              onKeyDown={(e) => {
+                // Apply constraints when user presses Enter
+                if (e.key === "Enter") {
+                  const value = Number(e.currentTarget.value);
+                  const min = props.min ?? 0;
+                  const max = props.max ?? 100;
+
+                  if (value < min) {
+                    props.onChange(min);
+                  } else if (value > max) {
+                    props.onChange(max);
+                  }
+
+                  // Blur the input to complete the editing
+                  e.currentTarget.blur();
+                }
+              }}
               min={props.min ?? 0}
               max={props.max ?? 100}
               disabled={disabled}
