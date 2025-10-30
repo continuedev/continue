@@ -56,7 +56,7 @@ export function evaluateTerminalCommandSecurity(
     
     // If there are multiple lines, evaluate each separately
     if (commandLines.length > 1) {
-      let mostRestrictivePolicy = basePolicy;
+      let mostRestrictivePolicy: ToolPolicy = basePolicy;
       
       for (const line of commandLines) {
         const trimmedLine = line.trim();
