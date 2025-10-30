@@ -32,25 +32,25 @@
 
 [Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
 
-![agent](docs/images/agent.gif)
+![agent](../../docs/images/agent.gif)
 
 ## Chat
 
 [Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
 
-![chat](docs/images/chat.gif)
+![chat](../../docs/images/chat.gif)
 
 ## Edit
 
 [Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
 
-![edit](docs/images/edit.gif)
+![edit](../../docs/images/edit.gif)
 
 ## Autocomplete
 
 [Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
 
-![autocomplete](docs/images/autocomplete.gif)
+![autocomplete](../../docs/images/autocomplete.gif)
 
 </div>
 
