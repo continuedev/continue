@@ -29,7 +29,7 @@
               "hub/introduction",
               {
                 "group": "Configs",
-                "icon": "robot",
+                "icon": "book",
                 "pages": [
                   "hub/configs/intro",
                   "hub/configs/use-a-config",
