@@ -352,7 +352,6 @@ export class ControlPlaneClient {
 
   /**
    * Check if remote sessions should be enabled based on feature flags
-   * Requires: PostHog feature flag AND @continue.dev email
    */
   public async shouldEnableRemoteSessions(): Promise<boolean> {
     // Check if user is signed in
@@ -360,17 +359,13 @@ export class ControlPlaneClient {
       return false;
     }
 
-    // Check if user has @continue.dev email
     try {
       const sessionInfo = await this.sessionInfoPromise;
       if (isOnPremSession(sessionInfo) || !sessionInfo) {
         return false;
       }
 
-      const hubSession = sessionInfo as HubSessionInfo;
-      const email = hubSession.account?.id;
-
-      return email ? email.includes("@continue.dev") : false;
+      return true;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_check_remote_sessions_enabled",
@@ -388,7 +383,6 @@ export class ControlPlaneClient {
 
   /**
    * Fetch remote agents/sessions from the control plane
-   * Currently restricted to @continue.dev emails for internal use
    */
   public async listRemoteSessions(): Promise<RemoteSessionMetadata[]> {
     if (!(await this.isSignedIn())) {
@@ -396,8 +390,6 @@ export class ControlPlaneClient {
     }
 
     try {
-      // Note: This endpoint is currently restricted to internal @continue.dev users
-      // In the future, this may be expanded to support broader remote session access
       const resp = await this.requestAndHandleError("agents/devboxes", {
         method: "GET",
       });
