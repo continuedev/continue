@@ -29,6 +29,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
+      const lower = model.toLowerCase();
       if (
         [
           "claude-3-5",
@@ -38,8 +39,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-sonnet-4",
           "claude-4-sonnet",
           "claude-opus-4",
-        ].some((part) => model.toLowerCase().startsWith(part))
+        ].some((part) => lower.startsWith(part))
       ) {
+        return true;
+      }
+      if (lower.includes("claude") && lower.includes("4-5")) {
         return true;
       }
 
@@ -385,6 +389,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt-5/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
+    [/claude/, /4-5/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
