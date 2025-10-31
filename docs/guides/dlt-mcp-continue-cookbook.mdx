@@ -40,7 +40,7 @@ For all options, first:
 ## dlt MCP Workflow Options
 
 <Card title="🚀 Fastest Path to Success" icon="zap">
-  Skip the manual setup and use our pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) that includes
+  Skip the manual setup and use our pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) that includes
       the dlt MCP and optimized data pipeline workflows for more consistent results. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize it for your specific needs.
 </Card>
 
@@ -53,7 +53,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your pipeline project directory and run:
         ```bash
-        cn --config dlthub/dlt-assistant
+        cn --agent continuedev/dlt-agent
         ```
 
         This agent includes:
@@ -73,7 +73,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Steps>
 
     <Info>
-      **Why Use the Agent?** The pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering. You can [remix and customize this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) later to fit your team's specific workflow.
+      **Why Use the Agent?** The pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) provides consistent pipeline development workflows and handles MCP configuration automatically, making it easier to get started with AI-powered data engineering. You can [remix and customize this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) later to fit your team's specific workflow.
     </Info>
 
   </Tab>
@@ -117,7 +117,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant), you need either:
+    To use the pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent), you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** added to Continue Hub secrets (same as manual setup)
 
@@ -165,6 +165,8 @@ You can add prompts to your agent's configuration for easy access in future sess
   changes, test your prompts in plan mode (see the [Plan Mode
   Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it.
+  
+  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 </Info>
 
 <Info>
@@ -178,15 +180,10 @@ You can add prompts to your agent's configuration for easy access in future sess
 <Card title="Inspect Pipeline Execution" icon="magnifying-glass">
   Review pipeline execution details including load timing and file sizes.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Inspect my dlt pipeline execution and provide a summary of the load info.
 Show me the timing breakdown and file sizes for each table.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Inspect my dlt pipeline execution and provide a summary of the load info. Show me the timing breakdown and file sizes for each table." --auto
 ```
 
 </Card>
@@ -196,15 +193,10 @@ cn -p "Inspect my dlt pipeline execution and provide a summary of the load info.
 <Card title="Retrieve Schema Metadata" icon="diagram-project">
   Get detailed schema information for your pipeline's tables.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Show me the schema for my users table including all columns,
 data types, and any constraints.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Show me the schema for my users table including all columns, data types, and any constraints." --auto
 ```
 
 </Card>
@@ -214,15 +206,10 @@ cn -p "Show me the schema for my users table including all columns, data types, 
 <Card title="Query Dataset Records" icon="table">
   Retrieve and analyze records from your destination database.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Get the last 10 records from my orders table and show me
 the distribution of order statuses.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Get the last 10 records from my orders table and show me the distribution of order statuses." --auto
 ```
 
 </Card>
@@ -232,15 +219,10 @@ cn -p "Get the last 10 records from my orders table and show me the distribution
 <Card title="Analyze Load Errors" icon="triangle-exclamation">
   Investigate and understand pipeline load errors.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Check for any load errors in my last pipeline run. If there are errors,
 explain what went wrong and suggest fixes.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Check for any load errors in my last pipeline run. If there are errors, explain what went wrong and suggest fixes." --auto
 ```
 
 </Card>
@@ -250,15 +232,10 @@ cn -p "Check for any load errors in my last pipeline run. If there are errors, e
 <Card title="Build New Pipeline" icon="plus">
   Create a new dlt pipeline from an API or data source.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Help me create a new dlt pipeline that loads data from the
 JSONPlaceholder API users endpoint into DuckDB.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholder API users endpoint into DuckDB." --auto
 ```
 
 </Card>
@@ -268,15 +245,10 @@ cn -p "Help me create a new dlt pipeline that loads data from the JSONPlaceholde
 <Card title="Handle Schema Changes" icon="code-branch">
   Review and manage schema evolution in your pipelines.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Check if my pipeline schema has evolved since the last run.
 Show me what columns were added or modified.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Check if my pipeline schema has evolved since the last run. Show me what columns were added or modified." --auto
 ```
 
 </Card>
@@ -293,7 +265,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 - Any required database credentials for your destination
 
 <Info>
-      The workflow uses the pre-built [dlt Assistant agent](https://hub.continue.dev/dlthub/dlt-assistant) with `--agent dlthub/dlt-assistant`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize the validation rules and prompts for your specific pipeline requirements.
+      The workflow uses the pre-built [dlt Agent](https://hub.continue.dev/continuedev/dlt-agent) with `--agent continuedev/dlt-agent`. This agent comes pre-configured with the dlt MCP and optimized rules for pipeline operations. You can [remix this agent](/guides/understanding-configs#how-to-get-started-with-hub-configs) to customize the validation rules and prompts for your specific pipeline requirements.
 </Info>
 
 ### Create Workflow File
@@ -342,7 +314,7 @@ jobs:
       - name: Validate Pipeline Schema
         run: |
           echo "🔍 Validating pipeline schema..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent continuedev/dlt-agent \
              -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes." \
              --auto
@@ -350,7 +322,7 @@ jobs:
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
-          cn --config dlthub/dlt-assistant \
+          cn --agent continuedev/dlt-agent \
              -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention." \
              --auto
@@ -360,7 +332,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --config dlthub/dlt-assistant \
+          REPORT=$(cn --agent continuedev/dlt-agent \
              -p "Generate a concise summary (200 words or less) of:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings
