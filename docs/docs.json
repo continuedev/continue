@@ -56,8 +56,12 @@
               },
               {
                 "group": "Agents",
-                "icon": "cloud",
-                "pages": ["hub/agents/intro"]
+                "icon": "robot",
+                "pages": [
+                  "hub/agents/intro",
+                  "hub/agents/overview",
+                  "hub/agents/create-and-edit"
+                ]
               },
               "hub/sharing",
               "hub/source-control"
@@ -343,7 +347,8 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ"
+      "discord": "https://discord.gg/vapESyrFmJ",
+      "youtube": "https://www.youtube.com/@continuedev"
     }
   },
   "contextual": {
