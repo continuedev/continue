@@ -57,7 +57,7 @@
               {
                 "group": "Agents",
                 "icon": "cloud",
-                "pages": ["hub/agents/intro"]
+                "pages": ["hub/agents/intro", "hub/agents/slack-integration"]
               },
               "hub/sharing",
               "hub/source-control"
