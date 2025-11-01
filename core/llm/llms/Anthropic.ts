@@ -28,6 +28,7 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 
@@ -110,7 +111,7 @@ class Anthropic extends BaseLLM {
             source: {
               type: "base64",
               media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
-              data: part.imageUrl.url.split(",")[1],
+              data: extractBase64FromDataUrl(part.imageUrl.url),
             },
           });
         }
