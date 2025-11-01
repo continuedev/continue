@@ -41,6 +41,16 @@ export class StakdApi extends OpenAIApi {
 
     for await (const chunk of streamSse(response)) {
       const delta = chunk.choices?.[0]?.delta;
+      const finishReason = chunk.choices?.[0]?.finish_reason;
+
+      // Check for stream completion: finish_reason present with no more content
+      if (finishReason && finishReason !== "null" && (!delta || (!delta.content && !delta.reasoning))) {
+        // This is the final chunk signaling completion
+        if (chunk.usage) {
+          lastChunkWithUsage = chunk;
+        }
+        break;
+      }
 
       if (!delta) {
         if (chunk.usage) {
