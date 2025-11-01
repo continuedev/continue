@@ -114,6 +114,18 @@ type OllamaErrorResponse = {
   error: string;
 };
 
+type N8nChatReponse = {
+  type: string;
+  content?: string;
+  metadata: {
+    nodeId: string;
+    nodeName: string;
+    itemIndex: number;
+    runIndex: number;
+    timestamps: number;
+  };
+};
+
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
@@ -124,7 +136,8 @@ type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
       message: OllamaChatMessage;
-    });
+    })
+  | N8nChatReponse;
 
 interface OllamaTool {
   type: "function";
@@ -427,10 +440,50 @@ class Ollama extends BaseLLM implements ModelInstaller {
       body: JSON.stringify(chatOptions),
       signal,
     });
-
+    let _isThinking: boolean = false;
+    function GetIsThinking(): boolean {
+      return _isThinking;
+    }
+    function SetIsThinking(newValue: boolean): void {
+      if (_isThinking !== newValue) {
+        _isThinking = newValue;
+      }
+    }
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
+      }
+
+      if ("type" in res) {
+        const { content } = res;
+
+        if (content === "<think>") {
+          SetIsThinking(true);
+        }
+
+        if (GetIsThinking() && content) {
+          const thinkingMessage: ThinkingChatMessage = {
+            role: "thinking",
+            content: content,
+          };
+
+          if (thinkingMessage) {
+            if (content === "</think>") {
+              SetIsThinking(false);
+            }
+            // When Streaming you can't have both thinking and content
+            return [thinkingMessage];
+          }
+        }
+
+        if (content) {
+          const chatMessage: ChatMessage = {
+            role: "assistant",
+            content: content,
+          };
+          return [chatMessage];
+        }
+        return [];
       }
 
       const { role, content, thinking, tool_calls: toolCalls } = res.message;
