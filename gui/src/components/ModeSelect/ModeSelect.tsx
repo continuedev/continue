@@ -6,7 +6,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
-import { capitalize } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -89,14 +88,14 @@ export function ModeSelect() {
     }
   }, [mode, isLocalAgent, dispatch]);
 
-  const notGreatAtAgent = (
+  const notGreatAtAgent = (mode: string) => (
     <>
       <ToolTip
         style={{
           zIndex: 200001, // in front of listbox
         }}
         className="flex items-center gap-1"
-        content={`${capitalize(mode)} might not work well with this model.`}
+        content={`${mode} might not work well with this model.`}
       >
         <ExclamationTriangleIcon className="text-warning h-2.5 w-2.5" />
       </ToolTip>
@@ -162,7 +161,7 @@ export function ModeSelect() {
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
             </div>
-            {!isGoodAtAgentMode && notGreatAtAgent}
+            {!isGoodAtAgentMode && notGreatAtAgent("Plan")}
             <CheckIcon
               className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
             />
@@ -181,7 +180,7 @@ export function ModeSelect() {
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
             </div>
-            {!isGoodAtAgentMode && notGreatAtAgent}
+            {!isGoodAtAgentMode && notGreatAtAgent("Agent")}
             <CheckIcon
               className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
             />
