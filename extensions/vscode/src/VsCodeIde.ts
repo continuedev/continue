@@ -698,6 +698,12 @@ class VsCodeIde implements IDE {
     const ideSettings = this.getIdeSettingsSync();
     return ideSettings;
   }
+
+  async updateTelemetryEnabled(enabled: boolean): Promise<void> {
+    vscode.workspace
+      .getConfiguration("continue")
+      .update("telemetryEnabled", enabled, vscode.ConfigurationTarget.Global);
+  }
 }
 
 export { VsCodeIde };
