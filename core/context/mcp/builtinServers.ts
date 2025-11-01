@@ -30,7 +30,7 @@ export const CONTEXT7_SERVER: BuiltInMcpServerConfig = {
   type: "streamable-http",
   url: "https://mcp.context7.com/mcp",
   readonly: true,
-  apiKey: "ctx7sk-ad277c04-2ae2-4a09-b5f3-e85807f2d4de",
+  apiKey: process.env.CONTEXT7_API_KEY,
   enabledByDefault: true,
 };
 
