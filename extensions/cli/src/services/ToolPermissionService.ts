@@ -139,8 +139,8 @@ export class ToolPermissionService
       policies.push(...allowed);
       const specificBuiltInSet = new Set(specificBuiltIns);
       const notMentioned = ALL_BUILT_IN_TOOLS.map(
-        (t) => t.function.name,
-      ).filter((name) => !specificBuiltInSet.has(name));
+        (t) => t.function?.name,
+      ).filter((name) => name && !specificBuiltInSet.has(name));
       const disallowed: ToolPermissionPolicy[] = notMentioned.map((tool) => ({
         tool,
         permission: "exclude",
