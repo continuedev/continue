@@ -295,7 +295,9 @@ describe("ToolPermissionService - Agent File Integration", () => {
       });
 
       // Should exclude all other built-in tools
-      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map((t) => t.name);
+      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map(
+        (t) => t.function?.name,
+      ).filter(Boolean);
       const notListed = allBuiltInNames.filter(
         (name) => name !== "Bash" && name !== "Read",
       );
@@ -376,7 +378,9 @@ describe("ToolPermissionService - Agent File Integration", () => {
       );
 
       // Should exclude all built-in tools
-      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map((t) => t.name);
+      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map(
+        (t) => t.function?.name,
+      ).filter(Boolean);
       for (const toolName of allBuiltInNames) {
         expect(policies).toContainEqual({
           tool: toolName,
@@ -454,7 +458,9 @@ describe("ToolPermissionService - Agent File Integration", () => {
       });
 
       // Should exclude other built-in tools
-      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map((t) => t.name);
+      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map(
+        (t) => t.function?.name,
+      ).filter(Boolean);
       const notListed = allBuiltInNames.filter(
         (name) => name !== "Bash" && name !== "Read",
       );
@@ -517,7 +523,9 @@ describe("ToolPermissionService - Agent File Integration", () => {
       });
 
       // Should exclude other built-in tools
-      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map((t) => t.name);
+      const allBuiltInNames = ALL_BUILT_IN_TOOLS.map(
+        (t) => t.function?.name,
+      ).filter(Boolean);
       const notBash = allBuiltInNames.filter((name) => name !== "Bash");
 
       for (const toolName of notBash) {
