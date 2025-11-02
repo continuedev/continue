@@ -22,9 +22,10 @@ function getAgentIdFromArgs(): string | undefined {
 }
 
 export const statusTool: Tool = {
-  name: "Status",
-  displayName: "Status",
-  description: `Set the current status of your task for the user to see
+  type: "function",
+  function: {
+    name: "Status",
+    description: `Set the current status of your task for the user to see
 
 The default available statuses are:
 - PLANNING: You are creating a plan before beginning implementation
@@ -35,17 +36,20 @@ The default available statuses are:
 However, if the user explicitly specifies in their prompt to use one or more different statuses, you can use those as well.
 
 You should use this tool to notify the user whenever the state of your work changes. By default, the status is assumed to be "PLANNING" prior to you setting a different status.`,
-  parameters: {
-    type: "object",
-    required: ["status"],
-    properties: {
-      status: {
-        type: "string",
-        description: "The status value to set",
+    parameters: {
+      type: "object",
+      required: ["status"],
+      properties: {
+        status: {
+          type: "string",
+          description: "The status value to set",
+        },
       },
     },
   },
+  displayTitle: "Status",
   readonly: true,
+  group: "Built-In",
   isBuiltIn: true,
   run: async (args: { status: string }): Promise<string> => {
     try {

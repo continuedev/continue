@@ -29,24 +29,28 @@ export function generateDiff(
 }
 
 export const writeFileTool: Tool = {
-  name: "Write",
-  displayName: "Write",
-  description: "Write content to a file at the specified path",
-  parameters: {
-    type: "object",
-    required: ["filepath", "content"],
-    properties: {
-      filepath: {
-        type: "string",
-        description: "The path to the file to write",
-      },
-      content: {
-        type: "string",
-        description: "The content to write to the file",
+  type: "function",
+  function: {
+    name: "Write",
+    description: "Write content to a file at the specified path",
+    parameters: {
+      type: "object",
+      required: ["filepath", "content"],
+      properties: {
+        filepath: {
+          type: "string",
+          description: "The path to the file to write",
+        },
+        content: {
+          type: "string",
+          description: "The content to write to the file",
+        },
       },
     },
   },
+  displayTitle: "Write",
   readonly: false,
+  group: "Built-In",
   isBuiltIn: true,
   preprocess: async (args) => {
     try {

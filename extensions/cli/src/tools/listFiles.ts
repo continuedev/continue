@@ -6,20 +6,24 @@ import { Tool } from "./types.js";
 
 // List files in a directory
 export const listFilesTool: Tool = {
-  name: "List",
-  displayName: "List",
-  description: "List files in a directory",
-  parameters: {
-    type: "object",
-    required: ["dirpath"],
-    properties: {
-      dirpath: {
-        type: "string",
-        description: "The path to the directory to list",
+  type: "function",
+  function: {
+    name: "List",
+    description: "List files in a directory",
+    parameters: {
+      type: "object",
+      required: ["dirpath"],
+      properties: {
+        dirpath: {
+          type: "string",
+          description: "The path to the directory to list",
+        },
       },
     },
   },
+  displayTitle: "List",
   readonly: true,
+  group: "Built-In",
   isBuiltIn: true,
   preprocess: async (args) => {
     // Resolve relative paths

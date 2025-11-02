@@ -7,20 +7,24 @@ import { Tool } from "./types.js";
 const execPromise = util.promisify(child_process.exec);
 
 export const viewDiffTool: Tool = {
-  name: "Diff",
-  displayName: "Diff",
-  description: "View all uncommitted changes in the git repository",
-  parameters: {
-    type: "object",
-    properties: {
-      path: {
-        type: "string",
-        description:
-          "The path to the git repository (defaults to current directory)",
+  type: "function",
+  function: {
+    name: "Diff",
+    description: "View all uncommitted changes in the git repository",
+    parameters: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description:
+            "The path to the git repository (defaults to current directory)",
+        },
       },
     },
   },
+  displayTitle: "Diff",
   readonly: true,
+  group: "Built-In",
   isBuiltIn: true,
   preprocess: async (args) => {
     return {
