@@ -14,13 +14,15 @@ const mockEvaluateToolCallPolicy = vi.fn();
 
 // Create a mock Bash tool
 const mockBashTool = {
-  name: "Bash",
-  displayName: "Bash",
-  description: "Execute bash commands",
-  parameters: {
-    type: "object" as const,
-    properties: {},
+  function: {
+    name: "Bash",
+    description: "Execute bash commands",
+    parameters: {
+      type: "object" as const,
+      properties: {},
+    },
   },
+  displayName: "Bash",
   isBuiltIn: true,
   evaluateToolCallPolicy: mockEvaluateToolCallPolicy,
   run: vi.fn(),
