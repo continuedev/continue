@@ -9,282 +9,76 @@ description: "Trigger agents from Slack by mentioning @Continue"
 
 ## Overview
 
-The Continue Slack integration enables you to:
+Continue brings AI-powered development agents to your Slack workspace. Mention @Continue in any channel with a task description, and it will:
+- Create a new development agent
+- Clone and work on your Repository
+- Generate code changes and create pull requests
+- Keep you updated on progress
 
-- **Start agents** by mentioning `@Continue` in any Slack channel
-- **Send follow-up messages** to existing agents by mentioning `@Continue` in the agent's thread
-- **Select repositories** interactively when starting an agent
-- **Configure default repositories** to streamline agent creation
-- **Use agent files** to customize behavior with specific prompts, tools, and rules
+The Slack bot is great for:
+- Quick bug fixes and feature implementations
+- Code reviews and refactoring
+- Documentation updates
+- Automated development tasks
 
 ## Setup
 
-### 1. Install the Slack App
+Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
+- [Personal Integrations Settings](https://hub.continue.dev/settings/integrations) or
+- Org Integrations Settings - `https://hub.continue.dev/organizations/{your-org-slug}/settings/integrations`
 
-<Steps>
-  <Step title="Navigate to Integrations">
-    Go to [hub.continue.dev/settings/integrations](https://hub.continue.dev/settings/integrations)
-  </Step>
-  
-  <Step title="Connect Slack">
-    Click the "Connect" button next to Slack and authorize the app in your workspace
-  </Step>
-  
-  <Step title="Complete OAuth">
-    After authorization, you'll be redirected back to Continue Hub with a success message
-  </Step>
-</Steps>
-
-### 2. Connect GitHub
-
-Before using the Slack integration, ensure you have the Continue GitHub App installed:
-
-1. Go to [hub.continue.dev/settings/integrations](https://hub.continue.dev/settings/integrations)
-2. Click "Connect" next to GitHub
-3. Grant access to the repositories you want Continue to work with
+1. First, connect Github by clicking "Connect" next to GitHub in the Integrations settings, and granting access to the repositories you want Continue to work with
+2. Click the "Connect" button next to Slack and authorize the app in your workspace
+3. Optionally, use the repository selector within the Slack tile to select a default repo for Continue Agents to work in
 
 ## Usage
 
 ### Starting an Agent
 
-There are three ways to start an agent from Slack:
+To kick off an agent, mention `@Continue` with a description of what needs to be done.
 
-#### 1. With a Prompt and Inline Repository
+Provide clear, detailed prompts to help Continue understand your requirements:
 
-Mention `@Continue` with your prompt and specify a repository:
+✅ **Good**: `@Continue Fix the authentication timeout issue in /api/v1/auth/login. Users are getting logged out after 5 minutes instead of 30.`
+
+❌ **Poor**: `@Continue fix auth`
+
+#### Agent context
+
+Continue captures the context of your Slack thread when creating an agent. If mentioned directly in a channel, it will respond in the thread and not have context other than the first message.
+
+The agent can also use a Slack MCP to dynamically send updates and retrieve more context if needed.
+
+#### Repo selection
+
+Continue determines which repo to work in with the following precedence:
+1. You can specify a repository to work in by adding `repo=repo-name` to your message. The repository name should match one of your GitHub repositories that the Continue GitHub App has access to.
 
 ```
 @Continue repo=my-app Fix the login validation bug
 ```
 
-The repository name should match one of your GitHub repositories that the Continue GitHub App has access to.
+2. A default repo, if set in the integration settings
 
-#### 2. With a Prompt (Uses Default Repo)
-
-If you've configured a default repository, simply mention `@Continue` with your prompt:
-
-```
-@Continue Add unit tests for the authentication service
-```
-
-Continue will use your default repository automatically.
-
-#### 3. Without a Prompt (Interactive Selection)
-
-Mention `@Continue` without any prompt to get an interactive repository picker:
-
-```
-@Continue
-```
-
-Continue will show a dropdown menu of your accessible repositories. Select one to create an agent.
+3. Otherwise, it will follow up with a dropdown to select a repository to work in.
 
 ### Sending Follow-up Messages
 
-Once an agent is created, you can send additional messages by mentioning `@Continue` in the agent's thread:
+Once an agent is created, you can send additional messages by mentioning `@Continue` in the same thread:
 
 ```
 @Continue Also add error handling for edge cases
 ```
 
-Continue will add your message to the existing agent session instead of creating a new one.
+Continue will forward your message to the existing agent session instead of creating a new one. For older threads, with no running agent, a new agent will be created.
 
-### Restarting Shut Down Agents
+## Monitoring Agent Progress
 
-If an agent's devbox has been shut down (due to inactivity or other reasons), Continue will automatically create a replacement agent when you try to send a message:
+Click the agent link in Slack to view the agent's progress in [Mission Control](https://hub.continue.dev/agents).
 
-```
-@Continue Continue working on this
-```
+You can also click the Slack icon in the agents page to return to the Slack message.
 
-You'll see a message like "The agent is back online! 🤖" with a link to the new agent session.
-
-## Configuration
-
-### Setting a Default Repository
-
-Configure a default repository to streamline agent creation:
-
-<Steps>
-  <Step title="Go to Integrations">
-    Navigate to [hub.continue.dev/settings/integrations](https://hub.continue.dev/settings/integrations)
-  </Step>
-  
-  <Step title="Find Your Slack Integration">
-    Locate your connected Slack workspace in the integrations list
-  </Step>
-  
-  <Step title="Set Default Repo">
-    Click "Edit" and enter the full GitHub URL of your default repository (e.g., `https://github.com/myorg/myapp`)
-  </Step>
-</Steps>
-
-### Using Custom Agent Files
-
-You can configure a default agent file that will be used for all Slack-triggered agents:
-
-<Steps>
-  <Step title="Create an Agent File">
-    Go to [hub.continue.dev/new?type=agentFile](https://hub.continue.dev/new?type=agentFile) and create your custom agent configuration
-  </Step>
-  
-  <Step title="Configure Slack Integration">
-    In your Slack integration settings, select your agent file from the dropdown
-  </Step>
-</Steps>
-
-Your agent file can include:
-- Custom prompts and instructions
-- Specific tools and MCP servers
-- Rules for code quality and style
-- Model selection
-
-## Organization-Level Integrations
-
-Organization admins can set up Slack integrations at the organization level:
-
-1. Navigate to your organization settings: `hub.continue.dev/organizations/{org-slug}/settings/integrations`
-2. Connect Slack for the organization
-3. Configure default settings that apply to all organization members
-
-Organization-level integrations:
-- Share the same default repository across the team
-- Use organization-scoped agent files
-- Access organization GitHub repositories
-- Provide consistent agent behavior across the team
-
-## Help Command
-
-Get help and see available commands by mentioning:
-
-```
-@Continue /help
-```
-
-This will show you usage examples and available options.
-
-## Thread Context
-
-Continue automatically captures the context of your Slack thread when creating an agent. This includes:
-
-- Previous messages in the thread
-- Any code snippets shared
-- Links and attachments
-- The full conversation history
-
-This context is passed to the agent, allowing it to understand the full scope of your request.
-
-## Best Practices
-
-### 1. Be Specific in Your Prompts
-
-Provide clear, detailed prompts to help Continue understand your requirements:
-
-✅ **Good**: `@Continue repo=api-server Fix the authentication timeout issue in /api/v1/auth/login. Users are getting logged out after 5 minutes instead of 30.`
-
-❌ **Poor**: `@Continue fix auth`
-
-### 2. Use Thread Context
-
-Start a conversation in a thread to provide context before requesting work:
-
-```
-User: I'm seeing errors in the login flow when users have special characters in their passwords
-User: @Continue Investigate and fix this issue
-```
-
-### 3. Configure Default Repositories
-
-For projects you work on frequently, set a default repository to avoid specifying `repo=` every time.
-
-### 4. Use Agent Files for Consistency
-
-Create agent files with custom rules and prompts for recurring types of work. For example:
-- A "code review" agent file with specific review guidelines
-- A "documentation" agent file that follows your doc style guide
-- A "bug fix" agent file with debugging tools and error handling patterns
-
-### 5. Monitor Agent Progress
-
-Click the agent link in Slack to view the agent's progress in Mission Control:
-
-```
-🤖 Agent created (view agent)
-```
-
-You can see:
-- Current status (Planning, Working, Done)
-- Files being modified
-- Pull request details
-- Any errors or blockers
-
-## Troubleshooting
-
-### "No accessible repositories found"
-
-**Problem**: You see this error when trying to start an agent.
-
-**Solution**: Install the Continue GitHub App and grant it access to your repositories:
-1. Go to [hub.continue.dev/settings/integrations](https://hub.continue.dev/settings/integrations)
-2. Connect GitHub and authorize repository access
-
-### "User not found"
-
-**Problem**: Continue can't match your Slack user to a Continue Hub account.
-
-**Solution**: Ensure your Slack email matches your Continue Hub account email. If you're using a different email:
-1. Go to [hub.continue.dev/settings/profile](https://hub.continue.dev/settings/profile)
-2. Update your email to match your Slack email
-3. Or update your Slack email to match your Continue email
-
-### Repository Not Found
-
-**Problem**: When using `repo=my-repo`, Continue says the repository wasn't found.
-
-**Solution**: 
-- Verify the repository name exactly matches your GitHub repository name (case-sensitive)
-- Ensure the Continue GitHub App has access to that specific repository
-- Try using the interactive repository picker instead: just mention `@Continue` without specifying a repo
-
-### Agent Link Returns "Not Found"
-
-**Problem**: Clicking the agent link shows "Agent Not Available".
-
-**Solution**: 
-- The agent's devbox may have been shut down. Try mentioning `@Continue` in the same thread to create a replacement agent
-- Check Mission Control at [hub.continue.dev/agents](https://hub.continue.dev/agents) to see all your agent sessions
-
-### Messages Not Being Delivered
-
-**Problem**: Continue isn't responding to your mentions.
-
-**Solution**:
-1. Verify you're mentioning `@Continue` (not just typing "Continue")
-2. Check that the Slack integration is still connected in your settings
-3. Ensure you're in a channel where the Continue app has been invited
-4. Try disconnecting and reconnecting the Slack integration
-
-## Security & Privacy
-
-### OAuth Scopes
-
-The Continue Slack app requests the following permissions:
-
-- `app_mentions:read` - To detect when you mention @Continue
-- `chat:write` - To send messages and responses
-- `users:read` - To look up user information
-- `users:read.email` - To match Slack users to Continue accounts
-- `channels:read` - To access channel information
-- `channels:history` - To read thread context
-
-### Data Handling
-
-- **Thread content**: Captured and stored as part of agent metadata to provide context
-- **Messages**: Processed in real-time; not permanently stored by the Slack integration
-- **Tokens**: Encrypted and stored securely in the Continue database
-- **Repository access**: Controlled by GitHub App permissions, separate from Slack
-
-### Disconnecting
+## Disconnecting
 
 To remove the Slack integration:
 
@@ -292,39 +86,7 @@ To remove the Slack integration:
 2. Find your Slack integration
 3. Click "Disconnect"
 
-This will:
-- Revoke the OAuth token
-- Stop Continue from accessing your Slack workspace
-- Remove stored integration data
-
-## Advanced Features
-
-### Source Tracking
-
-Agents started from Slack are tracked with a special source identifier format:
-
-```
-slack:{org|user}:{slug}:{channelId}:{threadTs}:{teamId}
-```
-
-This allows Continue to:
-- Link agents back to their originating Slack thread
-- Group agents by Slack team or channel
-- Provide analytics on Slack-triggered agents
-
-### Webhook Processing
-
-The Slack integration uses Slack's Events API with the following optimizations:
-
-- **Retry handling**: Duplicate events from Slack retries are ignored
-- **Processing timeouts**: Webhook responses are sent within 3 seconds to comply with Slack's requirements
-- **Background processing**: Agent creation happens asynchronously after acknowledging the webhook
-
-### Thread Permalinks
-
-Continue generates structured prompts that include a permanent link to the Slack thread, allowing the agent to reference the full conversation context if needed.
-
-## Feedback & Support
+## Support
 
 The Slack integration is in active development. We'd love to hear your feedback:
 
