@@ -147,7 +147,9 @@ export function checkToolPermission(
   }
 
   // Check if tool has dynamic policy evaluation
-  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolCall.name);
+  const tool = ALL_BUILT_IN_TOOLS.find(
+    (t) => t.function.name === toolCall.name,
+  );
   if (tool?.evaluateToolCallPolicy) {
     // Convert CLI permission to core policy
     const basePolicy = permissionPolicyToToolPolicy(basePermission);

@@ -12,12 +12,12 @@ describe("writeChecklistTool", () => {
   });
 
   it("should have correct tool properties", () => {
-    expect(writeChecklistTool.name).toBe("Checklist");
-    expect(writeChecklistTool.displayName).toBe("Checklist");
+    expect(writeChecklistTool.function.name).toBe("Checklist");
+    expect(writeChecklistTool.displayTitle).toBe("Checklist");
     expect(writeChecklistTool.readonly).toBe(false);
     expect(writeChecklistTool.isBuiltIn).toBe(true);
-    expect(writeChecklistTool.parameters.required?.includes("checklist")).toBe(
-      true,
-    );
+    expect(
+      writeChecklistTool.function.parameters?.required?.includes("checklist"),
+    ).toBe(true);
   });
 });
