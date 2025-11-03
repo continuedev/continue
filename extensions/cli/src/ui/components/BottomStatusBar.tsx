@@ -64,7 +64,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
           </React.Fragment>
         )}
         <ModeIndicator />
-        {contextPercentage !== undefined && contextPercentage > 75 && (
+        {contextPercentage !== undefined && (
           <React.Fragment>
             <Text key="context-separator" color="dim">
               {" "}
