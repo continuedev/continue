@@ -118,6 +118,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt5,
+      models.gpt5Codex,
       models.gpt4o,
       models.gpt4omini,
       models.gpt4turbo,

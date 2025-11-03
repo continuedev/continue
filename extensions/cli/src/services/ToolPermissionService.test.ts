@@ -30,7 +30,6 @@ describe("ToolPermissionService", () => {
         currentMode: "normal",
         isHeadless: false,
         modePolicyCount: 0,
-        agentFilePolicyCount: 0,
       });
     });
 

@@ -115,9 +115,11 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       <div className={`relative flex flex-col px-2`}>
         {props.isMainInput && <Lump />}
         <GradientBorder
-          loading={isStreaming && props.isLastUserInput ? 1 : 0}
+          loading={isStreaming && (props.isLastUserInput || isInEdit) ? 1 : 0}
           borderColor={
-            isStreaming && props.isLastUserInput ? undefined : vscBackground
+            isStreaming && (props.isLastUserInput || isInEdit)
+              ? undefined
+              : vscBackground
           }
           borderRadius={defaultBorderRadius}
         >

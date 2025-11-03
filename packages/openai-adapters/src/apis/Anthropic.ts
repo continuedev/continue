@@ -366,9 +366,13 @@ export class AnthropicApi implements BaseLlmApi {
           const startEvent = rawEvent as RawMessageStartEvent;
           usage.prompt_tokens = startEvent.message.usage?.input_tokens ?? 0;
           usage.prompt_tokens_details = {
+            cache_write_tokens:
+              startEvent.message.usage?.cache_creation_input_tokens ?? 0,
+            cache_read_tokens:
+              startEvent.message.usage?.cache_read_input_tokens ?? 0,
             cached_tokens:
               startEvent.message.usage?.cache_read_input_tokens ?? 0,
-          };
+          } as any;
           break;
         case "message_delta":
           const deltaEvent = rawEvent as RawMessageDeltaEvent;
