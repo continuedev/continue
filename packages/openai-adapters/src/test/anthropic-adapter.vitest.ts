@@ -35,7 +35,7 @@ describe("Anthropic Adapter Tests", () => {
       methodToTest: "chatCompletionNonStream",
       params: [
         {
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           messages: [{ role: "user", content: "hello" }],
         },
         new AbortController().signal,
@@ -62,7 +62,7 @@ describe("Anthropic Adapter Tests", () => {
             },
           ],
           system: undefined,
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           max_tokens: 32000,
           stream: undefined,
         },
@@ -77,7 +77,7 @@ describe("Anthropic Adapter Tests", () => {
             text: "Hello! How can I help you today?",
           },
         ],
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-4-5",
         stop_reason: "end_turn",
         stop_sequence: null,
         usage: {
@@ -98,7 +98,7 @@ describe("Anthropic Adapter Tests", () => {
       methodToTest: "chatCompletionStream",
       params: [
         {
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
         },
@@ -126,7 +126,7 @@ describe("Anthropic Adapter Tests", () => {
             },
           ],
           system: undefined,
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           max_tokens: 32000,
           stream: true,
         },
@@ -160,7 +160,7 @@ describe("Anthropic Adapter Tests", () => {
       methodToTest: "chatCompletionStream",
       params: [
         {
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           messages: [
             { role: "system", content: "You are a helpful assistant." },
             { role: "user", content: "hello" },
@@ -197,7 +197,7 @@ describe("Anthropic Adapter Tests", () => {
               cache_control: { type: "ephemeral" },
             },
           ],
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5",
           max_tokens: 32000,
           stream: true,
         },

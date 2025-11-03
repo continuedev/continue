@@ -28,7 +28,7 @@ body:
         - **OS**: macOS
         - **Continue version**: v0.9.4
         - **IDE version**:  VSCode 1.85.1
-        - Model: Claude Sonnet 3.5
+        - Model: Claude Sonnet 4.5
         - Agent configuration
       value: |
         - OS:
