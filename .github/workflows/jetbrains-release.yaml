@@ -294,44 +294,44 @@ jobs:
 
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./extensions/intellij/build/distributions/content/*/*
 
       # Upload binaries as artifacts
       - name: Upload artifact (darwin-arm64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-darwin-arm64
           path: ./binary/bin/darwin-arm64/
 
       - name: Upload artifact (darwin-x64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-darwin-x64
           path: ./binary/bin/darwin-x64/
 
       - name: Upload artifact (win32-x64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-win32-x64
           path: ./binary/bin/win32-x64/
 
       - name: Upload artifact (win32-arm64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-win32-arm64
           path: ./binary/bin/win32-arm64/
 
       - name: Upload artifact (linux-arm64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-linux-arm64
           path: ./binary/bin/linux-arm64/
 
       - name: Upload artifact (linux-x64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: continue-binary-linux-x64
           path: ./binary/bin/linux-x64/
@@ -420,7 +420,7 @@ jobs:
 
       - name: Upload logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
           path: ~/.continue/logs/core.log
@@ -455,7 +455,7 @@ jobs:
       # Collect Tests Result of failed tests
       - name: Collect Tests Result
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: tests-result
           path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
@@ -540,7 +540,7 @@ jobs:
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/build/reports/pluginVerifier
