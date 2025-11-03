@@ -1567,6 +1567,14 @@
       "created_at": "2025-10-30T23:22:29Z",
       "repoId": 644686905,
       "pullRequestNo": 8531
+    },
+    {
+      "name": "snyk-bot",
+      "id": 1234567,
+      "comment_id": 3482559396,
+      "created_at": "2025-10-30T23:22:29Z",
+      "repoId": 644686905,
+      "pullRequestNo": 8505
     }
   ]
 }
