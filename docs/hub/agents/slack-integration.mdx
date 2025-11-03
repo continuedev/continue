@@ -1,6 +1,6 @@
 ---
 title: "Slack Integration"
-description: "Trigger agents from Slack by mentioning @Continue"
+description: "Bring Continue’s AI agents into Slack. Mention @Continue in any channel or thread to trigger development workflows, generate PRs, or update docs all with the context of your conversation."
 ---
 
 <Info>
@@ -80,7 +80,7 @@ Use this for quick standalone requests.
 
 <Accordion title="Repository Selection">
 
-  Continue determines which repo to work in with the following precedence:
+  Continue determines which repository to work in with the following precedence:
 
   1. **Specify in message**: Add `repo=repo-name` to your message:
 
@@ -107,7 +107,7 @@ Once an agent is created, you can send additional messages by mentioning `@Conti
 @Continue Also add error handling for edge cases
 ```
 
-Continue will forward your message to the existing agent session instead of creating a new one. For older threads, with no running agent, a new agent will be created.
+Continue will forward your message to the existing agent session instead of creating a new one. For older threads with no running agent, a new agent will be created.
 
 ## Monitoring Agent Progress
 
