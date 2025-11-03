@@ -24,4 +24,4 @@ jobs:
           path-to-signatures: 'signatures/version1/cla.json'
           path-to-document: 'https://github.com/continuedev/continue/blob/main/docs/docs/CLA.md'
           branch: cla-signatures
-          allowlist: dependabot[bot]
+          allowlist: dependabot[bot],snyk-bot
