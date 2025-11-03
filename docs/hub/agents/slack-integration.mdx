@@ -4,32 +4,58 @@ description: "Trigger agents from Slack by mentioning @Continue"
 ---
 
 <Info>
-  The Slack integration allows you to start and manage Continue agents directly from your Slack workspace. This is currently in beta.
+
+  The Slack integration allows you to start and manage Continue agents directly from your Slack workspace. This feature is currently in beta.
+
 </Info>
 
 ## Overview
 
 Continue brings AI-powered development agents to your Slack workspace. Mention @Continue in any channel with a task description, and it will:
+
 - Create a new development agent
 - Clone and work on your Repository
 - Generate code changes and create pull requests
 - Keep you updated on progress
 
-The Slack bot is great for:
-- Quick bug fixes and feature implementations
-- Code reviews and refactoring
-- Documentation updates
-- Automated development tasks
+<Card title="What You Can Do" icon="slack">
+
+  The Slack bot is great for:
+  - Quick bug fixes and feature implementations
+  - Code reviews and refactoring
+  - Documentation updates
+  - Automated development tasks
+
+</Card>
 
 ## Setup
 
 Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
+
 - [Personal Integrations Settings](https://hub.continue.dev/settings/integrations) or
 - Org Integrations Settings - `https://hub.continue.dev/organizations/{your-org-slug}/settings/integrations`
 
-1. First, connect Github by clicking "Connect" next to GitHub in the Integrations settings, and granting access to the repositories you want Continue to work with
-2. Click the "Connect" button next to Slack and authorize the app in your workspace
-3. Optionally, use the repository selector within the Slack tile to select a default repo for Continue Agents to work in
+<Steps>
+
+  <Step title="Connect GitHub">
+
+    Click "Connect" next to GitHub in the Integrations settings, and grant access to the repositories you want Continue to work with.
+
+  </Step>
+
+  <Step title="Authorize Slack">
+
+    Click the "Connect" button next to Slack and authorize the app in your workspace.
+
+  </Step>
+
+  <Step title="Set Default Repository (Optional)">
+
+    Use the repository selector within the Slack tile to select a default repo for Continue Agents to work in.
+
+  </Step>
+
+</Steps>
 
 ## Usage
 
@@ -37,30 +63,39 @@ Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
 
 To kick off an agent, mention `@Continue` with a description of what needs to be done.
 
-Provide clear, detailed prompts to help Continue understand your requirements:
+<Tip>
 
-✅ **Good**: `@Continue Fix the authentication timeout issue in /api/v1/auth/login. Users are getting logged out after 5 minutes instead of 30.`
+  Provide clear, detailed prompts to help Continue understand your requirements:
 
-❌ **Poor**: `@Continue fix auth`
+  ✅ **Good**: `@Continue Fix the authentication timeout issue in /api/v1/auth/login. Users are getting logged out after 5 minutes instead of 30.`
 
-#### Agent context
+  ❌ **Poor**: `@Continue fix auth`
 
-Continue captures the context of your Slack thread when creating an agent. If mentioned directly in a channel, it will respond in the thread and not have context other than the first message.
+</Tip>
 
-The agent can also use a Slack MCP to dynamically send updates and retrieve more context if needed.
+<Accordion title="Agent Context">
 
-#### Repo selection
+  Continue captures the context of your Slack thread when creating an agent. If mentioned directly in a channel, it will respond in the thread and not have context other than the first message.
 
-Continue determines which repo to work in with the following precedence:
-1. You can specify a repository to work in by adding `repo=repo-name` to your message. The repository name should match one of your GitHub repositories that the Continue GitHub App has access to.
+  The agent can also use a Slack MCP to dynamically send updates and retrieve more context if needed.
 
-```
-@Continue repo=my-app Fix the login validation bug
-```
+</Accordion>
 
-2. A default repo, if set in the integration settings
+<Accordion title="Repository Selection">
 
-3. Otherwise, it will follow up with a dropdown to select a repository to work in.
+  Continue determines which repo to work in with the following precedence:
+
+  1. **Specify in message**: Add `repo=repo-name` to your message. The repository name should match one of your GitHub repositories that the Continue GitHub App has access to.
+
+  ```
+  @Continue repo=my-app Fix the login validation bug
+  ```
+
+  2. **Default repo**: Uses the default repo if set in the integration settings
+
+  3. **Interactive selection**: Continue will follow up with a dropdown to select a repository
+
+</Accordion>
 
 ### Sending Follow-up Messages
 
@@ -88,14 +123,40 @@ To remove the Slack integration:
 
 ## Support
 
-The Slack integration is in active development. We'd love to hear your feedback:
+<Warning>
 
-- Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
-- Feature requests: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
+  The Slack integration is in active development. We'd love to hear your feedback:
+  - Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
+  - Feature requests: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
+
+</Warning>
 
 ## Related Resources
 
-- [Agents Introduction](./intro) - Learn about Continue agents
-- [CLI Guide](../../guides/cli) - Use Continue from the command line
-- [Continuous AI](../../guides/continuous-ai) - Best practices for background agents
-- [GitHub PR Review Bot](../../guides/github-pr-review-bot) - Automate code reviews
+<CardGroup cols={2}>
+
+  <Card title="Agents Introduction" icon="robot" href="./intro">
+
+    Learn about Continue agents
+
+  </Card>
+
+  <Card title="CLI Guide" icon="terminal" href="../../guides/cli">
+
+    Use Continue from the command line
+
+  </Card>
+
+  <Card title="Continuous AI" icon="infinity" href="../../guides/continuous-ai">
+
+    Best practices for background agents
+
+  </Card>
+
+  <Card title="GitHub PR Review Bot" icon="github" href="../../guides/github-pr-review-bot">
+
+    Automate code reviews
+
+  </Card>
+
+</CardGroup>
