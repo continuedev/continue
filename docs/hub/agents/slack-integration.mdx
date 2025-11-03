@@ -5,7 +5,7 @@ description: "Trigger agents from Slack by mentioning @Continue"
 
 <Info>
 
-  Continue's Slack Agent allows you to start and manage Continue agents directly from your Slack workspace. When you summon @Continue inside an ongoing Slack thread, it automatically uses the entire conversation as context, so your agent starts with full situational awareness. This feature is currently in beta.
+  Continue's Slack integration allows you to start and manage Continue agents directly from your Slack workspace. All you need is a Continue account that's connected to GitHub. This feature is currently in beta.
 
 </Info>
 
@@ -27,6 +27,7 @@ Mention @Continue in any channel with a task description, and it will:
 - Automated development tasks
 
 </Card>
+
 ## Setup
 
 Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
@@ -62,6 +63,12 @@ Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
 
 To kick off an agent, mention `@Continue` with a description of what needs to be done.
 
+<Info>
+
+  **Thread Context**: When you mention @Continue in an ongoing Slack thread, it automatically uses the entire conversation as context, giving your agent full situational awareness.
+
+</Info>
+
 <Tip>
 
   Provide clear, detailed prompts to help Continue understand your requirements:
@@ -72,7 +79,7 @@ To kick off an agent, mention `@Continue` with a description of what needs to be
 
 </Tip>
 
-<Accordion title="Agent Context">
+<Accordion title="How Agent Context Works">
 
   Continue captures the context of your Slack thread when creating an agent. If mentioned directly in a channel, it will respond in the thread and not have context other than the first message.
 
