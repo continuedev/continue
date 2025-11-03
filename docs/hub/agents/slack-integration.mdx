@@ -59,15 +59,14 @@ Continue's Slack Bot can be installed to a Slack workspace via the Hub, from:
 
 ## Usage
 
-### Starting an Agent
+To kick off an agent, mention `@Continue` with a short task description.
 
-To kick off an agent, mention `@Continue` with a description of what needs to be done.
+### Thread Context
 
-<Info>
+When you mention `@Continue` in a **Slack thread**, Continue automatically uses the entire conversation as context. This means your agent starts with full situational awareness.
 
-  **Thread Context**: When you mention @Continue in an ongoing Slack thread, it automatically uses the entire conversation as context, giving your agent full situational awareness.
-
-</Info>
+If you start a **new message** (not a reply), Continue only sees that single message for context.  
+Use this for quick standalone requests.
 
 <Tip>
 
@@ -79,27 +78,24 @@ To kick off an agent, mention `@Continue` with a description of what needs to be
 
 </Tip>
 
-<Accordion title="How Agent Context Works">
-
-  Continue captures the context of your Slack thread when creating an agent. If mentioned directly in a channel, it will respond in the thread and not have context other than the first message.
-
-  The agent can also use a Slack MCP to dynamically send updates and retrieve more context if needed.
-
-</Accordion>
-
 <Accordion title="Repository Selection">
 
   Continue determines which repo to work in with the following precedence:
 
-  1. **Specify in message**: Add `repo=repo-name` to your message. The repository name should match one of your GitHub repositories that the Continue GitHub App has access to.
+  1. **Specify in message**: Add `repo=repo-name` to your message:
 
   ```
   @Continue repo=my-app Fix the login validation bug
   ```
 
-  2. **Default repo**: Uses the default repo if set in the integration settings
+  <Tip>
+  Be sure the repository name matches a GitHub repository that the Continue GitHub App has access to.
+  </Tip>
+    
 
-  3. **Interactive selection**: Continue will follow up with a dropdown to select a repository
+  2. **Default repo**: Uses the default repository if set in the integration settings
+
+  3. **Interactive selection**: If no repository is found, Continue will follow up with a dropdown to select a repository
 
 </Accordion>
 
