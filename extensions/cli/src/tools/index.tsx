@@ -228,7 +228,7 @@ export async function executeToolCall(
       errorReason,
     });
 
-    return `Error executing tool "${toolCall.name}": ${errorMessage}`;
+    throw error;
   }
 }
 

@@ -29,7 +29,7 @@
               "hub/introduction",
               {
                 "group": "Configs",
-                "icon": "robot",
+                "icon": "book",
                 "pages": [
                   "hub/configs/intro",
                   "hub/configs/use-a-config",
@@ -260,6 +260,7 @@
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
               "guides/github-mcp-continue-cookbook",
+              "guides/atlassian-mcp-continue-cookbook",
               "guides/sanity-mcp-continue-cookbook",
               "guides/sentry-mcp-error-monitoring",
               "guides/snyk-mcp-continue-cookbook",
@@ -342,7 +343,8 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ"
+      "discord": "https://discord.gg/vapESyrFmJ",
+      "youtube": "https://www.youtube.com/@continuedev"
     }
   },
   "contextual": {
