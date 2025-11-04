@@ -1,14 +1,14 @@
-import { RuleWithSource } from "../..";
+import { RuleMetadata } from "../..";
 import { getLastNPathParts } from "../../util/uri";
 
-export function getRuleDisplayName(rule: RuleWithSource): string {
+export function getRuleDisplayName(rule: RuleMetadata): string {
   if (rule.name) {
     return rule.name;
   }
   return getRuleSourceDisplayName(rule);
 }
 
-export function getRuleSourceDisplayName(rule: RuleWithSource): string {
+export function getRuleSourceDisplayName(rule: RuleMetadata): string {
   switch (rule.source) {
     case ".continuerules":
       return "Project rules";
