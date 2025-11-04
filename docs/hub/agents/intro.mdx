@@ -1,31 +1,61 @@
 ---
-title: "Agents Introduction"
-description: "Run and manage background agents in Mission Control"
-sidebarTitle: "Agents"
+title: "Getting Started with Agents"
+description: "Quick start guide for running AI workflows in Mission Control"
+sidebarTitle: "Getting Started"
 ---
+
+<Card title="🚀 Quick Start with Mission Control" icon="rocket">
+  Mission Control is your web interface for running and managing AI agents. Get started in minutes with pre-built workflows for security scanning, GitHub management, analytics insights, and more.
+</Card>
 
 <Info>
   Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
 </Info>
 
-Mission Control is a way to run and manage background agents in Continue. You can use it to kick off:
-- Addressing small nitpicks and bugs
-- Building boilerplate-heavy features
-- Investigating an issue to kickstart your work
-- [Automated security scanning](../../guides/snyk-mcp-continue-cookbook)
-- Running repeatable tasks with your own rules, prompts, and MCP servers
-- Much more!
+Use Mission Control to kick off agents for:
+- **Bug fixes & code quality** - Address nitpicks and technical debt
+- **Feature development** - Build boilerplate-heavy features  
+- **Security & compliance** - [Automated vulnerability scanning](../../guides/snyk-mcp-continue-cookbook)
+- **Investigation & analysis** - Research issues to kickstart your work
+- **Custom workflows** - Run repeatable tasks with your own rules and prompts
 
-## Quickstart
+## Quick Start
 
-To kick off your first agent
+<Steps>
+  <Step title="Access Mission Control">
+    Go to [hub.continue.dev/agents](https://hub.continue.dev/agents) and connect with your GitHub account.
+    
+    ![Mission Control Setup](/images/hub/workflows/images/workflows-setup.png)
+  </Step>
+  
+  <Step title="Choose an Agent">
+    Select from pre-configured agents or create your own:
+    
+    <CardGroup cols={2}>
+      <Card title="Security Scanner" icon="shield-check">
+        `continuedev/snyk-continuous-ai-agent`
+        Finds vulnerabilities and creates fix PRs
+      </Card>
+      
+      <Card title="GitHub Manager" icon="github">
+        `continuedev/github-project-manager-agent`  
+        Triages issues and manages workflows
+      </Card>
+    </CardGroup>
+  </Step>
+  
+  <Step title="Run Your First Agent">
+    Enter a prompt and watch your agent work:
+    
+    ```
+    "Fix the TypeError in api/users.ts and open a PR with tests"
+    ```
+  </Step>
+</Steps>
 
-1. Go to [hub.continue.dev/agents](https://hub.continue.dev/agents)
-
-![Mission Control Setup](/images/hub/workflows/images/workflows-setup.png)
-
-2. Connect with your GitHub account
-3. Enter the prompt for your agent
+<Info>
+  **New to agents?** Check out our [pre-configured agents](/hub/agents/overview#pre-configured-agents) to test out a workflow immediately.
+</Info>
 
 ## Example Workflow Tasks
 
@@ -36,7 +66,7 @@ Here are some example tasks you can try with your agents:
     
     - "Fix the TypeError in api/users.ts where the user object might be undefined"
     - "Add null checks to all database query results in the services/ directory"
-    - "Fix all ESLint warnings in the components folder"
+    - "Fix all ESLint warnings in the components folder and open a PR"
     - "Update deprecated React lifecycle methods to hooks in legacy components"
     
   </Accordion>
@@ -52,10 +82,10 @@ Here are some example tasks you can try with your agents:
 
   <Accordion title="Security & Compliance">
     
+    - "Run a complete security scan and create GitHub issues for critical vulnerabilities"
     - "Scan the codebase for hardcoded API keys and move them to environment variables"
     - "Add input sanitization to all user-facing form fields"
-    - "Update all npm packages with known security vulnerabilities"
-    - "Implement rate limiting on the /api/login endpoint"
+    - "Update npm packages with security vulnerabilities and test compatibility"
     
   </Accordion>
 
@@ -87,12 +117,74 @@ Here are some example tasks you can try with your agents:
   </Accordion>
 </AccordionGroup>
 
-## How to use background agents
+## Ways to Run Agents
 
-The practice of using background agents, which we call Continuous AI, requires practice and forethought to set up the right guiderails and habits to fit your development workflow, much like learning to work with a larger engineering team. We are constantly sharing our learnings on the [Continuous AI Blog](https://blog.continue.dev), but these few high-level tips are a great way to quickly become successful with agents:
+Choose the method that fits your workflow:
 
-- Practice first with the [Continue CLI](../../guides/cli) in "TUI mode". The Continue CLI is used to run agents, so you can easily test your prompts locally.
-- Identify and begin with tasks that you are confident can be accomplished by Continue. For example, ask Continue to fix a small bug where you already know the solution is simple.
-- Once you have merged a PR created by Continue, be increasingly ambitious with your tasks. By being willing to start tasks that might not succeed on the first try, you will learn about prompting best practices and limitations of current language models.
-- Use thorough prompts. Workflows can run for a long time to complete their task, so it is worthwhile to invest in sharing all of the important details.
-- Discuss the use of agents with your team. Truly embracing Continuous AI likely means acknowledging that a higher volume of PRs will be created and adjusting your code review habits.
+<Tabs>
+  <Tab title="🌐 Mission Control">
+    **Web interface for interactive use**
+    
+    Perfect for:
+    - Exploring agent capabilities
+    - Reviewing outputs before action
+    - Team collaboration
+    - One-time tasks
+    
+    Access at [hub.continue.dev/agents](https://hub.continue.dev/agents)
+  </Tab>
+  
+  <Tab title="💻 CLI (TUI Mode)">
+    **Terminal interface for development**
+    
+    ```bash
+    cn --agent continuedev/github-project-manager-agent
+    ```
+    
+    Perfect for:
+    - Local development workflows
+    - Testing agent behavior
+    - Interactive debugging
+    - Quick iterations
+  </Tab>
+  
+  <Tab title="🤖 Headless Mode">
+    **Automated execution for CI/CD**
+    
+    ```bash
+    cn --agent continuedev/snyk-continuous-ai-agent -p "Run security scan" --auto
+    ```
+    
+    Perfect for:
+    - Scheduled workflows
+    - CI/CD integration
+    - Webhook triggers
+    - Background processing
+  </Tab>
+</Tabs>
+
+## Best Practices for Success
+
+The practice of using agents (Continuous AI) requires thoughtful setup of guardrails and habits:
+
+<CardGroup cols={2}>
+  <Card title="Start Small" icon="seedling">
+    Begin with tasks you're confident Continue can handle, like fixing known bugs with simple solutions.
+  </Card>
+  
+  <Card title="Practice Locally" icon="terminal">
+    Test with [Continue CLI](../../guides/cli) in TUI mode before deploying automation.
+  </Card>
+  
+  <Card title="Be Thorough" icon="clipboard-list">
+    Agents can run for extended periods - invest time in detailed prompts with all important context.
+  </Card>
+  
+  <Card title="Team Alignment" icon="users">
+    Discuss agent usage and adjust code review habits for higher PR volumes.
+  </Card>
+</CardGroup>
+
+<Info>
+  **Learn More**: Explore advanced patterns and case studies on the [Continuous AI Blog](https://blog.continue.dev).
+</Info>
