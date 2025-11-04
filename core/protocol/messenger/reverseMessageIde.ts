@@ -81,10 +81,6 @@ export class ReverseMessageIde {
       return this.ide.readRangeInFile(data.filepath, data.range);
     });
 
-    this.on("isTelemetryEnabled", () => {
-      return this.ide.isTelemetryEnabled();
-    });
-
     this.on("getUniqueId", () => {
       return this.ide.getUniqueId();
     });

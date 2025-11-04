@@ -807,8 +807,6 @@ export interface IDE {
 
   getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
 
-  isTelemetryEnabled(): Promise<boolean>;
-
   isWorkspaceRemote(): Promise<boolean>;
 
   getUniqueId(): Promise<string>;

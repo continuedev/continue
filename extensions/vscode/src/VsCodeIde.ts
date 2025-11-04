@@ -241,15 +241,6 @@ class VsCodeIde implements IDE {
     return this.ideUtils.getRepo(vscode.Uri.parse(dir));
   }
 
-  async isTelemetryEnabled(): Promise<boolean> {
-    const globalEnabled = vscode.env.isTelemetryEnabled;
-    const continueEnabled: boolean =
-      (await vscode.workspace
-        .getConfiguration(EXTENSION_NAME)
-        .get("telemetryEnabled")) ?? true;
-    return globalEnabled && continueEnabled;
-  }
-
   isWorkspaceRemote(): Promise<boolean> {
     return Promise.resolve(vscode.env.remoteName !== undefined);
   }

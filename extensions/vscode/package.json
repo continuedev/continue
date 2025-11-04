@@ -86,11 +86,6 @@
     "configuration": {
       "title": "Continue",
       "properties": {
-        "continue.telemetryEnabled": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
-        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
