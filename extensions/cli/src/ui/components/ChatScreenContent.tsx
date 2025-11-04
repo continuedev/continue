@@ -26,6 +26,7 @@ interface ChatScreenContentProps {
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
   onShowEditSelector?: () => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
@@ -43,6 +44,7 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
   isRemoteMode,
   onImageInClipboardChange,
   onShowEditSelector,
+  onShowStatusMessage,
 }) => {
   if (activePermissionRequest) {
     return (
@@ -71,6 +73,7 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
       isRemoteMode={isRemoteMode}
       onImageInClipboardChange={onImageInClipboardChange}
       onShowEditSelector={onShowEditSelector}
+      onShowStatusMessage={onShowStatusMessage}
     />
   );
 };

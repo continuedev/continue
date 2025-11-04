@@ -424,6 +424,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           chatHistory={chatHistory}
           handleEditMessage={handleEditMessage}
           onShowEditSelector={() => navigateTo("edit")}
+          onShowStatusMessage={handleShowStatusMessage}
         />
 
         {/* Resource debug bar - only in verbose mode */}

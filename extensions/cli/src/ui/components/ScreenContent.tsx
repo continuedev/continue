@@ -50,6 +50,7 @@ interface ScreenContentProps {
   chatHistory?: ChatHistoryItem[];
   handleEditMessage?: (messageIndex: number, newContent: string) => void;
   onShowEditSelector?: () => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 function hideScreenContent(state?: UpdateServiceState) {
@@ -86,6 +87,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   chatHistory = [],
   handleEditMessage,
   onShowEditSelector,
+  onShowStatusMessage,
 }) => {
   if (hideScreenContent(services.update)) {
     return null;
@@ -205,6 +207,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         isRemoteMode={isRemoteMode}
         onImageInClipboardChange={onImageInClipboardChange}
         onShowEditSelector={onShowEditSelector}
+        onShowStatusMessage={onShowStatusMessage}
       />
     );
   }

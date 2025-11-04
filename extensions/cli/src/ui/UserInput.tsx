@@ -110,6 +110,7 @@ interface UserInputProps {
   isRemoteMode?: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
   onShowEditSelector?: () => void;
+  onShowStatusMessage?: (message: string) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -127,6 +128,7 @@ const UserInput: React.FC<UserInputProps> = ({
   isRemoteMode = false,
   onImageInClipboardChange,
   onShowEditSelector,
+  onShowStatusMessage,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -554,14 +556,21 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        inputHistory.addEntry(submittedText);
-
         // We don't queue, we just send in remote mode because the server handles queueing
         if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
+          // Block queuing of slash commands while streaming/compacting
+          const isSlashCommand = submittedText.startsWith("/");
+          if (isSlashCommand) {
+            onShowStatusMessage?.("Slash commands cannot be queued");
+            return true; // keep input so user can resubmit later
+          }
+
           // Process message later when LLM has responded or compaction is complete
+          inputHistory.addEntry(submittedText);
           void messageQueue.enqueueMessage(submittedText, imageMap);
         } else {
           // Submit with images
+          inputHistory.addEntry(submittedText);
           onSubmit(submittedText, imageMap);
         }
 
