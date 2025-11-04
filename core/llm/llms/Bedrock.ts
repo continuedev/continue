@@ -21,6 +21,7 @@ import type { CompletionOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
@@ -545,8 +546,9 @@ class Bedrock extends BaseLLM {
         if (part.type === "text") {
           blocks.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
-          try {
-            const [mimeType, base64Data] = part.imageUrl.url.split(",");
+          const parsed = parseDataUrl(part.imageUrl.url);
+          if (parsed) {
+            const { mimeType, base64Data } = parsed;
             const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
             if (
               format === ImageFormat.JPEG ||
@@ -568,8 +570,8 @@ class Bedrock extends BaseLLM {
                 part,
               );
             }
-          } catch (error) {
-            console.warn("Bedrock: failed to process image part", error, part);
+          } else {
+            console.warn("Bedrock: failed to process image part", part);
           }
         }
       }
