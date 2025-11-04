@@ -12,11 +12,17 @@ import { getVersion } from "../version.js";
 
 export class PosthogService {
   private os: string | undefined;
-  public uniqueId: string;
+  private _uniqueId: string | undefined;
 
   constructor() {
     this.os = os.platform();
-    this.uniqueId = this.getEventUserId();
+  }
+
+  public get uniqueId(): string {
+    if (!this._uniqueId) {
+      this._uniqueId = this.getEventUserId();
+    }
+    return this._uniqueId;
   }
 
   private _hasInternetConnection: boolean | undefined = undefined;
