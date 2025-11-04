@@ -30,7 +30,7 @@ describe("ChatDescriber", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should set completionOptions.maxTokens to 12", async () => {
+    it("should set completionOptions.maxTokens to 16", async () => {
       const message = "Test message";
       const completionOptions: LLMFullCompletionOptions = { temperature: 0.7 };
 

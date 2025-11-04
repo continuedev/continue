@@ -9,7 +9,11 @@ import * as versionModule from "./version.js";
 
 // Mock all dependencies
 vi.mock("./auth/workos.js");
-vi.mock("./version.js");
+vi.mock("./version.js", () => ({
+  getVersion: vi.fn(() => "1.2.3"),
+  getLatestVersion: vi.fn(() => Promise.resolve(null)),
+  compareVersions: vi.fn(() => "same"),
+}));
 vi.mock("./session.js");
 vi.mock("./telemetry/posthogService.js");
 
