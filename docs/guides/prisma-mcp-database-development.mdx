@@ -49,70 +49,32 @@ Before starting, ensure you have:
   Continue CLI with Prisma MCP can generate complete database schemas, write migrations, and even create realistic seed data - you just describe what you need!
 </Tip>
 
-## Step 1: Set Up Prisma MCP
+## Step 1: Understanding Prisma MCP
 
-Configure Prisma MCP to enable AI-powered database development.
+<Info>
+  **Prisma MCP Variants**:
+  - **Local Server**: For individual developers working on their own machines
+  - **Remote Server**: For platform builders offering database management to users
+
+  This guide uses the **Local Server** variant.
+</Info>
+
+**Available Prisma MCP Tools**:
+- `migrate-status` - Check migration status
+- `migrate-dev` - Create and execute migrations
+- `migrate-reset` - Reset the database
+- `Prisma-Postgres-account-status` - Check authentication
+- `Create-Prisma-Postgres-Database` - Provision new databases
+- `Prisma-Login` - Authenticate with Prisma
+- `Prisma-Studio` - Launch the data explorer
+
+<Warning>
+  **AI Safety Guardrails**: Prisma detects when destructive commands like `prisma migrate reset --force` are invoked through AI agents and requires explicit user consent before proceeding.
+</Warning>
+
+## Step 2: Prisma Postgres Setup (Optional)
 
 <Tabs>
-  <Tab title="Configure Prisma MCP">
-
-    <Info>
-      **Prisma MCP Variants**:
-      - **Local Server**: For individual developers working on their own machines
-      - **Remote Server**: For platform builders offering database management to users
-
-      This guide uses the **Local Server** variant.
-    </Info>
-
-    **Quick Setup**
-
-    The Prisma MCP local server includes everything you need:
-
-    ```bash
-    # Run directly without installation
-    npx -y prisma mcp
-    ```
-
-    **Available Tools**:
-    - `migrate-status` - Check migration status
-    - `migrate-dev` - Create and execute migrations
-    - `migrate-reset` - Reset the database
-    - `Prisma-Postgres-account-status` - Check authentication
-    - `Create-Prisma-Postgres-Database` - Provision new databases
-    - `Prisma-Login` - Authenticate with Prisma
-    - `Prisma-Studio` - Launch the data explorer
-
-    <Warning>
-      **AI Safety Guardrails**: Prisma detects when destructive commands like `prisma migrate reset --force` are invoked through AI agents and requires explicit user consent before proceeding.
-    </Warning>
-
-  </Tab>
-  <Tab title="Configure for Continue CLI">
-
-    **Add to Continue CLI Configuration**
-
-    For VS Code (`.vscode/mcp.json`):
-    ```json
-    {
-      "servers": {
-        "Prisma-Local": {
-          "command": "npx",
-          "args": ["-y", "prisma", "mcp"]
-        }
-      }
-    }
-    ```
-
-    **For Continue CLI via command:**
-    ```bash
-    claude mcp add prisma-local npx prisma mcp
-    ```
-
-    <Tip>
-      The Prisma MCP server starts automatically when Continue CLI needs it. No manual server management required!
-    </Tip>
-
-  </Tab>
   <Tab title="Prisma Postgres Setup">
 
     Prisma MCP works with any PostgreSQL database, including Prisma Postgres:
@@ -145,9 +107,45 @@ Configure Prisma MCP to enable AI-powered database development.
     </Info>
 
   </Tab>
+  <Tab title="Local PostgreSQL Setup">
+
+    If you prefer to use a local PostgreSQL database:
+
+    1. **Install PostgreSQL** locally
+       - macOS: `brew install postgresql`
+       - Linux: `sudo apt-get install postgresql`
+       - Windows: Download from [postgresql.org](https://www.postgresql.org/download/)
+
+    2. **Start PostgreSQL service**
+       ```bash
+       # macOS
+       brew services start postgresql
+       
+       # Linux
+       sudo service postgresql start
+       ```
+
+    3. **Create a database**
+       ```bash
+       createdb myapp_dev
+       ```
+
+    4. **Configure connection in `.env`**
+       ```bash
+       DATABASE_URL="postgresql://localhost:5432/myapp_dev"
+       ```
+
+    <Tip>
+      For development, you can also use Docker:
+      ```bash
+      docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
+      ```
+    </Tip>
+
+  </Tab>
 </Tabs>
 
-## Prisma Database Workflow Options
+## Step 3: Prisma Database Workflow Options
 
 <Card title="Fastest Path to Success" icon="rocket">
   Skip the manual setup and use our pre-built Prisma Continuous AI agent that includes
@@ -171,7 +169,7 @@ Configure Prisma MCP to enable AI-powered database development.
         Visit the [Prisma Continuous AI Agent](https://hub.continue.dev/continuedev/prisma-continuous-ai) on Continue Hub and click **"Install Agent"** or run:
 
         ```bash
-        cn --agent continuedev/prisma-continuous-ai
+        cn --agent "continuedev/prisma-continuous-ai"
         ```
 
         This agent includes:
@@ -200,12 +198,22 @@ Configure Prisma MCP to enable AI-powered database development.
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Add Prisma MCP to Continue CLI">
-        Configure the Prisma MCP:
+      <Step title="Create a Custom Agent on Continue Hub">
+        1. Go to [Continue Hub](https://hub.continue.dev) and create a new agent
+        2. Add Prisma MCP to your agent's configuration:
 
-        ```bash
-        claude mcp add prisma-local npx prisma mcp
+        ```yaml title="config.yaml"
+        mcpServers:
+          - name: Prisma Local
+            command: npx
+            args:
+              - "-y"
+              - "prisma"
+              - "mcp"
+            connectionTimeout: 30
         ```
+
+        3. Save your agent configuration
       </Step>
 
       <Step title="Initialize Prisma in Your Project">
@@ -254,7 +262,7 @@ Configure Prisma MCP to enable AI-powered database development.
 
 ---
 
-## Step 2: Design Your Database Schema with AI
+## Step 4: Design Your Database Schema with AI
 
 Use Continue CLI to design your database schema through natural language prompts.
 
@@ -344,7 +352,7 @@ Use Continue CLI to design your database schema through natural language prompts
   - Warns about potential performance issues
 </Info>
 
-## Step 3: Generate and Apply Migrations
+## Step 5: Generate and Apply Migrations
 
 Create database migrations from your schema design and apply them safely.
 
@@ -381,7 +389,7 @@ The AI will:
   **Best Practice**: Always review AI-generated migrations before applying to production. Test in development first!
 </Tip>
 
-## Step 4: Seed Your Database with Realistic Data
+## Step 6: Seed Your Database with Realistic Data
 
 Generate realistic seed data for development and testing.
 
@@ -448,7 +456,7 @@ Generate realistic seed data for development and testing.
   - Include edge cases and test scenarios
 </Info>
 
-## Step 5: Launch Prisma Studio for Visual Management
+## Step 7: Launch Prisma Studio for Visual Management
 
 Use Prisma Studio to visually explore and manage your database.
 
@@ -470,7 +478,7 @@ The AI will:
   - View relationship connections visually
 </Tip>
 
-## Step 6: Automate Database Health Checks
+## Step 8: Automate Database Health Checks
 
 Set up automated database monitoring with Continue CLI and GitHub Actions:
 
