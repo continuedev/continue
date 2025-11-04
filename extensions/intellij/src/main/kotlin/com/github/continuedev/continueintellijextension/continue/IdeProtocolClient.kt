@@ -8,8 +8,6 @@ import com.github.continuedev.continueintellijextension.browser.ContinueBrowserS
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
-import com.github.continuedev.continueintellijextension.error.ContinueTelemetryStatusService
-
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -166,18 +164,6 @@ class IdeProtocolClient(
                     "isTelemetryEnabled" -> {
                         val isEnabled = ide.isTelemetryEnabled()
                         respond(isEnabled)
-                    }
-
-                    "updateTelemetryEnabled" -> {
-                        val enabled = try {
-                            dataElement.asJsonObject.get("enabled").asBoolean
-                        } catch (_: Exception) {
-                            null
-                        }
-                        if (enabled != null) {
-                            service<ContinueTelemetryStatusService>().updateAllowAnonymousTelemetry(enabled)
-                        }
-                        respond(null)
                     }
 
                     "readRangeInFile" -> {

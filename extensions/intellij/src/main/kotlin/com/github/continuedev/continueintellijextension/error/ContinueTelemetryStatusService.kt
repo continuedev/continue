@@ -38,11 +38,6 @@ class ContinueTelemetryStatusService : ContinueTelemetryStatus {
         }
     }
 
-    fun updateAllowAnonymousTelemetry(enabled: Boolean) {
-        allowAnonymousTelemetry = enabled
-    }
-
-
     private companion object {
         const val DISABLED_FALLBACK = false
     }
