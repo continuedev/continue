@@ -223,8 +223,4 @@ export class MessageIde implements IDE {
   async getBranch(dir: string): Promise<string> {
     return this.request("getBranch", { dir });
   }
-
-  async updateTelemetryEnabled(enabled: boolean): Promise<void> {
-    return this.request("updateTelemetryEnabled", { enabled });
-  }
 }

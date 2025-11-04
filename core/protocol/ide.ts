@@ -94,8 +94,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   logoutOfControlPlane: [undefined, void];
   reportError: [any, void];
   closeSidebar: [undefined, void];
-
-  updateTelemetryEnabled: [{ enabled: boolean }, void];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

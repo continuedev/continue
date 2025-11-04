@@ -832,9 +832,5 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("reportError", async (msg) => {
       await handleLLMError(msg.data);
     });
-
-    this.onWebviewOrCore("updateTelemetryEnabled", async (msg) => {
-      return await ide.updateTelemetryEnabled(msg.data.enabled);
-    });
   }
 }
