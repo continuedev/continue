@@ -12,7 +12,7 @@ import { getVersion } from "../version.js";
 
 export class PosthogService {
   private os: string | undefined;
-  private uniqueId: string;
+  public uniqueId: string;
 
   constructor() {
     this.os = os.platform();
