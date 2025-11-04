@@ -31,7 +31,7 @@
 
 </div>
 
-Get started in [Mission Control](hub.continue.dev/agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
+Get started in [Mission Control](https://hub.continue.dev/agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
 
 ## Background Agents
 
