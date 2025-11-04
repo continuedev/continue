@@ -50,6 +50,7 @@ export class MCPService
   private connections: Map<string, ServerConnection> = new Map();
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
+  private isHeadless = false;
 
   getDependencies(): string[] {
     return [SERVICE_NAMES.CONFIG];
@@ -77,6 +78,9 @@ export class MCPService
       serverCount: assistant.mcpServers?.length || 0,
     });
 
+    // Store headless mode flag
+    this.isHeadless = waitForConnections;
+
     await this.shutdownConnections();
 
     this.assistant = assistant;
@@ -103,6 +107,19 @@ export class MCPService
     );
     if (waitForConnections) {
       await connectionInit;
+
+      // In headless mode, throw error if any MCP server failed to connect
+      const failedConnections = Array.from(this.connections.values()).filter(
+        (c) => c.status === "error",
+      );
+      if (failedConnections.length > 0) {
+        const errorMessages = failedConnections.map(
+          (c) => `${c.config?.name}: ${c.error}`,
+        );
+        throw new Error(
+          `MCP server(s) failed to load in headless mode:\n${errorMessages.join("\n")}`,
+        );
+      }
     } else {
       this.updateState();
     }
@@ -259,6 +276,13 @@ export class MCPService
             name: serverName,
             error: errorMessage,
           });
+
+          // In headless mode, throw error on capability failures
+          if (this.isHeadless) {
+            throw new Error(
+              `Failed to load prompts from MCP server ${serverName}: ${errorMessage}`,
+            );
+          }
         }
       }
 
@@ -276,18 +300,30 @@ export class MCPService
             name: serverName,
             error: errorMessage,
           });
+
+          // In headless mode, throw error on capability failures
+          if (this.isHeadless) {
+            throw new Error(
+              `Failed to load tools from MCP server ${serverName}: ${errorMessage}`,
+            );
+          }
         }
       }
 
-      logger.debug("MCP server restarted successfully", { name: serverName });
+      logger.debug("MCP server connected successfully", { name: serverName });
     } catch (error) {
       const errorMessage = getErrorString(error);
       connection.status = "error";
       connection.error = errorMessage;
-      logger.error("Failed to restart MCP server", {
+      logger.error("Failed to connect to MCP server", {
         name: serverName,
         error: errorMessage,
       });
+
+      // In headless mode, re-throw the error to fail fast
+      if (this.isHeadless) {
+        throw error;
+      }
     }
 
     this.updateState();

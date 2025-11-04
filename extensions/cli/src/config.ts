@@ -15,6 +15,30 @@ import {
   getOrganizationId,
 } from "./auth/workos.js";
 import { env } from "./env.js";
+import { getVersion } from "./version.js";
+
+/**
+ * Creates User-Agent header value for CLI requests
+ */
+function getUserAgent(): string {
+  const version = getVersion();
+  return `Continue-CLI/${version}`;
+}
+
+/**
+ * Merges User-Agent header into request options
+ */
+function mergeUserAgentIntoRequestOptions(
+  requestOptions: ModelConfig["requestOptions"],
+): ModelConfig["requestOptions"] {
+  return {
+    ...requestOptions,
+    headers: {
+      ...requestOptions?.headers,
+      "User-Agent": getUserAgent(),
+    },
+  };
+}
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
@@ -31,7 +55,9 @@ export function createLlmApi(
     model.provider === "continue-proxy"
       ? {
           provider: model.provider,
-          requestOptions: model.requestOptions,
+          requestOptions: mergeUserAgentIntoRequestOptions(
+            model.requestOptions,
+          ),
           apiBase: model.apiBase,
           apiKey: accessToken ?? undefined,
           env: {
@@ -46,7 +72,9 @@ export function createLlmApi(
           provider: model.provider as any,
           apiKey: model.apiKey,
           apiBase: model.apiBase,
-          requestOptions: model.requestOptions,
+          requestOptions: mergeUserAgentIntoRequestOptions(
+            model.requestOptions,
+          ),
           env: model.env,
         };
 
