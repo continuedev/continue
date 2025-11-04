@@ -11,12 +11,25 @@ import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 export class PosthogService {
-  private os: string | undefined;
-  private uniqueId: string;
+  private _os: string | undefined;
+  private _uniqueId: string | undefined;
 
   constructor() {
-    this.os = os.platform();
-    this.uniqueId = this.getEventUserId();
+    // Initialization is now lazy to avoid issues with mocking in tests
+  }
+
+  private get os(): string {
+    if (!this._os) {
+      this._os = os.platform();
+    }
+    return this._os;
+  }
+
+  public get uniqueId(): string {
+    if (!this._uniqueId) {
+      this._uniqueId = this.getEventUserId();
+    }
+    return this._uniqueId;
   }
 
   private _hasInternetConnection: boolean | undefined = undefined;
