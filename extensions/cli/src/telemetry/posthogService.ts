@@ -11,11 +11,18 @@ import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 export class PosthogService {
-  private os: string | undefined;
+  private _os: string | undefined;
   private _uniqueId: string | undefined;
 
   constructor() {
-    this.os = os.platform();
+    // Initialization is now lazy to avoid issues with mocking in tests
+  }
+
+  private get os(): string {
+    if (!this._os) {
+      this._os = os.platform();
+    }
+    return this._os;
   }
 
   public get uniqueId(): string {
