@@ -161,11 +161,6 @@ class IdeProtocolClient(
                         respond(contents)
                     }
 
-                    "isTelemetryEnabled" -> {
-                        val isEnabled = ide.isTelemetryEnabled()
-                        respond(isEnabled)
-                    }
-
                     "readRangeInFile" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
