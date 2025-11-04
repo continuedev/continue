@@ -1,0 +1,15 @@
+name: Akuvo MCP Servers
+version: 0.0.1
+schema: v1
+
+mcpServers:
+  - name: Azure DevOps
+    command: npx
+    args:
+      - "-y"
+      - "@tiberriver256/mcp-server-azure-devops"
+    env:
+      AZURE_DEVOPS_AUTH_METHOD: pat
+      AZURE_DEVOPS_ORG_URL: https://dev.azure.com/YOUR_ACTUAL_ORG
+      AZURE_DEVOPS_PAT: your_actual_personal_access_token
+      AZURE_DEVOPS_DEFAULT_PROJECT: YOUR_ACTUAL_PROJECT_NAME

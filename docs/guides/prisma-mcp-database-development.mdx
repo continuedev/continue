@@ -1,0 +1,751 @@
+---
+title: "Database Development Workflow with Prisma MCP"
+description: "Build an AI-powered database development workflow using Continue CLI with Prisma MCP to design schemas, create migrations, and manage your database with natural language."
+sidebarTitle: "Prisma Database Development with MCP"
+---
+
+<Card title="What You'll Build" icon="database">
+  A complete database development workflow that uses Continue CLI with Prisma MCP to design schemas, generate migrations, seed data, and manage your PostgreSQL database - all through natural language prompts.
+</Card>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Use [Prisma MCP](https://www.prisma.io/docs/postgres/integrations/mcp-server) to build database workflows
+- Design database schemas with AI assistance
+- Generate and apply migrations automatically
+- Create realistic seed data for development
+- Launch Prisma Studio for visual database management
+- Set up automated database health checks
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Node.js 18+ installed locally
+- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- Basic understanding of SQL and database concepts
+- A project directory where you want to set up your database
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+  <Step title="Set up Continue CLI Account & API Key">
+    1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+    2. Sign up or log in to your Continue account
+    3. Navigate to your organization settings
+    4. Click **"API Keys"** and then **"+ New API Key"**
+    5. Copy the API key immediately (you won't see it again!)
+    6. Login to the CLI: `cn login`
+  </Step>
+</Steps>
+
+<Tip>
+  Continue CLI with Prisma MCP can generate complete database schemas, write migrations, and even create realistic seed data - you just describe what you need!
+</Tip>
+
+## Step 1: Set Up Prisma MCP
+
+Configure Prisma MCP to enable AI-powered database development.
+
+<Tabs>
+  <Tab title="Configure Prisma MCP">
+
+    <Info>
+      **Prisma MCP Variants**:
+      - **Local Server**: For individual developers working on their own machines
+      - **Remote Server**: For platform builders offering database management to users
+
+      This guide uses the **Local Server** variant.
+    </Info>
+
+    **Quick Setup**
+
+    The Prisma MCP local server includes everything you need:
+
+    ```bash
+    # Run directly without installation
+    npx -y prisma mcp
+    ```
+
+    **Available Tools**:
+    - `migrate-status` - Check migration status
+    - `migrate-dev` - Create and execute migrations
+    - `migrate-reset` - Reset the database
+    - `Prisma-Postgres-account-status` - Check authentication
+    - `Create-Prisma-Postgres-Database` - Provision new databases
+    - `Prisma-Login` - Authenticate with Prisma
+    - `Prisma-Studio` - Launch the data explorer
+
+    <Warning>
+      **AI Safety Guardrails**: Prisma detects when destructive commands like `prisma migrate reset --force` are invoked through AI agents and requires explicit user consent before proceeding.
+    </Warning>
+
+  </Tab>
+  <Tab title="Configure for Continue CLI">
+
+    **Add to Continue CLI Configuration**
+
+    For VS Code (`.vscode/mcp.json`):
+    ```json
+    {
+      "servers": {
+        "Prisma-Local": {
+          "command": "npx",
+          "args": ["-y", "prisma", "mcp"]
+        }
+      }
+    }
+    ```
+
+    **For Continue CLI via command:**
+    ```bash
+    claude mcp add prisma-local npx prisma mcp
+    ```
+
+    <Tip>
+      The Prisma MCP server starts automatically when Continue CLI needs it. No manual server management required!
+    </Tip>
+
+  </Tab>
+  <Tab title="Prisma Postgres Setup">
+
+    Prisma MCP works with any PostgreSQL database, including Prisma Postgres:
+
+    1. **Create a Prisma Account** (optional, for hosted databases)
+       - Visit [Prisma Console](https://console.prisma.io)
+       - Sign up or log in
+
+    2. **Authenticate via Continue CLI**
+
+       **Prompt:**
+       ```
+       Log me into the Prisma Console
+       ```
+
+       The AI will use the `Prisma-Login` tool to authenticate.
+
+    3. **Create a Database**
+
+       **Prompt:**
+       ```
+       Create a new Prisma Postgres database in the US region for my e-commerce project
+       ```
+
+    <Info>
+      You can also use **any PostgreSQL database** by configuring your connection string in `.env`:
+      ```
+      DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+      ```
+    </Info>
+
+  </Tab>
+</Tabs>
+
+## Prisma Database Workflow Options
+
+<Card title="Fastest Path to Success" icon="rocket">
+  Skip the manual setup and use our pre-built Prisma Continuous AI agent that includes
+  optimized prompts, rules, and the Prisma MCP for consistent database development.
+</Card>
+
+<Info>
+  **How Prisma MCP Works**:
+  - Runs locally as a Node.js process via `npx`
+  - Provides tools for migrations, schema management, and database operations
+  - Integrates with Prisma Studio for visual database exploration
+  - Includes AI safety guardrails to prevent accidental data loss
+</Info>
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Rapid database development with AI-powered schema design and migration generation
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Prisma Continuous AI Agent](https://hub.continue.dev/continuedev/prisma-continuous-ai) on Continue Hub and click **"Install Agent"** or run:
+
+        ```bash
+        cn --agent continuedev/prisma-continuous-ai
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for schema design and migration workflows
+        - **Built-in rules** for database best practices
+        - **[Prisma MCP](https://www.prisma.io/docs/postgres/integrations/mcp-server)** for reliable database operations
+        - **Automatic schema validation** and safety checks
+      </Step>
+
+      <Step title="Run Schema Design">
+        Navigate to your project directory and enter this prompt in the Continue CLI TUI:
+
+        ```
+        Design a database schema for an e-commerce platform with products, users, orders, and reviews
+        ```
+
+        The agent handles everything automatically!
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Get consistent results with pre-tested prompts and built-in database design best practices.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Add Prisma MCP to Continue CLI">
+        Configure the Prisma MCP:
+
+        ```bash
+        claude mcp add prisma-local npx prisma mcp
+        ```
+      </Step>
+
+      <Step title="Initialize Prisma in Your Project">
+
+        **Prompt:**
+        ```
+        Initialize Prisma in my project with PostgreSQL and create a basic schema
+        ```
+      </Step>
+
+      <Step title="Create Custom Database Development Prompts">
+        Use this prompt template with Continue CLI:
+
+        ```
+        I need to design a database schema for [your project description].
+
+        Requirements:
+        - Create tables for [list your entities]
+        - Add appropriate relationships between tables
+        - Include timestamps and soft deletes where needed
+        - Use UUIDs for primary keys
+        - Add indexes for commonly queried fields
+
+        Generate:
+        1. Complete Prisma schema file
+        2. Initial migration
+        3. Basic seed data for development
+        4. Show me how to apply the migration
+        ```
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+  To use the pre-built agent, you need either:
+  - **Continue CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Continue Hub secrets
+
+  The agent will automatically detect and use your configuration. For Prisma MCP:
+  - **Node.js 18+** installed locally
+  - **PostgreSQL database** (local or hosted)
+  - Prisma MCP runs automatically via `npx`
+</Accordion>
+
+---
+
+## Step 2: Design Your Database Schema with AI
+
+Use Continue CLI to design your database schema through natural language prompts.
+
+<Tabs>
+  <Tab title="E-commerce Schema">
+    **Prompt:**
+    ```
+    Design a complete e-commerce database schema with:
+
+    Tables:
+    - Users (authentication, profiles, addresses)
+    - Products (variants, inventory, categories)
+    - Orders (line items, status tracking, shipping)
+    - Reviews (ratings, comments, helpful votes)
+    - Carts (temporary shopping carts)
+
+    Requirements:
+    - Use UUIDs for all IDs
+    - Add proper relationships (foreign keys)
+    - Include created_at and updated_at timestamps
+    - Add soft deletes for users and products
+    - Create indexes for:
+      * Product searches (name, category)
+      * Order lookups (user_id, status, created_at)
+      * Review queries (product_id, user_id)
+
+    Generate the Prisma schema and initial migration.
+    ```
+  </Tab>
+
+  <Tab title="SaaS Application Schema">
+    **Prompt:**
+    ```
+    Design a SaaS multi-tenant database schema with:
+
+    Tables:
+    - Organizations (tenants)
+    - Users (with organization membership)
+    - Projects (belonging to organizations)
+    - Tasks (belonging to projects)
+    - Comments (on tasks)
+    - Subscriptions (billing info)
+
+    Requirements:
+    - Ensure data isolation between organizations
+    - Add role-based access control (admin, member, viewer)
+    - Track who created and updated records
+    - Add indexes for tenant-scoped queries
+    - Include audit logging fields
+
+    Generate a Prisma schema that enforces multi-tenancy.
+    ```
+  </Tab>
+
+  <Tab title="Blog Platform Schema">
+    **Prompt:**
+    ```
+    Design a blog platform database with:
+
+    Tables:
+    - Users (authors and readers)
+    - Posts (with drafts and published states)
+    - Comments (nested/threaded)
+    - Tags (many-to-many with posts)
+    - Categories (hierarchical)
+    - Likes (on posts and comments)
+
+    Features:
+    - SEO-friendly slugs for posts
+    - View count tracking
+    - Featured/pinned posts
+    - Comment moderation status
+
+    Include proper indexes for:
+    - Post listing by date, popularity, category
+    - Tag-based searches
+    - User activity tracking
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Prisma MCP Capabilities for Schema Design**:
+  - Validates schema syntax automatically
+  - Suggests optimal data types and relationships
+  - Recommends indexes based on query patterns
+  - Warns about potential performance issues
+</Info>
+
+## Step 3: Generate and Apply Migrations
+
+Create database migrations from your schema design and apply them safely.
+
+**Example: Complete Migration Workflow**
+
+```
+I've designed my Prisma schema. Now I need to:
+
+1. Check the current migration status
+2. Create a new migration named "initial_schema"
+3. Review the generated SQL before applying
+4. Apply the migration to the database
+5. Verify all tables were created correctly
+
+For the migration:
+- Include all schema changes
+- Add helpful comments in the SQL
+- Show me the migration file contents
+- Confirm the migration was applied successfully
+
+Database: PostgreSQL
+Environment: Development
+```
+
+**Expected Output:**
+The AI will:
+- Run `prisma migrate status` to check current state
+- Generate migration with `prisma migrate dev --name initial_schema`
+- Show you the SQL file contents for review
+- Apply the migration automatically
+- Verify tables exist using database inspection
+
+<Tip>
+  **Best Practice**: Always review AI-generated migrations before applying to production. Test in development first!
+</Tip>
+
+## Step 4: Seed Your Database with Realistic Data
+
+Generate realistic seed data for development and testing.
+
+<Tabs>
+  <Tab title="E-commerce Seed Data">
+    **Prompt:**
+    ```
+    Create a comprehensive seed script for my e-commerce database:
+
+    Generate:
+    - 50 users with realistic names and emails
+    - 200 products across 10 categories
+      * Include product variants (size, color)
+      * Set realistic prices and inventory
+    - 100 orders with random items
+      * Various order statuses (pending, shipped, delivered)
+      * Created at different dates over the past 6 months
+    - 300 product reviews
+      * Ratings from 1-5 stars
+      * Realistic review text
+      * Mix of helpful/not helpful votes
+
+    Requirements:
+    - Use realistic fake data (not just "User 1", "Product 1")
+    - Maintain referential integrity
+    - Distribute data realistically (more delivered than pending orders)
+    - Add some edge cases (cancelled orders, out-of-stock items)
+
+    Create the seed.ts file and show me how to run it.
+    ```
+  </Tab>
+
+  <Tab title="SaaS Seed Data">
+    **Prompt:**
+    ```
+    Create seed data for my SaaS application:
+
+    Organizations:
+    - 10 organizations (different sizes: small, medium, enterprise)
+    - Each with appropriate subscription tier
+
+    Users:
+    - 50 total users distributed across organizations
+    - Mix of roles (admin, member, viewer)
+    - Realistic activity patterns
+
+    Projects and Tasks:
+    - 30 projects across all organizations
+    - 200 tasks with various statuses
+    - Assign tasks to users in the same organization
+    - Add comments from team members
+
+    Demonstrate multi-tenancy by ensuring data isolation.
+    Create the seed script with TypeScript.
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Prisma Seed Best Practices**:
+  - Use `faker` or similar libraries for realistic data
+  - Run seeds in transactions for consistency
+  - Make seeds idempotent (safe to run multiple times)
+  - Include edge cases and test scenarios
+</Info>
+
+## Step 5: Launch Prisma Studio for Visual Management
+
+Use Prisma Studio to visually explore and manage your database.
+
+**Prompt:**
+```
+Launch Prisma Studio so I can visually inspect my database tables and data
+```
+
+The AI will:
+- Run `prisma studio` command
+- Open Studio in your browser (usually http://localhost:5555)
+- Show you how to navigate the interface
+
+<Tip>
+  **Prisma Studio Features**:
+  - Browse all tables and relationships
+  - Edit records directly
+  - Filter and search data
+  - View relationship connections visually
+</Tip>
+
+## Step 6: Automate Database Health Checks
+
+Set up automated database monitoring with Continue CLI and GitHub Actions:
+
+```yaml
+name: Database Health Monitor
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'prisma/**'
+  pull_request:
+    paths:
+      - 'prisma/**'
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: "0 3 * * *"
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  check-database-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: |
+          npm install
+          npm install -g @continuedev/cli
+          echo "✅ Dependencies installed"
+
+      - name: Setup Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npx prisma migrate deploy
+          echo "✅ Migrations applied"
+
+      - name: Analyze Database Schema
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🔍 Analyzing database health..."
+
+          cn -p "Using Prisma MCP, perform a comprehensive database health check:
+
+                 1. Migration Status:
+                    - Check if all migrations are applied
+                    - Identify pending migrations
+                    - Detect migration conflicts
+
+                 2. Schema Analysis:
+                    - Verify all foreign key relationships are valid
+                    - Check for missing indexes on foreign keys
+                    - Identify tables without primary keys
+                    - Find unused indexes (if possible)
+
+                 3. Data Integrity:
+                    - Check for orphaned records (broken foreign keys)
+                    - Verify required fields don't have nulls
+                    - Identify duplicate records in unique columns
+
+                 4. Performance Review:
+                    - Suggest missing indexes based on schema
+                    - Identify large tables that might need partitioning
+                    - Check for inefficient data types
+
+                 5. Best Practices:
+                    - Verify created_at/updated_at timestamps exist
+                    - Check for soft delete implementations
+                    - Ensure proper enum usage
+
+                 Generate a detailed health report with:
+                 - Critical issues that need immediate attention
+                 - Warnings for potential problems
+                 - Optimization suggestions
+                 - SQL scripts to fix identified issues
+
+                 If critical issues are found, fail the workflow."
+
+      - name: Save Health Report
+        if: always()
+        run: |
+          echo "## 📊 Database Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "Generated at $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the 'Analyze Database Schema' step for the full report" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Health Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-health-report
+          path: |
+            *.md
+            *.sql
+```
+
+<Warning>
+  **Required GitHub Secrets**:
+  - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+  - `DATABASE_URL`: PostgreSQL connection string for your test database
+
+  Add these at: **Repository Settings → Secrets and variables → Actions**
+</Warning>
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered database development workflow** that:
+
+- **Designs schemas** - AI generates complete database schemas from natural language descriptions
+- **Creates migrations** - Automatically generates and applies database migrations
+- **Seeds data** - Generates realistic test data for development
+- **Monitors health** - Runs automated checks for schema issues and performance problems
+- **Visual management** - Provides GUI access via Prisma Studio
+
+<Card title="Continuous AI Database Development" icon="database">
+  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles schema design and migration generation with human oversight for production deployments.
+</Card>
+
+## Advanced Database Development Prompts
+
+Enhance your workflow with these advanced Continue CLI prompts:
+
+<CardGroup cols={2}>
+  <Card title="Schema Evolution" icon="code-branch">
+    Analyze existing schema and suggest improvements for scalability, including partitioning strategies and denormalization opportunities
+  </Card>
+  <Card title="Query Optimization" icon="gauge">
+    Review slow queries and generate optimized indexes, explain plans, and query rewrites
+  </Card>
+  <Card title="Data Migration" icon="exchange">
+    Generate data transformation scripts when changing schema structure (e.g., splitting tables, normalizing data)
+  </Card>
+  <Card title="Backup & Recovery" icon="life-ring">
+    Create backup strategies and generate recovery scripts for disaster scenarios
+  </Card>
+</CardGroup>
+
+## Real-World Use Cases
+
+### Use Case 1: Adding Multi-Tenancy to Existing Schema
+
+**Prompt:**
+```
+I need to add multi-tenancy to my existing database schema:
+
+Current tables: users, products, orders
+
+Requirements:
+- Add an organizations table
+- Link all existing tables to organizations
+- Ensure data isolation between tenants
+- Migrate existing data to a default organization
+- Add organization_id to all relevant indexes
+
+Generate:
+1. Updated Prisma schema with multi-tenant support
+2. Migration to add organization_id columns
+3. Data migration script to populate organization_id
+4. Updated seed script with multi-tenant data
+5. Queries demonstrating tenant isolation
+```
+
+### Use Case 2: Adding Full-Text Search
+
+**Prompt:**
+```
+Add full-text search to my blog platform:
+
+Tables: posts (title, content), comments (text)
+
+Requirements:
+- Use PostgreSQL full-text search capabilities
+- Create search indexes for posts and comments
+- Add search ranking/relevance
+- Support phrase matching and stemming
+- Highlight matching terms in results
+
+Generate:
+1. Migration to add tsvector columns and GIN indexes
+2. Prisma schema updates
+3. Example search queries using raw SQL
+4. Helper functions for search in TypeScript
+```
+
+### Use Case 3: Implementing Audit Logging
+
+**Prompt:**
+```
+Add comprehensive audit logging to track all data changes:
+
+Tables to audit: users, orders, products
+
+Requirements:
+- Record all INSERT, UPDATE, DELETE operations
+- Store: who made changes, when, what changed, old/new values
+- Implement using PostgreSQL triggers or application-level
+- Query audit history for specific records
+- Implement data retention policy (keep 90 days)
+
+Generate:
+1. Audit log table schema
+2. Triggers or Prisma middleware for logging
+3. Queries to view audit history
+4. Cleanup script for old audit records
+```
+
+## Security Best Practices
+
+<Warning>
+  **Database Security Guidelines**:
+  - Never commit `.env` files with database credentials
+  - Use environment variables for all sensitive configuration
+  - Implement row-level security (RLS) for multi-tenant apps
+  - Review all AI-generated SQL before running in production
+  - Use read replicas for analytics queries
+  - Enable SSL/TLS for database connections
+  - Regularly rotate database passwords
+  - Use least-privilege database users for applications
+</Warning>
+
+## Troubleshooting
+
+### Prisma MCP Connection Issues
+
+If you encounter issues with Prisma MCP:
+
+1. Verify Node.js version is 18 or higher: `node --version`
+2. Ensure Prisma is accessible: `npx prisma --version`
+3. Check your DATABASE_URL is correctly set in `.env`
+4. Try running Prisma commands directly: `npx prisma migrate status`
+
+### Common Migration Issues
+
+| Issue | Solution |
+|:------|:---------|
+| Migration conflicts | Reset development database with `prisma migrate reset` |
+| Schema drift detected | Run `prisma migrate dev` to sync schema with database |
+| Connection refused | Verify DATABASE_URL and database is running |
+| Permission denied | Check database user has CREATE/ALTER privileges |
+
+### AI Safety Guardrails
+
+When Prisma MCP detects destructive operations (like `migrate reset`):
+
+1. You'll see a confirmation prompt
+2. Review what will be deleted
+3. Type "yes" to confirm or "no" to cancel
+4. The AI will wait for your response before proceeding
+
+<Info>
+  This safety feature prevents accidental data loss when AI agents run database commands.
+</Info>
+
+## Next Steps
+
+- Explore [Prisma Client](https://www.prisma.io/docs/concepts/components/prisma-client) for type-safe database queries
+- Set up [Prisma Accelerate](https://www.prisma.io/docs/accelerate) for connection pooling
+- Configure [Prisma Pulse](https://www.prisma.io/docs/pulse) for real-time database events
+- Learn about [Prisma Optimize](https://www.prisma.io/docs/optimize) for query performance insights
+- Join the [Continue Discord](https://discord.gg/continue) for support
+
+## Resources
+
+- [Prisma MCP Documentation](https://www.prisma.io/docs/postgres/integrations/mcp-server)
+- [Prisma Schema Reference](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference)
+- [Prisma Migrate Guide](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+- [Prisma Best Practices](https://www.prisma.io/docs/guides/performance-and-optimization)
+- [Model Context Protocol Docs](https://modelcontextprotocol.io/introduction)
+- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
+- [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)
