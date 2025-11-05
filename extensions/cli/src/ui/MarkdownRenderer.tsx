@@ -242,18 +242,32 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
     };
 
     const parts = renderMarkdown(content);
-    return (
-      <Box flexDirection="row" flexWrap="wrap">
-        {parts.map((part, idx) => {
-          // If it's already a React element (like a URL), return as-is
-          if (React.isValidElement(part)) {
-            return part;
-          }
-          // Wrap string content in Text to allow normal wrapping
-          return <Text key={`part-${idx}`}>{part}</Text>;
-        })}
-      </Box>
+
+    // Check if any parts are URLs (React elements with cyan color)
+    const hasUrls = parts.some(
+      (part) =>
+        React.isValidElement(part) && (part as any).props?.color === "cyan",
     );
+
+    // If we have URLs, use Box layout to prevent them from breaking
+    // Otherwise, use Text for backward compatibility
+    if (hasUrls) {
+      return (
+        <Box flexDirection="row" flexWrap="wrap">
+          {parts.map((part, idx) => {
+            // If it's already a React element (like a URL), return as-is
+            if (React.isValidElement(part)) {
+              return part;
+            }
+            // Wrap string content in Text to allow normal wrapping
+            return <Text key={`part-${idx}`}>{part}</Text>;
+          })}
+        </Box>
+      );
+    }
+
+    // No URLs, return as Text (backward compatible)
+    return <Text>{parts}</Text>;
   },
 );
 
