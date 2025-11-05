@@ -191,6 +191,10 @@ class IntelliJIDE(
         return mapOf("text" to text)
     }
 
+    override suspend fun isTelemetryEnabled(): Boolean {
+        return true
+    }
+
     override suspend fun isWorkspaceRemote(): Boolean {
         return this.getIdeInfo().remoteName != "local"
     }
