@@ -87,6 +87,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
       {
         // Match URLs - must come after markdown patterns to avoid conflicts
         // Matches http://, https://, and angle-bracket URLs like <https://...>
+        // Uses a capturing group to match URL content, but we'll use match[0] for full text
         regex: /<?(https?:\/\/[^\s<>]+)>?/g,
         render: (content, key) => (
           <Text key={key} color="cyan">
@@ -149,10 +150,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
           );
 
           if (!isInCodeBlock) {
+            // For URLs, use the full match to preserve angle brackets
+            // For other patterns, use capture groups as before
+            const isUrlPattern = pattern.regex.source.includes("https?");
             allMatches.push({
               index: match.index,
               length: match[0].length,
-              content: match[2] || match[1], // Use second capture group for headings, first for others
+              content: isUrlPattern ? match[0] : match[2] || match[1], // Use full match for URLs, capture groups for others
               fullMatch: match[0],
               render: pattern.render,
             });
