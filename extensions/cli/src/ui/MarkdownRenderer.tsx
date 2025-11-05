@@ -1,4 +1,4 @@
-import { Text } from "ink";
+import { Box, Text } from "ink";
 import React from "react";
 
 import {
@@ -84,6 +84,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
           </Text>
         ),
       },
+      {
+        // Match URLs - must come after markdown patterns to avoid conflicts
+        // Matches http://, https://, and angle-bracket URLs like <https://...>
+        regex: /<?(https?:\/\/[^\s<>]+)>?/g,
+        render: (content, key) => (
+          <Text key={key} color="cyan">
+            {content}
+          </Text>
+        ),
+      },
     ];
 
     const renderMarkdown = (text: string | null | undefined) => {
@@ -121,6 +131,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
         index: number;
         length: number;
         content: string;
+        fullMatch: string;
         render: (content: string, key: string) => React.ReactNode;
       }> = [];
 
@@ -142,6 +153,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
               index: match.index,
               length: match[0].length,
               content: match[2] || match[1], // Use second capture group for headings, first for others
+              fullMatch: match[0],
               render: pattern.render,
             });
           }
@@ -154,6 +166,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
         length: number;
         type: "code" | "other";
         content?: string;
+        fullMatch?: string;
         render?: (content: string, key: string) => React.ReactNode;
         language?: string;
         code?: string;
@@ -170,6 +183,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
           length: match.length,
           type: "other" as const,
           content: match.content,
+          fullMatch: match.fullMatch,
           render: match.render,
         })),
       ];
@@ -227,7 +241,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
       return parts;
     };
 
-    return <Text>{renderMarkdown(content)}</Text>;
+    const parts = renderMarkdown(content);
+    return (
+      <Box flexDirection="row" flexWrap="wrap">
+        {parts.map((part, idx) => {
+          // If it's already a React element (like a URL), return as-is
+          if (React.isValidElement(part)) {
+            return part;
+          }
+          // Wrap string content in Text to allow normal wrapping
+          return <Text key={`part-${idx}`}>{part}</Text>;
+        })}
+      </Box>
+    );
   },
 );
 
