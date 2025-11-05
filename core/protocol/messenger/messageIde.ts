@@ -121,6 +121,10 @@ export class MessageIde implements IDE {
     return this.request("readRangeInFile", { filepath, range });
   }
 
+  isTelemetryEnabled(): Promise<boolean> {
+    return this.request("isTelemetryEnabled", undefined);
+  }
+
   isWorkspaceRemote(): Promise<boolean> {
     return this.request("isWorkspaceRemote", undefined);
   }

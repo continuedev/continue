@@ -348,6 +348,12 @@ export default async function doLoadConfig(options: {
     }
   });
 
+  if (newConfig.allowAnonymousTelemetry !== false) {
+    if ((await ide.isTelemetryEnabled()) === false) {
+      newConfig.allowAnonymousTelemetry = false;
+    }
+  }
+
   // Org policies
   const policy = PolicySingleton.getInstance().policy?.policy;
   if (policy?.allowAnonymousTelemetry === false) {

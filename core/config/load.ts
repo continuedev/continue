@@ -656,11 +656,6 @@ async function finalToBrowserConfig(
   final: ContinueConfig,
   ide: IDE,
 ): Promise<BrowserSerializedContinueConfig> {
-  console.log(
-    "debug1 allow anonymous telemetry",
-    final.allowAnonymousTelemetry,
-  );
-
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     completionOptions: final.completionOptions,
