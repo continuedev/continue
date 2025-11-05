@@ -12,7 +12,7 @@ sidebarTitle: "Prisma Database Development with MCP"
 
 This cookbook teaches you to:
 
-- Use [Prisma MCP](https://www.prisma.io/docs/postgres/integrations/mcp-server) to build database workflows
+- Use [Prisma Remote MCP](https://hub.continue.dev/prisma/prisma-remote-mcp) to build database workflows
 - Design database schemas with AI assistance
 - Generate and apply migrations automatically
 - Create realistic seed data for development
@@ -43,10 +43,24 @@ Before starting, ensure you have:
     5. Copy the API key immediately (you won't see it again!)
     6. Login to the CLI: `cn login`
   </Step>
+
+  <Step title="Add Prisma Secrets to Continue Hub">
+    For the Prisma Remote MCP to work, you need to authenticate with Prisma:
+
+    1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+    2. Click **"+ Add Secret"**
+    3. Add your Prisma authentication token:
+       - **Key**: `prisma/prisma-remote-mcp/PRISMA_AUTH_TOKEN`
+       - **Value**: Your Prisma auth token (get from [Prisma Console](https://console.prisma.io))
+
+    <Info>
+      The Prisma Remote MCP runs on Prisma's hosted infrastructure and requires authentication to access your databases and projects.
+    </Info>
+  </Step>
 </Steps>
 
 <Tip>
-  Continue CLI with Prisma MCP can generate complete database schemas, write migrations, and even create realistic seed data - you just describe what you need!
+  Continue CLI with Prisma Remote MCP can generate complete database schemas, write migrations, and even create realistic seed data - you just describe what you need!
 </Tip>
 
 ## Step 1: Set Up Your Database
@@ -130,13 +144,14 @@ Before starting, ensure you have:
 </Card>
 
 <Info>
-  **How Prisma MCP Works**:
-  - Runs locally as a Node.js process via `npx`
+  **How Prisma Remote MCP Works**:
+  - Connects to Prisma's hosted MCP server via `mcp-remote`
+  - Runs on Prisma's infrastructure (no local installation required)
   - Provides tools for migrations, schema management, and database operations
   - Integrates with Prisma Studio for visual database exploration
   - Includes AI safety guardrails to prevent accidental data loss
   
-  **Available Prisma MCP Tools**:
+  **Available Prisma Remote MCP Tools**:
   - `migrate-status` - Check migration status
   - `migrate-dev` - Create and execute migrations
   - `migrate-reset` - Reset the database
@@ -144,6 +159,8 @@ Before starting, ensure you have:
   - `Create-Prisma-Postgres-Database` - Provision new databases
   - `Prisma-Login` - Authenticate with Prisma
   - `Prisma-Studio` - Launch the data explorer
+
+  **Installation**: Add [Prisma Remote MCP from Continue Hub](https://hub.continue.dev/prisma/prisma-remote-mcp)
 </Info>
 
 <Tabs>
@@ -161,7 +178,7 @@ Before starting, ensure you have:
         This agent includes:
         - **Optimized prompts** for schema design and migration workflows
         - **Built-in rules** for database best practices
-        - **[Prisma MCP](https://www.prisma.io/docs/postgres/integrations/mcp-server)** for reliable database operations
+        - **[Prisma Remote MCP](https://hub.continue.dev/prisma/prisma-remote-mcp)** for reliable database operations
         - **Automatic schema validation** and safety checks
       </Step>
 
@@ -184,10 +201,16 @@ Before starting, ensure you have:
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Add Prisma MCP to Continue CLI">
-        Configure the [Prisma MCP](https://www.prisma.io/docs/postgres/integrations/mcp-server) to work with Continue CLI.
+      <Step title="Add Prisma Remote MCP to Continue CLI">
+        Add the [Prisma Remote MCP](https://hub.continue.dev/prisma/prisma-remote-mcp) from Continue Hub to your configuration.
 
-        The Prisma MCP will start automatically when Continue CLI needs it.
+        Visit [Continue Hub - Prisma Remote MCP](https://hub.continue.dev/prisma/prisma-remote-mcp) and click **"Install"**.
+
+        The MCP will connect automatically when Continue CLI needs it.
+
+        <Warning>
+          Make sure you've added your `PRISMA_AUTH_TOKEN` to [Continue Hub Secrets](https://hub.continue.dev/settings/secrets) as described in the Prerequisites step.
+        </Warning>
       </Step>
 
       <Step title="Initialize Prisma in Your Project">
@@ -228,10 +251,10 @@ Before starting, ensure you have:
   - **Continue CLI Pro Plan** with the models add-on, OR
   - **Your own API keys** added to Continue Hub secrets
 
-  The agent will automatically detect and use your configuration. For Prisma MCP:
-  - **Node.js 18+** installed locally
-  - **PostgreSQL database** (local or hosted)
-  - Prisma MCP runs automatically via `npx`
+  The agent will automatically detect and use your configuration. For Prisma Remote MCP:
+  - **Prisma authentication token** added to Continue Hub secrets
+  - **PostgreSQL database** (local or hosted via Prisma Postgres)
+  - Prisma Remote MCP connects to Prisma's hosted infrastructure (no local installation required)
 </Accordion>
 
 ---
@@ -323,11 +346,12 @@ Use Continue CLI to design your database schema through natural language prompts
 </Tabs>
 
 <Info>
-  **Prisma MCP Capabilities for Schema Design**:
+  **Prisma Remote MCP Capabilities for Schema Design**:
   - Validates schema syntax automatically
   - Suggests optimal data types and relationships
   - Recommends indexes based on query patterns
   - Warns about potential performance issues
+  - Leverages Prisma's hosted AI models for enhanced schema recommendations
 </Info>
 
 ## Step 3: Generate and Apply Migrations
@@ -687,14 +711,15 @@ Generate:
 
 ## Troubleshooting
 
-### Prisma MCP Connection Issues
+### Prisma Remote MCP Connection Issues
 
-If you encounter issues with Prisma MCP:
+If you encounter issues with Prisma Remote MCP:
 
-1. Verify Node.js version is 18 or higher: `node --version`
-2. Ensure Prisma is accessible: `npx prisma --version`
-3. Check your DATABASE_URL is correctly set in `.env`
-4. Try running Prisma commands directly: `npx prisma migrate status`
+1. Verify your `PRISMA_AUTH_TOKEN` is correctly set in [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+2. Check that the secret key is exactly: `prisma/prisma-remote-mcp/PRISMA_AUTH_TOKEN`
+3. Ensure you have network connectivity to `https://mcp.prisma.io`
+4. Verify your Prisma account has access to the database at [Prisma Console](https://console.prisma.io)
+5. Check your DATABASE_URL is correctly set in `.env` (for local Prisma CLI operations)
 
 ### Common Migration Issues
 
@@ -707,7 +732,7 @@ If you encounter issues with Prisma MCP:
 
 ### AI Safety Guardrails
 
-When Prisma MCP detects destructive operations (like `migrate reset`):
+When Prisma Remote MCP detects destructive operations (like `migrate reset`):
 
 1. You'll see a confirmation prompt
 2. Review what will be deleted
@@ -715,7 +740,7 @@ When Prisma MCP detects destructive operations (like `migrate reset`):
 4. The AI will wait for your response before proceeding
 
 <Info>
-  This safety feature prevents accidental data loss when AI agents run database commands.
+  This safety feature prevents accidental data loss when AI agents run database commands. The Prisma Remote MCP enforces these guardrails on the server side for enhanced security.
 </Info>
 
 ## Next Steps
@@ -728,6 +753,7 @@ When Prisma MCP detects destructive operations (like `migrate reset`):
 
 ## Resources
 
+- [Prisma Remote MCP on Continue Hub](https://hub.continue.dev/prisma/prisma-remote-mcp)
 - [Prisma MCP Documentation](https://www.prisma.io/docs/postgres/integrations/mcp-server)
 - [Prisma Schema Reference](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference)
 - [Prisma Migrate Guide](https://www.prisma.io/docs/concepts/components/prisma-migrate)
