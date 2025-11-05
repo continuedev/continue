@@ -509,8 +509,12 @@ export class MCPService
     serverConfig: StdioMcpServer,
   ): StdioClientTransport {
     const env: Record<string, string> = serverConfig.env || {};
-    if (process.env.PATH !== undefined) {
-      env.PATH = process.env.PATH;
+    if (process.env) {
+      for (const [key, value] of Object.entries(process.env)) {
+        if (!(key in env) && !!value) {
+          env[key] = value;
+        }
+      }
     }
 
     return new StdioClientTransport({
