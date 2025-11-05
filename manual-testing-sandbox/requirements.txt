@@ -5,7 +5,7 @@ scipy==1.7.1
 
 # Web development
 flask==2.0.2
-django==4.2.22
+django==4.2.26
 
 # Request handling
 requests==2.26.0
