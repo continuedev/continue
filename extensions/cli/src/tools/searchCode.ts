@@ -3,18 +3,25 @@ import * as fs from "fs";
 import * as util from "util";
 
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+import { findUp } from "find-up";
 
 import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
-const COMMON_IGNORE_PATTERNS: string[] = [
-  "**/node_modules/**",
-  "**/.git/**",
-  "**/bower_components/**",
-  "**/.svn/**",
-  "**/.hg/**",
-];
+async function getGitignorePatterns() {
+  const gitIgnorePath = await findUp(".gitignore");
+  if (!gitIgnorePath) return [];
+  const content = fs.readFileSync(gitIgnorePath, "utf-8");
+  const ignorePatterns = [];
+  for (let line of content.trim().split("\n")) {
+    line = line.trim();
+    if (line.startsWith("#") || line === "") continue; // ignore comments and empty line
+    if (line.startsWith("!")) continue; // ignore negated ignores
+    ignorePatterns.push(line);
+  }
+  return ignorePatterns;
+}
 
 // Default maximum number of results to display
 const DEFAULT_MAX_RESULTS = 100;
@@ -77,12 +84,13 @@ export const searchCodeTool: Tool = {
       command += ` -g "${args.file_pattern}"`;
     }
 
-    for (const ignorePattern of COMMON_IGNORE_PATTERNS) {
+    for (const ignorePattern of await getGitignorePatterns()) {
       command += ` -g "!${ignorePattern}"`;
     }
 
     command += ` "${searchPath}"`;
     try {
+      console.log("debug1 command was", command);
       const { stdout, stderr } = await execPromise(command);
 
       if (stderr) {
