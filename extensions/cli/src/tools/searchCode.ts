@@ -8,6 +8,14 @@ import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
+const COMMON_IGNORE_PATTERNS: string[] = [
+  "**/node_modules/**",
+  "**/.git/**",
+  "**/bower_components/**",
+  "**/.svn/**",
+  "**/.hg/**",
+];
+
 // Default maximum number of results to display
 const DEFAULT_MAX_RESULTS = 100;
 
@@ -67,6 +75,10 @@ export const searchCodeTool: Tool = {
 
     if (args.file_pattern) {
       command += ` -g "${args.file_pattern}"`;
+    }
+
+    for (const ignorePattern of COMMON_IGNORE_PATTERNS) {
+      command += ` -g "!${ignorePattern}"`;
     }
 
     command += ` "${searchPath}"`;
