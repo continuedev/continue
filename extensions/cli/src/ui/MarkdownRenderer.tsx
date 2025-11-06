@@ -247,30 +247,29 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
 
     const parts = renderMarkdown(content);
 
-    // Check if any parts are URLs (React elements with cyan color)
+    // Check if content has URLs by looking for cyan-colored Text elements
     const hasUrls = parts.some(
       (part) =>
         React.isValidElement(part) && (part as any).props?.color === "cyan",
     );
 
-    // If we have URLs, use Box layout to prevent them from breaking
-    // Otherwise, use Text for backward compatibility
+    // Use Box layout when URLs are present to prevent them from breaking
+    // across lines. Each element (URL or text) becomes a separate flex item.
     if (hasUrls) {
       return (
         <Box flexDirection="row" flexWrap="wrap">
-          {parts.map((part, idx) => {
-            // If it's already a React element (like a URL), return as-is
-            if (React.isValidElement(part)) {
-              return part;
-            }
-            // Wrap string content in Text to allow normal wrapping
-            return <Text key={`part-${idx}`}>{part}</Text>;
-          })}
+          {parts.map((part, idx) =>
+            React.isValidElement(part) ? (
+              part
+            ) : (
+              <Text key={`text-${idx}`}>{part}</Text>
+            ),
+          )}
         </Box>
       );
     }
 
-    // No URLs, return as Text (backward compatible)
+    // No URLs: use original Text wrapping for backward compatibility
     return <Text>{parts}</Text>;
   },
 );
