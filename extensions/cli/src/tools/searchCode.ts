@@ -90,7 +90,6 @@ export const searchCodeTool: Tool = {
 
     command += ` "${searchPath}"`;
     try {
-      console.log("debug1 command was", command);
       const { stdout, stderr } = await execPromise(command);
 
       if (stderr) {
