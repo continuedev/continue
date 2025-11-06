@@ -34,7 +34,7 @@ describe("asciiArt", () => {
       const result = getDisplayableAsciiArt();
 
       expect(result).toContain("██████╗");
-      expect(result).toContain("(beta)");
+      expect(result).not.toContain("(beta)");
       expect(result).not.toBe(CONTINUE_ASCII_ART);
       // Should be much shorter than the full ASCII art
       expect(result.length).toBeLessThan(CONTINUE_ASCII_ART.length / 2);
@@ -47,7 +47,7 @@ describe("asciiArt", () => {
       const result = getDisplayableAsciiArt();
 
       expect(result).toContain("██████╗");
-      expect(result).toContain("(beta)");
+      expect(result).not.toContain("(beta)");
       expect(result).not.toBe(CONTINUE_ASCII_ART);
     });
 
