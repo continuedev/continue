@@ -8,7 +8,7 @@ import { defaultBoxStyles } from "../styles.js";
 
 import { ToolPreview } from "./ToolPreview.js";
 
-// show dangerous commmand warning only once per CLI process
+// show dangerous command warning only once per CLI process
 let hasShownDangerousCommandWarning = false;
 
 interface PermissionOption {

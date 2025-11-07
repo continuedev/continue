@@ -177,7 +177,7 @@ export function StepContainerPreToolbar({
   }, [language, codeBlockContent]);
 
   // If we are creating a file, we already render that in the button
-  // so we don't want to dispaly it twice here
+  // so we don't want to display it twice here
   const displayFilepath = relativeFilepath ?? appliedFileUri;
 
   // TODO: This logic should be moved to a thunk

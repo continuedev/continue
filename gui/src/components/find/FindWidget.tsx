@@ -51,7 +51,7 @@ type ScrollToMatchOption = "closest" | "first" | "none";
     useFindWidget takes a container ref and returns
     1. A widget that can be placed anywhere to search the contents of that container
     2. Search results and state
-    3. Highlight components to be overlayed over the container
+    3. Highlight components to be overlaid over the container
 
     Container must have relative positioning
 */

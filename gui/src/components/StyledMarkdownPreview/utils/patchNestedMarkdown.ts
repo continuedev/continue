@@ -1,5 +1,5 @@
 /*
-    This is a patch for outputing markdown code that contains codeblocks
+    This is a patch for outputting markdown code that contains codeblocks
 
     It notices markdown blocks (including GitHub-specific variants),
     keeps track of when that specific block is closed,
