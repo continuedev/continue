@@ -101,8 +101,8 @@ export async function getAllAvailableTools(
 }
 
 export function getToolDisplayName(toolName: string): string {
-  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
-  return tool?.displayName || toolName;
+  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.function.name === toolName);
+  return tool?.displayTitle || toolName;
 }
 
 export function extractToolCalls(
@@ -136,12 +136,12 @@ export function convertToolToChatCompletionTool(
   return {
     type: "function" as const,
     function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: {
+      name: tool.function.name,
+      description: tool.function.description,
+      parameters: tool.function.parameters || {
         type: "object",
-        required: tool.parameters.required,
-        properties: tool.parameters.properties,
+        properties: {},
+        required: [],
       },
     },
   };
@@ -149,18 +149,22 @@ export function convertToolToChatCompletionTool(
 
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
-    name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
-    description: mcpTool.description ?? "",
-    parameters: {
-      type: "object",
-      properties: (mcpTool.inputSchema.properties ?? {}) as Record<
-        string,
-        ParameterSchema
-      >,
-      required: mcpTool.inputSchema.required,
+    type: "function" as const,
+    function: {
+      name: mcpTool.name,
+      description: mcpTool.description ?? "",
+      parameters: {
+        type: "object",
+        properties: (mcpTool.inputSchema.properties ?? {}) as Record<
+          string,
+          ParameterSchema
+        >,
+        required: mcpTool.inputSchema.required,
+      },
     },
-    readonly: undefined, // MCP tools don't have readonly property
+    displayTitle: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
+    readonly: false,
+    group: "MCP",
     isBuiltIn: false,
     run: async (args: any) => {
       const result = await services.mcp?.runTool(mcpTool.name, args);
@@ -234,12 +238,22 @@ export async function executeToolCall(
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  const parameters = tool.function.parameters;
+  if (
+    !parameters ||
+    typeof parameters !== "object" ||
+    !("required" in parameters)
+  ) {
+    return; // No parameter validation if schema is missing
+  }
+
+  const requiredParams = parameters.required ?? [];
+  const properties = parameters.properties ?? {};
+
+  for (const paramName of requiredParams) {
     if (
-      requiredParams.includes(paramName) &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
+      toolCall.arguments[paramName] === undefined ||
+      toolCall.arguments[paramName] === null
     ) {
       throw new Error(
         `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,

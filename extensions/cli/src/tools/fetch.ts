@@ -5,21 +5,25 @@ import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { Tool } from "./types.js";
 
 export const fetchTool: Tool = {
-  name: "Fetch",
-  displayName: "Fetch",
-  description:
-    "Fetches content from a URL, converts to markdown, and handles long content with truncation",
-  parameters: {
-    type: "object",
-    required: ["url"],
-    properties: {
-      url: {
-        type: "string",
-        description: "The URL to fetch content from",
+  type: "function",
+  function: {
+    name: "Fetch",
+    description:
+      "Fetches content from a URL, converts to markdown, and handles long content with truncation",
+    parameters: {
+      type: "object",
+      required: ["url"],
+      properties: {
+        url: {
+          type: "string",
+          description: "The URL to fetch content from",
+        },
       },
     },
   },
+  displayTitle: "Fetch",
   readonly: true,
+  group: "Built-In",
   isBuiltIn: true,
   preprocess: async (args) => {
     return {

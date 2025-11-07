@@ -32,18 +32,44 @@ export interface PreprocessToolCallResult {
 }
 
 export interface Tool {
-  name: string;
-  displayName: string;
-  description: string;
-  parameters: ToolParametersSchema;
-  preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
-  run: (args: any) => Promise<string>;
-  readonly?: boolean; // Indicates if the tool is readonly
-  isBuiltIn: boolean;
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, any>;
+    strict?: boolean | null;
+  };
+  displayTitle: string;
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
+  readonly: boolean;
+  isInstant?: boolean;
+  uri?: string;
+  faviconUrl?: string;
+  group: string;
+  originalFunctionName?: string;
+  systemMessageDescription?: {
+    prefix: string;
+    exampleArgs?: Array<[string, string | number]>;
+  };
+  defaultToolPolicy?: ToolPolicy;
+  toolCallIcon?: string;
+  preprocessArgs?: (
+    args: Record<string, unknown>,
+    extras: {
+      ide: any; // IDE interface
+    },
+  ) => Promise<Record<string, unknown>>;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
+    processedArgs?: Record<string, unknown>,
   ) => ToolPolicy;
+  // CLI-specific properties
+  preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
+  run: (args: any) => Promise<string>;
+  isBuiltIn: boolean;
 }
 
 export interface ToolCall {
