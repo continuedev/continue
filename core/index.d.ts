@@ -513,7 +513,7 @@ export interface ChatHistoryItem {
   toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
-  appliedRules?: RuleWithSource[];
+  appliedRules?: RuleMetadata[];
   conversationSummary?: string;
 }
 
@@ -1868,18 +1868,21 @@ export type RuleSource =
   | ".continuerules"
   | "agentFile";
 
-export interface RuleWithSource {
+export interface RuleMetadata {
   name?: string;
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
   regex?: string | string[];
-  rule: string;
   description?: string;
   sourceFile?: string;
   alwaysApply?: boolean;
   invokable?: boolean;
 }
+export interface RuleWithSource extends RuleMetadata {
+  rule: string;
+}
+
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
