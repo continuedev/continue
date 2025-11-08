@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.842.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.913.0",
     "@aws-sdk/credential-providers": "^3.840.0",
     "@continuedev/config-types": "^1.0.14",
     "@continuedev/config-yaml": "^1.14.0",
