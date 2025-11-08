@@ -192,7 +192,7 @@ const mercuryMultifileFimTemplate: AutocompleteTemplate = {
           suffix,
         ];
       }
-      return [`<|fim_prefix|>${prefix}`, suffix];
+      return [`${prefix}`, suffix];
     }
 
     const relativePaths = getShortestUniqueRelativeUriPaths(
