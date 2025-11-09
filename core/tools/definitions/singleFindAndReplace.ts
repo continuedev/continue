@@ -1,4 +1,7 @@
 import { Tool } from "../..";
+import { validateSingleEdit } from "../../edit/searchAndReplace/findAndReplaceUtils";
+import { executeFindAndReplace } from "../../edit/searchAndReplace/performReplace";
+import { validateSearchAndReplaceFilepath } from "../../edit/searchAndReplace/validateArgs";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 import { NO_PARALLEL_TOOL_CALLING_INSTRUCTION } from "./editFile";
 
@@ -70,4 +73,31 @@ WARNINGS:
     ],
   },
   defaultToolPolicy: "allowedWithPermission",
+  preprocessArgs: async (args, extras) => {
+    const { oldString, newString, replaceAll } = validateSingleEdit(
+      args.old_string,
+      args.new_string,
+      args.replace_all,
+    );
+    const fileUri = await validateSearchAndReplaceFilepath(
+      args.filepath,
+      extras.ide,
+    );
+
+    const editingFileContents = await extras.ide.readFile(fileUri);
+    const newFileContents = executeFindAndReplace(
+      editingFileContents,
+      oldString,
+      newString,
+      replaceAll ?? false,
+      0,
+    );
+
+    return {
+      ...args,
+      fileUri,
+      editingFileContents,
+      newFileContents,
+    };
+  },
 };

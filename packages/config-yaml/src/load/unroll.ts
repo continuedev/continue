@@ -50,12 +50,12 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       "cause" in e &&
       e.cause === "result.success was false"
     ) {
-      throw new Error(`Failed to parse agent: ${e.message}`);
+      throw new Error(`Failed to parse config: ${e.message}`);
     } else if (e instanceof ZodError) {
-      throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
+      throw new Error(`Failed to parse config: ${formatZodError(e)}`);
     } else {
       throw new Error(
-        `Failed to parse agent: ${e instanceof Error ? e.message : e}`,
+        `Failed to parse config: ${e instanceof Error ? e.message : e}`,
       );
     }
   }
@@ -70,7 +70,7 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
-    throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
+    throw new Error(`Failed to parse config: ${formatZodError(e)}`);
   }
 }
 
@@ -239,6 +239,18 @@ export async function unrollAssistant(
   return result;
 }
 
+export function replaceInputsWithSecrets(yamlContent: string): string {
+  const inputsToSecretsMap: Record<string, string> = {};
+
+  getTemplateVariables(yamlContent)
+    .filter((v) => v.startsWith("inputs."))
+    .forEach((v) => {
+      inputsToSecretsMap[v] = `\${{ ${v.replace("inputs.", "secrets.")} }}`;
+    });
+
+  return fillTemplateVariables(yamlContent, inputsToSecretsMap);
+}
+
 function renderTemplateData(
   rawYaml: string,
   templateData: Partial<TemplateData>,
@@ -284,7 +296,7 @@ export async function unrollAssistantFromContent(
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
-  const templatedYaml = renderTemplateData(rawUnrolledYaml, {
+  let templatedYaml = renderTemplateData(rawUnrolledYaml, {
     secrets: extractFQSNMap(rawUnrolledYaml, [id]),
   });
 
@@ -356,13 +368,6 @@ export async function unrollBlocks(
   injectRequestOptions?: RequestOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
-
-  function injectDuplicationError(errorMsg: string) {
-    errors.push({
-      fatal: false,
-      message: errorMsg,
-    });
-  }
 
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
@@ -536,16 +541,13 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
-            const parsedBlock = parseMarkdownRuleOrConfigYaml(
-              blockConfigYaml,
+            const blockConfigYamlWithSecrets =
+              replaceInputsWithSecrets(blockConfigYaml);
+            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+              blockConfigYamlWithSecrets,
               injectBlock,
             );
-            const blockType = getBlockType(parsedBlock);
-            const resolvedBlock = await resolveBlock(
-              injectBlock,
-              undefined,
-              registry,
-            );
+            const blockType = getBlockType(resolvedBlock);
 
             return {
               blockType,
@@ -622,12 +624,7 @@ export async function unrollBlocks(
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
       unrolledAssistant[sectionResult.section] = sectionResult.blocks.filter(
-        (block) =>
-          !detector.isDuplicated(
-            block,
-            sectionResult.section,
-            injectDuplicationError,
-          ),
+        (block) => !detector.isDuplicated(block, sectionResult.section),
       );
     }
   }
@@ -635,7 +632,7 @@ export async function unrollBlocks(
   // Assign rules result
   if (rulesResult.rules) {
     unrolledAssistant.rules = rulesResult.rules.filter(
-      (rule) => !detector.isDuplicated(rule, "rules", injectDuplicationError),
+      (rule) => !detector.isDuplicated(rule, "rules"),
     );
   }
 
@@ -654,10 +651,7 @@ export async function unrollBlocks(
       key,
       resolvedBlock,
       source,
-    ).filter(
-      (block: any) =>
-        !detector.isDuplicated(block, blockType, injectDuplicationError),
-    );
+    ).filter((block: any) => !detector.isDuplicated(block, blockType));
     unrolledAssistant[key]?.push(...filteredBlocks);
   }
 
@@ -727,7 +721,17 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  // Add source slug for mcp servers
+  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  if (
+    id.uriType === "slug" &&
+    "mcpServers" in parsed &&
+    parsed.mcpServers?.[0]
+  ) {
+    parsed.mcpServers[0].sourceSlug = `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+  }
+
+  return parsed;
 }
 
 export function parseMarkdownRuleOrAssistantUnrolled(

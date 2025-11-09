@@ -5,7 +5,10 @@ export const exitTool: Tool = {
   displayName: "Exit",
   description:
     "Exit the current process with status code 1, indicating a failure or error",
-  parameters: {},
+  parameters: {
+    type: "object",
+    properties: {},
+  },
   readonly: false,
   isBuiltIn: true,
   run: async (): Promise<string> => {

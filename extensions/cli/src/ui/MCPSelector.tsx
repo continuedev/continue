@@ -117,6 +117,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         { label: "⏹️  Stop all servers", value: "stop-all" },
       );
     }
+
+    // Add "Explore MCP Servers" option at the bottom
+    options.push({
+      label: "🔍 Explore MCP Servers",
+      value: "explore-mcp-servers",
+    });
+
     return options;
   };
 
@@ -280,6 +287,12 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         await mcpService.shutdownConnections();
         setMessage("All servers stopped");
         break;
+      case "explore-mcp-servers":
+        // Open the MCP servers hub in the default browser
+        const open = (await import("open")).default;
+        await open("https://hub.continue.dev/explore?type=mcpServers");
+        setMessage("Opened MCP servers hub in browser");
+        break;
       case "back":
         onCancel();
         return;
@@ -328,14 +341,24 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
             const { color: statusColor, statusText } =
               getServerStatusDisplay(serverInfo);
-            const { command, args } = serverInfo.config;
-            let cmd = command ? quote([command, ...(args ?? [])]) : "";
-            cmd = cmd.replace(/\$\{\{.*\}\}/, "(secret)");
+
+            let configText = "";
+            if ("command" in serverInfo.config) {
+              const { command, args } = serverInfo.config;
+              const cmd = command ? quote([command, ...(args ?? [])]) : "";
+              if (cmd) {
+                configText = ` • Command: ${cmd}`;
+              }
+            } else {
+              const { url } = serverInfo.config;
+              configText = ` • URL: ${url}`;
+            }
+            configText = configText.replace(/\$\{\{.*\}\}/, "(secret)");
 
             return (
               <Text color="dim">
                 Status: <Text color={statusColor}>{statusText}</Text>
-                {cmd && ` • Command: ${cmd}`}
+                {configText}
               </Text>
             );
           })()}

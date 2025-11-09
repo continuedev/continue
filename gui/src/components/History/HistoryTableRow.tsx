@@ -1,8 +1,10 @@
 import {
   DocumentDuplicateIcon,
   CloudIcon,
+  ArrowDownOnSquareIcon,
   PencilSquareIcon,
   TrashIcon,
+  CloudIcon,
 } from "@heroicons/react/24/outline";
 import { BaseSessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
@@ -21,7 +23,10 @@ import {
   loadSession,
   updateSession,
 } from "../../redux/thunks/session";
+import { isShareSessionSupported } from "../../util";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+
+const shareSessionSupported = isShareSessionSupported();
 
 export function HistoryTableRow({
   sessionMetadata,
@@ -45,6 +50,14 @@ export function HistoryTableRow({
     setSessionTitleEditValue(sessionMetadata.title);
   }, [sessionMetadata]);
 
+  const shareSession = async (sessionId: string) => {
+    // "session/share" is not supported in JetBrains yet
+    if (shareSessionSupported) {
+      await ideMessenger.request("session/share", {
+        sessionId,
+      });
+    }
+  };
   const isRemote = "isRemote" in sessionMetadata && sessionMetadata.isRemote;
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -180,6 +193,17 @@ export function HistoryTableRow({
               >
                 <PencilSquareIcon width="1em" height="1em" />
               </HeaderButtonWithToolTip>
+              {shareSessionSupported && (
+                <HeaderButtonWithToolTip
+                  text="Save Chat as Markdown"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await shareSession(sessionMetadata.sessionId);
+                  }}
+                >
+                  <ArrowDownOnSquareIcon width="1em" height="1em" />
+                </HeaderButtonWithToolTip>
+              )}
               <HeaderButtonWithToolTip
                 text="Copy"
                 onClick={async (e) => {

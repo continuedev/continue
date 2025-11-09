@@ -51,3 +51,8 @@ export const getConfigDependentToolDefinitions = (
 
   return tools;
 };
+
+export function serializeTool(tool: Tool) {
+  const { preprocessArgs, evaluateToolCallPolicy, ...rest } = tool;
+  return rest;
+}

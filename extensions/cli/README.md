@@ -44,6 +44,10 @@ cn ls --json
 - `--resume`: Resume the last session for this terminal
 - `<prompt>`: Optional prompt to start with
 
+## Environment Variables
+
+- `CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE`: Disable adding the Continue commit signature to generated commit messages
+
 ## Commands
 
 - `cn`: Start an interactive chat session

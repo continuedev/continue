@@ -1,73 +1,28 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { RuleWithSource } from "core";
-import { getLastNPathParts } from "core/util/uri";
-import { ComponentType, useMemo, useState } from "react";
+import { RuleMetadata } from "core";
+import { getRuleSourceDisplayName } from "core/llm/rules/rules-utils";
+import { ComponentType, useMemo } from "react";
 import ToggleDiv from "../../ToggleDiv";
+import { useOpenRule } from "../Lump/useEditBlock";
 
 interface RulesPeekProps {
-  appliedRules?: RuleWithSource[];
+  appliedRules?: RuleMetadata[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface RulesPeekItemProps {
-  rule: RuleWithSource;
+  rule: RuleMetadata;
 }
-
-// Convert technical source to user-friendly text
-const getSourceLabel = (rule: RuleWithSource): string => {
-  switch (rule.source) {
-    case "default-chat":
-      return "Default Chat";
-    case "default-agent":
-      return "Default Agent";
-    case "model-options-chat":
-      return "Model Chat Options";
-    case "model-options-plan":
-      return "Model Plan Options";
-    case "model-options-agent":
-      return "Model Agent Options";
-    case "rules-block":
-      return "Rules Block";
-    case "colocated-markdown":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
-      } else {
-        return "rules.md";
-      }
-    case "json-systemMessage":
-      return "System Message";
-    case ".continuerules":
-      return "Project Rules";
-    default:
-      return rule.source;
-  }
-};
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = rule.alwaysApply ?? !rule.globs;
-  const [expanded, setExpanded] = useState(false);
-
-  // Define maximum length for rule text display
-  const maxRuleLength = 100;
-  const isRuleLong = rule.rule.length > maxRuleLength;
-
-  // Get the displayed rule text based on expanded state
-  const displayedRule =
-    isRuleLong && !expanded
-      ? `${rule.rule.slice(0, maxRuleLength)}...`
-      : rule.rule;
-
-  const toggleExpand = () => {
-    if (isRuleLong) {
-      setExpanded(!expanded);
-    }
-  };
+  const openRule = useOpenRule();
 
   return (
     <div
-      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
+      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
-      onClick={toggleExpand}
+      onClick={() => openRule(rule)}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
@@ -88,21 +43,8 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
           </div>
         </div>
       </div>
-      <div
-        className={`mt-1 whitespace-pre-line pl-6 pr-2 text-xs italic text-gray-300`}
-        title={
-          isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
-        }
-      >
-        {displayedRule}
-        {isRuleLong && (
-          <span className="text-description-muted ml-1 opacity-0 transition-opacity group-hover:opacity-100">
-            {expanded ? "(collapse)" : "(expand)"}
-          </span>
-        )}
-      </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
-        Source: {getSourceLabel(rule)}
+        Source: {getRuleSourceDisplayName(rule)}
       </div>
     </div>
   );

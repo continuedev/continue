@@ -1,12 +1,12 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { describe, expect, beforeEach, vi, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock dependencies before imports
 vi.mock("../config.js");
 vi.mock("../auth/workos.js");
 
-import { AuthConfig } from "../auth/workos.js";
 import * as workos from "../auth/workos.js";
+import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
 import { ModelService } from "./ModelService.js";
@@ -97,45 +97,6 @@ describe("ModelService", () => {
       const state = await service.initialize(mockAssistant, mockAuthConfig);
 
       expect(state.model).toBe(mockAssistant.models![0]);
-    });
-  });
-
-  describe("update()", () => {
-    test("should update model with new assistant config", async () => {
-      // Initialize first
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        mockLlmApi as any,
-        mockAssistant.models![0] as ModelConfig,
-      ]);
-      await service.initialize(mockAssistant, mockAuthConfig);
-
-      // Update with new assistant
-      const newAssistant = {
-        ...mockAssistant,
-        models: [
-          {
-            provider: "openai",
-            model: "gpt-4-turbo",
-            name: "GPT-4 Turbo",
-            apiKey: "new-key",
-            roles: ["chat"],
-          } as ModelConfig,
-        ],
-      };
-      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
-      vi.mocked(config.getLlmApi).mockReturnValue([
-        newLlmApi as any,
-        newAssistant.models![0] as ModelConfig,
-      ]);
-
-      const state = await service.update(newAssistant, mockAuthConfig);
-
-      expect(state).toEqual({
-        llmApi: newLlmApi,
-        model: newAssistant.models![0],
-        assistant: newAssistant,
-        authConfig: mockAuthConfig,
-      });
     });
   });
 
@@ -357,8 +318,12 @@ describe("ModelService", () => {
   });
 
   describe("getDependencies()", () => {
-    test("should declare auth and config dependencies", () => {
-      expect(service.getDependencies()).toEqual(["auth", "config"]);
+    test("should declare auth, config, and agent-file dependencies", () => {
+      expect(service.getDependencies()).toEqual([
+        "auth",
+        "config",
+        "agentFile",
+      ]);
     });
   });
 

@@ -40,7 +40,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "cursor-pointer transition-all duration-200",
           "hover:enabled:cursor-pointer",
-          "disabled:text-description-muted disabled:pointer-events-none disabled:opacity-50",
+          "disabled:cursor-not-allowed disabled:opacity-50",
           buttonVariants[variant],
           isIcon
             ? iconButtonSizes[size]

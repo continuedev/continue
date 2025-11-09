@@ -15,7 +15,7 @@ export function slashCommandFromPromptFile(
     description,
     prompt,
     source: version === 1 ? "prompt-file-v1" : "prompt-file-v2",
-    promptFile: path,
+    sourceFile: path,
     overrideSystemMessage: systemMessage,
   };
 }

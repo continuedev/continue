@@ -14,7 +14,6 @@ import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
-import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
@@ -137,14 +136,6 @@ const Layout = () => {
       }
     },
     [location, navigate],
-  );
-
-  useWebviewListener(
-    "incrementFtc",
-    async () => {
-      incrementFreeTrialCount();
-    },
-    [],
   );
 
   useWebviewListener(

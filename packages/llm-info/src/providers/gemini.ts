@@ -14,17 +14,7 @@ export const Gemini: ModelProvider = {
       regex: /gemini-2\.5-pro-preview/i,
       recommendedFor: ["chat"],
     },
-    {
-      model: "gemini-2.5-pro-exp-03-25",
-      displayName: "Gemini 2.5 Pro Experimental",
-      description:
-        "Experimental release of Gemini 2.5 Pro with 1M token context window",
-      contextLength: 1048576,
-      maxCompletionTokens: 65536,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.5-pro-exp/i,
-      recommendedFor: ["chat"],
-    },
+
     {
       model: "gemini-2.5-flash-preview-05-20",
       displayName: "Gemini 2.5 Flash Preview",

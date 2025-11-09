@@ -147,4 +147,32 @@ models:
       "A prompt is required when using the -p/--print flag",
     );
   });
+
+  it("should not require prompt when using --agent flag with -p", async () => {
+    await createTestConfig(
+      context,
+      `name: Test Assistant
+version: 1.0.0
+schema: v1
+models:
+  - model: gpt-4
+    provider: openai
+    apiKey: test-key
+    roles:
+      - chat`,
+    );
+
+    const result = await runCLI(context, {
+      args: ["-p", "--config", context.configPath, "--agent", "test/agent"],
+      env: { OPENAI_API_KEY: "test-key" },
+      expectError: true, // Will fail trying to load agent from hub, but should pass prompt validation
+      timeout: 5000,
+    });
+
+    // Should NOT show the "prompt required" error message
+    const output = result.stderr + result.stdout;
+    expect(output).not.toContain(
+      "A prompt is required when using the -p/--print flag",
+    );
+  });
 });

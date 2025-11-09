@@ -27,35 +27,29 @@
 
 **Ship faster with Continuous AI**
 
-**Build and run custom agents across your IDE, terminal, and CI**
+**The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
 
 </div>
 
-Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue), [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension), or [CLI](https://docs.continue.dev/guides/cli)
+Get started in [Mission Control](https://hub.continue.dev/agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
 
-## Agent
+## Background Agents
 
-[Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
+Set workflows to run automatically on [PR opens](https://docs.continue.dev/guides/continuous-ai#pattern-2-the-pr-review-agent), [schedules](https://docs.continue.dev/guides/continuous-ai#pattern-1-the-async-triage-bot), or [any event trigger](https://docs.continue.dev/cli/quick-start#headless-mode)
 
-![agent](docs/images/agent.gif)
+![Background Agents](docs/images/background-agent.gif)
 
-## Chat
+## CLI Agents
 
-[Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
+Watch workflows execute in real-time and approve decisions step-by-step from your [terminal](https://docs.continue.dev/cli/quick-start#tui-mode)
 
-![chat](docs/images/chat.gif)
+![CLI Agents](docs/images/cli-agent.gif)
 
-## Edit
+## IDE Agents
 
-[Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
+Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—let agents handle the refactoring while you keep coding
 
-![edit](docs/images/edit.gif)
-
-## Autocomplete
-
-[Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
-
-![autocomplete](docs/images/autocomplete.gif)
+![IDE Agents](docs/images/agent.gif)
 
 </div>
 

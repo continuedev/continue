@@ -19,7 +19,7 @@ The Continue CLI should emit metrics that provide insights into:
 
 | Environment Variable            | Description                                               | Example Values                       |
 | ------------------------------- | --------------------------------------------------------- | ------------------------------------ |
-| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables telemetry collection (required)                   | `1`                                  |
+| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables OTEL telemetry collection (required)              | `1`                                  |
 | `OTEL_METRICS_EXPORTER`         | Metrics exporter type(s) (comma-separated)                | `console`, `otlp`, `prometheus`      |
 | `OTEL_LOGS_EXPORTER`            | Logs/events exporter type(s) (comma-separated)            | `console`, `otlp`                    |
 | `OTEL_EXPORTER_OTLP_PROTOCOL`   | Protocol for OTLP exporter (all signals)                  | `grpc`, `http/json`, `http/protobuf` |
