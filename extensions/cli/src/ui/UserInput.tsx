@@ -1,14 +1,17 @@
 /* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
-import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
-import { modeService } from "../services/ModeService.js";
+import {
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../services/index.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
@@ -106,6 +109,7 @@ interface UserInputProps {
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  onShowEditSelector?: () => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -122,9 +126,11 @@ const UserInput: React.FC<UserInputProps> = ({
   hideNormalUI = false,
   isRemoteMode = false,
   onImageInClipboardChange,
+  onShowEditSelector,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+  const lastEscapePressRef = useRef<number>(0);
 
   // Stable callback for TextBuffer state changes to prevent race conditions
   const onStateChange = useCallback(() => {
@@ -190,17 +196,17 @@ const UserInput: React.FC<UserInputProps> = ({
   // Cycle through permission modes
   const cycleModes = async () => {
     const modes: PermissionMode[] = ["normal", "plan", "auto"];
-    const currentMode = modeService.getCurrentMode();
+    const currentMode = services.toolPermissions.getCurrentMode();
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     const nextMode = modes[nextIndex];
 
-    modeService.switchMode(nextMode);
+    services.toolPermissions.switchMode(nextMode);
 
     // Update the service container with the new tool permissions state
     // Since TOOL_PERMISSIONS was registered with registerValue(), we need to
     // update its value directly rather than reloading from a factory
-    const updatedState = modeService.getToolPermissionService().getState();
+    const updatedState = services.toolPermissions.getState();
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Show a brief indicator of the mode change
@@ -548,16 +554,14 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        if (isWaitingForResponse || isCompacting) {
+        inputHistory.addEntry(submittedText);
+
+        // We don't queue, we just send in remote mode because the server handles queueing
+        if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
           // Process message later when LLM has responded or compaction is complete
-          void messageQueue.enqueueMessage(
-            submittedText,
-            imageMap,
-            inputHistory,
-          );
+          void messageQueue.enqueueMessage(submittedText, imageMap);
         } else {
           // Submit with images
-          inputHistory.addEntry(submittedText);
           onSubmit(submittedText, imageMap);
         }
 
@@ -623,6 +627,25 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowFileSearch(false);
       return true;
     }
+
+    // Handle double Esc to open edit message selector
+    const now = Date.now();
+    if (
+      inputMode &&
+      !showSlashCommands &&
+      !showFileSearch &&
+      !showBashMode &&
+      onShowEditSelector &&
+      now - lastEscapePressRef.current < 500
+    ) {
+      // Double escape detected
+      onShowEditSelector();
+      lastEscapePressRef.current = 0; // Reset to prevent triple-escape
+      return true;
+    }
+
+    // Track single escape press
+    lastEscapePressRef.current = now;
 
     return false;
   };

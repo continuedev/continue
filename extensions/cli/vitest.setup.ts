@@ -4,6 +4,44 @@ import { resetConsoleOverrides } from "./src/init.js";
 
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
+process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
+
+// Mock fetch to prevent actual API calls in tests
+const originalFetch = global.fetch;
+global.fetch = vi
+  .fn()
+  .mockImplementation(async (url: string | URL, ...args) => {
+    const urlString = url.toString();
+
+    // Mock the default-agent API call
+    if (urlString.includes("get-assistant/continuedev/default-agent")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          configResult: {
+            config: {
+              name: "Default Agent",
+              version: "0.0.1",
+              schema: "v1",
+              models: [
+                {
+                  provider: "anthropic",
+                  name: "claude-sonnet-4-5",
+                  apiKey: "test-key",
+                  roles: ["chat"],
+                },
+              ],
+              rules: [],
+              mcpServers: [],
+            },
+            errors: [],
+          },
+        }),
+      };
+    }
+    return originalFetch(url, ...args);
+  });
 
 // Mock the 'open' package to prevent browser opening during tests
 vi.mock("open", () => ({

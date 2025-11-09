@@ -12,10 +12,10 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import {
+  BaseSessionMetadata,
   IDE,
   ModelDescription,
   Session,
-  BaseSessionMetadata,
 } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
@@ -39,12 +39,11 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export interface FreeTrialStatus {
+export interface CreditStatus {
   optedInToFreeTrial: boolean;
-  chatCount?: number;
-  autocompleteCount?: number;
-  chatLimit: number;
-  autocompleteLimit: number;
+  hasCredits: boolean;
+  creditBalance: number;
+  hasPurchasedCredits: boolean;
 }
 
 export const TRIAL_PROXY_URL =
@@ -53,6 +52,39 @@ export const TRIAL_PROXY_URL =
 export interface RemoteSessionMetadata extends BaseSessionMetadata {
   isRemote: true;
   remoteId: string;
+}
+
+export interface AgentSessionMetadata {
+  createdBy: string;
+  github_repo: string;
+  organizationId?: string;
+  idempotencyKey?: string;
+  source?: string;
+  continueApiKeyId?: string;
+  s3Url?: string;
+  prompt?: string | null;
+  createdBySlug?: string;
+}
+
+export interface AgentSessionView {
+  id: string;
+  devboxId: string | null;
+  name: string | null;
+  icon: string | null;
+  status: string;
+  agentStatus: string | null;
+  unread: boolean;
+  state: string;
+  metadata: AgentSessionMetadata;
+  repoUrl: string;
+  branch: string | null;
+  pullRequestUrl: string | null;
+  pullRequestStatus: string | null;
+  tunnelUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  create_time_ms: string;
+  end_time_ms: string;
 }
 
 export class ControlPlaneClient {
@@ -260,20 +292,20 @@ export class ControlPlaneClient {
     }
   }
 
-  public async getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
+  public async getCreditStatus(): Promise<CreditStatus | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
 
     try {
-      const resp = await this.requestAndHandleError("ide/free-trial-status", {
+      const resp = await this.requestAndHandleError("ide/credits", {
         method: "GET",
       });
-      return (await resp.json()) as FreeTrialStatus;
+      return (await resp.json()) as CreditStatus;
     } catch (e) {
       // Capture control plane API failures to Sentry
       Logger.error(e, {
-        context: "control_plane_free_trial_status",
+        context: "control_plane_credit_status",
       });
       return null;
     }
@@ -320,7 +352,6 @@ export class ControlPlaneClient {
 
   /**
    * Check if remote sessions should be enabled based on feature flags
-   * Requires: PostHog feature flag AND @continue.dev email
    */
   public async shouldEnableRemoteSessions(): Promise<boolean> {
     // Check if user is signed in
@@ -328,17 +359,13 @@ export class ControlPlaneClient {
       return false;
     }
 
-    // Check if user has @continue.dev email
     try {
       const sessionInfo = await this.sessionInfoPromise;
       if (isOnPremSession(sessionInfo) || !sessionInfo) {
         return false;
       }
 
-      const hubSession = sessionInfo as HubSessionInfo;
-      const email = hubSession.account?.id;
-
-      return email ? email.includes("@continue.dev") : false;
+      return true;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_check_remote_sessions_enabled",
@@ -356,7 +383,6 @@ export class ControlPlaneClient {
 
   /**
    * Fetch remote agents/sessions from the control plane
-   * Currently restricted to @continue.dev emails for internal use
    */
   public async listRemoteSessions(): Promise<RemoteSessionMetadata[]> {
     if (!(await this.isSignedIn())) {
@@ -364,8 +390,6 @@ export class ControlPlaneClient {
     }
 
     try {
-      // Note: This endpoint is currently restricted to internal @continue.dev users
-      // In the future, this may be expanded to support broader remote session access
       const resp = await this.requestAndHandleError("agents/devboxes", {
         method: "GET",
       });
@@ -438,6 +462,205 @@ export class ControlPlaneClient {
       throw new Error(
         `Failed to load remote session: ${e instanceof Error ? e.message : "Unknown error"}`,
       );
+    }
+  }
+
+  /**
+   * Create a new background agent
+   */
+  public async createBackgroundAgent(
+    prompt: string,
+    repoUrl: string,
+    name: string,
+    branch?: string,
+    organizationId?: string,
+    contextItems?: any[],
+    selectedCode?: any[],
+    agent?: string,
+  ): Promise<{ id: string }> {
+    if (!(await this.isSignedIn())) {
+      throw new Error("Not signed in to Continue");
+    }
+
+    const requestBody: any = {
+      prompt,
+      repoUrl,
+      name,
+      branchName: branch,
+    };
+
+    if (organizationId) {
+      requestBody.organizationId = organizationId;
+    }
+
+    // Include context items if provided
+    if (contextItems && contextItems.length > 0) {
+      requestBody.contextItems = contextItems.map((item) => ({
+        content: item.content,
+        description: item.description,
+        name: item.name,
+        uri: item.uri,
+      }));
+    }
+
+    // Include selected code if provided
+    if (selectedCode && selectedCode.length > 0) {
+      requestBody.selectedCode = selectedCode.map((code) => ({
+        filepath: code.filepath,
+        range: code.range,
+        contents: code.contents,
+      }));
+    }
+
+    // Include agent configuration if provided
+    if (agent) {
+      requestBody.agent = agent;
+    }
+
+    const resp = await this.requestAndHandleError("agents", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    return (await resp.json()) as { id: string };
+  }
+
+  /**
+   * List all background agents for the current user or organization
+   * @param organizationId - Optional organization ID to filter agents by organization scope
+   * @param limit - Optional limit for number of agents to return (default: 5)
+   */
+  public async listBackgroundAgents(
+    organizationId?: string,
+    limit?: number,
+  ): Promise<{
+    agents: Array<{
+      id: string;
+      name: string | null;
+      status: string;
+      repoUrl: string;
+      createdAt: string;
+      metadata?: {
+        github_repo?: string;
+      };
+    }>;
+    totalCount: number;
+  }> {
+    if (!(await this.isSignedIn())) {
+      return { agents: [], totalCount: 0 };
+    }
+
+    try {
+      // Build URL with query parameters
+      const params = new URLSearchParams();
+      if (organizationId) {
+        params.set("organizationId", organizationId);
+      }
+      if (limit !== undefined) {
+        params.set("limit", limit.toString());
+      }
+
+      const url = `agents${params.toString() ? `?${params.toString()}` : ""}`;
+
+      const resp = await this.requestAndHandleError(url, {
+        method: "GET",
+      });
+
+      const result = (await resp.json()) as {
+        agents: AgentSessionView[];
+        totalCount: number;
+      };
+
+      return {
+        agents: result.agents.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+          status: agent.status,
+          repoUrl: agent.repoUrl,
+          createdAt: agent.createdAt,
+          metadata: {
+            github_repo: agent.metadata.github_repo,
+          },
+        })),
+        totalCount: result.totalCount,
+      };
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_list_background_agents",
+      });
+      return { agents: [], totalCount: 0 };
+    }
+  }
+
+  /**
+   * Get the full agent session information
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent session view including metadata and status
+   */
+  public async getAgentSession(
+    agentSessionId: string,
+  ): Promise<AgentSessionView | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}`,
+        {
+          method: "GET",
+        },
+      );
+
+      return (await resp.json()) as AgentSessionView;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_session",
+        agentSessionId,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Get the state of a specific background agent
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent's session state including history, workspace, and branch
+   */
+  public async getAgentState(agentSessionId: string): Promise<{
+    session: Session;
+    isProcessing: boolean;
+    messageQueueLength: number;
+    pendingPermission: any;
+  } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}/state`,
+        {
+          method: "GET",
+        },
+      );
+
+      const result = (await resp.json()) as {
+        session: Session;
+        isProcessing: boolean;
+        messageQueueLength: number;
+        pendingPermission: any;
+      };
+      return result;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_state",
+        agentSessionId,
+      });
+      return null;
     }
   }
 }

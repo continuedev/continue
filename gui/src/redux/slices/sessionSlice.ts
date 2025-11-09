@@ -9,6 +9,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
   AssistantChatMessage,
+  BaseSessionMetadata,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -16,16 +17,15 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
-  RuleWithSource,
+  RuleMetadata,
   Session,
-  BaseSessionMetadata,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
   ToolCallState,
 } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
-import { BuiltInToolNames } from "core/tools/builtIn";
+import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -36,7 +36,7 @@ import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
-import { addToolCallDeltaToState } from "../../util/toolCallState";
+import { addToolCallDeltaToState, isEditTool } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
@@ -51,13 +51,10 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 function filterMultipleEditToolCalls(
   toolCalls: ToolCallDelta[],
 ): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile];
   let hasSeenEditTool = false;
 
   return toolCalls.filter((toolCall) => {
-    const isEditTool = editToolNames.includes(toolCall.function?.name as any);
-
-    if (isEditTool) {
+    if (toolCall.function?.name && isEditTool(toolCall.function?.name)) {
       if (hasSeenEditTool) {
         return false; // Skip this duplicate edit tool
       }
@@ -228,7 +225,7 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
-const initialState: SessionState = {
+export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
@@ -250,7 +247,7 @@ const initialState: SessionState = {
 
 export const sessionSlice = createSlice({
   name: "session",
-  initialState,
+  initialState: INITIAL_SESSION_STATE,
   reducers: {
     addPromptCompletionPair: (
       state,
@@ -306,7 +303,10 @@ export const sessionSlice = createSlice({
           // Cancel any tool calls that are dangling and generated
           if (message.toolCallStates) {
             message.toolCallStates.forEach((toolCallState) => {
-              if (toolCallState.status === "generated") {
+              if (
+                toolCallState.status === "generated" ||
+                toolCallState.status === "generating"
+              ) {
                 toolCallState.status = "canceled";
               }
             });
@@ -501,7 +501,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: RuleMetadata[];
       }>,
     ) => {
       if (state.history[payload.index]) {
@@ -649,6 +649,29 @@ export const sessionSlice = createSlice({
             lastMessage.role === "assistant"
           ) {
             handleStreamingToolCallUpdates(message, lastItem);
+          }
+
+          // Attach Responses API output item id to the current assistant message if present
+          // fromResponsesChunk sets message.metadata.responsesOutputItemId when it sees output_item.added for messages
+          if (
+            message.role === "assistant" &&
+            lastMessage.role === "assistant" &&
+            message.metadata?.responsesOutputItemId
+          ) {
+            lastMessage.metadata = lastMessage.metadata || {};
+            lastMessage.metadata.responsesOutputItemId = message.metadata
+              .responsesOutputItemId as string;
+          }
+
+          if (
+            message.role === "thinking" &&
+            message.reasoning_details &&
+            lastMessage.role === "thinking"
+          ) {
+            lastMessage.reasoning_details = mergeReasoningDetails(
+              lastMessage.reasoning_details,
+              message.reasoning_details,
+            );
           }
         }
       }
@@ -849,7 +872,7 @@ export const sessionSlice = createSlice({
         );
       }
     },
-    setToolCallArgs: (
+    setProcessedToolCallArgs: (
       state,
       action: PayloadAction<{
         toolCallId: string;
@@ -861,7 +884,7 @@ export const sessionSlice = createSlice({
         action.payload.toolCallId,
       );
       if (toolCallState) {
-        toolCallState.parsedArgs = action.payload.newArgs;
+        toolCallState.processedArgs = action.payload.newArgs;
       }
     },
     cancelToolCall: (
@@ -882,6 +905,7 @@ export const sessionSlice = createSlice({
       state,
       action: PayloadAction<{
         toolCallId: string;
+        output?: ContextItem[]; // optional for convenience
       }>,
     ) => {
       const toolCallState = findToolCallById(
@@ -890,6 +914,9 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "errored";
+        if (action.payload.output) {
+          toolCallState.output = action.payload.output;
+        }
       }
     },
     acceptToolCall: (
@@ -1039,7 +1066,7 @@ export const {
   acceptToolCall,
   setToolGenerated,
   updateToolCallOutput,
-  setToolCallArgs,
+  setProcessedToolCallArgs,
   setMode,
   setIsSessionMetadataLoading,
   setAllSessionMetadata,

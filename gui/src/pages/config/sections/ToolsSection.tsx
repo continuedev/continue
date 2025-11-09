@@ -4,37 +4,75 @@ import {
   ChevronDownIcon,
   CircleStackIcon,
   CommandLineIcon,
+  EllipsisVerticalIcon,
   GlobeAltIcon,
+  PencilIcon,
+  PlayCircleIcon,
+  StopCircleIcon,
   UserCircleIcon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { MCPServerStatus } from "core";
+import { MCPConnectionStatus, MCPServerStatus } from "core";
+import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { useContext, useMemo, useState } from "react";
 import Alert from "../../../components/gui/Alert";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
-import { Button, Card, EmptyState } from "../../../components/ui";
+import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
-import { ToolPolicies } from "../components/ToolPolicies";
+import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
 
 interface MCPServerStatusProps {
+  allToolsOff: boolean;
   server: MCPServerStatus;
   serverFromYaml?: NonNullable<ConfigYaml["mcpServers"]>[number];
+  duplicateDetection: Record<string, boolean>;
 }
 
-function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
+const ServerStatusTooltip: Record<MCPConnectionStatus, string> = {
+  connected: "Active",
+  connecting: "Connecting",
+  "not-connected": "Inactive",
+  disabled: "Off",
+  authenticating: "Authenticating",
+  error: "Error",
+};
+
+const ServerStatusColor: Record<MCPConnectionStatus, string> = {
+  connected: "bg-success",
+  connecting: "bg-warning",
+  "not-connected": "bg-description-muted",
+  disabled: "bg-description-muted",
+  authenticating: "bg-warning",
+  error: "bg-error",
+};
+
+function MCPServerPreview({
+  server,
+  serverFromYaml,
+  allToolsOff,
+  duplicateDetection,
+}: MCPServerStatusProps) {
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
   }>({});
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
-  const dispatch = useAppDispatch();
+  const editBlock = useEditBlock();
 
+  const dispatch = useAppDispatch();
   const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
@@ -53,19 +91,50 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   };
 
   const onAuthenticate = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/startAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/startAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRemoveAuth = async () => {
-    updateMCPServerStatus("authenticating");
-    await ideMessenger.request("mcp/removeAuthentication", server);
+    if ("url" in server) {
+      updateMCPServerStatus("authenticating");
+      await ideMessenger.request("mcp/removeAuthentication", {
+        serverId: server.id,
+        serverUrl: server.url,
+      });
+    }
   };
 
   const onRefresh = async () => {
     updateMCPServerStatus("connecting");
-    ideMessenger.post("mcp/reloadServer", {
+    if (server.status === "disabled") {
+      await ideMessenger.request("mcp/setServerEnabled", {
+        id: server.id,
+        enabled: true,
+      });
+    } else {
+      await ideMessenger.request("mcp/reloadServer", {
+        id: server.id,
+      });
+    }
+  };
+
+  const onDisconnect = async () => {
+    updateMCPServerStatus("disabled");
+    dispatch(
+      updateConfig({
+        ...config,
+        tools: config.tools.filter((tool) => tool.group !== server.id),
+      }),
+    );
+    await ideMessenger.request("mcp/setServerEnabled", {
       id: server.id,
+      enabled: false,
     });
   };
 
@@ -83,7 +152,10 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     sectionKey,
   }: {
     title: string;
-    items: any[];
+    items:
+      | MCPServerStatus["prompts"]
+      | MCPServerStatus["resources"]
+      | MCPServerStatus["resourceTemplates"];
     icon: React.ReactNode;
     sectionKey: string;
   }) => {
@@ -93,7 +165,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     return (
       <div>
         <div
-          className="-mx-2 flex cursor-pointer items-center justify-between rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5"
+          className="mx-2 flex cursor-pointer items-center justify-between rounded hover:bg-gray-50 hover:bg-opacity-5"
           onClick={() => toggleSection(sectionKey)}
         >
           <div className="flex items-center gap-3">
@@ -103,7 +175,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
             <div className="flex items-center gap-2">
               {icon}
               <span className="text-sm">{title}</span>
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-600 text-xs font-medium text-white">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-600 px-0.5 text-xs font-medium text-white">
                 {items.length}
               </div>
             </div>
@@ -111,22 +183,24 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
 
         {isExpanded && (
-          <div className="mb-3 ml-6 mt-2">
+          <div className="mx-2 my-2 mb-3">
             {hasItems ? (
               <div className="space-y-1">
-                {items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="text-description rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs"
-                  >
-                    <code>{item.name}</code>
-                    {item.description && (
-                      <div className="mt-1 text-xs text-gray-500">
-                        {item.description}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {items.map((item, idx) => {
+                  return (
+                    <div
+                      key={idx}
+                      className="text-description rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs"
+                    >
+                      <code>{item.name}</code>
+                      {item.description && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          {item.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-xs italic text-gray-500">
@@ -140,111 +214,150 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   };
 
   return (
-    <div>
+    <div className="">
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h3 className="my-0 text-sm font-medium">{server.name}</h3>
-              <div
-                className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                  server.status === "connected"
-                    ? "bg-success"
-                    : server.status === "connecting"
-                      ? "bg-warning"
-                      : server.status === "not-connected"
-                        ? "bg-description-muted"
-                        : "bg-error"
-                }`}
-              />
+              <ToolTip content={ServerStatusTooltip[server.status] ?? "Error"}>
+                <div
+                  className={`h-2 w-2 flex-shrink-0 rounded-full ${ServerStatusColor[server.status] ?? "bg-error"}`}
+                />
+              </ToolTip>
             </div>
           </div>
         </div>
 
-        <div className="-mr-2.5 flex items-center gap-1">
-          {server.isProtectedResource && (
-            <ToolTip
-              content={
-                server.status === "error"
-                  ? "Authenticate"
-                  : server.status === "authenticating"
-                    ? "Authenticating..."
-                    : "Remove authentication"
-              }
-            >
-              <Button
-                onClick={
+        <div className="flex items-center gap-1">
+          {server.isProtectedResource &&
+            "url" in server &&
+            server.status !== "connected" && (
+              <ToolTip
+                content={
                   server.status === "error"
-                    ? onAuthenticate
+                    ? "Authenticate"
                     : server.status === "authenticating"
-                      ? undefined
-                      : onRemoveAuth
+                      ? "Authenticating..."
+                      : "Remove authentication"
                 }
-                variant="ghost"
-                size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-                disabled={server.status === "authenticating"}
               >
-                {server.status === "authenticating" ? (
-                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
-                ) : (
-                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
-                )}
-              </Button>
-            </ToolTip>
-          )}
+                <Button
+                  onClick={
+                    server.status === "error"
+                      ? onAuthenticate
+                      : server.status === "authenticating"
+                        ? undefined
+                        : onRemoveAuth
+                  }
+                  variant="ghost"
+                  size="sm"
+                  className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
+                  disabled={server.status === "authenticating"}
+                >
+                  {server.status === "authenticating" ? (
+                    <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
+                  ) : (
+                    <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
+                  )}
+                </Button>
+              </ToolTip>
+            )}
+          <Listbox>
+            <ListboxButton>
+              <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
+            </ListboxButton>
+            <ListboxOptions className="min-w-fit" anchor="bottom end">
+              {server.isProtectedResource && server.status === "connected" && (
+                <ListboxOption
+                  value="remove auth"
+                  onClick={onRemoveAuth}
+                  className="justify-start gap-x-1.5"
+                >
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Logout
+                </ListboxOption>
+              )}
 
-          <ToolTip content="Edit server configuration">
-            <div>
-              <EditBlockButton
-                blockType={"mcpServers"}
-                block={serverFromYaml}
-                sourceFile={server.sourceFile}
-              />
-            </div>
-          </ToolTip>
+              <ListboxOption
+                value="edit mcp"
+                className="justify-start gap-x-1.5"
+                onClick={() =>
+                  editBlock(
+                    serverFromYaml && "uses" in serverFromYaml
+                      ? serverFromYaml.uses
+                      : undefined,
+                    server.sourceFile,
+                  )
+                }
+              >
+                <PencilIcon
+                  className={
+                    "h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 text-inherit hover:brightness-125"
+                  }
+                />
+                Edit
+              </ListboxOption>
 
-          <ToolTip content="Refresh server">
-            <Button
-              onClick={onRefresh}
-              variant="ghost"
-              size="sm"
-              className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
-            >
-              <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
-            </Button>
-          </ToolTip>
+              {server.status === "connected" && (
+                <ListboxOption
+                  value="disconnect"
+                  onClick={onDisconnect}
+                  className="justify-start gap-x-1.5"
+                >
+                  <StopCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
+                  Disconnect
+                </ListboxOption>
+              )}
+
+              {server.status !== "connecting" && (
+                <ListboxOption
+                  value="reconnect"
+                  onClick={onRefresh}
+                  className="justify-start gap-x-1.5"
+                >
+                  {server.status === "disabled" ? (
+                    <PlayCircleIcon className="h-4 w-4 flex-shrink-0" />
+                  ) : (
+                    <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+                  )}
+                  Reload
+                </ListboxOption>
+              )}
+            </ListboxOptions>
+          </Listbox>
         </div>
       </div>
 
       {/* Individual resource rows */}
       <div className="mt-1">
-        <ResourceRow
-          title="Tools"
-          items={server.tools}
-          icon={
-            <WrenchScrewdriverIcon className="text-description h-4 w-4 flex-shrink-0" />
-          }
-          sectionKey={`${server.id}-tools`}
+        <ToolPoliciesGroup
+          showIcon={true}
+          groupName={server.name}
+          displayName={"Tools"}
+          allToolsOff={allToolsOff}
+          duplicateDetection={duplicateDetection}
         />
-
-        <ResourceRow
-          title="Prompts"
-          items={server.prompts}
-          icon={
-            <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
-          }
-          sectionKey={`${server.id}-prompts`}
-        />
-
-        <ResourceRow
-          title="Resources"
-          items={[...server.resources, ...server.resourceTemplates]}
-          icon={
-            <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
-          }
-          sectionKey={`${server.id}-resources`}
-        />
+        {server.prompts.length > 0 && (
+          <ResourceRow
+            title="Prompts"
+            items={server.prompts}
+            icon={
+              <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
+            }
+            sectionKey={`${server.id}-prompts`}
+          />
+        )}
+        {(server.resources.length > 0 ||
+          server.resourceTemplates.length > 0) && (
+          <ResourceRow
+            title="Resources"
+            items={[...server.resources, ...server.resourceTemplates]}
+            icon={
+              <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
+            }
+            sectionKey={`${server.id}-resources`}
+          />
+        )}
       </div>
 
       {/* Error display below expandable section */}
@@ -292,8 +405,11 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   );
 }
 
-function McpSubsection() {
+export function ToolsSection() {
+  const availableTools = useAppSelector((state) => state.config.config.tools);
+
   const currentOrg = useAppSelector(selectCurrentOrg);
+  const mode = useAppSelector((store) => store.session.mode);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
@@ -301,6 +417,20 @@ function McpSubsection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const disableMcp = currentOrg?.policy?.allowMcpServers === false;
   const isLocal = selectedProfile?.profileType === "local";
+
+  const duplicateDetection = useMemo(() => {
+    const counts: Record<string, number> = {};
+    availableTools.forEach((tool) => {
+      if (counts[tool.function.name]) {
+        counts[tool.function.name] = counts[tool.function.name] + 1;
+      } else {
+        counts[tool.function.name] = 1;
+      }
+    });
+    return Object.fromEntries(
+      Object.entries(counts).map(([k, v]) => [k, v > 1]),
+    );
+  }, [availableTools]);
 
   const mergedBlocks = useMemo(() => {
     const parsed = selectedProfile?.rawYaml
@@ -317,7 +447,7 @@ function McpSubsection() {
         .map((server) => [server.name, server]) ?? [],
     );
 
-    return (servers ?? []).map((doc) => ({
+    return (servers ?? []).map((doc: MCPServerStatus) => ({
       block: doc,
       blockFromYaml: yamlServersByName.get(doc.name),
     }));
@@ -336,56 +466,78 @@ function McpSubsection() {
     }
   };
 
-  return (
-    <div>
-      <ConfigHeader
-        title="MCP Servers"
-        variant="sm"
-        onAddClick={!disableMcp ? handleAddMcpServer : undefined}
-        addButtonTooltip="Add MCP server"
-      />
-      {disableMcp ? (
-        <Card>
-          <EmptyState message="MCP servers are disabled in your organization" />
-        </Card>
-      ) : mergedBlocks.length > 0 ? (
-        mergedBlocks.map(({ block, blockFromYaml }, index) => (
-          <div key={block.id}>
-            <Card>
-              <MCPServerPreview server={block} serverFromYaml={blockFromYaml} />
-            </Card>
-            {index < mergedBlocks.length - 1 && <div className="mb-4" />}
-          </div>
-        ))
-      ) : (
-        <Card>
-          <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
-        </Card>
-      )}
-    </div>
-  );
-}
+  const allToolsOff = useMemo(() => {
+    return mode === "chat";
+  }, [mode]);
 
-function ToolPoliciesSubsection() {
-  return (
-    <div>
-      <ConfigHeader title="Tool Policies" variant="sm" />
-      <ToolPolicies />
-    </div>
-  );
-}
-
-export function ToolsSection() {
-  const availableTools = useAppSelector((state) => state.config.config.tools);
-
-  const hasTools = availableTools && availableTools.length > 0;
+  const availableToolsMessage =
+    mode === "chat"
+      ? "All tools disabled in Chat, switch to Plan or Agent mode to use tools"
+      : mode === "plan"
+        ? "Read-only tools available in Plan mode"
+        : "";
 
   return (
     <>
-      <ConfigHeader title="Tools" />
-      <div className="space-y-6">
-        <McpSubsection />
-        {hasTools && <ToolPoliciesSubsection />}
+      <ConfigHeader
+        title="Tools"
+        subtext="Manage MCP servers and tool policies"
+        className="mb-2"
+      />
+      {!!availableToolsMessage && (
+        <div className="mb-4">
+          <Alert type="info" size="sm">
+            <span className="text-2xs italic">{availableToolsMessage}</span>
+          </Alert>
+        </div>
+      )}
+      <div className="mb-4 space-y-6">
+        <ToolPoliciesGroup
+          showIcon={false}
+          groupName={BUILT_IN_GROUP_NAME}
+          displayName={"Built-in Tools"}
+          allToolsOff={allToolsOff}
+          duplicateDetection={duplicateDetection}
+        />
+        <ConfigHeader
+          className="pr-2"
+          title="MCP Servers"
+          variant="sm"
+          onAddClick={handleAddMcpServer}
+          addButtonTooltip="Add MCP server"
+          showAddButton={!disableMcp}
+        />
+        {disableMcp ? (
+          <Card>
+            <EmptyState message="MCP servers are disabled in your organization" />
+          </Card>
+        ) : (
+          <>
+            {mode === "chat" && (
+              <Alert type="info" size="sm">
+                <span className="text-2xs italic">
+                  All MCPs are disabled in Chat, switch to Plan or Agent mode to
+                  use MCPs
+                </span>
+              </Alert>
+            )}
+            {mergedBlocks.length > 0 ? (
+              mergedBlocks.map(({ block, blockFromYaml }) => (
+                <MCPServerPreview
+                  key={block.name}
+                  server={block}
+                  serverFromYaml={blockFromYaml}
+                  allToolsOff={allToolsOff}
+                  duplicateDetection={duplicateDetection}
+                />
+              ))
+            ) : (
+              <Card>
+                <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
+              </Card>
+            )}
+          </>
+        )}
       </div>
     </>
   );

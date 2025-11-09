@@ -1,12 +1,23 @@
+import {
+  AgentFile,
+  ModelConfig,
+  parseAgentFile,
+} from "@continuedev/config-yaml";
 import JSZip from "jszip";
 
+import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
 /**
+ * Pattern to match valid hub slugs (owner/package format)
+ */
+export const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+
+/**
  * Hub package type definitions
  */
-export type HubPackageType = "rule" | "mcp" | "model" | "prompt";
+export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "agentFile";
 
 /**
  * Hub package processor interface
@@ -59,7 +70,7 @@ export const mcpProcessor: HubPackageProcessor<any> = {
 /**
  * Model processor - handles JSON/YAML configuration files
  */
-export const modelProcessor: HubPackageProcessor<any> = {
+export const modelProcessor: HubPackageProcessor<ModelConfig> = {
   type: "model",
   expectedFileExtensions: [".json", ".yaml", ".yml"],
   parseContent: async (content: string, filename: string) => {
@@ -94,8 +105,19 @@ export const promptProcessor: HubPackageProcessor<string> = {
   parseContent: (content: string) => content,
 };
 
+export const agentFileProcessor: HubPackageProcessor<AgentFile> = {
+  type: "agentFile",
+  expectedFileExtensions: [".md"],
+  parseContent: (content: string) => parseAgentFile(content),
+  validateContent: (agentFile: AgentFile) => {
+    return !!agentFile.name;
+  },
+};
+
 /**
  * Generic hub package loader
+ * Automatically includes authentication headers when user is logged in,
+ * enabling access to private packages.
  */
 export async function loadPackageFromHub<T>(
   slug: string,
@@ -127,7 +149,17 @@ export async function loadPackageFromHub<T>(
   }
 
   try {
-    const response = await fetch(downloadUrl);
+    // Load auth config and get access token for private package access
+    const authConfig = loadAuthConfig();
+    const accessToken = getAccessToken(authConfig);
+
+    // Prepare headers with optional authorization
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(downloadUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -213,35 +245,27 @@ export const loadMcpFromHub = (slug: string) =>
 export const loadModelFromHub = (slug: string) =>
   loadPackageFromHub(slug, modelProcessor);
 
-export const loadPromptFromHub = (slug: string) =>
-  loadPackageFromHub(slug, promptProcessor);
-
 /**
  * Process a rule specification - supports file paths, hub slugs, or direct content
  */
 export async function processRule(ruleSpec: string): Promise<string> {
-  // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    ruleSpec.includes("/") &&
-    !ruleSpec.startsWith(".") &&
-    !ruleSpec.startsWith("/")
-  ) {
-    return await loadRuleFromHub(ruleSpec);
-  }
+  const trimmedRuleSpec = ruleSpec.trim();
+  const hasNewline = /[\r\n]/.test(ruleSpec);
 
-  // If it looks like a file path
-  if (
-    ruleSpec.startsWith(".") ||
-    ruleSpec.startsWith("/") ||
-    ruleSpec.includes("/") ||
-    ruleSpec.includes("\\") ||
-    /\.[a-zA-Z]+$/.test(ruleSpec) // Has file extension at the end
-  ) {
+  // If it looks like a file path (single line, typical path indicators)
+  const looksLikePath =
+    !hasNewline &&
+    (trimmedRuleSpec.startsWith(".") ||
+      trimmedRuleSpec.startsWith("/") ||
+      trimmedRuleSpec.includes("\\") ||
+      /\.[a-zA-Z]+$/.test(trimmedRuleSpec));
+
+  if (looksLikePath) {
     const fs = await import("fs");
     const path = await import("path");
 
     try {
-      const absolutePath = path.resolve(ruleSpec);
+      const absolutePath = path.resolve(trimmedRuleSpec);
       if (!fs.existsSync(absolutePath)) {
         throw new Error(`Rule file not found: ${ruleSpec}`);
       }
@@ -253,8 +277,41 @@ export async function processRule(ruleSpec: string): Promise<string> {
     }
   }
 
+  // Check if it might be a hub slug (contains "/" and is a single line)
+  if (!hasNewline && trimmedRuleSpec.includes("/")) {
+    const parts = trimmedRuleSpec.split("/");
+
+    // If it's exactly 2 parts and matches hub slug pattern, treat as hub slug
+    if (parts.length === 2 && HUB_SLUG_PATTERN.test(trimmedRuleSpec)) {
+      return await loadRuleFromHub(trimmedRuleSpec);
+    }
+
+    // If it has more than 2 parts, it's an invalid hub slug
+    if (parts.length > 2) {
+      throw new Error(
+        `Invalid hub slug format. Expected "owner/package", got: ${trimmedRuleSpec}`,
+      );
+    }
+  }
+
   // Otherwise, treat it as direct string content
   return ruleSpec;
+}
+
+export function isStringRule(rule: string) {
+  if (rule.includes(" ") || rule.includes("\n")) {
+    return true;
+  }
+  if (
+    ["file:/", ".", "/", "~"].some((prefix) => rule.startsWith(prefix)) ||
+    rule.includes("\\")
+  ) {
+    return false;
+  }
+  if (HUB_SLUG_PATTERN.test(rule)) {
+    return false;
+  }
+  return true;
 }
 
 /**

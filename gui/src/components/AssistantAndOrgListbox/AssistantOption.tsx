@@ -34,7 +34,7 @@ export function AssistantOption({
   }, [profile.errors]);
 
   function handleOptionClick() {
-    // Always select the agent first (even if it has errors)
+    // Always select the config first (even if it has errors)
     // optimistic update
     dispatch(setSelectedProfile(profile.id));
     // notify core which will handle actual update
@@ -87,7 +87,7 @@ export function AssistantOption({
                 className="text-error hover:enabled:text-error my-0 h-4 w-4 p-0"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(CONFIG_ROUTES.AGENTS);
+                  navigate(CONFIG_ROUTES.CONFIGS);
                 }}
               >
                 <ExclamationTriangleIcon className="h-3.5 w-3.5" />

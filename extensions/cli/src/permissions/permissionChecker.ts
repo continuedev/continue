@@ -1,11 +1,7 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 
-import { getServiceSync } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/types.js";
-import { SERVICE_NAMES } from "../services/types.js";
-import { getAllBuiltinTools } from "../tools/index.js";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import {
   PermissionCheckResult,
   PermissionPolicy,
@@ -131,25 +127,9 @@ function permissionPolicyToToolPolicy(
  */
 export function checkToolPermission(
   toolCall: ToolCallRequest,
-  permissions?: ToolPermissions,
+  permissions: ToolPermissions,
 ): PermissionCheckResult {
-  // Get permissions from service if not provided
-  let policies = permissions?.policies;
-
-  if (!policies) {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-
-    // Only use defaults if service is not ready, not registered, or has no value
-    // This allows critical runtime errors to propagate properly
-    if (serviceResult.state !== "ready" || !serviceResult.value) {
-      policies = DEFAULT_TOOL_POLICIES;
-    } else {
-      policies =
-        serviceResult.value.permissions.policies || DEFAULT_TOOL_POLICIES;
-    }
-  }
+  const policies = permissions.policies;
 
   // First, get the base permission from static policies
   let basePermission: PermissionPolicy = "ask";
@@ -167,9 +147,7 @@ export function checkToolPermission(
   }
 
   // Check if tool has dynamic policy evaluation
-  const builtinTools = getAllBuiltinTools();
-  const tool = builtinTools.find((t) => t.name === toolCall.name);
-
+  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolCall.name);
   if (tool?.evaluateToolCallPolicy) {
     // Convert CLI permission to core policy
     const basePolicy = permissionPolicyToToolPolicy(basePermission);
@@ -200,20 +178,4 @@ export function checkToolPermission(
     permission: basePermission,
     matchedPolicy,
   };
-}
-
-/**
- * Filters out tools that have "exclude" permission from a list of tool names.
- */
-export function filterExcludedTools(
-  toolNames: string[],
-  permissions?: ToolPermissions,
-): string[] {
-  return toolNames.filter((toolName) => {
-    const result = checkToolPermission(
-      { name: toolName, arguments: {} },
-      permissions,
-    );
-    return result.permission !== "exclude";
-  });
 }

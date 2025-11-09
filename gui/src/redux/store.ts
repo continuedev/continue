@@ -35,7 +35,6 @@ const rootReducer = combineReducers({
 
 const saveSubsetFilters = [
   createFilter("session", [
-    "history",
     "id",
     "lastSessionId",
     "title",
@@ -73,7 +72,6 @@ const migrations: MigrationManifest = {
         defaultModelTitle: oldState?.state?.defaultModelTitle ?? undefined,
       },
       session: {
-        history: oldState?.state?.history ?? [],
         id: oldState?.state?.sessionId ?? "",
       },
       tabs: {

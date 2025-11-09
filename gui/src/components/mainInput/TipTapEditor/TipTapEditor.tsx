@@ -57,7 +57,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
-  const { editor, onEnterRef } = createEditorConfig({
+  const { editor, onEnter } = createEditorConfig({
     props,
     ideMessenger,
     dispatch,
@@ -68,9 +68,16 @@ function TipTapEditorInner(props: TipTapEditorProps) {
     if (props.isMainInput && editor) {
       mainEditorContext.setMainEditor(editor);
       mainEditorContext.setInputId(props.inputId);
-      mainEditorContext.onEnterRef.current = onEnterRef.current;
+      mainEditorContext.onEnterRef.current = onEnter;
     }
-  }, [editor, props.isMainInput, props.inputId, mainEditorContext, onEnterRef]);
+  }, [
+    editor,
+    props.isMainInput,
+    props.inputId,
+    mainEditorContext,
+    onEnter,
+    isStreaming,
+  ]);
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(true);
 
@@ -272,7 +279,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          onEnter={onEnterRef.current}
+          onEnter={onEnter}
           onImageFileSelected={(file) => {
             void handleImageFile(ideMessenger, file).then((result) => {
               if (!editor) {

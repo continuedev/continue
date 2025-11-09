@@ -14,7 +14,7 @@ interface TabsState {
   tabs: Tab[];
 }
 
-const initialState: TabsState = {
+export const INITIAL_TABS_STATE: TabsState = {
   tabs: [
     {
       id: Date.now().toString(36) + Math.random().toString(36).substring(2),
@@ -28,7 +28,7 @@ const initialState: TabsState = {
 
 export const tabsSlice = createSlice({
   name: "tabs",
-  initialState,
+  initialState: INITIAL_TABS_STATE,
   reducers: {
     setTabs: (state, action: PayloadAction<Tab[]>) => {
       state.tabs = action.payload;

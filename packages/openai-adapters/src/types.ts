@@ -79,12 +79,14 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   //   cacheSystemMessage: z.boolean().optional(),
   //   cacheConversation: z.boolean().optional(),
   // }).optional(),
-  env: z.object({
-    region: z.string().optional(),
-    accessKeyId: z.string().optional(),
-    secretAccessKey: z.string().optional(),
-    profile: z.string().optional(),
-  }),
+  env: z
+    .object({
+      region: z.string().optional(),
+      accessKeyId: z.string().optional(),
+      secretAccessKey: z.string().optional(),
+      profile: z.string().optional(),
+    })
+    .optional(),
 });
 export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
 
@@ -115,6 +117,11 @@ export const CohereConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("cohere"),
 });
 export type CohereConfig = z.infer<typeof CohereConfigSchema>;
+
+export const CometAPIConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("cometapi"),
+});
+export type CometAPIConfig = z.infer<typeof CometAPIConfigSchema>;
 
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
@@ -197,5 +204,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   VertexAIConfigSchema,
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
+  CometAPIConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

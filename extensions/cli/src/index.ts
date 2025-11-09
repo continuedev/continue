@@ -216,15 +216,18 @@ addCommonOptions(program)
       }
     }
 
-    // In headless mode, ensure we have a prompt
-    if (options.print && !prompt) {
+    // In headless mode, ensure we have a prompt unless using --agent flag
+    // Agent files can provide their own prompts
+    if (options.print && !prompt && !options.agent) {
       safeStderr(
-        "Error: A prompt is required when using the -p/--print flag.\n\n",
+        "Error: A prompt is required when using the -p/--print flag, unless --prompt or --agent is provided.\n\n",
       );
       safeStderr("Usage examples:\n");
       safeStderr('  cn -p "please review my current git diff"\n');
       safeStderr('  echo "hello" | cn -p\n');
       safeStderr('  cn -p "analyze the code in src/"\n');
+      safeStderr("  cn -p --agent my-org/my-agent\n");
+      safeStderr("  cn -p --prompt my-org/my-prompt\n");
       await gracefulExit(1);
     }
 
@@ -276,6 +279,10 @@ addCommonOptions(
   .option(
     "--url <url>",
     "Connect directly to the specified URL instead of creating a new remote environment",
+  )
+  .option(
+    "--id <id>",
+    "Connect to an existing remote agent by id and establish a tunnel",
   )
   .option(
     "--idempotency-key <key>",

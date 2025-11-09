@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, Session, BaseSessionMetadata } from "core";
+import { BaseSessionMetadata, ChatMessage, Session } from "core";
 import { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
@@ -67,11 +67,7 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
     dispatch(deleteSessionMetadata(id)); // optimistic
     const state = getState();
     if (id === state.session.id) {
-      await dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
+      await dispatch(loadLastSession());
     }
     const result = await extra.ideMessenger.request("history/delete", { id });
     if (result.status === "error") {
@@ -146,27 +142,31 @@ export const loadRemoteSession = createAsyncThunk<
   },
 );
 
-export const loadLastSession = createAsyncThunk<
-  void,
-  {
-    saveCurrentSession: boolean;
-  },
-  ThunkApiType
->(
+export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
   "session/loadLast",
-  async ({ saveCurrentSession }, { extra, dispatch, getState }) => {
-    const state = getState();
+  async (_, { extra, dispatch, getState }) => {
+    let lastSessionId = getState().session.lastSessionId;
 
-    if (state.session.id && saveCurrentSession) {
-    }
-    const lastSessionId = getState().session.lastSessionId;
+    // const lastSessionResult = await extra.ideMessenger.request("history/list", {
+    //   limit: 1,
+    // });
+    // if (lastSessionResult.status === "success") {
+    //   lastSessionId = lastSessionResult.content.at(0)?.sessionId;
+    // }
 
     if (!lastSessionId) {
       dispatch(newSession());
       return;
     }
 
-    const session = await getSession(extra.ideMessenger, lastSessionId);
+    let session: Session;
+    try {
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    } catch {
+      // retry again after 1 sec
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      session = await getSession(extra.ideMessenger, lastSessionId);
+    }
     dispatch(newSession(session));
   },
 );

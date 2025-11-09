@@ -1,5 +1,6 @@
 import type { ContextItem } from "core/index.js";
 import { fetchUrlContentImpl } from "core/tools/implementations/fetchUrlContent.js";
+import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { Tool } from "./types.js";
 
@@ -9,10 +10,13 @@ export const fetchTool: Tool = {
   description:
     "Fetches content from a URL, converts to markdown, and handles long content with truncation",
   parameters: {
-    url: {
-      type: "string",
-      description: "The URL to fetch content from",
-      required: true,
+    type: "object",
+    required: ["url"],
+    properties: {
+      url: {
+        type: "string",
+        description: "The URL to fetch content from",
+      },
     },
   },
   readonly: true,
@@ -43,7 +47,10 @@ export const fetchTool: Tool = {
       console.error = originalConsoleError;
 
       if (contextItems.length === 0) {
-        return `Error: Could not fetch content from ${url}`;
+        throw new ContinueError(
+          ContinueErrorReason.Unspecified,
+          `Could not fetch content from ${url}`,
+        );
       }
 
       // Format the results for CLI display
@@ -56,7 +63,12 @@ export const fetchTool: Tool = {
         })
         .join("\n\n");
     } catch (error) {
-      return `Error: ${error instanceof Error ? error.message : String(error)}`;
+      if (error instanceof ContinueError) {
+        throw error;
+      }
+      throw new Error(
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   },
 };

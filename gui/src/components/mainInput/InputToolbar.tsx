@@ -56,7 +56,6 @@ function InputToolbar(props: InputToolbarProps) {
   const hasReasoningEnabled = useAppSelector(
     (store) => store.session.hasReasoningEnabled,
   );
-
   const isEnterDisabled =
     props.disabled || (isInEdit && codeToEdit.length === 0);
 
@@ -223,8 +222,8 @@ function InputToolbar(props: InputToolbarProps) {
                   props.onEnter({
                     useCodebase: false,
                     noContext: useActiveFile
-                      ? !(isMetaEquivalentKeyPressed(e as any) || e.altKey)
-                      : isMetaEquivalentKeyPressed(e as any) || e.altKey,
+                      ? isMetaEquivalentKeyPressed(e as any) || e.altKey
+                      : !(isMetaEquivalentKeyPressed(e as any) || e.altKey),
                   });
                 }
               }}
