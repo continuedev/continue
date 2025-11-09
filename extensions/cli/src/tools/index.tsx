@@ -235,11 +235,10 @@ export async function executeToolCall(
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  for (const paramName of requiredParams) {
     if (
-      requiredParams.includes(paramName) &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
+      toolCall.arguments[paramName] === undefined ||
+      toolCall.arguments[paramName] === null
     ) {
       throw new Error(
         `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,

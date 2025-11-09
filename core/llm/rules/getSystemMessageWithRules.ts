@@ -1,6 +1,7 @@
 import { minimatch } from "minimatch";
 import {
   ContextItemWithId,
+  RuleMetadata,
   RuleWithSource,
   ToolResultChatMessage,
   UserChatMessage,
@@ -324,7 +325,7 @@ export const getApplicableRules = (
   return applicableRules;
 };
 
-export function getRuleId(rule: RuleWithSource): string {
+export function getRuleId(rule: RuleMetadata): string {
   return rule.slug ?? rule.sourceFile ?? rule.name ?? rule.source;
 }
 
@@ -342,7 +343,7 @@ export const getSystemMessageWithRules = ({
   rulePolicies?: RulePolicies;
 }): {
   systemMessage: string;
-  appliedRules: RuleWithSource[];
+  appliedRules: RuleMetadata[];
 } => {
   const appliedRules = getApplicableRules(
     userMessage,
@@ -359,8 +360,10 @@ export const getSystemMessageWithRules = ({
     systemMessage += rule.rule;
   }
 
+  const ruleMetadata = appliedRules.map(({ rule, ...rest }) => rest);
+
   return {
     systemMessage,
-    appliedRules,
+    appliedRules: ruleMetadata,
   };
 };

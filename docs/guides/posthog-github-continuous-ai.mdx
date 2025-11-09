@@ -134,16 +134,16 @@ You only need to configure the PostHog MCP credential - it automatically handles
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [PostHog GitHub Continuous AI Agent](https://hub.continue.dev/continuedev/awesome-models-posthog-gh) on Continue Hub and click **"Install Agent"** or run:
+        Visit the [PostHog Continuous AI Agent](https://hub.continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Hub and click **"Install Agent"** or run:
         
         ```bash
-        cn --config continuedev/awesome-models-posthog-gh
+        cn --agent continuedev/posthog-continuous-ai-agent
         ```
 
         This agent includes:
-        - **Optimized prompts** for [PostHog analysis](https://hub.continue.dev/continuedev/posthog-analysis) and [GitHub issue creation](https://hub.continue.dev/continuedev/posthog-github-issues)
-        - **[Built-in rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules)** for consistent formatting and error handling
-        - **[PostHog MCP](https://hub.continue.dev/posthog/posthog-mcp)** for more reliable API interactions
+        - **Optimized prompts** for PostHog analysis and GitHub issue creation
+        - **Built-in rules** for consistent formatting and error handling
+        - **PostHog MCP** for more reliable API interactions
       </Step>
 
       <Step title="Run the Analysis">
@@ -204,7 +204,7 @@ You only need to configure the PostHog MCP credential - it automatically handles
       - **Continue CLI Pro Plan** with
       the models add-on, OR 
       - **Your own API keys** added to Continue Hub secrets
-      (same as Step 1 below) The agent will automatically detect and use your
+      The agent will automatically detect and use your
       configuration.
 
 </Accordion>

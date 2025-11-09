@@ -1,4 +1,5 @@
-import { ModelDescription } from "core";
+import { ModelDescription, RuleMetadata } from "core";
+import { DEFAULT_SYSTEM_MESSAGES_URL } from "core/llm/defaultSystemMessages";
 import { useContext } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -61,6 +62,22 @@ export function useEditDoc() {
       editBlock(undefined, docConfig.sourceFile);
     } else {
       editBlock(docConfig.uses, undefined);
+    }
+  };
+}
+
+export function useOpenRule() {
+  const editBlock = useEditBlock();
+  const ideMessenger = useContext(IdeMessengerContext);
+  return (rule: RuleMetadata) => {
+    if (
+      rule.source === "default-chat" ||
+      rule.source === "default-plan" ||
+      rule.source === "default-agent"
+    ) {
+      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
+    } else {
+      editBlock(rule?.slug, rule?.sourceFile);
     }
   };
 }

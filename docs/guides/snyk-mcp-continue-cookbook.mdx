@@ -77,7 +77,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your project directory and run:
         ```bash
-        cn --config continuedev/snyk-continuous-ai
+        cn --agent continuedev/snyk-continuous-ai-agent
         ```
 
         This agent includes:
@@ -109,7 +109,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Step>
 
   <Step title="Connect Snyk MCP via Continue Hub">
-    Visit the [Snyk MCP on Continue Hub](https://hub.continue.dev/snyk/snyk-mcp) and click **Install** to add it to the agent you created in the step above.
+    Visit the [Snyk Continuous AI Agent](https://hub.continue.dev/continuedev/snyk-continuous-ai-agent) and click **Install** to add it to the agent you created in the step above.
 
     This will add Snyk MCP to your agent's available tools. The Hub listing automatically configures the MCP command:
     ```bash
@@ -454,7 +454,7 @@ jobs:
             # Use Continue CLI to generate mitigation suggestions
             PROMPT="Analyze these Snyk security findings and provide specific, actionable mitigation steps for each issue. Focus on: 1) Root cause, 2) Immediate fix, 3) Long-term prevention. Findings: $FINDINGS_SUMMARY. Provide clear, prioritized recommendations."
 
-            cn --config continuedev/snyk-continuous-ai -p "$PROMPT" --auto > mitigation-suggestions.md || {
+            cn --agent continuedev/snyk-continuous-ai-agent -p "$PROMPT" --auto > mitigation-suggestions.md || {
               echo "⚠️ Warning: Could not generate AI suggestions"
               exit 0
             }
