@@ -194,6 +194,8 @@ async function loadFromSource(
           injectBlocks,
         );
 
+      // TODO this is currently skipped because we are forcing default config
+      // Because models add on won't work for injected blocks e.g. default model, (only default config)
       case "no-config":
         return await unrollPackageIdentifiersAsConfigYaml(
           injectBlocks,
