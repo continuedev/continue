@@ -267,8 +267,6 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   });
 
   const handleMainMenuSelect = async (value: string) => {
-    if (!mcpService) return;
-
     if (value.startsWith("server:")) {
       // Handle server selection
       const serverName = value.replace("server:", "");
@@ -280,11 +278,11 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
     switch (value) {
       case "restart-all":
-        await mcpService.restartAllServers();
+        await mcpService?.restartAllServers();
         setMessage("All servers restarted");
         break;
       case "stop-all":
-        await mcpService.shutdownConnections();
+        await mcpService?.shutdownConnections();
         setMessage("All servers stopped");
         break;
       case "explore-mcp-servers":
@@ -300,15 +298,20 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   };
 
   const handleServerAction = async (action: string) => {
-    if (!mcpService || !selectedServer) return;
     try {
       switch (action) {
         case "restart":
-          await mcpService.restartServer(selectedServer);
+          if (!selectedServer) {
+            return;
+          }
+          await mcpService?.restartServer(selectedServer);
           setMessage(`Server "${selectedServer}" restarted`);
           break;
         case "stop":
-          await mcpService.stopServer(selectedServer);
+          if (!selectedServer) {
+            return;
+          }
+          await mcpService?.stopServer(selectedServer);
           setMessage(`Server "${selectedServer}" stopped`);
           break;
         case "back":
