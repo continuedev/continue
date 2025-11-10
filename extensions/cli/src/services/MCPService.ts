@@ -15,6 +15,7 @@ import {
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
+import { TEMPLATE_VAR_REGEX } from "@continuedev/config-yaml";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -249,6 +250,8 @@ export class MCPService
     this.updateState();
 
     try {
+      this.validateConfigSecrets(serverConfig);
+
       const client = await this.getConnectedClient(serverConfig);
 
       connection.client = client;
@@ -350,6 +353,25 @@ export class MCPService
     );
     await Promise.all(shutdownPromises);
     this.updateState();
+  }
+
+  public validateConfigSecrets(serverConfig: MCPServerConfig): void {
+    const configString = JSON.stringify(serverConfig);
+    const unresolvedSecrets: string[] = [];
+
+    let match;
+    const regex = new RegExp(TEMPLATE_VAR_REGEX);
+    while ((match = regex.exec(configString)) !== null) {
+      const fullPath = match[1];
+      const secretName = fullPath.split(/[./]+/).pop() || fullPath;
+      unresolvedSecrets.push(secretName);
+    }
+
+    if (unresolvedSecrets.length > 0) {
+      throw new Error(
+        `${serverConfig.name} MCP Server has unresolved secrets: ${unresolvedSecrets.join(", ")}`,
+      );
+    }
   }
 
   /**
