@@ -120,10 +120,7 @@ export const loadSession = createAsyncThunk<
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
-    const chatModelTitle = (session as any).chatModelTitle as
-      | string
-      | null
-      | undefined;
+    const chatModelTitle = session.chatModelTitle;
     if (chatModelTitle) {
       const state = getState();
       const org = state.profiles.organizations.find(
@@ -140,7 +137,7 @@ export const loadSession = createAsyncThunk<
             role: "chat",
             modelTitle: chatModelTitle,
             selectedProfile,
-          }) as any,
+          }),
         );
       }
     }
@@ -173,10 +170,7 @@ export const loadRemoteSession = createAsyncThunk<
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
-    const chatModelTitle = (session as any).chatModelTitle as
-      | string
-      | null
-      | undefined;
+    const chatModelTitle = session.chatModelTitle;
     if (chatModelTitle) {
       const state = getState();
       const org = state.profiles.organizations.find(
@@ -193,7 +187,7 @@ export const loadRemoteSession = createAsyncThunk<
             role: "chat",
             modelTitle: chatModelTitle,
             selectedProfile,
-          }) as any,
+          }),
         );
       }
     }
@@ -228,10 +222,7 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
-    const chatModelTitle = (session as any).chatModelTitle as
-      | string
-      | null
-      | undefined;
+    const chatModelTitle = session.chatModelTitle;
     if (chatModelTitle) {
       const state = getState();
       const org = state.profiles.organizations.find(
@@ -248,7 +239,7 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
             role: "chat",
             modelTitle: chatModelTitle,
             selectedProfile,
-          }) as any,
+          }),
         );
       }
     }
@@ -339,7 +330,7 @@ export const saveCurrentSession = createAsyncThunk<
       history: state.session.history,
       mode: state.session.mode,
       chatModelTitle: selectedChatModel?.title ?? null,
-    } as Session;
+    };
 
     const result = await dispatch(updateSession(session));
     unwrapResult(result);

@@ -1,7 +1,6 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAppSelector } from "../../redux/hooks";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
 import { newSession } from "../../redux/slices/sessionSlice";
@@ -15,8 +14,6 @@ import {
 import { AppDispatch, RootState } from "../../redux/store";
 import { loadSession, saveCurrentSession } from "../../redux/thunks/session";
 import { varWithFallback } from "../../styles/theme";
-import { useAuth } from "../../context/Auth";
-import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 
 // Haven't set up theme colors for tabs yet
 // Will keep it simple and choose from existing ones. Comments show vars we could use
