@@ -257,18 +257,18 @@ export class MCPService
       return decodeSecretLocation(v.replace("secrets.", "")).secretName;
     });
 
-    if (unrendered.length > 0) {
-      const message = `${serverConfig.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}
+    try {
+      if (unrendered.length > 0) {
+        const message = `${serverConfig.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}
 For personal use you can set the secret in the hub at https://hub.continue.dev/settings/secrets or pass it to the CLI environment.
 Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled for the secret.`;
-      if (this.isHeadless) {
-        throw new Error(message);
-      } else {
-        connection.warnings.push(message);
+        if (this.isHeadless) {
+          throw new Error(message);
+        } else {
+          connection.warnings.push(message);
+        }
       }
-    }
 
-    try {
       const client = await this.getConnectedClient(serverConfig);
 
       connection.client = client;
