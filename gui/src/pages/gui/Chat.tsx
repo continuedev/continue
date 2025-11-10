@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
 import { useFindWidget } from "../../components/find/FindWidget";
@@ -82,7 +82,7 @@ const StepsDiv = styled.div`
 
 export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
-function fallbackRender({ error, resetErrorBoundary }: any) {
+function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
