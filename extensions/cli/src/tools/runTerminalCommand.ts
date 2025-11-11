@@ -35,7 +35,7 @@ export const runTerminalCommandTool: Tool = {
 
 Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 
-IMPORTANT: If you need to edit files, prefer using the Edit or MultiEdit tools instead of bash commands (like sed, awk, perl, or shell scripts). Edit tools are more reliable and less error-prone for file modifications.
+IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc).
 `,
   parameters: {
     type: "object",
