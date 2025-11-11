@@ -60,7 +60,8 @@
                 "pages": [
                   "hub/agents/intro",
                   "hub/agents/overview",
-                  "hub/agents/create-and-edit"
+                  "hub/agents/create-and-edit",
+                  "hub/agents/slack-agent"
                 ]
               },
               "hub/sharing",
