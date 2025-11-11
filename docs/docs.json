@@ -87,6 +87,7 @@
               "ide-extensions/quick-start",
               {
                 "group": "Agent",
+                "expanded": false,
                 "icon": "robot",
                 "pages": [
                   "ide-extensions/agent/quick-start",
@@ -99,6 +100,7 @@
               },
               {
                 "group": "Chat",
+                "expanded": false,
                 "icon": "messages",
                 "pages": [
                   "ide-extensions/chat/quick-start",
@@ -110,6 +112,8 @@
               },
               {
                 "group": "Autocomplete",
+                "expanded": false,
+
                 "icon": "sparkles",
                 "pages": [
                   "ide-extensions/autocomplete/quick-start",
@@ -122,6 +126,8 @@
               },
               {
                 "group": "Edit",
+                "expanded": false,
+
                 "icon": "pen-to-square",
                 "pages": [
                   "ide-extensions/edit/quick-start",
