@@ -232,21 +232,38 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-configs",
-              "guides/configuring-models-rules-tools",
-              "guides/codebase-documentation-awareness",
-              "guides/cli",
-              "guides/doc-writing-agent-cli",
-              "guides/continuous-ai",
-              "guides/continuous-ai-readiness-assessment",
-              "guides/plan-mode-guide",
-              "guides/ollama-guide",
-              "guides/instinct",
-              "guides/running-continue-without-internet",
-              "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model",
-              "guides/notion-continue-guide",
-              "guides/github-pr-review-bot"
+              {
+                "group": "Understanding Continue",
+                "pages": [
+                  "guides/understanding-configs",
+                  "guides/configuring-models-rules-tools",
+                  "guides/codebase-documentation-awareness",
+                  "guides/plan-mode-guide",
+                  "guides/ollama-guide",
+                  "guides/instinct",
+                  "guides/running-continue-without-internet",
+                  "guides/custom-code-rag",
+                  "guides/how-to-self-host-a-model"
+                ]
+              },
+              {
+                "group": "CLI Guides",
+                "pages": ["guides/cli", "guides/doc-writing-agent-cli"]
+              },
+              {
+                "group": "Continuous AI Guides",
+                "pages": [
+                  "guides/continuous-ai",
+                  "guides/continuous-ai-readiness-assessment"
+                ]
+              },
+              {
+                "group": "Integration Guides",
+                "pages": [
+                  "guides/notion-continue-guide",
+                  "guides/github-pr-review-bot"
+                ]
+              }
             ]
           },
           {
