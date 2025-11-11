@@ -444,6 +444,16 @@ async function runHeadlessMode(
   prompt: string | undefined,
   options: ChatOptions,
 ): Promise<void> {
+  // Critical validation: Ensure we have a prompt in headless mode
+  // This prevents the CLI from hanging in TTY-less environments
+  if (!prompt) {
+    throw new Error(
+      'Headless mode requires a prompt. Use: cn -p "your prompt"\n' +
+        'Or pipe input: echo "prompt" | cn -p\n' +
+        "Or use agent files: cn -p --agent my-org/my-agent",
+    );
+  }
+
   // Initialize services for headless mode
   const { permissionOverrides } = processCommandFlags(options);
 
