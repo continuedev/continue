@@ -52,11 +52,7 @@ import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
-import {
-  setDialogEntryOn,
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
@@ -283,7 +279,6 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", currentCount + 1);
         if (currentCount === 300) {
           dispatch(setDialogMessage(<FeedbackDialog />));
-          dispatch(setDialogEntryOn(false));
           dispatch(setShowDialog(true));
         }
       } else {
