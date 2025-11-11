@@ -56,8 +56,13 @@
               },
               {
                 "group": "Agents",
-                "icon": "cloud",
-                "pages": ["hub/agents/intro"]
+                "icon": "robot",
+                "pages": [
+                  "hub/agents/intro",
+                  "hub/agents/overview",
+                  "hub/agents/create-and-edit",
+                  "hub/agents/slack-agent"
+                ]
               },
               "hub/sharing",
               "hub/source-control"

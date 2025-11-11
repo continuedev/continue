@@ -50,7 +50,6 @@ export class MCPService
   private connections: Map<string, ServerConnection> = new Map();
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
-  private isHeadless = false;
 
   getDependencies(): string[] {
     return [SERVICE_NAMES.CONFIG];
@@ -71,15 +70,13 @@ export class MCPService
    */
   async doInitialize(
     assistant: AssistantConfig,
-    waitForConnections = false,
+    hasAgentFile: boolean,
+    isHeadless: boolean | undefined,
   ): Promise<MCPServiceState> {
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
       serverCount: assistant.mcpServers?.length || 0,
     });
-
-    // Store headless mode flag
-    this.isHeadless = waitForConnections;
 
     await this.shutdownConnections();
 
@@ -102,23 +99,24 @@ export class MCPService
         logger.debug("MCP connections established", {
           connectionCount: connections.length,
         });
-        this.updateState();
       },
     );
-    if (waitForConnections) {
+    if (isHeadless || hasAgentFile) {
       await connectionInit;
 
-      // In headless mode, throw error if any MCP server failed to connect
-      const failedConnections = Array.from(this.connections.values()).filter(
-        (c) => c.status === "error",
-      );
-      if (failedConnections.length > 0) {
-        const errorMessages = failedConnections.map(
-          (c) => `${c.config?.name}: ${c.error}`,
+      if (isHeadless) {
+        // With headless or agent, throw error if any MCP server failed to connect
+        const failedConnections = Array.from(this.connections.values()).filter(
+          (c) => c.status === "error",
         );
-        throw new Error(
-          `MCP server(s) failed to load in headless mode:\n${errorMessages.join("\n")}`,
-        );
+        if (failedConnections.length > 0) {
+          const errorMessages = failedConnections.map(
+            (c) => `${c.config?.name}: ${c.error}`,
+          );
+          throw new Error(
+            `MCP server(s) failed to load:\n${errorMessages.join("\n")}`,
+          );
+        }
       }
     } else {
       this.updateState();
@@ -249,7 +247,7 @@ export class MCPService
     this.updateState();
 
     try {
-      const client = await this.getConnectedClient(serverConfig);
+      const client = await this.getConnectedClient(serverConfig, connection);
 
       connection.client = client;
       connection.status = "connected";
@@ -276,13 +274,6 @@ export class MCPService
             name: serverName,
             error: errorMessage,
           });
-
-          // In headless mode, throw error on capability failures
-          if (this.isHeadless) {
-            throw new Error(
-              `Failed to load prompts from MCP server ${serverName}: ${errorMessage}`,
-            );
-          }
         }
       }
 
@@ -300,13 +291,6 @@ export class MCPService
             name: serverName,
             error: errorMessage,
           });
-
-          // In headless mode, throw error on capability failures
-          if (this.isHeadless) {
-            throw new Error(
-              `Failed to load tools from MCP server ${serverName}: ${errorMessage}`,
-            );
-          }
         }
       }
 
@@ -314,16 +298,20 @@ export class MCPService
     } catch (error) {
       const errorMessage = getErrorString(error);
       connection.status = "error";
-      connection.error = errorMessage;
+
+      // Convert any warnings to error at time of connection failure
+      if (connection.warnings.length > 0) {
+        const stderrContent = connection.warnings.join("\n");
+        connection.error = `${errorMessage}\n\nServer stderr:\n${stderrContent}`;
+        connection.warnings = [];
+      } else {
+        connection.error = errorMessage;
+      }
+
       logger.error("Failed to connect to MCP server", {
         name: serverName,
-        error: errorMessage,
+        error: connection.error,
       });
-
-      // In headless mode, re-throw the error to fail fast
-      if (this.isHeadless) {
-        throw error;
-      }
     }
 
     this.updateState();
@@ -392,6 +380,7 @@ export class MCPService
    */
   private async getConnectedClient(
     serverConfig: MCPServerConfig,
+    connection: ServerConnection,
   ): Promise<Client> {
     const client = new Client(
       { name: "continue-cli-client", version: "1.0.0" },
@@ -404,7 +393,7 @@ export class MCPService
         name: serverConfig.name,
         command: serverConfig.command,
       });
-      const transport = this.constructStdioTransport(serverConfig);
+      const transport = this.constructStdioTransport(serverConfig, connection);
       await client.connect(transport, {});
     } else {
       // SSE/HTTP: if type isn't explicit: try http and fall back to sse
@@ -424,11 +413,14 @@ export class MCPService
       } catch (error: unknown) {
         // on authorization error, use "mcp-remote" with stdio transport to connect
         if (is401Error(error)) {
-          const transport = this.constructStdioTransport({
-            name: serverConfig.name,
-            command: "npx",
-            args: ["-y", "mcp-remote", serverConfig.url],
-          });
+          const transport = this.constructStdioTransport(
+            {
+              name: serverConfig.name,
+              command: "npx",
+              args: ["-y", "mcp-remote", serverConfig.url],
+            },
+            connection,
+          );
           await client.connect(transport, {});
         } else {
           throw error;
@@ -507,18 +499,35 @@ export class MCPService
   }
   private constructStdioTransport(
     serverConfig: StdioMcpServer,
+    connection: ServerConnection,
   ): StdioClientTransport {
     const env: Record<string, string> = serverConfig.env || {};
-    if (process.env.PATH !== undefined) {
-      env.PATH = process.env.PATH;
+    if (process.env) {
+      for (const [key, value] of Object.entries(process.env)) {
+        if (!(key in env) && !!value) {
+          env[key] = value;
+        }
+      }
     }
 
-    return new StdioClientTransport({
+    const transport = new StdioClientTransport({
       command: serverConfig.command,
       args: serverConfig.args || [],
       env,
       cwd: serverConfig.cwd,
-      stderr: "ignore",
+      stderr: "pipe",
     });
+
+    const stderrStream = transport.stderr;
+    if (stderrStream) {
+      stderrStream.on("data", (data: Buffer) => {
+        const stderrOutput = data.toString().trim();
+        if (stderrOutput) {
+          connection.warnings.push(stderrOutput);
+        }
+      });
+    }
+
+    return transport;
   }
 }

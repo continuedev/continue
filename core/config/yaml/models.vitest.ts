@@ -52,7 +52,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
       requestOptions: {
         timeout: 30000,
         headers: {
-          "User-Agent": "Continue/1.0.0",
+          "user-agent": "Continue/1.0.0",
         },
         proxy: "global-proxy",
       },
@@ -112,7 +112,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
     expect(llm.requestOptions).toEqual({
       timeout: 60000, // model-specific takes precedence
       headers: {
-        "User-Agent": "Continue/1.0.0", // from global request options
+        "user-agent": "Continue/1.0.0", // from global request options
         Authorization: "Bearer token123", // from model
       },
       proxy: "model-proxy", // model-specific takes precedence
@@ -236,7 +236,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
       expect(llm.requestOptions).toEqual({
         timeout: 120000, // model-specific takes precedence
         headers: {
-          "User-Agent": "Continue/1.0.0", // from global request options
+          "user-agent": "Continue/1.0.0", // from global request options
           "X-Custom": "autodetect", // from model
         },
         proxy: "global-proxy", // from global request options
@@ -302,7 +302,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
     expect(llm.requestOptions).toEqual({
       timeout: 90000,
       headers: {
-        "User-Agent": "Continue/1.0.0",
+        "user-agent": "Continue/1.0.0",
       },
       proxy: "global-proxy",
     });
@@ -345,7 +345,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
     const llm = result[0];
 
     expect(llm.requestOptions?.headers).toEqual({
-      "User-Agent": "Continue/1.0.0", // from global request options
+      "user-agent": "Continue/1.0.0", // from global request options
       "Cache-Control": "no-cache", // from global request options
       Authorization: "Bearer model-token", // from model
       Accept: "application/json", // from model (overrides config)

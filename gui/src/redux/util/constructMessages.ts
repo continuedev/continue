@@ -2,6 +2,7 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
+  RuleMetadata,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
@@ -41,7 +42,7 @@ export function constructMessages(
   useSystemToolsFramework?: SystemMessageToolsFramework,
 ): {
   messages: ChatMessage[];
-  appliedRules: RuleWithSource[];
+  appliedRules: RuleMetadata[];
   appliedRuleIndex: number;
 } {
   // Find the most recent conversation summary and filter history accordingly
