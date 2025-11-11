@@ -23,39 +23,39 @@
             "pages": ["index"]
           },
           {
-            "group": "Hub",
+            "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "hub/introduction",
+              "mission-control/introduction",
               {
                 "group": "Configs",
                 "icon": "book",
                 "pages": [
-                  "hub/configs/intro",
-                  "hub/configs/use-a-config",
-                  "hub/configs/create-a-config",
-                  "hub/configs/edit-a-config"
+                  "mission-control/configs/intro",
+                  "mission-control/configs/use-a-config",
+                  "mission-control/configs/create-a-config",
+                  "mission-control/configs/edit-a-config"
                 ]
               },
               {
                 "group": "Governance",
                 "icon": "building",
                 "pages": [
-                  "hub/governance/creating-an-org",
-                  "hub/governance/org-permissions",
-                  "hub/governance/pricing"
+                  "mission-control/governance/creating-an-org",
+                  "mission-control/governance/org-permissions",
+                  "mission-control/governance/pricing"
                 ]
               },
               {
                 "group": "Secrets",
                 "icon": "key",
                 "pages": [
-                  "hub/secrets/secret-types",
-                  "hub/secrets/secret-resolution"
+                  "mission-control/secrets/secret-types",
+                  "mission-control/secrets/secret-resolution"
                 ]
               },
-              "hub/sharing",
-              "hub/source-control"
+              "mission-control/sharing",
+              "mission-control/source-control"
             ]
           },
           {
@@ -379,39 +379,91 @@
   "redirects": [
     {
       "source": "/hub",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
+    },
+    {
+      "source": "/hub/introduction",
+      "destination": "/mission-control/introduction"
+    },
+    {
+      "source": "/hub/configs/intro",
+      "destination": "/mission-control/configs/intro"
+    },
+    {
+      "source": "/hub/configs/use-a-config",
+      "destination": "/mission-control/configs/use-a-config"
+    },
+    {
+      "source": "/hub/configs/create-a-config",
+      "destination": "/mission-control/configs/create-a-config"
+    },
+    {
+      "source": "/hub/configs/edit-a-config",
+      "destination": "/mission-control/configs/edit-a-config"
     },
     {
       "source": "/hub/governance",
-      "destination": "/hub/governance/org-permissions"
+      "destination": "/mission-control/governance/org-permissions"
+    },
+    {
+      "source": "/hub/governance/creating-an-org",
+      "destination": "/mission-control/governance/creating-an-org"
+    },
+    {
+      "source": "/hub/governance/org-permissions",
+      "destination": "/mission-control/governance/org-permissions"
+    },
+    {
+      "source": "/hub/governance/pricing",
+      "destination": "/mission-control/governance/pricing"
     },
     {
       "source": "/hub/secrets",
-      "destination": "/hub/secrets/secret-types"
+      "destination": "/mission-control/secrets/secret-types"
+    },
+    {
+      "source": "/hub/secrets/secret-types",
+      "destination": "/mission-control/secrets/secret-types"
+    },
+    {
+      "source": "/hub/secrets/secret-resolution",
+      "destination": "/mission-control/secrets/secret-resolution"
+    },
+    {
+      "source": "/hub/sharing",
+      "destination": "/mission-control/sharing"
+    },
+    {
+      "source": "/hub/source-control",
+      "destination": "/mission-control/source-control"
     },
     {
       "source": "/hub/blocks",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
     },
     {
       "source": "/hub/blocks/intro",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
     },
     {
       "source": "/hub/blocks/use-a-block",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
     },
     {
       "source": "/hub/blocks/block-types",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
     },
     {
       "source": "/hub/workflows/intro",
-      "destination": "/hub/agents/intro"
+      "destination": "/agents/intro"
     },
     {
       "source": "/hub/blocks/create-a-block",
-      "destination": "/hub/introduction"
+      "destination": "/mission-control/introduction"
+    },
+    {
+      "source": "/hub/blocks/bundles",
+      "destination": "/mission-control/introduction"
     },
     {
       "source": "/customize",
@@ -1081,10 +1133,7 @@
       "source": "/guides/build-your-own-context-provider",
       "destination": "/customize/deep-dives/custom-providers"
     },
-    {
-      "source": "/hub/blocks/bundles",
-      "destination": "/hub/introduction"
-    },
+
     {
       "source": "/customize/settings",
       "destination": "/customize/overview"
@@ -1239,31 +1288,31 @@
     },
     {
       "source": "/hub/assistants/intro",
-      "destination": "/hub/configs/intro"
+      "destination": "/mission-control/configs/intro"
     },
     {
       "source": "/hub/assistants/use-an-assistant",
-      "destination": "/hub/configs/use-a-config"
+      "destination": "/mission-control/configs/use-a-config"
     },
     {
       "source": "/hub/assistants/create-an-assistant",
-      "destination": "/hub/configs/create-a-config"
+      "destination": "/mission-control/configs/create-a-config"
     },
     {
       "source": "/hub/assistants/edit-an-assistant",
-      "destination": "/hub/configs/edit-a-config"
+      "destination": "/mission-control/configs/edit-a-config"
     },
     {
       "source": "/hub/agents/use-an-agent",
-      "destination": "/hub/configs/use-a-config"
+      "destination": "/mission-control/configs/use-a-config"
     },
     {
       "source": "/hub/agents/create-an-agent",
-      "destination": "/hub/configs/create-a-config"
+      "destination": "/mission-control/configs/create-a-config"
     },
     {
       "source": "/hub/agents/edit-an-agent",
-      "destination": "/hub/configs/edit-a-config"
+      "destination": "/mission-control/configs/edit-a-config"
     },
     {
       "source": "/guides/understanding-assistants",
@@ -1383,7 +1432,11 @@
     },
     {
       "source": "/hub/agents/slack-agent",
-      "destination": "/hub/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack-agent"
+    },
+    {
+      "source": "/hub/integrations/slack-agent",
+      "destination": "/mission-control/integrations/slack-agent"
     }
   ]
 }
