@@ -262,6 +262,7 @@
             "group": "Cookbooks",
             "icon": "book-open-cover",
             "pages": [
+              "guides/klavis-mcp-continue-cookbook",
               "guides/posthog-github-continuous-ai",
               "guides/continue-docs-mcp-cookbook",
               "guides/github-mcp-continue-cookbook",
