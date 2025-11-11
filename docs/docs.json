@@ -64,8 +64,7 @@
                   "hub/agents/slack-agent"
                 ]
               },
-              "hub/sharing",
-              "hub/source-control"
+              "hub/sharing"
             ]
           },
           {
@@ -219,7 +218,6 @@
                 "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
-                  "customize/deep-dives/slash-commands",
                   "customize/deep-dives/rules",
                   "customize/deep-dives/prompts",
                   "customize/deep-dives/autocomplete",
