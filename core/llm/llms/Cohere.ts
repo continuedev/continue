@@ -78,10 +78,14 @@ class Cohere extends BaseLLM {
               },
             }));
           } else {
-            msg.content.push({
-              type: "text",
-              text: m.content,
-            });
+            if (typeof m.content === "string") {
+              msg.content.push({
+                type: "text",
+                text: m.content,
+              });
+            } else {
+              msg.content.push(...m.content);
+            }
           }
 
           messages.push(msg);
