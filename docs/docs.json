@@ -425,6 +425,10 @@
       "destination": "/customize/overview"
     },
     {
+      "source": "/customization/overview#change-your-model-provider",
+      "destination": "/customize/overview#change-your-model-provider"
+    },
+    {
       "source": "/customization/models",
       "destination": "/customize/models"
     },
@@ -1108,18 +1112,7 @@
       "source": "/hub/blocks/bundles",
       "destination": "/hub/introduction"
     },
-    {
-      "source": "/customize/settings",
-      "destination": "/customize/overview"
-    },
-    {
-      "source": "/advanced/deep-dives/settings",
-      "destination": "/customize/overview"
-    },
-    {
-      "source": "/customize/deep-dives/settings",
-      "destination": "/customize/overview"
-    },
+
     {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
