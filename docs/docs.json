@@ -421,6 +421,10 @@
       "destination": "/customize/overview"
     },
     {
+      "source": "/customize",
+      "destination": "/customize/overview"
+    },
+    {
       "source": "/customization/overview",
       "destination": "/customize/overview"
     },
