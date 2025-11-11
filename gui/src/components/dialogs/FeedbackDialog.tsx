@@ -1,5 +1,4 @@
 import { usePostHog } from "posthog-js/react";
-import { useState } from "react";
 import { Button, Input, SecondaryButton } from "..";
 import { useAppDispatch } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
@@ -7,10 +6,6 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 export default function FeedbackDialog() {
   const posthog = usePostHog();
   const dispatch = useAppDispatch();
-  const [submitted, setSubmitted] = useState(false);
-
-  if (submitted) {
-  }
 
   return (
     <div className="mx-auto flex max-w-md flex-col p-6 pt-8">
