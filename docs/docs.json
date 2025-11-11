@@ -54,18 +54,17 @@
                   "hub/secrets/secret-resolution"
                 ]
               },
-              {
-                "group": "Agents",
-                "icon": "robot",
-                "pages": [
-                  "hub/agents/intro",
-                  "hub/agents/overview",
-                  "hub/agents/create-and-edit",
-                  "hub/agents/slack-agent"
-                ]
-              },
               "hub/sharing",
               "hub/source-control"
+            ]
+          },
+          {
+            "group": "Agents",
+            "icon": "robot",
+            "pages": [
+              "agents/intro",
+              "agents/overview",
+              "agents/create-and-edit"
             ]
           },
           {
@@ -1369,6 +1368,22 @@
     {
       "source": "/getting-started/quick-start",
       "destination": "/ide-extensions/quick-start"
+    },
+    {
+      "source": "/hub/agents/intro",
+      "destination": "/agents/intro"
+    },
+    {
+      "source": "/hub/agents/overview",
+      "destination": "/agents/overview"
+    },
+    {
+      "source": "/hub/agents/create-and-edit",
+      "destination": "/agents/create-and-edit"
+    },
+    {
+      "source": "/hub/agents/slack-agent",
+      "destination": "/hub/integrations/slack-agent"
     }
   ]
 }

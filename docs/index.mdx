@@ -1,7 +1,7 @@
 ---
 title: "Welcome to Continue"
 icon: book-open
-description: "Kick off agents from the terminal, IDE, or Mission Control"
+description: "Create, run, and automate AI agents across Mission Control, terminal, and CI/CD"
 ---
 
 <Frame>
@@ -9,12 +9,50 @@ description: "Kick off agents from the terminal, IDE, or Mission Control"
 </Frame>
 
 <Note>
-  **Launch background agents, iterate in terminal, and deploy workflows in CI/CD**
+  ****
 </Note>
+
+## Mission Control
+<Note>
+  Central dashboard for managing Agents, Tasks, Automations, and Integrations.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Create a Task" icon="plus" href="/mission-control/tasks">
+    Trigger your Agent with a prompt, tools, and rules to complete a specific job.
+    <br />
+    <sub>• Run manually or from your Inbox</sub><br />
+    <sub>• Reuse and share with teammates</sub>
+  </Card>
+  <Card title="Set up an Automation" icon="clock" href="/mission-control/automations">
+    Schedule recurring Tasks or connect webhooks to trigger Agents automatically.
+    <br />
+    <sub>• Cron or webhook-based triggers</sub><br />
+    <sub>• Ideal for daily audits or status checks</sub>
+  </Card>
+</CardGroup>
+
+## Integrations
+<Note>
+  Connect Continue to your existing developer tools to power Tasks and Automations.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="GitHub" icon="github" href="/integrations/github">
+    Enable repository access for Agents to read and create PRs.
+  </Card>
+  <Card title="Slack" icon="slack" href="/integrations/slack">
+    Mention <code>@Continue</code> in Slack to trigger Agents and receive updates.
+  </Card>
+  <Card title="Sentry" icon="alert-triangle" href="/integrations/sentry">
+    Automatically generate PRs to fix new issues from Sentry alerts.
+  </Card>
+</CardGroup>
+
 
 ## Continue CLI
 
-<Info>Terminal-native AI coding assistance with TUI and headless modes.</Info>
+<Note>Terminal-native AI coding assistance with TUI and headless modes.</Note>
 
 <CodeGroup>
 
@@ -63,10 +101,10 @@ description: "Kick off agents from the terminal, IDE, or Mission Control"
 
 ## IDE Extensions
 
-<Info>
-  **Complement your CLI workflow** - Rich editor integrations for interactive
-  development.
-</Info>
+<Note>
+  Optional IDE extensions for real-time code editing and assistance.
+</Note>
+
 
 <CardGroup cols={2}>
   <Card
@@ -85,50 +123,15 @@ description: "Kick off agents from the terminal, IDE, or Mission Control"
   >
     Install from JetBrains Plugin Repository
     <br />
-    <sub>Autocomplete and multi-file edits</sub>
-  </Card>
-</CardGroup>
-
-## Core Features
-
-<CardGroup cols={2}>
-  <Card title="Agent" icon="robot" href="/ide-extensions/agent/quick-start">
-    Multi-step workflows and complex task automation
-  </Card>
-  <Card title="Chat" icon="messages" href="/ide-extensions/chat/quick-start">
-    Ask questions and explore your codebase
-  </Card>
-  <Card title="Edit" icon="pen-to-square" href="/ide-extensions/edit/quick-start">
-    In-place code editing without breaking flow
-  </Card>
-  <Card
-    title="Autocomplete"
-    icon="sparkles"
-    href="/ide-extensions/autocomplete/quick-start"
-  >
-    Inline AI suggestions as you type
-  </Card>
-</CardGroup>
-
-## Configuration
-
-<CardGroup cols={3}>
-  <Card title="Models" icon="brain" href="/customization/models">
-    Connect your preferred AI models
-  </Card>
-  <Card title="Rules" icon="shield" href="/customization/rules">
-    Configure AI behavior and constraints
-  </Card>
-  <Card title="MCPs" icon="wrench" href="/customization/mcp-tools">
-    Extend functionality with MCP tools
+    <sub>Community supported for autocomplete and multi-file edits</sub>
   </Card>
 </CardGroup>
 
 ## Resources
 
 <CardGroup cols={3}>
-  <Card title="Continue Hub" icon="globe" href="https://hub.continue.dev/">
-    Community models, rules, and tools
+  <Card title="Continue Mission Control" icon="globe" href="https://hub.continue.dev/">
+    Create your agents with models, rules, and tools
   </Card>
   <Card
     title="GitHub Discussions"
@@ -138,10 +141,10 @@ description: "Kick off agents from the terminal, IDE, or Mission Control"
     Get help from the community
   </Card>
   <Card
-    title="CLI Examples"
-    icon="code-branch"
-    href="/guides/overview#continuous-ai"
+    title="Integrations"
+    icon="plug"
+    href="/hub/integrations"
   >
-    TUI and headless workflow examples
+    Connect GitHub, Slack, and Sentry to power your automations.
   </Card>
 </CardGroup>
