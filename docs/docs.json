@@ -84,6 +84,7 @@
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
+              "ide-extensions/settings",
               {
                 "group": "Agent",
                 "icon": "robot",
@@ -152,7 +153,6 @@
               "customize/mcp-tools",
               "customize/rules",
               "customize/prompts",
-              "customize/settings",
               {
                 "group": "Model Providers",
                 "icon": "server",
@@ -446,7 +446,7 @@
     },
     {
       "source": "/customization/settings",
-      "destination": "/customize/settings"
+      "destination": "/ide-extensions/settings"
     },
     {
       "source": "/customize/tools",
