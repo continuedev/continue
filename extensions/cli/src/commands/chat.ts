@@ -495,7 +495,16 @@ async function runHeadlessMode(
   // Critical validation: Ensure we have actual prompt text in headless mode
   // This prevents the CLI from hanging in TTY-less environments when question() is called
   // We check AFTER processing all prompts (including agent files) to ensure we have real content
+  // EXCEPTION: Allow empty prompts when resuming/forking since they may just want to view history
   if (!initialUserInput || !initialUserInput.trim()) {
+    // If resuming or forking, allow empty prompt - just exit successfully after showing history
+    if (options.resume || options.fork) {
+      // For resume/fork with no new input, we've already loaded the history above
+      // Just exit successfully (the history was already loaded into chatHistory)
+      await gracefulExit(0);
+      return;
+    }
+
     throw new Error(
       'Headless mode requires a prompt. Use: cn -p "your prompt"\n' +
         'Or pipe input: echo "prompt" | cn -p\n' +
