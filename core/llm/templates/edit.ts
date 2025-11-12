@@ -9,18 +9,6 @@ Edit the code to perfectly satisfy the following user request:
 {{{userInput}}}
 Output nothing except for the code. No code block, no English explanation, no start/end tags.`;
 
-const simplestEditPrompt = `Here is the code before editing:
-\`\`\`{{{language}}}
-{{{codeToEdit}}}
-\`\`\`
-
-Here is the edit requested:
-"{{{userInput}}}"
-
-Here is the code after editing:`;
-
-const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
-
 const START_TAG = "<START EDITING HERE>";
 const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
   // "No sufix" means either there is no suffix OR
@@ -244,7 +232,6 @@ export {
   alpacaEditPrompt,
   claudeEditPrompt,
   codeLlama70bEditPrompt,
-  codellamaInfillEditPrompt,
   deepseekEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
@@ -254,7 +241,6 @@ export {
   openchatEditPrompt,
   osModelsEditPrompt,
   phindEditPrompt,
-  simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
