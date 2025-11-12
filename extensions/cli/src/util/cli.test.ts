@@ -100,9 +100,9 @@ describe("CLI utility functions", () => {
       expect(hasSuppliedPrompt()).toBe(true);
     });
 
-    it("should return true when --agent flag is present", () => {
-      process.argv = ["node", "script.js", "-p", "--agent"];
-      expect(hasSuppliedPrompt()).toBe(true);
+    it("should return false when --agent flag is present (agent slug is not a prompt)", () => {
+      process.argv = ["node", "script.js", "-p", "--agent", "my-agent"];
+      expect(hasSuppliedPrompt()).toBe(false);
     });
 
     it("should return false when -p is last argument with no prompt", () => {

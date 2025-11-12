@@ -63,6 +63,7 @@ export function hasSuppliedPrompt(): boolean {
     "--output",
     "--mode",
     "--workflow",
+    "--agent",
     "-m",
     "-c",
     "-o",
