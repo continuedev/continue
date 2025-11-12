@@ -97,8 +97,9 @@ if (!prompt) {
 
 Configures output handling for TTY-less environments:
 
-- Sets UTF-8 encoding for stdout/stderr
-- Redirects error messages to stderr in headless mode
+- Sets UTF-8 encoding
+- Leaves stdout/stderr buffering unchanged in headless mode.
+- Disables progress indicators
 
 ## Usage Examples
 
