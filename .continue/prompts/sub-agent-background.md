@@ -8,4 +8,4 @@ invokable: true
 
 Take the prompt provided by the user and using the terminal tool run the following command in the background:
 
-cn -p {{prompt}}
+cn -p "{{prompt}}"
