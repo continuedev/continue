@@ -54,6 +54,15 @@
                   "mission-control/secrets/secret-resolution"
                 ]
               },
+              {
+                "group": "Integrations",
+                "icon": "plug",
+                "pages": [
+                  "mission-control/integrations/github",
+                  "mission-control/integrations/sentry",
+                  "mission-control/integrations/slack-agent"
+                ]
+              },
               "mission-control/sharing",
               "mission-control/source-control"
             ]
@@ -1437,6 +1446,14 @@
     {
       "source": "/hub/integrations/slack-agent",
       "destination": "/mission-control/integrations/slack-agent"
+    },
+    {
+      "source": "/hub/integrations/github",
+      "destination": "/mission-control/integrations/github"
+    },
+    {
+      "source": "/hub/integrations/sentry",
+      "destination": "/mission-control/integrations/sentry"
     }
   ]
 }
