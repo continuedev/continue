@@ -84,7 +84,7 @@ export async function startTUIChat(
       (stdinToUse as any).setRawMode(true);
       (stdinToUse as any).setRawMode(false);
       logger.debug("Raw mode test passed - TTY is suitable for Ink");
-    } catch (error) {
+    } catch {
       throw new Error(
         "Terminal does not support raw mode required for interactive UI.\n" +
           'Use -p flag for headless mode: cn -p "your prompt"',
@@ -145,7 +145,7 @@ export async function startRemoteTUIChat(
       (process.stdin as any).setRawMode(true);
       (process.stdin as any).setRawMode(false);
       logger.debug("Raw mode test passed for remote TUI");
-    } catch (error) {
+    } catch {
       throw new Error(
         "Terminal does not support raw mode required for interactive UI.",
       );
