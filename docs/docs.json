@@ -28,22 +28,22 @@
             "pages": [
               "mission-control/introduction",
               {
-                "group": "Configs",
-                "icon": "book",
-                "pages": [
-                  "mission-control/configs/intro",
-                  "mission-control/configs/use-a-config",
-                  "mission-control/configs/create-a-config",
-                  "mission-control/configs/edit-a-config"
-                ]
-              },
-              {
                 "group": "Governance",
                 "icon": "building",
                 "pages": [
                   "mission-control/governance/creating-an-org",
                   "mission-control/governance/org-permissions",
                   "mission-control/governance/pricing"
+                ]
+              },
+
+              {
+                "group": "Integrations",
+                "icon": "plug",
+                "pages": [
+                  "mission-control/integrations/github",
+                  "mission-control/integrations/sentry",
+                  "mission-control/integrations/slack-agent"
                 ]
               },
               {
@@ -55,12 +55,13 @@
                 ]
               },
               {
-                "group": "Integrations",
-                "icon": "plug",
+                "group": "Configs",
+                "icon": "book",
                 "pages": [
-                  "mission-control/integrations/github",
-                  "mission-control/integrations/sentry",
-                  "mission-control/integrations/slack-agent"
+                  "mission-control/configs/intro",
+                  "mission-control/configs/use-a-config",
+                  "mission-control/configs/create-a-config",
+                  "mission-control/configs/edit-a-config"
                 ]
               },
               "mission-control/sharing",
