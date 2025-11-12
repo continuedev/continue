@@ -1,0 +1,350 @@
+---
+title: "Webhooks"
+description: "Kick off Cloud Agents from external events"
+---
+
+# Webhook 
+
+## Overview
+
+Webhooks allow you to trigger Background Agents automatically when external events occur. When a webhook receives data, it kicks off an agent session with the webhook payload appended to the prompt, executing your chosen agent in a specified repository.
+
+## Quick Start
+
+### 1. Create a Webhook
+
+Navigate to **Settings → Webhooks** and click **Create Webhook**.
+
+**SCREENSHOT - Settings webhooks page showing the "Create Webhook" button in the top-right corner**
+
+### 2. Configure Your Webhook
+
+Fill in the required fields:
+
+- **Name**: A descriptive name for your webhook (e.g., "Zapier Bug Reports")
+- **Agent**: Select which agent to kick off when triggered
+- **Repository**: Choose the repository where the agent will run
+- **Advanced Settings (Optional)**:
+  - **Secret Header Name**: Custom HTTP header for authentication (e.g., `X-Webhook-Secret`)
+  - **Secret Value**: Secret token used to verify incoming request headers.
+
+**SCREENSHOT - Create webhook dialog showing all fields including name, agent selector, repository dropdown, and collapsed advanced settings section**
+
+### 3. Copy Your Webhook URL
+
+After creating the webhook, copy the unique webhook URL from the webhooks table.
+
+**SCREENSHOT - Webhooks table showing a webhook entry with the URL column highlighted and a copy button**
+
+Format: `https://api.continue.dev/webhooks/ingest/{webhook-id}`
+
+### 4. Use Your Webhook URL
+
+Configure your external service (Zapier, Make, GitHub Actions, etc.) to POST data to this URL.
+
+---
+
+## Integration Examples
+
+### Zapier
+
+1. Create a new Zap with your desired trigger (e.g., "New Email in Gmail")
+2. Add a "Webhooks by Zapier" action
+3. Choose "POST" as the method
+4. Paste your webhook URL
+5. Configure the payload data (e.g., email subject, body, sender)
+6. (Optional) Add a custom header with your secret if configured
+
+**SCREENSHOT - Zapier webhook configuration showing POST method, webhook URL field, and payload data configuration with example fields**
+
+**Example payload sent to agent:**
+
+```json
+{
+  "subject": "Bug: Login button not working",
+  "body": "Users are reporting that the login button...",
+  "sender": "user@example.com",
+  "priority": "high"
+}
+```
+
+### GitHub Actions
+
+Trigger agents from CI/CD pipelines:
+
+```yaml
+name: Trigger Agent on Failed Test
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Tests
+        id: tests
+        run: npm test
+
+      - name: Trigger Webhook on Failure
+        if: failure()
+        run: |
+          curl -X POST https://api.continue.dev/webhooks/ingest/YOUR-WEBHOOK-ID \
+            -H "Content-Type: application/json" \
+            -d '{
+              "event": "test_failure",
+              "branch": "${{ github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "workflow": "${{ github.workflow }}"
+            }'
+```
+
+### cURL (Manual Testing)
+
+Test your webhook directly:
+
+```bash
+curl -X POST https://api.continue.dev/webhooks/ingest/YOUR-WEBHOOK-ID \
+  -H "Content-Type: application/json" \
+  -d '{"test": "data", "message": "Hello from webhook"}'
+```
+
+## How It Works
+
+```
+┌─────────────────┐
+│ External Service│
+│  (Zapier, etc.) │
+└────────┬────────┘
+         │ POST /webhooks/ingest/{id}
+         │ + Payload Data
+         ▼
+┌─────────────────┐
+│  Continue API   │  1. Validate webhook
+│                 │  2. Check authentication
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Agent Session  │  3. Spawn agent with:
+│                 │     - Your chosen agent
+│                 │     - Selected repository
+│                 │     - Webhook payload appended to prompt
+└─────────────────┘
+```
+
+### What Happens When Triggered
+
+1. **Validation**: Continue validates the webhook exists and is enabled
+2. **Authentication**: If configured, verifies the secret header matches
+3. **Agent Creation**: Spawns a new agent session with:
+   - The agent you selected
+   - The repository you specified
+   - The entire webhook payload (JSON) as the agent's prompt
+4. **Execution**: The agent processes the data and performs its configured tasks
+
+---
+
+## Managing Webhooks
+
+### View All Webhooks
+
+Navigate to **Settings → Webhooks** to see all configured webhooks.
+
+**SCREENSHOT - Webhooks table showing multiple webhooks with columns: Name, Agent, Repository, URL, Status (enabled/disabled), Created date, and Actions**
+
+### Enable/Disable Webhooks
+
+Use the toggle switch to temporarily disable webhooks without deleting them.
+
+**SCREENSHOT - Close-up of webhook table row with enabled toggle switch highlighted**
+
+### Edit Webhooks
+
+Click the edit button to modify webhook configuration. You can change:
+
+- Name
+- Agent
+- Repository
+- Authentication settings (optional)
+
+### Delete Webhooks
+
+Click the delete button and confirm. This permanently removes the webhook and invalidates the URL.
+
+---
+
+## Troubleshooting
+
+### Webhook Not Triggering
+
+1. **Check webhook is enabled** - Look for the toggle in the webhooks table
+2. **Verify URL is correct** - Copy the URL directly from the table
+3. **Test with cURL** - Use the manual testing example above
+4. **Check authentication** - Ensure header name and value match exactly
+
+### Authentication Failures
+
+- Header names are case-insensitive but must match exactly
+- Secret values are case-sensitive
+- Both header name and value must be provided together
+- Re-save the webhook if you recently changed secrets
+
+### Agent Not Running as Expected
+
+- Verify the agent works when triggered manually
+- Check that the repository is accessible
+- Examine the agent session logs for errors
+- The webhook payload is passed as JSON to the agent's prompt
+
+### Where to Find Logs
+
+Agent sessions triggered by webhooks appear in **Agents → Sessions** with the name format:
+`Webhook: {webhook-name}`
+
+**SCREENSHOT - Agent sessions list showing a session with name "Webhook: Zapier Bug Reports" and webhook source icon**
+
+---
+
+## Use Cases
+
+### Bug Tracking Integration
+
+Automatically investigate and create PRs for bugs reported via external systems.
+
+### Customer Support
+
+Trigger agents when support tickets are created to gather context and suggest solutions.
+
+### Monitoring Alerts
+
+Respond to production issues automatically when monitoring tools detect problems.
+
+### Form Submissions
+
+Process form data, validate inputs, and execute follow-up actions.
+
+### Scheduled Tasks (via Zapier Schedule)
+
+Run agents on a schedule by using Zapier's scheduler as the trigger.
+
+### CI/CD Integration
+
+Trigger agents on build failures, deployment events, or test results.
+
+---
+
+## Limits and Considerations
+
+- Each webhook creates a new agent session
+- Agent sessions consume organization resources
+- Webhook URLs are unique and non-guessable UUIDs
+- Payloads are stored as part of the agent session
+- Maximum payload size: Follows standard HTTP request limits (~10MB)
+- Rate limiting may apply to prevent abuse
+
+---
+
+## API Reference
+
+### Endpoint
+
+```
+POST https://api.continue.dev/webhooks/ingest/{webhook-id}
+```
+
+### Request Headers
+
+| Header                 | Required    | Description                                    |
+| ---------------------- | ----------- | ---------------------------------------------- |
+| `Content-Type`         | Yes         | Must be `application/json`                     |
+| `{Your-Secret-Header}` | Conditional | Required if webhook has authentication enabled |
+
+### Request Body
+
+Any valid JSON payload. This will appended to the Agent's prompt.
+
+### Response Codes
+
+| Code | Description                            |
+| ---- | -------------------------------------- |
+| 200  | Success - Agent session created        |
+| 401  | Authentication failed - Invalid secret |
+| 403  | Webhook is disabled                    |
+| 404  | Webhook not found                      |
+| 500  | Server error                           |
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "agentSessionId": "uuid-of-created-session"
+}
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": "Error message description"
+}
+```
+
+---
+
+## Creating Agents for Webhooks
+
+When a webhook triggers an agent, the incoming JSON payload is stringified and appended to your agent's prompt. Design your agent prompts to handle this structured data.
+
+Agent files consist of YAML frontmatter and a markdown prompt. When triggered, the final prompt becomes:
+
+```
+{agent prompt}
+
+{stringified webhook payload}
+```
+
+### Example: Bug Report Handler
+
+Here's an agent designed to handle bug reports from webhooks:
+
+```markdown
+---
+name: Bug Report Investigator
+tools: Read,Search,Bash,Fetch
+rules: continuedev/github-issue-creation-rules
+---
+
+You are a bug investigation agent. When you receive a bug report:
+
+1. Extract the bug details (title, description, priority, reporter)
+2. Search the codebase for related error messages or functions
+3. Document your findings and root cause analysis
+4. Create a detailed GitHub issue with your investigation
+
+Expected webhook data:
+{
+"title": "Bug description",
+"description": "Details and reproduction steps",
+"priority": "high|medium|low",
+"reporter": "email or name"
+}
+
+Here's the bug report data:
+```
+
+The agent prompt should clearly describe the expected data structure and what actions to take. When Zapier or another service sends a webhook with bug details, the agent automatically investigates the issue and creates a GitHub issue with findings.
+
+Create agents at https://hub.continue.dev/new?type=agents, then reference them by slug (e.g., `username/bug-investigator`) when setting up webhooks.
+
+---
+
+## Next Steps
+
+- Create your first webhook in Settings → Webhooks
+- Design an agent to handle your webhook data
+- Test with cURL to verify it works
+- Connect to your favorite automation tool
+- Monitor agent sessions to see results
