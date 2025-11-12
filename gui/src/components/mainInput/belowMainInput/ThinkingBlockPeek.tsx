@@ -58,9 +58,12 @@ function ThinkingBlockPeek({
     <div className="thread-message">
       <div className="mt-1 flex flex-col px-4">
         <div className="flex min-w-0 flex-row items-center justify-between gap-2">
-          <div
+          <button
+            type="button"
             className="text-description flex min-w-0 cursor-pointer flex-row items-center gap-1.5 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
             data-testid="thinking-block-peek"
+            aria-expanded={open}
+            aria-controls={`thinking-block-content-${index}`}
             onClick={() => setOpen(!open)}
           >
             {inProgress ? (
@@ -80,9 +83,10 @@ function ThinkingBlockPeek({
             ) : (
               <ChevronDownIcon className="h-3 w-3" />
             )}
-          </div>
+          </button>
         </div>
         <div
+          id={`thinking-block-content-${index}`}
           className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
             open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}
