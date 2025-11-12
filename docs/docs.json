@@ -426,7 +426,7 @@
     },
     {
       "source": "/customization/overview#change-your-model-provider",
-      "destination": "/customize/overview#change-your-model-provider"
+      "destination": "/customize/model-providers/overview#change-your-model-provider"
     },
     {
       "source": "/customization/models",
