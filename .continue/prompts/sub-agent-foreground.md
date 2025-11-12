@@ -6,6 +6,6 @@ invokable: true
 
 # Continue Sub Agent Foreground Prompt
 
-Take the prompt provided by the user and using the terminal tool run the following command in the forground:
+Take the prompt provided by the user and using the terminal tool run the following command in the foreground:
 
 cn -p {{prompt}}
