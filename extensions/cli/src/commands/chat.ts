@@ -444,16 +444,6 @@ async function runHeadlessMode(
   prompt: string | undefined,
   options: ChatOptions,
 ): Promise<void> {
-  // Critical validation: Ensure we have a prompt in headless mode
-  // This prevents the CLI from hanging in TTY-less environments
-  if (!prompt && !options.prompt?.length) {
-    throw new Error(
-      'Headless mode requires a prompt. Use: cn -p "your prompt"\n' +
-        'Or pipe input: echo "prompt" | cn -p\n' +
-        "Or use agent files: cn -p --agent my-org/my-agent",
-    );
-  }
-
   // Initialize services for headless mode
   const { permissionOverrides } = processCommandFlags(options);
 
@@ -501,6 +491,18 @@ async function runHeadlessMode(
     options.prompt,
     initialPrompt,
   );
+
+  // Critical validation: Ensure we have actual prompt text in headless mode
+  // This prevents the CLI from hanging in TTY-less environments when question() is called
+  // We check AFTER processing all prompts (including agent files) to ensure we have real content
+  if (!initialUserInput || !initialUserInput.trim()) {
+    throw new Error(
+      'Headless mode requires a prompt. Use: cn -p "your prompt"\n' +
+        'Or pipe input: echo "prompt" | cn -p\n' +
+        "Or use agent files: cn -p --agent my-org/my-agent\n" +
+        "Note: Agent files must contain a prompt field.",
+    );
+  }
 
   let isFirstMessage = true;
   while (true) {
