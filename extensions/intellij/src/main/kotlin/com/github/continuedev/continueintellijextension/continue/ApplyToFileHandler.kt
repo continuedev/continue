@@ -141,7 +141,7 @@ class ApplyToFileHandler(
     }
 
     private fun buildApplyPrompt(): String {
-        return "The following code was suggested as an edit:\n```\n${params.text}\n```\nPlease apply it to the previous code."
+        return "The following code was suggested as an edit:\n```\n${params.text}\n```\nPlease apply it to the previous code. Do not change code comments unless explicitly requested."
     }
 
     private fun createDiffStreamHandler(
