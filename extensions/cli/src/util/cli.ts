@@ -46,12 +46,46 @@ export function hasSuppliedPrompt(): boolean {
     return false;
   }
 
-  // Check if there's a non-flag argument after -p/--print
-  // or if there are --prompt or --agent flags
-  const hasPromptArg =
-    args.length > printIndex + 1 && !args[printIndex + 1].startsWith("-");
+  // Check if --prompt flag is present (indicates a prompt is coming)
+  // Note: --agent doesn't supply a prompt, it just specifies which agent to use
+  // Piped stdin should still be read when --agent is present
   const hasPromptFlag = args.includes("--prompt");
-  const hasAgentFlag = args.includes("--agent");
+  if (hasPromptFlag) {
+    return true;
+  }
 
-  return hasPromptArg || hasPromptFlag || hasAgentFlag;
+  // Check if there's a non-flag argument after -p/--print
+  // We need to skip flags that take values (like --config, --model, etc.)
+  // Known flags that take values
+  const flagsWithValues = new Set([
+    "--config",
+    "--model",
+    "--output",
+    "--mode",
+    "--workflow",
+    "-m",
+    "-c",
+    "-o",
+  ]);
+
+  const argsAfterPrint = args.slice(printIndex + 1);
+  for (let i = 0; i < argsAfterPrint.length; i++) {
+    const arg = argsAfterPrint[i];
+
+    // If this is a flag that takes a value, skip both the flag and its value
+    if (flagsWithValues.has(arg)) {
+      i++; // Skip the next argument (the value)
+      continue;
+    }
+
+    // If this is any other flag (starts with -), skip it
+    if (arg.startsWith("-")) {
+      continue;
+    }
+
+    // Found a non-flag argument - this is the prompt
+    return true;
+  }
+
+  return false;
 }
