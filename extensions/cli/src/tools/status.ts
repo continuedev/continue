@@ -31,6 +31,7 @@ The default available statuses are:
 - WORKING: The task is in progress
 - DONE: The task is complete
 - BLOCKED: You need further information from the user in order to proceed
+- FAILED: The task cannot be completed due to a fatal error
 
 However, if the user explicitly specifies in their prompt to use one or more different statuses, you can use those as well.
 
@@ -43,11 +44,19 @@ You should use this tool to notify the user whenever the state of your work chan
         type: "string",
         description: "The status value to set",
       },
+      errorMessage: {
+        type: "string",
+        description:
+          "Required when status is FAILED. Explain what went wrong and why you cannot continue.",
+      },
     },
   },
   readonly: true,
   isBuiltIn: true,
-  run: async (args: { status: string }): Promise<string> => {
+  run: async (args: {
+    status: string;
+    errorMessage?: string;
+  }): Promise<string> => {
     try {
       // Get agent ID from --id flag
       const agentId = getAgentIdFromArgs();
@@ -59,7 +68,10 @@ You should use this tool to notify the user whenever the state of your work chan
       }
 
       // Call the API endpoint using shared client
-      await post(`agents/${agentId}/status`, { status: args.status });
+      await post(`agents/${agentId}/status`, {
+        status: args.status,
+        errorMessage: args.errorMessage,
+      });
 
       logger.info(`Status: ${args.status}`);
       return `Status set: ${args.status}`;
