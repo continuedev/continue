@@ -29,7 +29,7 @@
               "mission-control/introduction",
               "mission-control/tasks",
               "mission-control/workflows",
-
+              "mission-control/sharing",
               {
                 "group": "Governance",
                 "icon": "building",
@@ -66,8 +66,7 @@
                   "mission-control/configs/create-a-config",
                   "mission-control/configs/edit-a-config"
                 ]
-              },
-              "mission-control/sharing"
+              }
             ]
           },
           {
