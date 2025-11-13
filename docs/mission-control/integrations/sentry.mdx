@@ -23,13 +23,12 @@ Connect Sentry to Continue Mission Control to enable agents to automatically det
 
   <Step title="Navigate to Integrations">
 
-    Go to your [Personal Integrations Settings](https://hub.continue.dev/settings/integrations) or Org Integrations Settings at `https://hub.continue.dev/organizations/{your-org}/settings/integrations`
-
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
   </Step>
 
   <Step title="Connect Sentry">
 
-    Click "Add Integration" and select Sentry. You'll need the following credentials:
+    Click "Connect" and select Sentry. You'll need the following credentials:
 
     - **Sentry Organization Slug**: Your organization name (e.g., "my-company")
     - **Auth Token**: Internal integration token from Sentry
@@ -216,78 +215,6 @@ Set up agents to run automatically:
 
 </Tip>
 
-## Example Agent Configurations
-
-### Sentry Error Resolution Agent
-
-<Steps>
-
-  <Step title="Create Agent">
-
-    Visit [Mission Control](https://hub.continue.dev) and create a new agent with:
-    - **Name**: Sentry Error Resolver
-    - **Tools**: Enable Sentry MCP
-    - **Prompt**: "Monitor and resolve production errors automatically"
-    - **Rules**: Add error handling and testing standards
-
-  </Step>
-
-  <Step title="Configure Sentry Connection">
-
-    Ensure your Sentry integration is connected with the proper organization slug and auth token.
-
-  </Step>
-
-  <Step title="Set Up Automation">
-
-    Create an automation that:
-    - Triggers on new Sentry error webhooks
-    - Analyzes the error and generates a fix
-    - Creates a PR with tests
-    - Links back to the Sentry issue
-
-  </Step>
-
-  <Step title="Test with Manual Run">
-
-    Before enabling automation, test with manual tasks:
-    - "Fix the TypeError in user authentication"
-    - "Analyze errors from the checkout flow"
-    - "Create a report on database query timeouts"
-
-  </Step>
-
-</Steps>
-
-## Best Practices
-
-### Error Resolution
-
-<Card title="Effective Error Fixing" icon="lightbulb">
-
-  **Do:**
-  - Provide specific error IDs or URLs from Sentry
-  - Include reproduction steps in your prompts
-  - Ask for test coverage with the fix
-  - Review generated PRs before merging
-
-  **Don't:**
-  - Auto-merge fixes without review
-  - Fix errors without understanding root cause
-  - Ignore patterns in favor of one-off fixes
-
-</Card>
-
-### Prompt Examples
-
-**Good prompts provide context:**
-- ✅ "Fix Sentry issue #12345: TypeError in payment processing. Users report this happens during checkout when using saved cards."
-- ✅ "Analyze the 10 most frequent errors this week and create GitHub issues for any that affect >100 users."
-
-**Poor prompts lack specificity:**
-- ❌ "Fix errors"
-- ❌ "Check Sentry"
-
 ## Integration with GitHub
 
 Combine Sentry with GitHub integration for a complete workflow:
@@ -327,28 +254,6 @@ Track your agent's error resolution performance:
 3. **Review PRs**: Ensure quality of generated fixes
 4. **Monitor Metrics**: Track resolution time and success rate
 
-## Disconnecting Sentry
-
-To remove the Sentry integration:
-
-1. Go to [Integrations Settings](https://hub.continue.dev/settings/integrations)
-2. Find your Sentry integration
-3. Click "Disconnect"
-4. Remove the webhook from your Sentry internal integration
-
-<Warning>
-
-  Disconnecting Sentry will prevent agents from receiving error notifications and accessing error data. Any running agents with Sentry tasks will fail.
-
-</Warning>
-
-## Security & Privacy
-
-- Continue only accesses error data for configured projects
-- All API calls are authenticated and encrypted
-- Webhook signatures are verified for security
-- You can revoke access at any time
-- Error data is not stored; it's only accessed on-demand
 
 ## Troubleshooting
 
@@ -398,18 +303,6 @@ To remove the Sentry integration:
 
   </Card>
 
-  <Card title="Agents Overview" icon="robot" href="/agents/overview">
-
-    Learn how to create and manage agents
-
-  </Card>
-
-  <Card title="Continuous AI Guide" icon="infinity" href="/guides/continuous-ai">
-
-    Best practices for automated error monitoring
-
-  </Card>
-
   <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
 
     Combine Sentry with GitHub for complete automation
@@ -418,12 +311,4 @@ To remove the Sentry integration:
 
 </CardGroup>
 
-<Info>
 
-  **Need Help?**
-  - Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
-  - Ask questions: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
-  - Community support: [Discord](https://discord.gg/NWtdYexhMs)
-  - Sentry integration docs: [Sentry Documentation](https://docs.sentry.io/product/integrations/integration-platform/)
-
-</Info>
