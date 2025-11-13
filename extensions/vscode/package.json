@@ -725,7 +725,7 @@
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
     "vite": "^4.5.14",
-    "vscode-extension-tester": "^8.14.1"
+    "vscode-extension-tester": "^8.19.0"
   },
   "dependencies": {
     "@continuedev/config-types": "file:../../packages/config-types",
