@@ -447,7 +447,7 @@
     },
     {
       "source": "/hub/source-control",
-      "destination": "/mission-control/source-control"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/blocks",
