@@ -64,7 +64,13 @@ async function buildPackage(packageName, cleanNodeModules = false) {
     }
   }
 
-  await runCommand(npmInstallCmd, packagePath, `${packageName} (install)`);
+  console.log(`📦 Installing ${packageName} at ${packagePath}`);
+  try {
+    await runCommand(npmInstallCmd, packagePath, `${packageName} (install)`);
+  } catch (error) {
+    console.error(`❌ Failed to install ${packageName}:`, error.message);
+    throw error;
+  }
 
   return runCommand("npm run build", packagePath, `${packageName} (build)`);
 }
@@ -81,13 +87,25 @@ async function main() {
     console.log("🚀 Starting package builds...\n");
 
     // Phase 1: Build foundation packages (no local dependencies)
+    console.log(
+      "📍 Phase 1: Building foundation packages (config-types, terminal-security)",
+    );
     await buildPackagesInParallel(["config-types", "terminal-security"]);
+    console.log("✅ Phase 1 complete\n");
 
     // Phase 2: Build packages that depend on config-types
+    console.log(
+      "📍 Phase 2: Building packages that depend on config-types (fetch, config-yaml, llm-info)",
+    );
     await buildPackagesInParallel(["fetch", "config-yaml", "llm-info"]);
+    console.log("✅ Phase 2 complete\n");
 
     // Phase 3: Build packages that depend on other local packages
+    console.log(
+      "📍 Phase 3: Building packages with complex dependencies (openai-adapters, continue-sdk)",
+    );
     await buildPackagesInParallel(["openai-adapters", "continue-sdk"]);
+    console.log("✅ Phase 3 complete\n");
 
     console.log("🎉 All packages built successfully!");
   } catch (error) {
