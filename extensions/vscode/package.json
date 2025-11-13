@@ -776,6 +776,7 @@
     "vitest": "^3.1.4",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
+    "yaml": "^2.6.1",
     "yarn": "^1.22.21"
   },
   "overrides": {
