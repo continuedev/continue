@@ -367,7 +367,8 @@
     }
   },
   "custom": {
-    "css": ["custom.css"]
+    "css": ["custom.css"],
+    "js": ["reo-tracking.js"]
   },
   "redirects": [
     {
