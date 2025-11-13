@@ -94,11 +94,11 @@ Some components can receive values, including secrets, as inputs through templat
 <Info>
 **Choosing between `secrets.` and `inputs.`**
 
-When creating blocks for the hub:
-- Use `${{ inputs.INPUT_NAME }}` in your block definition when you want users to be able to customize which secret is used
+When creating components for your Agent:
+- Use `${{ inputs.INPUT_NAME }}` in your definition when you want users to be able to customize which secret is used
 - Users will then map their own secrets using `${{ secrets.SECRET_NAME }}` in the `with` clause
 
-For personal or single-use configurations, you can skip the inputs layer and reference `${{ secrets.SECRET_NAME }}` directly in your block.
+For personal or single-use configurations, you can skip the inputs layer and reference `${{ secrets.SECRET_NAME }}` directly.
 </Info>
 </Accordion>
 
