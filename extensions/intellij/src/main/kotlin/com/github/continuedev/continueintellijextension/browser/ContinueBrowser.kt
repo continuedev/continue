@@ -21,12 +21,14 @@ class ContinueBrowser(
 ): Disposable {
 
     private val log = Logger.getInstance(ContinueBrowser::class.java.simpleName)
-    private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
+    private val myJBCefClient: JBCefClient = JBCefApp.getInstance().createClient().apply {
+        setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 200)
+    }
+    private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(true).setClient(myJBCefClient).build()
     private val myJSQueryOpenInBrowser = JBCefJSQuery.create(browser as JBCefBrowserBase)
 
     init {
         CefApp.getInstance().registerSchemeHandlerFactory("http", "continue", CustomSchemeHandlerFactory())
-        browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 200)
         myJSQueryOpenInBrowser.addHandler { msg: String? ->
             val json = gsonService.gson.fromJson(msg, BrowserMessage::class.java)
             val messageType = json.messageType
@@ -107,6 +109,7 @@ class ContinueBrowser(
     override fun dispose() {
         Disposer.dispose(myJSQueryOpenInBrowser)
         Disposer.dispose(browser)
+        Disposer.dispose(myJBCefClient)
     }
 
     // todo: remove and use types.Message
