@@ -26,7 +26,7 @@ import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchCodeTool } from "./searchCode.js";
+import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { statusTool } from "./status.js";
 import {
   type Tool,
@@ -45,17 +45,23 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   listFilesTool,
-  searchCodeTool,
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
 ];
+
+const BUILTIN_SEARCH_TOOLS: Tool[] = [searchCodeTool];
 
 // Get all builtin tools including dynamic ones, with capability-based filtering
 export async function getAllAvailableTools(
   isHeadless: boolean,
 ): Promise<Tool[]> {
   const tools = [...BASE_BUILTIN_TOOLS];
+
+  const isRipgrepInstalled = await checkIfRipgrepIsInstalled();
+  if (isRipgrepInstalled) {
+    tools.push(...BUILTIN_SEARCH_TOOLS);
+  }
 
   // If model is capable, exclude editTool in favor of multiEditTool
   const modelState = await serviceContainer.get<ModelServiceState>(

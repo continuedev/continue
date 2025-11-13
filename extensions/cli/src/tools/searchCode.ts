@@ -11,6 +11,15 @@ const execPromise = util.promisify(child_process.exec);
 // Default maximum number of results to display
 const DEFAULT_MAX_RESULTS = 100;
 
+export async function checkIfRipgrepIsInstalled(): Promise<boolean> {
+  try {
+    await execPromise("rg --version");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const searchCodeTool: Tool = {
   name: "Search",
   displayName: "Search",
