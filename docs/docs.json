@@ -28,6 +28,8 @@
             "pages": [
               "mission-control/introduction",
               "mission-control/tasks",
+              "mission-control/workflows",
+
               {
                 "group": "Governance",
                 "icon": "building",
