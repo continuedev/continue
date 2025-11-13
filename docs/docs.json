@@ -26,7 +26,7 @@
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control/introduction",
+              "mission-control",
               "mission-control/tasks",
               "mission-control/workflows",
               "mission-control/sharing",
@@ -390,11 +390,11 @@
   "redirects": [
     {
       "source": "/hub",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/introduction",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/configs/intro",
@@ -450,19 +450,19 @@
     },
     {
       "source": "/hub/blocks",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/blocks/intro",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/blocks/use-a-block",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/blocks/block-types",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/workflows/intro",
@@ -470,11 +470,11 @@
     },
     {
       "source": "/hub/blocks/create-a-block",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/hub/blocks/bundles",
-      "destination": "/mission-control/introduction"
+      "destination": "/mission-control"
     },
     {
       "source": "/customize",
