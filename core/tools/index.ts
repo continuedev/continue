@@ -18,6 +18,7 @@ export const getBaseToolDefinitions = () => [
 /**
  * Check if the model supports the Anthropic memory tool.
  * Memory tool is only available on Claude 4+ models.
+ * Based on: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/memory
  */
 const supportsMemoryTool = (modelName: string | undefined): boolean => {
   if (!modelName) {
@@ -25,21 +26,21 @@ const supportsMemoryTool = (modelName: string | undefined): boolean => {
   }
 
   const normalized = modelName.toLowerCase();
-  
-  // List of models that support the memory tool
-  // Based on: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/memory
-  const supportedModels = [
-    "claude-sonnet-4-5-20250929",      // Claude Sonnet 4.5
-    "claude-sonnet-4-20250514",        // Claude Sonnet 4
-    "claude-haiku-4-5-20251001",       // Claude Haiku 4.5
-    "claude-opus-4-1-20250805",        // Claude Opus 4.1
-    "claude-opus-4-20250514",          // Claude Opus 4
+
+  // Match any Claude 4+ family models (Sonnet, Opus, Haiku)
+  // This handles both direct names and Bedrock ARN format
+  // Examples:
+  // - "claude-sonnet-4-20250514"
+  // - "claude-sonnet-4-5-20250929"
+  // - "anthropic.claude-sonnet-4-20250514-v1:0"
+  // - "anthropic.claude-opus-4-1-20250805-v1:0"
+  const claude4Patterns = [
+    "claude-sonnet-4", // Matches any Claude 4 Sonnet (4.0, 4.5, etc.)
+    "claude-opus-4", // Matches any Claude 4 Opus (4.0, 4.1, etc.)
+    "claude-haiku-4", // Matches any Claude 4 Haiku (4.0, 4.5, etc.)
   ];
 
-  // Check if the model name matches any of the supported models
-  // This handles both direct model names and Bedrock ARN format
-  // (e.g., "anthropic.claude-sonnet-4-20250514-v1:0")
-  return supportedModels.some(model => normalized.includes(model));
+  return claude4Patterns.some((pattern) => normalized.includes(pattern));
 };
 
 export const getConfigDependentToolDefinitions = (

@@ -19,8 +19,8 @@ import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
-import { multiEditTool } from "./multiEdit.js";
 import { memoryTool } from "./memory.js";
+import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
@@ -111,8 +111,32 @@ function shouldExcludeEditTool(): boolean {
   return false;
 }
 
-function isClaudeModelValue(value?: string | null): boolean {
-  return typeof value === "string" && value.toLowerCase().includes("claude");
+/**
+ * Check if the model supports the Anthropic memory tool.
+ * Memory tool is only available on Claude 4+ models.
+ * Based on: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/memory
+ */
+function supportsMemoryTool(modelName?: string | null): boolean {
+  if (!modelName || typeof modelName !== "string") {
+    return false;
+  }
+
+  const normalized = modelName.toLowerCase();
+
+  // Match any Claude 4+ family models (Sonnet, Opus, Haiku)
+  // This handles both direct names and Bedrock ARN format
+  // Examples:
+  // - "claude-sonnet-4-20250514"
+  // - "claude-sonnet-4-5-20250929"
+  // - "anthropic.claude-sonnet-4-20250514-v1:0"
+  // - "anthropic.claude-opus-4-1-20250805-v1:0"
+  const claude4Patterns = [
+    "claude-sonnet-4", // Matches any Claude 4 Sonnet (4.0, 4.5, etc.)
+    "claude-opus-4", // Matches any Claude 4 Opus (4.0, 4.1, etc.)
+    "claude-haiku-4", // Matches any Claude 4 Haiku (4.0, 4.5, etc.)
+  ];
+
+  return claude4Patterns.some((pattern) => normalized.includes(pattern));
 }
 
 function shouldIncludeMemoryTool(): boolean {
@@ -127,21 +151,21 @@ function shouldIncludeMemoryTool(): boolean {
     ) {
       const { name, provider, model } = modelServiceResult.value.model;
 
-      const isClaudeModel =
-        isClaudeModelValue(name) || isClaudeModelValue(model);
+      // Check both the name and model fields
+      const isSupported = supportsMemoryTool(name) || supportsMemoryTool(model);
 
-      if (isClaudeModel) {
-        logger.debug("Enabling Claude-only memory tool", {
+      if (isSupported) {
+        logger.debug("Enabling memory tool for supported Claude model", {
           provider,
           name,
           model,
         });
       }
 
-      return isClaudeModel;
+      return isSupported;
     }
   } catch (error) {
-    logger.debug("Error checking model for Claude-only memory tool", {
+    logger.debug("Error checking model for memory tool support", {
       error,
     });
   }
