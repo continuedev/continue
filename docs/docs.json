@@ -67,8 +67,7 @@
                   "mission-control/configs/edit-a-config"
                 ]
               },
-              "mission-control/sharing",
-              "mission-control/source-control"
+              "mission-control/sharing"
             ]
           },
           {
