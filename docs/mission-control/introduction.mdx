@@ -1,30 +1,55 @@
 ---
 title: "Continue Mission Control"
-description: "Central platform for discovering, creating, and sharing AI coding configurations, agents, and components with organization-level governance"
+description: "Your command center for Continue. Create Tasks, set up Automations, manage Agents, connect Integrations, and share with your team—all in one place."
+sidebarTitle: "Overview"
 ---
 
-[Continue Mission Control](https://hub.continue.dev) is your central platform for AI-powered development. Discover pre-built configurations, create custom agents, and manage components that power your coding workflow.
+## What You Can Do in Mission Control
 
-## What You Can Do on the Hub
+Mission Control is where developers and teams use Continue to power everyday coding workflows. From quick one-off Tasks to fully automated pipelines, everything starts here.
 
-![Continue Mission Control Overview](/images/hub/assets/images/hub-overview.jpg)
+<CardGroup cols={4}>
+  <Card title="Create & Run Tasks" icon="list" href="/mission-control/tasks">
+    Trigger your AI Agents and review or approve the results. 
+  </Card>
+   <Card title="Manage Your Agents" icon="robot" href="../agents/intro">
+        Create, configure, and monitor your custom Agents across repositories.
+  </Card>
+ <Card title="Set Up Automations" icon="clock" href="/mission-control/automations">
+    Schedule recurring Tasks, connect webhooks to trigger Agents automatically, or add 
+  </Card>
+    <Card title="Connect Integrations" icon="plug" href="/mission-control/integrations">
+    Link GitHub, Slack, and Sentry to power your Tasks and Workflows.
+  </Card>
+</CardGroup>
+
+## Monitoring & Insights
+
+<Info>
+Track performance, share configurations across your organization, and monitor agent activity in real time.
+</Info>
 
 <CardGroup cols={3}>
 
-   <Card title="Manage Organization & Settings" icon="settings" href="https://hub.continue.dev/settings">
-    Manage organizations, API keys, secrets, and integrations. Configure models, MCP servers, and connected tools all in one place.  
+  <Card title="Metrics" icon="chart-column" href="/mission-control/metrics">
+    Measure success rates, PR activity, and intervention trends across Agents.
   </Card>
-   <Card title="Find, Create, or Share Agents" icon="robot" href="/hub/agents/intro">
-    Search existing agents or build custom, reusable agents. Standardize prompts, rules, and tools to match your workflows and share with your team.  
+
+  <Card title="Organization Sharing" icon="users" href="/mission-control/organization">
+    Share Agents and Workflows with teammates using built-in access controls.
   </Card>
-   <Card title="Run Agents in Mission Control" icon="radar" href="/hub/agents/intro">
-    Launch and monitor agents across your repositories. Trigger on events or schedules and track performance.  
+
+  <Card title="Agent Monitoring" icon="radar" href="/mission-control/monitoring">
+    View active runs, logs, and outcomes for every Agent session.
   </Card>
 
 </CardGroup>
+---
 
-## Hub Components
 
+## Components Behind Mission Control
+
+Mission Control uses your configured components to power Agents, Tasks, and Workflows:
 Agents are built from reusable components that you can create, share, and customize:
 
 <CardGroup cols={2}>
@@ -55,51 +80,14 @@ Agents are built from reusable components that you can create, share, and custom
 
 </CardGroup>
 
-## Creating Components
-
 <Tip>
 
-  Components are the building blocks for agents. When you create a component on the hub, it becomes available according to the permissions you set.
+  Components are the building blocks for agents that you can create new or remix from an existing component. When you create a component in mission control, it becomes available according to the permissions you set: Personal, Public, or Organization.
 
 </Tip>
 
-<CardGroup cols={2}>
 
-  <Card title="Create New" icon="plus">
-
-    Start with a blank template:
-
-    - Select New Rules, Prompts, Configs, or Agents from the Hub navigation
-    - Click 'New' to start with a blank template
-    - Configure by filling in the inputs to create your markdown configuration
-        ![hub navigation new](../images/hub/hub-nav.png)
-
-  </Card>
-
-  <Card title="Remix Existing" icon="copy">
-
-    Customize an existing component:
-
-    - Browse the [Hub](https://hub.continue.dev/) for what you need
-    - Click 'Remix' to create a copy that you can customize
-    - Modify the configuration for your specific needs
-    - Save your customized version
-        ![hub remix button](../images/hub/block-remix-button.png)
-
-  </Card>
-
-</CardGroup>
-
-
-### Component Permissions
-
-Set visibility for your components:
-
-- **Personal**: Only you can see and use
-- **Public**: Anyone can discover and use
-- **Organization**: Team members can access
-
-### Component Inputs
+<Accordion title="Component Inputs">
 
 Some components can receive values, including secrets, as inputs through templating. For values that the user needs to set, you can use template variables (e.g. `${{ inputs.API_KEY}}`). Then, the user can set `API_KEY: ${{ secrets.MY_API_KEY }}` in the `with` clause of their agent or config.
 
@@ -112,3 +100,26 @@ When creating blocks for the hub:
 
 For personal or single-use configurations, you can skip the inputs layer and reference `${{ secrets.SECRET_NAME }}` directly in your block.
 </Info>
+</Accordion>
+
+---
+## Get Started
+<Frame>
+
+
+<CardGroup cols={3}>
+
+  <Card title="Create a Task" icon="plus" href="https://hub.continue.dev">
+    Start with a prompt and run an Agent on demand.
+  </Card>
+
+  <Card title="Build a Workflow" icon="clock" href="https://hub.continue.dev/workflows">
+    Automate your Tasks using cron schedules or webhooks.
+  </Card>
+
+  <Card title="Add Integrations" icon="workflow" href="https://hub.continue.dev/integrations">
+    Connect GitHub, Slack, and Sentry to extend your Agents.
+  </Card>
+
+</CardGroup>
+</Frame>
