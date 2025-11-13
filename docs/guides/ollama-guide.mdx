@@ -97,11 +97,11 @@ models:
 ```
 
 <Warning>
-  **Important**: Hub blocks only provide configuration - you still need to pull
-  the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue
+  **Important**: Blocks only provide configuration - you still need to pull
+  the model locally. The block `ollama/deepseek-r1-32b` configures Continue
   to use `model: deepseek-r1:32b`, but the actual model must be installed:
   ```bash
-  # Check what the hub block expects (view on hub.continue.dev)
+  # Check what the block expects (view on hub.continue.dev)
   # Then pull that exact model tag locally
   ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
   ```
@@ -146,7 +146,7 @@ You can update `apiBase` with the IP address of a remote machine serving Ollama.
 
 ### Method 3: Manual Configuration
 
-For custom configurations or models not on the hub:
+For custom configurations or models not in Mission Control:
 
 ```yaml
 models:
