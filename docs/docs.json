@@ -29,6 +29,7 @@
               "mission-control",
               "mission-control/tasks",
               "mission-control/workflows",
+              "mission-control/metrics",
               "mission-control/sharing",
               {
                 "group": "Governance",
