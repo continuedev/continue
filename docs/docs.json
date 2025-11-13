@@ -27,6 +27,7 @@
             "icon": "globe",
             "pages": [
               "mission-control/introduction",
+              "mission-control/tasks",
               {
                 "group": "Governance",
                 "icon": "building",

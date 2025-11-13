@@ -1,0 +1,144 @@
+---
+title: "Tasks"
+description: "A Task is a unit of work shared between you and an agent. You trigger the task, the agent executes it, then you review or approve the results.  Tasks can run **on demand**, **on triggers**, or **on schedules**."
+---
+
+<Info>
+
+  **What is a Task?**
+
+  A Task is a unit of work that combines:
+  - Your instructions
+  - An agent's capabilities (model, rules, tools, prompt)
+  - Your codebase (repository and branch)
+
+  Tasks can be triggered manually, by events, or on a schedule.
+
+</Info>
+
+## Creating and Running a Task
+
+<Steps>
+
+  <Step title="Choose an Agent">
+
+    Select the **Agent** you want to use for this task.
+
+    <Tip>
+
+      Don't have an Agent yet? Create one in **[Mission Control → Agents](https://hub.continue.dev/new?type=agent)** before setting up your first task.
+
+    </Tip>
+
+  </Step>
+
+  <Step title="Select Your Repository">
+
+    Pick the **repository** and **branch** where the Agent will work.
+
+
+  </Step>
+
+  <Step title="Describe the Task">
+
+    Add your user input — clear instructions for what you want the agent to accomplish.
+
+    **Example prompts:**
+
+    ```text
+    Refactor unused React components and clean up imports
+    ```
+
+    ```text
+    Add error handling to all API endpoints in the /api directory
+    ```
+
+    ```text
+    Update README with installation instructions for the new CLI tool
+    ```
+
+  </Step>
+
+  <Step title="Run the Task">
+
+    Click the Submit button.
+
+    The Agent will:
+    - Analyze your repository and branch
+    - Execute the task based on your input
+    - Generate changes based on your task request
+    - Create a detailed session log
+
+    <Info>
+
+      Task execution time varies based on complexity. You can monitor progress in your inbox.
+
+    </Info>
+
+  </Step>
+
+  <Step title="Review Results">
+
+    Each Task run creates a Session with complete traceability.
+  
+    <AccordionGroup>
+      <Accordion title="Summary">
+
+        A high-level explanation of:
+        - What the Agent did
+        - Why decisions were made
+        - Key changes implemented
+
+      </Accordion>
+
+      <Accordion title="Diff">
+
+        The exact code changes:
+            - Files modified
+            - Lines added/removed
+            - Side-by-side comparison
+
+      </Accordion>
+
+      <Accordion title="Logs">
+
+        Full execution trace:
+            - Tool calls made
+            - Agent reasoning
+            - Any errors or warnings
+
+      </Accordion>
+
+    </AccordionGroup>
+
+
+    <Tip>
+
+      Review the diff carefully before accepting changes. You can:
+      - Accept all changes
+      - Request modifications
+      - Reject and retry with an updated input
+
+    </Tip>
+
+  </Step>
+
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+  <Card title="Task Triggers" icon="bolt" href="/mission-control/triggers">
+
+    Automate tasks with event-based triggers
+
+  </Card>
+
+  <Card title="Task Schedules" icon="clock" href="/mission-control/schedules">
+
+    Run tasks automatically on a schedule
+
+  </Card>
+
+</CardGroup>
