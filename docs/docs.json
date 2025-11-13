@@ -67,7 +67,6 @@
                   "mission-control/configs/edit-a-config"
                 ]
               },
-<<<<<<< HEAD
               "mission-control/sharing",
               "mission-control/source-control"
             ]
@@ -79,9 +78,6 @@
               "agents/intro",
               "agents/overview",
               "agents/create-and-edit"
-=======
-              "hub/sharing"
->>>>>>> main
             ]
           },
           {
