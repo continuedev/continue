@@ -8,9 +8,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
-import { systemMessageService } from "../services/SystemMessageService.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { ToolCall } from "../tools/index.js";
@@ -22,7 +20,7 @@ import {
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
-import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
+import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 import {
   processChunkContent,
@@ -157,7 +155,9 @@ export async function processStreamingResponse(
   }
 
   // Get fresh system message and inject it
-  const systemMessage = await systemMessageService.getSystemMessage();
+  const systemMessage = await services.systemMessage.getSystemMessage(
+    services.toolPermissions.getState().currentMode,
+  );
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
     chatHistory,
     systemMessage,
@@ -299,7 +299,7 @@ export async function processStreamingResponse(
 
   // Validate tool calls have complete arguments
   const validToolCalls = toolCalls.filter((tc) => {
-    if (!tc.arguments || !tc.name) {
+    if (!tc.name) {
       logger.error("Incomplete tool call", {
         id: tc.id,
         name: tc.name,
@@ -337,10 +337,7 @@ export async function streamChatResponse(
     hasCallbacks: !!callbacks,
   });
 
-  const serviceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-  );
-  const isHeadless = serviceResult.value?.isHeadless ?? false;
+  const isHeadless = services.toolPermissions.isHeadless();
 
   let fullResponse = "";
   let finalResponse = "";
@@ -384,7 +381,7 @@ export async function streamChatResponse(
     }
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getAllTools();
+    const tools = await getRequestTools(isHeadless);
 
     logger.debug("Tools prepared", {
       toolCount: tools.length,
@@ -394,12 +391,12 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
+        isHeadless,
         chatHistory,
         model,
         llmApi,
         abortController,
         callbacks,
-        isHeadless,
         tools,
       });
 
@@ -476,4 +473,3 @@ export async function streamChatResponse(
   // Otherwise, return the full response
   return isHeadless ? finalResponse : fullResponse;
 }
-export { getAllTools };

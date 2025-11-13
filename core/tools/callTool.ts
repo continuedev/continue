@@ -1,6 +1,7 @@
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+import { ContinueError, ContinueErrorReason } from "../util/errors";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
@@ -200,6 +201,7 @@ export async function callTool(
 ): Promise<{
   contextItems: ContextItem[];
   errorMessage: string | undefined;
+  errorReason?: ContinueErrorReason;
 }> {
   try {
     const args = safeParseToolCallArgs(toolCall);
@@ -217,12 +219,19 @@ export async function callTool(
     };
   } catch (e) {
     let errorMessage = `${e}`;
-    if (e instanceof Error) {
+    let errorReason: ContinueErrorReason | undefined;
+
+    if (e instanceof ContinueError) {
+      errorMessage = e.message;
+      errorReason = e.reason;
+    } else if (e instanceof Error) {
       errorMessage = e.message;
     }
+
     return {
       contextItems: [],
       errorMessage,
+      errorReason,
     };
   }
 }

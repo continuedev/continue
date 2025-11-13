@@ -1,11 +1,12 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
-import { usesFreeTrialApiKey } from "../config/usesFreeTrialApiKey";
+import { usesCreditsBasedApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
 import { TTS } from "../util/tts";
+import { isOutOfStarterCredits } from "./utils/starterCredits";
 
 export async function* llmStreamChat(
   configHandler: ConfigHandler,
@@ -59,13 +60,6 @@ export async function* llmStreamChat(
       if (!slashCommand) {
         throw new Error(`Unknown slash command ${command.name}`);
       }
-      void Telemetry.capture(
-        "useSlashCommand",
-        {
-          name: command.name,
-        },
-        true,
-      );
       if (!slashCommand.run) {
         console.error(
           `Slash command ${command.name} (${command.source}) has no run function`,
@@ -151,7 +145,7 @@ export async function* llmStreamChat(
         true,
       );
 
-      void checkForFreeTrialExceeded(configHandler, messenger);
+      void checkForOutOfStarterCredits(configHandler, messenger);
 
       if (!next.done) {
         throw new Error("Will never happen");
@@ -160,46 +154,24 @@ export async function* llmStreamChat(
       return next.value;
     }
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("premature close")
-    ) {
-      void Telemetry.capture(
-        "stream_premature_close_error",
-        {
-          model: model.model,
-          provider: model.providerName,
-          errorMessage: error.message,
-          context: legacySlashCommandData ? "slash_command" : "regular_chat",
-          ...(legacySlashCommandData && {
-            command: legacySlashCommandData.command.name,
-          }),
-        },
-        false,
-      );
-    }
+    // Moved error handling that was here to GUI, keeping try/catch for clean diff
     throw error;
   }
 }
 
-async function checkForFreeTrialExceeded(
+async function checkForOutOfStarterCredits(
   configHandler: ConfigHandler,
   messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
 ) {
-  const { config } = await configHandler.getSerializedConfig();
-
-  // Only check if the user is using the free trial
-  if (config && !usesFreeTrialApiKey(config)) {
-    return;
-  }
-
   try {
-    const freeTrialStatus =
-      await configHandler.controlPlaneClient.getFreeTrialStatus();
+    const { config } = await configHandler.getSerializedConfig();
+    const creditStatus =
+      await configHandler.controlPlaneClient.getCreditStatus();
+
     if (
-      freeTrialStatus &&
-      freeTrialStatus.chatCount &&
-      freeTrialStatus.chatCount > freeTrialStatus.chatLimit
+      config &&
+      creditStatus &&
+      isOutOfStarterCredits(usesCreditsBasedApiKey(config), creditStatus)
     ) {
       void messenger.request("freeTrialExceeded", undefined);
     }

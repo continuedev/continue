@@ -1,20 +1,24 @@
 // @ts-ignore
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+import { ChatCompletionTool } from "openai/resources.mjs";
 
 import { posthogService } from "src/telemetry/posthogService.js";
+import { isModelCapable } from "src/utils/modelCapability.js";
 
 import {
-  getServiceSync,
-  MCPServiceState,
   SERVICE_NAMES,
   serviceContainer,
+  services,
 } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import type { ModelServiceState } from "../services/types.js";
+import type {
+  MCPServiceState,
+  MCPTool,
+  ModelServiceState,
+} from "../services/types.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
-import { isModelCapable } from "../utils/index.js";
 
+import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -24,6 +28,7 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
@@ -39,10 +44,7 @@ export type { Tool, ToolCall, ToolParametersSchema };
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
-  editTool,
-  multiEditTool,
   writeFileTool,
-  // searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,
@@ -50,63 +52,40 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   writeChecklistTool,
 ];
 
-const MEMORY_TOOL_INSERT_INDEX = BASE_BUILTIN_TOOLS.findIndex(
-  (tool) => tool.name === fetchTool.name,
-);
+// Get all builtin tools including dynamic ones, with capability-based filtering
+export async function getAllAvailableTools(
+  isHeadless: boolean,
+): Promise<Tool[]> {
+  const tools = [...BASE_BUILTIN_TOOLS];
 
-// Export BUILTIN_TOOLS as the base set of tools
-// Dynamic tools (like exit tool in headless mode) are added separately
-export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
-
-// Get dynamic tools based on current state
-function getDynamicTools(): Tool[] {
-  const dynamicTools: Tool[] = [];
-
-  // Add headless-specific tools if in headless mode
-  try {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-    const isHeadless = serviceResult.value?.isHeadless ?? false;
-    if (isHeadless) {
-      dynamicTools.push(exitTool);
-    }
-  } catch {
-    // Service not ready yet, no dynamic tools
+  // If model is capable, exclude editTool in favor of multiEditTool
+  const modelState = await serviceContainer.get<ModelServiceState>(
+    SERVICE_NAMES.MODEL,
+  );
+  if (!modelState.model) {
+    throw new Error("Model service is not initialized");
   }
 
-  return dynamicTools;
-}
+  const { provider, name, model } = modelState.model;
 
-// Check if the current model is capable and should exclude Edit tool
-function shouldExcludeEditTool(): boolean {
-  try {
-    const modelServiceResult = getServiceSync<ModelServiceState>(
-      SERVICE_NAMES.MODEL,
+  const isCapable = isModelCapable(provider, name, model);
+  if (isCapable) {
+    tools.push(multiEditTool);
+  } else {
+    tools.push(editTool);
+    logger.debug(
+      "Excluded Edit tool for capable model - MultiEdit will be used instead",
     );
+  }
 
-    if (
-      modelServiceResult.state === "ready" &&
-      modelServiceResult.value?.model
-    ) {
-      const { name, provider, model } = modelServiceResult.value.model;
+  logger.debug("Capability-based tool filtering", {
+    provider,
+    name,
+    isCapable,
+  });
 
-      // Check if model is capable
-      const isCapable = isModelCapable(provider, name, model);
-
-      logger.debug("Capability-based tool filtering", {
-        provider,
-        name,
-        isCapable,
-        willExcludeEdit: isCapable,
-      });
-
-      return isCapable;
-    }
-  } catch (error) {
-    logger.debug("Error checking model capability for tool filtering", {
-      error,
-    });
+  if (isHeadless) {
+    tools.push(exitTool);
   }
   return false;
 }
@@ -192,14 +171,22 @@ export function getAllBuiltinTools(): Tool[] {
     logger.debug(
       "Excluded Edit tool for capable model - MultiEdit will be used instead",
     );
+
+  // Add beta status tool if --beta-status-tool flag is present
+  if (process.argv.includes("--beta-status-tool")) {
+    tools.push(statusTool);
   }
 
-  return [...builtinTools, ...getDynamicTools()];
+  const mcpState = await serviceContainer.get<MCPServiceState>(
+    SERVICE_NAMES.MCP,
+  );
+  tools.push(...mcpState.tools.map(convertMcpToolToContinueTool));
+
+  return tools;
 }
 
 export function getToolDisplayName(toolName: string): string {
-  const allTools = getAllBuiltinTools();
-  const tool = allTools.find((t) => t.name === toolName);
+  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
   return tool?.displayName || toolName;
 }
 
@@ -228,35 +215,43 @@ export function extractToolCalls(
   return toolCalls;
 }
 
-export async function getAvailableTools() {
-  // Load MCP tools
-  const mcpState = await serviceContainer.get<MCPServiceState>(
-    SERVICE_NAMES.MCP,
-  );
-  const tools = mcpState.tools ?? [];
-  const mcpTools: Tool[] =
-    tools.map((t) => ({
-      name: t.name,
-      displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-      description: t.description ?? "",
+export function convertToolToChatCompletionTool(
+  tool: Tool,
+): ChatCompletionTool {
+  return {
+    type: "function" as const,
+    function: {
+      name: tool.name,
+      description: tool.description,
       parameters: {
         type: "object",
-        properties: (t.inputSchema.properties ?? {}) as Record<
-          string,
-          ParameterSchema
-        >,
-        required: t.inputSchema.required,
+        required: tool.parameters.required,
+        properties: tool.parameters.properties,
       },
-      readonly: undefined, // MCP tools don't have readonly property
-      isBuiltIn: false,
-      run: async (args: any) => {
-        const result = await mcpState.mcpService?.runTool(t.name, args);
-        return JSON.stringify(result?.content) ?? "";
-      },
-    })) || [];
+    },
+  };
+}
 
-  const allTools: Tool[] = [...getAllBuiltinTools(), ...mcpTools];
-  return allTools;
+export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
+  return {
+    name: mcpTool.name,
+    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
+    description: mcpTool.description ?? "",
+    parameters: {
+      type: "object",
+      properties: (mcpTool.inputSchema.properties ?? {}) as Record<
+        string,
+        ParameterSchema
+      >,
+      required: mcpTool.inputSchema.required,
+    },
+    readonly: undefined, // MCP tools don't have readonly property
+    isBuiltIn: false,
+    run: async (args: any) => {
+      const result = await services.mcp?.runTool(mcpTool.name, args);
+      return JSON.stringify(result?.content) ?? "";
+    },
+  };
 }
 
 export async function executeToolCall(
@@ -318,18 +313,17 @@ export async function executeToolCall(
       errorReason,
     });
 
-    return `Error executing tool "${toolCall.name}": ${errorMessage}`;
+    throw error;
   }
 }
 
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  for (const paramName of requiredParams) {
     if (
-      requiredParams.includes(paramName) &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
+      toolCall.arguments[paramName] === undefined ||
+      toolCall.arguments[paramName] === null
     ) {
       throw new Error(
         `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,

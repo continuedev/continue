@@ -19,8 +19,9 @@ import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
-  fileUri?: string;
-  editingFileContents?: string;
+  fileUri?: string; // Added during args preprocessing
+  newFileContents?: string; // Added during args preprocessing
+  editingFileContents?: string; // Added args preprocessing
   relativeFilePath?: string;
   edits: EditOperation[];
   toolCallId: string;
@@ -84,6 +85,7 @@ function DiffStats({ added, removed }: { added: number; removed: number }) {
 
 export function FindAndReplaceDisplay({
   fileUri,
+  newFileContents,
   relativeFilePath,
   editingFileContents,
   edits,
@@ -124,39 +126,37 @@ export function FindAndReplaceDisplay({
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
-    if (!currentFileContent) {
-      return null;
-    }
-
     try {
-      // Apply all edits sequentially
-      let newContent = currentFileContent;
-      for (let i = 0; i < edits.length; i++) {
-        const {
-          old_string: oldString,
-          new_string: newString,
-          replace_all: replaceAll,
-        } = edits[i];
-        newContent = executeFindAndReplace(
-          newContent,
-          oldString,
-          newString,
-          !!replaceAll,
-          i,
-        );
+      let contentsAfterReplace = newFileContents;
+      if (typeof contentsAfterReplace === "undefined") {
+        // Apply all edits sequentially
+        contentsAfterReplace = currentFileContent;
+        for (let i = 0; i < edits.length; i++) {
+          const {
+            old_string: oldString,
+            new_string: newString,
+            replace_all: replaceAll,
+          } = edits[i];
+          contentsAfterReplace = executeFindAndReplace(
+            contentsAfterReplace,
+            oldString,
+            newString,
+            !!replaceAll,
+            i,
+          );
+        }
       }
 
       // Generate diff between original and final content
-      const diff = diffLines(currentFileContent, newContent);
-      return { diff, newContent, error: null };
+      const diff = diffLines(currentFileContent, contentsAfterReplace);
+      return { diff, error: null };
     } catch (error) {
       return {
         diff: null,
-        newContent: null,
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
-  }, [currentFileContent, edits]);
+  }, [currentFileContent, newFileContents, edits]);
 
   const diffStats = useMemo(() => {
     if (!diffResult?.diff) {

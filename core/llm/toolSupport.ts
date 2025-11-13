@@ -29,6 +29,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
+      const lower = model.toLowerCase();
       if (
         [
           "claude-3-5",
@@ -38,8 +39,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-sonnet-4",
           "claude-4-sonnet",
           "claude-opus-4",
-        ].some((part) => model.toLowerCase().startsWith(part))
+        ].some((part) => lower.startsWith(part))
       ) {
+        return true;
+      }
+      if (lower.includes("claude") && lower.includes("4-5")) {
         return true;
       }
 
@@ -112,7 +116,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
-      return ["grok-3", "grok-4"].some((val) => lowerCaseModel.includes(val));
+      return ["grok-3", "grok-4", "grok-code"].some((val) =>
+        lowerCaseModel.includes(val),
+      );
     },
     bedrock: (model) => {
       if (
@@ -189,6 +195,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "llama3-groq",
           "granite3",
           "granite-3",
+          "granite4",
+          "granite-4",
           "aya-expanse",
           "firefunction-v2",
           "mistral",
@@ -383,6 +391,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt-5/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
+    [/grok-code/],
+    [/claude/, /4-5/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {

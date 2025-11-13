@@ -82,10 +82,13 @@ After completing **Quick Setup** above, you have two paths to get started:
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Netlify Continuous AI Agent](https://hub.continue.dev/continuedev/netlify-continuous-ai) on Continue Hub and click **"Install Agent"**
+        Visit the [Netlify Continuous AI Agent](https://hub.continue.dev/continuedev/netlify-continuous-ai-agent) on Continue Hub and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --agent continuedev/netlify-continuous-ai-agent
+        ```
 
         This agent includes:
-        - **Optimized prompts** for Netlify deployment and performance analysis
         - **Built-in rules** for consistent formatting and error handling
         - **Netlify MCP** for more reliable API interactions
       </Step>
@@ -95,7 +98,7 @@ After completing **Quick Setup** above, you have two paths to get started:
       </Step>
 
       <Step title="Run Performance Analysis">
-        Navigate to your project directory and run:
+        From your project directory, run:
         ```bash
         cn "Analyze my Netlify site's performance and optimize it for better Core Web Vitals."
         ```

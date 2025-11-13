@@ -1,6 +1,9 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import {
+  SSEClientTransport,
+  SseError,
+} from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
@@ -20,6 +23,14 @@ import {
   MCPServiceState,
   SERVICE_NAMES,
 } from "./types.js";
+
+function is401Error(error: unknown) {
+  return (
+    (error instanceof SseError && error.code === 401) ||
+    (error instanceof Error && error.message.includes("401")) ||
+    (error instanceof Error && error.message.includes("Unauthorized"))
+  );
+}
 
 interface ServerConnection extends MCPConnectionInfo {
   client: Client | null;
@@ -41,7 +52,7 @@ export class MCPService
   private isShuttingDown = false;
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG];
   }
   constructor() {
     super("MCPService", {
@@ -59,7 +70,8 @@ export class MCPService
    */
   async doInitialize(
     assistant: AssistantConfig,
-    waitForConnections = false,
+    hasAgentFile: boolean,
+    isHeadless: boolean | undefined,
   ): Promise<MCPServiceState> {
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
@@ -87,11 +99,25 @@ export class MCPService
         logger.debug("MCP connections established", {
           connectionCount: connections.length,
         });
-        this.updateState();
       },
     );
-    if (waitForConnections) {
+    if (isHeadless || hasAgentFile) {
       await connectionInit;
+
+      if (isHeadless) {
+        // With headless or agent, throw error if any MCP server failed to connect
+        const failedConnections = Array.from(this.connections.values()).filter(
+          (c) => c.status === "error",
+        );
+        if (failedConnections.length > 0) {
+          const errorMessages = failedConnections.map(
+            (c) => `${c.config?.name}: ${c.error}`,
+          );
+          throw new Error(
+            `MCP server(s) failed to load:\n${errorMessages.join("\n")}`,
+          );
+        }
+      }
     } else {
       this.updateState();
     }
@@ -221,7 +247,7 @@ export class MCPService
     this.updateState();
 
     try {
-      const client = await this.getConnectedClient(serverConfig);
+      const client = await this.getConnectedClient(serverConfig, connection);
 
       connection.client = client;
       connection.status = "connected";
@@ -268,14 +294,23 @@ export class MCPService
         }
       }
 
-      logger.debug("MCP server restarted successfully", { name: serverName });
+      logger.debug("MCP server connected successfully", { name: serverName });
     } catch (error) {
       const errorMessage = getErrorString(error);
       connection.status = "error";
-      connection.error = errorMessage;
-      logger.error("Failed to restart MCP server", {
+
+      // Convert any warnings to error at time of connection failure
+      if (connection.warnings.length > 0) {
+        const stderrContent = connection.warnings.join("\n");
+        connection.error = `${errorMessage}\n\nServer stderr:\n${stderrContent}`;
+        connection.warnings = [];
+      } else {
+        connection.error = errorMessage;
+      }
+
+      logger.error("Failed to connect to MCP server", {
         name: serverName,
-        error: errorMessage,
+        error: connection.error,
       });
     }
 
@@ -345,6 +380,7 @@ export class MCPService
    */
   private async getConnectedClient(
     serverConfig: MCPServerConfig,
+    connection: ServerConnection,
   ): Promise<Client> {
     const client = new Client(
       { name: "continue-cli-client", version: "1.0.0" },
@@ -357,7 +393,7 @@ export class MCPService
         name: serverConfig.name,
         command: serverConfig.command,
       });
-      const transport = this.constructStdioTransport(serverConfig);
+      const transport = this.constructStdioTransport(serverConfig, connection);
       await client.connect(transport, {});
     } else {
       // SSE/HTTP: if type isn't explicit: try http and fall back to sse
@@ -366,15 +402,32 @@ export class MCPService
         url: serverConfig.url,
       });
 
-      if (serverConfig.type === "sse") {
-        const transport = this.constructSseTransport(serverConfig);
-        await client.connect(transport, {});
-      } else if (serverConfig.type === "streamable-http") {
-        const transport = this.constructHttpTransport(serverConfig);
-        await client.connect(transport, {});
-      } else if (serverConfig.type) {
-        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
-      } else {
+      try {
+        if (serverConfig.type === "sse") {
+          const transport = this.constructSseTransport(serverConfig);
+          await client.connect(transport, {});
+        } else if (serverConfig.type === "streamable-http") {
+          const transport = this.constructHttpTransport(serverConfig);
+          await client.connect(transport, {});
+        }
+      } catch (error: unknown) {
+        // on authorization error, use "mcp-remote" with stdio transport to connect
+        if (is401Error(error)) {
+          const transport = this.constructStdioTransport(
+            {
+              name: serverConfig.name,
+              command: "npx",
+              args: ["-y", "mcp-remote", serverConfig.url],
+            },
+            connection,
+          );
+          await client.connect(transport, {});
+        } else {
+          throw error;
+        }
+      }
+
+      if (typeof serverConfig.type === "undefined") {
         try {
           const transport = this.constructHttpTransport(serverConfig);
           await client.connect(transport, {});
@@ -394,6 +447,10 @@ export class MCPService
             );
           }
         }
+      } else if (
+        !["streamable-http", "sse", "stdio"].includes(serverConfig.type)
+      ) {
+        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
       }
     }
 
@@ -403,6 +460,14 @@ export class MCPService
   private constructSseTransport(
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...serverConfig.requestOptions?.headers,
+      ...(serverConfig.apiKey && {
+        Authorization: `Bearer ${serverConfig.apiKey}`,
+      }),
+    };
+
     return new SSEClientTransport(new URL(serverConfig.url), {
       eventSourceInit: {
         fetch: (input, init) =>
@@ -410,34 +475,59 @@ export class MCPService
             ...init,
             headers: {
               ...init?.headers,
-              ...serverConfig.requestOptions?.headers,
+              ...headers,
             },
           }),
       },
-      requestInit: { headers: serverConfig.requestOptions?.headers },
+      requestInit: { headers },
     });
   }
   private constructHttpTransport(
     serverConfig: HttpMcpServer,
   ): StreamableHTTPClientTransport {
+    // Merge apiKey into headers if provided
+    const headers = {
+      ...serverConfig.requestOptions?.headers,
+      ...(serverConfig.apiKey && {
+        Authorization: `Bearer ${serverConfig.apiKey}`,
+      }),
+    };
+
     return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
-      requestInit: { headers: serverConfig.requestOptions?.headers },
+      requestInit: { headers },
     });
   }
   private constructStdioTransport(
     serverConfig: StdioMcpServer,
+    connection: ServerConnection,
   ): StdioClientTransport {
     const env: Record<string, string> = serverConfig.env || {};
-    if (process.env.PATH !== undefined) {
-      env.PATH = process.env.PATH;
+    if (process.env) {
+      for (const [key, value] of Object.entries(process.env)) {
+        if (!(key in env) && !!value) {
+          env[key] = value;
+        }
+      }
     }
 
-    return new StdioClientTransport({
+    const transport = new StdioClientTransport({
       command: serverConfig.command,
       args: serverConfig.args || [],
       env,
       cwd: serverConfig.cwd,
-      stderr: "ignore",
+      stderr: "pipe",
     });
+
+    const stderrStream = transport.stderr;
+    if (stderrStream) {
+      stderrStream.on("data", (data: Buffer) => {
+        const stderrOutput = data.toString().trim();
+        if (stderrOutput) {
+          connection.warnings.push(stderrOutput);
+        }
+      });
+    }
+
+    return transport;
   }
 }

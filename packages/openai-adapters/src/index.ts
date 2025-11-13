@@ -4,6 +4,7 @@ import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
+import { CometAPIApi } from "./apis/CometAPI.js";
 import { ContinueProxyApi } from "./apis/ContinueProxy.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
@@ -13,12 +14,12 @@ import { LlamastackApi } from "./apis/LlamaStack.js";
 import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
+import { OpenRouterApi } from "./apis/OpenRouter.js";
 import { RelaceApi } from "./apis/Relace.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
-import { CometAPIApi } from "./apis/CometAPI.js";
 import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
 dotenv.config();
@@ -110,8 +111,6 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
       return openAICompatible("http://127.0.0.1:5000/v1/", config);
-    case "openrouter":
-      return openAICompatible("https://openrouter.ai/api/v1/", config);
     case "cerebras":
       return openAICompatible("https://api.cerebras.ai/v1/", config);
     case "kindo":
@@ -139,6 +138,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
+    case "openrouter":
+      return new OpenRouterApi(config);
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
@@ -187,3 +188,5 @@ export {
   getAnthropicHeaders,
   getAnthropicMediaTypeFromDataUrl,
 } from "./apis/AnthropicUtils.js";
+
+export { isResponsesModel } from "./apis/openaiResponses.js";

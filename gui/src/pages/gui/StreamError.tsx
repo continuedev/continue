@@ -8,6 +8,7 @@ import {
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
+import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
@@ -21,7 +22,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isLocalProfile } from "../../util";
 import { analyzeError } from "../../util/errorAnalysis";
-import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
+import { OutOfCreditsDialog } from "./OutOfCreditsDialog";
 
 interface StreamErrorProps {
   error: unknown;
@@ -66,15 +67,12 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   ) : null;
 
+  const handleEditModel = useEditModel();
+
   const configButton = (
     <GhostButton
       className="flex items-center"
-      onClick={() => {
-        ideMessenger.post("config/openProfile", {
-          profileId: undefined,
-          element: selectedModel ?? undefined,
-        });
-      }}
+      onClick={() => handleEditModel(selectedModel)}
     >
       <Cog6ToothIcon className="mr-1.5 h-3.5 w-3.5" />
       <span>View config</span>
@@ -123,10 +121,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
-  if (
-    parsedError === "You have exceeded the chat limit for the Models Add-On."
-  ) {
-    return <ModelsAddOnLimitDialog />;
+  if (parsedError.includes("You're out of credits!")) {
+    return <OutOfCreditsDialog />;
   }
 
   let errorContent = (

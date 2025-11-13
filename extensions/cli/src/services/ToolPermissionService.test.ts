@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock modules
 vi.mock("../permissions/permissionsYamlLoader.js");

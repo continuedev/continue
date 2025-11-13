@@ -197,11 +197,13 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
  */
 export function removeCodeBlocksAndTrim(text: string): string {
   const codeBlockRegex = /```[\s\S]*?```/g;
+  const thinkBlockRegex = /<think>[\s\S]*?<\/think>/g;
 
-  // Remove code blocks from the message text
-  const textWithoutCodeBlocks = text.replace(codeBlockRegex, "");
+  // Remove code blocks and think blocks from the message text
+  let processedText = text.replace(codeBlockRegex, "");
+  processedText = processedText.replace(thinkBlockRegex, "");
 
-  return textWithoutCodeBlocks.trim();
+  return processedText.trim();
 }
 
 export function splitCamelCaseAndNonAlphaNumeric(value: string) {

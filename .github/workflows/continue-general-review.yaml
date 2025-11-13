@@ -1,6 +1,9 @@
 name: Continue General Review
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
@@ -22,4 +25,4 @@ jobs:
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
-          continue-config: "continuedev/review-bot"
+          continue-agent: "empty-agent"

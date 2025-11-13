@@ -2,6 +2,7 @@ import { fdir } from "fdir";
 import { AsyncFzf, FzfResultItem } from "fzf";
 
 import { FILE_IGNORE_PATTERNS } from "../util/filePatterns.js";
+import { isGitRepo } from "../util/git.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -131,10 +132,15 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
       const currentDir = process.cwd();
       logger.debug(`Starting file index in directory: ${currentDir}`);
 
+      // Determine max depth based on git repository status
+      const inGitRepo = isGitRepo();
+      const maxDepth = inGitRepo ? 10 : 3;
+
       // Create file indexing promise
       const fileIndexPromise = new fdir()
         .withFullPaths()
         .withRelativePaths()
+        .withMaxDepth(maxDepth)
         .filter((path) => {
           // Use the helper function that implements original FILE_PATTERNS logic
           return this.shouldIncludeFile(path);

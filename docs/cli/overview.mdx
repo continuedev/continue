@@ -77,15 +77,30 @@ cn -p "Update documentation based on recent code changes"
 - **CI/CD and pipeline integration**
 - **Git hooks and automated workflows**
 
+<Info>
+  **Tool Permissions in TUI vs Headless Mode**
+
+  Continue CLI tools have three permission levels:
+  - **allow**: Executes automatically without confirmation
+  - **ask**: Prompts for user confirmation before execution (e.g., `writeFile`, `runTerminalCommand`)
+  - **exclude**: Tool is not available to the AI
+
+  **In headless mode**, tools with "ask" permission are automatically excluded to prevent the AI from seeing tools it cannot call. This ensures reliable automation without user intervention.
+
+  **In TUI mode**, tools with "ask" permission are available and will prompt for confirmation when the AI attempts to use them.
+
+  💡 **Tip**: If your workflow requires tools that need confirmation (like file writes or terminal commands), use TUI mode. For fully automated workflows with read-only operations, use headless mode.
+</Info>
+
 ### Development Workflow: TUI → Headless
 
 <Tip>
-  **Pro Tip**: Start in TUI mode to iterate on your AI agent and prompts. Once
+  **Pro Tip**: Start in TUI mode to iterate on your AI agent. Once
   you have a workflow that works reliably, deploy it as a Continuous AI
   automation.
 </Tip>
 
-1. **Experiment in TUI mode** to perfect your prompts and agent configuration
+1. **Experiment in TUI mode** to perfect your agent
 2. **Test different approaches** interactively until you get consistent results
 3. **Convert successful workflows** to automated Continuous AI commands
 4. **Deploy in production** with confidence in your proven approach

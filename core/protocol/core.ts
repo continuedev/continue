@@ -48,12 +48,10 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import {
-  FreeTrialStatus,
-  RemoteSessionMetadata,
-} from "../control-plane/client";
+import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
+import { ContinueErrorReason } from "../util/errors";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -93,6 +91,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
+  "config/addGlobalRule": [undefined, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
@@ -117,10 +116,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [
-    { profileId: string | undefined; element?: { sourceFile?: string } },
-    void,
-  ];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -147,8 +143,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
-  "mcp/disconnectServer": [{ id: string }, void];
-  "mcp/getDisconnectedServers": [undefined, string[]];
+  "mcp/setServerEnabled": [{ id: string; enabled: boolean }, void];
   "mcp/getPrompt": [
     {
       serverName: string;
@@ -246,6 +241,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  getDiffLines: [{ oldContent: string; newContent: string }, DiffLine[]];
   "llm/compileChat": [
     { messages: ChatMessage[]; options: LLMFullCompletionOptions },
     CompiledMessagesResult,
@@ -312,20 +308,33 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
-    { contextItems: ContextItem[]; errorMessage?: string },
+    {
+      contextItems: ContextItem[];
+      errorMessage?: string;
+      errorReason?: ContinueErrorReason;
+    },
   ];
   "tools/evaluatePolicy": [
-    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    {
+      toolName: string;
+      basePolicy: ToolPolicy;
+      parsedArgs: Record<string, unknown>;
+      processedArgs?: Record<string, unknown>;
+    },
     { policy: ToolPolicy; displayValue?: string },
+  ];
+  "tools/preprocessArgs": [
+    { toolName: string; args: Record<string, unknown> },
+    {
+      preprocessedArgs?: Record<string, unknown>;
+      errorReason?: ContinueErrorReason;
+      errorMessage?: string;
+    },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
-  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
-  "controlPlane/getModelsAddOnUpgradeUrl": [
-    { vsCodeUriScheme?: string },
-    { url: string } | null,
-  ];
+  "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },

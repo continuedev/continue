@@ -12,16 +12,17 @@ import {
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callToolById = createAsyncThunk<
   void,
-  { toolCallId: string },
+  { toolCallId: string; isAutoApproved?: boolean; depth?: number },
   ThunkApiType
->("chat/callTool", async ({ toolCallId }, { dispatch, extra, getState }) => {
+>("chat/callTool", async (inputs, { dispatch, extra, getState }) => {
+  const { toolCallId, isAutoApproved, depth = 0 } = inputs;
+
   const state = getState();
   const toolCallState = findToolCallById(state.session.history, toolCallId);
   if (!toolCallState) {
@@ -35,14 +36,6 @@ export const callToolById = createAsyncThunk<
 
   // Track tool call acceptance and start timing
   const startTime = Date.now();
-
-  // Check if this is an auto-approved tool
-  const toolSettings = state.ui.toolSettings;
-  const toolPolicy =
-    toolSettings[toolCallState.toolCall.function.name] ??
-    toolCallState.tool?.defaultToolPolicy ??
-    DEFAULT_TOOL_SETTING;
-  const isAutoApproved = toolPolicy === "allowedWithoutPermission";
 
   const selectedChatModel = selectSelectedChatModel(state);
 
@@ -101,7 +94,7 @@ export const callToolById = createAsyncThunk<
       output = result.content.contextItems;
       error = result.content.errorMessage
         ? new ContinueError(
-            ContinueErrorReason.Unspecified,
+            result.content.errorReason || ContinueErrorReason.Unspecified,
             result.content.errorMessage,
           )
         : undefined;
@@ -164,6 +157,7 @@ export const callToolById = createAsyncThunk<
     const wrapped = await dispatch(
       streamResponseAfterToolCall({
         toolCallId,
+        depth: depth + 1,
       }),
     );
     unwrapResult(wrapped);

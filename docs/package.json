@@ -16,6 +16,6 @@
     "mintlify": "^4.2.3"
   },
   "dependencies": {
-    "@c15t/react": "^1.4.4"
+    "@c15t/react": "^1.7.0"
   }
 }

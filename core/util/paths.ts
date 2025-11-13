@@ -14,6 +14,16 @@ import Types from "../config/types";
 
 dotenv.config();
 
+export function setConfigFilePermissions(filePath: string): void {
+  try {
+    if (os.platform() !== "win32") {
+      fs.chmodSync(filePath, 0o600);
+    }
+  } catch (error) {
+    console.warn(`Failed to set permissions on ${filePath}:`, error);
+  }
+}
+
 const CONTINUE_GLOBAL_DIR = (() => {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
@@ -117,6 +127,7 @@ export function getConfigYamlPath(ideType?: IdeType): string {
     } else {
       fs.writeFileSync(p, YAML.stringify(defaultConfig));
     }
+    setConfigFilePermissions(p);
   }
   return p;
 }
@@ -255,12 +266,14 @@ function editConfigJson(
 }
 
 function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
-  const config = fs.readFileSync(getConfigYamlPath(), "utf8");
+  const configPath = getConfigYamlPath();
+  const config = fs.readFileSync(configPath, "utf8");
   let configYaml = YAML.parse(config);
   // Check if it's an object
   if (typeof configYaml === "object" && configYaml !== null) {
     configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml));
+    fs.writeFileSync(configPath, YAML.stringify(configYaml));
+    setConfigFilePermissions(configPath);
   } else {
     console.warn("config.yaml is not a valid object");
   }

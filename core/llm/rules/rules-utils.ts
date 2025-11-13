@@ -1,14 +1,14 @@
-import { RuleWithSource } from "../..";
+import { RuleMetadata } from "../..";
 import { getLastNPathParts } from "../../util/uri";
 
-export function getRuleDisplayName(rule: RuleWithSource): string {
+export function getRuleDisplayName(rule: RuleMetadata): string {
   if (rule.name) {
     return rule.name;
   }
   return getRuleSourceDisplayName(rule);
 }
 
-export function getRuleSourceDisplayName(rule: RuleWithSource): string {
+export function getRuleSourceDisplayName(rule: RuleMetadata): string {
   switch (rule.source) {
     case ".continuerules":
       return "Project rules";
@@ -26,15 +26,15 @@ export function getRuleSourceDisplayName(rule: RuleWithSource): string {
       return "Base System Plan Message";
     case "model-options-chat":
       return "Base System Chat Message";
-    case "agent-file":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
+    case "agentFile":
+      if (rule.sourceFile) {
+        return getLastNPathParts(rule.sourceFile, 2);
       } else {
         return "Agent file";
       }
     case "colocated-markdown":
-      if (rule.ruleFile) {
-        return getLastNPathParts(rule.ruleFile, 2);
+      if (rule.sourceFile) {
+        return getLastNPathParts(rule.sourceFile, 2);
       } else {
         return "rules.md";
       }

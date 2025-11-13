@@ -27,6 +27,7 @@ export enum ContinueErrorReason {
   FindAndReplaceMissingOldString = "find_and_replace_missing_old_string",
   FindAndReplaceNonFirstEmptyOldString = "find_and_replace_non_first_empty_old_string",
   FindAndReplaceMissingNewString = "find_and_replace_missing_new_string",
+  FindAndReplaceInvalidReplaceAll = "find_and_replace_invalid_replace_all",
   FindAndReplaceOldStringNotFound = "find_and_replace_old_string_not_found",
   FindAndReplaceMultipleOccurrences = "find_and_replace_multiple_occurrences",
   FindAndReplaceMissingFilepath = "find_and_replace_missing_filepath",
@@ -46,8 +47,22 @@ export enum ContinueErrorReason {
   FileWriteError = "file_write_error",
   FileIsSecurityConcern = "file_is_security_concern",
   ParentDirectoryNotFound = "parent_directory_not_found",
+  FileTooLarge = "file_too_large",
+  PathResolutionFailed = "path_resolution_failed",
+  InvalidLineNumber = "invalid_line_number",
+  DirectoryNotFound = "directory_not_found",
+
+  // Terminal/Command execution
+  CommandExecutionFailed = "command_execution_failed",
+  CommandNotAvailableInRemote = "command_not_available_in_remote",
+
+  // Search
+  SearchExecutionFailed = "search_execution_failed",
+
+  // Rules
+  RuleNotFound = "rule_not_found",
 
   // Other
-  Unspecified = "unspecified",
-  Unknown = "unknown",
+  Unspecified = "unspecified", // I.e. a known error but no specific code for it
+  Unknown = "unknown", // I.e. an unexpected error
 }

@@ -63,10 +63,14 @@ import {
   setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
+import {
+  createNewGlobalRuleFile,
+  createNewWorkspaceBlockFile,
+} from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
+import { myersDiff } from "./diff/myers";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
@@ -80,6 +84,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { ContinueError, ContinueErrorReason } from "./util/errors";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 
@@ -410,11 +415,19 @@ export class Core {
       );
     });
 
+    on("config/addGlobalRule", async (msg) => {
+      try {
+        await createNewGlobalRuleFile(this.ide);
+        await this.configHandler.reloadConfig(
+          "Global rule created (config/addGlobalRule message)",
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(
-        msg.data.profileId,
-        msg.data?.element,
-      );
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -460,9 +473,11 @@ export class Core {
       const urlPath = msg.data.path.startsWith("/")
         ? msg.data.path.slice(1)
         : msg.data.path;
-      let url = `${env.APP_URL}${urlPath}`;
+      let url;
       if (msg.data.orgSlug) {
-        url += `?org=${msg.data.orgSlug}`;
+        url = `${env.APP_URL}organizations/${msg.data.orgSlug}/${urlPath}`;
+      } else {
+        url = `${env.APP_URL}${urlPath}`;
       }
       await this.messenger.request("openUrl", url);
     });
@@ -471,32 +486,16 @@ export class Core {
       return await getControlPlaneEnv(this.ide.getIdeSettings());
     });
 
-    on("controlPlane/getFreeTrialStatus", async (msg) => {
-      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
-    });
-
-    on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
-      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
-        msg.data.vsCodeUriScheme,
-      );
+    on("controlPlane/getCreditStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getCreditStatus();
     });
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
-      MCPManagerSingleton.getInstance().removeDisconnectedServer(msg.data.id);
     });
-    on("mcp/disconnectServer", async (msg) => {
-      const mcpConnection = MCPManagerSingleton.getInstance().getConnection(
-        msg.data.id,
-      );
-      if (!mcpConnection)
-        throw new Error(`MCP connection with id ${msg.data.id} not found`);
-      MCPManagerSingleton.getInstance().addDisconnectedServer(msg.data.id);
-      await mcpConnection.disconnect();
-      await this.configHandler.refreshAll("MCP Servers disconnected");
-    });
-    on("mcp/getDisconnectedServers", async (_msg) => {
-      return MCPManagerSingleton.getInstance().getDisconnectedServers();
+    on("mcp/setServerEnabled", async (msg) => {
+      const { id, enabled } = msg.data;
+      await MCPManagerSingleton.getInstance().setEnabled(id, enabled);
     });
     on("mcp/getPrompt", async (msg) => {
       const { serverName, promptName, args } = msg.data;
@@ -798,6 +797,10 @@ export class Core {
       );
     });
 
+    on("getDiffLines", (msg) => {
+      return myersDiff(msg.data.oldContent, msg.data.newContent);
+    });
+
     on("cancelApply", async (msg) => {
       const abortManager = ApplyAbortManager.getInstance();
       abortManager.clear(); // for now abort all streams
@@ -825,7 +828,6 @@ export class Core {
       if (data?.shouldClearIndexes) {
         await this.codeBaseIndexer.clearIndexes();
       }
-
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
@@ -886,9 +888,9 @@ export class Core {
         });
       }
 
-      // If it's a local agent being created, we want to reload all agent so it shows up in the list
+      // If it's a local config being created, we want to reload all configs so it shows up in the list
       if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
-        await this.configHandler.refreshAll("Local assistant file created");
+        await this.configHandler.refreshAll("Local config file created");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
           ".continue config-related file created",
@@ -918,9 +920,9 @@ export class Core {
         });
       }
 
-      // If it's a local agent being deleted, we want to reload all agent so it disappears from the list
+      // If it's a local config being deleted, we want to reload all configs so it disappears from the list
       if (nonColocatedRuleUris.some(isContinueAgentConfigFile)) {
-        await this.configHandler.refreshAll("Local assistant file deleted");
+        await this.configHandler.refreshAll("Local config file deleted");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
           ".continue config-related file deleted",
@@ -929,7 +931,7 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
-      console.log("deleteChain called from files/closed");
+      console.debug("deleteChain called from files/closed");
       await NextEditProvider.getInstance().deleteChain();
 
       try {
@@ -1096,7 +1098,7 @@ export class Core {
 
     on(
       "tools/evaluatePolicy",
-      async ({ data: { toolName, basePolicy, args } }) => {
+      async ({ data: { toolName, basePolicy, parsedArgs, processedArgs } }) => {
         const { config } = await this.configHandler.loadConfig();
         if (!config) {
           throw new Error("Config not loaded");
@@ -1104,26 +1106,59 @@ export class Core {
 
         const tool = config.tools.find((t) => t.function.name === toolName);
         if (!tool) {
-          // Tool not found, return base policy
           return { policy: basePolicy };
         }
 
         // Extract display value for specific tools
         let displayValue: string | undefined;
-        if (toolName === "runTerminalCommand" && args.command) {
-          displayValue = args.command as string;
+        if (toolName === "runTerminalCommand" && parsedArgs.command) {
+          displayValue = parsedArgs.command as string;
         }
 
-        // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
-          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(
+            basePolicy,
+            parsedArgs,
+            processedArgs,
+          );
           return { policy: evaluatedPolicy, displayValue };
         }
-
-        // Otherwise return base policy unchanged
         return { policy: basePolicy, displayValue };
       },
     );
+
+    on("tools/preprocessArgs", async ({ data: { toolName, args } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
+      const tool = config?.tools.find((t) => t.function.name === toolName);
+      if (!tool) {
+        throw new Error(`Tool ${toolName} not found`);
+      }
+
+      try {
+        const preprocessedArgs = await tool.preprocessArgs?.(args, {
+          ide: this.ide,
+        });
+        return {
+          preprocessedArgs,
+        };
+      } catch (e) {
+        let errorReason =
+          e instanceof ContinueError ? e.reason : ContinueErrorReason.Unknown;
+        let errorMessage =
+          e instanceof Error
+            ? e.message
+            : `Error preprocessing tool call args for ${toolName}\n${JSON.stringify(args)}`;
+        return {
+          preprocessedArgs: undefined,
+          errorReason,
+          errorMessage,
+        };
+      }
+    });
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);

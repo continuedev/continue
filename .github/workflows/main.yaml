@@ -73,11 +73,11 @@ jobs:
             platform: alpine
             arch: x64
             npm_config_arch: x64
-          - os: macos-13
+          - os: macos-latest
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-13
+          - os: macos-latest
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
@@ -86,7 +86,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
 
@@ -99,7 +99,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .vsix artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
           path: "extensions/vscode/*.vsix"
@@ -120,7 +120,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: "*-vsix"
           path: vsix-artifacts
@@ -156,7 +156,7 @@ jobs:
         run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
 
       # 1. Download the artifacts
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: "*-vsix"
           path: vsix-artifacts

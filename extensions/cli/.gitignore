@@ -11,3 +11,7 @@ chat.log
 config.yaml
 
 .continue-debug/
+
+*.expect
+!demo.expect
+*.cast
