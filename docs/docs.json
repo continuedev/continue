@@ -44,6 +44,7 @@
                 "group": "Integrations",
                 "icon": "plug",
                 "pages": [
+                  "mission-control/integrations",
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/slack-agent"
