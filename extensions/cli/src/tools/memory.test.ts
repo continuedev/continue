@@ -25,7 +25,12 @@ vi.mock("fs", async () => {
 });
 
 describe("memoryTool", () => {
-  const mockMemoryRoot = path.join(process.cwd(), ".continue", "memory", "memories");
+  const mockMemoryRoot = path.join(
+    process.cwd(),
+    ".continue",
+    "memory",
+    "memories",
+  );
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -115,7 +120,9 @@ describe("memoryTool", () => {
         command: "view",
         path: "/memories/../../../etc/passwd",
       });
-      expect(result).toContain("Error: Path /memories/../../../etc/passwd would escape /memories directory");
+      expect(result).toContain(
+        "Error: Path /memories/../../../etc/passwd would escape /memories directory",
+      );
     });
 
     it("should reject invalid path types", async () => {
@@ -157,7 +164,10 @@ describe("memoryTool", () => {
           isDirectory: () => true,
           isFile: () => false,
         } as any);
-      vi.mocked(fs.readdir).mockResolvedValue(["notes.txt", "subfolder"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue([
+        "notes.txt",
+        "subfolder",
+      ] as any);
 
       const result = await memoryTool.run({
         command: "view",
@@ -179,7 +189,10 @@ describe("memoryTool", () => {
           isDirectory: () => false,
           isFile: () => true,
         } as any);
-      vi.mocked(fs.readdir).mockResolvedValue([".hidden", "visible.txt"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue([
+        ".hidden",
+        "visible.txt",
+      ] as any);
 
       const result = await memoryTool.run({
         command: "view",
@@ -212,7 +225,9 @@ describe("memoryTool", () => {
         isDirectory: () => false,
         isFile: () => true,
       } as any);
-      vi.mocked(fs.readFile).mockResolvedValue("Line 1\nLine 2\nLine 3\nLine 4\nLine 5");
+      vi.mocked(fs.readFile).mockResolvedValue(
+        "Line 1\nLine 2\nLine 3\nLine 4\nLine 5",
+      );
 
       const result = await memoryTool.run({
         command: "view",
@@ -267,7 +282,9 @@ describe("memoryTool", () => {
         file_text: "Hello World",
       });
 
-      expect(result).toBe("File created successfully at /memories/new-file.txt");
+      expect(result).toBe(
+        "File created successfully at /memories/new-file.txt",
+      );
       expect(fs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining("new-file.txt"),
         "Hello World",
@@ -538,10 +555,10 @@ describe("memoryTool", () => {
       });
 
       expect(result).toBe("Directory deleted: /memories/folder");
-      expect(fs.rm).toHaveBeenCalledWith(
-        expect.any(String),
-        { recursive: true, force: true },
-      );
+      expect(fs.rm).toHaveBeenCalledWith(expect.any(String), {
+        recursive: true,
+        force: true,
+      });
     });
 
     it("should prevent deleting /memories root", async () => {
@@ -550,7 +567,9 @@ describe("memoryTool", () => {
         path: "/memories",
       });
 
-      expect(result).toContain("Error: Cannot delete the /memories directory itself");
+      expect(result).toContain(
+        "Error: Cannot delete the /memories directory itself",
+      );
     });
 
     it("should error for non-existent path", async () => {
@@ -598,10 +617,9 @@ describe("memoryTool", () => {
       });
 
       expect(result).toContain("Renamed");
-      expect(fs.mkdir).toHaveBeenCalledWith(
-        expect.any(String),
-        { recursive: true },
-      );
+      expect(fs.mkdir).toHaveBeenCalledWith(expect.any(String), {
+        recursive: true,
+      });
     });
 
     it("should error if source doesn't exist", async () => {

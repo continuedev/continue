@@ -23,7 +23,6 @@ import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
-import { memoryTool } from "./memory.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -87,90 +86,6 @@ export async function getAllAvailableTools(
   if (isHeadless) {
     tools.push(exitTool);
   }
-  return false;
-}
-
-/**
- * Check if the model supports the Anthropic memory tool.
- * Memory tool is only available on Claude 4+ models.
- * Based on: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/memory
- */
-function supportsMemoryTool(modelName?: string | null): boolean {
-  if (!modelName || typeof modelName !== "string") {
-    return false;
-  }
-
-  const normalized = modelName.toLowerCase();
-
-  // Match any Claude 4+ family models (Sonnet, Opus, Haiku)
-  // This handles both direct names and Bedrock ARN format
-  // Examples:
-  // - "claude-sonnet-4-20250514"
-  // - "claude-sonnet-4-5-20250929"
-  // - "anthropic.claude-sonnet-4-20250514-v1:0"
-  // - "anthropic.claude-opus-4-1-20250805-v1:0"
-  const claude4Patterns = [
-    "claude-sonnet-4", // Matches any Claude 4 Sonnet (4.0, 4.5, etc.)
-    "claude-opus-4", // Matches any Claude 4 Opus (4.0, 4.1, etc.)
-    "claude-haiku-4", // Matches any Claude 4 Haiku (4.0, 4.5, etc.)
-  ];
-
-  return claude4Patterns.some((pattern) => normalized.includes(pattern));
-}
-
-function shouldIncludeMemoryTool(): boolean {
-  try {
-    const modelServiceResult = getServiceSync<ModelServiceState>(
-      SERVICE_NAMES.MODEL,
-    );
-
-    if (
-      modelServiceResult.state === "ready" &&
-      modelServiceResult.value?.model
-    ) {
-      const { name, provider, model } = modelServiceResult.value.model;
-
-      // Check both the name and model fields
-      const isSupported = supportsMemoryTool(name) || supportsMemoryTool(model);
-
-      if (isSupported) {
-        logger.debug("Enabling memory tool for supported Claude model", {
-          provider,
-          name,
-          model,
-        });
-      }
-
-      return isSupported;
-    }
-  } catch (error) {
-    logger.debug("Error checking model for memory tool support", {
-      error,
-    });
-  }
-
-  return false;
-}
-
-// Get all builtin tools including dynamic ones, with capability-based filtering
-export function getAllBuiltinTools(): Tool[] {
-  let builtinTools = [...BUILTIN_TOOLS];
-
-  if (shouldIncludeMemoryTool()) {
-    const insertAt =
-      MEMORY_TOOL_INSERT_INDEX === -1
-        ? builtinTools.length
-        : MEMORY_TOOL_INSERT_INDEX;
-    builtinTools.splice(insertAt, 0, memoryTool);
-  }
-
-  // Apply capability-based filtering for edit tools
-  // If model is capable, exclude editTool in favor of multiEditTool
-  if (shouldExcludeEditTool()) {
-    builtinTools = builtinTools.filter((tool) => tool.name !== editTool.name);
-    logger.debug(
-      "Excluded Edit tool for capable model - MultiEdit will be used instead",
-    );
 
   // Add beta status tool if --beta-status-tool flag is present
   if (process.argv.includes("--beta-status-tool")) {

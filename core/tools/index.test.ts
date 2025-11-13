@@ -80,10 +80,7 @@ describe("getConfigDependentToolDefinitions", () => {
     });
 
     it("should include memory tool for Claude 4 Sonnet models", () => {
-      const models = [
-        "claude-sonnet-4-20250514",
-        "claude-sonnet-4-5-20250929",
-      ];
+      const models = ["claude-sonnet-4-20250514", "claude-sonnet-4-5-20250929"];
 
       for (const model of models) {
         const tools = getConfigDependentToolDefinitions(
@@ -95,10 +92,7 @@ describe("getConfigDependentToolDefinitions", () => {
     });
 
     it("should include memory tool for Claude 4 Opus models", () => {
-      const models = [
-        "claude-opus-4-20250514",
-        "claude-opus-4-1-20250805",
-      ];
+      const models = ["claude-opus-4-20250514", "claude-opus-4-1-20250805"];
 
       for (const model of models) {
         const tools = getConfigDependentToolDefinitions(

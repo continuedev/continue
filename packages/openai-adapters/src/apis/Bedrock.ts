@@ -68,16 +68,16 @@ function supportsMemoryTool(modelName: string | undefined): boolean {
   }
 
   const normalized = modelName.toLowerCase();
-  
+
   const supportedModels = [
-    "claude-sonnet-4-5-20250929",      // Claude Sonnet 4.5
-    "claude-sonnet-4-20250514",        // Claude Sonnet 4
-    "claude-haiku-4-5-20251001",       // Claude Haiku 4.5
-    "claude-opus-4-1-20250805",        // Claude Opus 4.1
-    "claude-opus-4-20250514",          // Claude Opus 4
+    "claude-sonnet-4-5-20250929", // Claude Sonnet 4.5
+    "claude-sonnet-4-20250514", // Claude Sonnet 4
+    "claude-haiku-4-5-20251001", // Claude Haiku 4.5
+    "claude-opus-4-1-20250805", // Claude Opus 4.1
+    "claude-opus-4-20250514", // Claude Opus 4
   ];
 
-  return supportedModels.some(model => normalized.includes(model));
+  return supportedModels.some((model) => normalized.includes(model));
 }
 
 export class BedrockApi implements BaseLlmApi {
@@ -460,26 +460,22 @@ export class BedrockApi implements BaseLlmApi {
     // Memory tool is only supported on Claude 4+ models
     if (isClaudeModel && oaiBody.tools && oaiBody.tools.length > 0) {
       const typedTools = oaiBody.tools
-        .filter(
-          (tool) =>
-            tool.type != "function" &&
-            "function" in tool
-        )
+        .filter((tool) => tool.type != "function" && "function" in tool)
         .map((tool) => {
           if (tool.type != "function" && "function" in tool) {
             const toolType = tool.type as string;
             const toolName = (tool.function as any).name;
-            
+
             // Check if this is a memory tool - only allow for Claude 4+ models
             if (toolType.startsWith("memory_")) {
               if (!supportsMemoryTool(oaiBody.model)) {
                 console.warn(
-                  `Bedrock: Memory tool "${toolName}" (${toolType}) is only supported on Claude 4+ models, skipping for model: ${oaiBody.model}`
+                  `Bedrock: Memory tool "${toolName}" (${toolType}) is only supported on Claude 4+ models, skipping for model: ${oaiBody.model}`,
                 );
                 return null;
               }
             }
-            
+
             return {
               name: toolName,
               type: toolType,
