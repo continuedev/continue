@@ -17,23 +17,6 @@ Connect your GitHub account to Continue Mission Control to enable agents to inte
 
 </Card>
 
-## Permissions
-
-When you connect GitHub, you can grant access to:
-
-### Repository Access
-- **All repositories**: Give Continue access to all current and future repositories
-- **Selected repositories**: Choose specific repositories for Continue to access
-
-### Access Levels
-- **Read access to**: actions, checks, discussions, and metadata
-- **Read and write access to**: code, issues, pull requests, and workflows
-
-<Info>
-
-  You can modify repository access and permissions at any time from your GitHub settings.
-
-</Info>
 
 ## Setup
 
@@ -41,7 +24,7 @@ When you connect GitHub, you can grant access to:
 
   <Step title="Navigate to Integrations">
 
-    Go to your [Personal Integrations Settings](https://hub.continue.dev/settings/integrations) or Org Integrations Settings at `https://hub.continue.dev/organizations/{your-org}/settings/integrations`
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
 
   </Step>
 
@@ -202,59 +185,6 @@ Set up agents to run automatically:
 
 </Tip>
 
-## Example Agent Configurations
-
-### GitHub Project Manager Agent
-
-<Steps>
-
-  <Step title="Create Agent">
-
-    Visit [Mission Control](https://hub.continue.dev) and create a new agent with:
-    - **Name**: GitHub Project Manager
-    - **Tools**: Enable GitHub MCP
-    - **Prompt**: "Analyze and manage GitHub project workflow"
-
-  </Step>
-
-  <Step title="Configure GitHub Access">
-
-    Ensure your GitHub integration is connected and has access to the target repositories.
-
-  </Step>
-
-  <Step title="Run Tasks">
-
-    Try tasks like:
-    - "List all open issues and categorize them by priority"
-    - "Create a PR to update outdated dependencies"
-    - "Review the last 5 commits for security issues"
-
-  </Step>
-
-</Steps>
-
-## Disconnecting GitHub
-
-To remove the GitHub integration:
-
-1. Go to [Integrations Settings](https://hub.continue.dev/settings/integrations)
-2. Find your GitHub integration
-3. Click "Disconnect"
-4. Confirm in GitHub that the Continue app is uninstalled
-
-<Warning>
-
-  Disconnecting GitHub will prevent all agents from accessing your repositories. Any running agents with GitHub tasks will fail.
-
-</Warning>
-
-## Security & Privacy
-
-- Continue only accesses repositories you explicitly grant permission to
-- All API calls are authenticated and encrypted
-- You can revoke access at any time from GitHub settings
-- Audit logs are available in Mission Control for tracking agent actions
 
 ## Support & Resources
 
@@ -266,31 +196,12 @@ To remove the GitHub integration:
 
   </Card>
 
-  <Card title="GitHub PR Review Bot" icon="code-review" href="/guides/github-pr-review-bot">
+  <Card title="GitHub PR Review Bot" icon="robot" href="/guides/github-pr-review-bot">
 
     Automate code reviews with Continue
 
   </Card>
 
-  <Card title="Agents Overview" icon="robot" href="/agents/overview">
-
-    Learn how to create and manage agents
-
-  </Card>
-
-  <Card title="Continuous AI Guide" icon="infinity" href="/guides/continuous-ai">
-
-    Best practices for automated workflows
-
-  </Card>
-
 </CardGroup>
 
-<Info>
 
-  **Need Help?**
-  - Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
-  - Ask questions: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
-  - Community support: [Discord](https://discord.gg/NWtdYexhMs)
-
-</Info>
