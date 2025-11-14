@@ -1,12 +1,12 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+import { sentryService } from "../sentry.js";
 import {
   ApiRequestError,
   AuthenticationRequiredError,
   post,
 } from "../util/apiClient.js";
 import { logger } from "../util/logger.js";
-import { sentryService } from "../sentry.js";
 
 import { Tool } from "./types.js";
 
