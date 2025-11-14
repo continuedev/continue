@@ -25,9 +25,9 @@ import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
+import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
-import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
@@ -49,6 +49,7 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
+  reportFailureTool,
 ];
 
 // Get all builtin tools including dynamic ones, with capability-based filtering
@@ -85,11 +86,6 @@ export async function getAllAvailableTools(
 
   if (isHeadless) {
     tools.push(exitTool);
-  }
-
-  // Add beta status tool if --beta-status-tool flag is present
-  if (process.argv.includes("--beta-status-tool")) {
-    tools.push(statusTool);
   }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(

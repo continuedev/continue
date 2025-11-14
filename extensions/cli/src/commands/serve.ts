@@ -26,6 +26,7 @@ import { createSession, getCompleteStateSnapshot } from "../session.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
+import { reportFailureTool } from "../tools/reportFailure.js";
 import { gracefulExit } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
@@ -472,6 +473,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           removePartialAssistantMessage(state);
         } else {
           logger.error(`Error: ${formatError(e)}`);
+
           // Add error message via ChatHistoryService
           const errorMessage = `Error: ${formatError(e)}`;
           try {
@@ -481,6 +483,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
               message: { role: "assistant", content: errorMessage },
               contextItems: [],
             });
+          }
+
+          // Report failure to control plane (retries exhausted or non-retryable error)
+          try {
+            await reportFailureTool.run({
+              errorMessage: formatError(e),
+            });
+          } catch (reportError) {
+            logger.error(
+              `Failed to report agent failure: ${formatError(reportError)}`,
+            );
+            // Don't block on reporting failure
           }
         }
       } finally {
