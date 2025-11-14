@@ -1,0 +1,207 @@
+---
+title: "GitHub Integration"
+description: "Connect to GitHub to allow Continue Agents to read and create PRs on your repositories"
+---
+
+## Overview
+
+Connect your GitHub account to Continue Mission Control to enable agents to interact with your repositories. Once connected, agents can read code, create pull requests, manage issues, and automate your development workflow.
+
+<Card title="What You Can Do with GitHub Integration" icon="github">
+
+  - Automatically create pull requests from agent tasks
+  - Read and analyze repository code and issues
+  - Manage project workflows and milestones
+  - Automate code reviews and quality checks
+  - Generate release notes and documentation
+
+</Card>
+
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
+
+  </Step>
+
+  <Step title="Connect GitHub">
+
+    Click "Connect" next to GitHub and authorize the Continue app in your GitHub account.
+
+  </Step>
+
+  <Step title="Select Repository Access">
+
+    Choose whether to grant access to all repositories or select specific ones. You can always modify this later in your GitHub settings.
+
+  </Step>
+
+  <Step title="Confirm Permissions">
+
+    Review and approve the requested permissions. Continue needs these to perform automated tasks on your behalf.
+
+  </Step>
+
+</Steps>
+
+## Use Cases
+
+### Automated Issue Resolution
+
+Create agents that automatically fix bugs and open PRs:
+
+<Card title="Bug Fixer Agent" icon="bug">
+
+  **Task Example**: "Review issues labeled 'bug' and create PRs to fix any that are straightforward"
+
+  **What the Agent Does**:
+  - Scans your repository for issues with the "bug" label
+  - Analyzes the bug description and reproduces the issue
+  - Generates a fix and creates a pull request
+  - Adds a link back to the original issue
+
+  **Run in Mission Control**: Create as a scheduled automation or trigger manually
+
+</Card>
+
+### Pull Request Management
+
+Automate code reviews and PR maintenance:
+
+<Card title="PR Review Agent" icon="code-pull-request">
+
+  **Task Example**: "Review open PRs for code quality, security issues, and best practices"
+
+  **What the Agent Does**:
+  - Analyzes code changes in open pull requests
+  - Identifies potential bugs, security vulnerabilities, or style issues
+  - Adds review comments with suggestions
+  - Approves PRs that meet quality standards
+
+  **Run in Mission Control**: Set up as an automation triggered on new PRs
+
+</Card>
+
+### Documentation Generation
+
+Keep your docs up-to-date automatically:
+
+<Card title="Docs Updater Agent" icon="book">
+
+  **Task Example**: "Update README and API documentation based on recent code changes"
+
+  **What the Agent Does**:
+  - Detects changes to public APIs or features
+  - Generates updated documentation
+  - Creates a PR with doc updates
+  - Links documentation to related code changes
+
+  **Run in Mission Control**: Schedule to run after releases or major merges
+
+</Card>
+
+### Project Management
+
+Automate issue triage and project organization:
+
+<Card title="Issue Triage Agent" icon="list-check">
+
+  **Task Example**: "Triage new issues by adding labels, assigning to appropriate team members, and linking related issues"
+
+  **What the Agent Does**:
+  - Analyzes new issue descriptions
+  - Applies relevant labels (bug, feature, documentation, etc.)
+  - Suggests team members to assign based on expertise
+  - Identifies and links related issues or PRs
+
+  **Run in Mission Control**: Create as an automation triggered on new issues
+
+</Card>
+
+### Release Management
+
+Automate your release process:
+
+<Card title="Release Notes Generator" icon="rocket">
+
+  **Task Example**: "Generate release notes from merged PRs since last release and create a draft release"
+
+  **What the Agent Does**:
+  - Collects all merged PRs since the last tag
+  - Categorizes changes (features, fixes, breaking changes)
+  - Generates formatted release notes
+  - Creates a draft GitHub release for review
+
+  **Run in Mission Control**: Trigger manually or on a schedule before releases
+
+</Card>
+
+### Code Quality Monitoring
+
+Maintain code standards across your codebase:
+
+<Card title="Code Quality Agent" icon="shield-check">
+
+  **Task Example**: "Scan the codebase for deprecated API usage and create issues with migration guides"
+
+  **What the Agent Does**:
+  - Identifies usage of deprecated functions or libraries
+  - Generates migration recommendations
+  - Creates individual issues for each deprecated usage
+  - Provides code examples for the upgrade path
+
+  **Run in Mission Control**: Schedule monthly or after dependency updates
+
+</Card>
+
+## Running GitHub Agents in Mission Control
+
+You can run GitHub-connected agents in two ways:
+
+### 1. Manual Tasks
+
+Trigger agents on-demand for specific tasks:
+
+1. Go to [Mission Control Agents](https://hub.continue.dev/agents)
+2. Select or create a GitHub-enabled agent
+3. Click "Run Agent" and provide your task description
+4. Monitor progress and review results in real-time
+
+### 2. Automated Workflows
+
+Set up agents to run automatically:
+
+- **Scheduled**: Run daily, weekly, or on a custom schedule
+- **Triggered**: Execute when specific events occur (new issues, PR opened, etc.)
+- **Webhook**: Integrate with external services to trigger agents
+
+<Tip>
+
+  Start with manual tasks to test your agent's behavior, then convert successful workflows to automations once you're confident in the results.
+
+</Tip>
+
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="GitHub MCP Cookbook" icon="book-open" href="/guides/github-mcp-continue-cookbook">
+
+    Comprehensive guide to using GitHub with Continue agents
+
+  </Card>
+
+  <Card title="GitHub PR Review Bot" icon="robot" href="/guides/github-pr-review-bot">
+
+    Automate code reviews with Continue
+
+  </Card>
+
+</CardGroup>
+
+
