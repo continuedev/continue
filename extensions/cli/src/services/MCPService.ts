@@ -13,6 +13,7 @@ import {
 } from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
 import { getErrorString } from "../util/error.js";
+import { getMcpAuthToken } from "../util/apiClient.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -51,14 +52,18 @@ export class MCPService
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
   private isHeadless = false;
+  private authService: any = null;
+  private mcpOriginalIds: Map<string, string> = new Map();
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH];
   }
-  constructor() {
+  constructor(authService?: any) {
     super("MCPService", {
       ...EMPTY_MCP_STATE,
     });
+
+    this.authService = authService;
 
     // Register shutdown handler
     process.on("exit", () => this.cleanup());
@@ -72,6 +77,7 @@ export class MCPService
   async doInitialize(
     assistant: AssistantConfig,
     waitForConnections = false,
+    mcpOriginalIds?: Map<string, string>,
   ): Promise<MCPServiceState> {
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
@@ -80,6 +86,9 @@ export class MCPService
 
     // Store headless mode flag
     this.isHeadless = waitForConnections;
+
+    // Store MCP original IDs for OAuth token lookup
+    this.mcpOriginalIds = mcpOriginalIds || new Map();
 
     await this.shutdownConnections();
 
@@ -235,6 +244,66 @@ export class MCPService
     await this.connectServer(serverConfig);
   }
 
+  /**
+   * Try to inject OAuth token for remote MCP servers
+   */
+  private async tryInjectOAuthToken(
+    serverConfig: MCPServerConfig,
+  ): Promise<void> {
+    // Only try for remote SSE/HTTP servers that don't already have an apiKey
+    if (!("url" in serverConfig) || serverConfig.apiKey) {
+      return;
+    }
+
+    // Look up original ID - try by name first, then by URL
+    let originalId = this.mcpOriginalIds.get(serverConfig.name);
+    if (!originalId && serverConfig.url) {
+      originalId = this.mcpOriginalIds.get(serverConfig.url);
+    }
+
+    if (!originalId) {
+      logger.debug("No original ID found for MCP server", {
+        name: serverConfig.name,
+      });
+      return;
+    }
+
+    // Get scope ID from auth service
+    if (!this.authService) {
+      return;
+    }
+
+    try {
+      const organizationId = this.authService.currentState?.organizationId;
+      const scopeId = organizationId || "personal";
+
+      logger.debug("Attempting to fetch OAuth token for MCP server", {
+        name: serverConfig.name,
+        originalId,
+        scopeId,
+      });
+
+      const token = await getMcpAuthToken(originalId, scopeId);
+
+      if (token) {
+        logger.debug("Successfully retrieved OAuth token for MCP server", {
+          name: serverConfig.name,
+        });
+        serverConfig.apiKey = token;
+      } else {
+        logger.debug("No OAuth token available for MCP server", {
+          name: serverConfig.name,
+        });
+      }
+    } catch (error) {
+      // Silent failure - will fall back to normal OAuth flow
+      logger.debug("Error fetching OAuth token for MCP server", {
+        name: serverConfig.name,
+        error: getErrorString(error),
+      });
+    }
+  }
+
   private async connectServer(serverConfig: MCPServerConfig) {
     const connection: ServerConnection = {
       config: serverConfig,
@@ -249,6 +318,9 @@ export class MCPService
     this.updateState();
 
     try {
+      // Try to inject OAuth token for remote servers
+      await this.tryInjectOAuthToken(serverConfig);
+
       const client = await this.getConnectedClient(serverConfig);
 
       connection.client = client;

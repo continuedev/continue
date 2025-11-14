@@ -56,6 +56,7 @@ export class ConfigService
     super("ConfigService", {
       config: null,
       configPath: undefined,
+      mcpOriginalIds: new Map(),
     });
   }
 
@@ -76,6 +77,7 @@ export class ConfigService
   ): {
     injected: PackageIdentifier[];
     additional: AssistantUnrolled;
+    mcpOriginalIds: Map<string, string>;
   } {
     const packageIdentifiers: PackageIdentifier[] = [];
     const additional: AssistantUnrolled = {
@@ -85,6 +87,7 @@ export class ConfigService
       mcpServers: [],
       prompts: [],
     };
+    const mcpOriginalIds = new Map<string, string>();
 
     const options = injectedConfigOptions || {};
 
@@ -94,6 +97,7 @@ export class ConfigService
       agentFileState,
       packageIdentifiers,
       additional,
+      mcpOriginalIds,
     );
     this.processAgentFileRules(agentFileState, packageIdentifiers);
     this.processRulesAndPrompts(
@@ -107,6 +111,7 @@ export class ConfigService
     return {
       injected: packageIdentifiers,
       additional,
+      mcpOriginalIds,
     };
   }
 
@@ -134,6 +139,7 @@ export class ConfigService
     agentFileState: AgentFileServiceState | undefined,
     packageIdentifiers: PackageIdentifier[],
     additional: AssistantUnrolled,
+    mcpOriginalIds: Map<string, string>,
   ): void {
     const allMcps = [
       ...mcps,
@@ -143,12 +149,20 @@ export class ConfigService
     for (const mcp of allMcps) {
       try {
         if (this.isUrl(mcp)) {
+          const hostname = new URL(mcp).hostname;
           additional.mcpServers!.push({
-            name: new URL(mcp).hostname,
+            name: hostname,
             url: mcp,
           });
+          // Map server name to original URL for OAuth token lookup
+          mcpOriginalIds.set(hostname, mcp);
         } else {
-          packageIdentifiers.push(decodePackageIdentifier(mcp));
+          // For hub packages, we'll need to map after resolution
+          // Store with a temporary key that includes the slug
+          const pkgId = decodePackageIdentifier(mcp);
+          packageIdentifiers.push(pkgId);
+          // Store slug with a special prefix to handle later
+          mcpOriginalIds.set(`__pending__${mcp}`, mcp);
         }
       } catch (e) {
         logger.warn(`Failed to add MCP server "${mcp}": ${getErrorString(e)}`);
@@ -259,10 +273,11 @@ export class ConfigService
       injectedConfigOptions,
       agentFileState,
     } = init;
-    const { injected, additional } = this.getAdditionalBlocksFromOptions(
-      injectedConfigOptions,
-      agentFileState,
-    );
+    const { injected, additional, mcpOriginalIds } =
+      this.getAdditionalBlocksFromOptions(
+        injectedConfigOptions,
+        agentFileState,
+      );
 
     const result = await loadConfiguration(
       authConfig,
@@ -274,6 +289,35 @@ export class ConfigService
 
     const loadedConfig = result.config;
     const merged = mergeUnrolledAssistants(loadedConfig, additional);
+
+    // Map resolved MCP servers to their original IDs
+    // For hub packages, use the resolved URL as the key
+    const finalMcpOriginalIds = new Map<string, string>();
+    for (const [key, value] of mcpOriginalIds.entries()) {
+      if (!key.startsWith("__pending__")) {
+        // Direct URL mapping - use URL as key
+        finalMcpOriginalIds.set(key, value);
+      }
+    }
+
+    // For hub-resolved servers, map by URL
+    for (const mcpServer of merged.mcpServers || []) {
+      if (mcpServer && "url" in mcpServer && mcpServer.url) {
+        // Check if this URL came from a pending slug
+        const existingMapping = finalMcpOriginalIds.get(mcpServer.url);
+        if (!existingMapping) {
+          // Find matching pending slug - use URL or name to identify
+          for (const [key, value] of mcpOriginalIds.entries()) {
+            if (key.startsWith("__pending__")) {
+              // For now, map all hub packages by their server name
+              // The original slug is more useful than trying to match by server name
+              finalMcpOriginalIds.set(mcpServer.name, value);
+              break; // TODO: Better matching logic
+            }
+          }
+        }
+      }
+    }
 
     const withModel = await this.addDefaultChatModelIfNone(
       merged,
@@ -288,6 +332,7 @@ export class ConfigService
     const state = {
       config: withModel,
       configPath,
+      mcpOriginalIds: finalMcpOriginalIds,
     };
     this.setState(state);
 

@@ -53,6 +53,7 @@ export interface AuthServiceState {
 export interface ConfigServiceState {
   config: AssistantUnrolled | null;
   configPath?: string;
+  mcpOriginalIds?: Map<string, string>; // Maps server name -> original --mcp value
 }
 
 export interface ModelServiceState {
@@ -70,6 +71,14 @@ export type MCPPrompt = Awaited<
 export type MCPServerConfig = NonNullable<
   NonNullable<AssistantConfig["mcpServers"]>[number]
 >;
+
+/**
+ * MCP server config with original ID for OAuth token lookup
+ */
+export interface McpServerWithId {
+  id: string; // Original --mcp value (URL/slug/registry ID)
+  config: MCPServerConfig;
+}
 
 export interface MCPConnectionInfo {
   config: MCPServerConfig;

@@ -33,7 +33,7 @@ const authService = new AuthService();
 const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
-const mcpService = new MCPService();
+const mcpService = new MCPService(authService);
 const fileIndexService = new FileIndexService();
 const resourceMonitoringService = new ResourceMonitoringService();
 const chatHistoryService = new ChatHistoryService();
@@ -265,9 +265,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       return mcpService.initialize(
         configState.config,
         initOptions.headless || initOptions.options?.agent,
+        configState.mcpOriginalIds,
       );
     },
-    [SERVICE_NAMES.CONFIG], // Depends on config
+    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH], // Depends on config and auth
   );
 
   serviceContainer.register(

@@ -191,3 +191,28 @@ export async function del<T = any>(
 ): Promise<ApiResponse<T>> {
   return makeAuthenticatedRequest<T>(endpoint, { method: "DELETE", headers });
 }
+
+/**
+ * Get OAuth token for an MCP server if it exists
+ * Returns null if token not found or on any error (silent fallback)
+ */
+export async function getMcpAuthToken(
+  mcpServerId: string,
+  scopeId: string,
+): Promise<string | null> {
+  try {
+    const response = await makeAuthenticatedRequest<{ token?: string }>(
+      `ide/mcp-auth?mcpServerId=${encodeURIComponent(mcpServerId)}&scopeId=${encodeURIComponent(scopeId)}`,
+      { method: "GET" },
+    );
+    return response.data?.token ?? null;
+  } catch (error) {
+    // Silently fail - fall back to normal OAuth flow
+    logger.debug("Failed to retrieve MCP auth token", {
+      mcpServerId,
+      scopeId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
