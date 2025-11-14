@@ -1155,7 +1155,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 4 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic"],
+    providerOptions: ["anthropic", "replicate"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
