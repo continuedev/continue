@@ -7,8 +7,8 @@ import {
   runCLI,
 } from "../test-helpers/cli-helpers.js";
 import {
-  setupMockLLMTest,
   cleanupMockLLMServer,
+  setupMockLLMTest,
   type MockLLMServer,
 } from "../test-helpers/mock-llm-server.js";
 
@@ -80,8 +80,9 @@ describe("E2E: Resume Flag", () => {
     expect(assistantMessage?.message?.content).toBe("Hello! Nice to meet you.");
 
     // Now run with --resume flag using the same session ID
+    // Use -p flag to run in headless mode (tests don't have TTY)
     const resumeResult = await runCLI(context, {
-      args: ["--resume", "--config", context.configPath],
+      args: ["-p", "--resume", "--config", context.configPath],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: "test-session-123",
         CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
@@ -98,8 +99,9 @@ describe("E2E: Resume Flag", () => {
 
   it("should handle --resume when no previous session exists", async () => {
     // Try to resume without any previous session
+    // Use -p flag to run in headless mode (tests don't have TTY)
     const result = await runCLI(context, {
-      args: ["--resume", "--config", context.configPath],
+      args: ["-p", "--resume", "--config", context.configPath],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: "no-session-456",
         CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),

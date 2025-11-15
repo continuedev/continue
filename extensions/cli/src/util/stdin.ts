@@ -1,5 +1,7 @@
 import * as fs from "fs";
 
+import { hasSuppliedPrompt, isHeadlessMode } from "./cli.js";
+
 /**
  * Reads input from stdin if available (when data is piped in)
  * Returns null if stdin is a TTY (interactive terminal) or if no data available
@@ -17,8 +19,21 @@ export function readStdinSync(): string | null {
       return null;
     }
 
+    // Skip stdin reading in headless mode when a prompt is supplied
+    // This prevents blocking on TTY-less environments (like VSCode/IntelliJ terminal tools)
+    if (isHeadlessMode() && hasSuppliedPrompt()) {
+      return null;
+    }
+
     // Special handling for CI environments - allow reading if stdin is clearly not a TTY
     if (process.env.CI === "true" && process.stdin.isTTY === true) {
+      return null;
+    }
+
+    // In TTY-less environments (Docker, CI, VSCode/IntelliJ terminal tools),
+    // attempting to read stdin can hang or fail
+    // Only attempt to read if we're confident there's piped input
+    if (process.env.FORCE_NO_TTY === "true") {
       return null;
     }
 

@@ -77,6 +77,9 @@ export async function runCLI(
     expectError = false,
   } = options;
 
+  // Detect if this is a headless mode test (has -p flag)
+  const isHeadlessTest = args.includes("-p") || args.includes("--prompt");
+
   const execOptions = {
     cwd: context.testDir,
     env: {
@@ -90,6 +93,8 @@ export async function runCLI(
         path.parse(context.testDir).root,
         context.testDir,
       ),
+      // Mark as TTY-less for headless tests to prevent stdin reading
+      ...(isHeadlessTest ? { FORCE_NO_TTY: "true" } : {}),
       ...env,
     },
     timeout,
