@@ -5,9 +5,9 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
-import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
 
@@ -85,7 +85,14 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props} />
+            {props.item.reasoning?.text && (
+              <ThinkingBlockPeek
+                content={props.item.reasoning.text}
+                index={props.index}
+                prevItem={props.index > 0 ? props.item : null}
+                inProgress={!props.item.reasoning?.endAt}
+              />
+            )}
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
