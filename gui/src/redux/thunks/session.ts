@@ -103,7 +103,10 @@ export const loadSession = createAsyncThunk<
   ThunkApiType
 >(
   "session/load",
-  async ({ sessionId, saveCurrentSession: save }, { extra, dispatch }) => {
+  async (
+    { sessionId, saveCurrentSession: save },
+    { extra, dispatch, getState },
+  ) => {
     if (save) {
       const result = await dispatch(
         saveCurrentSession({
@@ -115,6 +118,29 @@ export const loadSession = createAsyncThunk<
     }
     const session = await getSession(extra.ideMessenger, sessionId);
     dispatch(newSession(session));
+
+    // Restore selected chat model from session, if present
+    const chatModelTitle = session.chatModelTitle;
+    if (chatModelTitle) {
+      const state = getState();
+      const org = state.profiles.organizations.find(
+        (o) => o.id === state.profiles.selectedOrganizationId,
+      );
+      const selectedProfile =
+        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
+        null;
+      if (selectedProfile) {
+        await dispatch(
+          (
+            await import("../thunks/updateSelectedModelByRole")
+          ).updateSelectedModelByRole({
+            role: "chat",
+            modelTitle: chatModelTitle,
+            selectedProfile,
+          }),
+        );
+      }
+    }
   },
 );
 
@@ -127,7 +153,10 @@ export const loadRemoteSession = createAsyncThunk<
   ThunkApiType
 >(
   "session/loadRemote",
-  async ({ remoteId, saveCurrentSession: save }, { extra, dispatch }) => {
+  async (
+    { remoteId, saveCurrentSession: save },
+    { extra, dispatch, getState },
+  ) => {
     if (save) {
       const result = await dispatch(
         saveCurrentSession({
@@ -139,6 +168,29 @@ export const loadRemoteSession = createAsyncThunk<
     }
     const session = await getRemoteSession(extra.ideMessenger, remoteId);
     dispatch(newSession(session));
+
+    // Restore selected chat model from session, if present
+    const chatModelTitle = session.chatModelTitle;
+    if (chatModelTitle) {
+      const state = getState();
+      const org = state.profiles.organizations.find(
+        (o) => o.id === state.profiles.selectedOrganizationId,
+      );
+      const selectedProfile =
+        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
+        null;
+      if (selectedProfile) {
+        await dispatch(
+          (
+            await import("../thunks/updateSelectedModelByRole")
+          ).updateSelectedModelByRole({
+            role: "chat",
+            modelTitle: chatModelTitle,
+            selectedProfile,
+          }),
+        );
+      }
+    }
   },
 );
 
@@ -168,6 +220,29 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
       session = await getSession(extra.ideMessenger, lastSessionId);
     }
     dispatch(newSession(session));
+
+    // Restore selected chat model from session, if present
+    const chatModelTitle = session.chatModelTitle;
+    if (chatModelTitle) {
+      const state = getState();
+      const org = state.profiles.organizations.find(
+        (o) => o.id === state.profiles.selectedOrganizationId,
+      );
+      const selectedProfile =
+        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
+        null;
+      if (selectedProfile) {
+        await dispatch(
+          (
+            await import("../thunks/updateSelectedModelByRole")
+          ).updateSelectedModelByRole({
+            role: "chat",
+            modelTitle: chatModelTitle,
+            selectedProfile,
+          }),
+        );
+      }
+    }
   },
 );
 
@@ -246,11 +321,15 @@ export const saveCurrentSession = createAsyncThunk<
       title = NEW_SESSION_TITLE;
     }
 
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const session: Session = {
       sessionId: state.session.id,
       title,
       workspaceDirectory: window.workspacePaths?.[0] || "",
       history: state.session.history,
+      mode: state.session.mode,
+      chatModelTitle: selectedChatModel?.title ?? null,
     };
 
     const result = await dispatch(updateSession(session));

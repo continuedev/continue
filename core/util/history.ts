@@ -107,7 +107,12 @@ export class HistoryManager {
       title: session.title,
       workspaceDirectory: session.workspaceDirectory,
       history: session.history,
-    };
+      // Optional fields persisted when present
+      ...(session.mode ? { mode: session.mode } : {}),
+      ...(typeof session.chatModelTitle === "undefined"
+        ? {}
+        : { chatModelTitle: session.chatModelTitle }),
+    } as Session;
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
       JSON.stringify(orderedSession, undefined, 2),
