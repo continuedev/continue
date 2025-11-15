@@ -291,7 +291,7 @@ models:
     apiKey: ${{ secrets.OPENAI_API_KEY }}
 ```
 
-#### Hub-managed secrets
+#### Mission Control-managed secrets
 
 For centralized team secret management, use `${{ inputs.SECRET_NAME }}` syntax in your config.yaml and manage them at [https://hub.continue.dev/settings/secrets](https://hub.continue.dev/settings/secrets):
 ```yaml
@@ -318,12 +318,12 @@ If your API keys aren't being recognized:
 
 ### Using Model Addons Locally
 
-You can leverage model addons from the Continue Hub in your local configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+You can leverage model addons from the Continue Mission Control in your local configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
 
 #### Requirements
 
 - You must be logged in to Continue
-- Internet connection is required (model addons are fetched from the hub)
+- Internet connection is required (model addons are fetched from Mission Control)
 
 #### Usage
 

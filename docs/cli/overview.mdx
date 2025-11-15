@@ -20,7 +20,7 @@ sidebarTitle: "Overview"
 Prerequisites:
 
 - [Node.js 18 or newer](https://nodejs.org/en/download/)
-- A [Continue Hub](https://hub.continue.dev) account (recommended) or local configuration
+- A [Continue Mission Control](https://hub.continue.dev) account (recommended) or local configuration
 
 ```bash npm
 # Install Continue CLI
@@ -132,17 +132,17 @@ cn -p "Update documentation based on recent code changes"
 
 - Switch between models with `/model` command
 - Use any model configured in your `config.yaml`
-- Access Continue Hub models and configurations
+- Access Continue Mission Control models and configurations
 
-## Continue Hub Integration
+## Continue Mission Control Integration
 
-Continue CLI integrates seamlessly with [Continue Hub](https://hub.continue.dev) for:
+Continue CLI integrates seamlessly with [Continue Mission Control](https://hub.continue.dev) for:
 
 ### API Access
 
 Get an API key for automation workflows:
 
-1. Visit [Continue Hub API Keys](https://hub.continue.dev/settings/api-keys)
+1. Visit [Continue Mission Control API Keys](https://hub.continue.dev/settings/api-keys)
 2. Create a new API key
 3. Use with `cn login` or in your automation scripts
 
@@ -150,7 +150,7 @@ Get an API key for automation workflows:
 
 Store secure credentials for CLI workflows:
 
-1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+1. Visit [Continue Mission Control Secrets](https://hub.continue.dev/settings/secrets)
 2. Add your API keys and sensitive data
 3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
 
