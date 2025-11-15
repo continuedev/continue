@@ -1,0 +1,13 @@
+# Snyk (https://snyk.io) policy file
+
+version: v1.25.0
+
+# Ignoring Next.js vulnerability SNYK-JS-NEXT-9508709
+# Reason: Next.js is only an optional peer dependency of iron-session in the CLI extension
+# and is not actually used or installed in this project. The vulnerability requires Next.js
+# to be running as a server, which doesn't apply to our use case.
+ignore:
+  SNYK-JS-NEXT-9508709:
+    - '*':
+        reason: Next.js is not used in this project - only an optional peer dependency
+        expires: 2026-02-14T00:00:00.000Z
