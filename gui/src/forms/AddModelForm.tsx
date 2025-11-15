@@ -47,6 +47,7 @@ export function AddModelForm({
     providers["gemini"]?.title || "",
     providers["azure"]?.title || "",
     providers["ollama"]?.title || "",
+    providers["openrouter"]?.title || "",
   ];
 
   const allProviders = Object.entries(providers)
@@ -149,6 +150,7 @@ export function AddModelForm({
                 }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
+                searchPlaceholder="Search providers..."
               />
               <span className="text-description-muted mt-1 block text-xs">
                 Don't see your provider?{" "}
