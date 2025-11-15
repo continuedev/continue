@@ -150,6 +150,7 @@ export function AddModelForm({
                 }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
+                searchPlaceholder="Search providers..."
               />
               <span className="text-description-muted mt-1 block text-xs">
                 Don't see your provider?{" "}
