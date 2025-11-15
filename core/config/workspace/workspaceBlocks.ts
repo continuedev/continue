@@ -1,13 +1,13 @@
 import {
   BlockType,
   ConfigYaml,
-  createRuleMarkdown,
   createPromptMarkdown,
-  RULE_FILE_EXTENSION,
+  createRuleMarkdown,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
+import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
 
 const BLOCK_TYPE_CONFIG: Record<
@@ -165,7 +165,7 @@ export async function createNewWorkspaceBlockFile(
 
 export async function createNewGlobalRuleFile(ide: IDE): Promise<void> {
   try {
-    const globalDir = getContinueGlobalPath();
+    const globalDir = localPathToUri(getContinueGlobalPath());
 
     // Create the rules subdirectory within the global directory
     const rulesDir = joinPathsToUri(globalDir, "rules");
