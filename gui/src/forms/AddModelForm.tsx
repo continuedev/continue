@@ -47,6 +47,7 @@ export function AddModelForm({
     providers["gemini"]?.title || "",
     providers["azure"]?.title || "",
     providers["ollama"]?.title || "",
+    providers["openrouter"]?.title || "",
   ];
 
   const allProviders = Object.entries(providers)
