@@ -8,6 +8,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
+import { pruneLastMessage } from "../compaction.js";
 import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -130,6 +131,7 @@ interface ProcessStreamingResponseOptions {
 }
 
 // Process a single streaming response and return whether we need to continue
+// eslint-disable-next-line max-statements
 export async function processStreamingResponse(
   options: ProcessStreamingResponseOptions,
 ): Promise<{
@@ -138,18 +140,22 @@ export async function processStreamingResponse(
   toolCalls: ToolCall[];
   shouldContinue: boolean;
 }> {
-  const {
-    chatHistory,
-    model,
-    llmApi,
-    abortController,
-    callbacks,
-    isHeadless,
-    tools,
-  } = options;
+  const { model, llmApi, abortController, callbacks, isHeadless, tools } =
+    options;
+
+  let chatHistory = options.chatHistory;
 
   // Validate context length before making the request
-  const validation = validateContextLength(chatHistory, model);
+  let validation = validateContextLength(chatHistory, model);
+
+  // Prune last messages until valid
+  while (chatHistory.length > 1 && !validation.isValid) {
+    const prunedChatHistory = pruneLastMessage(chatHistory);
+    if (prunedChatHistory.length === chatHistory.length) break;
+    chatHistory = prunedChatHistory;
+    validation = validateContextLength(chatHistory, model);
+  }
+
   if (!validation.isValid) {
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
@@ -323,13 +329,14 @@ export async function processStreamingResponse(
 }
 
 // Main function that handles the conversation loop
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity, max-params
 export async function streamChatResponse(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
   callbacks?: StreamCallbacks,
+  isCompacting = false,
 ) {
   logger.debug("streamChatResponse called", {
     model,
@@ -350,33 +357,43 @@ export async function streamChatResponse(
       chatHistorySvc.isReady()
     ) {
       try {
-        chatHistory = chatHistorySvc.getHistory();
+        // use chat history from params when isCompacting is true
+        // otherwise use the full history
+        if (!isCompacting) {
+          chatHistory = chatHistorySvc.getHistory();
+        }
       } catch {}
     }
     logger.debug("Starting conversation iteration");
 
-    // Pre-API auto-compaction checkpoint
-    const { wasCompacted: preCompacted, chatHistory: preCompactHistory } =
-      await handleAutoCompaction(chatHistory, model, llmApi, {
-        isHeadless,
-        callbacks: {
-          onSystemMessage: callbacks?.onSystemMessage,
-          onContent: callbacks?.onContent,
-        },
-      });
+    logger.debug("debug1 streamChatResponse history", { chatHistory });
 
-    if (preCompacted) {
-      logger.debug("Pre-API compaction occurred, updating chat history");
-      // Update chat history after pre-compaction
-      const chatHistorySvc2 = services.chatHistory;
-      if (
-        typeof chatHistorySvc2?.isReady === "function" &&
-        chatHistorySvc2.isReady()
-      ) {
-        chatHistorySvc2.setHistory(preCompactHistory);
-        chatHistory = chatHistorySvc2.getHistory();
-      } else {
-        chatHistory = [...preCompactHistory];
+    // avoid pre-compaction when compaction is in progress
+    // this also avoids infinite compaction call stacks
+    if (!isCompacting) {
+      // Pre-API auto-compaction checkpoint
+      const { wasCompacted: preCompacted, chatHistory: preCompactHistory } =
+        await handleAutoCompaction(chatHistory, model, llmApi, {
+          isHeadless,
+          callbacks: {
+            onSystemMessage: callbacks?.onSystemMessage,
+            onContent: callbacks?.onContent,
+          },
+        });
+
+      if (preCompacted) {
+        logger.debug("Pre-API compaction occurred, updating chat history");
+        // Update chat history after pre-compaction
+        const chatHistorySvc2 = services.chatHistory;
+        if (
+          typeof chatHistorySvc2?.isReady === "function" &&
+          chatHistorySvc2.isReady()
+        ) {
+          chatHistorySvc2.setHistory(preCompactHistory);
+          chatHistory = chatHistorySvc2.getHistory();
+        } else {
+          chatHistory = [...preCompactHistory];
+        }
       }
     }
 
