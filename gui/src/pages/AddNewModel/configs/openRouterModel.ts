@@ -57,7 +57,7 @@ function convertOpenRouterModelToPackage(model: OpenRouterModel): ModelPackage {
       model: model.id,
       contextLength,
     },
-    isOpenSource: model.architecture?.modality ? false : true,
+    isOpenSource: !!model.hugging_face_id,
     tags: [provider as any],
   };
 }
