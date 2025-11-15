@@ -23,6 +23,7 @@ import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/Thinkin
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
+import UserMessageActions from "../../components/StepContainer/UserMessageActions";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
@@ -323,17 +324,22 @@ export function Chat() {
 
       if (message.role === "user") {
         return (
-          <ContinueInputBox
-            onEnter={(editorState, modifiers) =>
-              sendInput(editorState, modifiers, index)
-            }
-            isLastUserInput={isLastUserInput(index)}
-            isMainInput={false}
-            editorState={editorState ?? item.message.content}
-            contextItems={contextItems}
-            appliedRules={appliedRules}
-            inputId={message.id}
-          />
+          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+            <ContinueInputBox
+              onEnter={(editorState, modifiers) =>
+                sendInput(editorState, modifiers, index)
+              }
+              isLastUserInput={isLastUserInput(index)}
+              isMainInput={false}
+              editorState={editorState ?? item.message.content}
+              contextItems={contextItems}
+              appliedRules={appliedRules}
+              inputId={message.id}
+            />
+            <div className="mt-2 h-7 transition-opacity duration-300 ease-in-out">
+              <UserMessageActions index={index} item={item} />
+            </div>
+          </div>
         );
       }
 

@@ -10,6 +10,7 @@ import ConversationSummary from "./ConversationSummary";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
+import UserMessageActions from "./UserMessageActions";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -34,6 +35,32 @@ export default function StepContainer(props: StepContainerProps) {
   const historyItemAfterThis = useAppSelector(
     (state) => state.session.history[props.index + 1],
   );
+
+  const isNextMsgAssistantOrThinking =
+    historyItemAfterThis?.message.role === "assistant" ||
+    historyItemAfterThis?.message.role === "thinking" ||
+    historyItemAfterThis?.message.role === "tool";
+
+  const shouldRenderResponseAction = () => {
+    // Only for assistant messages
+    if (props.item.message.role !== "assistant") return false;
+
+    // Hide when next is assistant/thinking/tool
+    if (isNextMsgAssistantOrThinking) return false;
+
+    // If this is the last message, only show when not streaming and no tool calls
+    if (props.isLast) {
+      return !isStreaming && !props.item.toolCallStates;
+    }
+
+    // For non-last messages, only show if the next message is a user message
+    return historyItemAfterThis?.message.role === "user";
+  };
+
+  const shouldRenderUserMessageActions = () => {
+    // Show actions for user messages when not streaming
+    return props.item.message.role === "user";
+  };
   const showResponseActions =
     (props.isLast || historyItemAfterThis?.message.role === "user") &&
     !(props.isLast && (isStreaming || props.item.toolCallStates));
@@ -97,7 +124,7 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {showResponseActions && (
+      {shouldRenderResponseAction() && (
         <div
           className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary || isStreaming ? "opacity-35" : ""} ${isStreaming && "pointer-events-none cursor-not-allowed"}`}
         >
@@ -109,6 +136,14 @@ export default function StepContainer(props: StepContainerProps) {
             item={props.item}
             isLast={props.isLast}
           />
+        </div>
+      )}
+
+      {shouldRenderUserMessageActions() && (
+        <div
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+        >
+          <UserMessageActions index={props.index} item={props.item} />
         </div>
       )}
 

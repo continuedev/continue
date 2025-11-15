@@ -1,4 +1,6 @@
 import {
+  DocumentDuplicateIcon,
+  CloudIcon,
   ArrowDownOnSquareIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -14,6 +16,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { exitEdit } from "../../redux/thunks/edit";
 import {
+  copySession,
   deleteSession,
   getSession,
   loadRemoteSession,
@@ -201,6 +204,20 @@ export function HistoryTableRow({
                   <ArrowDownOnSquareIcon width="1em" height="1em" />
                 </HeaderButtonWithToolTip>
               )}
+              <HeaderButtonWithToolTip
+                text="Copy"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await dispatch(
+                    copySession({
+                      sessionId: sessionMetadata.sessionId,
+                      titlePrefix: "Copy",
+                    }),
+                  );
+                }}
+              >
+                <DocumentDuplicateIcon width="1em" height="1em" />
+              </HeaderButtonWithToolTip>
               <HeaderButtonWithToolTip
                 text="Delete"
                 onClick={async (e) => {
