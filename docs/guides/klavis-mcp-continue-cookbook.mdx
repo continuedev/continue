@@ -1,0 +1,594 @@
+---
+title: "Slack and Gmail Automation with Klavis AI Strata MCP and Continue"
+description: "Use Continue and Klavis AI's Strata MCP to automate communication workflows across Slack and Gmail with natural language prompts."
+sidebarTitle: "Klavis AI with Continue"
+---
+
+<Card title="What You'll Build" icon="wand-magic-sparkles">
+  A communication workflow assistant that uses Continue CLI with Klavis AI's Strata MCP to manage and automate multi-platform workflows including Slack and Gmail—all through simple natural language prompts.
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- A Klavis [AI account](https://www.klavis.ai/) with access to your Strata URL
+- OAuth authentication completed in Klavis dashboard for Slack and Gmail (see [Klavis integrations guide](https://www.klavis.ai/integrations))
+
+<Warning>
+  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
+  Klavis AI Strata requires proper OAuth authentication for each service integration.
+</Warning>
+
+For all options, first:
+<Steps>
+<Step title="Install Continue CLI">
+  ```bash
+  npm i -g @continuedev/cli
+  ```
+  </Step>
+
+<Step title="Get Klavis AI's Strata URL">
+  1. Visit [klavis.ai](https://www.klavis.ai/) and create an account
+  2. Navigate to your dashboard and generate [Strata URL](https://www.klavis.ai/home/mcp-servers)
+  3. Copy the Strata URL for configuration
+  </Step>
+</Steps>
+
+## Klavis AI Strata MCP Setup
+
+<Tabs>
+  <Tab title="Manual Setup">
+    <Steps>
+      <Step title="Create an Agent on Continue Hub">
+        Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+      </Step>
+
+      <Step title="Add Klavis AI Strata MCP">
+        Add the following YAML configuration to your agent:
+
+        ```yaml title="config.yaml"
+            name: klavis-strata
+            version: 0.0.1
+            schema: v1
+
+            mcpServers:
+              - name: klavis-strata
+                command: npx
+                args:
+                  - "mcp-remote"
+                  - "https://strata.klavis.ai/mcp/?strata_id=your_strata_id_here"
+        ```
+
+        **Notes:**
+        - Keep your Klavis Strata URL secret and secure
+        - Ensure your Klavis account has Slack and Gmail integrations activated
+        - Complete OAuth flows for both Slack and Gmail in the Klavis dashboard
+      </Step>
+
+      <Step title="Test the Connection">
+        Launch Continue and ask:
+        ```
+        Check my latest 5 emails and summarize them in a Slack message to #general.
+        ```
+      </Step>
+    </Steps>
+
+    <Info>
+      **Pro tip**: Learn how to integrate and use [Klavis Strata](https://www.klavis.ai/docs/knowledge-base/use-mcp-server/continue) with Continue through CLI and IDE.
+    </Info>
+
+  </Tab>
+
+  <Tab title="CLI Setup">
+    <Steps>
+      <Step title="Set Environment Variables">
+        ```bash
+        export KLAVIS_API_KEY="your_api_key_here"
+        ```
+      </Step>
+
+      <Step title="Launch Continue with Klavis MCP">
+        From your project root:
+        ```bash
+        cn --agent your-agent-name
+        ```
+        Now try:
+        ```
+        "Send a Slack message to #general saying 'Hello from Continue!'"
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+  To use Klavis AI Strata MCP with Continue CLI, you need either:
+  - **Continue CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Continue Hub secrets
+
+  The agent will automatically detect and use your configuration along with the Klavis AI Strata MCP for multi-tool operations.
+</Accordion>
+
+---
+
+## Slack Workflows
+
+Use natural language to send messages, manage channels, and coordinate team communications through Slack.
+
+<Info>
+  **Where to run these workflows:**
+  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
+
+  To run any of the example prompts below in headless mode, use `cn -p "prompt" --auto`
+</Info>
+
+### Message Management
+
+<Card title="Send Channel Message" icon="message">
+  Post messages to Slack channels.
+
+**Prompt:**
+```
+Send a message to #engineering channel:
+"Deploy completed successfully! Version 2.1.0 is now live."
+```
+</Card>
+
+<Card title="Send Direct Message" icon="user">
+  Message team members directly.
+
+**Prompt:**
+```
+Send a direct message to @sarah.chen:
+"Hi Sarah, could you review the PR for the authentication refactor when you have a chance? It's ready for review."
+```
+</Card>
+
+<Card title="Thread Reply" icon="reply">
+  Respond to existing Slack threads.
+
+**Prompt:**
+```
+Find the thread about "Q1 Planning" in #product-strategy from the last 2 days.
+Reply with: "I've updated the roadmap document with the Q1 priorities we discussed. Link: [doc_url]"
+```
+</Card>
+
+### Channel and Workspace Management
+
+<Card title="List Channels" icon="list">
+  Discover available channels.
+
+**Prompt:**
+```
+List all public channels in the workspace that contain "engineering" or "dev" in the name.
+```
+</Card>
+
+<Card title="Create Channel" icon="plus">
+  Set up new communication channels.
+
+**Prompt:**
+```
+Create a new Slack channel called #klavis-strata
+```
+</Card>
+
+<Card title="Archive Old Channels" icon="archive">
+  Clean up inactive channels.
+
+**Prompt:**
+```
+Find and archive all channels with no messages in the last 90 days.
+```
+</Card>
+
+---
+
+## Gmail Workflows
+
+Manage email communications, automate responses, and coordinate notifications through Gmail.
+
+### Email Management
+
+<Card title="Send Email" icon="envelope">
+  Compose and send emails with a single prompt.
+
+**Prompt:**
+```
+Send an email to team@company.com regarding Weekly Status Update.
+```
+</Card>
+
+<Card title="Read Recent Emails" icon="inbox">
+  Check and summarize recent messages.
+
+**Prompt:**
+```
+Read all unread emails from the last 24 hours.
+```
+</Card>
+
+<Card title="Search Email Thread" icon="magnifying-glass">
+  Find specific conversations.
+
+**Prompt:**
+```
+Search my emails from the last 30 days containing "invoice" or "payment".
+```
+</Card>
+
+### Advanced Email Operations
+
+<Card title="Send with Attachments" icon="paperclip">
+  Attach files to outgoing emails.
+
+**Prompt:**
+```
+Send an email to client@company.com with subject "Monthly Report 2025" and attach the file: reports/monthly-2025-analytics.pdf
+```
+</Card>
+
+---
+
+## Cross-Platform Workflows
+
+Combine Slack and Gmail for powerful multi-channel communication automation.
+
+### Notification Coordination
+
+<Card title="Slack + Gmail Announcements" icon="bullhorn">
+  Send coordinated messages across platforms.
+
+**Prompt:**
+```
+Send an announcement about Scheduled Maintenance @ Sat 2-6 AM EST to #engineering channel and also email to engineering@klavis.ai
+```
+</Card>
+
+<Card title="Issue Escalation" icon="triangle-exclamation">
+  Coordinate urgent communications.
+
+**Prompt:**
+```
+A critical bug has been reported (issue #2847 - payment processing failure). Send this urgent message to #engineering-alerts with issue description, assessment, and immediate action items. Finally, create a Slack thread for coordination and updates.
+```
+</Card>
+
+### Meeting and Event Coordination
+
+<Card title="Meeting Invitation" icon="calendar">
+  Coordinate meeting schedules across platforms.
+
+**Prompt:**
+```
+Schedule a sprint planning meeting:
+
+Gmail invitations to: team@company.com
+Subject: "Sprint 24 Planning - Q2 Roadmap"
+Time: Next Monday, 10 AM EST
+Duration: 2 hours
+
+Slack notification to #engineering:
+"Sprint Planning scheduled for Monday 10 AM EST
+Please review the backlog before the meeting: [link]
+Add agenda items to the shared doc by Friday."
+```
+</Card>
+
+<Card title="Status Updates" icon="chart-line">
+  Share progress updates across channels.
+
+**Prompt:**
+```
+Generate and distribute weekly status update:
+
+1. Analyze my recent work (commits, PRs, issues closed)
+2. Draft status summary with:
+   - Completed work
+   - In-progress items
+   - Blockers
+   - Next week's priorities
+
+3. Send to Slack #team-updates (formatted for Slack)
+4. Email to manager@company.com (formal email format)
+```
+</Card>
+
+### Customer Communication
+
+<Card title="Support Ticket Response" icon="headset">
+  Coordinate customer support across channels.
+
+**Prompt:**
+```
+A customer reported an issue via email (support ticket #5234 - login problems).
+
+1. Send acknowledgment email to customer@client.com:
+   "We've received your report about login issues. Investigating now.
+    Ticket #5234 - Expected resolution: 4 hours"
+
+2. Alert Slack #customer-support:
+   "New Priority 1 Ticket #5234: Login issues affecting Customer XYZ
+    Assigned to: @on-call-engineer
+    Details: [summary]"
+
+3. Create Slack thread for internal coordination
+```
+</Card>
+
+---
+
+## Multi-Tool Integration Workflows
+
+Leverage Klavis AI Strata's integrations for comprehensive automation workflows.
+
+<Info>
+  Klavis AI Strata supports integrations with Notion, Linear, GitHub, Asana, Salesforce, HubSpot, and more. Combine these with Slack and Gmail to create powerful cross-platform workflows.
+</Info>
+
+### Development Workflows
+
+<Card title="PR Review Notifications" icon="code-pull-request">
+  Automate code review coordination.
+
+**Prompt:**
+```
+Monitor GitHub for new pull requests in the main repository.
+
+When a new PR is created:
+1. Send Slack message to #code-reviews:
+   "New PR ready for review: [PR title]
+    Author: [name]
+    Changes: [summary]
+    Link: [github_url]"
+
+2. If PR is labeled "urgent":
+   - Send Gmail to tech-leads@company.com
+   - Ping reviewer in Slack DM
+```
+</Card>
+
+<Card title="Deployment Notifications" icon="rocket">
+  Coordinate deployment communications.
+
+**Prompt:**
+```
+After successful deployment to production:
+
+1. Update Notion deployment log with:
+   - Version number
+   - Deployment timestamp
+   - Changes included
+   - Rollback procedure
+
+2. Announce in Slack #announcements:
+   "Production deployment complete: v2.5.0
+    Release notes: [notion_link]"
+
+3. Email stakeholders@company.com with:
+   - Executive summary of changes
+   - User-facing improvements
+   - Link to full documentation
+```
+</Card>
+
+### Project Management Integration
+
+<Card title="Task Sync Workflow" icon="tasks">
+  Synchronize tasks across platforms.
+
+**Prompt:**
+```
+Daily task synchronization:
+
+1. Fetch high-priority tasks from Linear (assigned to me, due this week)
+2. Create Notion task list with priorities and deadlines
+3. Send Slack DM reminder about tasks due today
+4. If any tasks are overdue, email manager@company.com with status update
+```
+</Card>
+
+<Card title="Sprint Report Generation" icon="chart-pie">
+  Automate sprint reporting.
+
+**Prompt:**
+```
+Generate end-of-sprint report:
+
+1. Analyze completed work:
+   - Linear: Closed issues and story points
+   - GitHub: Merged PRs and code changes
+   - Notion: Sprint goals completion status
+
+2. Create comprehensive report in Notion
+3. Send summary to Slack #sprint-reviews
+4. Email detailed report to leadership@company.com with:
+   - Velocity metrics
+   - Burndown chart
+   - Highlights and challenges
+```
+</Card>
+
+---
+
+## Automation Examples
+
+<Card title="Ready-to-Use Workflows" icon="clipboard-check">
+  These examples have been designed for common use cases. Customize them to fit your team's needs.
+</Card>
+
+### Daily Standup Automation
+
+```bash
+cn -p --auto "
+Generate and distribute daily standup update:
+
+1. Review my activity:
+   - GitHub commits and PRs from yesterday
+   - Linear tasks completed
+   - Calendar meetings attended
+
+2. Draft standup summary:
+   - Yesterday: [completed work]
+   - Today: [planned work]
+   - Blockers: [any issues]
+
+3. Post to Slack #daily-standups
+4. If there are blockers, also send email to team-lead@company.com
+"
+```
+
+### On-Call Alert System
+
+```bash
+cn -p --auto "
+When critical alert is triggered:
+
+1. Send urgent Slack message to #on-call with:
+   - Alert details
+   - Severity level
+   - Affected systems
+   - Runbook link
+
+2. Send SMS-style urgent email to on-call engineer
+3. If not acknowledged in 5 minutes, escalate to backup on-call
+4. Create incident thread in Slack for coordination
+"
+```
+
+### Customer Onboarding
+
+```bash
+cn -p --auto "
+New customer onboarding workflow:
+
+1. Send welcome email via Gmail:
+   - Getting started guide
+   - Support contact information
+   - Link to documentation
+
+2. Create Slack Connect channel with customer
+3. Post introduction message in Slack with team members
+4. Create customer record in Notion with:
+   - Contact information
+   - Onboarding status
+   - Key milestones
+
+5. Add reminder in Linear for 7-day check-in call
+"
+```
+
+### Weekly Team Digest
+
+```bash
+cn -p --auto "
+Generate weekly team digest (run every Friday at 4 PM):
+
+1. Collect data:
+   - GitHub: PRs merged this week
+   - Linear: Issues closed, velocity metrics
+   - Slack: Key discussions and decisions
+   - Gmail: Important external communications
+
+2. Create digest in Notion with sections:
+   - Accomplishments
+   - Challenges
+   - Next week's priorities
+   - Team shoutouts
+
+3. Share to Slack #team-updates
+4. Email summary to remote team members
+"
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication Issues">
+    - **Klavis Strata URL not recognized**: Verify the Strata URL is active and correctly set in environment variables or Hub secrets
+    - **Slack OAuth failed**: Re-authenticate through the Klavis AI dashboard and ensure workspace permissions are granted
+    - **Gmail OAuth failed**: Check Google Cloud Console for API access and ensure the Gmail API is enabled
+    - **Token expired**: Klavis AI manages token refresh automatically, but you may need to re-authorize if it fails
+  </Accordion>
+
+  <Accordion title="Message Delivery Issues">
+    - **Slack message not sent**: Verify the bot has permission to post in the target channel
+    - **Gmail rate limiting**: Google imposes sending limits—monitor your quota
+    - **Channel not found**: Check channel name spelling and ensure it's public or the bot has been invited
+    - **User not found**: Verify Slack username format (@username) and that the user exists in the workspace
+  </Accordion>
+
+  <Accordion title="Workflow Execution Issues">
+    - **Multi-step workflow incomplete**: Check each step individually to identify where the failure occurred
+    - **Rate limits hit**: Klavis manages rate limiting, but external APIs (Slack, Gmail) have their own limits
+    - **Permission denied errors**: Ensure your authenticated user has the necessary permissions for the requested operation
+    - **Integration not available**: Verify the integration is active in your Klavis dashboard at klavis.ai/integrations
+  </Accordion>
+</AccordionGroup>
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered communication automation system** that:
+
+- ✅ **Uses natural language** — Simple prompts instead of complex commands
+- ✅ **Automates Slack**: Send messages, manage channels, and team coordination
+- ✅ **Manages Gmail**: Read, send, and triage emails with intelligent automation
+- ✅ **Cross-platform coordination**: Unified workflows across Slack, Gmail, and other tools
+- ✅ **Scales reliably**: Handles complex multi-app workflows efficiently
+
+<Card title="Continuous AI" icon="rocket">
+  Your communication workflows now operate at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine communications and coordinates multi-platform workflows
+  with optional human oversight and approval.
+</Card>
+
+## Klavis Strata MCP Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Scalable Tool Integration" icon="layer-group">
+    Handle **thousands of tools** with no context overload.
+  </Card>
+
+  <Card title="Progressive Discovery" icon="network-wired">
+    Strata guides AI agents to **discover relevant categories** first, avoiding tool overload.
+  </Card>
+
+  <Card title="Smart Navigation" icon="compass">
+    AI drills down **layer by layer** to find the exact tool needed for the task.
+  </Card>
+
+  <Card title="Precise Execution" icon="bullseye">
+    Once identified, **Strata** pulls API details and executes with correct parameters.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+1. **Explore integrations** — Try Slack and Gmail prompts on your workspace
+2. **Add more tools** — Integrate Notion, Linear, GitHub, or other services
+3. **Automate notifications** — Set up cross-platform announcement workflows
+4. **Monitor performance** — Track automation accuracy and time savings
+5. **Scale up** — Add scheduled workflows and event-driven automation
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Klavis AI Platform" icon="link" href="https://www.klavis.ai/docs/knowledge-base/use-mcp-server/overview">
+    Integrate Klavis AI with AI platforms
+  </Card>
+  <Card title="Strata MCP Documentation" icon="book" href="https://www.klavis.ai/docs/concepts/strata">
+    Learn about Klavis AI's Strata MCP platform architecture
+  </Card>
+  <Card title="MCP in Continue" icon="puzzle-piece" href="/customize/deep-dives/mcp">
+    Learn how MCP works with Continue agents
+  </Card>
+  <Card title="Continue Hub" icon="globe" href="https://hub.continue.dev">
+    Create and manage your Continue agents
+  </Card>
+</CardGroup>
