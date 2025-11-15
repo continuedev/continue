@@ -158,7 +158,7 @@ function ModelSelectionListbox({
                         <ListboxOption
                           key={index}
                           className={({ selected }: { selected: boolean }) =>
-                            ` ${selected ? "bg-list-active" : "bg-input"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-default select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
+                            ` ${selected ? "bg-list-active" : "bg-input"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
                           }
                           value={option}
                         >
