@@ -100,7 +100,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     cohere: (model) => {
-      return model.toLowerCase().startsWith("command");
+      const lower = model.toLowerCase();
+      if (lower.startsWith("command-a-vision")) {
+        return false;
+      }
+      return lower.startsWith("command");
     },
     gemini: (model) => {
       // All gemini models support function calling

@@ -4,10 +4,10 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
-  MessageContent,
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 
 class Cohere extends BaseLLM {
   static providerName = "cohere";
@@ -19,7 +19,6 @@ class Cohere extends BaseLLM {
 
   private _convertMessages(msgs: ChatMessage[]): any[] {
     const messages = [];
-    let lastToolPlan: MessageContent | undefined;
     for (const m of msgs) {
       if (!m.content) {
         continue;
@@ -48,36 +47,48 @@ class Cohere extends BaseLLM {
           });
           break;
         case "thinking":
-          lastToolPlan = m.content;
+          messages.push({
+            role: "assistant",
+            content: [
+              {
+                type: "thinking",
+                thinking: m.content,
+              },
+            ],
+          });
           break;
         case "assistant":
-          if (m.toolCalls) {
-            if (!lastToolPlan) {
-              throw new Error("No tool plan found");
-            }
-            messages.push({
+          let msg: any;
+          if (messages.at(-1)?.content[0]?.thinking) {
+            msg = messages.pop();
+          } else {
+            msg = {
               role: m.role,
-              tool_calls: m.toolCalls.map((toolCall) => ({
-                id: toolCall.id,
-                type: "function",
-                function: {
-                  name: toolCall.function?.name,
-                  arguments: toolCall.function?.arguments,
-                },
-              })),
-              // Ideally the tool plan would be in this message, but it is
-              // split in another, usually the previous, this one's content is
-              // a space.
-              // tool_plan: m.content,
-              tool_plan: lastToolPlan,
-            });
-            lastToolPlan = undefined;
-            break;
+              content: [],
+            };
           }
-          messages.push({
-            role: m.role,
-            content: m.content,
-          });
+
+          if (m.toolCalls) {
+            msg.tool_calls = m.toolCalls.map((toolCall) => ({
+              id: toolCall.id,
+              type: "function",
+              function: {
+                name: toolCall.function?.name,
+                arguments: toolCall.function?.arguments,
+              },
+            }));
+          } else {
+            if (typeof m.content === "string") {
+              msg.content.push({
+                type: "text",
+                text: m.content,
+              });
+            } else {
+              msg.content.push(...m.content);
+            }
+          }
+
+          messages.push(msg);
           break;
         case "system":
           messages.push({
@@ -110,6 +121,15 @@ class Cohere extends BaseLLM {
       stop_sequences: options.stop?.slice(0, Cohere.maxStopSequences),
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
+      thinking: options.reasoning
+        ? {
+            type: "enabled" as const,
+            token_budget:
+              options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
+          }
+        : // Reasoning is enabled by default for models that support it.
+          // https://docs.cohere.com/reference/chat-stream#request.body.thinking
+          { type: "disabled" as const },
       tools: options.tools?.map((tool) => ({
         type: "function",
         function: {
@@ -159,14 +179,17 @@ class Cohere extends BaseLLM {
 
     if (options.stream === false) {
       const data = await resp.json();
+      for (const content of data.message.content) {
+        if (content.thinking) {
+          yield { role: "thinking", content: content.thinking };
+          continue;
+        }
+        yield { role: "assistant", content: content.text };
+      }
       if (data.message.tool_calls) {
-        yield {
-          // Use the "thinking" role for `tool_plan`, since there is no such
-          // role in the Cohere API at the moment and it is a "a
-          // chain-of-thought style reflection".
-          role: "thinking",
-          content: data.message.tool_plan,
-        };
+        if (data.message.tool_plan) {
+          yield { role: "thinking", content: data.message.tool_plan };
+        }
         yield {
           role: "assistant",
           content: "",
@@ -181,7 +204,6 @@ class Cohere extends BaseLLM {
         };
         return;
       }
-      yield { role: "assistant", content: data.message.content[0].text };
       return;
     }
 
@@ -192,6 +214,13 @@ class Cohere extends BaseLLM {
       switch (value.type) {
         // https://docs.cohere.com/v2/docs/streaming#content-delta
         case "content-delta":
+          if (value.delta.message.content.thinking) {
+            yield {
+              role: "thinking",
+              content: value.delta.message.content.thinking,
+            };
+            break;
+          }
           yield {
             role: "assistant",
             content: value.delta.message.content.text,
@@ -199,9 +228,6 @@ class Cohere extends BaseLLM {
           break;
         // https://docs.cohere.com/reference/chat-stream#request.body.messages.assistant.tool_plan
         case "tool-plan-delta":
-          // Use the "thinking" role for `tool_plan`, since there is no such
-          // role in the Cohere API at the moment and it is a "a
-          // chain-of-thought style reflection".
           yield {
             role: "thinking",
             content: value.delta.message.tool_plan,

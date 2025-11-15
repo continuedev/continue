@@ -124,6 +124,10 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   describe("cohere", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["cohere"];
 
+    it("should return false for Command A Vision models", () => {
+      expect(supportsFn("command-a-vision")).toBe(false);
+    });
+
     it("should return true for Command models", () => {
       expect(supportsFn("command-r")).toBe(true);
       expect(supportsFn("command-a")).toBe(true);
