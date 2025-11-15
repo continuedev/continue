@@ -344,7 +344,12 @@ void (async () => {
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = ["@lancedb", "@vscode/ripgrep", "workerpool"];
+  const NODE_MODULES_TO_COPY = [
+    "@lancedb",
+    "@vscode/ripgrep",
+    "workerpool",
+    "yaml",
+  ];
 
   fs.mkdirSync("out/node_modules", { recursive: true });
 

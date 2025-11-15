@@ -680,8 +680,8 @@
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
     "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
-    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage --code_version 1.95.0",
-    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage --code_version 1.95.0",
+    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage --code_version 1.94.2",
+    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage --code_version 1.94.2",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
@@ -725,7 +725,7 @@
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
     "vite": "^4.5.14",
-    "vscode-extension-tester": "^8.14.1"
+    "vscode-extension-tester": "^8.19.0"
   },
   "dependencies": {
     "@continuedev/config-types": "file:../../packages/config-types",
@@ -776,6 +776,7 @@
     "vitest": "^3.1.4",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
+    "yaml": "^2.6.1",
     "yarn": "^1.22.21"
   },
   "overrides": {
