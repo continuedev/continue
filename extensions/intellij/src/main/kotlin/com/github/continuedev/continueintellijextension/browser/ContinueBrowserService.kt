@@ -8,16 +8,44 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 
 @Service(Service.Level.PROJECT)
-class ContinueBrowserService(project: Project): Disposable {
+class ContinueBrowserService(val project: Project): Disposable {
 
-    private val browser: ContinueBrowser? =
-        if (JBCefApp.isSupported())
-            ContinueBrowser(project)
-        else null
+    private var browser: ContinueBrowser? = null
+
+    init {
+        load()
+    }
 
     override fun dispose() {
-        if (browser != null)
-            Disposer.dispose(browser)
+        browser?.let { Disposer.dispose(it) }
+        browser = null
+    }
+
+    private fun load(): ContinueBrowser? {
+        if (browser != null) {
+            return browser
+        }
+        if (!JBCefApp.isSupported()) {
+            return null
+        }
+        val newBrowser = ContinueBrowser(project)
+        Disposer.register(this, newBrowser)
+
+        this.browser = newBrowser
+        return this.browser
+    }
+
+    /**
+     * Reloads the browser by disposing the current one and creating a new one.
+     * This method is intended for use when browser is frozen (unresponsive).
+     */
+    fun reload() {
+        browser?.let {
+            Disposer.dispose(it)
+        }
+        browser = null
+
+        load()
     }
 
     companion object {
