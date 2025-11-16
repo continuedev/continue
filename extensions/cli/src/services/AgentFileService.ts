@@ -49,10 +49,10 @@ export class AgentFileService
     return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
   }
 
-  private async getAgentFile(agentPath: string): Promise<AgentFile> {
+  async getAgentFile(agentPath: string): Promise<AgentFile> {
     try {
       const parts = agentPath.split("/");
-      if (parts.length === 2 && parts[0] && parts[1]) {
+      if (parts.length === 2 && parts[0] && parts[1] && !parts.includes(".")) {
         try {
           return await loadPackageFromHub(agentPath, agentFileProcessor);
         } catch (e) {
