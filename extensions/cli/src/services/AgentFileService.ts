@@ -62,12 +62,9 @@ export class AgentFileService
           // slug COULD be path, fall back to relative path
         }
       }
-      if (agentPath.startsWith("file:/")) {
-        const path = fileURLToPath(agentPath);
-        const content = fs.readFileSync(path, "utf-8");
-        return parseAgentFile(content);
-      }
-      const resolvedPath = path.resolve(agentPath);
+      const resolvedPath = agentPath.startsWith("file:/")
+        ? fileURLToPath(agentPath)
+        : path.resolve(agentPath);
       const content = fs.readFileSync(resolvedPath, "utf-8");
       return parseAgentFile(content);
     } catch (e) {
