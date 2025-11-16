@@ -669,6 +669,7 @@ async function finalToBrowserConfig(
     userToken: final.userToken,
     ui: final.ui,
     experimental: final.experimental,
+    codeExecution: final.codeExecution,
     rules: final.rules,
     docs: final.docs,
     tools: final.tools.map(serializeTool),
@@ -850,6 +851,7 @@ async function loadContinueConfigFromJson(
   // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
   const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig);
+  console.log("sharedConfig: ", sharedConfig, withShared);
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(withShared, ide);

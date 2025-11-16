@@ -22,7 +22,15 @@ export function getNonce() {
 }
 
 export function getExtensionUri(): vscode.Uri {
-  return vscode.extensions.getExtension("Continue.continue")!.extensionUri;
+  const extension = vscode.extensions.getExtension("Continue.continue");
+
+  if (!extension) {
+    throw new Error(
+      "Continue extension is not registered. Make sure the dev extension is running.",
+    );
+  }
+
+  return extension.extensionUri;
 }
 
 export function getViewColumnOfFile(

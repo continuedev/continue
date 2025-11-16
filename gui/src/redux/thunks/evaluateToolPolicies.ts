@@ -21,6 +21,7 @@ async function evaluateToolPolicy(
   activeTools: Tool[],
   toolCallState: ToolCallState,
   toolPolicies: ToolPolicies,
+  conversationId?: string,
 ): Promise<EvaluatedPolicy> {
   // allow edit tool calls without permission
   if (isEditTool(toolCallState.toolCall.function.name)) {
@@ -40,6 +41,7 @@ async function evaluateToolPolicy(
     basePolicy,
     parsedArgs: toolCallState.parsedArgs,
     processedArgs: toolCallState.processedArgs,
+    conversationId,
   });
 
   // Evaluate the policy dynamically
@@ -77,6 +79,7 @@ export async function evaluateToolPolicies(
   activeTools: Tool[],
   generatedToolCalls: ToolCallState[],
   toolPolicies: ToolPolicies,
+  conversationId?: string,
 ): Promise<EvaluatedPolicy[]> {
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   const policyResults = await Promise.all(
@@ -86,6 +89,7 @@ export async function evaluateToolPolicies(
         activeTools,
         toolCallState,
         toolPolicies,
+        conversationId,
       ),
     ),
   );

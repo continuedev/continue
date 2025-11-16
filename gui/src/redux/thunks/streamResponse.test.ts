@@ -750,16 +750,20 @@ describe("streamResponseThunk", () => {
       options: { tools: [grepTool] },
     });
 
-    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
-      toolCall: {
-        id: "tool-call-1",
-        type: "function",
-        function: {
-          name: grepName,
-          arguments: JSON.stringify({ query: "test function" }),
+    expect(requestSpy).toHaveBeenCalledWith(
+      "tools/call",
+      expect.objectContaining({
+        conversationId: expect.any(String),
+        toolCall: {
+          id: "tool-call-1",
+          type: "function",
+          function: {
+            name: grepName,
+            arguments: JSON.stringify({ query: "test function" }),
+          },
         },
-      },
-    });
+      }),
+    );
 
     // Verify that multiple compilation calls were made (due to tool call continuation)
     expect(requestSpy).toHaveBeenCalledWith(

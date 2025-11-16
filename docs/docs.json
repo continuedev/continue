@@ -152,6 +152,11 @@
             ]
           },
           {
+            "group": "Features",
+            "icon": "sparkles",
+            "pages": ["features/code-execution"]
+          },
+          {
             "group": "Customization",
             "icon": "sliders",
             "expanded": false,
@@ -305,6 +310,7 @@
               "reference/yaml-migration",
               "reference/continue-mcp",
               "reference/json-reference",
+              "reference/release-notes",
               "reference/deprecated-context-providers",
               "reference/deprecated-codebase",
               "reference/deprecated-docs"

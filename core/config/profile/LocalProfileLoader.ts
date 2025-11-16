@@ -40,6 +40,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       rawYaml: undefined,
     };
     this.description = description;
+    console.log("overrideAssistantFIle: ", overrideAssistantFile?.content);
     if (overrideAssistantFile?.content) {
       try {
         const parsedAssistant = parseConfigYaml(
@@ -66,6 +67,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         fileUri: this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
       },
     });
+    console.log("doLoadConfig result", result);
 
     this.description.errors = result.errors;
 

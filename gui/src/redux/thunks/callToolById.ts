@@ -24,6 +24,7 @@ export const callToolById = createAsyncThunk<
   const { toolCallId, isAutoApproved, depth = 0 } = inputs;
 
   const state = getState();
+  const conversationId = state.session.id;
   const toolCallState = findToolCallById(state.session.history, toolCallId);
   if (!toolCallState) {
     console.warn(`Tool call with ID ${toolCallId} not found`);
@@ -87,6 +88,7 @@ export const callToolById = createAsyncThunk<
     // Tool is called on core side
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
+      conversationId,
     });
     if (result.status === "error") {
       throw new Error(result.error);

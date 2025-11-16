@@ -1118,7 +1118,7 @@ declare global {
      * Automatically read LLM chat responses aloud using system TTS models
      */
     readResponseTTS?: boolean;
-  
+
     /**
      * If set to true, we will attempt to pull down and install an instance of Chromium
      * that is compatible with the current version of Puppeteer.
@@ -1126,6 +1126,20 @@ declare global {
      */
     useChromiumForDocsCrawling?: boolean;
     modelContextProtocolServers?: MCPOptions[];
+    codeExecution?: CodeExecutionConfig;
+  }
+
+  export interface CodeExecutionConfig {
+    enabled?: boolean;
+    e2bApiKey?: string;
+    sessionTimeoutMinutes?: number;
+    maxExecutionTimeSeconds?: number;
+    requestTimeoutSeconds?: number;
+    maxOutputSizeChars?: number;
+    rateLimit?: {
+      maxExecutionsPerMinute?: number;
+    };
+    requireFirstUseConfirmation?: boolean;
   }
   
   interface AnalyticsConfig {
@@ -1154,6 +1168,7 @@ declare global {
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
     experimental?: ExperimentalConfig;
+    codeExecution?: CodeExecutionConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
   }
@@ -1206,6 +1221,8 @@ declare global {
     reranker?: RerankerDescription | ILLM;
     /** Experimental configuration */
     experimental?: ExperimentalConfig;
+    /** Top-level code execution configuration (flattened helper for experimental.codeExecution) */
+    codeExecution?: CodeExecutionConfig;
     /** Analytics configuration */
     analytics?: AnalyticsConfig;
   }
@@ -1228,6 +1245,7 @@ declare global {
     ui?: ContinueUIConfig;
     reranker?: ILLM;
     experimental?: ExperimentalConfig;
+    codeExecution?: CodeExecutionConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
     tools: Tool[];
@@ -1248,6 +1266,7 @@ declare global {
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
     experimental?: ExperimentalConfig;
+    codeExecution?: CodeExecutionConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
     tools: Tool[];

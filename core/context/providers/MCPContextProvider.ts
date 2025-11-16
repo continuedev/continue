@@ -80,6 +80,13 @@ class MCPContextProvider extends BaseContextProvider {
 
     return await Promise.all(
       contents.map(async (resource) => {
+        // Check if resource has text property (TextResourceContents) or blob (BlobResourceContents)
+        if (!("text" in resource)) {
+          throw new Error(
+            "Continue currently only supports text resources from MCP (blob resources are not supported)",
+          );
+        }
+
         const content = resource.text;
         if (typeof content !== "string") {
           throw new Error(

@@ -413,16 +413,20 @@ describe("streamResponseThunk - tool calls", () => {
       },
     });
 
-    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
-      toolCall: {
-        id: "tool-call-1",
-        type: "function",
-        function: {
-          name: grepName,
-          arguments: JSON.stringify({ query: "test function" }),
+    expect(requestSpy).toHaveBeenCalledWith(
+      "tools/call",
+      expect.objectContaining({
+        conversationId: expect.any(String),
+        toolCall: {
+          id: "tool-call-1",
+          type: "function",
+          function: {
+            name: grepName,
+            arguments: JSON.stringify({ query: "test function" }),
+          },
         },
-      },
-    });
+      }),
+    );
 
     // Verify that multiple compilation calls were made (due to tool call continuation)
     const compileCallsCount = requestSpy.mock.calls.filter(
@@ -1790,16 +1794,20 @@ describe("streamResponseThunk - tool calls", () => {
     );
 
     // Verify IDE messenger calls for tool execution
-    expect(requestSpy).toHaveBeenCalledWith("tools/call", {
-      toolCall: {
-        id: "tool-approval-flow-1",
-        type: "function",
-        function: {
-          name: grepName,
-          arguments: JSON.stringify({ query: "test function" }),
+    expect(requestSpy).toHaveBeenCalledWith(
+      "tools/call",
+      expect.objectContaining({
+        conversationId: expect.any(String),
+        toolCall: {
+          id: "tool-approval-flow-1",
+          type: "function",
+          function: {
+            name: grepName,
+            arguments: JSON.stringify({ query: "test function" }),
+          },
         },
-      },
-    });
+      }),
+    );
 
     // Verify second streaming call was made for continuation
     expect(streamCallCount).toBe(2);

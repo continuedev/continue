@@ -8,6 +8,7 @@ import { BuiltInToolNames } from "./builtIn";
 import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
+import { executeCodeImpl } from "./implementations/executeCode";
 import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
 import { fileGlobSearchImpl } from "./implementations/globSearch";
 import { grepSearchImpl } from "./implementations/grepSearch";
@@ -183,6 +184,8 @@ export async function callBuiltInTool(
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.ExecuteCode:
+      return await executeCodeImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

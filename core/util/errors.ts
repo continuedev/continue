@@ -62,6 +62,11 @@ export enum ContinueErrorReason {
   // Rules
   RuleNotFound = "rule_not_found",
 
+  // Code Execution
+  CodeExecutionDisabled = "code_execution_disabled",
+  CodeExecutionMissingApiKey = "code_execution_missing_api_key",
+  CodeExecutionUnsupportedLanguage = "code_execution_unsupported_language",
+
   // Other
   Unspecified = "unspecified", // I.e. a known error but no specific code for it
   Unknown = "unknown", // I.e. an unexpected error

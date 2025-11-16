@@ -10,6 +10,7 @@ describe("Tool Definitions", () => {
     isSignedIn: false,
     isRemote: false,
     modelName: "a model",
+    testVal: "test",
   };
 
   // Helper function to get the actual tool object

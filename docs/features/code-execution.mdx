@@ -1,0 +1,135 @@
+---
+title: "Code Execution"
+description: "Run TypeScript snippets in managed E2B sandboxes directly from Continue"
+sidebarTitle: "Code Execution"
+---
+
+<Info>
+  The built-in <code>execute_code</code> tool uses E2B sandboxes to run TypeScript securely. It works in chat, plan, and agent modes once enabled.
+</Info>
+
+## ⚡️ Two-Minute Quick Start
+
+<Steps>
+  <Step title="Get an E2B API key">
+    1. Sign in at [e2b.dev/dashboard](https://e2b.dev/dashboard)
+    2. Create an API key and copy it (format: <code>e2b_live_...</code>)
+  </Step>
+  <Step title="Enable the feature">
+    Add the snippet below to your <code>config.yaml</code> (or set the equivalent JSON fields). You can keep the key in the config or load it from <code>E2B_API_KEY</code>.
+
+    ```yaml
+    experimental:
+      codeExecution:
+        enabled: true
+        e2bApiKey: ${E2B_API_KEY}
+    ```
+  </Step>
+  <Step title="Run a smoke test">
+    Ask Continue: “Use execute_code to print 6 * 7”. When the tool completes you should see <code>42</code> in the context panel.
+  </Step>
+</Steps>
+
+## Setup & Configuration
+
+### Provide the API key
+
+- **Config file** – add <code>experimental.codeExecution.e2bApiKey</code>
+- **Environment** – export <code>E2B_API_KEY</code> (takes precedence when the config field is omitted)
+
+```bash
+export E2B_API_KEY="e2b_live_xxxxx"
+```
+
+### Enable the capability
+
+Set <code>experimental.codeExecution.enabled</code> to <code>true</code>. Optional safety knobs:
+
+| Field | Purpose | Default |
+| --- | --- | --- |
+| <code>sessionTimeoutMinutes</code> | Idle time before the sandbox is recycled | 30 |
+| <code>maxExecutionTimeSeconds</code> | Per-run execution limit | 60 |
+| <code>requestTimeoutSeconds</code> | REST request timeout to E2B | 120 |
+| <code>maxOutputSizeChars</code> | Truncation threshold for stdout/stderr/results | 10,000 |
+| <code>rateLimit.maxExecutionsPerMinute</code> | Prevent runaway loops | 10 |
+| <code>requireFirstUseConfirmation</code> | Force a one-time confirmation before code runs | true |
+
+### Tool call reminder
+
+Once enabled, the assistant sees a new tool definition:
+
+```
+execute_code({ code: string, language?: "typescript" | "javascript" })
+```
+
+- Top-level await is supported
+- State persists inside each conversation (declare helpers once, reuse them later)
+- Only TypeScript/JavaScript is available in this release
+
+## Sandbox Behavior
+
+- **Runtime**: Node.js 18+ with TypeScript transpilation
+- **Preinstalled packages**: common utilities from the E2B template (axios, lodash, Node built-ins). Installing new npm packages is blocked for security.
+- **Networking**: outbound HTTP(S) is available, but the sandbox cannot reach your local workspace
+- **Storage**: no access to your project files; use the existing Continue tools if a file needs to be read or edited
+
+Keep remote execution in mind—never paste secrets into the tool output.
+
+## Example Workflows
+
+### 1. Data wrangling & calculations
+
+```tool
+TOOL_NAME: execute_code
+BEGIN_ARG: code
+const rows = [
+  { id: 1, price: 12.5 },
+  { id: 2, price: 19.75 },
+  { id: 3, price: 6.25 }
+];
+const average = rows.reduce((sum, row) => sum + row.price, 0) / rows.length;
+console.log({ average: average.toFixed(2) });
+return average;
+END_ARG
+```
+
+### 2. Stateful exploration
+
+1. **Initialize**
+
+   ```tool
+   TOOL_NAME: execute_code
+   BEGIN_ARG: code
+   const cache = [];
+   cache.push({ label: "alpha", value: 10 });
+   END_ARG
+   ```
+
+2. **Reuse state**
+
+   ```tool
+   TOOL_NAME: execute_code
+   BEGIN_ARG: code
+   cache.push({ label: "beta", value: 22 });
+   const maxEntry = cache.reduce((best, entry) =>
+     entry.value > best.value ? entry : best,
+   cache[0]);
+   console.log(maxEntry);
+   maxEntry;
+   END_ARG
+   ```
+
+The variables declared in the first call remain available for the second call because both happen inside the same conversation sandbox.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| “E2B API key required” | Key missing or invalid | Set <code>experimental.codeExecution.e2bApiKey</code> or export <code>E2B_API_KEY</code> |
+| Tool call never returns | Execution exceeded <code>maxExecutionTimeSeconds</code> or produced unbounded output | Reduce work per call, split into smaller steps, or raise the timeout/output limits |
+| “Rate limit exceeded” | More than <code>rateLimit.maxExecutionsPerMinute</code> runs in one minute | Wait a few seconds or raise the rate limit after validating the workflow |
+| “Tool disabled” prompt | Feature flag still <code>false</code> or first-use confirmation declined | Set <code>enabled: true</code> and approve the first execution |
+
+<Tip>
+  For debugging, you can wipe the sandbox for a conversation by clearing the chat history. A fresh run will create a new E2B instance.
+</Tip>

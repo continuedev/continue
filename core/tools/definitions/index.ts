@@ -9,6 +9,7 @@ export { lsTool } from "./ls";
 export { multiEditTool } from "./multiEdit";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";
+export { executeCodeTool } from "./executeCode";
 
 export { readFileRangeTool } from "./readFileRange";
 export { requestRuleTool } from "./requestRule";
