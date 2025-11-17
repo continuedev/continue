@@ -40,6 +40,18 @@ import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolCall, ToolParametersSchema };
 
+/**
+ * Extract the agent ID from the --id command line flag
+ */
+function getAgentIdFromArgs(): string | undefined {
+  const args = process.argv;
+  const idIndex = args.indexOf("--id");
+  if (idIndex !== -1 && idIndex + 1 < args.length) {
+    return args[idIndex + 1];
+  }
+  return undefined;
+}
+
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
@@ -57,6 +69,21 @@ export async function getAllAvailableTools(
   isHeadless: boolean,
 ): Promise<Tool[]> {
   const tools = [...BASE_BUILTIN_TOOLS];
+
+  // Filter out ReportFailure tool if no agent ID is present
+  // (it requires --id to function and will confuse the agent if unavailable)
+  const agentId = getAgentIdFromArgs();
+  if (!agentId) {
+    const reportFailureIndex = tools.findIndex(
+      (t) => t.name === "ReportFailure",
+    );
+    if (reportFailureIndex !== -1) {
+      tools.splice(reportFailureIndex, 1);
+      logger.debug(
+        "Filtered out ReportFailure tool - no agent ID present (--id flag not provided)",
+      );
+    }
+  }
 
   // If model is capable, exclude editTool in favor of multiEditTool
   const modelState = await serviceContainer.get<ModelServiceState>(
