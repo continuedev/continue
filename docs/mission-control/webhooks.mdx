@@ -3,11 +3,13 @@ title: "Webhooks"
 description: "Kick off Cloud Agents from external events"
 ---
 
-# Webhook 
+# Webhooks
 
 ## Overview
 
-Webhooks allow you to trigger Background Agents automatically when external events occur. When a webhook receives data, it kicks off an agent session with the webhook payload appended to the prompt, executing your chosen agent in a specified repository.
+Webhooks are a type of Workflow Trigger which allow you to automatically kick off custom Cloud Agents when external events occur. 
+
+You can configure which Agent to run when your webhook receives data, and in which repository. The event payload (POST request body) will be appended to the Agent's prompt.
 
 ## Quick Start
 
@@ -22,7 +24,7 @@ Navigate to **Settings → Webhooks** and click **Create Webhook**.
 Fill in the required fields:
 
 - **Name**: A descriptive name for your webhook (e.g., "Zapier Bug Reports")
-- **Agent**: Select which agent to kick off when triggered
+- **Agent**: Select which Agent to kick off when triggered
 - **Repository**: Choose the repository where the agent will run
 - **Advanced Settings (Optional)**:
   - **Secret Header Name**: Custom HTTP header for authentication (e.g., `X-Webhook-Secret`)
@@ -296,15 +298,17 @@ Any valid JSON payload. This will appended to the Agent's prompt.
 
 ## Creating Agents for Webhooks
 
-When a webhook triggers an agent, the incoming JSON payload is stringified and appended to your agent's prompt. Design your agent prompts to handle this structured data.
-
-Agent files consist of YAML frontmatter and a markdown prompt. When triggered, the final prompt becomes:
+When a webhook triggers an agent, the incoming JSON payload is stringified and appended to your agent's prompt like this:
 
 ```
 {agent prompt}
 
 {stringified webhook payload}
 ```
+
+Design your agent prompts to prepend and handle this structured data.
+
+Below are some example webhook data and corresponding Agent prompts:
 
 ### Example: Bug Report Handler
 
