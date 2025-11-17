@@ -64,7 +64,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   const renderRules = () =>
     allRules.length > 0 ? (
       <>
-        <Text bold color="blue">
+        <Text bold color="green">
           Rules:
         </Text>
         {allRules.map((rule, index) => (
@@ -79,7 +79,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   const renderMcpServers = () =>
     (config?.mcpServers?.length ?? 0) > 0 ? (
       <>
-        <Text bold color="blue">
+        <Text bold color="green">
           MCP Servers:
         </Text>
         {config?.mcpServers?.map((server: any, index: number) => (
@@ -102,26 +102,26 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       {/* Organization name */}
       {organizationName && (
-        <Text color="blue">
+        <Text color="green">
           <Text bold>Org:</Text> <Text color="white">{organizationName}</Text>
         </Text>
       )}
 
       {/* Agent name */}
       {config && (
-        <Text color="blue">
+        <Text color="green">
           <Text bold>Agent:</Text> <Text color="white">{config.name}</Text>
         </Text>
       )}
 
       {/* Model */}
       {model ? (
-        <Text color="blue">
+        <Text color="green">
           <Text bold>Model:</Text>{" "}
           <Text color="white">{model.name.split("/").pop()}</Text>
         </Text>
       ) : (
-        <Text color="blue">
+        <Text color="green">
           <Text bold>Model:</Text> <Text color="dim">Loading...</Text>
         </Text>
       )}
