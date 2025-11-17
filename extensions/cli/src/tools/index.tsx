@@ -75,12 +75,12 @@ export async function getAllAvailableTools(
   const agentId = getAgentIdFromArgs();
   if (!agentId) {
     const reportFailureIndex = tools.findIndex(
-      (t) => t.name === "ReportFailure",
+      (t) => t.name === reportFailureTool.name,
     );
     if (reportFailureIndex !== -1) {
       tools.splice(reportFailureIndex, 1);
       logger.debug(
-        "Filtered out ReportFailure tool - no agent ID present (--id flag not provided)",
+        `Filtered out ${reportFailureTool.name} tool - no agent ID present (--id flag not provided)`,
       );
     }
   }
