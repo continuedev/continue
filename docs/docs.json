@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "Continue",
   "banner": {
-    "content": "Continue CLI v1.5.1 is live 🚀 Learn how you can leverage the CLI with our [MCP Cookbooks](https://docs.continue.dev/guides/overview#mcp-integration-cookbooks)",
+    "content": "Check out our new look in Mission Control. It's now easier than ever to create [Workflows](https://hub.continue.dev/workflows), [Integrate with the tools you use](https://hub.continue.dev/integrations), and to create a one-off Task.",
     "dismissable": true
   },
   "colors": {
