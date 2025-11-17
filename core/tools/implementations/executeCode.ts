@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import { ToolImpl } from ".";
-import { ContextItem } from "../..";
+import type { ContextItem, IDE } from "../..";
+import { LspMcpBridge, LSP_TOOLS } from "../../context/lsp/index.js";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { Telemetry } from "../../util/posthog";
@@ -20,6 +21,12 @@ const MCP_REQUEST_DIR = `${MCP_ROOT_DIR}/requests`;
 const MCP_RESPONSE_DIR = `${MCP_ROOT_DIR}/responses`;
 const MCP_POLL_INTERVAL_MS = 200;
 const MCP_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+
+const LSP_ROOT_DIR = "/tmp/continue_lsp";
+const LSP_REQUEST_DIR = `${LSP_ROOT_DIR}/requests`;
+const LSP_RESPONSE_DIR = `${LSP_ROOT_DIR}/responses`;
+const LSP_POLL_INTERVAL_MS = 200;
+const LSP_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
 const LANGUAGE_MAP: Record<string, "ts" | "js"> = {
   ts: "ts",
@@ -37,6 +44,7 @@ type ManagedSession = {
   lastUsed: number;
   timeoutMs: number;
   monitor: McpRequestMonitor;
+  lspMonitor: LspRequestMonitor;
   conversationId: string;
 };
 
@@ -57,6 +65,7 @@ class SandboxSessionManager {
     apiKey: string,
     requestTimeoutMs: number,
     sessionTimeoutMinutes: number,
+    ide: IDE,
   ): Promise<ManagedSession> {
     const key = this.normalizeConversationId(conversationId);
     let session = this.sessions.get(key);
@@ -72,15 +81,19 @@ class SandboxSessionManager {
       requestTimeoutMs,
     });
 
-    await this.initializeSandbox(sandbox);
+    await this.initializeSandbox(sandbox, ide);
     const monitor = new McpRequestMonitor(sandbox);
     monitor.start();
+
+    const lspMonitor = new LspRequestMonitor(sandbox, ide);
+    lspMonitor.start();
 
     session = {
       sandbox,
       lastUsed: Date.now(),
       timeoutMs: sessionTimeoutMinutes * 60_000,
       monitor,
+      lspMonitor,
       conversationId: key,
     };
     this.sessions.set(key, session);
@@ -100,6 +113,7 @@ class SandboxSessionManager {
     this.sessions.delete(key);
     executeCodePolicy.clearConversation(key);
     await session.monitor.stop();
+    await session.lspMonitor.stop();
     try {
       await session.sandbox.kill();
     } catch {
@@ -119,11 +133,11 @@ class SandboxSessionManager {
     }
   }
 
-  private async initializeSandbox(sandbox: Sandbox) {
+  private async initializeSandbox(sandbox: Sandbox, ide: IDE) {
     await sandbox.commands.run(
-      `mkdir -p ${MCP_REQUEST_DIR} ${MCP_RESPONSE_DIR}`,
+      `mkdir -p ${MCP_REQUEST_DIR} ${MCP_RESPONSE_DIR} ${LSP_REQUEST_DIR} ${LSP_RESPONSE_DIR}`,
     );
-    const files = await this.wrapperGenerator.generate();
+    const files = await this.wrapperGenerator.generate(ide);
     for (const file of files) {
       await sandbox.files.write(file.path, file.content);
     }
@@ -185,7 +199,56 @@ globalThis.__mcp_invoke = async function invokeMCP(
   }
 };
 
-"mcp bridge ready";`;
+// LSP Bridge
+const LSP_REQUEST_DIR = ${JSON.stringify(LSP_REQUEST_DIR)};
+const LSP_RESPONSE_DIR = ${JSON.stringify(LSP_RESPONSE_DIR)};
+
+globalThis.__lsp_invoke = async function invokeLSP(
+  toolName: string,
+  args: Record<string, unknown> = {},
+) {
+  const requestId = randomUUID();
+  const fileName = requestId + ".json";
+  const requestPath = ${JSON.stringify(`${LSP_REQUEST_DIR}/`)} + fileName;
+  const responsePath = ${JSON.stringify(`${LSP_RESPONSE_DIR}/`)} + fileName;
+
+  await fs.mkdir(LSP_REQUEST_DIR, { recursive: true });
+  await fs.mkdir(LSP_RESPONSE_DIR, { recursive: true });
+  await fs.writeFile(
+    requestPath,
+    JSON.stringify({ id: requestId, toolName, args }),
+    "utf-8",
+  );
+
+  const start = Date.now();
+  while (true) {
+    try {
+      const raw = await fs.readFile(responsePath, "utf-8");
+      await fs.rm(requestPath, { force: true }).catch(() => {});
+      await fs.rm(responsePath, { force: true }).catch(() => {});
+      const parsed = JSON.parse(raw);
+      if (parsed.success) {
+        return parsed.result;
+      }
+      const err = new Error(parsed.error?.message || "LSP invocation failed");
+      if (parsed.error?.type) {
+        err.name = parsed.error.type;
+      }
+      throw err;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code === "ENOENT") {
+        if (Date.now() - start > ${LSP_RESPONSE_TIMEOUT_MS}) {
+          throw new Error("Timed out waiting for LSP response");
+        }
+        await wait(100);
+        continue;
+      }
+      throw err;
+    }
+  }
+};
+
+"mcp and lsp bridges ready";`;
   }
 
   private async cleanupIdleSessions() {
@@ -353,11 +416,148 @@ type McpInvocationResponse =
       };
     };
 
+type LspInvocationRequest = {
+  id: string;
+  toolName: string;
+  args: Record<string, unknown>;
+};
+
+type LspInvocationResponse =
+  | { success: true; result: unknown }
+  | {
+      success: false;
+      error: {
+        message: string;
+        type?: string;
+      };
+    };
+
+class LspRequestMonitor {
+  private stopped = false;
+  private loopPromise: Promise<void> | null = null;
+  private lspBridge: LspMcpBridge;
+
+  constructor(
+    private readonly sandbox: Sandbox,
+    ide: IDE,
+  ) {
+    this.lspBridge = new LspMcpBridge(ide);
+  }
+
+  start() {
+    if (this.loopPromise) {
+      return;
+    }
+    this.stopped = false;
+    this.loopPromise = this.loop();
+  }
+
+  async stop() {
+    this.stopped = true;
+    if (this.loopPromise) {
+      try {
+        await this.loopPromise;
+      } catch {
+        // ignore
+      }
+      this.loopPromise = null;
+    }
+  }
+
+  private async loop() {
+    while (!this.stopped) {
+      try {
+        await this.processOnce();
+      } catch {
+        // ignore
+      }
+      await delay(LSP_POLL_INTERVAL_MS);
+    }
+  }
+
+  private async processOnce() {
+    let entries;
+    try {
+      entries = await this.sandbox.files.list(LSP_REQUEST_DIR);
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (entry.type !== "file") {
+        continue;
+      }
+      await this.handleRequest(entry.path);
+    }
+  }
+
+  private async handleRequest(requestPath: string) {
+    const fileName = path.posix.basename(requestPath);
+    const responsePath = path.posix.join(LSP_RESPONSE_DIR, fileName);
+    let payload: LspInvocationRequest | undefined;
+    try {
+      const raw = await this.sandbox.files.read(requestPath);
+      payload = JSON.parse(raw) as LspInvocationRequest;
+    } catch (err) {
+      await this.writeResponse(responsePath, {
+        success: false,
+        error: {
+          message: `Failed to parse LSP request: ${(err as Error).message}`,
+          type: "ParseError",
+        },
+      });
+      await this.sandbox.files.remove(requestPath).catch(() => {});
+      return;
+    }
+
+    const response = await this.invokeTool(payload);
+    await this.writeResponse(responsePath, response);
+    await this.sandbox.files.remove(requestPath).catch(() => {});
+  }
+
+  private async invokeTool(
+    payload: LspInvocationRequest,
+  ): Promise<LspInvocationResponse> {
+    try {
+      const result = await this.lspBridge.callTool(
+        payload.toolName,
+        payload.args as Record<string, any>,
+      );
+      return {
+        success: true,
+        result,
+      };
+    } catch (err) {
+      const error = err as Error;
+      return {
+        success: false,
+        error: {
+          message: error.message || "LSP invocation failed",
+          type: error.name || "LspToolError",
+        },
+      };
+    }
+  }
+
+  private async writeResponse(
+    responsePath: string,
+    response: LspInvocationResponse,
+  ) {
+    await this.sandbox.files.write(responsePath, JSON.stringify(response));
+  }
+}
+
 class McpWrapperGenerator {
-  async generate() {
+  async generate(ide: IDE) {
     const files: { path: string; content: string }[] = [];
     const serverExports: string[] = [];
     const usedSlugs = new Set<string>();
+
+    // Add LSP as built-in virtual MCP server FIRST
+    const lspFiles = this.generateLspWrappers();
+    files.push(...lspFiles);
+    serverExports.push(`export * as lsp from "./lsp/index.js";`);
+
     const manager = MCPManagerSingleton.getInstance();
     const statuses = manager.getStatuses();
 
@@ -415,6 +615,42 @@ export async function ${tool.name}(
     files.push({
       path: `/mcp/index.ts`,
       content: serverExports.length ? serverExports.join("\n") : "export {};\n",
+    });
+
+    return files;
+  }
+
+  private generateLspWrappers(): { path: string; content: string }[] {
+    const files: { path: string; content: string }[] = [];
+    const toolExports: string[] = [];
+
+    for (const tool of LSP_TOOLS) {
+      const filePath = `/mcp/lsp/${tool.name}.ts`;
+      const typeName = `${this.pascalCase(tool.name)}Args`;
+      const typeDefinition = this.schemaToType(tool.inputSchema as JSONSchema7);
+
+      const fileContent = `type ${typeName} = ${typeDefinition};
+
+export async function ${tool.name}(
+  params: ${typeName},
+) {
+  if (!globalThis.__lsp_invoke) {
+    throw new Error("LSP is not available in this environment");
+  }
+  return await globalThis.__lsp_invoke(
+    ${JSON.stringify(tool.name)},
+    params,
+  );
+}
+`;
+      files.push({ path: filePath, content: fileContent });
+      toolExports.push(`export * from "./${tool.name}.js";`);
+    }
+
+    // Create lsp/index.ts
+    files.push({
+      path: "/mcp/lsp/index.ts",
+      content: toolExports.join("\n"),
     });
 
     return files;
@@ -549,6 +785,7 @@ export const executeCodeImpl: ToolImpl = async (args, extras) => {
     apiKey,
     requestTimeoutMs,
     config.sessionTimeoutMinutes,
+    extras.ide,
   );
 
   executeCodePolicy.registerExecutionAttempt(
