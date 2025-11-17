@@ -30,7 +30,7 @@ export class AuthService extends BaseService<AuthServiceState> {
    */
   async doInitialize(): Promise<AuthServiceState> {
     const authConfig = loadAuthConfig();
-    const authenticated = isAuthenticated();
+    const authenticated = await isAuthenticated();
 
     const state: AuthServiceState = {
       authConfig,

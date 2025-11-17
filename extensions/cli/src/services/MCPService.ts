@@ -12,9 +12,11 @@ import {
   StdioMcpServer,
 } from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
+import { get } from "../util/apiClient.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
+import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -50,9 +52,11 @@ export class MCPService
   private connections: Map<string, ServerConnection> = new Map();
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
+  private isHeadless: boolean | undefined;
+  private mcpTokenCache: Map<string, string> = new Map();
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH];
   }
   constructor() {
     super("MCPService", {
@@ -73,6 +77,8 @@ export class MCPService
     hasAgentFile: boolean,
     isHeadless: boolean | undefined,
   ): Promise<MCPServiceState> {
+    this.isHeadless = isHeadless;
+
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
       serverCount: assistant.mcpServers?.length || 0,
@@ -179,6 +185,115 @@ export class MCPService
   }
 
   /**
+   * Generic wrapper for client operations that handles 401 errors with token refresh
+   * Only applies to SSE/HTTP connections, not stdio
+   */
+  private async withTokenRefresh<T>(
+    serverName: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const connection = this.connections.get(serverName);
+    if (!connection) {
+      throw new Error(`Connection ${serverName} not found`);
+    }
+
+    const serverConfig = connection.config;
+    if (!serverConfig || "command" in serverConfig) {
+      // For stdio connections, just execute normally (no token refresh possible)
+      return await operation();
+    }
+
+    try {
+      // Try the operation first
+      return await operation();
+    } catch (error: unknown) {
+      // If not a 401 error, rethrow
+      if (!is401Error(error)) {
+        throw error;
+      }
+
+      logger.debug("Got 401 error on MCP operation, attempting token refresh", {
+        name: serverName,
+      });
+
+      // Check if user is signed in
+      const isAuthed = await isAuthenticated();
+      if (!isAuthed) {
+        logger.debug("User not signed in, cannot refresh OAuth token", {
+          name: serverName,
+        });
+        throw error;
+      }
+
+      const authConfig = loadAuthConfig();
+
+      // Clear cached token since it's invalid
+      this.mcpTokenCache.delete(serverName);
+
+      // Fetch OAuth token from backend
+      const identifier = serverConfig.name;
+      const organizationSlug = authConfig?.organizationId;
+
+      let token: string | null = null;
+      try {
+        const params = new URLSearchParams({ identifier });
+        if (organizationSlug) {
+          params.set("organizationSlug", organizationSlug);
+        }
+
+        logger.debug("Fetching OAuth token for MCP server on 401", {
+          name: serverName,
+          identifier,
+          organizationSlug,
+        });
+
+        const response = await get<{
+          configured: boolean;
+          hasCredentials: boolean;
+          accessToken?: string;
+          expiresAt?: string;
+          expired?: boolean;
+        }>(`/ide/mcp-auth?${params.toString()}`);
+
+        if (response.data.hasCredentials && response.data.accessToken) {
+          token = response.data.accessToken;
+          this.mcpTokenCache.set(serverName, token);
+          logger.debug("Successfully retrieved OAuth token for MCP server", {
+            name: serverName,
+          });
+        } else {
+          logger.debug("No OAuth token available for MCP server", {
+            name: serverName,
+            configured: response.data.configured,
+            hasCredentials: response.data.hasCredentials,
+            expired: response.data.expired,
+          });
+        }
+      } catch (fetchError) {
+        logger.debug("Error fetching OAuth token for MCP server", {
+          name: serverName,
+          error: getErrorString(fetchError),
+        });
+      }
+
+      if (!token) {
+        logger.debug("No OAuth token available for refresh", {
+          name: serverName,
+        });
+        throw error;
+      }
+
+      // Update the server config with new token and retry
+      serverConfig.apiKey = token;
+      logger.debug("Retrying operation with refreshed OAuth token", {
+        name: serverName,
+      });
+
+      return await operation();
+    }
+  }
+
+  /**
    * Run a tool by name
    */
   public async runTool(name: string, args: Record<string, any>) {
@@ -186,9 +301,16 @@ export class MCPService
       if (connection.status === "connected" && connection.client) {
         const tool = connection.tools.find((t) => t.name === name);
         if (tool) {
-          return await connection.client.callTool({
-            name,
-            arguments: args,
+          const serverName = connection.config!.name;
+          return await this.withTokenRefresh(serverName, async () => {
+            const conn = this.connections.get(serverName);
+            if (!conn?.client) {
+              throw new Error(`Client for ${serverName} not available`);
+            }
+            return await conn.client.callTool({
+              name,
+              arguments: args,
+            });
           });
         }
       }
@@ -262,7 +384,16 @@ export class MCPService
 
       if (capabilities?.prompts) {
         try {
-          connection.prompts = (await client.listPrompts()).prompts;
+          connection.prompts = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listPrompts()).prompts;
+            },
+          );
           logger.debug("Loaded MCP prompts", {
             name: serverName,
             count: connection.prompts.length,
@@ -279,7 +410,16 @@ export class MCPService
 
       if (capabilities?.tools) {
         try {
-          connection.tools = (await client.listTools()).tools;
+          connection.tools = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listTools()).tools;
+            },
+          );
           logger.debug("Loaded MCP tools", {
             name: serverName,
             count: connection.tools.length,
@@ -403,16 +543,21 @@ export class MCPService
       });
 
       try {
-        if (serverConfig.type === "sse") {
-          const transport = this.constructSseTransport(serverConfig);
-          await client.connect(transport, {});
-        } else if (serverConfig.type === "streamable-http") {
-          const transport = this.constructHttpTransport(serverConfig);
-          await client.connect(transport, {});
-        }
+        await this.withTokenRefresh(serverConfig.name, async () => {
+          if (serverConfig.type === "sse") {
+            const transport = this.constructSseTransport(serverConfig);
+            await client.connect(transport, {});
+          } else if (serverConfig.type === "streamable-http") {
+            const transport = this.constructHttpTransport(serverConfig);
+            await client.connect(transport, {});
+          }
+        });
       } catch (error: unknown) {
-        // on authorization error, use "mcp-remote" with stdio transport to connect
-        if (is401Error(error)) {
+        // If token refresh didn't work and it's a 401, fall back to mcp-remote
+        if (is401Error(error) && !this.isHeadless) {
+          logger.debug("Falling back to mcp-remote after 401 error", {
+            name: serverConfig.name,
+          });
           const transport = this.constructStdioTransport(
             {
               name: serverConfig.name,
@@ -428,22 +573,28 @@ export class MCPService
       }
 
       if (typeof serverConfig.type === "undefined") {
+        // Try HTTP first, then SSE
         try {
-          const transport = this.constructHttpTransport(serverConfig);
-          await client.connect(transport, {});
-        } catch {
+          await this.withTokenRefresh(serverConfig.name, async () => {
+            const transport = this.constructHttpTransport(serverConfig);
+            await client.connect(transport, {});
+          });
+        } catch (httpError) {
           logger.debug(
             "MCP Connection: http connection failed, falling back to sse connection",
             {
               name: serverConfig.name,
+              error: getErrorString(httpError),
             },
           );
           try {
-            const transport = this.constructSseTransport(serverConfig);
-            await client.connect(transport, {});
-          } catch (e) {
+            await this.withTokenRefresh(serverConfig.name, async () => {
+              const transport = this.constructSseTransport(serverConfig);
+              await client.connect(transport, {});
+            });
+          } catch (sseError) {
             throw new Error(
-              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
+              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${sseError instanceof Error ? sseError.message : String(sseError)}`,
             );
           }
         }

@@ -115,6 +115,7 @@ import {
   persistModelName,
 } from "../util/modelPersistence.js";
 
+import { logger } from "src/util/logger.js";
 import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
@@ -266,7 +267,7 @@ export function updateLocalConfigPath(localConfigPath: string | null): void {
 /**
  * Checks if the user is authenticated and the token is valid
  */
-export function isAuthenticated(): boolean {
+export async function isAuthenticated(): Promise<boolean> {
   const config = loadAuthConfig();
 
   if (config === null) {
@@ -278,17 +279,14 @@ export function isAuthenticated(): boolean {
     return true;
   }
 
-  /**
-   * THIS CODE DOESN'T WORK.
-   * .catch() will never return in a non-async function.
-   * It's a hallucination.
-   **/
   if (Date.now() > config.expiresAt) {
-    // Try refreshing the token
-    refreshToken(config.refreshToken).catch(() => {
-      // If refresh fails, we're not authenticated
+    try {
+      const refreshed = await refreshToken(config.refreshToken);
+      return isAuthenticatedConfig(refreshed);
+    } catch (e) {
+      logger.error("Failed to refresh auto token");
       return false;
-    });
+    }
   }
 
   return true;
