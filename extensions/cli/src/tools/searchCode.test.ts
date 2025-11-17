@@ -1,3 +1,18 @@
+import * as nodeUtil from "util";
+
+import { vi } from "vitest";
+
+const execMock: any = vi.fn();
+(execMock as any)[(nodeUtil as any).promisify.custom] = (cmd: any) =>
+  new Promise((resolve, reject) => {
+    execMock(cmd, (err: any, stdout: any, stderr: any) => {
+      if (err) reject(err);
+      else resolve({ stdout, stderr });
+    });
+  });
+
+vi.mock("child_process", () => ({ exec: execMock }));
+
 // Since we want to test just the interface and not the internals,
 // let's create a simplified version of the run function to test the truncation logic
 describe("searchCodeTool", () => {
@@ -50,5 +65,31 @@ describe("searchCodeTool", () => {
 
     // Check that we have the expected number of lines (header + 50 content lines)
     expect(nonEmptyLines.length).toBe(51);
+  });
+
+  describe("searchCodeTool line-length filtering", () => {
+    afterEach(() => {
+      vi.clearAllMocks();
+      vi.resetModules();
+    });
+
+    it("filters out lines longer than 1000 characters", async () => {
+      const childProc = await import("child_process");
+      const long = "a".repeat(1001);
+
+      vi.mocked(childProc.exec as any).mockImplementation((...args: any[]) => {
+        // exec callback signature: (error, stdout, stderr)
+        const cb = args[args.length - 1];
+        cb(null, `path/file.ts:1:${long}\npath/file.ts:2:match`, "");
+        return {} as any;
+      });
+
+      const { searchCodeTool } = await import("./searchCode.js");
+      const result = await searchCodeTool.run({ pattern: "match", path: "." });
+
+      expect(result).toContain("path/file.ts:2:match");
+      expect(result).not.toContain(long);
+      expect(result).not.toContain("[Results truncated:");
+    });
   });
 });

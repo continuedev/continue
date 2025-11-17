@@ -95,10 +95,17 @@ class SentryService {
     return this.config.enabled && this.initialized;
   }
 
-  public captureException(error: Error, context?: Record<string, any>) {
+  public captureException(
+    error: Error,
+    context?: Record<string, any>,
+    level?: "info" | "warning" | "error" | "debug" | "fatal",
+  ) {
     if (!this.isEnabled()) return;
 
     Sentry.withScope((scope) => {
+      if (level) {
+        scope.setLevel(level);
+      }
       if (context) {
         Object.entries(context).forEach(([key, value]) => {
           scope.setContext(key, value);
