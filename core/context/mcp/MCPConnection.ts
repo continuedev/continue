@@ -169,7 +169,12 @@ class MCPConnection {
 
     const vars = getTemplateVariables(JSON.stringify(this.options));
     const unrendered = vars.map((v) => {
-      return decodeSecretLocation(v.replace("secrets.", "")).secretName;
+      const stripped = v.replace("secrets.", "");
+      try {
+        return decodeSecretLocation(stripped).secretName;
+      } catch {
+        return stripped;
+      }
     });
 
     if (unrendered.length > 0) {
