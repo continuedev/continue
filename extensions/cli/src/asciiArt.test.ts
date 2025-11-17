@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { CONTINUE_ASCII_ART, getDisplayableAsciiArt } from "./asciiArt.js";
+import { CODE_MODE_ASCII_ART, getDisplayableAsciiArt } from "./asciiArt.js";
 
 describe("asciiArt", () => {
   let originalColumns: number | undefined;
@@ -24,10 +24,10 @@ describe("asciiArt", () => {
 
       const result = getDisplayableAsciiArt();
 
-      expect(result).toBe(CONTINUE_ASCII_ART);
+      expect(result).toBe(CODE_MODE_ASCII_ART);
     });
 
-    it("should return CN ASCII art version when terminal is too narrow", () => {
+    it("should return CM ASCII art version when terminal is too narrow", () => {
       // Set process.stdout.columns to simulate narrow terminal
       process.stdout.columns = 60;
 
@@ -35,12 +35,12 @@ describe("asciiArt", () => {
 
       expect(result).toContain("██████╗");
 
-      expect(result).not.toBe(CONTINUE_ASCII_ART);
+      expect(result).not.toBe(CODE_MODE_ASCII_ART);
       // Should be much shorter than the full ASCII art
-      expect(result.length).toBeLessThan(CONTINUE_ASCII_ART.length / 2);
+      expect(result.length).toBeLessThan(CODE_MODE_ASCII_ART.length / 2);
     });
 
-    it("should return CN ASCII art version when terminal is below threshold", () => {
+    it("should return CM ASCII art version when terminal is below threshold", () => {
       // Test the edge case at exactly 74 columns (below our threshold of 75)
       process.stdout.columns = 74;
 
@@ -48,7 +48,7 @@ describe("asciiArt", () => {
 
       expect(result).toContain("██████╗");
 
-      expect(result).not.toBe(CONTINUE_ASCII_ART);
+      expect(result).not.toBe(CODE_MODE_ASCII_ART);
     });
 
     it("should return full ASCII art when terminal is exactly at threshold", () => {
@@ -57,7 +57,7 @@ describe("asciiArt", () => {
 
       const result = getDisplayableAsciiArt();
 
-      expect(result).toBe(CONTINUE_ASCII_ART);
+      expect(result).toBe(CODE_MODE_ASCII_ART);
     });
 
     it("should default to full ASCII art when columns is undefined", () => {
@@ -66,7 +66,7 @@ describe("asciiArt", () => {
 
       const result = getDisplayableAsciiArt();
 
-      expect(result).toBe(CONTINUE_ASCII_ART);
+      expect(result).toBe(CODE_MODE_ASCII_ART);
     });
   });
 });
