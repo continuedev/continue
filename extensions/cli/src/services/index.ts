@@ -23,6 +23,7 @@ import {
   ApiClientServiceState,
   AuthServiceState,
   ConfigServiceState,
+  MCPServiceState,
   SERVICE_NAMES,
   ServiceInitOptions,
 } from "./types.js";
@@ -114,7 +115,7 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     SERVICE_NAMES.TOOL_PERMISSIONS,
     async () => {
       const [mcpState, agentFileState] = await Promise.all([
-        serviceContainer.get<AuthServiceState>(SERVICE_NAMES.MCP),
+        serviceContainer.get<MCPServiceState>(SERVICE_NAMES.MCP),
         serviceContainer.get<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
       ]);
 
@@ -264,7 +265,8 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       }
       return mcpService.initialize(
         configState.config,
-        initOptions.headless || initOptions.options?.agent,
+        !!initOptions.options?.agent,
+        initOptions.headless,
       );
     },
     [SERVICE_NAMES.CONFIG], // Depends on config
