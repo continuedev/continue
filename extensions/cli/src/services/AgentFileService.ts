@@ -1,11 +1,16 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import {
   AgentFile,
   parseAgentFile,
   parseAgentFileRules,
   parseAgentFileTools,
 } from "@continuedev/config-yaml";
-import fs from "fs";
-import path from "path";
+
+import { getErrorString } from "src/util/error.js";
+
 import {
   agentFileProcessor,
   loadModelFromHub,
@@ -13,8 +18,6 @@ import {
 } from "../hubLoader.js";
 import { logger } from "../util/logger.js";
 
-import { getErrorString } from "src/util/error.js";
-import { fileURLToPath } from "url";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -57,7 +60,7 @@ export class AgentFileService
           return await loadPackageFromHub(agentPath, agentFileProcessor);
         } catch (e) {
           logger.info(
-            `Failed to load agent file from slug-like path: ${agentPath}`,
+            `Failed to load agent file from slug-like path ${agentPath}: ${getErrorString(e)}`,
           );
           // slug COULD be path, fall back to relative path
         }
