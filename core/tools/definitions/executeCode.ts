@@ -32,8 +32,9 @@ export const executeCodeTool: GetTool = ({ codeExecutionConfig }) => {
           language: {
             type: "string",
             description:
-              'Optional language override. Accepted values: "typescript" (default) or "javascript".',
+              'Optional language override. Accepted values: "typescript" (default) or "javascript". Default: "typescript".',
             enum: ["typescript", "ts", "javascript", "js"],
+            default: "typescript",
           },
         },
       },

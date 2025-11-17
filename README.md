@@ -1,4 +1,3 @@
-
 # Code Mode: 98% Token Reduction for AI Agent Workflows
 
 **Created by [Connor Belez](https://github.com/Connorbelez)** | Built on [Continue.dev](https://continue.dev)
@@ -26,8 +25,156 @@ Code Mode is an experimental enhancement to Continue.dev that introduces a novel
 
 Traditional MCP tool calling burns massive context on multi-step workflows:
 
+---
+
+## Code Mode: Execute TypeScript to Call MCP Tools
+
+Continue introduces **Code Mode**—a revolutionary approach to AI tool calling that replaces verbose JSON schemas with **actual TypeScript code execution**.
+
+### Why This Matters
+
+**Traditional JSON Tool Calling:**
+
+- Tool schemas consume 2,000-4,000 tokens per request
+- Each tool call requires a separate round-trip to the LLM
+- No composition (can't loop, use conditionals, or maintain state)
+- Hard to debug (no stack traces, no type checking)
+
+**Code Mode:**
+
+- **75-85% fewer tokens** (schemas loaded on-demand, not in every request)
+- **Single execution** for multi-step workflows (no round-trips)
+- **Real composition** (loops, async/await, error handling, variables)
+- **Superior DX** (autocomplete, type checking, debugging tools)
+
+### How It Works
+
+Instead of generating JSON like this:
+
+```json
+{
+  "toolCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "github_create_issue",
+        "arguments": "{\"owner\": \"myorg\", \"repo\": \"myrepo\", \"title\": \"Bug\"}"
+      }
+    }
+  ]
+}
 ```
-Task: "Update priority labels on 50 GitHub issues"
+
+Your agent writes and executes real TypeScript:
+
+```typescript
+import { github } from "/mcp";
+
+await github.createIssue({
+  owner: "myorg",
+  repo: "myrepo",
+  title: "Bug",
+  body: "...",
+});
+```
+
+### Quick Start
+
+1. **Get an E2B API key** (free tier available): [e2b.dev](https://e2b.dev)
+
+2. **Enable Code Mode** in your `.continue/config.yaml`:
+
+```yaml
+experimental:
+  codeExecution:
+    enabled: true
+    e2bApiKey: "your-e2b-api-key"
+
+# Configure MCP servers (plug-and-play!)
+mcpServers:
+  github:
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+    env:
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+```
+
+3. **Use it!** Ask your agent to perform multi-step tasks:
+
+> "Find all open bugs labeled 'priority:high' and create a summary report"
+
+The agent will write:
+
+```typescript
+import { github } from "/mcp";
+
+const issues = await github.listIssues({ state: "open" });
+const bugs = issues.filter((i) => i.labels.some((l) => l.name === "bug"));
+const highPriority = bugs.filter((i) =>
+  i.labels.some((l) => l.name === "priority:high"),
+);
+
+console.log(`Found ${highPriority.length} high-priority bugs`);
+return { bugs: highPriority };
+```
+
+**Plug-and-play with any MCP server** — no code changes needed. Popular servers:
+
+- [`@modelcontextprotocol/server-github`](https://github.com/modelcontextprotocol/servers/tree/main/src/github) - GitHub API
+- [`@modelcontextprotocol/server-filesystem`](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) - File operations
+- [`@modelcontextprotocol/server-google-drive`](https://github.com/modelcontextprotocol/servers/tree/main/src/gdrive) - Google Drive
+- [And many more...](https://github.com/modelcontextprotocol/servers)
+
+### Built-in LSP Integration
+
+Code Mode includes **Language Server Protocol (LSP)** support out-of-the-box for semantic code navigation:
+
+```typescript
+import { lsp } from "/mcp";
+
+// Get function definition with contents
+const def = await lsp.getDefinition({
+  filepath: "/workspace/src/app.ts",
+  line: 42,
+  character: 10,
+});
+
+// Find all references across workspace
+const refs = await lsp.findReferences({
+  filepath: "/workspace/src/utils.ts",
+  line: 15,
+  character: 5,
+});
+
+// Get type information
+const hover = await lsp.getHover({
+  filepath: "/workspace/src/types.ts",
+  line: 8,
+  character: 12,
+});
+
+// Get errors/warnings
+const diagnostics = await lsp.getDiagnostics({
+  filepath: "/workspace/src/app.ts",
+});
+```
+
+**Available LSP Operations:**
+
+- `getDefinition` - Jump to symbol definitions
+- `findReferences` - Find all symbol usages
+- `getHover` - Get type info and docs
+- `getDiagnostics` - Get compiler errors/warnings
+- `getDocumentSymbols` - List all symbols in file
+- `getWorkspaceSymbols` - Search symbols workspace-wide
+
+**Token Savings:** Instead of reading entire files to find definitions or references, LSP gives you precise locations — typically **95%+ token reduction** for code navigation tasks.
+
+**[Read the full Code Mode documentation →](docs/features/code-mode-readme.md)**
+
+---
+
+## Cloud Agents
 
 Traditional Tool Calling:
 ├─ Round 1: List issues → 20,000 tokens (schemas + results)
@@ -40,7 +187,8 @@ Problems:
 ❌ Full tool schemas sent in every request
 ❌ Results accumulate in context
 ❌ No way to compose, filter, or parallelize
-```
+
+````
 
 ## ✨ The Solution
 
@@ -62,7 +210,7 @@ await Promise.all(
 );
 
 return `Updated ${bugs.length} issues`;
-```
+````
 
 ```
 Code Mode:
@@ -81,12 +229,12 @@ Benefits:
 
 ## 📊 Benchmarks: Real Token Savings
 
-| Workflow | Traditional Tokens | Code Mode Tokens | Reduction | Traditional Cost | Code Mode Cost | Savings |
-|----------|-------------------|------------------|-----------|------------------|----------------|---------|
-| **GitHub: Update 50 issues** | 450,000 | 8,000 | **98.2%** | $0.90 | $0.016 | **98.2%** |
-| **Filesystem: Process 100 files** | 380,000 | 6,500 | **98.3%** | $0.76 | $0.013 | **98.3%** |
-| **Multi-tool: Search + Analyze** | 180,000 | 5,200 | **97.1%** | $0.36 | $0.010 | **97.2%** |
-| **Data Pipeline: Filter + Transform** | 220,000 | 4,800 | **97.8%** | $0.44 | $0.010 | **97.7%** |
+| Workflow                              | Traditional Tokens | Code Mode Tokens | Reduction | Traditional Cost | Code Mode Cost | Savings   |
+| ------------------------------------- | ------------------ | ---------------- | --------- | ---------------- | -------------- | --------- |
+| **GitHub: Update 50 issues**          | 450,000            | 8,000            | **98.2%** | $0.90            | $0.016         | **98.2%** |
+| **Filesystem: Process 100 files**     | 380,000            | 6,500            | **98.3%** | $0.76            | $0.013         | **98.3%** |
+| **Multi-tool: Search + Analyze**      | 180,000            | 5,200            | **97.1%** | $0.36            | $0.010         | **97.2%** |
+| **Data Pipeline: Filter + Transform** | 220,000            | 4,800            | **97.8%** | $0.44            | $0.010         | **97.7%** |
 
 **Methodology:** GPT-4 pricing ($0.002/1K tokens). See [benchmarks/](benchmarks/) for full details.
 
@@ -95,27 +243,30 @@ Benefits:
 ## 🚀 Why This Matters
 
 ### 1. **Massive Token Reduction** (75-98%)
+
 - Tool schemas only loaded when imported (not in every request)
 - Data filtering/processing happens in code
 - Multi-step workflows execute without LLM involvement
 
 ### 2. **True Composability**
+
 Do things impossible with traditional tool calling:
 
 ```typescript
 // Parallel execution
 const results = await Promise.all(
-  repos.map(r => github.listIssues({ repo: r.name }))
+  repos.map((r) => github.listIssues({ repo: r.name })),
 );
 
 // Complex filtering
-const critical = results.flat()
-  .filter(i => i.priority === 'P0' && !i.assignee);
+const critical = results
+  .flat()
+  .filter((i) => i.priority === "P0" && !i.assignee);
 
 // Conditional logic
 for (const issue of critical) {
   if (issue.age > 30) {
-    await github.addLabel({ issue: issue.number, label: 'stale' });
+    await github.addLabel({ issue: issue.number, label: "stale" });
   }
 }
 ```
@@ -123,6 +274,7 @@ for (const issue of critical) {
 **Try doing that with traditional tool calling** → 50+ LLM round-trips
 
 ### 3. **Drop-in Solution**
+
 - Works with ANY MCP server (no modifications)
 - Automatic TypeScript generation from JSON schemas
 - Compatible with all MCP transports (STDIO, SSE, HTTP, WebSocket)
@@ -781,31 +933,41 @@ details;
 See [examples/advanced-composition/](examples/advanced-composition/) for production-ready patterns showing what's possible with Code Mode:
 
 ### 1. **Parallel Batch Operations** ([view code](examples/advanced-composition/01-parallel-batch-operations.ts))
+
 Analyze 5 repos in parallel, filter stale issues, batch-update labels/comments.
+
 - **Traditional:** 350K tokens, 200+ LLM calls
 - **Code Mode:** 6K tokens, single execution
 - **Savings:** 98.3% tokens, 98.3% cost
 
 ### 2. **Multi-Service Orchestration** ([view code](examples/advanced-composition/02-multi-service-orchestration.ts))
+
 GitHub → analysis → filesystem reports → Slack notifications in one flow.
+
 - **Traditional:** 280K tokens across GitHub, Filesystem, Slack
 - **Code Mode:** 7K tokens
 - **Savings:** 97.5%
 
 ### 3. **Data Pipeline with Error Handling** ([view code](examples/advanced-composition/03-data-pipeline-with-error-handling.ts))
+
 Process files with validation, retry logic with exponential backoff, auto-issue creation.
+
 - **Traditional:** Error handling nearly impossible
 - **Code Mode:** Full try-catch, retries, graceful degradation
 - **Savings:** 96.8%
 
 ### 4. **Stateful Caching** ([view code](examples/advanced-composition/04-stateful-caching-workflow.ts))
+
 Intelligent caching using `globalThis` - cache persists across executions in same conversation.
+
 - **First call:** 93.3% reduction
 - **Subsequent calls:** 99.2% reduction (cache hits!)
 - **Overall:** 96.8% across multiple executions
 
 ### 5. **Cross-Repository Analysis** ([view code](examples/advanced-composition/05-complex-cross-repo-analysis.ts))
+
 Analyze dependencies, contributor overlap, code health across multiple repos with advanced algorithms.
+
 - **Traditional:** 450K tokens, 300+ calls
 - **Code Mode:** 6K tokens, parallel execution
 - **Savings:** 98.7% tokens, 8× faster
@@ -1131,16 +1293,20 @@ See the full [white paper](../research/code-mode-white-paper.md) for architectur
 ---
 
 ## Credits & Acknowledgments
-We all stand on the shoulders of giants. 
+
+We all stand on the shoulders of giants.
 
 ### Code Mode Enhancements
+
 **Connor Belez** - Architecture, implementation, and benchmarking
+
 - MCP TypeScript wrapper generation system
 - E2B sandbox integration for secure code execution
 - File-based IPC protocol for MCP tool invocation
 - Benchmark methodology and advanced composition examples
 
 ### Foundation & Inspiration
+
 - **Continue.dev** - Extension framework and infrastructure ([continuedev/continue](https://github.com/continuedev/continue))
 - **Anthropic** - Code execution mode research ([blog post](https://www.anthropic.com/engineering/code-execution-with-mcp))
 - **Cloudflare** - Code Mode articulation by Kenton Varda & Sunil Pai ([blog post](https://blog.cloudflare.com/code-mode/))

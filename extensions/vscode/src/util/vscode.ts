@@ -26,7 +26,7 @@ export function getExtensionUri(): vscode.Uri {
 
   if (!extension) {
     throw new Error(
-      "Continue extension is not registered. Make sure the dev extension is running.",
+      "Continue extension is not registered. Ensure the extension is installed and enabled.",
     );
   }
 

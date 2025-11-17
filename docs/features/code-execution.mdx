@@ -69,7 +69,7 @@ execute_code({ code: string, language?: "typescript" | "javascript" })
 ## Sandbox Behavior
 
 - **Runtime**: Node.js 18+ with TypeScript transpilation
-- **Preinstalled packages**: common utilities from the E2B template (axios, lodash, Node built-ins). Installing new npm packages is blocked for security.
+- **Preinstalled packages**: common utilities from the E2B template (axios, lodash, Node built-ins). The sandbox supports installing npm packages at runtime, and custom templates with preinstalled packages are also supported.
 - **Networking**: outbound HTTP(S) is available, but the sandbox cannot reach your local workspace
 - **Storage**: no access to your project files; use the existing Continue tools if a file needs to be read or edited
 

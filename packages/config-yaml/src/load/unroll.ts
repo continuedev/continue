@@ -23,7 +23,14 @@ import {
   ConfigYaml,
   configYamlSchema,
   Rule,
+  DocsConfig,
+  Prompt,
+  MCPServer,
+  contextSchema,
 } from "../schemas/index.js";
+import { ModelConfig } from "../schemas/models.js";
+import { DataDestination } from "../schemas/data/index.js";
+import * as z from "zod";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 import {
@@ -36,6 +43,38 @@ import {
   getBlockType,
   isArrayBlockType,
 } from "./getBlockType.js";
+
+// Union type for all section block types
+type Context = z.infer<typeof contextSchema>;
+export type SectionBlock =
+  | ModelConfig
+  | Context
+  | DataDestination
+  | MCPServer
+  | Prompt
+  | DocsConfig;
+
+// Type for block wrappers (blocks with "uses" field)
+type BlockWrapper<T> = {
+  uses: unknown; // Can be string, PackageIdentifier, or object with filePath
+  with?: Record<string, string>;
+  override?: Partial<T>;
+};
+
+// Type guard to check if a value is a block wrapper
+function isBlockWrapper(
+  block: SectionBlock | BlockWrapper<SectionBlock>,
+): block is BlockWrapper<SectionBlock> {
+  return typeof block === "object" && block !== null && "uses" in block;
+}
+
+// Type guard to check if uses is a string
+function isUsesString(uses: unknown): uses is string {
+  return typeof uses === "string";
+}
+
+// Type for blocks that can appear in sections (either direct blocks or wrappers)
+type SectionBlockOrWrapper = SectionBlock | BlockWrapper<SectionBlock>;
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
@@ -411,11 +450,16 @@ export async function unrollBlocks(
     }
 
     // Process all blocks in this section in parallel
-    const blockPromises = (assistant[section] as any[]).map(
-      async (unrolledBlock: any, index: number) => {
+    const blockPromises = (assistant[section] as SectionBlockOrWrapper[]).map(
+      async (unrolledBlock: SectionBlockOrWrapper, index: number) => {
         // "uses/with" block
-        if ("uses" in unrolledBlock) {
+        if (isBlockWrapper(unrolledBlock)) {
           try {
+            if (!isUsesString(unrolledBlock.uses)) {
+              throw new Error(
+                `Invalid uses field: expected string, got ${typeof unrolledBlock.uses}`,
+              );
+            }
             const blockIdentifier = decodePackageIdentifier(unrolledBlock.uses);
 
             if (
@@ -442,11 +486,17 @@ export async function unrollBlocks(
               unrolledBlock.with,
               registry,
             );
-            const block = (blockConfigYaml as any)[section]?.[0];
+            const sectionBlocks = blockConfigYaml[section];
+            const block = Array.isArray(sectionBlocks)
+              ? sectionBlocks[0]
+              : null;
             if (block) {
               return {
                 index,
-                block: mergeOverrides(block, unrolledBlock.override ?? {}),
+                block: mergeOverrides(
+                  block as SectionBlock,
+                  unrolledBlock.override ?? {},
+                ),
                 error: null,
               };
             }
@@ -455,9 +505,11 @@ export async function unrollBlocks(
             let msg = "";
             if (
               typeof unrolledBlock.uses !== "string" &&
+              unrolledBlock.uses !== null &&
+              typeof unrolledBlock.uses === "object" &&
               "filePath" in unrolledBlock.uses
             ) {
-              msg = `${(err as Error).message}.\n> ${unrolledBlock.uses.filePath}`;
+              msg = `${(err as Error).message}.\n> ${(unrolledBlock.uses as { filePath: string }).filePath}`;
             } else {
               msg = `${(err as Error).message}.\n> ${JSON.stringify(unrolledBlock.uses)}`;
             }
@@ -473,8 +525,8 @@ export async function unrollBlocks(
             };
           }
         } else {
-          // Normal block
-          return { index, block: unrolledBlock, error: null };
+          // Normal block (not a wrapper, so it's a direct SectionBlock)
+          return { index, block: unrolledBlock as SectionBlock, error: null };
         }
       },
     );
@@ -482,7 +534,7 @@ export async function unrollBlocks(
     const blockResults = await Promise.all(blockPromises);
 
     // Collect errors and maintain order
-    const sectionBlocks: any[] = [];
+    const sectionBlocks: (SectionBlock | null)[] = [];
     const sectionErrors: ConfigValidationError[] = [];
 
     for (const result of blockResults) {
@@ -632,11 +684,15 @@ export async function unrollBlocks(
   // Assign section results
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
-      (unrolledAssistant as any)[sectionResult.section] =
-        sectionResult.blocks.filter(
-          (block: any) =>
-            !detector.isDuplicated(block, sectionResult.section as BlockType),
-        );
+      const filteredBlocks = sectionResult.blocks.filter(
+        (block: SectionBlock | null): block is SectionBlock =>
+          block !== null &&
+          !detector.isDuplicated(block, sectionResult.section as BlockType),
+      );
+      // Type assertion needed because TypeScript can't narrow the union type based on section
+      (unrolledAssistant[sectionResult.section] as
+        | (SectionBlock | null)[]
+        | undefined) = filteredBlocks;
     }
   }
 
