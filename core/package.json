@@ -1,7 +1,7 @@
 {
-  "name": "@continuedev/core",
+  "name": "@connorbelez/code-mode-core",
   "version": "1.1.0",
-  "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
+  "description": "Code Mode: 98% token reduction for AI agents via MCP code execution. Built on Continue.dev framework.",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "vitest": "vitest run",
@@ -14,8 +14,13 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org continue-xd --project continue ./dist && sentry-cli sourcemaps upload --org continue-xd --project continue ./dist"
   },
   "type": "module",
-  "author": "Continue Dev, Inc",
+  "author": "Connor Belez (Code Mode enhancements), Continue Dev, Inc (Continue.dev framework)",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Connorbelez/codeMode"
+  },
+  "homepage": "https://github.com/Connorbelez/codeMode",
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",

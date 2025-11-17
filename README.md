@@ -1,12 +1,24 @@
 
 # Code Mode: 98% Token Reduction for AI Agent Workflows
 
+**Created by [Connor Belez](https://github.com/Connorbelez)** | Built on [Continue.dev](https://continue.dev)
+
 > **Reduce AI agent token usage by up to 98%** while unlocking true composability for MCP tool calls.
 > **Works with any MCP server out of the box.** Zero modifications needed.
 
 <p align="center">
   <strong>Same workflows. 50x fewer tokens. 50x lower costs.</strong>
 </p>
+
+---
+
+## About
+
+Code Mode is an experimental enhancement to Continue.dev that introduces a novel approach to AI tool calling. Instead of verbose JSON schemas sent with every request, agents write and execute **TypeScript code in secure sandboxes**, enabling massive token reduction and true workflow composability.
+
+**Author:** Connor Belez
+**Based on:** [Continue.dev](https://continue.dev) (Apache 2.0)
+**Status:** Independent fork with production-ready MCP implementation
 
 ---
 
@@ -1118,60 +1130,68 @@ See the full [white paper](../research/code-mode-white-paper.md) for architectur
 
 ---
 
-## Credits
+## Credits & Acknowledgments
 
-Code Mode builds on pioneering work by:
+**Code Mode** is built on pioneering work by:
 
-- **Anthropic** - Code execution mode research ([link](https://www.anthropic.com/engineering/code-execution-with-mcp))
-- **Cloudflare** (Kenton Varda, Sunil Pai) - Code Mode articulation ([blog post](https://blog.cloudflare.com/code-mode/))
+### Code Mode Enhancements
+**Connor Belez** - Architecture, implementation, and benchmarking
+- MCP TypeScript wrapper generation system
+- E2B sandbox integration for secure code execution
+- File-based IPC protocol for MCP tool invocation
+- Benchmark methodology and advanced composition examples
 
-Continue's contribution is the production implementation for MCP tools and the proposed architecture for extending to all development tools.
+### Foundation & Inspiration
+- **Continue.dev** - Extension framework and infrastructure ([continuedev/continue](https://github.com/continuedev/continue))
+- **Anthropic** - Code execution mode research ([blog post](https://www.anthropic.com/engineering/code-execution-with-mcp))
+- **Cloudflare** - Code Mode articulation by Kenton Varda & Sunil Pai ([blog post](https://blog.cloudflare.com/code-mode/))
+- **Model Context Protocol** - Standard protocol for tool integration ([MCP](https://modelcontextprotocol.io))
+- **E2B** - Secure code sandboxing infrastructure ([e2b.dev](https://e2b.dev))
 
 ---
 
 ## Resources
 
-- **Documentation:** [docs.continue.dev](https://docs.continue.dev)
-- **White Paper:** [Code Mode Architecture](../research/code-mode-white-paper.md)
-- **Blog Post:** [Building in Public](../blog/building-code-mode-in-public.md)
+- **Code Mode Repository:** [github.com/Connorbelez/codeMode](https://github.com/Connorbelez/codeMode)
+- **Continue.dev:** [continue.dev](https://continue.dev)
 - **MCP Servers:** [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)
-- **E2B Docs:** [e2b.dev/docs](https://e2b.dev/docs)
-- **Discord:** [discord.gg/vapESyrFmJ](https://discord.gg/vapESyrFmJ)
-- **GitHub:** [github.com/continuedev/continue](https://github.com/continuedev/continue)
+- **E2B Documentation:** [e2b.dev/docs](https://e2b.dev/docs)
+- **Continue Discord:** [discord.gg/vapESyrFmJ](https://discord.gg/vapESyrFmJ)
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](../../LICENSE) for details.
+**Code Mode** © 2024 Connor Belez
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ---
 
-## Cloud Agents
+### Third-Party Licenses
 
-Set workflows to run automatically on [PR opens](https://docs.continue.dev/guides/continuous-ai#pattern-2-the-pr-review-agent), [schedules](https://docs.continue.dev/guides/continuous-ai#pattern-1-the-async-triage-bot), or [any event trigger](https://docs.continue.dev/cli/quick-start#headless-mode)
+This project builds upon and includes code from:
 
-![Cloud Agents](docs/images/background-agent.gif)
+**Continue.dev Framework**
+Copyright © 2023-2024 Continue Dev, Inc.
+Licensed under the Apache License, Version 2.0
 
-## CLI Agents
+See [ATTRIBUTION.md](ATTRIBUTION.md) for complete third-party license information.
 
-Watch workflows execute in real-time and approve decisions step-by-step from your [terminal](https://docs.continue.dev/cli/quick-start#tui-mode)
-
-![CLI Agents](docs/images/cli-agent.gif)
-
-## IDE Agents
-
-Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—let agents handle the refactoring while you keep coding
-
-![IDE Agents](docs/images/agent.gif)
-
-</div>
+---
 
 ## Contributing
 
-Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
-join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
-
-[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
+For questions or discussions, open an issue on [GitHub](https://github.com/Connorbelez/codeMode/issues).
