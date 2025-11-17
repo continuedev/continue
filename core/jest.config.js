@@ -16,6 +16,9 @@ export default {
     ],
   },
   moduleNameMapper: {
+    "^\\.\\./\\.\\./\\.\\./extensions/vscode/src/autocomplete/lsp\\.js$":
+      "<rootDir>/__mocks__/extensions/vscode/src/autocomplete/lsp.ts",
+    "^vscode$": "<rootDir>/__mocks__/vscode.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
     "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",

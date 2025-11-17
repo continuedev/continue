@@ -85,9 +85,15 @@ class ExecuteCodePolicyManager {
     );
 
     if (recentExecutions.length >= maxExecutionsPerMinute) {
+      // Find the oldest timestamp in recentExecutions
+      const oldestTimestamp = Math.min(...recentExecutions);
+      // Calculate seconds until the limit resets (oldest timestamp + 60 seconds)
+      const resetTime = oldestTimestamp + 60_000;
+      const secondsUntilReset = Math.ceil((resetTime - now) / 1000);
+
       throw new ContinueError(
         ContinueErrorReason.Unspecified,
-        `Code execution rate limit exceeded. A maximum of ${maxExecutionsPerMinute} executions per minute are allowed per conversation.`,
+        `Code execution rate limit exceeded. A maximum of ${maxExecutionsPerMinute} executions per minute are allowed per conversation. Try again in ${secondsUntilReset} seconds.`,
       );
     }
 
