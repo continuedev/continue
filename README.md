@@ -1131,8 +1131,7 @@ See the full [white paper](../research/code-mode-white-paper.md) for architectur
 ---
 
 ## Credits & Acknowledgments
-
-**Code Mode** is built on pioneering work by:
+We all stand on the shoulders of giants. 
 
 ### Code Mode Enhancements
 **Connor Belez** - Architecture, implementation, and benchmarking
