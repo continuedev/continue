@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ConfigYaml } from "../schemas/index.js";
 
-export const BLOCK_TYPES = [
+const arrayBlockTypes = [
   "models",
   "context",
   "data",
@@ -10,8 +10,19 @@ export const BLOCK_TYPES = [
   "prompts",
   "docs",
 ] as const;
+
+export const ARRAY_BLOCK_TYPES = arrayBlockTypes;
+export type ArrayBlockType = (typeof ARRAY_BLOCK_TYPES)[number];
+
+export const BLOCK_TYPES = [...ARRAY_BLOCK_TYPES, "experimental"] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 export const blockTypeSchema = z.enum(BLOCK_TYPES);
+
+export function isArrayBlockType(
+  blockType: BlockType,
+): blockType is ArrayBlockType {
+  return blockType !== "experimental";
+}
 
 export function getBlockType(block: ConfigYaml): BlockType | undefined {
   if (block.context?.length) {
@@ -28,6 +39,8 @@ export function getBlockType(block: ConfigYaml): BlockType | undefined {
     return "rules";
   } else if (block.prompts?.length) {
     return "prompts";
+  } else if (block.experimental) {
+    return "experimental";
   } else {
     return undefined;
   }

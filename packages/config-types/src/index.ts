@@ -135,6 +135,49 @@ export const uiOptionsSchema = z.object({
 });
 export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
+const codeExecutionRateLimitSchema = z.object({
+  maxExecutionsPerMinute: z.number().int().min(1).max(120),
+});
+export type CodeExecutionRateLimit = z.infer<
+  typeof codeExecutionRateLimitSchema
+>;
+
+const codeExecutionConfigSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    e2bApiKey: z.string().optional(),
+    sessionTimeoutMinutes: z.number().int().min(5).max(240).optional(),
+    maxExecutionTimeSeconds: z.number().int().min(1).max(300).optional(),
+    requestTimeoutSeconds: z.number().int().min(5).max(600).optional(),
+    maxOutputSizeChars: z.number().int().min(100).max(1_000_000).optional(),
+    rateLimit: codeExecutionRateLimitSchema.optional(),
+    requireFirstUseConfirmation: z.boolean().optional(),
+  })
+  .refine(
+    (val) => {
+      if (
+        val.requestTimeoutSeconds === undefined ||
+        val.maxExecutionTimeSeconds === undefined
+      ) {
+        return true;
+      }
+      return val.requestTimeoutSeconds > val.maxExecutionTimeSeconds;
+    },
+    {
+      message:
+        "requestTimeoutSeconds must be greater than maxExecutionTimeSeconds",
+      path: ["requestTimeoutSeconds"],
+    },
+  );
+export type CodeExecutionConfig = z.infer<typeof codeExecutionConfigSchema>;
+
+const experimentalConfigSchema = z
+  .object({
+    codeExecution: codeExecutionConfigSchema.optional(),
+  })
+  .passthrough();
+export type ExperimentalConfig = z.infer<typeof experimentalConfigSchema>;
+
 export const tabAutocompleteOptionsSchema = z.object({
   disable: z.boolean(),
   maxPromptTokens: z.number(),
@@ -247,5 +290,7 @@ export const configJsonSchema = z.object({
   ui: uiOptionsSchema.optional(),
   docs: z.array(siteIndexingConfigSchema).optional(),
   controlPlane: controlPlaneConfigSchema.optional(),
+  experimental: experimentalConfigSchema.optional(),
+  codeExecution: codeExecutionConfigSchema.optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

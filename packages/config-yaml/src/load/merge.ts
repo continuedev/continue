@@ -1,4 +1,4 @@
-import { BLOCK_TYPES, RequestOptions } from "../browser.js";
+import { ARRAY_BLOCK_TYPES, RequestOptions } from "../browser.js";
 import { AssistantUnrolled, ConfigYaml } from "../schemas/index.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 
@@ -20,6 +20,10 @@ export function mergePackages(
       current.requestOptions,
       incoming.requestOptions,
     ),
+    experimental: mergeExperimentalConfigs(
+      current.experimental,
+      incoming.experimental,
+    ),
   };
 }
 
@@ -37,7 +41,7 @@ export function mergeUnrolledAssistants(
   };
 
   const duplicationDetector = new BlockDuplicationDetector();
-  for (const blockType of BLOCK_TYPES) {
+  for (const blockType of ARRAY_BLOCK_TYPES) {
     const allOfType = [
       ...(incoming[blockType] ?? []),
       ...(current[blockType] ?? []),
@@ -54,6 +58,11 @@ export function mergeUnrolledAssistants(
       assistant[blockType] = undefined;
     }
   }
+
+  assistant.experimental = mergeExperimentalConfigs(
+    current.experimental,
+    incoming.experimental,
+  );
 
   return assistant;
 }
@@ -81,5 +90,31 @@ export function mergeConfigYamlRequestOptions(
     ...global,
     ...base, // base overrides for simple values as well as noProxy and extraBodyProperties
     headers: Object.keys(headers).length === 0 ? undefined : headers, // headers are the only thing that really merge
+  };
+}
+
+function mergeExperimentalConfigs(
+  current: ConfigYaml["experimental"],
+  incoming: ConfigYaml["experimental"],
+): ConfigYaml["experimental"] {
+  if (!current && !incoming) {
+    return undefined;
+  }
+
+  const mergedBase = {
+    ...(current ?? {}),
+    ...(incoming ?? {}),
+  };
+
+  if (!current?.codeExecution && !incoming?.codeExecution) {
+    return mergedBase;
+  }
+
+  return {
+    ...mergedBase,
+    codeExecution: {
+      ...(current?.codeExecution ?? {}),
+      ...(incoming?.codeExecution ?? {}),
+    },
   };
 }

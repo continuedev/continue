@@ -1,6 +1,7 @@
 import { ConfigDependentToolParams, Tool } from "..";
 import { isRecommendedAgentModel } from "../llm/toolSupport";
 import * as toolDefinitions from "./definitions";
+import { logExecuteCodeDebug } from "./executeCodeDebug";
 
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 export const getBaseToolDefinitions = () => [
@@ -20,7 +21,6 @@ export const getConfigDependentToolDefinitions = (
 ): Tool[] => {
   const { modelName, isSignedIn, enableExperimentalTools, isRemote } = params;
   const tools: Tool[] = [];
-
   tools.push(toolDefinitions.requestRuleTool(params));
 
   if (isSignedIn) {
@@ -34,6 +34,7 @@ export const getConfigDependentToolDefinitions = (
       toolDefinitions.viewSubdirectoryTool,
       toolDefinitions.codebaseTool,
       toolDefinitions.readFileRangeTool,
+      // execute code handled via codeExecutionConfig gate
     );
   }
 
@@ -47,6 +48,28 @@ export const getConfigDependentToolDefinitions = (
   // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
   if (!isRemote) {
     tools.push(toolDefinitions.grepSearchTool);
+  }
+
+  const codeExecutionConfig = params.codeExecutionConfig;
+  if (!codeExecutionConfig) {
+    logExecuteCodeDebug(
+      "Skipping execute_code tool: no experimental.codeExecution block found",
+      {
+        enableExperimentalTools,
+        isSignedIn,
+      },
+    );
+  } else if (codeExecutionConfig.enabled) {
+    logExecuteCodeDebug("Registering execute_code tool", {
+      hasApiKey: Boolean(codeExecutionConfig.e2bApiKey),
+      requireFirstUseConfirmation:
+        codeExecutionConfig.requireFirstUseConfirmation ?? true,
+    });
+    tools.push(toolDefinitions.executeCodeTool(params));
+  } else {
+    logExecuteCodeDebug("Skipping execute_code tool: config disabled", {
+      enabled: codeExecutionConfig.enabled ?? false,
+    });
   }
 
   return tools;

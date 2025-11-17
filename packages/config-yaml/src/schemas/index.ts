@@ -36,6 +36,44 @@ const docSchema = z.object({
 
 export type DocsConfig = z.infer<typeof docSchema>;
 
+const codeExecutionRateLimitSchema = z.object({
+  maxExecutionsPerMinute: z.number().int().min(1).max(120),
+});
+
+const codeExecutionConfigSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    e2bApiKey: z.string().optional(),
+    sessionTimeoutMinutes: z.number().int().min(5).max(240).optional(),
+    maxExecutionTimeSeconds: z.number().int().min(1).max(300).optional(),
+    requestTimeoutSeconds: z.number().int().min(5).max(600).optional(),
+    maxOutputSizeChars: z.number().int().min(100).max(1_000_000).optional(),
+    rateLimit: codeExecutionRateLimitSchema.optional(),
+    requireFirstUseConfirmation: z.boolean().optional(),
+  })
+  .refine(
+    (val) => {
+      if (
+        val.requestTimeoutSeconds === undefined ||
+        val.maxExecutionTimeSeconds === undefined
+      ) {
+        return true;
+      }
+      return val.requestTimeoutSeconds > val.maxExecutionTimeSeconds;
+    },
+    {
+      message:
+        "codeExecution.requestTimeoutSeconds must be greater than maxExecutionTimeSeconds",
+      path: ["requestTimeoutSeconds"],
+    },
+  );
+
+const experimentalConfigSchema = z
+  .object({
+    codeExecution: codeExecutionConfigSchema.optional(),
+  })
+  .passthrough();
+
 const ruleObjectSchema = z.object({
   name: z.string(),
   rule: z.string(),
@@ -104,6 +142,7 @@ export const baseConfigYamlSchema = z.object({
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  codeExecution: codeExecutionConfigSchema.optional(),
 });
 
 const modelsUsesSchema = z
@@ -150,6 +189,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   prompts: z.array(blockOrSchema(promptSchema)).optional(),
   docs: z.array(blockOrSchema(docSchema)).optional(),
+  experimental: experimentalConfigSchema.optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
@@ -162,6 +202,7 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema.nullable()).optional(),
   prompts: z.array(promptSchema.nullable()).optional(),
   docs: z.array(docSchema.nullable()).optional(),
+  experimental: experimentalConfigSchema.optional(),
 });
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
@@ -174,6 +215,7 @@ export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
+  experimental: experimentalConfigSchema.optional(),
 });
 
 export type AssistantUnrolledNonNullable = z.infer<
@@ -202,6 +244,7 @@ export const blockSchema = baseConfigYamlSchema.and(
     }),
     z.object({ prompts: z.array(promptSchema).length(1) }),
     z.object({ docs: z.array(docSchema).length(1) }),
+    z.object({ experimental: experimentalConfigSchema }),
   ]),
 );
 
@@ -261,6 +304,7 @@ export const configSchema = z.object({
   api_key: z.string().optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  codeExecution: codeExecutionConfigSchema.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

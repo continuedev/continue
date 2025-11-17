@@ -30,7 +30,12 @@ import {
   packageIdentifierToShorthandSlug,
   useProxyForUnrenderedSecrets,
 } from "./clientRender.js";
-import { BlockType, getBlockType } from "./getBlockType.js";
+import {
+  ArrayBlockType,
+  BlockType,
+  getBlockType,
+  isArrayBlockType,
+} from "./getBlockType.js";
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
@@ -374,6 +379,10 @@ export async function unrollBlocks(
     requestOptions: assistant.requestOptions,
   };
 
+  if (assistant.experimental) {
+    unrolledAssistant.experimental = { ...assistant.experimental };
+  }
+
   if (injectRequestOptions) {
     unrolledAssistant.requestOptions = mergeConfigYamlRequestOptions(
       assistant.requestOptions,
@@ -392,6 +401,7 @@ export async function unrollBlocks(
     | "metadata"
     | "env"
     | "requestOptions"
+    | "experimental"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel
@@ -401,8 +411,8 @@ export async function unrollBlocks(
     }
 
     // Process all blocks in this section in parallel
-    const blockPromises = assistant[section].map(
-      async (unrolledBlock, index) => {
+    const blockPromises = (assistant[section] as any[]).map(
+      async (unrolledBlock: any, index: number) => {
         // "uses/with" block
         if ("uses" in unrolledBlock) {
           try {
@@ -432,7 +442,7 @@ export async function unrollBlocks(
               unrolledBlock.with,
               registry,
             );
-            const block = blockConfigYaml[section]?.[0];
+            const block = (blockConfigYaml as any)[section]?.[0];
             if (block) {
               return {
                 index,
@@ -622,9 +632,11 @@ export async function unrollBlocks(
   // Assign section results
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
-      unrolledAssistant[sectionResult.section] = sectionResult.blocks.filter(
-        (block) => !detector.isDuplicated(block, sectionResult.section),
-      );
+      (unrolledAssistant as any)[sectionResult.section] =
+        sectionResult.blocks.filter(
+          (block: any) =>
+            !detector.isDuplicated(block, sectionResult.section as BlockType),
+        );
     }
   }
 
@@ -641,17 +653,31 @@ export async function unrollBlocks(
     resolvedBlock,
     source,
   } of injectedResult.injectedBlocks) {
-    const key = blockType;
-    if (!unrolledAssistant[key]) {
-      unrolledAssistant[key] = [];
+    if (!isArrayBlockType(blockType)) {
+      const experimentalBlock = injectExperimentalSourceFile(
+        resolvedBlock,
+        source,
+      );
+      if (experimentalBlock) {
+        unrolledAssistant.experimental = mergeExperimentalConfigs(
+          unrolledAssistant.experimental,
+          experimentalBlock,
+        );
+      }
+      continue;
+    }
+
+    if (!unrolledAssistant[blockType]) {
+      (unrolledAssistant as any)[blockType] = [];
     }
 
     const filteredBlocks = injectLocalSourceFile(
-      key,
+      blockType,
       resolvedBlock,
       source,
     ).filter((block: any) => !detector.isDuplicated(block, blockType));
-    unrolledAssistant[key]?.push(...filteredBlocks);
+
+    (unrolledAssistant[blockType] as any[])?.push(...filteredBlocks);
   }
 
   const configResult: ConfigResult<AssistantUnrolled> = {
@@ -667,7 +693,7 @@ export async function unrollBlocks(
 }
 
 function injectLocalSourceFile(
-  blockType: BlockType,
+  blockType: ArrayBlockType,
   resolvedBlock: any,
   source?: string,
 ): (any & { source?: string })[] {
@@ -697,6 +723,51 @@ function injectLocalSourceFile(
     ...block,
     sourceFile: source,
   }));
+}
+
+function injectExperimentalSourceFile(
+  resolvedBlock: any,
+  source?: string,
+): ConfigYaml["experimental"] | undefined {
+  const experimentalBlock = resolvedBlock.experimental;
+  if (!experimentalBlock) {
+    return undefined;
+  }
+
+  if (!source) {
+    return experimentalBlock;
+  }
+
+  return {
+    ...experimentalBlock,
+    sourceFile: source,
+  };
+}
+
+function mergeExperimentalConfigs(
+  current: ConfigYaml["experimental"],
+  incoming: ConfigYaml["experimental"],
+): ConfigYaml["experimental"] {
+  if (!current && !incoming) {
+    return undefined;
+  }
+
+  const mergedBase = {
+    ...(current ?? {}),
+    ...(incoming ?? {}),
+  };
+
+  if (!current?.codeExecution && !incoming?.codeExecution) {
+    return mergedBase;
+  }
+
+  return {
+    ...mergedBase,
+    codeExecution: {
+      ...(current?.codeExecution ?? {}),
+      ...(incoming?.codeExecution ?? {}),
+    },
+  };
 }
 
 export async function resolveBlock(

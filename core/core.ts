@@ -1092,13 +1092,21 @@ export class Core {
       return { url };
     });
 
-    on("tools/call", async ({ data: { toolCall } }) =>
-      this.handleToolCall(toolCall),
+    on("tools/call", async ({ data: { toolCall, conversationId } }) =>
+      this.handleToolCall(toolCall, conversationId),
     );
 
     on(
       "tools/evaluatePolicy",
-      async ({ data: { toolName, basePolicy, parsedArgs, processedArgs } }) => {
+      async ({
+        data: {
+          toolName,
+          basePolicy,
+          parsedArgs,
+          processedArgs,
+          conversationId,
+        },
+      }) => {
         const { config } = await this.configHandler.loadConfig();
         if (!config) {
           throw new Error("Config not loaded");
@@ -1120,6 +1128,7 @@ export class Core {
             basePolicy,
             parsedArgs,
             processedArgs,
+            { conversationId },
           );
           return { policy: evaluatedPolicy, displayValue };
         }
@@ -1187,7 +1196,7 @@ export class Core {
     });
   }
 
-  private async handleToolCall(toolCall: ToolCall) {
+  private async handleToolCall(toolCall: ToolCall, conversationId?: string) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
       throw new Error("Config not loaded");
@@ -1223,6 +1232,7 @@ export class Core {
       toolCallId: toolCall.id,
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
+      conversationId,
     });
 
     return result;

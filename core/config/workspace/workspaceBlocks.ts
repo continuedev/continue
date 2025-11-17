@@ -1,9 +1,8 @@
 import {
   BlockType,
   ConfigYaml,
-  createRuleMarkdown,
   createPromptMarkdown,
-  RULE_FILE_EXTENSION,
+  createRuleMarkdown,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
@@ -21,6 +20,7 @@ const BLOCK_TYPE_CONFIG: Record<
   prompts: { singular: "prompt", filename: "prompt" },
   mcpServers: { singular: "MCP server", filename: "mcp-server" },
   data: { singular: "data", filename: "data" },
+  experimental: { singular: "experimental", filename: "experimental" },
 };
 
 function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
@@ -79,6 +79,12 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
         },
       ];
       break;
+    case "experimental": {
+      configYaml.experimental = {
+        codeExecution: { enabled: false, e2bApiKey: "your-api-key-here" },
+      };
+      break;
+    }
   }
 
   return configYaml;

@@ -1089,6 +1089,7 @@ export interface ToolExtras {
   }) => void;
   config: ContinueConfig;
   codeBaseIndexer?: CodebaseIndexer;
+  conversationId?: string;
 }
 
 export interface Tool {
@@ -1125,6 +1126,9 @@ export interface Tool {
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,
     processedArgs?: Record<string, unknown>,
+    context?: {
+      conversationId?: string;
+    },
   ) => ToolPolicy;
 }
 
@@ -1139,8 +1143,10 @@ export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
   enableExperimentalTools: boolean;
   isSignedIn: boolean;
+  apiKey?: string;
   isRemote: boolean;
   modelName: string | undefined;
+  codeExecutionConfig?: CodeExecutionConfig;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1631,6 +1637,7 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+  codeExecution?: CodeExecutionConfig;
 
   /**
    * If enabled, will add the current file as context.
@@ -1648,6 +1655,19 @@ export interface ExperimentalConfig {
    * gather context for the model where necessary.
    */
   enableStaticContextualization?: boolean;
+}
+
+export interface CodeExecutionConfig {
+  enabled?: boolean;
+  e2bApiKey?: string;
+  sessionTimeoutMinutes?: number;
+  maxExecutionTimeSeconds?: number;
+  requestTimeoutSeconds?: number;
+  maxOutputSizeChars?: number;
+  rateLimit?: {
+    maxExecutionsPerMinute?: number;
+  };
+  requireFirstUseConfirmation?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1706,6 +1726,7 @@ export interface SerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  codeExecution?: CodeExecutionConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   data?: DataDestination[];
@@ -1759,6 +1780,8 @@ export interface Config {
   reranker?: RerankerDescription | ILLM;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
+  /** Top-level code execution configuration (flattened helper for experimental.codeExecution) */
+  codeExecution?: CodeExecutionConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
@@ -1779,6 +1802,8 @@ export interface ContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   experimental?: ExperimentalConfig;
+  /** Top-level code execution configuration (flattened helper for experimental.codeExecution) */
+  codeExecution?: CodeExecutionConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
@@ -1801,6 +1826,8 @@ export interface BrowserSerializedContinueConfig {
   userToken?: string;
   ui?: ContinueUIConfig;
   experimental?: ExperimentalConfig;
+  /** Top-level code execution configuration (flattened helper for experimental.codeExecution) */
+  codeExecution?: CodeExecutionConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Omit<Tool, "preprocessArgs", "evaluateToolCallPolicy">[];

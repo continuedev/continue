@@ -1,0 +1,13 @@
+---
+title: "Release Notes"
+description: "Dependency and capability updates"
+sidebarTitle: "Release Notes"
+---
+
+## Dependency Updates
+
+- **@e2b/code-interpreter@^1.5.1 (core package)** – Added to power the <code>execute_code</code> tool. This version provides deterministic stdout batching and the session APIs needed for persistent TypeScript sandboxes. If you audit the bundle, ensure the dependency stays on the 1.x series unless the E2B SDK publishes a stable 2.x replacement.
+
+## Telemetry & Observability
+
+- Added events <code>sandbox_created</code>, <code>sandbox_idle_cleanup</code>, <code>execute_code_invoked</code>, and <code>execute_code_failed</code> to monitor code execution sandboxes.

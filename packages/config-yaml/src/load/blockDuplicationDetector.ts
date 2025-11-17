@@ -1,11 +1,15 @@
-import { BLOCK_TYPES, BlockType } from "./getBlockType.js";
+import {
+  ARRAY_BLOCK_TYPES,
+  BlockType,
+  isArrayBlockType,
+} from "./getBlockType.js";
 
 export class BlockDuplicationDetector {
   private records: Map<string, Set<string>>;
 
   constructor() {
     this.records = new Map();
-    for (const blockType of BLOCK_TYPES) {
+    for (const blockType of ARRAY_BLOCK_TYPES) {
       this.records.set(blockType, new Set());
     }
   }
@@ -27,16 +31,25 @@ export class BlockDuplicationDetector {
   }
 
   private check(identifier: string, blockType: BlockType): boolean {
-    if (this.records.get(blockType)!.has(identifier)) {
+    const record = this.records.get(blockType);
+    if (!record) {
+      return false;
+    }
+
+    if (record.has(identifier)) {
       return true;
     } else {
-      this.records.get(blockType)!.add(identifier);
+      record.add(identifier);
       return false;
     }
   }
 
   // Check if the name is duplicated within the same blockType
   isDuplicated(block: any, blockType: BlockType): boolean {
+    if (!isArrayBlockType(blockType)) {
+      return false;
+    }
+
     // Not checking any null or undefined object
     if (block === null || block === undefined) {
       return false;

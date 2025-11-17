@@ -128,7 +128,9 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "windows": {
+        "command": "./scripts/install-dependencies.ps1"
+      },
       "command": "./scripts/install-dependencies.sh",
       "problemMatcher": [],
       "presentation": {

@@ -28,6 +28,7 @@ function migrateToolPolicies(dispatch: AppDispatch) {
     [BuiltInToolNames.CodebaseTool]: ["builtin_codebase"],
     [BuiltInToolNames.ViewRepoMap]: ["builtin_view_repo_map"],
     [BuiltInToolNames.ViewSubdirectory]: ["builtin_view_subdirectory"],
+    [BuiltInToolNames.ExecuteCode]: ["builtin_execute_code"],
   };
   const persistedRedux = localStorage.getItem("persist:root");
   if (persistedRedux) {

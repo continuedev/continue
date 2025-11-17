@@ -112,9 +112,10 @@ export default async function doLoadConfig(options: {
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
+  let result;
 
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
-    const result = await loadContinueConfigFromYaml({
+    result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
       ideInfo,
@@ -130,7 +131,7 @@ export default async function doLoadConfig(options: {
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
   } else {
-    const result = await loadContinueConfigFromJson(
+    result = await loadContinueConfigFromJson(
       ide,
       ideSettings,
       ideInfo,
@@ -298,14 +299,26 @@ export default async function doLoadConfig(options: {
     }
   }
 
+  const codeExecutionConfig =
+    newConfig.codeExecution ?? newConfig.experimental?.codeExecution;
+
+  if (codeExecutionConfig && !newConfig.codeExecution) {
+    newConfig.codeExecution = codeExecutionConfig;
+  }
+
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
       isSignedIn,
+      apiKey: newConfig.experimental?.codeExecution?.e2bApiKey,
       isRemote: await ide.isWorkspaceRemote(),
       modelName: newConfig.selectedModelByRole.chat?.model,
+      codeExecutionConfig: codeExecutionConfig,
+      testVal: codeExecutionConfig?.e2bApiKey
+        ? "hello from doLoadConfig"
+        : "goodbye from doLoadConfig",
     }),
   );
 

@@ -316,6 +316,7 @@ export const streamNormalInput = createAsyncThunk<
       activeTools,
       generatedCalls3,
       toolPolicies,
+      state3.session.id,
     );
     const anyRequireApproval = policies.find(
       ({ policy }) => policy === "allowedWithPermission",

@@ -669,6 +669,7 @@ async function finalToBrowserConfig(
     userToken: final.userToken,
     ui: final.ui,
     experimental: final.experimental,
+    codeExecution: final.codeExecution,
     rules: final.rules,
     docs: final.docs,
     tools: final.tools.map(serializeTool),

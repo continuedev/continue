@@ -990,6 +990,20 @@ Code Mode builds on pioneering work by:
 
 Continue's contribution is the production implementation for MCP tools and the proposed architecture for extending to all development tools.
 
+---
+
+## Resources
+
+- **Documentation:** [docs.continue.dev](https://docs.continue.dev)
+- **White Paper:** [Code Mode Architecture](../research/code-mode-white-paper.md)
+- **Blog Post:** [Building in Public](../blog/building-code-mode-in-public.md)
+- **MCP Servers:** [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)
+- **E2B Docs:** [e2b.dev/docs](https://e2b.dev/docs)
+- **Discord:** [discord.gg/vapESyrFmJ](https://discord.gg/vapESyrFmJ)
+- **GitHub:** [github.com/continuedev/continue](https://github.com/continuedev/continue)
+
+---
+
 ## License
 
 MIT License - see [LICENSE](../../LICENSE) for details.
