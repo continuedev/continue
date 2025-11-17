@@ -1147,7 +1147,6 @@ export interface ConfigDependentToolParams {
   isRemote: boolean;
   modelName: string | undefined;
   codeExecutionConfig?: CodeExecutionConfig;
-  testVal: string;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;

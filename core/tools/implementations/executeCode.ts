@@ -369,8 +369,14 @@ class McpWrapperGenerator {
         usedSlugs,
         this.slugify(status.name ?? status.id ?? randomUUID()),
       );
-      const toolsResponse = await status.client.listTools();
-      const tools = toolsResponse.tools ?? [];
+      let tools: any[] = [];
+      try {
+        const toolsResponse = await status.client.listTools();
+        tools = toolsResponse.tools ?? [];
+      } catch (err) {
+        console.error(`Failed to list tools for MCP server ${slug}:`, err);
+        continue;
+      }
 
       const toolExports: string[] = [];
       for (const tool of tools) {

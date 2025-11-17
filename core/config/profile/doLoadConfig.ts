@@ -109,13 +109,6 @@ export default async function doLoadConfig(options: {
     overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType),
   );
 
-  // Confirmed that it's reading a config file with the required info. still not loading the experimental block
-  console.debug("CONFIG details: ", {
-    configJsonPath: configJsonPath,
-    configYamlPath: configYamlPath,
-    overrideConfigYamlByPath: overrideConfigYamlByPath,
-  });
-
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
@@ -151,8 +144,6 @@ export default async function doLoadConfig(options: {
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
   }
-
-  console.debug("NEW CONFIG 154: ", { newConfig: newConfig, result: result });
 
   if (configLoadInterrupted || !newConfig) {
     return { errors, config: newConfig, configLoadInterrupted: true };
@@ -308,17 +299,12 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  console.debug("NEW CONFIG: ", { newConfig });
   const codeExecutionConfig =
     newConfig.codeExecution ?? newConfig.experimental?.codeExecution;
 
   if (codeExecutionConfig && !newConfig.codeExecution) {
     newConfig.codeExecution = codeExecutionConfig;
   }
-
-  const apiKey = newConfig.codeExecution?.e2bApiKey;
-  console.debug("APIKEY!", apiKey); //This is undefined
-  console.debug("NEW CONFIG: ", { newConfig });
 
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({

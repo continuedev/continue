@@ -21,7 +21,6 @@ export const getConfigDependentToolDefinitions = (
 ): Tool[] => {
   const { modelName, isSignedIn, enableExperimentalTools, isRemote } = params;
   const tools: Tool[] = [];
-  console.debug("PARAMS:", params);
   tools.push(toolDefinitions.requestRuleTool(params));
 
   if (isSignedIn) {
@@ -52,12 +51,7 @@ export const getConfigDependentToolDefinitions = (
   }
 
   const codeExecutionConfig = params.codeExecutionConfig;
-  console.log("CodeExecutionConfig: ", codeExecutionConfig);
-  //This is always coming up as undefined.
   if (!codeExecutionConfig) {
-    console.log(
-      "Skipping execute_code tool: no experimental.codeExecution block found",
-    );
     logExecuteCodeDebug(
       "Skipping execute_code tool: no experimental.codeExecution block found",
       {

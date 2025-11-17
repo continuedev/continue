@@ -94,6 +94,15 @@ class ExecuteCodePolicyManager {
     recentExecutions.push(now);
     this.executionHistory.set(key, recentExecutions);
     this.confirmedConversations.add(key);
+
+    // Clean up stale entries periodically
+    if (this.executionHistory.size > 1000) {
+      for (const [id, timestamps] of this.executionHistory.entries()) {
+        if (timestamps.every((ts) => ts < windowStart)) {
+          this.executionHistory.delete(id);
+        }
+      }
+    }
   }
 
   clearConversation(conversationId: string | undefined) {

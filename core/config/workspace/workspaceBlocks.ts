@@ -81,7 +81,7 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       break;
     case "experimental": {
       configYaml.experimental = {
-        codeExecution: { enabled: false, e2bApiKey: "fuck you" },
+        codeExecution: { enabled: false, e2bApiKey: "your-api-key-here" },
       };
       break;
     }
