@@ -1,3 +1,7 @@
+import {
+  decodeSecretLocation,
+  getTemplateVariables,
+} from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
@@ -15,10 +19,6 @@ import {
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
-import {
-  decodeSecretLocation,
-  getTemplateVariables,
-} from "@continuedev/config-yaml";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
