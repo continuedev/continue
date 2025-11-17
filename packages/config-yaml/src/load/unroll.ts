@@ -61,14 +61,24 @@ type BlockWrapper<T> = {
   override?: Partial<T>;
 };
 
-// Type guard to check if a value is a block wrapper
+/**
+ * Determines whether a section block is a wrapper that references an external block via `uses`.
+ *
+ * @param block - The value to test for a wrapper containing a `uses` field
+ * @returns `true` if `block` is a BlockWrapper with a `uses` property, `false` otherwise.
+ */
 function isBlockWrapper(
   block: SectionBlock | BlockWrapper<SectionBlock>,
 ): block is BlockWrapper<SectionBlock> {
   return typeof block === "object" && block !== null && "uses" in block;
 }
 
-// Type guard to check if uses is a string
+/**
+ * Determines whether a `uses` value is a string.
+ *
+ * @param uses - The value to test
+ * @returns `true` if `uses` is a string, `false` otherwise.
+ */
 function isUsesString(uses: unknown): uses is string {
   return typeof uses === "string";
 }
@@ -76,6 +86,13 @@ function isUsesString(uses: unknown): uses is string {
 // Type for blocks that can appear in sections (either direct blocks or wrappers)
 type SectionBlockOrWrapper = SectionBlock | BlockWrapper<SectionBlock>;
 
+/**
+ * Parse and validate a YAML string into a ConfigYaml object.
+ *
+ * @param configYaml - The YAML content to parse and validate
+ * @returns The parsed and validated `ConfigYaml`
+ * @throws Error If the content cannot be parsed as YAML or fails schema validation. The error message begins with "Failed to parse config:" and includes formatted validation details when available.
+ */
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
     const parsed = YAML.parse(configYaml);
@@ -402,6 +419,18 @@ function isPackageAllowed(
   return true;
 }
 
+/**
+ * Unrolls a ConfigYaml into a fully assembled AssistantUnrolled by resolving referenced blocks, injecting external blocks, and applying overrides.
+ *
+ * Resolves `uses`/`with` wrapper blocks, merges overrides, injects provided package identifiers, enforces allowlist/blocklist rules, preserves experimental fields, filters duplicate blocks, and collects non-fatal configuration validation errors.
+ *
+ * @param assistant - The source assistant configuration (ConfigYaml) to unroll
+ * @param registry - Registry used to fetch referenced or injected package contents
+ * @param injectBlocks - Optional list of package identifiers to inject into the unrolled result
+ * @param allowlistedBlocks - Optional list of package slugs that are explicitly allowed for `uses` resolution
+ * @param blocklistedBlocks - Optional list of package slugs that are explicitly disallowed for `uses` resolution
+ * @param injectRequestOptions - Optional request options to merge into the unrolled assistant's requestOptions
+ * @returns A ConfigResult containing the assembled AssistantUnrolled in `config` and any collected non-fatal validation errors in `errors`; `configLoadInterrupted` is always `false` for this function.
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,

@@ -16,6 +16,14 @@ export function constructMcpSlashCommand(
   };
 }
 
+/**
+ * Converts an MCP prompt's text messages into a single XML-like string with role tags.
+ *
+ * Unsupported message content types are skipped and a console warning is emitted for each skipped message.
+ *
+ * @param prompt - The prompt object returned by Client.prototype.getPrompt; its `messages` array is used.
+ * @returns A string where each text message is serialized as `<role>\n<text>\n</role>` concatenated in message order.
+ */
 export function stringifyMcpPrompt(
   prompt: Awaited<ReturnType<typeof Client.prototype.getPrompt>>,
 ): string {

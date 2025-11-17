@@ -21,6 +21,12 @@ export function getNonce() {
   return text;
 }
 
+/**
+ * Retrieve the extension URI for the "Continue.continue" extension.
+ *
+ * @returns The extension's URI.
+ * @throws Error if the extension is not registered (for example, not installed or not enabled).
+ */
 export function getExtensionUri(): vscode.Uri {
   const extension = vscode.extensions.getExtension("Continue.continue");
 
