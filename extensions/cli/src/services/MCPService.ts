@@ -5,7 +5,10 @@ import {
   SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  StreamableHTTPClientTransport,
+  StreamableHTTPError,
+} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
   HttpMcpServer,
   SseMcpServer,
@@ -26,10 +29,16 @@ import {
   SERVICE_NAMES,
 } from "./types.js";
 
-function is401Error(error: unknown) {
+// 405 is technically "not allowed" but some servers like Sanity don't return the correct error
+// Since we're using mcp library there's a good chance 405 means auth issue and doesn't hurt to retry with auth
+function isAuthError(error: unknown) {
   return (
     (error instanceof SseError && error.code === 401) ||
+    (error instanceof SseError && error.code === 405) ||
+    (error instanceof StreamableHTTPError && error.code === 401) ||
+    (error instanceof StreamableHTTPError && error.code === 405) ||
     (error instanceof Error && error.message.includes("401")) ||
+    (error instanceof Error && error.message.includes("405")) ||
     (error instanceof Error && error.message.includes("Unauthorized"))
   );
 }
@@ -53,7 +62,7 @@ export class MCPService
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
   private isHeadless: boolean | undefined;
-  private mcpTokenCache: Map<string, string> = new Map();
+  private apiKeyCache: Map<string, string> = new Map();
 
   getDependencies(): string[] {
     return [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH];
@@ -208,7 +217,7 @@ export class MCPService
       return await operation();
     } catch (error: unknown) {
       // If not a 401 error, rethrow
-      if (!is401Error(error)) {
+      if (!isAuthError(error)) {
         throw error;
       }
 
@@ -228,24 +237,22 @@ export class MCPService
       const authConfig = loadAuthConfig();
 
       // Clear cached token since it's invalid
-      this.mcpTokenCache.delete(serverName);
+      this.apiKeyCache.delete(serverName);
 
       // Fetch OAuth token from backend
-      const identifier = serverConfig.name;
       const organizationSlug = authConfig?.organizationId;
 
       let token: string | null = null;
       try {
-        const params = new URLSearchParams({ identifier });
+        const params = new URLSearchParams({
+          url: serverConfig.url,
+        });
         if (organizationSlug) {
           params.set("organizationSlug", organizationSlug);
         }
-
-        logger.debug("Fetching OAuth token for MCP server on 401", {
-          name: serverName,
-          identifier,
-          organizationSlug,
-        });
+        if (serverConfig.sourceSlug) {
+          params.set("slug", serverConfig.sourceSlug);
+        }
 
         const response = await get<{
           configured: boolean;
@@ -257,7 +264,7 @@ export class MCPService
 
         if (response.data.hasCredentials && response.data.accessToken) {
           token = response.data.accessToken;
-          this.mcpTokenCache.set(serverName, token);
+          this.apiKeyCache.set(serverName, token);
           logger.debug("Successfully retrieved OAuth token for MCP server", {
             name: serverName,
           });
@@ -283,11 +290,7 @@ export class MCPService
         throw error;
       }
 
-      // Update the server config with new token and retry
-      serverConfig.apiKey = token;
-      logger.debug("Retrying operation with refreshed OAuth token", {
-        name: serverName,
-      });
+      this.apiKeyCache.set(serverConfig.name, token);
 
       return await operation();
     }
@@ -544,17 +547,35 @@ export class MCPService
 
       try {
         await this.withTokenRefresh(serverConfig.name, async () => {
+          if (serverConfig.apiKey && !this.apiKeyCache.get(serverConfig.name)) {
+            this.apiKeyCache.set(serverConfig.name, serverConfig.apiKey);
+          }
           if (serverConfig.type === "sse") {
             const transport = this.constructSseTransport(serverConfig);
             await client.connect(transport, {});
           } else if (serverConfig.type === "streamable-http") {
             const transport = this.constructHttpTransport(serverConfig);
             await client.connect(transport, {});
+          } else {
+            try {
+              const transport = this.constructHttpTransport(serverConfig);
+              await client.connect(transport, {});
+            } catch (e) {
+              logger.debug(
+                "MCP Connection: http connection failed, falling back to sse connection",
+                {
+                  name: serverConfig.name,
+                  error: getErrorString(e),
+                },
+              );
+              const transport = this.constructSseTransport(serverConfig);
+              await client.connect(transport, {});
+            }
           }
         });
       } catch (error: unknown) {
         // If token refresh didn't work and it's a 401, fall back to mcp-remote
-        if (is401Error(error) && !this.isHeadless) {
+        if (isAuthError(error) && !this.isHeadless) {
           logger.debug("Falling back to mcp-remote after 401 error", {
             name: serverConfig.name,
           });
@@ -571,38 +592,6 @@ export class MCPService
           throw error;
         }
       }
-
-      if (typeof serverConfig.type === "undefined") {
-        // Try HTTP first, then SSE
-        try {
-          await this.withTokenRefresh(serverConfig.name, async () => {
-            const transport = this.constructHttpTransport(serverConfig);
-            await client.connect(transport, {});
-          });
-        } catch (httpError) {
-          logger.debug(
-            "MCP Connection: http connection failed, falling back to sse connection",
-            {
-              name: serverConfig.name,
-              error: getErrorString(httpError),
-            },
-          );
-          try {
-            await this.withTokenRefresh(serverConfig.name, async () => {
-              const transport = this.constructSseTransport(serverConfig);
-              await client.connect(transport, {});
-            });
-          } catch (sseError) {
-            throw new Error(
-              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${sseError instanceof Error ? sseError.message : String(sseError)}`,
-            );
-          }
-        }
-      } else if (
-        !["streamable-http", "sse", "stdio"].includes(serverConfig.type)
-      ) {
-        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
-      }
     }
 
     return client;
@@ -611,11 +600,12 @@ export class MCPService
   private constructSseTransport(
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
+    const apiKey = this.apiKeyCache.get(serverConfig.name);
     // Merge apiKey into headers if provided
     const headers = {
       ...serverConfig.requestOptions?.headers,
-      ...(serverConfig.apiKey && {
-        Authorization: `Bearer ${serverConfig.apiKey}`,
+      ...(apiKey && {
+        Authorization: `Bearer ${apiKey}`,
       }),
     };
 
@@ -637,10 +627,12 @@ export class MCPService
     serverConfig: HttpMcpServer,
   ): StreamableHTTPClientTransport {
     // Merge apiKey into headers if provided
+    const apiKey = this.apiKeyCache.get(serverConfig.name);
+
     const headers = {
       ...serverConfig.requestOptions?.headers,
-      ...(serverConfig.apiKey && {
-        Authorization: `Bearer ${serverConfig.apiKey}`,
+      ...(apiKey && {
+        Authorization: `Bearer ${apiKey}`,
       }),
     };
 

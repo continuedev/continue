@@ -208,7 +208,7 @@ async function loadFromSource(
     }
   } catch (error) {
     // If we're trying user assistants and it fails, fall back to default agent
-    if (source.type === "user-assistant") {
+    if (source.type === "user-assistant" || source.type === "cli-flag") {
       console.warn(
         chalk.yellow(
           "Failed to load user assistants, falling back to default agent",
