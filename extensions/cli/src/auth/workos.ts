@@ -3,13 +3,15 @@ import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
-// Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
 import open from "open";
+
+import { logger } from "src/util/logger.js";
 
 import { getApiClient } from "../config.js";
 // eslint-disable-next-line import/order
 import { env } from "../env.js";
+
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
@@ -19,33 +21,6 @@ function getAuthConfigPath() {
   const continueHome =
     process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
   return path.join(continueHome, "auth.json");
-}
-
-// Represents an authenticated user's configuration
-export interface AuthenticatedConfig {
-  userId: string;
-  userEmail: string;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  organizationId: string | null | undefined; // null means personal organization, undefined triggers auto-selection
-  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
-  modelName?: string; // Name of the selected model
-}
-
-// Represents configuration when using environment variable auth
-export interface EnvironmentAuthConfig {
-  /**
-   * This userId?: undefined; field a trick to help TypeScript differentiate between
-   * AuthenticatedConfig and EnvironmentAuthConfig. Otherwise AuthenticatedConfig is
-   * a possible subtype of EnvironmentAuthConfig and TypeScript gets confused where
-   * type guards are involved.
-   */
-  userId?: undefined;
-  accessToken: string;
-  organizationId: string | null; // Can be set via --org flag in headless mode
-  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
-  modelName?: string; // Name of the selected model
 }
 
 // Union type representing the possible authentication states
@@ -115,9 +90,13 @@ import {
   persistModelName,
 } from "../util/modelPersistence.js";
 
-import { logger } from "src/util/logger.js";
 import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
+import {
+  AuthenticatedConfig,
+  DeviceAuthorizationResponse,
+  EnvironmentAuthConfig,
+} from "./workos-types.js";
 import {
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
@@ -274,7 +253,6 @@ export async function isAuthenticated(): Promise<boolean> {
     return false;
   }
 
-  // Environment auth is always valid
   if (isEnvironmentAuthConfig(config)) {
     return true;
   }
@@ -284,24 +262,12 @@ export async function isAuthenticated(): Promise<boolean> {
       const refreshed = await refreshToken(config.refreshToken);
       return isAuthenticatedConfig(refreshed);
     } catch (e) {
-      logger.error("Failed to refresh auto token");
+      logger.error("Failed to refresh auto token", e);
       return false;
     }
   }
 
   return true;
-}
-
-/**
- * Device authorization response from WorkOS
- */
-interface DeviceAuthorizationResponse {
-  device_code: string;
-  user_code: string;
-  verification_uri: string;
-  verification_uri_complete: string;
-  expires_in: number;
-  interval: number;
 }
 
 /**

@@ -1,5 +1,5 @@
+import { AuthenticatedConfig } from "src/auth/workos-types.js";
 import {
-  AuthenticatedConfig,
   login as doLogin,
   logout as doLogout,
   ensureOrganization,

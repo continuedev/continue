@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { AuthService } from "src/services/AuthService.js";
 
+import { AuthenticatedConfig } from "src/auth/workos-types.js";
 import {
-  AuthenticatedConfig,
   getModelName,
   loadAuthConfig,
   saveAuthConfig,
