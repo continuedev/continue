@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.browser
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -40,10 +41,17 @@ class ContinueBrowserService(val project: Project): Disposable {
      * This method is intended for use when browser is frozen (unresponsive).
      */
     fun reload() {
-        browser?.let {
-            Disposer.dispose(it)
-        }
+        // Store the old browser instance to be disposed later
+        val oldBrowser = browser
         browser = null
+
+        // Dispose the old browser after the new one is loaded and UI is updated.
+        // This avoids race conditions. We can do this on a background thread.
+        oldBrowser?.let {
+            ApplicationManager.getApplication().invokeLater {
+                Disposer.dispose(it)
+            }
+        }
 
         load()
     }

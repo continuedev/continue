@@ -10,6 +10,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -95,25 +96,32 @@ class ReloadBrowserAction: ContinueToolbarAction() {
     override fun toolbarActionPerformed(project: Project) {
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Continue")
             ?: return
-        val contentManager = toolWindow.contentManager
         val browserService = project.service<ContinueBrowserService>()
-        browserService.reload()
 
-        val newBrowser = project.getBrowser() ?: return
-        val newBrowserComponent = newBrowser.getComponent()
+        // Perform the reload and UI update on the Event Dispatch Thread
+        ApplicationManager.getApplication().invokeLater {
+            // Reload the browser service to get a new browser instance
+            browserService.reload()
 
-        contentManager.removeAllContents(true)
-        val newContent = contentManager.factory.createContent(
-            newBrowserComponent,
-            null,
-            false
-        )
+            val newBrowser = project.getBrowser() ?: return@invokeLater
+            val newBrowserComponent = newBrowser.getComponent()
 
-        contentManager.addContent(newContent)
+            val contentManager = toolWindow.contentManager
+            contentManager.removeAllContents(true)
 
-        contentManager.setSelectedContent(newContent)
+            val newContent = contentManager.factory.createContent(
+                newBrowserComponent,
+                null,
+                false
+            )
+            contentManager.addContent(newContent)
+            contentManager.setSelectedContent(newContent, true) // Request focus
 
-        toolWindow.activate(null)
+            toolWindow.activate({
+                // After activation, ensure the browser's input field gets focus
+                newBrowser.focusOnInput()
+            }, true)
+        }
     }
 }
 
