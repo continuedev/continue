@@ -168,6 +168,7 @@ function convertBundleIntoReact(
         bg={useClasses ? undefined : bundle.bg}
         fg={useClasses ? undefined : bundle.fg}
         decoration={decorationProp}
+        data-testid="ansi-span"
       >
         {bundle.content}
       </AnsiSpan>
@@ -210,6 +211,7 @@ function convertBundleIntoReact(
       bg={useClasses ? undefined : bundle.bg}
       fg={useClasses ? undefined : bundle.fg}
       decoration={decorationProp}
+      data-testid="ansi-span"
     >
       {content}
     </AnsiSpan>

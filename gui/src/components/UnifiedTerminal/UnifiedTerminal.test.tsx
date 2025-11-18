@@ -178,9 +178,9 @@ describe("UnifiedTerminalCommand", () => {
     expect(container.textContent).toMatch(/Bold text/);
     expect(container.textContent).toMatch(/Underlined text/);
 
-    // Verify ANSI processing created styled spans
-    const styledSpans = container.querySelectorAll('span[class*="sc-esYiGF"]');
-    expect(styledSpans.length).toBeGreaterThan(0);
+    // Verify ANSI processing created styled spans using data-testid
+    const ansiSpans = container.querySelectorAll('[data-testid="ansi-span"]');
+    expect(ansiSpans.length).toBeGreaterThan(0);
   });
 
   test("handles links in output", async () => {
