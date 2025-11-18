@@ -7,6 +7,7 @@ import type { AuthConfig } from "../auth/workos.js";
 import { saveAuthConfig } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
 import { env } from "../env.js";
+
 import { AuthenticatedConfig } from "./workos-types.js";
 
 /**

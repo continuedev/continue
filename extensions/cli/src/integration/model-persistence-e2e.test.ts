@@ -6,6 +6,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { AuthenticatedConfig } from "src/auth/workos-types.js";
+
 import {
   getModelName,
   loadAuthConfig,
