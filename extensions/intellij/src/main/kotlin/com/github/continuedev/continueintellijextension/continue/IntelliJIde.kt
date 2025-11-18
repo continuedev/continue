@@ -315,7 +315,6 @@ class IntelliJIDE(
                             widget = terminalManager.createLocalShellWidget(
                                 project.basePath,
                                 terminalOptions.terminalName,
-                                true,
                                 true
                             )
                         } else {
