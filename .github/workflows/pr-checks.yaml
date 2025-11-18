@@ -228,16 +228,6 @@ jobs:
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
         with:
@@ -298,16 +288,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -340,16 +320,6 @@ jobs:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
       - uses: actions/checkout@v5
       - name: Run VS Code E2E test
         uses: ./.github/actions/run-vscode-e2e-test
@@ -371,7 +341,8 @@ jobs:
           android: true
           dotnet: true
           haskell: true
-          large-packages: true
+          large-packages: false
+          docker-images: true
           swap-storage: true
 
       - uses: actions/checkout@v5
