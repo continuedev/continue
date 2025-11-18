@@ -5,6 +5,7 @@
  * Handles scheduling, unscheduling, and execution triggering.
  */
 
+import * as cronParser from 'cron-parser';
 import {
   Workflow,
   WorkflowExecution,
@@ -197,53 +198,21 @@ export class WorkflowScheduler {
   }
 
   /**
-   * Calculate next run time from cron expression
+   * Calculate next run time from cron expression using cron-parser
    */
-  private calculateNextRun(cronExpression: string): Date {
-    // Basic implementation - in production, use a library like 'cron-parser'
-    const parts = cronExpression.split(' ');
+  private calculateNextRun(cronExpression: string, timezone?: string): Date {
+    try {
+      const options = {
+        currentDate: new Date(),
+        tz: timezone || 'UTC',
+      };
 
-    if (parts.length !== 5) {
-      throw new Error(`Invalid cron expression: ${cronExpression}`);
+      const interval = cronParser.parseExpression(cronExpression, options);
+      return interval.next().toDate();
+    } catch (error: any) {
+      console.error(`[WorkflowScheduler] Invalid cron expression: ${cronExpression}`, error);
+      throw new Error(`Invalid cron expression: ${cronExpression} - ${error.message}`);
     }
-
-    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
-
-    const now = new Date();
-    const next = new Date(now);
-
-    // Simple logic for common patterns
-    if (cronExpression === '0 0 * * *') {
-      // Daily at midnight
-      next.setDate(next.getDate() + 1);
-      next.setHours(0, 0, 0, 0);
-    } else if (cronExpression === '0 9 * * *') {
-      // Daily at 9 AM
-      next.setHours(9, 0, 0, 0);
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-    } else if (cronExpression === '0 0 * * 0') {
-      // Weekly on Sunday
-      next.setDate(next.getDate() + ((7 - next.getDay()) % 7 || 7));
-      next.setHours(0, 0, 0, 0);
-    } else if (cronExpression === '0 0 1 * *') {
-      // Monthly on 1st
-      next.setMonth(next.getMonth() + 1);
-      next.setDate(1);
-      next.setHours(0, 0, 0, 0);
-    } else if (cronExpression.startsWith('*/')) {
-      // Every N minutes
-      const interval = parseInt(minute.substring(2));
-      next.setMinutes(Math.ceil(next.getMinutes() / interval) * interval);
-      next.setSeconds(0, 0);
-    } else {
-      // Default: 1 hour from now
-      next.setHours(next.getHours() + 1);
-      next.setMinutes(0, 0, 0);
-    }
-
-    return next;
   }
 
   /**
@@ -293,6 +262,18 @@ export class WorkflowScheduler {
     });
 
     return executionId;
+  }
+
+  /**
+   * Validate cron expression
+   */
+  validateCronExpression(cronExpression: string): boolean {
+    try {
+      cronParser.parseExpression(cronExpression);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
