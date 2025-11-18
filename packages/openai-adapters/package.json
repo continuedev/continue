@@ -19,12 +19,12 @@
     "@continuedev/config-yaml": "^1.29.0",
     "@continuedev/fetch": "^1.5.0",
     "dotenv": "^16.5.0",
-    "google-auth-library": "^10.1.0",
+    "google-auth-library": "^10.4.1",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
-    "openai": "^5.13.1",
+    "openai": "^5.23.2",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
