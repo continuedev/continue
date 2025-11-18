@@ -1,0 +1,58 @@
+{
+  "id": "github-stale-issues",
+  "name": "Stale Issue Manager",
+  "description": "Auto-label and comment on inactive issues",
+  "version": "1.0.0",
+  "author": "Code Mode Team",
+  "category": "github-automation",
+  "tags": ["github", "issues", "automation", "maintenance"],
+  "difficulty": "beginner",
+  "mcpServers": ["github"],
+  "triggerTypes": ["cron"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "GITHUB_ORG": {
+        "type": "string",
+        "description": "GitHub organization name"
+      },
+      "STALE_DAYS": {
+        "type": "number",
+        "description": "Days before marking an issue as stale",
+        "default": 30,
+        "minimum": 1,
+        "maximum": 365
+      },
+      "STALE_LABEL": {
+        "type": "string",
+        "description": "Label to apply to stale issues",
+        "default": "stale"
+      },
+      "COMMENT_MESSAGE": {
+        "type": "string",
+        "description": "Message to post on stale issues",
+        "default": "This issue has been automatically marked as stale because it has not had recent activity."
+      }
+    },
+    "required": ["GITHUB_ORG"]
+  },
+  "defaultConfig": {
+    "STALE_DAYS": 30,
+    "STALE_LABEL": "stale",
+    "COMMENT_MESSAGE": "This issue has been automatically marked as stale because it has not had recent activity."
+  },
+  "estimatedTokens": 6000,
+  "estimatedDuration": 45,
+  "tokenReduction": 98,
+  "useCases": [
+    "Identify abandoned feature requests",
+    "Prompt contributors to update status",
+    "Keep issue tracker organized",
+    "Free up maintainer time"
+  ],
+  "exampleOutputUrl": "https://example.com/stale-issues-example",
+  "requiredPermissions": ["repo:issues:write"],
+  "visibility": "public",
+  "createdAt": "2025-01-15T00:00:00Z",
+  "updatedAt": "2025-01-15T00:00:00Z"
+}
