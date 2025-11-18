@@ -64,7 +64,8 @@ class CoreMessenger(
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
-            val done = (data as Map<String, Boolean>)["done"]
+            @Suppress("UNCHECKED_CAST")
+            val done = (data as? Map<String, Boolean>)?.get("done")
 
             if (done == true) {
                 responseListeners.remove(messageId)
