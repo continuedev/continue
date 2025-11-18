@@ -130,7 +130,7 @@ export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
         const afterLastColon = toolRef.substring(lastColonIndex + 1);
 
         // Check if it's a port number (only digits), empty string, or a tool name
-        if (/^\d+$/.test(afterLastColon)) {
+        if (/^\d+(?:$|[/?#])/.test(afterLastColon)) {
           // It's a port number, treat the whole thing as the server
           const mcpServer = toolRef;
           tools.push({ mcpServer });

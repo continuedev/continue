@@ -473,7 +473,10 @@ export class MCPService
             try {
               const transport = this.constructHttpTransport(serverConfig);
               await client.connect(transport, {});
-            } catch {
+            } catch (e) {
+              if (isAuthError(e)) {
+                throw e;
+              }
               const transport = this.constructSseTransport(serverConfig);
               await client.connect(transport, {});
             }
