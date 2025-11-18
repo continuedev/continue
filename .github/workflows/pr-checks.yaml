@@ -11,6 +11,30 @@ on:
       - main
 
 jobs:
+  # Check what files changed to determine which jobs to skip
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs-only: ${{ steps.check-changes.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+            non-docs:
+              - '!docs/**'
+      - name: Check if only docs changed
+        id: check-changes
+        run: |
+          if [[ "${{ steps.filter.outputs.docs }}" == "true" && "${{ steps.filter.outputs.non-docs }}" == "false" ]]; then
+            echo "docs-only=true" >> $GITHUB_OUTPUT
+          else
+            echo "docs-only=false" >> $GITHUB_OUTPUT
+          fi
+
   track-rerun:
     runs-on: ubuntu-latest
     if: github.run_attempt > 1
@@ -89,6 +113,8 @@ jobs:
           INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
 
   gui-checks:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -119,6 +145,8 @@ jobs:
           npm test
 
   binary-checks:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -331,6 +359,8 @@ jobs:
           is_fork: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
 
   jetbrains-tests:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -349,6 +379,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     needs:
+      - changes
       - prettier-check
       - core-checks
       - gui-checks
