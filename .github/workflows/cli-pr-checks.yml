@@ -10,6 +10,30 @@ permissions:
   issues: write
 
 jobs:
+  # Check what files changed to determine which jobs to skip
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs-only: ${{ steps.check-changes.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+            non-docs:
+              - '!docs/**'
+      - name: Check if only docs changed
+        id: check-changes
+        run: |
+          if [[ "${{ steps.filter.outputs.docs }}" == "true" && "${{ steps.filter.outputs.non-docs }}" == "false" ]]; then
+            echo "docs-only=true" >> $GITHUB_OUTPUT
+          else
+            echo "docs-only=false" >> $GITHUB_OUTPUT
+          fi
+
   track-rerun:
     runs-on: ubuntu-latest
     if: github.run_attempt > 1
@@ -55,6 +79,8 @@ jobs:
           npm run lint
 
   test:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -126,6 +152,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     needs:
+      - changes
       - lint
       - test
 
@@ -133,4 +160,5 @@ jobs:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
+          allowed-skips: test
           jobs: ${{ toJSON(needs) }}
