@@ -7,7 +7,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 function AddRuleDialog({ mode }: { mode: "workspace" | "global" }) {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const [name, setName] = useState("");
+  const [name, setName] = useState("new-rule");
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
