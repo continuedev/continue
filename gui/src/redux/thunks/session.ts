@@ -5,6 +5,7 @@ import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectSelectedChatModel } from "../slices/configSlice";
+import { selectSelectedProfile } from "../slices/profilesSlice";
 import {
   deleteSessionMetadata,
   newSession,
@@ -13,6 +14,7 @@ import {
   updateSessionMetadata,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { updateSelectedModelByRole } from "../thunks/updateSelectedModelByRole";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -120,26 +122,8 @@ export const loadSession = createAsyncThunk<
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
-    const chatModelTitle = session.chatModelTitle;
-    if (chatModelTitle) {
-      const state = getState();
-      const org = state.profiles.organizations.find(
-        (o) => o.id === state.profiles.selectedOrganizationId,
-      );
-      const selectedProfile =
-        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
-        null;
-      if (selectedProfile) {
-        await dispatch(
-          (
-            await import("../thunks/updateSelectedModelByRole")
-          ).updateSelectedModelByRole({
-            role: "chat",
-            modelTitle: chatModelTitle,
-            selectedProfile,
-          }),
-        );
-      }
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
     }
   },
 );
@@ -170,26 +154,32 @@ export const loadRemoteSession = createAsyncThunk<
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
-    const chatModelTitle = session.chatModelTitle;
-    if (chatModelTitle) {
-      const state = getState();
-      const org = state.profiles.organizations.find(
-        (o) => o.id === state.profiles.selectedOrganizationId,
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
+    }
+  },
+);
+
+export const selectChatModelForProfile = createAsyncThunk<
+  void,
+  string,
+  ThunkApiType
+>(
+  "session/selectModelForCurrentProfile",
+  async (modelTitle, { extra, dispatch, getState }) => {
+    const state = getState();
+    const modelMatch = state.config.config?.modelsByRole?.chat?.find(
+      (m) => m.title === modelTitle,
+    );
+    const selectedProfile = selectSelectedProfile(state);
+    if (selectedProfile && modelMatch) {
+      await dispatch(
+        updateSelectedModelByRole({
+          role: "chat",
+          modelTitle: modelTitle,
+          selectedProfile,
+        }),
       );
-      const selectedProfile =
-        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
-        null;
-      if (selectedProfile) {
-        await dispatch(
-          (
-            await import("../thunks/updateSelectedModelByRole")
-          ).updateSelectedModelByRole({
-            role: "chat",
-            modelTitle: chatModelTitle,
-            selectedProfile,
-          }),
-        );
-      }
     }
   },
 );
@@ -220,28 +210,8 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
       session = await getSession(extra.ideMessenger, lastSessionId);
     }
     dispatch(newSession(session));
-
-    // Restore selected chat model from session, if present
-    const chatModelTitle = session.chatModelTitle;
-    if (chatModelTitle) {
-      const state = getState();
-      const org = state.profiles.organizations.find(
-        (o) => o.id === state.profiles.selectedOrganizationId,
-      );
-      const selectedProfile =
-        org?.profiles.find((p) => p.id === state.profiles.selectedProfileId) ??
-        null;
-      if (selectedProfile) {
-        await dispatch(
-          (
-            await import("../thunks/updateSelectedModelByRole")
-          ).updateSelectedModelByRole({
-            role: "chat",
-            modelTitle: chatModelTitle,
-            selectedProfile,
-          }),
-        );
-      }
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
     }
   },
 );

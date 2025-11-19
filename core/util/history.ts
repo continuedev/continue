@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import { Session, BaseSessionMetadata } from "../index.js";
+import { BaseSessionMetadata, Session } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
 
 import { NEW_SESSION_TITLE } from "./constants.js";
@@ -107,12 +107,14 @@ export class HistoryManager {
       title: session.title,
       workspaceDirectory: session.workspaceDirectory,
       history: session.history,
-      // Optional fields persisted when present
-      ...(session.mode ? { mode: session.mode } : {}),
-      ...(typeof session.chatModelTitle === "undefined"
-        ? {}
-        : { chatModelTitle: session.chatModelTitle }),
-    } as Session;
+    };
+    if (session.mode) {
+      orderedSession.mode = session.mode;
+    }
+    if (session.chatModelTitle !== undefined) {
+      orderedSession.chatModelTitle = session.chatModelTitle;
+    }
+
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
       JSON.stringify(orderedSession, undefined, 2),

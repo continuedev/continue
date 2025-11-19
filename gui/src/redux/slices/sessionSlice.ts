@@ -694,7 +694,7 @@ export const sessionSlice = createSlice({
         state.title = payload.title;
         state.id = payload.sessionId;
         if (payload.mode) {
-          state.mode = payload.mode as MessageModes;
+          state.mode = payload.mode;
         }
       } else {
         state.history = [];
