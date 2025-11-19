@@ -6,7 +6,7 @@ import {
   autoSelectOrganizationAndConfig,
   createUpdatedAuthConfig,
 } from "./orgSelection.js";
-import type { AuthenticatedConfig } from "./workos.js";
+import { AuthenticatedConfig } from "./workos-types.js";
 
 // Mock dependencies
 vi.mock("fs");

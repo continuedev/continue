@@ -5,14 +5,10 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
 
   push:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
 
 jobs:
   track-rerun:
@@ -338,6 +334,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/checkout@v5
       - name: Run JetBrains tests
         uses: ./.github/actions/run-jetbrains-tests

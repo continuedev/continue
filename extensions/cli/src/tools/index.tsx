@@ -27,7 +27,7 @@ import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchCodeTool } from "./searchCode.js";
+import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import {
   type Tool,
   type ToolCall,
@@ -57,12 +57,12 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   listFilesTool,
-  searchCodeTool,
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
-  reportFailureTool,
 ];
+
+const BUILTIN_SEARCH_TOOLS: Tool[] = [searchCodeTool];
 
 // Get all builtin tools including dynamic ones, with capability-based filtering
 export async function getAllAvailableTools(
@@ -70,19 +70,16 @@ export async function getAllAvailableTools(
 ): Promise<Tool[]> {
   const tools = [...BASE_BUILTIN_TOOLS];
 
-  // Filter out ReportFailure tool if no agent ID is present
+  const isRipgrepInstalled = await checkIfRipgrepIsInstalled();
+  if (isRipgrepInstalled) {
+    tools.push(...BUILTIN_SEARCH_TOOLS);
+  }
+
+  // Add ReportFailure tool if no agent ID is present
   // (it requires --id to function and will confuse the agent if unavailable)
   const agentId = getAgentIdFromArgs();
-  if (!agentId) {
-    const reportFailureIndex = tools.findIndex(
-      (t) => t.name === reportFailureTool.name,
-    );
-    if (reportFailureIndex !== -1) {
-      tools.splice(reportFailureIndex, 1);
-      logger.debug(
-        `Filtered out ${reportFailureTool.name} tool - no agent ID present (--id flag not provided)`,
-      );
-    }
+  if (agentId) {
+    tools.push(reportFailureTool);
   }
 
   // If model is capable, exclude editTool in favor of multiEditTool
