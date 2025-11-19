@@ -4,10 +4,7 @@ import {
 } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import {
-  SSEClientTransport,
-  SseError,
-} from "@modelcontextprotocol/sdk/client/sse.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
@@ -16,10 +13,14 @@ import {
   StdioMcpServer,
 } from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
+import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
+
+import { get } from "../util/apiClient.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import { isAuthError } from "./mcpUtils.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   MCPConnectionInfo,
@@ -27,14 +28,6 @@ import {
   MCPServiceState,
   SERVICE_NAMES,
 } from "./types.js";
-
-function is401Error(error: unknown) {
-  return (
-    (error instanceof SseError && error.code === 401) ||
-    (error instanceof Error && error.message.includes("401")) ||
-    (error instanceof Error && error.message.includes("Unauthorized"))
-  );
-}
 
 interface ServerConnection extends MCPConnectionInfo {
   client: Client | null;
@@ -55,9 +48,10 @@ export class MCPService
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
   private isHeadless: boolean | undefined;
+  private apiKeyCache: Map<string, string> = new Map();
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH];
   }
   constructor() {
     super("MCPService", {
@@ -79,34 +73,19 @@ export class MCPService
     isHeadless: boolean | undefined,
   ): Promise<MCPServiceState> {
     this.isHeadless = isHeadless;
-    logger.debug("Initializing MCPService", {
-      configName: assistant.name,
-      serverCount: assistant.mcpServers?.length || 0,
-    });
 
     await this.shutdownConnections();
 
     this.assistant = assistant;
     this.connections.clear();
 
-    if (assistant.mcpServers?.length) {
-      logger.debug("Starting MCP server connections", {
-        serverCount: assistant.mcpServers.length,
-      });
-    }
     const connectionPromises = assistant.mcpServers?.map(async (config) => {
       if (config) {
         return await this.connectServer(config);
       }
     });
 
-    const connectionInit = Promise.all(connectionPromises ?? []).then(
-      (connections) => {
-        logger.debug("MCP connections established", {
-          connectionCount: connections.length,
-        });
-      },
-    );
+    const connectionInit = Promise.all(connectionPromises ?? []);
     if (isHeadless || hasAgentFile) {
       await connectionInit;
 
@@ -185,6 +164,86 @@ export class MCPService
   }
 
   /**
+   * Generic wrapper for client operations that handles 401 errors with token refresh
+   * Only applies to SSE/HTTP connections, not stdio
+   */
+  private async withTokenRefresh<T>(
+    serverName: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const connection = this.connections.get(serverName);
+    if (!connection) {
+      throw new Error(`Connection ${serverName} not found`);
+    }
+
+    const serverConfig = connection.config;
+    if (!serverConfig || "command" in serverConfig) {
+      // For stdio connections, just execute normally (no token refresh possible)
+      return await operation();
+    }
+
+    try {
+      // Try the operation first
+      return await operation();
+    } catch (error: unknown) {
+      // If not a 401 error, rethrow
+      if (!isAuthError(error)) {
+        throw error;
+      }
+
+      // Check if user is signed in
+      const isAuthed = await isAuthenticated();
+      if (!isAuthed) {
+        throw error;
+      }
+
+      const authConfig = loadAuthConfig();
+
+      // Clear cached token since it's invalid
+      this.apiKeyCache.delete(serverName);
+
+      // Fetch OAuth token from backend
+      const organizationSlug = authConfig?.organizationId;
+
+      let token: string | null = null;
+      try {
+        const params = new URLSearchParams({
+          url: serverConfig.url,
+        });
+        if (organizationSlug) {
+          params.set("organizationSlug", organizationSlug);
+        }
+        if (serverConfig.sourceSlug) {
+          params.set("slug", serverConfig.sourceSlug);
+        }
+
+        const response = await get<{
+          configured: boolean;
+          hasCredentials: boolean;
+          accessToken?: string;
+          expiresAt?: string;
+          expired?: boolean;
+        }>(`/ide/mcp-auth?${params.toString()}`);
+
+        if (response.data.hasCredentials && response.data.accessToken) {
+          token = response.data.accessToken;
+          this.apiKeyCache.set(serverName, token);
+        }
+      } catch {
+        logger.debug("Failed to fetch mcp oauth credentials");
+      }
+
+      if (!token) {
+        throw error;
+      }
+
+      this.apiKeyCache.set(serverConfig.name, token);
+
+      return await operation();
+    }
+  }
+
+  /**
    * Run a tool by name
    */
   public async runTool(name: string, args: Record<string, any>) {
@@ -192,9 +251,16 @@ export class MCPService
       if (connection.status === "connected" && connection.client) {
         const tool = connection.tools.find((t) => t.name === name);
         if (tool) {
-          return await connection.client.callTool({
-            name,
-            arguments: args,
+          const serverName = connection.config!.name;
+          return await this.withTokenRefresh(serverName, async () => {
+            const conn = this.connections.get(serverName);
+            if (!conn?.client) {
+              throw new Error(`Client for ${serverName} not available`);
+            }
+            return await conn.client.callTool({
+              name,
+              arguments: args,
+            });
           });
         }
       }
@@ -208,7 +274,6 @@ export class MCPService
   public async restartAllServers(): Promise<void> {
     if (!this.assistant) return;
 
-    logger.debug("Restarting all MCP servers");
     await this.shutdownConnections();
     await this.initialize(this.assistant);
   }
@@ -226,8 +291,6 @@ export class MCPService
     if (!serverConfig) {
       throw new Error(`Server ${serverName} not found in configuration`);
     }
-
-    logger.debug("Restarting MCP server", { name: serverName });
 
     const existingConnection = this.connections.get(serverName);
     if (existingConnection) {
@@ -277,19 +340,19 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       this.updateState();
 
       const capabilities = client.getServerCapabilities();
-      logger.debug("MCP server capabilities", {
-        name: serverName,
-        hasPrompts: !!capabilities?.prompts,
-        hasTools: !!capabilities?.tools,
-      });
 
       if (capabilities?.prompts) {
         try {
-          connection.prompts = (await client.listPrompts()).prompts;
-          logger.debug("Loaded MCP prompts", {
-            name: serverName,
-            count: connection.prompts.length,
-          });
+          connection.prompts = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listPrompts()).prompts;
+            },
+          );
         } catch (error) {
           const errorMessage = getErrorString(error);
           connection.warnings.push(`Failed to load prompts: ${errorMessage}`);
@@ -302,11 +365,16 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
       if (capabilities?.tools) {
         try {
-          connection.tools = (await client.listTools()).tools;
-          logger.debug("Loaded MCP tools", {
-            name: serverName,
-            count: connection.tools.length,
-          });
+          connection.tools = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listTools()).tools;
+            },
+          );
         } catch (error) {
           const errorMessage = getErrorString(error);
           connection.warnings.push(`Failed to load tools: ${errorMessage}`);
@@ -316,8 +384,6 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
           });
         }
       }
-
-      logger.debug("MCP server connected successfully", { name: serverName });
     } catch (error) {
       const errorMessage = getErrorString(error);
       connection.status = "error";
@@ -344,8 +410,6 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
    * Stop a specific server
    */
   public async stopServer(serverName: string): Promise<void> {
-    logger.debug("Stopping MCP server", { name: serverName });
-
     const connection = this.connections.get(serverName);
     if (connection) {
       await this.shutdownConnection(connection);
@@ -394,7 +458,6 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     this.isShuttingDown = true;
 
     this.removeAllListeners();
-    logger.debug("Shutting down MCPService");
     await this.shutdownConnections();
   }
 
@@ -412,30 +475,37 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     if ("command" in serverConfig) {
       // STDIO: no need to check type, just if command is present
-      logger.debug("Connecting to MCP server", {
-        name: serverConfig.name,
-        command: serverConfig.command,
-      });
       const transport = this.constructStdioTransport(serverConfig, connection);
       await client.connect(transport, {});
     } else {
       // SSE/HTTP: if type isn't explicit: try http and fall back to sse
-      logger.debug("Connecting to MCP server", {
-        name: serverConfig.name,
-        url: serverConfig.url,
-      });
-
       try {
-        if (serverConfig.type === "sse") {
-          const transport = this.constructSseTransport(serverConfig);
-          await client.connect(transport, {});
-        } else if (serverConfig.type === "streamable-http") {
-          const transport = this.constructHttpTransport(serverConfig);
-          await client.connect(transport, {});
-        }
+        await this.withTokenRefresh(serverConfig.name, async () => {
+          if (serverConfig.apiKey && !this.apiKeyCache.get(serverConfig.name)) {
+            this.apiKeyCache.set(serverConfig.name, serverConfig.apiKey);
+          }
+          if (serverConfig.type === "sse") {
+            const transport = this.constructSseTransport(serverConfig);
+            await client.connect(transport, {});
+          } else if (serverConfig.type === "streamable-http") {
+            const transport = this.constructHttpTransport(serverConfig);
+            await client.connect(transport, {});
+          } else {
+            try {
+              const transport = this.constructHttpTransport(serverConfig);
+              await client.connect(transport, {});
+            } catch (e) {
+              if (isAuthError(e)) {
+                throw e;
+              }
+              const transport = this.constructSseTransport(serverConfig);
+              await client.connect(transport, {});
+            }
+          }
+        });
       } catch (error: unknown) {
-        // on authorization error, use "mcp-remote" with stdio transport to connect
-        if (is401Error(error)) {
+        // If token refresh didn't work and it's a 401, fall back to mcp-remote
+        if (isAuthError(error) && !this.isHeadless) {
           const transport = this.constructStdioTransport(
             {
               name: serverConfig.name,
@@ -449,32 +519,6 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
           throw error;
         }
       }
-
-      if (typeof serverConfig.type === "undefined") {
-        try {
-          const transport = this.constructHttpTransport(serverConfig);
-          await client.connect(transport, {});
-        } catch {
-          logger.debug(
-            "MCP Connection: http connection failed, falling back to sse connection",
-            {
-              name: serverConfig.name,
-            },
-          );
-          try {
-            const transport = this.constructSseTransport(serverConfig);
-            await client.connect(transport, {});
-          } catch (e) {
-            throw new Error(
-              `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
-            );
-          }
-        }
-      } else if (
-        !["streamable-http", "sse", "stdio"].includes(serverConfig.type)
-      ) {
-        throw new Error(`Unsupported transport type: ${serverConfig.type}`);
-      }
     }
 
     return client;
@@ -483,11 +527,12 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   private constructSseTransport(
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
+    const apiKey = this.apiKeyCache.get(serverConfig.name);
     // Merge apiKey into headers if provided
     const headers = {
       ...serverConfig.requestOptions?.headers,
-      ...(serverConfig.apiKey && {
-        Authorization: `Bearer ${serverConfig.apiKey}`,
+      ...(apiKey && {
+        Authorization: `Bearer ${apiKey}`,
       }),
     };
 
@@ -509,10 +554,12 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     serverConfig: HttpMcpServer,
   ): StreamableHTTPClientTransport {
     // Merge apiKey into headers if provided
+    const apiKey = this.apiKeyCache.get(serverConfig.name);
+
     const headers = {
       ...serverConfig.requestOptions?.headers,
-      ...(serverConfig.apiKey && {
-        Authorization: `Bearer ${serverConfig.apiKey}`,
+      ...(apiKey && {
+        Authorization: `Bearer ${apiKey}`,
       }),
     };
 
