@@ -26,7 +26,7 @@ export async function handleInfoSlashCommand() {
   );
 
   // Auth info
-  if (isAuthenticated()) {
+  if (await isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
       const email = config.userEmail || config.userId;
