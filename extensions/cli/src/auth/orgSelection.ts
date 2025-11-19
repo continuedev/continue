@@ -3,10 +3,12 @@ import * as path from "path";
 
 import chalk from "chalk";
 
-import type { AuthConfig, AuthenticatedConfig } from "../auth/workos.js";
+import type { AuthConfig } from "../auth/workos.js";
 import { saveAuthConfig } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
 import { env } from "../env.js";
+
+import { AuthenticatedConfig } from "./workos-types.js";
 
 /**
  * Creates an updated AuthenticatedConfig with a new organization ID and optional config URI

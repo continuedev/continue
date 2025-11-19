@@ -103,6 +103,7 @@ export async function compactChatHistory(
       llmApi,
       controller,
       streamCallbacks,
+      true,
     );
 
     // Create the compacted history with a special marker

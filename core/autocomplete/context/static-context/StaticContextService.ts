@@ -1,8 +1,7 @@
-import * as fs from "fs/promises";
 import path from "path";
 import { pathToFileURL } from "url";
 import Parser from "web-tree-sitter";
-import { IDE, Position } from "../../..";
+import { FileType, IDE, Position } from "../../../";
 import { localPathOrUriToPath } from "../../../util/pathToUri";
 import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
 import {
@@ -353,10 +352,7 @@ export class StaticContextService {
             if (foundContents.has(tdLocation.filepath)) {
               content = foundContents.get(tdLocation.filepath)!;
             } else {
-              content = await fs.readFile(
-                localPathOrUriToPath(tdLocation.filepath),
-                "utf8",
-              );
+              content = await this.ide.readFile(tdLocation.filepath);
               foundContents.set(tdLocation.filepath, content);
             }
 
@@ -854,24 +850,19 @@ export class StaticContextService {
       return skipDirs.includes(dirName) || dirName.startsWith(".");
     };
 
-    async function scanRecursively(currentPath: string): Promise<void> {
+    const scanRecursively = async (currentPath: string): Promise<void> => {
       try {
-        const entries = await fs.readdir(currentPath, {
-          withFileTypes: true,
-        });
+        const currentUri = pathToFileURL(currentPath).toString();
+        const entries = await this.ide.listDir(currentUri);
+        for (const [name, fileType] of entries) {
+          const fullPath = localPathOrUriToPath(path.join(currentPath, name));
 
-        for (const entry of entries) {
-          const fullPath = localPathOrUriToPath(
-            path.join(currentPath, entry.name),
-          );
-
-          if (entry.isDirectory()) {
-            // Skip common directories that typically don't contain source files
-            if (!shouldSkipDirectory(entry.name)) {
+          if (fileType === (2 as FileType.Directory)) {
+            if (!shouldSkipDirectory(name)) {
               await scanRecursively(fullPath);
             }
-          } else if (entry.isFile()) {
-            const extension = path.extname(entry.name).toLowerCase();
+          } else if (fileType === (1 as FileType.File)) {
+            const extension = path.extname(name).toLowerCase();
             if (tsExtensions.includes(extension)) {
               tsFiles.push(fullPath);
             }
@@ -880,7 +871,7 @@ export class StaticContextService {
       } catch (error) {
         console.error(`Error reading directory ${currentPath}:`, error);
       }
-    }
+    };
 
     await scanRecursively(dirPath);
     return tsFiles;
