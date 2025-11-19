@@ -252,6 +252,135 @@ describe("processStreamingResponse - content preservation", () => {
     expect(result.finalContent).toBe("Hello world!");
   });
 
+  it("routes gpt-5 models through responsesStream and preserves streaming tool updates", async () => {
+    const gpt5Chunks: ChatCompletionChunk[] = [
+      {
+        id: "resp_gpt5",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: "gpt-5",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "resp_gpt5",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: "gpt-5",
+        choices: [
+          {
+            index: 0,
+            delta: { content: "Analyzing repository…" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "resp_gpt5",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: "gpt-5",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call_final",
+                  type: "function",
+                  function: {
+                    name: "searchDocs",
+                    arguments: '{"query":"unit',
+                  },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "resp_gpt5",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: "gpt-5",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              tool_calls: [
+                {
+                  index: 0,
+                  type: "function",
+                  function: {
+                    arguments: ' tests"}',
+                  },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "resp_gpt5",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: "gpt-5",
+        choices: [
+          {
+            index: 0,
+            delta: {},
+            finish_reason: "tool_calls",
+          },
+        ],
+      },
+    ];
+
+    const responsesStream = vi.fn().mockImplementation(async function* () {
+      for (const chunk of gpt5Chunks) {
+        yield chunk;
+      }
+    });
+    const chatCompletionStream = vi.fn().mockImplementation(async function* () {
+      throw new Error("chatCompletionStream should not be used for gpt-5");
+    });
+
+    mockLlmApi = {
+      responsesStream,
+      chatCompletionStream,
+    } as unknown as BaseLlmApi;
+
+    mockModel = {
+      model: "gpt-5-preview",
+      provider: "openai",
+    } as unknown as ModelConfig;
+
+    const result = await processStreamingResponse({
+      chatHistory,
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
+
+    expect(responsesStream).toHaveBeenCalledTimes(1);
+    expect(chatCompletionStream).not.toHaveBeenCalled();
+    expect(result.content).toBe("Analyzing repository…");
+    expect(result.toolCalls).toHaveLength(1);
+    expect(result.toolCalls[0]).toMatchObject({
+      id: "call_final",
+      name: "searchDocs",
+      arguments: { query: "unit tests" },
+    });
+    expect(result.shouldContinue).toBe(true);
+  });
+
   it("handles provider that only sends tool ID in first chunk then uses index", async () => {
     chunks = [
       contentChunk("I'll read the README.md file for you and then say hello!"),

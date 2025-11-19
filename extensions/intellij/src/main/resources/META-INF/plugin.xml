@@ -41,7 +41,6 @@
                            displayType="BALLOON"/>
         <actionPromoter order="last"
                         implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
-        <errorHandler implementation="com.github.continuedev.continueintellijextension.error.ContinueErrorSubmitter"/>
         <postStartupActivity
                 implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
         <postStartupActivity implementation="com.github.continuedev.continueintellijextension.proxy.ProxyPoolingActivity"/>

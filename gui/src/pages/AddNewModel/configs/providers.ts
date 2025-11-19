@@ -118,6 +118,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt5,
+      models.gpt5Codex,
       models.gpt4o,
       models.gpt4omini,
       models.gpt4turbo,
@@ -725,6 +726,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.codeLlamaInstruct,
       models.wizardCoder,
       models.mistralOs,
+      models.claude4Sonnet,
     ],
     apiKeyUrl: "https://replicate.com/account/api-tokens",
   },

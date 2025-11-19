@@ -1164,7 +1164,20 @@ export abstract class BaseLLM implements ILLM {
     let citations: null | string[] = null;
 
     try {
-      {
+      if (this.templateMessages) {
+        for await (const chunk of this._streamComplete(
+          prompt,
+          signal,
+          completionOptions,
+        )) {
+          completion.push(chunk);
+          interaction?.logItem({
+            kind: "chunk",
+            chunk: chunk,
+          });
+          yield { role: "assistant", content: chunk };
+        }
+      } else {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           let body = toChatBody(messages, completionOptions, {
             includeReasoningField: this.supportsReasoningField,

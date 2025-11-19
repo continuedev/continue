@@ -19,7 +19,6 @@ export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 type UIState = {
   showDialog: boolean;
   dialogMessage: JSX.Element | undefined;
-  dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
@@ -35,7 +34,6 @@ export const DEFAULT_RULE_SETTING: RulePolicy = "on";
 export const DEFAULT_UI_SLICE: UIState = {
   showDialog: false,
   dialogMessage: undefined,
-  dialogEntryOn: false,
   onboardingCard: defaultOnboardingCardState,
   isExploreDialogOpen:
     getLocalStorage(LocalStorageKey.IsExploreDialogOpen) ?? false,

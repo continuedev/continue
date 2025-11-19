@@ -158,7 +158,35 @@ export function customFetch(
   if (process.env.FEATURE_FLAG_DISABLE_CUSTOM_FETCH) {
     return patchedFetch;
   }
+
+  function letRequestOptionsOverrideAuthorizationHeader(init: any): any {
+    if (
+      !init ||
+      !init.headers ||
+      !requestOptions ||
+      !requestOptions.headers ||
+      (!requestOptions.headers["Authorization"] &&
+        !requestOptions.headers["authorization"])
+    ) {
+      return init;
+    }
+
+    if (init.headers instanceof Headers) {
+      init.headers.delete("Authorization");
+    } else if (Array.isArray(init.headers)) {
+      init.headers = init.headers.filter(
+        (header: [string, string]) =>
+          (header[0] ?? "").toLowerCase() !== "authorization",
+      );
+    } else if (typeof init.headers === "object") {
+      delete init.headers["Authorization"];
+      delete init.headers["authorization"];
+    }
+    return init;
+  }
+
   return (req: URL | string | Request, init?: any) => {
+    init = letRequestOptionsOverrideAuthorizationHeader(init);
     if (typeof req === "string" || req instanceof URL) {
       return fetchwithRequestOptions(req, init, requestOptions);
     } else {

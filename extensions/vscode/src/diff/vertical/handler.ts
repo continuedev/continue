@@ -11,6 +11,7 @@ import {
 
 import type { ApplyState, DiffLine } from "core";
 import type { VerticalDiffCodeLens } from "./manager";
+import { getFirstChangedLine } from "./util";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
@@ -135,12 +136,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       // Accept all: delete all the red ranges and clear green decorations
       await this.deleteRangeLines(removedRanges.map((r) => r.range));
     } else {
-      // Reject all: Re-insert red lines, delete green ones
-      for (const r of removedRanges) {
-        await this.deleteRangeLines([r.range]);
-        await this.insertTextAboveLine(r.range.start.line, r.line);
-      }
-      await this.deleteRangeLines(this.addedLineDecorations.ranges);
+      await this.unifiedRejectAll();
     }
 
     this.clearDecorations();
@@ -211,7 +207,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
       // Scroll to the first diff
       const scrollToLine =
-        this.getFirstChangedLine(myersDiffs) ?? this.startLine;
+        getFirstChangedLine(myersDiffs, this.startLine) ?? this.startLine;
       const range = new vscode.Range(scrollToLine, 0, scrollToLine, 0);
       this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
 
@@ -603,15 +599,63 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   /**
-   * Gets the first line number that was changed in a diff
+   * Rejects all diffs in a single edit operation.
    */
-  private getFirstChangedLine(diff: DiffLine[]): number | null {
-    for (let i = 0; i < diff.length; i++) {
-      const item = diff[i];
-      if (item.type === "old" || item.type === "new") {
-        return this.startLine + i;
+  private async unifiedRejectAll() {
+    await this.ensureCurrentFileIsFocused();
+
+    const removedRanges = this.removedLineDecorations.ranges;
+    const addedRanges = this.addedLineDecorations.ranges;
+
+    interface LineOperation {
+      type: "removed" | "added";
+      line?: string; // Only for removed lines
+      range: vscode.Range;
+    }
+
+    const operations: LineOperation[] = [];
+    for (const r of removedRanges) {
+      operations.push({
+        type: "removed",
+        line: r.line,
+        range: r.range,
+      });
+    }
+    for (const range of addedRanges) {
+      operations.push({
+        type: "added",
+        range,
+      });
+    }
+
+    operations.sort((a, b) => b.range.start.line - a.range.start.line);
+
+    const document = this.editor.document;
+    const lines = document.getText().split("\n");
+
+    for (const op of operations) {
+      const lineNum = op.range.start.line;
+
+      if (op.type === "removed") {
+        // Replace the placeholder line with the original content
+        lines[lineNum] = op.line!;
+      } else if (op.type === "added") {
+        // Delete the added lines
+        const startLine = op.range.start.line;
+        const endLine = op.range.end.line;
+        const numLinesToDelete = endLine - startLine + 1;
+        lines.splice(startLine, numLinesToDelete);
       }
     }
-    return null;
+
+    const finalContent = lines.join("\n");
+
+    await this.editor.edit(
+      (editBuilder) => {
+        const fullRange = new vscode.Range(0, 0, document.lineCount, 0);
+        editBuilder.replace(fullRange, finalContent);
+      },
+      { undoStopAfter: false, undoStopBefore: false },
+    );
   }
 }

@@ -20,7 +20,7 @@ sidebarTitle: "Overview"
 Prerequisites:
 
 - [Node.js 18 or newer](https://nodejs.org/en/download/)
-- A [Continue Hub](https://hub.continue.dev) account (recommended) or local configuration
+- A [Continue Mission Control](https://hub.continue.dev) account (recommended) or local configuration
 
 ```bash npm
 # Install Continue CLI
@@ -77,6 +77,21 @@ cn -p "Update documentation based on recent code changes"
 - **CI/CD and pipeline integration**
 - **Git hooks and automated workflows**
 
+<Info>
+  **Tool Permissions in TUI vs Headless Mode**
+
+  Continue CLI tools have three permission levels:
+  - **allow**: Executes automatically without confirmation
+  - **ask**: Prompts for user confirmation before execution (e.g., `writeFile`, `runTerminalCommand`)
+  - **exclude**: Tool is not available to the AI
+
+  **In headless mode**, tools with "ask" permission are automatically excluded to prevent the AI from seeing tools it cannot call. This ensures reliable automation without user intervention.
+
+  **In TUI mode**, tools with "ask" permission are available and will prompt for confirmation when the AI attempts to use them.
+
+  💡 **Tip**: If your workflow requires tools that need confirmation (like file writes or terminal commands), use TUI mode. For fully automated workflows with read-only operations, use headless mode.
+</Info>
+
 ### Development Workflow: TUI → Headless
 
 <Tip>
@@ -117,17 +132,17 @@ cn -p "Update documentation based on recent code changes"
 
 - Switch between models with `/model` command
 - Use any model configured in your `config.yaml`
-- Access Continue Hub models and configurations
+- Access Continue Mission Control models and configurations
 
-## Continue Hub Integration
+## Continue Mission Control Integration
 
-Continue CLI integrates seamlessly with [Continue Hub](https://hub.continue.dev) for:
+Continue CLI integrates seamlessly with [Continue Mission Control](https://hub.continue.dev) for:
 
 ### API Access
 
 Get an API key for automation workflows:
 
-1. Visit [Continue Hub API Keys](https://hub.continue.dev/settings/api-keys)
+1. Visit [Continue Mission Control API Keys](https://hub.continue.dev/settings/api-keys)
 2. Create a new API key
 3. Use with `cn login` or in your automation scripts
 
@@ -135,7 +150,7 @@ Get an API key for automation workflows:
 
 Store secure credentials for CLI workflows:
 
-1. Visit [Continue Hub Secrets](https://hub.continue.dev/settings/secrets)
+1. Visit [Continue Mission Control Secrets](https://hub.continue.dev/settings/secrets)
 2. Add your API keys and sensitive data
 3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
 

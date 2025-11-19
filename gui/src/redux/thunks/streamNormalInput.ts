@@ -231,7 +231,6 @@ export const streamNormalInput = createAsyncThunk<
               ...(appliedRules.length > 0 && {
                 rules: appliedRules.map((rule) => ({
                   id: getRuleId(rule),
-                  rule: rule.rule,
                   slug: rule.slug,
                 })),
               }),
@@ -317,7 +316,6 @@ export const streamNormalInput = createAsyncThunk<
       activeTools,
       generatedCalls3,
       toolPolicies,
-      state3.config.config.ui?.autoAcceptEditToolDiffs,
     );
     const anyRequireApproval = policies.find(
       ({ policy }) => policy === "allowedWithPermission",

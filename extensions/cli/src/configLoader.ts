@@ -133,7 +133,7 @@ function determineConfigSource(
   } else {
     // In headless, user assistant fallback behavior isn't supported
     if (isHeadless) {
-      return { type: "no-config" };
+      return { type: "default-agent" };
     }
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
@@ -194,6 +194,8 @@ async function loadFromSource(
           injectBlocks,
         );
 
+      // TODO this is currently skipped because we are forcing default config
+      // Because models add on won't work for injected blocks e.g. default model, (only default config)
       case "no-config":
         return await unrollPackageIdentifiersAsConfigYaml(
           injectBlocks,

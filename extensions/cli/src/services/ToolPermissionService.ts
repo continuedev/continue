@@ -30,7 +30,6 @@ export interface ToolPermissionServiceState {
   currentMode: PermissionMode;
   isHeadless: boolean;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
-  agentFilePolicyCount?: number;
   originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
 
@@ -74,10 +73,16 @@ export class ToolPermissionService
   generateAgentFilePolicies(
     agentFileServiceState?: AgentFileServiceState,
     mcpServiceState?: MCPServiceState,
-  ): undefined | ToolPermissionPolicy[] {
+  ): ToolPermissionPolicy[] {
+    // With --agent, all available tools are allowed if not specified
     const parsedTools = agentFileServiceState?.parsedTools;
-    if (!parsedTools?.tools.length) {
-      return undefined;
+    if (!parsedTools) {
+      return [
+        {
+          tool: "*",
+          permission: "allow",
+        },
+      ];
     }
 
     const policies: ToolPermissionPolicy[] = [];
@@ -222,23 +227,20 @@ export class ToolPermissionService
       this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
-    const agentFilePolicies = this.generateAgentFilePolicies(
-      agentFileServiceState,
-      mcpServiceState,
-    );
     const modePolicies = this.generateModePolicies();
 
-    // For plan and auto modes, use ONLY mode policies (absolute override)
-    // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
-    if (agentFilePolicies) {
+    if (agentFileServiceState?.agentFile) {
       // Agent file policies take full precedence on init
-      allPolicies = agentFilePolicies;
+      allPolicies = this.generateAgentFilePolicies(
+        agentFileServiceState,
+        mcpServiceState,
+      );
     } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto"
     ) {
-      // Absolute override: ignore all user configuration
+      // For plan and auto modes, use ONLY mode policies (absolute override)
       allPolicies = modePolicies;
     } else {
       // Normal mode: combine mode policies with user configuration
@@ -255,7 +257,6 @@ export class ToolPermissionService
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-      agentFilePolicyCount: (agentFilePolicies ?? []).length,
     });
 
     (this as any).isInitialized = true;

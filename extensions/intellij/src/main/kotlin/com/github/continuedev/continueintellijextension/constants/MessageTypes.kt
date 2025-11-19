@@ -122,6 +122,7 @@ class MessageTypes {
             "llm/listModels",
             "llm/compileChat",
             "streamDiffLines",
+            "getDiffLines",
             "chatDescriber/describe",
             "conversation/compact",
             "stats/getTokensPerDay",

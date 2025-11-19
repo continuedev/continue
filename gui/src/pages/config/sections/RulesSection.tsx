@@ -16,16 +16,18 @@ import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_PLAN_SYSTEM_MESSAGE,
-  DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { getRuleDisplayName } from "core/llm/rules/rules-utils";
 import { useContext, useMemo, useState } from "react";
 import { DropdownButton } from "../../../components/DropdownButton";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
-import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
+import {
+  useEditBlock,
+  useOpenRule,
+} from "../../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
-import { Card, EmptyState, useFontSize } from "../../../components/ui";
+import { Card, EmptyState } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
@@ -138,20 +140,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   );
 
   const isDisabled = policy === "off";
-
-  const editBlock = useEditBlock();
-  const handleOpen = async () => {
-    if (
-      rule.source === "default-chat" ||
-      rule.source === "default-plan" ||
-      rule.source === "default-agent"
-    ) {
-      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
-    } else {
-      editBlock(rule?.slug, rule?.sourceFile);
-    }
-  };
-
+  const openRule = useOpenRule();
   const handleTogglePolicy = () => {
     if (rule.name) {
       dispatch(toggleRuleSetting(rule.name));
@@ -207,11 +196,17 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
               </HeaderButtonWithToolTip>{" "}
               {rule.source === "default-chat" ||
               rule.source === "default-agent" ? (
-                <HeaderButtonWithToolTip onClick={handleOpen} text="View">
+                <HeaderButtonWithToolTip
+                  onClick={() => openRule(rule)}
+                  text="View"
+                >
                   <EyeIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               ) : (
-                <HeaderButtonWithToolTip onClick={handleOpen} text="Edit">
+                <HeaderButtonWithToolTip
+                  onClick={() => openRule(rule)}
+                  text="Edit"
+                >
                   <PencilIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               )}

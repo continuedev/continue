@@ -272,6 +272,10 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
+  /** Optional: per-session UI mode (chat/agent/plan/background) */
+  mode?: MessageModes;
+  /** Optional: title of the selected chat model for this session */
+  chatModelTitle?: string | null;
 }
 
 export interface BaseSessionMetadata {
@@ -513,7 +517,7 @@ export interface ChatHistoryItem {
   toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
-  appliedRules?: RuleWithSource[];
+  appliedRules?: RuleMetadata[];
   conversationSummary?: string;
 }
 
@@ -1404,7 +1408,6 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
-  autoAcceptEditToolDiffs?: boolean;
   continueAfterToolRejection?: boolean;
 }
 
@@ -1869,18 +1872,21 @@ export type RuleSource =
   | ".continuerules"
   | "agentFile";
 
-export interface RuleWithSource {
+export interface RuleMetadata {
   name?: string;
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
   regex?: string | string[];
-  rule: string;
   description?: string;
   sourceFile?: string;
   alwaysApply?: boolean;
   invokable?: boolean;
 }
+export interface RuleWithSource extends RuleMetadata {
+  rule: string;
+}
+
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;

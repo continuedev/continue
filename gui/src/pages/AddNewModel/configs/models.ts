@@ -1079,6 +1079,19 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  gpt5Codex: {
+    title: "GPT-5 Codex",
+    description:
+      "OpenAI's most advanced code generation model, optimized for programming tasks",
+    params: {
+      model: "gpt-5-codex",
+      contextLength: 400_000,
+      title: "GPT-5 Codex",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt4turbo: {
     title: "GPT-4 Turbo",
     description:
@@ -1142,7 +1155,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 4 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic"],
+    providerOptions: ["anthropic", "replicate"],
     icon: "anthropic.png",
     isOpenSource: false,
   },

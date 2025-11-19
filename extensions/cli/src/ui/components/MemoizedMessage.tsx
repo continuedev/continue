@@ -56,13 +56,6 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
     // Handle system messages
     if (isSystem) {
-      // TODO: Properly separate LLM system messages from UI informational messages
-      // using discriminated union types. For now, skip displaying the first system
-      // message which is typically the LLM's system prompt.
-      if (index === 0) {
-        return null;
-      }
-
       return (
         <Box key={index} marginBottom={1}>
           <Text color="dim" italic>
@@ -116,24 +109,28 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                 flexDirection="column"
                 marginBottom={1}
               >
-                <Box>
-                  <Text
-                    color={
-                      isErrored
-                        ? "red"
-                        : isCompleted
-                          ? "green"
-                          : toolState.status === "generated"
-                            ? "yellow"
-                            : "white"
-                    }
-                  >
-                    {isCompleted || isErrored ? "●" : "○"}
-                  </Text>
-                  <Text color="white">
-                    {" "}
-                    <ToolCallTitle toolName={toolName} args={toolArgs} />
-                  </Text>
+                <Box width="100%">
+                  <Box flexShrink={0}>
+                    <Text
+                      color={
+                        isErrored
+                          ? "red"
+                          : isCompleted
+                            ? "green"
+                            : toolState.status === "generated"
+                              ? "yellow"
+                              : "white"
+                      }
+                    >
+                      {isCompleted || isErrored ? "●" : "○"}
+                    </Text>
+                  </Box>
+                  <Box flexGrow={1} flexShrink={1} minWidth={0}>
+                    <Text color="white">
+                      {" "}
+                      <ToolCallTitle toolName={toolName} args={toolArgs} />
+                    </Text>
+                  </Box>
                 </Box>
 
                 {isErrored ? (

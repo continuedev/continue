@@ -20,7 +20,7 @@ import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
 import { HelperVars } from "./util/HelperVars.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./util/types.js";
 
-const autocompleteCache = AutocompleteLruCache.get();
+const autocompleteCachePromise = AutocompleteLruCache.get();
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
 // Not worth disrupting the user to tell them that a single autocomplete request didn't go through
@@ -31,7 +31,7 @@ const ERRORS_TO_IGNORE = [
 ];
 
 export class CompletionProvider {
-  private autocompleteCache = AutocompleteLruCache.get();
+  private autocompleteCache?: AutocompleteLruCache;
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
@@ -48,6 +48,22 @@ export class CompletionProvider {
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
+    void this.initCache();
+  }
+
+  private async initCache() {
+    try {
+      this.autocompleteCache = await autocompleteCachePromise;
+    } catch (e) {
+      console.error("Failed to initialize autocomplete cache:", e);
+    }
+  }
+
+  private async getCache(): Promise<AutocompleteLruCache> {
+    if (!this.autocompleteCache) {
+      this.autocompleteCache = await autocompleteCachePromise;
+    }
+    return this.autocompleteCache;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -201,14 +217,12 @@ export class CompletionProvider {
 
       // Completion
       let completion: string | undefined = "";
-
-      const cache = await autocompleteCache;
+      const cache = await this.getCache();
       const cachedCompletion = helper.options.useCache
         ? await cache.get(helper.prunedPrefix)
         : undefined;
       let cacheHit = false;
       if (cachedCompletion) {
-        // Cache
         cacheHit = true;
         completion = cachedCompletion;
       } else {
@@ -277,16 +291,12 @@ export class CompletionProvider {
         outcome.enabledStaticContextualization = true;
       }
 
-      //////////
-
-      // Save to cache
       if (!outcome.cacheHit && helper.options.useCache) {
-        (await this.autocompleteCache)
+        void cache
           .put(outcome.prefix, outcome.completion)
           .catch((e) => console.warn(`Failed to save to cache: ${e.message}`));
       }
 
-      // When using the JetBrains extension, Mark as displayed
       const ideType = (await this.ide.getIdeInfo()).ideType;
       if (ideType === "jetbrains") {
         this.markDisplayed(input.completionId, outcome);
@@ -297,6 +307,12 @@ export class CompletionProvider {
       this.onError(e);
     } finally {
       this.loggingService.deleteAbortController(input.completionId);
+    }
+  }
+
+  public async dispose() {
+    if (this.autocompleteCache) {
+      await this.autocompleteCache.close();
     }
   }
 }
