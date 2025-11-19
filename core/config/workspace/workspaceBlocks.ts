@@ -8,6 +8,7 @@ import {
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
+import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
 
 const BLOCK_TYPE_CONFIG: Record<
@@ -190,7 +191,7 @@ export async function createNewGlobalRuleFile(
   baseFilename?: string,
 ): Promise<void> {
   try {
-    const globalDir = getContinueGlobalPath();
+    const globalDir = localPathToUri(getContinueGlobalPath());
 
     // Create the rules subdirectory within the global directory
     const rulesDir = joinPathsToUri(globalDir, "rules");

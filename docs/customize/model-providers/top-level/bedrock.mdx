@@ -90,8 +90,8 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
       model: <MODEL_ID>
       env:
         region: us-east-1
-        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local assistants
-        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # can also enter key inline here for local assistants
+        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local configs
+        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # can also enter key inline here for local configs
       roles:
         - chat
   ```

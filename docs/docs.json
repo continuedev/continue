@@ -48,6 +48,7 @@
                   "mission-control/integrations",
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
+                  "mission-control/integrations/snyk",
                   "mission-control/integrations/slack-agent"
                 ]
               },

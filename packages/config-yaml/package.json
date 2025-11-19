@@ -24,8 +24,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
-    "yaml": "^2.6.1",
-    "zod": "^3.24.2"
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
