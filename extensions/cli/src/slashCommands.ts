@@ -93,9 +93,10 @@ async function handleLogout() {
   }
 }
 
-function handleWhoami() {
-  if (isAuthenticated()) {
-    const config = loadAuthConfig();
+async function handleWhoami() {
+  const authed = await isAuthenticated();
+  if (authed) {
+    const config = loadAuthConfig(); // TODO duplicate auth config loading
     if (config && isAuthenticatedConfig(config)) {
       return {
         exit: false,

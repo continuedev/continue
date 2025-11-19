@@ -4,11 +4,8 @@ import { getApiClient } from "../config.js";
 import { safeStderr } from "../init.js";
 import { gracefulExit } from "../util/exit.js";
 
-import type {
-  AuthConfig,
-  AuthenticatedConfig,
-  EnvironmentAuthConfig,
-} from "./workos.js";
+import { AuthenticatedConfig, EnvironmentAuthConfig } from "./workos-types.js";
+import type { AuthConfig } from "./workos.js";
 import { saveAuthConfig } from "./workos.js";
 
 /**
