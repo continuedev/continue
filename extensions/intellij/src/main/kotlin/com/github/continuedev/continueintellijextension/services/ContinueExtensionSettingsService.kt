@@ -30,6 +30,7 @@ class ContinueSettingsComponent : DumbAware {
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
     val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
+    val allowTelemetry: JCheckBox = JCheckBox("Allow telemetry")
 
     init {
         val constraints = GridBagConstraints()
@@ -59,6 +60,8 @@ class ContinueSettingsComponent : DumbAware {
         constraints.gridy++
         panel.add(showIDECompletionSideBySide, constraints)
         constraints.gridy++
+        panel.add(allowTelemetry, constraints)
+        constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
@@ -87,6 +90,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableTabAutocomplete: Boolean = true
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
+        var allowTelemetry: Boolean = true
         var continueTestEnvironment: String = "production"
     }
 
@@ -188,7 +192,8 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
                     mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
                     mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
-                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide
+                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide ||
+                    mySettingsComponent?.allowTelemetry?.isSelected != settings.continueState.allowTelemetry
         return modified
     }
 
@@ -201,6 +206,7 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
         settings.continueState.showIDECompletionSideBySide =
             mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
+        settings.continueState.allowTelemetry = mySettingsComponent?.allowTelemetry?.isSelected ?: true
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
             .settingsUpdated(settings.continueState)
@@ -216,6 +222,7 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide
+        mySettingsComponent?.allowTelemetry?.isSelected = settings.continueState.allowTelemetry
 
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }

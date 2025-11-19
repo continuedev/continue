@@ -148,6 +148,7 @@ data class IdeSettings(
     val remoteConfigSyncPeriod: Int,
     val userToken: String,
     val pauseCodebaseIndexOnStart: Boolean,
+    val allowTelemetry: Boolean,
     val continueTestEnvironment: String
 )
 
