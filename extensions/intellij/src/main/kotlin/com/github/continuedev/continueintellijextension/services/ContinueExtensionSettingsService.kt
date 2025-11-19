@@ -122,10 +122,21 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
                             connection.addRequestProperty("Authorization", "Bearer $token")
                     }.readString()
                 val response = Gson().fromJson(responseBody, ContinueRemoteConfigSyncResponse::class.java)
-                val file = File(getConfigJsonPath(URL(url).host))
-                response.configJs.let { file.writeText(it!!) }
-                response.configJson.let { file.writeText(it!!) }
-            } catch (e: IOException) {
+                val configPath = getConfigJsonPath(URL(url).host)
+                
+                // Write configJson if present
+                if (!response.configJson.isNullOrEmpty()) {
+                    File(configPath).writeText(response.configJson!!)
+                }
+                
+                // Write configJs if present (to a separate file if needed)
+                // Note: Currently both would overwrite the same file, which seems like a bug
+                // For now, prioritizing configJson over configJs
+                if (response.configJson.isNullOrEmpty() && !response.configJs.isNullOrEmpty()) {
+                    File(configPath).writeText(response.configJs!!)
+                }
+            } catch (e: Exception) {
+                // Catch all exceptions including JsonSyntaxException
                 service<ContinueSentryService>().report(e, "Unexpected exception during remote config sync")
             }
         }
@@ -133,18 +144,23 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
     // Create a scheduled task to sync remote config every `remoteConfigSyncPeriod` minutes
     fun addRemoteSyncJob() {
-
+        // Cancel existing job if present
         if (remoteSyncFuture != null) {
             remoteSyncFuture?.cancel(false)
+            remoteSyncFuture = null
         }
 
-        instance.remoteSyncFuture = AppExecutorUtil.getAppScheduledExecutorService()
-            .scheduleWithFixedDelay(
-                ::syncRemoteConfig,
-                0,
-                continueState.remoteConfigSyncPeriod.toLong(),
-                TimeUnit.MINUTES
-            )
+        // Only schedule sync job if remote config server URL is configured
+        val remoteServerUrl = continueState.remoteConfigServerUrl
+        if (remoteServerUrl != null && remoteServerUrl.isNotEmpty()) {
+            instance.remoteSyncFuture = AppExecutorUtil.getAppScheduledExecutorService()
+                .scheduleWithFixedDelay(
+                    ::syncRemoteConfig,
+                    0,
+                    continueState.remoteConfigSyncPeriod.toLong(),
+                    TimeUnit.MINUTES
+                )
+        }
     }
 }
 
