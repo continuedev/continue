@@ -440,15 +440,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
       body: JSON.stringify(chatOptions),
       signal,
     });
-    let _isThinking: boolean = false;
-    function GetIsThinking(): boolean {
-      return _isThinking;
-    }
-    function SetIsThinking(newValue: boolean): void {
-      if (_isThinking !== newValue) {
-        _isThinking = newValue;
-      }
-    }
+    let isThinking: boolean = false;
+
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
@@ -458,18 +451,20 @@ class Ollama extends BaseLLM implements ModelInstaller {
         const { content } = res;
 
         if (content === "<think>") {
-          SetIsThinking(true);
+          isThinking = true;
         }
 
-        if (GetIsThinking() && content) {
+        if (isThinking && content) {
+          // TODO better support for streaming thinking chunks, or remove this and depend on redux <think/> parsing logic
           const thinkingMessage: ThinkingChatMessage = {
             role: "thinking",
             content: content,
           };
 
           if (thinkingMessage) {
+            // could cause issues with termination if chunk doesn't match this exactly
             if (content === "</think>") {
-              SetIsThinking(false);
+              isThinking = false;
             }
             // When Streaming you can't have both thinking and content
             return [thinkingMessage];
