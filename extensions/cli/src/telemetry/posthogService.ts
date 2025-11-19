@@ -11,12 +11,25 @@ import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 export class PosthogService {
-  private os: string | undefined;
-  private uniqueId: string;
+  private _os: string | undefined;
+  private _uniqueId: string | undefined;
 
   constructor() {
-    this.os = os.platform();
-    this.uniqueId = this.getEventUserId();
+    // Initialization is now lazy to avoid issues with mocking in tests
+  }
+
+  private get os(): string {
+    if (!this._os) {
+      this._os = os.platform();
+    }
+    return this._os;
+  }
+
+  public get uniqueId(): string {
+    if (!this._uniqueId) {
+      this._uniqueId = this.getEventUserId();
+    }
+    return this._uniqueId;
   }
 
   private _hasInternetConnection: boolean | undefined = undefined;
@@ -66,10 +79,16 @@ export class PosthogService {
   }
 
   /**
-   * - Continue user id if signed in
+   * - Continue user id from environment (when running as agent)
+   * - Continue user id if signed in locally
    * - Unique machine id if not signed in
    */
   private getEventUserId(): string {
+    // When running as an agent, use the user ID from the environment
+    if (process.env.CONTINUE_USER_ID) {
+      return process.env.CONTINUE_USER_ID;
+    }
+
     const authConfig = loadAuthConfig();
 
     if (isAuthenticatedConfig(authConfig)) {

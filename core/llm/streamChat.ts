@@ -60,13 +60,6 @@ export async function* llmStreamChat(
       if (!slashCommand) {
         throw new Error(`Unknown slash command ${command.name}`);
       }
-      void Telemetry.capture(
-        "useSlashCommand",
-        {
-          name: command.name,
-        },
-        true,
-      );
       if (!slashCommand.run) {
         console.error(
           `Slash command ${command.name} (${command.source}) has no run function`,

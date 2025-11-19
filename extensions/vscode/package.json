@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.3.23",
+  "version": "1.3.26",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -89,7 +89,9 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
+          "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
+          "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -257,7 +259,7 @@
       {
         "command": "continue.viewLogs",
         "category": "Continue",
-        "title": "View History",
+        "title": "View Logs",
         "group": "Continue"
       },
       {

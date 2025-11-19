@@ -17,15 +17,15 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
-  RuleWithSource,
+  RuleMetadata,
   Session,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -501,7 +501,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: RuleMetadata[];
       }>,
     ) => {
       if (state.history[payload.index]) {
@@ -693,6 +693,9 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
+        if (payload.mode) {
+          state.mode = payload.mode;
+        }
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;

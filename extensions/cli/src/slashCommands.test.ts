@@ -1,14 +1,15 @@
 import type { AssistantUnrolled } from "@continuedev/config-yaml";
 import {
-  describe,
-  it,
-  expect,
-  vi,
   beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
   type MockedFunction,
 } from "vitest";
 
-import type { AuthConfig, AuthenticatedConfig } from "./auth/workos.js";
+import { AuthenticatedConfig } from "./auth/workos-types.js";
+import type { AuthConfig } from "./auth/workos.js";
 import type { ConfigServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
@@ -128,7 +129,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -157,7 +158,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(true);
+      ).mockResolvedValue(true);
       (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
         {} as AuthConfig,
       );
@@ -199,7 +200,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(true);
+      ).mockResolvedValue(true);
       (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
         mockAuthConfig,
       );
@@ -230,7 +231,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -263,7 +264,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
