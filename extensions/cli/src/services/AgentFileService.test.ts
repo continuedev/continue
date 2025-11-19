@@ -1,9 +1,47 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   AgentFileService,
   EMPTY_AGENT_FILE_STATE,
 } from "./AgentFileService.js";
+
+// Mock fs module
+vi.mock("fs", async () => {
+  const actual = await vi.importActual("fs");
+  return {
+    ...actual,
+    default: {
+      readFileSync: vi.fn(),
+    },
+    readFileSync: vi.fn(),
+  };
+});
+
+// Mock path module
+vi.mock("path", async () => {
+  const actual = await vi.importActual<typeof import("path")>("path");
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      resolve: vi.fn(),
+    },
+    resolve: vi.fn(),
+  };
+});
+
+// Mock url module
+vi.mock("url", async () => {
+  const actual = await vi.importActual<typeof import("url")>("url");
+  return {
+    ...actual,
+    fileURLToPath: vi.fn(),
+  };
+});
 
 // Mock the hubLoader module
 vi.mock("../hubLoader.js", () => ({
@@ -28,6 +66,7 @@ vi.mock("../util/logger.js", () => ({
     debug: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
@@ -65,6 +104,9 @@ describe("AgentFileService", () => {
   let agentFileService: AgentFileService;
   let mockLoadPackageFromHub: any;
   let mockLoadModelFromHub: any;
+  let mockReadFileSync: any;
+  let mockPathResolve: any;
+  let mockFileURLToPath: any;
 
   const mockAgentFile = {
     name: "Test Agent File",
@@ -102,15 +144,23 @@ describe("AgentFileService", () => {
     mockLoadPackageFromHub = hubLoaderModule.loadPackageFromHub as any;
     mockLoadModelFromHub = hubLoaderModule.loadModelFromHub as any;
 
+    // Get fs mocks
+    mockReadFileSync = vi.mocked(fs.readFileSync);
+    mockPathResolve = vi.mocked(path.resolve);
+    mockFileURLToPath = vi.mocked(fileURLToPath);
+
     // Create service instance
     agentFileService = new AgentFileService();
 
-    // Setup default mocks
+    // Setup default mocks for initialization tests
+    // For getAgentFile tests, mocks should be set in each test
     mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
     mockLoadModelFromHub.mockResolvedValue({
       name: "gpt-4-agent",
       provider: "openai",
     });
+    // Default file system mocks
+    mockPathResolve.mockImplementation((p: string) => `/resolved/${p}`);
   });
 
   describe("initialization", () => {
@@ -307,6 +357,10 @@ describe("AgentFileService", () => {
   describe("error handling", () => {
     it("should throw error when agent loading fails", async () => {
       mockLoadPackageFromHub.mockRejectedValue(new Error("Network error"));
+      // Also make file reading fail so there's no fallback
+      mockReadFileSync.mockImplementation(() => {
+        throw new Error("File not found");
+      });
 
       const authServiceState = {
         authConfig: mockAuthConfig,
@@ -320,13 +374,18 @@ describe("AgentFileService", () => {
           authServiceState,
           apiClientState,
         ),
-      ).rejects.toThrow("Network error");
+      ).rejects.toThrow("Failed to load agent from owner/agent");
 
       const state = agentFileService.getState();
       expect(state.agentFile).toBeNull();
     });
 
-    it("should throw error for invalid agent slug format", async () => {
+    it("should throw error when both hub and file loading fail", async () => {
+      mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
+      mockReadFileSync.mockImplementation(() => {
+        throw new Error("File not found");
+      });
+
       const authServiceState = {
         authConfig: mockAuthConfig,
         isAuthenticated: true,
@@ -339,9 +398,7 @@ describe("AgentFileService", () => {
           authServiceState,
           apiClientState,
         ),
-      ).rejects.toThrow(
-        'Invalid agent slug format. Expected "owner/package", got: invalid-slug',
-      );
+      ).rejects.toThrow("Failed to load agent from invalid-slug");
     });
 
     it("should throw error when model loading fails", async () => {
@@ -426,6 +483,370 @@ describe("AgentFileService", () => {
       expect(state.agentFile?.rules).toBeUndefined();
       expect(state.parsedRules).toBeNull();
       expect(state.parsedTools).toBeNull();
+    });
+  });
+
+  describe("getAgentFile", () => {
+    const mockFileContent = `---
+name: Test Agent
+model: gpt-4
+tools: bash,read,write
+rules: Be helpful
+---
+You are a helpful agent`;
+
+    describe("hub slug loading", () => {
+      it("should load from hub when path is valid slug format (owner/agent)", async () => {
+        mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+
+        const result = await agentFileService.getAgentFile("owner/agent");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "owner/agent",
+          expect.objectContaining({
+            type: "agentFile",
+            expectedFileExtensions: [".md"],
+          }),
+        );
+        expect(result).toEqual(mockAgentFile);
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should load from hub when slug has valid two-part format", async () => {
+        mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+
+        const result =
+          await agentFileService.getAgentFile("continue/dev-agent");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "continue/dev-agent",
+          expect.any(Object),
+        );
+        expect(result).toEqual(mockAgentFile);
+      });
+
+      it("should fallback to file path when hub loading fails for slug-like path", async () => {
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
+        mockPathResolve.mockImplementation((p: string) => `/resolved/${p}`);
+        mockReadFileSync.mockReturnValue(mockFileContent);
+
+        const result = await agentFileService.getAgentFile("owner/agent");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        expect(mockPathResolve).toHaveBeenCalledWith("owner/agent");
+        expect(mockReadFileSync).toHaveBeenCalledWith(
+          "/resolved/owner/agent",
+          "utf-8",
+        );
+        expect(result).toBeDefined();
+        expect(result.name).toBe("Test Agent");
+      });
+    });
+
+    describe("file:/ URL loading", () => {
+      it("should load from file:/ URL using fileURLToPath", async () => {
+        const fileUrl = "file:///home/user/agent.md";
+        const resolvedPath = "/home/user/agent.md";
+        mockFileURLToPath.mockReturnValue(resolvedPath);
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(fileUrl);
+
+        expect(mockFileURLToPath).toHaveBeenCalledWith(fileUrl);
+        expect(mockReadFileSync).toHaveBeenCalledWith(resolvedPath, "utf-8");
+        expect(result.name).toBe("Test Agent");
+        expect(result.model).toBe("gpt-4");
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+      });
+
+      it("should handle file:/ prefix with single slash", async () => {
+        const fileUrl = "file:/path/to/agent.md";
+        const resolvedPath = "/path/to/agent.md";
+        mockFileURLToPath.mockReturnValue(resolvedPath);
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(fileUrl);
+
+        expect(mockFileURLToPath).toHaveBeenCalledWith(fileUrl);
+        expect(mockReadFileSync).toHaveBeenCalledWith(resolvedPath, "utf-8");
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe("relative path loading", () => {
+      it("should load from relative path", async () => {
+        const relativePath = "./agents/my-agent.md";
+        mockPathResolve.mockReturnValue("/absolute/path/agents/my-agent.md");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Reset hub loading mock to ensure it's not called
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(relativePath);
+
+        expect(mockPathResolve).toHaveBeenCalledWith(relativePath);
+        expect(mockReadFileSync).toHaveBeenCalledWith(
+          "/absolute/path/agents/my-agent.md",
+          "utf-8",
+        );
+        expect(result.name).toBe("Test Agent");
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+      });
+
+      it("should load from absolute path", async () => {
+        const absolutePath = "/home/user/agents/agent.md";
+        mockPathResolve.mockReturnValue(absolutePath);
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(absolutePath);
+
+        expect(mockPathResolve).toHaveBeenCalledWith(absolutePath);
+        expect(mockReadFileSync).toHaveBeenCalledWith(absolutePath, "utf-8");
+        expect(result).toBeDefined();
+      });
+
+      it("should handle paths with special characters", async () => {
+        const specialPath = "./agents/my agent (v2).md";
+        mockPathResolve.mockReturnValue("/resolved/agents/my agent (v2).md");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(specialPath);
+
+        expect(mockPathResolve).toHaveBeenCalledWith(specialPath);
+        expect(mockReadFileSync).toHaveBeenCalledWith(
+          "/resolved/agents/my agent (v2).md",
+          "utf-8",
+        );
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe("path format edge cases", () => {
+      it("should treat single-part path as file path, not hub slug", async () => {
+        const singlePath = "agent";
+        mockPathResolve.mockReturnValue("/resolved/agent");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(singlePath);
+
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+        expect(mockPathResolve).toHaveBeenCalledWith(singlePath);
+        expect(mockReadFileSync).toHaveBeenCalled();
+        expect(result).toBeDefined();
+      });
+
+      it("should treat three-part path as file path, not hub slug", async () => {
+        const threePath = "path/to/agent";
+        mockPathResolve.mockReturnValue("/resolved/path/to/agent");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(threePath);
+
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+        expect(mockPathResolve).toHaveBeenCalledWith(threePath);
+        expect(mockReadFileSync).toHaveBeenCalled();
+        expect(result).toBeDefined();
+      });
+
+      it("should not treat two-part path with empty part as hub slug", async () => {
+        const emptyPartPath = "owner/";
+        mockPathResolve.mockReturnValue("/resolved/owner/");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(emptyPartPath);
+
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+        expect(mockPathResolve).toHaveBeenCalledWith(emptyPartPath);
+        expect(result).toBeDefined();
+      });
+
+      it("should not treat path starting with slash as hub slug", async () => {
+        const slashPath = "/owner/agent";
+        mockPathResolve.mockReturnValue(slashPath);
+        mockReadFileSync.mockReturnValue(mockFileContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile(slashPath);
+
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+        expect(mockPathResolve).toHaveBeenCalledWith(slashPath);
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe("error handling", () => {
+      it("should throw error with context when file reading fails", async () => {
+        const testPath = "./missing-file.md";
+        mockPathResolve.mockReturnValue("/resolved/missing-file.md");
+        mockReadFileSync.mockImplementation(() => {
+          throw new Error("ENOENT: no such file or directory");
+        });
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        await expect(agentFileService.getAgentFile(testPath)).rejects.toThrow(
+          "Failed to load agent from ./missing-file.md",
+        );
+        await expect(agentFileService.getAgentFile(testPath)).rejects.toThrow(
+          "ENOENT: no such file or directory",
+        );
+      });
+
+      it("should throw error when parseAgentFile fails", async () => {
+        const invalidContent = "invalid yaml content {{{{";
+        mockPathResolve.mockReturnValue("/resolved/invalid.md");
+        mockReadFileSync.mockReturnValue(invalidContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        await expect(
+          agentFileService.getAgentFile("./invalid.md"),
+        ).rejects.toThrow("Failed to load agent from ./invalid.md");
+      });
+
+      it("should throw error when hub loading fails and file fallback also fails", async () => {
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
+        mockPathResolve.mockReturnValue("/resolved/owner/agent");
+        mockReadFileSync.mockImplementation(() => {
+          throw new Error("File not found");
+        });
+
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("Failed to load agent from owner/agent");
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("File not found");
+      });
+
+      it("should handle permission errors when reading files", async () => {
+        mockPathResolve.mockReturnValue("/restricted/file.md");
+        mockReadFileSync.mockImplementation(() => {
+          throw new Error("EACCES: permission denied");
+        });
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        await expect(
+          agentFileService.getAgentFile("./restricted-file.md"),
+        ).rejects.toThrow("Failed to load agent from ./restricted-file.md");
+        await expect(
+          agentFileService.getAgentFile("./restricted-file.md"),
+        ).rejects.toThrow("EACCES: permission denied");
+      });
+    });
+
+    describe("content parsing", () => {
+      it("should correctly parse agent file with all fields", async () => {
+        const fullContent = `---
+name: Full Agent
+description: A complete agent
+model: gpt-4
+tools: bash,read,write
+rules: Always be helpful, Be concise
+---
+You are a helpful assistant`;
+
+        mockPathResolve.mockReturnValue("/resolved/full.md");
+        mockReadFileSync.mockReturnValue(fullContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile("./full.md");
+
+        expect(result.name).toBe("Full Agent");
+        expect(result.description).toBe("A complete agent");
+        expect(result.model).toBe("gpt-4");
+        expect(result.tools).toBe("bash,read,write");
+        expect(result.rules).toBe("Always be helpful, Be concise");
+        expect(result.prompt).toBe("You are a helpful assistant");
+      });
+
+      it("should parse agent file with minimal required fields", async () => {
+        const minimalContent = `---
+name: Minimal Agent
+---
+Basic prompt`;
+
+        mockPathResolve.mockReturnValue("/resolved/minimal.md");
+        mockReadFileSync.mockReturnValue(minimalContent);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile("./minimal.md");
+
+        expect(result.name).toBe("Minimal Agent");
+        expect(result.prompt).toBe("Basic prompt");
+        expect(result.model).toBeUndefined();
+        expect(result.tools).toBeUndefined();
+        expect(result.rules).toBeUndefined();
+      });
+
+      it("should handle UTF-8 encoded content", async () => {
+        const utf8Content = `---
+name: Agent with émojis 🚀
+---
+Héllo wörld`;
+
+        mockPathResolve.mockReturnValue("/resolved/utf8.md");
+        mockReadFileSync.mockReturnValue(utf8Content);
+        // Make hub loading fail so it falls back to file system
+        mockLoadPackageFromHub.mockRejectedValueOnce(
+          new Error("Not a hub slug"),
+        );
+
+        const result = await agentFileService.getAgentFile("./utf8.md");
+
+        expect(result.name).toBe("Agent with émojis 🚀");
+        expect(result.prompt).toBe("Héllo wörld");
+        expect(mockReadFileSync).toHaveBeenCalledWith(
+          "/resolved/utf8.md",
+          "utf-8",
+        );
+      });
     });
   });
 });

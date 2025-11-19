@@ -25,8 +25,9 @@ vi.mock("../hubLoader.js", () => ({
 vi.mock("../util/logger.js", () => ({
   logger: {
     debug: vi.fn(),
-    error: vi.fn(),
+    info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
@@ -417,7 +418,7 @@ describe("Agent file Integration Tests", () => {
           authServiceState,
           apiClientState,
         ),
-      ).rejects.toThrow("Network error");
+      ).rejects.toThrow("Failed to load agent from owner/agent");
 
       const agentFileState = agentFileService.getState();
       expect(agentFileState.agentFile).toBeNull();
