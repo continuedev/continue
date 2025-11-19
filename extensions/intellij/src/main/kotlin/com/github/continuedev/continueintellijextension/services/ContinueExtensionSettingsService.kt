@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
@@ -122,18 +123,16 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
                             connection.addRequestProperty("Authorization", "Bearer $token")
                     }.readString()
                 val response = Gson().fromJson(responseBody, ContinueRemoteConfigSyncResponse::class.java)
-                val configPath = getConfigJsonPath(URL(url).host)
+                val hostname = URL(url).host
                 
-                // Write configJson if present
+                // Write configJson to config.json if present
                 if (!response.configJson.isNullOrEmpty()) {
-                    File(configPath).writeText(response.configJson!!)
+                    File(getConfigJsonPath(hostname)).writeText(response.configJson!!)
                 }
                 
-                // Write configJs if present (to a separate file if needed)
-                // Note: Currently both would overwrite the same file, which seems like a bug
-                // For now, prioritizing configJson over configJs
-                if (response.configJson.isNullOrEmpty() && !response.configJs.isNullOrEmpty()) {
-                    File(configPath).writeText(response.configJs!!)
+                // Write configJs to config.js if present
+                if (!response.configJs.isNullOrEmpty()) {
+                    File(getConfigJsPath(hostname)).writeText(response.configJs!!)
                 }
             } catch (e: Exception) {
                 // Catch all exceptions including JsonSyntaxException
