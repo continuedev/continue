@@ -1,5 +1,5 @@
 import type { ChatHistoryItem } from "core/index.js";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatHistoryService } from "./ChatHistoryService.js";
 
@@ -18,6 +18,7 @@ vi.mock("../session.js", () => ({
 vi.mock("../util/logger.js", () => ({
   logger: {
     debug: vi.fn(),
+    info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
   },

@@ -3,6 +3,10 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { fileURLToPath } from "url";
 
 import {
+  decodeSecretLocation,
+  getTemplateVariables,
+} from "@continuedev/config-yaml";
+import {
   SSEClientTransport,
   SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -161,6 +165,24 @@ class MCPConnection {
           Authorization: `Bearer ${accessToken}`,
         };
       }
+    }
+
+    const vars = getTemplateVariables(JSON.stringify(this.options));
+    const unrendered = vars.map((v) => {
+      const stripped = v.replace("secrets.", "");
+      try {
+        return decodeSecretLocation(stripped).secretName;
+      } catch {
+        return stripped;
+      }
+    });
+
+    if (unrendered.length > 0) {
+      this.errors.push(
+        `${this.options.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}.
+For personal use you can set the secret in the hub at https://hub.continue.dev/settings/secrets.
+Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled.`,
+      );
     }
 
     this.connectionPromise = Promise.race([
