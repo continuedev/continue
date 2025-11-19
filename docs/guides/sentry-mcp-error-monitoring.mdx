@@ -4,6 +4,24 @@ description: "Build an AI-powered error monitoring workflow that analyzes Sentry
 sidebarTitle: "Sentry Automated Error Analysis with MCP"
 ---
 
+<Note>
+
+  **🚀 New: Sentry Mission Control Integration with Continuous AI**
+  
+  The new [Sentry Mission Control Integration](/mission-control/integrations/sentry) enables **[Continuous AI](/guides/continuous-ai)** for error monitoring - where AI agents autonomously detect, analyze, and fix production errors. When Sentry detects an issue, your agent automatically analyzes it, generates a fix, creates a PR, and validates the solution without manual intervention.
+  
+  **Mission Control Benefits:**
+  - **Webhook-based triggers** - Automatically respond when new errors occur in production
+  - **Centralized error workflows** - Manage all error monitoring Tasks from one dashboard
+  - **Dedicated inbox view** - Monitor all Sentry-related agent activity at [hub.continue.dev/inbox?view=sentry](https://hub.continue.dev/inbox?view=sentry)
+  - **Metrics & intervention rates** - Track how often agents successfully fix errors without human help
+  
+  This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine error analysis and fixes autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces mean time to resolution (MTTR) and improves application reliability.
+  
+  **Get Started:** Use this cookbook to understand error monitoring fundamentals, then [enable Mission Control](/mission-control/integrations/sentry) to deploy autonomous error-fixing agents across your organization.
+
+</Note>
+
 <Card title="What You'll Build" icon="bug">
   An automated error monitoring system that uses Continue CLI with Sentry MCP to analyze production errors, identify root causes with AI, and create detailed GitHub issues with suggested fixes.
 </Card>

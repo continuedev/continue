@@ -3,6 +3,8 @@ name: CLI PR Checks
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
 
 permissions:
   contents: read
