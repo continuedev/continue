@@ -4,8 +4,9 @@ import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
+import { AuthenticatedConfig } from "src/auth/workos-types.js";
+
 import {
-  AuthenticatedConfig,
   getModelName,
   loadAuthConfig,
   saveAuthConfig,
