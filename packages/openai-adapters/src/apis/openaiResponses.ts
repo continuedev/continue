@@ -34,7 +34,7 @@ import {
   ResponseUsage,
 } from "openai/resources/responses/responses.js";
 
-const RESPONSES_MODEL_REGEX = /^(?:gpt-5|gpt-5-codex|o)/i;
+const RESPONSES_MODEL_REGEX = /^(?:gpt-5|gpt-5-codex|o[0-9])/i;
 
 export function isResponsesModel(model: string): boolean {
   return !!model && RESPONSES_MODEL_REGEX.test(model);
