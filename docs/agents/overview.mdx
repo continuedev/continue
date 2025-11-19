@@ -6,7 +6,7 @@ sidebarTitle: "Overview"
 
 <Card title="Agents in Continue" icon="robot">
   Agents are custom AI workflows that combine a prompt, rules, and tools (MCPs and more) to complete specific, repeatable tasks.
-  They live in the Continue Hub and can be executed from Mission Control (web interface), TUI mode, or headless automation.
+  They live in the Continue Mission Control and can be executed from Mission Control (web interface), TUI mode, or headless automation.
 </Card>
 
 ## What Are Agents?
@@ -35,7 +35,7 @@ You can run Agents in three main ways:
   <Tab title="🌐 Mission Control">
     **Interactive web interface**
     
-    Trigger from the Continue Hub and review results in real-time.
+    Trigger from the Continue Mission Control and review results in real-time.
     
     ```bash
     # Navigate to hub.continue.dev/agents
@@ -170,9 +170,36 @@ Agents are organizational assets — once created, everyone in your org can use 
   </Step>
 </Steps>
 
+## Monitoring
+
+You can monitor all activity for your Agents directly in **Mission Control**.
+
+<AccordionGroup>
+
+  <Accordion title="Inbox Overview">
+    The **Inbox** shows every Task or Workflow run, and you can filter by Agent.
+  </Accordion>
+
+  <Accordion title="Detailed Session View">
+    Click any session in the Inbox to open the Detail page.  
+
+    Each session includes:
+    - **Summary** — what the agent did and why  
+    - **Diff** — generated code changes  
+    - **Logs** — full execution trace, tool calls, and reasoning  
+
+    This is the best way to review output, debug issues, or confirm correctness.
+  </Accordion>
+
+</AccordionGroup>
+
+<Info>
+All monitoring is scoped to your current workspace. 
+</Info>
+
 ## Best Practices
 
-The practice of using background agents, which we call Continuous AI, requires forethought to set up the right guardrails:
+The practice of using cloud agents, which we call Continuous AI, requires forethought to set up the right guardrails:
 
 - **Start Small**: Begin with tasks you're confident Continue can accomplish
 - **Use Thorough Prompts**: Agents can run for extended periods, so invest in detailed instructions  

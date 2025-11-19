@@ -461,9 +461,13 @@ export class NextEditProvider {
     // prompts[1] extracts the user prompt from the system-user prompt pair.
     // NOTE: Stream is currently set to false, but this should ideally be a per-model flag.
     // Mercury Coder currently does not support streaming.
-    const msg: ChatMessage = await llm.chat([prompts[1]], token, {
-      stream: false,
-    });
+    const msg: ChatMessage = await llm.chat(
+      this.endpointType === "fineTuned" ? [prompts[1]] : prompts,
+      token,
+      {
+        stream: false,
+      },
+    );
 
     if (typeof msg.content !== "string") {
       return undefined;

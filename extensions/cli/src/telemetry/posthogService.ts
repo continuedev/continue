@@ -79,10 +79,16 @@ export class PosthogService {
   }
 
   /**
-   * - Continue user id if signed in
+   * - Continue user id from environment (when running as agent)
+   * - Continue user id if signed in locally
    * - Unique machine id if not signed in
    */
   private getEventUserId(): string {
+    // When running as an agent, use the user ID from the environment
+    if (process.env.CONTINUE_USER_ID) {
+      return process.env.CONTINUE_USER_ID;
+    }
+
     const authConfig = loadAuthConfig();
 
     if (isAuthenticatedConfig(authConfig)) {

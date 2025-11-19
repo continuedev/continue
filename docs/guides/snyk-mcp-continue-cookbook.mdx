@@ -4,6 +4,24 @@ description: "Set up an AI-powered security workflow that automatically scans yo
 sidebarTitle: "Snyk Security Scanning with Continue"
 ---
 
+<Note>
+
+  **🚀 New: Snyk Mission Control Integration with Continuous AI**
+  
+  The new [Snyk Mission Control Integration](/mission-control/integrations/snyk) enables **[Continuous AI](/guides/continuous-ai)** - where AI agents autonomously detect, analyze, and fix vulnerabilities. When Snyk detects an issue, your agent automatically generates a fix, creates a PR, and validates the solution without manual intervention.
+  
+  **Mission Control Benefits:**
+  - **One-click OAuth** - No tokens, no configuration files, just connect and go
+  - **Centralized workflows** - Manage all security Tasks and automations from one dashboard
+  - **Webhook triggers** - Automatically respond to new vulnerabilities as they're discovered
+  - **Metrics & intervention rates** - Track how often agents successfully fix issues without human help
+  
+  This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine security work autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces intervention rates and accelerates secure development.
+  
+  **Get Started:** Use this cookbook to understand the fundamentals, then [enable Mission Control](/mission-control/integrations/snyk) to deploy autonomous security agents across your organization.
+
+</Note>
+
 <Card title="What You'll Build" icon="shield-halved">
   An automated security scanning system that uses Continue's AI agent with Snyk
   MCP to identify vulnerabilities in code, dependencies, infrastructure, and
@@ -104,14 +122,14 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Create a New Agent via the Continue Hub">
-    Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+  <Step title="Create a New Agent via the Continue Mission Control">
+    Go to the [Continue Mission Control](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
     </Step>
 
-  <Step title="Connect Snyk MCP via Continue Hub">
+  <Step title="Connect Snyk MCP via Continue Mission Control">
     Visit the [Snyk Continuous AI Agent](https://hub.continue.dev/continuedev/snyk-continuous-ai-agent) and click **Install** to add it to the agent you created in the step above.
 
-    This will add Snyk MCP to your agent's available tools. The Hub listing automatically configures the MCP command:
+    This will add Snyk MCP to your agent's available tools. The Mission Control listing automatically configures the MCP command:
     ```bash
     npx -y snyk@latest mcp -t stdio
     ```
@@ -132,7 +150,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   </Step>
 
   <Step title="Add Secure-at-Inception Rules">
-    Install the [Snyk Secure-at-Inception rules](https://hub.continue.dev/snyk/secure-at-inception) from the Hub to enable automatic security scanning.
+    Install the [Snyk Secure-at-Inception rules](https://hub.continue.dev/snyk/secure-at-inception) from Mission Control to enable automatic security scanning.
 
     **How to add rules to your agent:**
     1. Visit the rules link above and click **Install**
@@ -161,7 +179,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either: 
       - **Continue CLI Pro Plan** with the models add-on, OR 
-      - **Your own API keys** added to Continue Hub secrets (same as manual setup)
+      - **Your own API keys** added to Continue Mission Control secrets (same as manual setup)
       
     The agent will automatically detect and use your configuration along with the pre-configured Snyk MCP for security scanning operations.
 
@@ -174,7 +192,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Hub](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
 </Info>
 
 <Info>
@@ -594,7 +612,7 @@ jobs:
 Implement automated security policies using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 <Note>
-  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Continue Hub for easy installation.
+  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Continue Mission Control for easy installation.
 </Note>
 
 <Card title="Pre-commit Scanning" icon="lock">
@@ -627,7 +645,7 @@ Implement automated security policies using Continue's rule system. See the [Rul
 </Card>
 
 <Tip>
-  Enable the **Secure-at-Inception** rules from the Hub to automatically apply
+  Enable the **Secure-at-Inception** rules from Mission Control to automatically apply
   these guardrails to all code generation and modifications.
 </Tip>
 
@@ -687,7 +705,7 @@ After completing this guide, you have a complete **AI-powered security system** 
   <Card title="Snyk Documentation" icon="book" href="https://docs.snyk.io">
     Complete Snyk platform documentation
   </Card>
-  <Card title="Continue Hub" icon="plug" href="https://hub.continue.dev">
+  <Card title="Continue Mission Control" icon="plug" href="https://hub.continue.dev">
     Explore more MCP integrations and agents
   </Card>
   <Card
