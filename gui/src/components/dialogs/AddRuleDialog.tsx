@@ -78,7 +78,7 @@ function AddRuleDialog({ mode }: { mode: "workspace" | "global" }) {
           <div className="mt-2 flex flex-row justify-end gap-2">
             <SecondaryButton
               className="min-w-16"
-              disabled={!name.trim() || isSubmitting}
+              disabled={isSubmitting}
               type="submit"
             >
               Create
