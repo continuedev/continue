@@ -25,9 +25,9 @@ import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
+import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
-import { statusTool } from "./status.js";
 import {
   type Tool,
   type ToolCall,
@@ -39,6 +39,18 @@ import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolCall, ToolParametersSchema };
+
+/**
+ * Extract the agent ID from the --id command line flag
+ */
+function getAgentIdFromArgs(): string | undefined {
+  const args = process.argv;
+  const idIndex = args.indexOf("--id");
+  if (idIndex !== -1 && idIndex + 1 < args.length) {
+    return args[idIndex + 1];
+  }
+  return undefined;
+}
 
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
@@ -61,6 +73,13 @@ export async function getAllAvailableTools(
   const isRipgrepInstalled = await checkIfRipgrepIsInstalled();
   if (isRipgrepInstalled) {
     tools.push(...BUILTIN_SEARCH_TOOLS);
+  }
+
+  // Add ReportFailure tool if no agent ID is present
+  // (it requires --id to function and will confuse the agent if unavailable)
+  const agentId = getAgentIdFromArgs();
+  if (agentId) {
+    tools.push(reportFailureTool);
   }
 
   // If model is capable, exclude editTool in favor of multiEditTool
@@ -91,11 +110,6 @@ export async function getAllAvailableTools(
 
   if (isHeadless) {
     tools.push(exitTool);
-  }
-
-  // Add beta status tool if --beta-status-tool flag is present
-  if (process.argv.includes("--beta-status-tool")) {
-    tools.push(statusTool);
   }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
@@ -241,11 +255,10 @@ export async function executeToolCall(
 // Only checks top-level required
 export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   const requiredParams = tool.parameters.required ?? [];
-  for (const [paramName] of Object.entries(tool.parameters)) {
+  for (const paramName of requiredParams) {
     if (
-      requiredParams.includes(paramName) &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
+      toolCall.arguments[paramName] === undefined ||
+      toolCall.arguments[paramName] === null
     ) {
       throw new Error(
         `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,

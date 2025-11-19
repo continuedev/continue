@@ -13,7 +13,7 @@ body:
       options:
         - label: I've tried using the "Ask AI" feature on the [Continue docs site](https://docs.continue.dev/) to see if the docs have an answer
           required: false
-        - label: I believe this is a bug. I'll try to join the [Continue Discord](https://discord.gg/NWtdYexhMs) for questions
+        - label: I'm not able to find a related conversation on [GitHub discussions](https://github.com/continuedev/continue/discussions) that reports the same bug
           required: false
         - label: I'm not able to find an [open issue](https://github.com/continuedev/continue/issues?q=is%3Aopen+is%3Aissue) that reports the same bug
           required: false

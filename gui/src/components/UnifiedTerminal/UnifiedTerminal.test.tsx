@@ -178,9 +178,14 @@ describe("UnifiedTerminalCommand", () => {
     expect(container.textContent).toMatch(/Bold text/);
     expect(container.textContent).toMatch(/Underlined text/);
 
-    // Verify ANSI processing created styled spans
-    const styledSpans = container.querySelectorAll('span[class*="sc-esYiGF"]');
-    expect(styledSpans.length).toBeGreaterThan(0);
+    // Verify ANSI processing created span elements within the code block
+    // The AnsiRenderer creates spans for each ANSI segment
+    const codeElement = container.querySelector("code");
+    expect(codeElement).toBeInTheDocument();
+
+    // Count all spans inside the code element (ANSI creates multiple spans)
+    const spans = codeElement?.querySelectorAll("span");
+    expect(spans?.length).toBeGreaterThan(0);
   });
 
   test("handles links in output", async () => {
