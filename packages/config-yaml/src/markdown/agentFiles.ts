@@ -23,7 +23,7 @@ export type AgentFile = z.infer<typeof agentFileSchema>;
  * Parsed agent tool reference
  */
 export interface AgentToolReference {
-  /** MCP server slug (owner/package) if this is an MCP tool */
+  /** MCP server slug (owner/package) or URL (https://...) if this is an MCP tool */
   mcpServer?: string;
   /** Specific tool name - either MCP tool name or built-in tool name */
   toolName?: string;
@@ -91,6 +91,8 @@ export function serializeAgentFile(agentFile: AgentFile): string {
  * Supports formats:
  * - owner/package - all tools from MCP server
  * - owner/package:tool_name - specific tool from MCP server
+ * - https://mcp.url.com or http://mcp.url.com - all tools from URL-based MCP server
+ * - https://mcp.url.com:tool_name - specific tool from URL-based MCP server
  * - ToolName or tool_name - built-in tool
  * - built_in - all built-in tools
  *
@@ -115,6 +117,53 @@ export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
     if (toolRef === "built_in") {
       // Special keyword for all built-in tools
       allBuiltIn = true;
+    } else if (
+      toolRef.startsWith("http://") ||
+      toolRef.startsWith("https://")
+    ) {
+      // URL-based MCP tool reference: "https://mcp.url.com" or "https://mcp.url.com:tool_name"
+      const protocolEndIndex = toolRef.indexOf("://") + 3;
+      const lastColonIndex = toolRef.lastIndexOf(":");
+
+      // Check if there's a colon after the protocol
+      if (lastColonIndex > protocolEndIndex) {
+        const afterLastColon = toolRef.substring(lastColonIndex + 1);
+
+        // Check if it's a port number (only digits), empty string, or a tool name
+        if (/^\d+(?:$|[/?#])/.test(afterLastColon)) {
+          // It's a port number, treat the whole thing as the server
+          const mcpServer = toolRef;
+          tools.push({ mcpServer });
+          mcpServerSet.add(mcpServer);
+        } else if (
+          afterLastColon === "" ||
+          /^[a-zA-Z0-9_-]+$/.test(afterLastColon)
+        ) {
+          // It's a tool name (or empty string)
+          // Reject references with whitespace to prevent silent misconfigurations
+          if (/\s/.test(toolRef)) {
+            throw new Error(
+              `Invalid MCP tool reference "${toolRef}": colon-separated tool references cannot contain whitespace. ` +
+                `Use format "https://server:tool_name" without spaces.`,
+            );
+          }
+
+          const mcpServer = toolRef.substring(0, lastColonIndex);
+          const toolName = afterLastColon;
+
+          tools.push({ mcpServer, toolName });
+          mcpServerSet.add(mcpServer);
+        } else {
+          throw new Error(
+            `Invalid URL-based MCP tool reference "${toolRef}": the part after the last colon must be either a port number or a valid tool name (alphanumeric, underscores, hyphens).`,
+          );
+        }
+      } else {
+        // No colon after the protocol, treat the whole thing as the server
+        const mcpServer = toolRef;
+        tools.push({ mcpServer });
+        mcpServerSet.add(mcpServer);
+      }
     } else if (toolRef.includes("/")) {
       // MCP tool reference: "owner/package" or "owner/package:tool_name"
       const colonIndex = toolRef.indexOf(":");

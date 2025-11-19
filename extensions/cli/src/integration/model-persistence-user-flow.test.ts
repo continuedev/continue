@@ -5,10 +5,10 @@ import * as path from "path";
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { AuthenticatedConfig } from "src/auth/workos-types.js";
 import { AuthService } from "src/services/AuthService.js";
 
 import {
-  AuthenticatedConfig,
   getModelName,
   loadAuthConfig,
   saveAuthConfig,
