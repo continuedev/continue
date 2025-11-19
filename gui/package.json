@@ -26,7 +26,7 @@
     "@sentry/vite-plugin": "^4.0.2",
     "@tiptap/core": "^2.3.2",
     "@tiptap/extension-document": "^2.3.2",
-    "@tiptap/extension-dropcursor": "^2.1.16",
+    "@tiptap/extension-dropcursor": "^2.27.0",
     "@tiptap/extension-history": "^2.3.2",
     "@tiptap/extension-image": "^2.1.16",
     "@tiptap/extension-mention": "^2.1.13",
