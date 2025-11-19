@@ -171,7 +171,7 @@ export class ApplyManager {
    * Creates a prompt for applying code edits
    */
   private getApplyPrompt(text: string): string {
-    return `The following code was suggested as an edit:\n\`\`\`\n${text}\n\`\`\`\nPlease apply it to the previous code.`;
+    return `The following code was suggested as an edit:\n\`\`\`\n${text}\n\`\`\`\nPlease apply it to the previous code. Leave existing comments in place unless changes require modifying them.`;
   }
 
   /**
