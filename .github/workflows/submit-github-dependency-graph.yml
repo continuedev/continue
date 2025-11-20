@@ -10,6 +10,8 @@ permissions:
 jobs:
   dependency-submission:
     runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     steps:
       - name: Checkout sources
         uses: actions/checkout@v5
