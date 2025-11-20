@@ -84,15 +84,6 @@ async function searchWithGrepOrFindstr(
 const DEFAULT_MAX_RESULTS = 100;
 const MAX_LINE_LENGTH = 1000;
 
-export async function checkIfRipgrepIsInstalled(): Promise<boolean> {
-  try {
-    await execPromise("rg --version");
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export const searchCodeTool: Tool = {
   name: "Search",
   displayName: "Search",
