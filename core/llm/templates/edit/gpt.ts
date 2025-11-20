@@ -76,5 +76,5 @@ export const defaultApplyPrompt: PromptTemplateFunction = (
   history,
   otherData,
 ) => {
-  return `${otherData.original_code}\n\nThe following code was suggested as an edit:\n\`\`\`\n${otherData.new_code}\n\`\`\`\nPlease apply it to the previous code. Do not change comments unless explicitly requested.`;
+  return `${otherData.original_code}\n\nThe following code was suggested as an edit:\n\`\`\`\n${otherData.new_code}\n\`\`\`\nPlease apply it to the previous code. Leave existing comments in place unless changes require modifying them.`;
 };

@@ -1,0 +1,168 @@
+---
+title: "Snyk Integration"
+description: "Automatically detect and fix vulnerabilities with Continue Agents connected to Snyk"
+---
+
+## Overview
+
+Connect Snyk to Continue Mission Control to enable agents to automatically detect, analyze, and resolve security vulnerabilities. When Snyk is enabled, Continue can generate PRs to fix vulnerabilities, analyze security patterns, and maintain application security posture.
+
+<Card title="What You Can Do with Snyk Integration" icon="shield-check">
+
+  - Automatically generate PRs to fix security vulnerabilities
+  - Analyze dependency risks and suggest updates
+  - Monitor security posture across projects
+  - Create detailed vulnerability reports with remediation steps
+  - Track vulnerability trends and compliance status
+
+</Card>
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
+
+  </Step>
+
+  <Step title="Connect Snyk">
+
+    Click "Connect" next to Snyk integration.
+
+  </Step>
+
+  <Step title="Authorize with Snyk">
+
+    Click the "Connect with Snyk" button to authorize Continue Mission Control:
+    
+    - You'll be redirected to Snyk's OAuth authorization page
+    - Review and approve the requested permissions
+    - You'll be automatically redirected back to the [Snyk inbox view](https://hub.continue.dev/inbox?view=snyk)
+
+  </Step>
+
+  <Step title="Verify Connection">
+
+    Once redirected back, you'll see:
+    - A confirmation that Snyk is connected
+    - Your Snyk projects available for monitoring
+    - Any active vulnerability alerts
+
+  </Step>
+
+</Steps>
+
+<Info>
+
+  **OAuth Authorization**: No manual token configuration needed! Simply click the authorization button and Continue will securely handle the authentication flow with Snyk.
+
+</Info>
+
+## Integration with GitHub
+
+Combine Snyk with GitHub integration for a complete security workflow:
+
+<Steps>
+
+  <Step title="Connect Both Integrations">
+
+    Enable both Snyk and GitHub integrations in Mission Control
+
+  </Step>
+
+  <Step title="Create a Security Agent">
+
+    Build an agent that:
+    - Receives Snyk vulnerability alerts
+    - Analyzes the security issue in your codebase
+    - Creates a PR with the security fix
+    - Adds security impact analysis to the PR
+
+  </Step>
+
+  <Step title="Set Up Automated Security Workflow">
+
+    Configure the agent to run automatically on new critical vulnerabilities
+
+  </Step>
+
+</Steps>
+
+## Monitoring Agent Activity
+
+Track your agent's security remediation performance:
+
+1. **View in Inbox**: Navigate to the [Snyk view](https://hub.continue.dev/inbox?view=snyk) to see all Snyk-related agent activity
+2. **Check Snyk Dashboard**: Verify that vulnerabilities are being addressed
+3. **Review PRs**: Ensure quality and security of generated fixes
+4. **Monitor Metrics**: Track mean time to remediation (MTTR) and fix rate
+
+## Troubleshooting
+
+<Accordion title="OAuth authorization fails">
+
+  **Problem**: Can't complete the Snyk authorization flow
+
+  **Solutions**:
+  - Ensure you have appropriate permissions in your Snyk organization
+  - Check if your organization allows OAuth integrations
+  - Try logging out and back into Snyk before authorizing
+  - Clear browser cookies and try again
+
+</Accordion>
+
+<Accordion title="Projects not appearing">
+
+  **Problem**: Snyk projects aren't visible after connection
+
+  **Solutions**:
+  - Verify you have access to projects in Snyk
+  - Check that projects are properly imported in Snyk
+  - Refresh the integration connection
+  - Ensure the OAuth scope includes project access
+
+</Accordion>
+
+<Accordion title="Agent can't access vulnerability data">
+
+  **Problem**: Agent returns errors when trying to fetch Snyk data
+
+  **Solutions**:
+  - Verify the OAuth connection is still valid
+  - Re-authorize if the token has expired
+  - Check that the agent has the necessary Snyk context provider
+  - Review agent logs for specific error messages
+
+</Accordion>
+
+<Accordion title="Webhooks not triggering">
+
+  **Problem**: Agent isn't running when new vulnerabilities are found
+
+  **Solutions**:
+  - Verify webhook configuration in Snyk integration settings
+  - Check that webhook URL points to Continue Mission Control
+  - Ensure webhook events include vulnerability detection
+  - Review webhook delivery logs in Snyk
+
+</Accordion>
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Snyk MCP Cookbook" icon="book-open" href="/guides/snyk-mcp-continue-cookbook">
+
+    Complete guide with security scanning recipes, CI/CD integration, and automated remediation workflows
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+
+    Combine Snyk with GitHub for complete security automation
+
+  </Card>
+
+</CardGroup>

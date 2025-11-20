@@ -1,17 +1,17 @@
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock the workos module
 vi.mock("../auth/workos.js");
 
 // Import the workos functions we need to mock
 import {
-  loadAuthConfig,
+  ensureOrganization,
   isAuthenticated,
+  listUserOrganizations,
+  loadAuthConfig,
   login,
   logout,
-  ensureOrganization,
   saveAuthConfig,
-  listUserOrganizations,
 } from "../auth/workos.js";
 
 import { AuthService } from "./AuthService.js";
@@ -35,7 +35,7 @@ describe("AuthService", () => {
   describe("State Management", () => {
     test("should initialize with unauthenticated state", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
 
       const state = await service.initialize();
 
@@ -48,7 +48,7 @@ describe("AuthService", () => {
 
     test("should initialize with authenticated state", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
 
       const state = await service.initialize();
 
@@ -64,7 +64,7 @@ describe("AuthService", () => {
     test("should update state after successful login", async () => {
       // Initialize first
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
       await service.initialize();
 
       // Mock successful login
@@ -93,7 +93,7 @@ describe("AuthService", () => {
     test("should clear state after logout", async () => {
       // Initialize with authenticated state
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const state = await service.logout();
@@ -112,7 +112,7 @@ describe("AuthService", () => {
       // Initialize with auth but no org
       const authWithoutOrg = { ...mockAuthConfig, organizationId: null };
       vi.mocked(loadAuthConfig).mockReturnValue(authWithoutOrg);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       // Mock ensure organization
@@ -129,7 +129,7 @@ describe("AuthService", () => {
 
     test("should throw error if not authenticated", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
       await service.initialize();
 
       await expect(service.ensureOrganization()).rejects.toThrow(
@@ -139,7 +139,7 @@ describe("AuthService", () => {
 
     test("should pass organization slug to ensureOrganization in headless mode", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const updatedConfig = { ...mockAuthConfig, organizationId: "org-456" };
@@ -161,7 +161,7 @@ describe("AuthService", () => {
 
     test("should handle personal organization slug", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const personalConfig = { ...mockAuthConfig, organizationId: null };
@@ -183,7 +183,7 @@ describe("AuthService", () => {
 
     test("should work without organization slug parameter", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       vi.mocked(ensureOrganization).mockResolvedValue(mockAuthConfig);
@@ -206,7 +206,7 @@ describe("AuthService", () => {
   describe("switchOrganization()", () => {
     test("should update state with new organization", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const state = await service.switchOrganization("org-456");
@@ -227,7 +227,7 @@ describe("AuthService", () => {
 
     test("should handle null organization", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const state = await service.switchOrganization(null);
@@ -238,7 +238,7 @@ describe("AuthService", () => {
     test("should throw error if not file-based auth", async () => {
       const tokenOnlyAuth = { accessToken: "token" } as any;
       vi.mocked(loadAuthConfig).mockReturnValue(tokenOnlyAuth);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       await expect(service.switchOrganization("org-456")).rejects.toThrow(
@@ -250,7 +250,7 @@ describe("AuthService", () => {
   describe("getAvailableOrganizations()", () => {
     test("should return organizations when authenticated", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       const mockOrgs = [
@@ -265,7 +265,7 @@ describe("AuthService", () => {
 
     test("should return null when not authenticated", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
       await service.initialize();
 
       const orgs = await service.getAvailableOrganizations();
@@ -274,7 +274,7 @@ describe("AuthService", () => {
 
     test("should handle errors gracefully", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       vi.mocked(listUserOrganizations).mockRejectedValue(
@@ -297,7 +297,7 @@ describe("AuthService", () => {
   describe("hasMultipleOrganizations()", () => {
     test("should return true when multiple orgs available", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       vi.mocked(listUserOrganizations).mockResolvedValue([
@@ -311,7 +311,7 @@ describe("AuthService", () => {
 
     test("should return false when no orgs available", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
       await service.initialize();
 
       vi.mocked(listUserOrganizations).mockResolvedValue([]);
@@ -324,12 +324,12 @@ describe("AuthService", () => {
   describe("refresh()", () => {
     test("should reload auth state from disk", async () => {
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
       await service.initialize();
 
       // Update mock to return authenticated state
       vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
-      vi.mocked(isAuthenticated).mockReturnValue(true);
+      vi.mocked(isAuthenticated).mockResolvedValue(true);
 
       const state = await service.refresh();
 
@@ -345,7 +345,7 @@ describe("AuthService", () => {
     test("should emit stateChanged on login", async () => {
       // Initialize with no auth config to simulate logged out state
       vi.mocked(loadAuthConfig).mockReturnValue(null);
-      vi.mocked(isAuthenticated).mockReturnValue(false);
+      vi.mocked(isAuthenticated).mockResolvedValue(false);
       await service.initialize();
 
       const listener = vi.fn();
