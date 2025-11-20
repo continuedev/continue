@@ -13,8 +13,8 @@ global.fetch = vi
   .mockImplementation(async (url: string | URL, ...args) => {
     const urlString = url.toString();
 
-    // Mock the default-config API call
-    if (urlString.includes("get-assistant/continuedev/default-config")) {
+    // Mock the default config API call
+    if (urlString.includes("get-assistant/continuedev/default-cli-config")) {
       return {
         ok: true,
         status: 200,
