@@ -47,7 +47,6 @@ describe("getRequestTools - Tool Filtering", () => {
     // Read-only tools should still be available
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("List");
-    expect(toolNames).toContain("Search");
     expect(toolNames).toContain("Fetch");
     expect(toolNames).toContain("Checklist");
 
@@ -130,7 +129,6 @@ describe("getRequestTools - Tool Filtering", () => {
     expect(toolNames).toContain("Bash");
     expect(toolNames).toContain("Write");
     expect(toolNames).toContain("List");
-    expect(toolNames).toContain("Search");
   });
 
   test("plan mode should override allow flags (regression test for GitHub Actions issue)", async () => {
@@ -158,6 +156,5 @@ describe("getRequestTools - Tool Filtering", () => {
     // Read-only tools should be available
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("List");
-    expect(toolNames).toContain("Search");
   });
 });

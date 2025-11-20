@@ -7,6 +7,7 @@ interface ToggleProps {
   title: React.ReactNode;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
   testId?: string;
+  defaultOpen?: boolean;
 }
 
 function ToggleDiv({
@@ -14,8 +15,9 @@ function ToggleDiv({
   title,
   icon: Icon,
   testId = "context-items-peek",
+  defaultOpen = false,
 }: ToggleProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [isHovered, setIsHovered] = useState(false);
 
   return (

@@ -82,6 +82,16 @@ async function searchWithGrepOrFindstr(
 
 // Default maximum number of results to display
 const DEFAULT_MAX_RESULTS = 100;
+const MAX_LINE_LENGTH = 1000;
+
+export async function checkIfRipgrepIsInstalled(): Promise<boolean> {
+  try {
+    await execPromise("rg --version");
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const searchCodeTool: Tool = {
   name: "Search",
@@ -167,7 +177,13 @@ export const searchCodeTool: Tool = {
       }
 
       // Split the results into lines and limit the number of results
-      const lines = stdout.split("\n");
+      const splitLines = stdout.split("\n");
+      const lines = splitLines.filter((line) => line.length <= MAX_LINE_LENGTH);
+      if (lines.length === 0) {
+        return `No matches found for pattern "${args.pattern}"${
+          args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+        }.`;
+      }
       const truncated = lines.length > DEFAULT_MAX_RESULTS;
       const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
       const resultText = limitedLines.join("\n");

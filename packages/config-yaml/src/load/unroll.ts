@@ -44,7 +44,6 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       cause: "result.success was false",
     });
   } catch (e) {
-    console.error("Failed to parse rolled assistant:", configYaml);
     if (
       e instanceof Error &&
       "cause" in e &&

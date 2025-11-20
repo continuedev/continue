@@ -95,7 +95,7 @@ jobs:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
     name: Build Plugin
-    runs-on: macos-13
+    runs-on: macos-latest
     permissions:
       contents: write
       pull-requests: write
@@ -358,7 +358,7 @@ jobs:
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-13
+          - os: macos-latest
             platform: darwin
             arch: arm64
             npm_config_arch: arm64

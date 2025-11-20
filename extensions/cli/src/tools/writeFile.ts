@@ -49,16 +49,23 @@ export const writeFileTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   preprocess: async (args) => {
+    const filepath = args?.filepath;
+    const content = args?.content ?? "";
+    if (typeof filepath !== "string") {
+      throw new Error("Filepath must be a string");
+    }
+    if (typeof content !== "string") {
+      throw new Error("New file content must be a string");
+    }
     try {
-      if (fs.existsSync(args.filepath)) {
-        const oldContent = fs.readFileSync(args.filepath, "utf-8");
-        const newContent = args.content;
+      if (fs.existsSync(filepath)) {
+        const oldContent = fs.readFileSync(filepath, "utf-8");
 
         const diff = createTwoFilesPatch(
           args.filepath,
           args.filepath,
           oldContent,
-          newContent,
+          content,
           undefined,
           undefined,
           { context: 2 },
@@ -81,7 +88,7 @@ export const writeFileTool: Tool = {
     } catch {
       // do nothing
     }
-    const lines: string[] = args.content.split("\n");
+    const lines: string[] = content.split("\n");
     const previewLines = lines.slice(0, 3);
 
     const preview: ToolCallPreview[] = [
@@ -103,7 +110,10 @@ export const writeFileTool: Tool = {
     }
 
     return {
-      args,
+      args: {
+        filepath,
+        content,
+      },
       preview,
     };
   },
