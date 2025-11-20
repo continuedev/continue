@@ -98,6 +98,7 @@
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
+              "ide-extensions/settings",
               {
                 "group": "Agent",
                 "expanded": false,
@@ -152,19 +153,7 @@
               }
             ]
           },
-          {
-            "group": "Customization",
-            "icon": "sliders",
-            "expanded": false,
-            "pages": [
-              "customization/overview",
-              "customization/models",
-              "customization/mcp-tools",
-              "customization/rules",
-              "customization/prompts",
-              "customization/settings"
-            ]
-          },
+
           {
             "group": "Help",
             "icon": "book-open",
@@ -180,6 +169,10 @@
             "group": "Customize",
             "pages": [
               "customize/overview",
+              "customize/models",
+              "customize/mcp-tools",
+              "customize/rules",
+              "customize/prompts",
               {
                 "group": "Model Providers",
                 "icon": "server",
@@ -259,21 +252,38 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-configs",
-              "guides/configuring-models-rules-tools",
-              "guides/codebase-documentation-awareness",
-              "guides/cli",
-              "guides/doc-writing-agent-cli",
-              "guides/continuous-ai",
-              "guides/continuous-ai-readiness-assessment",
-              "guides/plan-mode-guide",
-              "guides/ollama-guide",
-              "guides/instinct",
-              "guides/running-continue-without-internet",
-              "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model",
-              "guides/notion-continue-guide",
-              "guides/github-pr-review-bot"
+              {
+                "group": "Understanding Continue",
+                "pages": [
+                  "guides/understanding-configs",
+                  "guides/configuring-models-rules-tools",
+                  "guides/codebase-documentation-awareness",
+                  "guides/plan-mode-guide",
+                  "guides/ollama-guide",
+                  "guides/instinct",
+                  "guides/running-continue-without-internet",
+                  "guides/custom-code-rag",
+                  "guides/how-to-self-host-a-model"
+                ]
+              },
+              {
+                "group": "CLI Guides",
+                "pages": ["guides/cli", "guides/doc-writing-agent-cli"]
+              },
+              {
+                "group": "Continuous AI Guides",
+                "pages": [
+                  "guides/continuous-ai",
+                  "guides/continuous-ai-readiness-assessment"
+                ]
+              },
+              {
+                "group": "Integration Guides",
+                "pages": [
+                  "guides/notion-continue-guide",
+                  "guides/github-pr-review-bot"
+                ]
+              }
             ]
           },
           {
@@ -473,23 +483,43 @@
     },
     {
       "source": "/hub/blocks/create-a-block",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks/bundles",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/customize",
-      "destination": "/customization/overview"
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customization",
-      "destination": "/customization/overview"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customization/overview",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customization/overview#change-your-model-provider",
+      "destination": "/customize/model-providers/overview#change-your-model-provider"
+    },
+    {
+      "source": "/customization/models",
+      "destination": "/customize/models"
+    },
+    {
+      "source": "/customization/mcp-tools",
+      "destination": "/customize/mcp-tools"
+    },
+    {
+      "source": "/customization/rules",
+      "destination": "/customize/rules"
+    },
+    {
+      "source": "/customization/prompts",
+      "destination": "/customize/prompts"
+    },
+    {
+      "source": "/customization/settings",
+      "destination": "/ide-extensions/settings"
     },
     {
       "source": "/customize/tools",
-      "destination": "/customization/mcp-tools"
+      "destination": "/customize/mcp-tools"
     },
     {
       "source": "/install/vscode",
@@ -1160,6 +1190,11 @@
       "source": "/customize/deep-dives/settings",
       "destination": "/customize/overview"
     },
+    {
+      "source": "/hub/blocks/bundles",
+      "destination": "/hub/introduction"
+    },
+
     {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
