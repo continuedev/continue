@@ -372,7 +372,7 @@ async function loadDefaultConfig(
 ): Promise<AssistantUnrolled> {
   const resp = await apiClient.getAssistant({
     ownerSlug: "continuedev",
-    packageSlug: "default-config",
+    packageSlug: "default-cli-config",
     organizationId: organizationId ?? undefined,
   });
 
