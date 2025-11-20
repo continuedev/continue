@@ -5,6 +5,7 @@ import { ChatHistoryItem } from "core";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
+import { vscBackground } from "../..";
 import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 
@@ -60,7 +61,8 @@ function ThinkingBlockPeek({
         <div className="flex min-w-0 flex-row items-center justify-between gap-2">
           <button
             type="button"
-            className="text-description flex min-w-0 cursor-pointer flex-row items-center gap-1.5 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
+            className="text-description hover:text- flex min-w-0 cursor-pointer flex-row items-center gap-1.5 border-0 text-xs shadow-none transition-colors duration-200 ease-in-out"
+            style={{ backgroundColor: vscBackground }}
             data-testid="thinking-block-peek"
             aria-expanded={open}
             aria-controls={`thinking-block-content-${index}`}
