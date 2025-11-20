@@ -72,7 +72,7 @@ async function searchWithGrepOrFindstr(
       excludeArgs += ` --exclude="${ignorePattern}" --exclude-dir="${ignorePattern}"`; // use both exclude and exclude-dir because ignorePattern can be a file or directory
     }
     if (filePattern) {
-      command = `find . -type f -name "${filePattern}" -print0 | xargs -0 grep -nH -I${excludeArgs} "${pattern}"`;
+      command = `find . -type f -path "${filePattern}" -print0 | xargs -0 grep -nH -I${excludeArgs} "${pattern}"`;
     } else {
       command = `grep -R -n -H -I${excludeArgs} "${pattern}" .`;
     }
