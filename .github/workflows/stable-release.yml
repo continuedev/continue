@@ -32,6 +32,8 @@ jobs:
   stable-release:
     name: Stable Release
     runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
