@@ -314,6 +314,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
               "Ollama: skipping image with invalid data URL format",
               part.imageUrl.url,
             );
+          }
         }
       });
       if (images.length > 0) {
