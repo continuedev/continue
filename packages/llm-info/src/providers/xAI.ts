@@ -55,6 +55,27 @@ export const xAI: ModelProvider = {
       regex: /grok-4/,
     },
     {
+      model: "grok-4-1-fast-reasoning",
+      displayName: "Grok 4.1 Fast Reasoning",
+      contextLength: 256000,
+      recommendedFor: ["chat"],
+      regex: /grok-4-1-fast-reasoning/,
+    },
+    {
+      model: "grok-4-1-fast-reasoning",
+      displayName: "Grok 4.1 Fast Non Reasoning",
+      contextLength: 256000,
+      recommendedFor: ["chat"],
+      regex: /grok-4-1-fast-non-reasoning/,
+    },
+    {
+      model: "grok-4",
+      displayName: "Grok 4 Fast",
+      contextLength: 256000,
+      recommendedFor: ["chat"],
+      regex: /grok-4/,
+    },
+    {
       model: "grok-code-fast-1",
       displayName: "Grok Code Fast 1",
       contextLength: 256000,
