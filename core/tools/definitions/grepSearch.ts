@@ -21,7 +21,7 @@ export const grepSearchTool: Tool = {
         query: {
           type: "string",
           description:
-            "The regex pattern to search for within file contents. Use regex with alternation (e.g., 'word1|word2|word3) or character classes to find multiple potential words in a single search.",
+            "The regex pattern to search for within file contents. Use regex with alternation (e.g., 'word1|word2|word3') or character classes to find multiple potential words in a single search.",
         },
       },
     },
