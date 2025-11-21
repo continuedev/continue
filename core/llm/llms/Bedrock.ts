@@ -21,11 +21,11 @@ import type { CompletionOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import { withLLMRetry } from "../utils/retry.js";
-import { parseDataUrl } from "../../util/url.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;

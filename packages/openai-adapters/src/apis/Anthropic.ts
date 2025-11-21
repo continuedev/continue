@@ -25,7 +25,6 @@ import {
   CompletionUsage,
 } from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/resources/index.js";
-import { extractBase64FromDataUrl } from "../util/url.js";
 import { AnthropicConfig } from "../types.js";
 import {
   chatChunk,
@@ -35,6 +34,7 @@ import {
 } from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import { safeParseArgs } from "../util/parseArgs.js";
+import { extractBase64FromDataUrl } from "../util/url.js";
 import {
   CACHING_STRATEGIES,
   CachingStrategyName,

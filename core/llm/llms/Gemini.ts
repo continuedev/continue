@@ -11,6 +11,7 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import {
   GeminiChatContent,
@@ -21,7 +22,6 @@ import {
   GeminiToolFunctionDeclaration,
   convertContinueToolToGeminiFunction,
 } from "./gemini-types";
-import { extractBase64FromDataUrl } from "../../util/url.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";

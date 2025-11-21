@@ -1,6 +1,6 @@
 import {
-  parseDataUrl as parseDataUrlFromAdapter,
   extractBase64FromDataUrl as extractBase64FromDataUrlFromAdapter,
+  parseDataUrl as parseDataUrlFromAdapter,
 } from "@continuedev/openai-adapters";
 
 export function canParseUrl(url: string): boolean {

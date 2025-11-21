@@ -13,8 +13,8 @@ import {
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
-import { BaseLLM } from "../index.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
+import { BaseLLM } from "../index.js";
 
 type OllamaChatMessage = {
   role: ChatMessageRole;

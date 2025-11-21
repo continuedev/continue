@@ -28,9 +28,9 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
-import { extractBase64FromDataUrl } from "../../util/url.js";
 
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
