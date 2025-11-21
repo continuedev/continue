@@ -31,10 +31,10 @@ import {
 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { fromStatic } from "@aws-sdk/token-providers";
-import { parseDataUrl } from "../util/url.js";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
+import { parseDataUrl } from "../util/url.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -163,7 +163,7 @@ export class BedrockApi implements BaseLlmApi {
             `Bedrock: skipping unsupported image part format: ${format}`,
           );
           return { text: "[Unsupported image format]" };
-        } 
+        }
     }
   }
 
