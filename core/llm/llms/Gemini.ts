@@ -21,6 +21,7 @@ import {
   GeminiToolFunctionDeclaration,
   convertContinueToolToGeminiFunction,
 } from "./gemini-types";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";
@@ -184,16 +185,31 @@ class Gemini extends BaseLLM {
   }
 
   continuePartToGeminiPart(part: MessagePart): GeminiChatContentPart {
-    return part.type === "text"
-      ? {
-          text: part.text,
-        }
-      : {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
-          },
-        };
+    if (part.type === "text") {
+      return {
+        text: part.text,
+      };
+    }
+
+    let data = "";
+    if (part.imageUrl?.url) {
+      const extracted = extractBase64FromDataUrl(part.imageUrl.url);
+      if (extracted) {
+        data = extracted;
+      } else {
+        console.warn(
+          "Gemini: skipping image with invalid data URL format",
+          part.imageUrl.url,
+        );
+      }
+    }
+
+    return {
+      inlineData: {
+        mimeType: "image/jpeg",
+        data,
+      },
+    };
   }
 
   public prepareBody(

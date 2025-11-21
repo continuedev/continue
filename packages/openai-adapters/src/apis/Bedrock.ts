@@ -31,6 +31,7 @@ import {
 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { fromStatic } from "@aws-sdk/token-providers";
+import { parseDataUrl } from "../util/url.js";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
@@ -134,35 +135,35 @@ export class BedrockApi implements BaseLlmApi {
         throw new Error("Unsupported part type: input_audio");
       case "image_url":
       default:
-        try {
-          const [mimeType, base64Data] = (
-            part as ChatCompletionContentPartImage
-          ).image_url.url.split(",");
-          const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
-          if (
-            format === ImageFormat.JPEG ||
-            format === ImageFormat.PNG ||
-            format === ImageFormat.WEBP ||
-            format === ImageFormat.GIF
-          ) {
-            return {
-              image: {
-                format,
-                source: {
-                  bytes: Uint8Array.from(Buffer.from(base64Data, "base64")),
-                },
-              },
-            };
-          } else {
-            console.warn(
-              `Bedrock: skipping unsupported image part format: ${format}`,
-            );
-            return { text: "[Unsupported image format]" };
-          }
-        } catch (error) {
-          console.warn("Bedrock: failed to process image part", error);
+        const parsed = parseDataUrl(
+          (part as ChatCompletionContentPartImage).image_url.url,
+        );
+        if (!parsed) {
+          console.warn("Bedrock: failed to process image part - invalid URL");
           return { text: "[Failed to process image]" };
         }
+        const { mimeType, base64Data } = parsed;
+        const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
+        if (
+          format === ImageFormat.JPEG ||
+          format === ImageFormat.PNG ||
+          format === ImageFormat.WEBP ||
+          format === ImageFormat.GIF
+        ) {
+          return {
+            image: {
+              format,
+              source: {
+                bytes: Uint8Array.from(Buffer.from(base64Data, "base64")),
+              },
+            },
+          };
+        } else {
+          console.warn(
+            `Bedrock: skipping unsupported image part format: ${format}`,
+          );
+          return { text: "[Unsupported image format]" };
+        } 
     }
   }
 

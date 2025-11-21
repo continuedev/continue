@@ -14,6 +14,7 @@ import {
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
 import { BaseLLM } from "../index.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 
 type OllamaChatMessage = {
   role: ChatMessageRole;
@@ -303,10 +304,16 @@ class Ollama extends BaseLLM implements ModelInstaller {
       const images: string[] = [];
       message.content.forEach((part) => {
         if (part.type === "imageUrl" && part.imageUrl) {
-          const image = part.imageUrl?.url.split(",").at(-1);
+          const image = part.imageUrl?.url
+            ? extractBase64FromDataUrl(part.imageUrl.url)
+            : undefined;
           if (image) {
             images.push(image);
-          }
+          } else if (part.imageUrl?.url) {
+            console.warn(
+              "Ollama: skipping image with invalid data URL format",
+              part.imageUrl.url,
+            );
         }
       });
       if (images.length > 0) {
