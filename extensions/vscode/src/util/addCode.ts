@@ -96,7 +96,7 @@ export async function addHighlightedCodeToContext(
 ) {
   // the passed argument below was set to true in https://github.com/continuedev/continue/pull/6711
   // which would add the entire file contents when selection is empty
-  // currently this behaviour is reverted and needs further investigation
+  // some of this behaviour is reverted and needs further investigation
   const rangeInFileWithContents = getRangeInFileWithContents(false);
   if (rangeInFileWithContents) {
     webviewProtocol?.request("highlightedCode", {
