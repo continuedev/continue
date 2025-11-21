@@ -149,10 +149,15 @@
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/extensions/cli/dist/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/extensions/cli/dist/**/*.js",
+        "${workspaceFolder}/core/out/**/*.js",
+        "${workspaceFolder}/packages/*/out/**/*.js"
+      ],
       "sourceMapPathOverrides": {
         "../src/*": "${workspaceFolder}/extensions/cli/src/*",
-        "../../core/*": "${workspaceFolder}/core/*"
+        "../../core/*": "${workspaceFolder}/core/*",
+        "../../packages/*/src/*": "${workspaceFolder}/packages/*/src/*"
       },
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
@@ -179,10 +184,15 @@
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/extensions/cli/dist/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/extensions/cli/dist/**/*.js",
+        "${workspaceFolder}/core/out/**/*.js",
+        "${workspaceFolder}/packages/*/out/**/*.js"
+      ],
       "sourceMapPathOverrides": {
         "../src/*": "${workspaceFolder}/extensions/cli/src/*",
-        "../../core/*": "${workspaceFolder}/core/*"
+        "../../core/*": "${workspaceFolder}/core/*",
+        "../../packages/*/src/*": "${workspaceFolder}/packages/*/src/*"
       },
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
