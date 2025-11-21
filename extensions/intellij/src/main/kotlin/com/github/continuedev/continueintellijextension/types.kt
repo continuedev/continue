@@ -166,8 +166,6 @@ interface IDE {
 
     suspend fun getClipboardContent(): Map<String, String>
 
-    suspend fun isTelemetryEnabled(): Boolean
-
     suspend fun isWorkspaceRemote(): Boolean
 
     suspend fun getUniqueId(): String

@@ -348,7 +348,12 @@ export default async function doLoadConfig(options: {
     }
   });
 
-  if (newConfig.allowAnonymousTelemetry !== false) {
+  // VS Code has an IDE telemetry setting
+  // Since it's a security concern we use OR behavior on false
+  if (
+    newConfig.allowAnonymousTelemetry !== false &&
+    ideInfo.ideType === "vscode"
+  ) {
     if ((await ide.isTelemetryEnabled()) === false) {
       newConfig.allowAnonymousTelemetry = false;
     }
