@@ -34,6 +34,7 @@ import {
 } from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import { safeParseArgs } from "../util/parseArgs.js";
+import { extractBase64FromDataUrl } from "../util/url.js";
 import {
   CACHING_STRATEGIES,
   CachingStrategyName,
@@ -194,14 +195,22 @@ export class AnthropicApi implements BaseLlmApi {
         if (part.type === "image_url") {
           const dataUrl = part.image_url.url;
           if (dataUrl?.startsWith("data:")) {
-            blocks.push({
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
-                data: dataUrl.split(",")[1],
-              },
-            });
+            const base64Data = extractBase64FromDataUrl(dataUrl);
+            if (base64Data) {
+              blocks.push({
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
+                  data: base64Data,
+                },
+              });
+            } else {
+              console.warn(
+                "Anthropic: skipping image with invalid data URL format",
+                dataUrl,
+              );
+            }
           }
         } else {
           const text = part.type === "text" ? part.text : part.refusal;
