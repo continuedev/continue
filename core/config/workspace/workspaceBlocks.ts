@@ -3,6 +3,7 @@ import {
   ConfigYaml,
   createPromptMarkdown,
   createRuleMarkdown,
+  sanitizeRuleName,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
@@ -116,13 +117,31 @@ export async function findAvailableFilename(
   fileExists: (uri: string) => Promise<boolean>,
   extension?: string,
   isGlobal?: boolean,
+  baseFilenameOverride?: string,
 ): Promise<string> {
-  // Differentiate filename based on whether its a global rule or a workspace rule
-  const baseFilename =
-    blockType === "rules" && isGlobal
-      ? "global-rule"
-      : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
   const fileExtension = extension ?? getFileExtension(blockType);
+  let baseFilename: string;
+
+  const trimmedOverride = baseFilenameOverride?.trim();
+  if (trimmedOverride) {
+    if (blockType === "rules") {
+      const withoutExtension = trimmedOverride.replace(/\.[^./\\]+$/, "");
+      const sanitized = sanitizeRuleName(withoutExtension);
+      baseFilename =
+        sanitized ||
+        (isGlobal
+          ? "global-rule"
+          : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`);
+    } else {
+      baseFilename = trimmedOverride;
+    }
+  } else {
+    baseFilename =
+      blockType === "rules" && isGlobal
+        ? "global-rule"
+        : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
+  }
+
   let counter = 0;
   let fileUri: string;
 
@@ -141,6 +160,7 @@ export async function findAvailableFilename(
 export async function createNewWorkspaceBlockFile(
   ide: IDE,
   blockType: BlockType,
+  baseFilename?: string,
 ): Promise<void> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (workspaceDirs.length === 0) {
@@ -155,6 +175,9 @@ export async function createNewWorkspaceBlockFile(
     baseDirUri,
     blockType,
     ide.fileExists.bind(ide),
+    undefined,
+    false,
+    baseFilename,
   );
 
   const fileContent = getFileContent(blockType);
@@ -163,7 +186,10 @@ export async function createNewWorkspaceBlockFile(
   await ide.openFile(fileUri);
 }
 
-export async function createNewGlobalRuleFile(ide: IDE): Promise<void> {
+export async function createNewGlobalRuleFile(
+  ide: IDE,
+  baseFilename?: string,
+): Promise<void> {
   try {
     const globalDir = localPathToUri(getContinueGlobalPath());
 
@@ -176,6 +202,7 @@ export async function createNewGlobalRuleFile(ide: IDE): Promise<void> {
       ide.fileExists.bind(ide),
       undefined,
       true, // isGlobal = true for global rules
+      baseFilename,
     );
 
     const fileContent = getFileContent("rules");
