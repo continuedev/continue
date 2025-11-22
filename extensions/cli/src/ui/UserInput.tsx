@@ -463,7 +463,34 @@ const UserInput: React.FC<UserInputProps> = ({
 
     if ((key.return && !key.shift) || key.tab) {
       if (filteredCommands.length > 0) {
-        selectSlashCommand(filteredCommands[selectedCommandIndex].name);
+        const selectedCommand = filteredCommands[selectedCommandIndex];
+
+        // Commands that require arguments and should not auto-submit
+        const commandsRequiringArgs = ["title", "init"];
+
+        // Check if the current input is an exact match (ignoring case)
+        // and the user pressed Enter (not Tab)
+        const trimmedInput = inputText.trim();
+        const isExactMatch =
+          trimmedInput.toLowerCase() ===
+          `/${selectedCommand.name}`.toLowerCase();
+
+        // Only auto-submit if:
+        // 1. User pressed Enter (not Tab)
+        // 2. Input is an exact match
+        // 3. Command doesn't require arguments
+        if (
+          key.return &&
+          isExactMatch &&
+          !commandsRequiringArgs.includes(selectedCommand.name)
+        ) {
+          // For exact match with Enter, submit the command immediately
+          // by falling through to handleEnterKey instead of just selecting
+          return false;
+        }
+
+        // Otherwise, just select the command (Tab or non-exact match)
+        selectSlashCommand(selectedCommand.name);
       }
       return true;
     }
