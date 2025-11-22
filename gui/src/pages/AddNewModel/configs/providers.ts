@@ -3,6 +3,7 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { openRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -170,6 +171,29 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     packages: [models.claude4Sonnet, models.claude41Opus, models.claude35Haiku],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  openrouter: {
+    title: "OpenRouter",
+    provider: "openrouter",
+    description:
+      "OpenRouter provides access to a variety of LLMs including open-source and proprietary models.",
+    longDescription: `To get started with OpenRouter, sign up for an account at [openrouter.ai](https://openrouter.ai/) and obtain your API key from the dashboard.`,
+    icon: "openrouter.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "openrouter",
+    apiKeyUrl: "https://openrouter.ai/settings/keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OpenRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: openRouterModelsList,
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",
