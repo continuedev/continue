@@ -18,9 +18,29 @@ cn
 
 ### Headless Mode
 
+Headless mode (`-p` flag) runs without an interactive terminal UI, making it perfect for:
+
+- Scripts and automation
+- CI/CD pipelines
+- Docker containers
+- VSCode/IntelliJ extension integration
+- Environments without a TTY
+
 ```bash
+# Basic usage
 cn -p "Generate a conventional commit name for the current git changes."
+
+# With piped input
+echo "Review this code" | cn -p
+
+# JSON output for scripting
+cn -p "Analyze the code" --format json
+
+# Silent mode (strips thinking tags)
+cn -p "Write a README" --silent
 ```
+
+**TTY-less Environments**: Headless mode is designed to work in environments without a terminal (TTY), such as when called from VSCode/IntelliJ extensions using terminal commands. The CLI will not attempt to read stdin or initialize the interactive UI when running in headless mode with a supplied prompt.
 
 ### Session Management
 
@@ -47,6 +67,7 @@ cn ls --json
 ## Environment Variables
 
 - `CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE`: Disable adding the Continue commit signature to generated commit messages
+- `FORCE_NO_TTY`: Force TTY-less mode, prevents stdin reading (useful for testing and automation)
 
 ## Commands
 
@@ -62,3 +83,26 @@ cn ls --json
 Shows recent sessions, limited by screen height to ensure it fits on your terminal.
 
 - `--json`: Output in JSON format for scripting (always shows 10 sessions)
+
+## TTY-less Support
+
+The CLI fully supports running in environments without a TTY (terminal):
+
+```bash
+# From Docker without TTY allocation
+docker run --rm my-image cn -p "Generate docs"
+
+# From CI/CD pipeline
+cn -p "Review changes" --format json
+
+# From VSCode/IntelliJ extension terminal tool
+cn -p "Analyze code" --silent
+```
+
+The CLI automatically detects TTY-less environments and adjusts its behavior:
+
+- Skips stdin reading when a prompt is supplied
+- Disables interactive UI components
+- Ensures clean stdout/stderr output
+
+For more details, see [`spec/tty-less-support.md`](./spec/tty-less-support.md).

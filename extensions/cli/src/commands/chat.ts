@@ -492,6 +492,27 @@ async function runHeadlessMode(
     initialPrompt,
   );
 
+  // Critical validation: Ensure we have actual prompt text in headless mode
+  // This prevents the CLI from hanging in TTY-less environments when question() is called
+  // We check AFTER processing all prompts (including agent files) to ensure we have real content
+  // EXCEPTION: Allow empty prompts when resuming/forking since they may just want to view history
+  if (!initialUserInput || !initialUserInput.trim()) {
+    // If resuming or forking, allow empty prompt - just exit successfully after showing history
+    if (options.resume || options.fork) {
+      // For resume/fork with no new input, we've already loaded the history above
+      // Just exit successfully (the history was already loaded into chatHistory)
+      await gracefulExit(0);
+      return;
+    }
+
+    throw new Error(
+      'Headless mode requires a prompt. Use: cn -p "your prompt"\n' +
+        'Or pipe input: echo "prompt" | cn -p\n' +
+        "Or use agent files: cn -p --agent my-org/my-agent\n" +
+        "Note: Agent files must contain a prompt field.",
+    );
+  }
+
   let isFirstMessage = true;
   while (true) {
     // When in headless mode, don't ask for user input
@@ -544,6 +565,15 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Start active time tracking
     telemetryService.startActiveTime();
 
+    // Critical routing: Explicit separation of headless and interactive modes
+    if (options.headless) {
+      // Headless path - no Ink, no TUI, works in TTY-less environments
+      logger.debug("Running in headless mode (TTY-less compatible)");
+      await runHeadlessMode(prompt, options);
+      return;
+    }
+
+    // Interactive path - requires TTY for Ink rendering
     // If not in headless mode, use unified initialization with TUI
     if (!options.headless) {
       // Process flags for TUI mode
