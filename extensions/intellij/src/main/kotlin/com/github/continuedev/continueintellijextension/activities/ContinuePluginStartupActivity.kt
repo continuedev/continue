@@ -146,9 +146,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             val diffManager = DiffManager(project)
 
             continuePluginService.diffManager = diffManager
-            
-            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
-            continuePluginService.coreMessengerManager = coreMessengerManager
             continuePluginService.ideProtocolClient = ideProtocolClient
 
             // Listen to changes to settings so the core can reload remote configuration
@@ -306,6 +303,9 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 listener,
                 project.service<ContinuePluginDisposable>()
             )
+
+            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
+            continuePluginService.coreMessengerManager = coreMessengerManager
         }
     }
 }

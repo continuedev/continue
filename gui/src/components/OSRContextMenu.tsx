@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { getPlatform } from "../util";
 
 interface Position {
@@ -140,7 +140,7 @@ const OSRContextMenu = () => {
     }
 
     setPosition(null);
-    if (isOSREnabled && platform.current !== "mac") {
+    if (isOSREnabled) {
       document.addEventListener("mousedown", clickHandler);
       document.addEventListener("mouseleave", leaveWindowHandler);
       document.addEventListener("contextmenu", contextMenuHandler);
@@ -153,7 +153,7 @@ const OSRContextMenu = () => {
     };
   }, [isOSREnabled]);
 
-  if (platform.current === "mac" || !isOSREnabled || !position) {
+  if (!isOSREnabled || !position) {
     return null;
   }
   return (

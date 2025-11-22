@@ -641,21 +641,29 @@ class Ollama extends BaseLLM implements ModelInstaller {
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
-    const response = await this.fetch(
-      // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
-      this.getEndpoint("api/tags"),
-      {
+
+    try {
+      const response = await this.fetch(this.getEndpoint("api/tags"), {
         method: "GET",
         headers: headers,
-      },
-    );
-    const data = await response.json();
-    if (response.ok) {
-      return data.models.map((model: any) => model.name);
-    } else {
-      throw new Error(
-        "Failed to list Ollama models. Make sure Ollama is running.",
-      );
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return data.models.map((model: any) => model.name);
+      } else {
+        console.warn(
+          `Ollama /api/tags returned status ${response.status}:`,
+          data,
+        );
+        throw new Error(
+          "Failed to list Ollama models. Make sure Ollama is running.",
+        );
+      }
+    } catch (error) {
+      console.warn("Failed to list Ollama models:", error);
+      // If Ollama is not running or returns an error, return an empty list
+      // This allows the application to continue without blocking on Ollama
+      return [];
     }
   }
 
