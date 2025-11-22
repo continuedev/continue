@@ -693,6 +693,9 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
+        if (payload.mode) {
+          state.mode = payload.mode;
+        }
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;
