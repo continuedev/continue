@@ -50,7 +50,46 @@ export function evaluateTerminalCommandSecurity(
   }
 
   try {
-    // Parse the command into tokens using shell-quote
+    // Split on line breaks to handle multi-line commands
+    // Newlines are command separators in shells, similar to semicolons
+    const commandLines = normalizedCommand.split(/\r?\n|\r/);
+
+    // If there are multiple lines, evaluate each separately
+    if (commandLines.length > 1) {
+      let mostRestrictivePolicy: ToolPolicy = basePolicy;
+
+      for (const line of commandLines) {
+        const trimmedLine = line.trim();
+
+        // Skip empty lines
+        if (trimmedLine === "") {
+          continue;
+        }
+
+        // Parse and evaluate this line
+        const tokens = parse(trimmedLine);
+        const linePolicy = evaluateTokensSecurity(
+          tokens,
+          basePolicy,
+          trimmedLine,
+        );
+
+        // Track the most restrictive policy
+        mostRestrictivePolicy = getMostRestrictive(
+          mostRestrictivePolicy,
+          linePolicy,
+        );
+
+        // If we found a disabled command, return immediately
+        if (mostRestrictivePolicy === "disabled") {
+          return "disabled";
+        }
+      }
+
+      return mostRestrictivePolicy;
+    }
+
+    // Single line command - parse and evaluate normally
     const tokens = parse(normalizedCommand);
 
     // Evaluate security of the parsed tokens
