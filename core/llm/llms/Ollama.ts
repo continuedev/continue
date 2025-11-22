@@ -115,6 +115,18 @@ type OllamaErrorResponse = {
   error: string;
 };
 
+type N8nChatReponse = {
+  type: string;
+  content?: string;
+  metadata: {
+    nodeId: string;
+    nodeName: string;
+    itemIndex: number;
+    runIndex: number;
+    timestamps: number;
+  };
+};
+
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
@@ -125,7 +137,8 @@ type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
       message: OllamaChatMessage;
-    });
+    })
+  | N8nChatReponse;
 
 interface OllamaTool {
   type: "function";
@@ -435,10 +448,45 @@ class Ollama extends BaseLLM implements ModelInstaller {
       body: JSON.stringify(chatOptions),
       signal,
     });
+    let isThinking: boolean = false;
 
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
+      }
+
+      if ("type" in res) {
+        const { content } = res;
+
+        if (content === "<think>") {
+          isThinking = true;
+        }
+
+        if (isThinking && content) {
+          // TODO better support for streaming thinking chunks, or remove this and depend on redux <think/> parsing logic
+          const thinkingMessage: ThinkingChatMessage = {
+            role: "thinking",
+            content: content,
+          };
+
+          if (thinkingMessage) {
+            // could cause issues with termination if chunk doesn't match this exactly
+            if (content === "</think>") {
+              isThinking = false;
+            }
+            // When Streaming you can't have both thinking and content
+            return [thinkingMessage];
+          }
+        }
+
+        if (content) {
+          const chatMessage: ChatMessage = {
+            role: "assistant",
+            content: content,
+          };
+          return [chatMessage];
+        }
+        return [];
       }
 
       const { role, content, thinking, tool_calls: toolCalls } = res.message;
