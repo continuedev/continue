@@ -88,7 +88,7 @@ class IPCMessengerBase<
         truncatedLine =
           line.substring(0, 100) + "..." + line.substring(line.length - 100);
       }
-      console.error("Error parsing line: ", truncatedLine, e);
+      console.error("Error parsing JSON from line: ", truncatedLine);
       return;
     }
   }
