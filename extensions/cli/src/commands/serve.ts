@@ -34,6 +34,7 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import { createPullRequest, type PrOptions } from "./pr.js";
 import {
   streamChatResponseWithInterruption,
   type ServerState,
@@ -320,6 +321,40 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
   });
 
+  // POST /pr - Create a pull request
+  app.post("/pr", async (req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    try {
+      const options: PrOptions = req.body;
+      logger.info("Creating pull request", { options });
+
+      const result = await createPullRequest(options);
+
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          message: result.message,
+          error: result.error,
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: result.message,
+        prUrl: result.prUrl,
+      });
+    } catch (error) {
+      logger.error(`Pull request creation error: ${formatError(error)}`);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: formatError(error),
+      });
+    }
+  });
+
   // Track intervals for cleanup
   let inactivityChecker: NodeJS.Timeout | null = null;
 
@@ -380,6 +415,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim("  POST /pause      - Pause the current agent run"));
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),
+    );
+    console.log(
+      chalk.dim(
+        "  POST /pr         - Create a pull request (body: { title?, body?, base?, draft?, web? })",
+      ),
     );
     console.log(
       chalk.dim("  POST /exit       - Gracefully shut down the server"),
