@@ -24,7 +24,7 @@ async function getGitignorePatterns() {
 }
 
 // procedure 1: search with ripgrep
-async function checkIfRipgrepIsInstalled(): Promise<boolean> {
+export async function checkIfRipgrepIsInstalled(): Promise<boolean> {
   try {
     await execPromise("rg --version");
     return true;
