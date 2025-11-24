@@ -188,7 +188,7 @@ export const CometAPI: ModelProvider = {
       contextLength: 256000,
       maxCompletionTokens: 4096,
       description:
-        "Latest Grok model series with improved reasoning and conversational abilities.",
+        "Latest Grok model with improved reasoning and conversational abilities.",
       recommendedFor: ["chat"],
     },
     {
