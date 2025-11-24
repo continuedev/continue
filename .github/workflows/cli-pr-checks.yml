@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup packages
         uses: ./.github/actions/setup-packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       - name: Setup core component
         uses: ./.github/actions/setup-component
         with:
@@ -85,6 +87,8 @@ jobs:
 
       - name: Setup packages
         uses: ./.github/actions/setup-packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       - name: Setup core component
         uses: ./.github/actions/setup-component
         with:
