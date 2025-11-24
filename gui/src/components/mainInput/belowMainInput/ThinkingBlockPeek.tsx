@@ -7,6 +7,7 @@ import styled from "styled-components";
 
 import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
+import { Button } from "../../ui";
 
 const MarkdownWrapper = styled.div`
   & > div > *:first-child {
@@ -57,10 +58,10 @@ function ThinkingBlockPeek({
   return duplicateRedactedThinkingBlock ? null : (
     <div className="thread-message">
       <div className="mt-1 flex flex-col px-4">
-        <div className="flex min-w-0 flex-row items-center justify-between gap-2">
-          <button
-            type="button"
-            className="text-description flex min-w-0 cursor-pointer flex-row items-center gap-1.5 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
+        <div>
+          <Button
+            variant="outline"
+            className="text-description flex-0 border-border m-0 mb-2 flex min-w-0 cursor-pointer flex-row items-center gap-1.5 rounded-full border-[0.5px] border-solid px-3 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
             data-testid="thinking-block-peek"
             aria-expanded={open}
             aria-controls={`thinking-block-content-${index}`}
@@ -83,11 +84,11 @@ function ThinkingBlockPeek({
             ) : (
               <ChevronDownIcon className="h-3 w-3" />
             )}
-          </button>
+          </Button>
         </div>
         <div
           id={`thinking-block-content-${index}`}
-          className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
+          className={`overflow-y-auto transition-all duration-300 ease-in-out ${
             open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
