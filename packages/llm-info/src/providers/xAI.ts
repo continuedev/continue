@@ -52,7 +52,7 @@ export const xAI: ModelProvider = {
       displayName: "Grok 4 Fast",
       contextLength: 256000,
       recommendedFor: ["chat"],
-      regex: /grok-4/,
+      regex: /^grok-4$/,
     },
     {
       model: "grok-4-1-fast-reasoning",
