@@ -1201,13 +1201,13 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude41Opus: {
-    title: "Claude 4.1 Opus",
-    description: "The most capable model in the Claude 4 series",
+  claude4_5Opus: {
+    title: "Claude 4.5 Opus",
+    description: "The most capable model in the Claude 4.5 series",
     params: {
-      model: "claude-opus-4-1-20250805",
+      model: "claude-opus-4-5",
       contextLength: 200_000,
-      title: "Claude 4.1 Opus",
+      title: "Claude 4.5 Opus",
       apiKey: "",
     },
     providerOptions: ["anthropic"],

@@ -167,7 +167,11 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
         defaultValue: 100000,
       },
     ],
-    packages: [models.claude4Sonnet, models.claude41Opus, models.claude35Haiku],
+    packages: [
+      models.claude4Sonnet,
+      models.claude4_5Opus,
+      models.claude35Haiku,
+    ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   moonshot: {
