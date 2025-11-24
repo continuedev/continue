@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.actions
 
 import com.github.continuedev.continueintellijextension.HighlightedCodePayload
 import com.github.continuedev.continueintellijextension.RangeInFileWithContents
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
@@ -9,9 +10,11 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindowManager
 import java.io.File
 
 class RestartContinueProcess : AnAction() {
@@ -86,6 +89,39 @@ class ViewHistoryAction : ContinueToolbarAction() {
 class OpenConfigAction : ContinueToolbarAction() {
     override fun toolbarActionPerformed(project: Project)  {
         project.getBrowser()?.sendToWebview("navigateTo", mapOf("path" to "/config", "toggle" to true))
+    }
+}
+
+class ReloadBrowserAction: ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) {
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Continue")
+            ?: return
+        val browserService = project.service<ContinueBrowserService>()
+
+        // Perform the reload and UI update on the Event Dispatch Thread
+        ApplicationManager.getApplication().invokeLater {
+            // Reload the browser service to get a new browser instance
+            browserService.reload()
+
+            val newBrowser = project.getBrowser() ?: return@invokeLater
+            val newBrowserComponent = newBrowser.getComponent()
+
+            val contentManager = toolWindow.contentManager
+            contentManager.removeAllContents(true)
+
+            val newContent = contentManager.factory.createContent(
+                newBrowserComponent,
+                null,
+                false
+            )
+            contentManager.addContent(newContent)
+            contentManager.setSelectedContent(newContent, true) // Request focus
+
+            toolWindow.activate({
+                // After activation, ensure the browser's input field gets focus
+                newBrowser.focusOnInput()
+            }, true)
+        }
     }
 }
 
