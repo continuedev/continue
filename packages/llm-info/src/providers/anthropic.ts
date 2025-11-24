@@ -32,7 +32,7 @@ export const Anthropic: ModelProvider = {
       contextLength: 200000,
       maxCompletionTokens: 32000,
       description: "Previous iteration on Opus",
-      regex: /claude-(?:4-1-opus|opus-4-1).*/i,
+      regex: /claude-(?:4[.-]1-opus|opus-4[.-]1).*/i,
       recommendedFor: ["chat"],
     },
     {
