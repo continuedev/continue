@@ -120,7 +120,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
-      return ["grok-3", "grok-4", "grok-code"].some((val) =>
+      return ["grok-3", "grok-4", "grok-4-1", "grok-code"].some((val) =>
         lowerCaseModel.includes(val),
       );
     },
