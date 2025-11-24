@@ -107,7 +107,7 @@ describe("ConfigService", () => {
     test("should initialize with undefined config path", async () => {
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
-        source: { type: "default-agent" } as any,
+        source: { type: "remote-default-config" } as any,
       });
 
       const state = await service.doInitialize({
@@ -257,7 +257,7 @@ describe("ConfigService", () => {
       // Initialize without config path
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
-        source: { type: "default-agent" } as any,
+        source: { type: "remote-default-config" } as any,
       });
       await service.doInitialize({
         authConfig: { accessToken: "token" } as any,

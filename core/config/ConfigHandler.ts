@@ -502,11 +502,13 @@ export class ConfigHandler {
     this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
-      return {
+      const out = {
         config: undefined,
         errors: injectErrors,
         configLoadInterrupted: true,
       };
+      this.notifyConfigListeners(out);
+      return out;
     }
 
     for (const org of this.organizations) {

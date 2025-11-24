@@ -56,7 +56,7 @@ Continue hub uses a slug in the format of `owner/item-name` to resolve blocks.
 
 For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
 
-Import from the hub using the `uses` syntax alongside your custom configurations:
+Import from Mission Control using the `uses` syntax alongside your custom configurations:
 
 ```yaml config.yaml highlight={6}
 name: Team Config
@@ -91,7 +91,7 @@ Organize your local configurations using these directories:
 
 Models, and many MCP servers, require a secret for things like API keys.
 
-On the hub, you can configure secrets when adding a model or MCP server.
+On Mission Control, you can configure secrets when adding a model or MCP server.
 
 This will use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
 

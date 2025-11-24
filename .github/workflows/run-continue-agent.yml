@@ -4,14 +4,15 @@ on:
   workflow_call:
     inputs:
       prompt:
-        description: "The prompt to send to the Continue agent"
-        required: true
-        type: string
-      config:
-        description: "The config to use (e.g., continuedev/default-background-agent)"
+        description: "Additional prompting to send to the Continue agent"
         required: false
         type: string
-        default: "continuedev/default-background-agent"
+        default: ""
+      agent:
+        description: "The agent to use (e.g., continuedev/github-pr-agent)"
+        required: true
+        type: string
+        default: "continuedev/github-pr-agent"
       branch_name:
         description: "The base branch name to work from"
         required: false
@@ -33,7 +34,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CONTINUE_API_KEY }}" \
             -d '{
               "prompt": "${{ inputs.prompt }}",
-              "config": "${{ inputs.config }}",
+              "agent": "${{ inputs.agent }}",
               "branchName": "${{ inputs.branch_name }}",
               "repoUrl": "https://github.com/${{ github.repository }}"
             }')
