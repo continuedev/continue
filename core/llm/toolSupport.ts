@@ -396,6 +396,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
     [/grok-code/],
+    [/grok-4-1|grok-4\.1/],
     [/claude/, /4-5/],
   ];
   for (const combo of recs) {
