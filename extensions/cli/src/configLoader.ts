@@ -36,8 +36,8 @@ export type ConfigSource =
   | { type: "cli-flag"; path: string }
   | { type: "saved-uri"; uri: string }
   | { type: "user-assistant"; slug: string }
-  | { type: "default-config-yaml" }
-  | { type: "default-agent" }
+  | { type: "local-config-yaml" }
+  | { type: "remote-default-config" }
   | { type: "no-config" };
 
 /**
@@ -124,16 +124,16 @@ function determineConfigSource(
 
   // Priority 3: Default resolution based on auth state
   if (authConfig === null) {
-    // Unauthenticated: check for default config.yaml, then fallback to default agent
+    // Unauthenticated: check for default config.yaml, then fallback to default config
     const defaultConfigPath = path.join(env.continueHome, "config.yaml");
     if (fs.existsSync(defaultConfigPath)) {
-      return { type: "default-config-yaml" };
+      return { type: "local-config-yaml" };
     }
-    return { type: "default-agent" };
+    return { type: "remote-default-config" };
   } else {
     // In headless, user assistant fallback behavior isn't supported
     if (isHeadless) {
-      return { type: "default-agent" };
+      return { type: "remote-default-config" };
     }
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
@@ -178,16 +178,16 @@ async function loadFromSource(
           injectBlocks,
         );
 
-      case "default-config-yaml":
-        return await loadDefaultConfigYaml(
+      case "local-config-yaml":
+        return await loadLocalConfigYaml(
           accessToken,
           organizationId,
           apiClient,
           injectBlocks,
         );
 
-      case "default-agent":
-        return await loadDefaultAgent(
+      case "remote-default-config":
+        return await loadDefaultConfig(
           organizationId,
           apiClient,
           accessToken,
@@ -214,7 +214,7 @@ async function loadFromSource(
           "Failed to load user assistants, falling back to default agent",
         ),
       );
-      return await loadDefaultAgent(
+      return await loadDefaultConfig(
         organizationId,
         apiClient,
         accessToken,
@@ -334,7 +334,7 @@ async function loadUserAssistantWithFallback(
   }
 
   // No user assistants, fall back to default agent
-  return await loadDefaultAgent(
+  return await loadDefaultConfig(
     organizationId,
     apiClient,
     accessToken,
@@ -345,7 +345,7 @@ async function loadUserAssistantWithFallback(
 /**
  * Loads default config.yaml from ~/.continue/config.yaml
  */
-async function loadDefaultConfigYaml(
+async function loadLocalConfigYaml(
   accessToken: string | null,
   organizationId: string | null,
   apiClient: DefaultApiInterface,
@@ -362,9 +362,9 @@ async function loadDefaultConfigYaml(
 }
 
 /**
- * Loads the default continuedev/default-agent
+ * Loads the default continuedev/default-config
  */
-async function loadDefaultAgent(
+async function loadDefaultConfig(
   organizationId: string | null,
   apiClient: DefaultApiInterface,
   accessToken: string | null,
@@ -372,7 +372,7 @@ async function loadDefaultAgent(
 ): Promise<AssistantUnrolled> {
   const resp = await apiClient.getAssistant({
     ownerSlug: "continuedev",
-    packageSlug: "default-agent",
+    packageSlug: "default-cli-config",
     organizationId: organizationId ?? undefined,
   });
 
@@ -582,7 +582,7 @@ function getUriFromSource(source: ConfigSource): string | null {
         : `slug://${source.path}`;
     case "saved-uri":
       return source.uri;
-    case "default-config-yaml":
+    case "local-config-yaml":
       return `file://${path.join(env.continueHome, "config.yaml")}`;
     default:
       return null;

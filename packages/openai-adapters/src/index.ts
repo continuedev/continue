@@ -190,3 +190,4 @@ export {
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
+export { parseDataUrl, extractBase64FromDataUrl } from "./util/url.js";
