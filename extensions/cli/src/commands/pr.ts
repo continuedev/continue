@@ -1,10 +1,10 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
 import { getGitBranch, getGitRemoteUrl, isGitRepo } from "../util/git.js";
 import { logger } from "../util/logger.js";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export interface PrOptions {
   title?: string;
@@ -26,7 +26,7 @@ export interface PrResult {
  */
 async function isGhInstalled(): Promise<boolean> {
   try {
-    await execAsync("gh --version");
+    await execFileAsync("gh", ["--version"]);
     return true;
   } catch {
     return false;
@@ -88,7 +88,7 @@ async function createPrWithGh(options: PrOptions): Promise<{ prUrl?: string }> {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(`gh ${args.join(" ")}`, {
+    const { stdout, stderr } = await execFileAsync("gh", args, {
       cwd: process.cwd(),
     });
 
