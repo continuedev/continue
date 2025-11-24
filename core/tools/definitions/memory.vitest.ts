@@ -39,7 +39,8 @@ describe("memoryTool definition", () => {
     });
 
     it("should have command enum with all operations", () => {
-      const commandProperty = memoryTool.function.parameters!.properties.command;
+      const commandProperty =
+        memoryTool.function.parameters!.properties.command;
       expect(commandProperty.type).toBe("string");
       expect(commandProperty.enum).toEqual([
         "view",

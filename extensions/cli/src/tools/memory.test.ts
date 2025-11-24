@@ -305,11 +305,12 @@ describe("memoryTool", () => {
         file_text: "Content",
       });
 
-      expect(result).toBe("File created successfully at /memories/newdir/file.txt");
-      expect(fs.mkdir).toHaveBeenCalledWith(
-        expect.stringContaining("newdir"),
-        { recursive: true }
+      expect(result).toBe(
+        "File created successfully at /memories/newdir/file.txt",
       );
+      expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining("newdir"), {
+        recursive: true,
+      });
       expect(fs.writeFile).toHaveBeenCalled();
     });
   });
