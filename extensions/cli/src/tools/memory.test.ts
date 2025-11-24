@@ -292,11 +292,12 @@ describe("memoryTool", () => {
       );
     });
 
-    it("should create directory if it doesn't exist and throw error", async () => {
+    it("should create directory if it doesn't exist and create file successfully", async () => {
       vi.mocked(fs.access)
         .mockRejectedValueOnce(new Error("ENOENT"))
         .mockResolvedValueOnce(undefined);
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+      vi.mocked(fs.writeFile).mockResolvedValue();
 
       const result = await memoryTool.run({
         command: "create",
@@ -304,8 +305,12 @@ describe("memoryTool", () => {
         file_text: "Content",
       });
 
-      expect(result).toContain("Error: Path not found");
-      expect(fs.mkdir).toHaveBeenCalled();
+      expect(result).toBe("File created successfully at /memories/newdir/file.txt");
+      expect(fs.mkdir).toHaveBeenCalledWith(
+        expect.stringContaining("newdir"),
+        { recursive: true }
+      );
+      expect(fs.writeFile).toHaveBeenCalled();
     });
   });
 
