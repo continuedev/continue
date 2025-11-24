@@ -35,11 +35,11 @@ describe("memoryTool definition", () => {
 
   describe("function parameters", () => {
     it("should require command parameter", () => {
-      expect(memoryTool.function.parameters.required).toContain("command");
+      expect(memoryTool.function.parameters!.required).toContain("command");
     });
 
     it("should have command enum with all operations", () => {
-      const commandProperty = memoryTool.function.parameters.properties.command;
+      const commandProperty = memoryTool.function.parameters!.properties.command;
       expect(commandProperty.type).toBe("string");
       expect(commandProperty.enum).toEqual([
         "view",
@@ -52,7 +52,7 @@ describe("memoryTool definition", () => {
     });
 
     it("should have path parameter with proper description", () => {
-      const pathProperty = memoryTool.function.parameters.properties.path;
+      const pathProperty = memoryTool.function.parameters!.properties.path;
       expect(pathProperty).toBeDefined();
       expect(pathProperty.type).toBe("string");
       expect(pathProperty.description).toContain("/memories");
@@ -60,7 +60,7 @@ describe("memoryTool definition", () => {
 
     it("should have view_range parameter for viewing files", () => {
       const viewRangeProperty =
-        memoryTool.function.parameters.properties.view_range;
+        memoryTool.function.parameters!.properties.view_range;
       expect(viewRangeProperty).toBeDefined();
       expect(viewRangeProperty.type).toBe("array");
       expect(viewRangeProperty.items.type).toBe("number");
@@ -69,7 +69,7 @@ describe("memoryTool definition", () => {
 
     it("should have file_text parameter for create command", () => {
       const fileTextProperty =
-        memoryTool.function.parameters.properties.file_text;
+        memoryTool.function.parameters!.properties.file_text;
       expect(fileTextProperty).toBeDefined();
       expect(fileTextProperty.type).toBe("string");
       expect(fileTextProperty.description).toContain("creating");
@@ -77,9 +77,9 @@ describe("memoryTool definition", () => {
 
     it("should have insert parameters", () => {
       const insertLineProperty =
-        memoryTool.function.parameters.properties.insert_line;
+        memoryTool.function.parameters!.properties.insert_line;
       const insertTextProperty =
-        memoryTool.function.parameters.properties.insert_text;
+        memoryTool.function.parameters!.properties.insert_text;
 
       expect(insertLineProperty).toBeDefined();
       expect(insertLineProperty.type).toBe("number");
@@ -90,8 +90,8 @@ describe("memoryTool definition", () => {
     });
 
     it("should have str_replace parameters", () => {
-      const oldStrProperty = memoryTool.function.parameters.properties.old_str;
-      const newStrProperty = memoryTool.function.parameters.properties.new_str;
+      const oldStrProperty = memoryTool.function.parameters!.properties.old_str;
+      const newStrProperty = memoryTool.function.parameters!.properties.new_str;
 
       expect(oldStrProperty).toBeDefined();
       expect(oldStrProperty.type).toBe("string");
@@ -104,9 +104,9 @@ describe("memoryTool definition", () => {
 
     it("should have rename parameters", () => {
       const oldPathProperty =
-        memoryTool.function.parameters.properties.old_path;
+        memoryTool.function.parameters!.properties.old_path;
       const newPathProperty =
-        memoryTool.function.parameters.properties.new_path;
+        memoryTool.function.parameters!.properties.new_path;
 
       expect(oldPathProperty).toBeDefined();
       expect(oldPathProperty.type).toBe("string");
@@ -181,7 +181,7 @@ describe("memoryTool definition", () => {
         "rename",
       ];
       const commandEnum =
-        memoryTool.function.parameters.properties.command.enum;
+        memoryTool.function.parameters!.properties.command.enum;
 
       for (const cmd of commands) {
         expect(commandEnum).toContain(cmd);
@@ -189,7 +189,7 @@ describe("memoryTool definition", () => {
     });
 
     it("should have parameters for all documented commands", () => {
-      const properties = memoryTool.function.parameters.properties;
+      const properties = memoryTool.function.parameters!.properties;
 
       // Check that we have parameters for each command type
       expect(properties).toHaveProperty("command"); // All commands
@@ -219,7 +219,7 @@ describe("memoryTool definition", () => {
     });
 
     it("should have command as first required parameter", () => {
-      const required = memoryTool.function.parameters.required;
+      const required = memoryTool.function.parameters!.required;
       expect(required).toHaveLength(1);
       expect(required[0]).toBe("command");
     });
@@ -239,31 +239,31 @@ describe("memoryTool definition", () => {
 
   describe("security and validation", () => {
     it("should document path requirements in description", () => {
-      const pathProperty = memoryTool.function.parameters.properties.path;
+      const pathProperty = memoryTool.function.parameters!.properties.path;
       expect(pathProperty.description).toContain("/memories");
       expect(pathProperty.description).toContain("Must begin");
     });
 
     it("should document str_replace uniqueness requirement", () => {
-      const oldStrProperty = memoryTool.function.parameters.properties.old_str;
+      const oldStrProperty = memoryTool.function.parameters!.properties.old_str;
       expect(oldStrProperty.description).toContain("exactly once");
     });
 
     it("should document insert_line as 0-based", () => {
       const insertLineProperty =
-        memoryTool.function.parameters.properties.insert_line;
+        memoryTool.function.parameters!.properties.insert_line;
       expect(insertLineProperty.description).toContain("0-based");
     });
 
     it("should document view_range as 1-indexed", () => {
       const viewRangeProperty =
-        memoryTool.function.parameters.properties.view_range;
+        memoryTool.function.parameters!.properties.view_range;
       expect(viewRangeProperty.description).toContain("1-indexed");
     });
 
     it("should document -1 for EOF in view_range", () => {
       const viewRangeProperty =
-        memoryTool.function.parameters.properties.view_range;
+        memoryTool.function.parameters!.properties.view_range;
       expect(viewRangeProperty.description).toContain("-1");
       expect(viewRangeProperty.description).toContain("EOF");
     });
