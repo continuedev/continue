@@ -402,6 +402,7 @@ export class ConfigHandler {
     const newSession = sessionInfo;
 
     let reload = false;
+    let isLogin = false;
     if (newSession) {
       if (currentSession) {
         if (
@@ -416,6 +417,7 @@ export class ConfigHandler {
       } else {
         // log in
         reload = true;
+        isLogin = true;
       }
     } else {
       if (currentSession) {
@@ -429,6 +431,19 @@ export class ConfigHandler {
         Promise.resolve(sessionInfo),
         this.ide,
       );
+
+      // On login, clear the saved org selection so cascadeInit will prefer organization over personal
+      if (isLogin) {
+        const workspaceId = await this.getWorkspaceId();
+        const selectedOrgs =
+          this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+        delete selectedOrgs[workspaceId];
+        this.globalContext.update(
+          "lastSelectedOrgIdForWorkspace",
+          selectedOrgs,
+        );
+      }
+
       this.abortCascade();
       await this.cascadeInit("Control plane session info update");
     }
