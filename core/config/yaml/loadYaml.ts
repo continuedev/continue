@@ -9,7 +9,6 @@ import {
   ModelRole,
   PackageIdentifier,
   RegistryClient,
-  TEMPLATE_VAR_REGEX,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -236,22 +235,6 @@ export async function configYamlToContinueConfig(options: {
     useLocalCrawling: doc.useLocalCrawling,
     sourceFile: doc.sourceFile,
   }));
-
-  config.mcpServers?.forEach((mcpServer) => {
-    if ("args" in mcpServer) {
-      const mcpArgVariables =
-        mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
-
-      if (mcpArgVariables.length === 0) {
-        return;
-      }
-
-      localErrors.push({
-        fatal: false,
-        message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-      });
-    }
-  });
 
   // Prompt files -
   try {

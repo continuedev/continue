@@ -51,7 +51,7 @@ fun showTutorial(project: Project) {
             if (`is` == null) {
                 throw IOException("Resource not found: $tutorialFileName")
             }
-            var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+            var content = `is`.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
 
             // All jetbrains will use J instead of L
             content = content.replace("[Cmd + L]", "[Cmd + J]")
@@ -95,7 +95,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
     }
 
     private fun getPlatformSpecificKeyStroke(key: String): String {
-        val osName = System.getProperty("os.name").toLowerCase()
+        val osName = System.getProperty("os.name").lowercase()
         val modifier = if (osName.contains("mac")) "meta" else "control"
         return "$modifier $key"
     }

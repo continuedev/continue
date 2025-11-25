@@ -33,7 +33,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
-import org.jetbrains.plugins.terminal.TerminalView
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
@@ -191,10 +191,6 @@ class IntelliJIDE(
         return mapOf("text" to text)
     }
 
-    override suspend fun isTelemetryEnabled(): Boolean {
-        return true
-    }
-
     override suspend fun isWorkspaceRemote(): Boolean {
         return this.getIdeInfo().remoteName != "local"
     }
@@ -208,10 +204,10 @@ class IntelliJIDE(
             try {
                 val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
 
-                val terminalView = TerminalView.getInstance(project)
+                val terminalManager = TerminalToolWindowManager.getInstance(project)
                 // Find the first terminal widget selected, whatever its state, running command or not.
-                val widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
-                    toolWindow?.getContentManager()?.getContent(it)?.isSelected ?: false
+                val widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                    toolWindow?.contentManager?.getContent(it)?.isSelected ?: false
                 }
 
                 if (widget != null) {
@@ -288,23 +284,23 @@ class IntelliJIDE(
                 val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
                 toolWindow?.activate({
                     try {
-                        val terminalView = TerminalView.getInstance(project)
+                        val terminalManager = TerminalToolWindowManager.getInstance(project)
                         var widget: ShellTerminalWidget? = null
 
                         // 1. Handle reuseTerminal option
-                        if (terminalOptions.reuseTerminal == true && terminalView.getWidgets().isNotEmpty()) {
+                        if (terminalOptions.reuseTerminal == true && terminalManager.getWidgets().isNotEmpty()) {
                             // 2. Find by terminalName if provided
                             if (terminalOptions.terminalName != null) {
-                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>()
                                     .firstOrNull {
                                         toolWindow.contentManager.getContent(it).tabName == terminalOptions.terminalName
                                                 && !it.hasRunningCommands()
                                     }
                             } else {
                                 // 3. Find active terminal, or fall back to the first one
-                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>()
                                     .firstOrNull { toolWindow.contentManager.getContent(it).isSelected }
-                                    ?: terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                                    ?: terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
                                         !it.hasRunningCommands()
                                     }
                             }
@@ -312,7 +308,7 @@ class IntelliJIDE(
 
                         // 4. Create a new terminal if needed
                         if (widget == null) {
-                            widget = terminalView.createLocalShellWidget(
+                            widget = terminalManager.createLocalShellWidget(
                                 project.basePath,
                                 terminalOptions.terminalName,
                                 true
