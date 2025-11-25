@@ -416,7 +416,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch"),
     );
-    console.log(
+    logger.info(
       chalk.dim(
         "  POST /pr         - Create a pull request (body: { title?, body?, base?, draft?, web? })",
       ),
