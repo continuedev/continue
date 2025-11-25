@@ -120,22 +120,19 @@ export async function findAvailableFilename(
   baseFilenameOverride?: string,
 ): Promise<string> {
   const fileExtension = extension ?? getFileExtension(blockType);
-  let baseFilename: string;
+  let baseFilename = "";
 
   const trimmedOverride = baseFilenameOverride?.trim();
   if (trimmedOverride) {
     if (blockType === "rules") {
       const withoutExtension = trimmedOverride.replace(/\.[^./\\]+$/, "");
       const sanitized = sanitizeRuleName(withoutExtension);
-      baseFilename =
-        sanitized ||
-        (isGlobal
-          ? "global-rule"
-          : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`);
+      baseFilename = sanitized;
     } else {
       baseFilename = trimmedOverride;
     }
-  } else {
+  }
+  if (!baseFilename) {
     baseFilename =
       blockType === "rules" && isGlobal
         ? "global-rule"
