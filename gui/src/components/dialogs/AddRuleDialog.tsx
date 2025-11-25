@@ -31,7 +31,7 @@ function AddRuleDialog({ mode }: { mode: "workspace" | "global" }) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError("File name is required");
+      setError("Rule name is required");
       return;
     }
     setError(undefined);
@@ -54,7 +54,7 @@ function AddRuleDialog({ mode }: { mode: "workspace" | "global" }) {
     }
   };
 
-  const title = mode === "global" ? "Add global rule file" : "Add rule file";
+  const title = mode === "global" ? "Add global rule" : "Add workspace rule";
 
   return (
     <div className="px-2 pt-4 sm:px-4">
@@ -65,7 +65,7 @@ function AddRuleDialog({ mode }: { mode: "workspace" | "global" }) {
         </p>
         <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2">
           <label className="flex w-full flex-col gap-1">
-            <span>File name</span>
+            <span>Rule name</span>
             <Input
               ref={inputRef}
               type="text"

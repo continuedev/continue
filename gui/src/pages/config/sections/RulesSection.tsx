@@ -411,7 +411,7 @@ function RulesSubSection() {
       );
     } else {
       void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=rules",
+        path: "/hub?type=rules",
         orgSlug: undefined,
       });
     }
