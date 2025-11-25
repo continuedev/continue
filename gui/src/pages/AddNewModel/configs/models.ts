@@ -1121,6 +1121,18 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  gpt5_1: {
+    title: "GPT-5.1",
+    description: "OpenAI's GPT-5.1 model for advanced reasoning and chat",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      title: "GPT-5.1",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt5Codex: {
     title: "GPT-5 Codex",
     description:
@@ -1902,6 +1914,34 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Grok 4 Fast Non-Reasoning",
       model: "grok-4-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastReasoning: {
+    title: "Grok 4.1 Fast Reasoning",
+    description:
+      "xAI's upgraded reasoning model offering strong performance in complex tasks.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Reasoning",
+      model: "grok-4-1-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastNonReasoning: {
+    title: "Grok 4.1 Fast Non-Reasoning",
+    description:
+      "xAI's upgraded non-reasoning model optimized for speed and efficiency.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-non-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Non-Reasoning",
+      model: "grok-4-1-fast-non-reasoning",
       contextLength: 2_000_000,
     },
     icon: "xAI.png",
