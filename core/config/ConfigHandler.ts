@@ -100,7 +100,7 @@ export class ConfigHandler {
     return `${workspaceId}:::${orgId}`;
   }
 
-  private async cascadeInit(reason: string) {
+  private async cascadeInit(reason: string, isLogin?: boolean) {
     const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
 
@@ -118,7 +118,8 @@ export class ConfigHandler {
       const workspaceId = await this.getWorkspaceId();
       const selectedOrgs =
         this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-      const currentSelection = selectedOrgs[workspaceId];
+      // reset selected org to first available org on login, otherwise use saved selection
+      const currentSelection = isLogin ? null : selectedOrgs[workspaceId];
 
       const firstNonPersonal = orgs.find(
         (org) => org.id !== this.PERSONAL_ORG_DESC.id,
@@ -431,21 +432,8 @@ export class ConfigHandler {
         Promise.resolve(sessionInfo),
         this.ide,
       );
-
-      // On login, clear the saved org selection so cascadeInit will prefer organization over personal
-      if (isLogin) {
-        const workspaceId = await this.getWorkspaceId();
-        const selectedOrgs =
-          this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-        delete selectedOrgs[workspaceId];
-        this.globalContext.update(
-          "lastSelectedOrgIdForWorkspace",
-          selectedOrgs,
-        );
-      }
-
       this.abortCascade();
-      await this.cascadeInit("Control plane session info update");
+      await this.cascadeInit("Control plane session info update", isLogin);
     }
     return reload;
   }
