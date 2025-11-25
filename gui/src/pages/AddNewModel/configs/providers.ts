@@ -624,6 +624,8 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.grokCodeFast1,
       models.grok4FastReasoning,
       models.grok4FastNonReasoning,
+      models.grok41FastReasoning,
+      models.grok41FastNonReasoning,
       models.grok4,
       models.grok3,
       models.grok3Mini,
