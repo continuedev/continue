@@ -92,6 +92,14 @@ export const OpenAi: ModelProvider = {
       regex: /gpt-5-codex/,
       recommendedFor: ["chat"],
     },
+    {
+      model: "gpt-5.1",
+      displayName: "GPT-5.1",
+      contextLength: 400000,
+      maxCompletionTokens: 128000,
+      regex: /^gpt-5\.1$/,
+      recommendedFor: ["chat"],
+    },
     // gpt-4o
     {
       model: "gpt-4o",
