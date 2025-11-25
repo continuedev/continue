@@ -183,9 +183,18 @@ export const CometAPI: ModelProvider = {
 
     // Grok Series
     {
+      model: "grok-4-1-fast-reasoning",
+      displayName: "Grok 4.1 Fast Reasoning",
+      contextLength: 256000,
+      maxCompletionTokens: 4096,
+      description:
+        "Latest Grok model with faster and improved reasoning and conversational abilities.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "grok-4-0709",
       displayName: "Grok 4 (07-09)",
-      contextLength: 128000,
+      contextLength: 256000,
       maxCompletionTokens: 4096,
       description:
         "Latest Grok model with improved reasoning and conversational abilities.",
