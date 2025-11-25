@@ -113,8 +113,9 @@ async function createPrWithGh(options: PrOptions): Promise<{ prUrl?: string }> {
  */
 async function getCommitMessages(base: string = "main"): Promise<string> {
   try {
-    const { stdout } = await execAsync(
-      `git log ${base}..HEAD --pretty=format:"- %s"`,
+    const { stdout } = await execFileAsync(
+      "git",
+      ["log", `${base}..HEAD`, "--pretty=format:- %s"],
       {
         cwd: process.cwd(),
       },

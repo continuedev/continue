@@ -4,22 +4,38 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as gitUtil from "../util/git.js";
 
-// Create mock exec with promisify.custom support inside the factory
-vi.mock("child_process", () => {
-  const execMockFn: any = vi.fn();
-  (execMockFn as any)[(nodeUtil as any).promisify.custom] = (cmd: string) =>
+// Create mock execFile with promisify.custom support inside the factory
+vi.mock("child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("child_process")>();
+
+  const execFileMockFn: any = vi.fn();
+  // Add promisify.custom to handle promisify(execFile)
+  (execFileMockFn as any)[(nodeUtil as any).promisify.custom] = (
+    file: string,
+    args?: string[],
+    options?: any,
+  ) =>
     new Promise((resolve, reject) => {
-      execMockFn(cmd, (err: any, stdout: any, stderr: any) => {
-        if (err) reject(err);
-        else resolve({ stdout, stderr });
-      });
+      // Call the mock with all arguments
+      execFileMockFn(
+        file,
+        args,
+        options,
+        (err: any, stdout: any, stderr: any) => {
+          if (err) reject(err);
+          else resolve({ stdout, stderr });
+        },
+      );
     });
-  return { exec: execMockFn };
+  return {
+    ...actual,
+    execFile: execFileMockFn,
+  };
 });
 
 // Import after mocking to get the mocked version
 const childProcess = await import("child_process");
-const execMock = vi.mocked(childProcess.exec);
+const execFileMock = vi.mocked(childProcess.execFile);
 
 // Mock logger
 vi.mock("../util/logger.js", () => ({
@@ -37,7 +53,7 @@ const { createPullRequest } = await import("./pr.js");
 describe("pr endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    execMock.mockClear();
+    execFileMock.mockClear();
   });
 
   afterEach(() => {
@@ -117,11 +133,13 @@ describe("pr endpoint", () => {
         "https://github.com/owner/repo.git",
       );
 
-      // Mock exec to fail for gh --version
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        callback(new Error("Command not found"), "", "");
-        return {} as any;
-      });
+      // Mock execFile to fail for gh --version
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          callback(new Error("Command not found"), "", "");
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({});
 
@@ -138,21 +156,23 @@ describe("pr endpoint", () => {
         "https://github.com/owner/repo.git",
       );
 
-      // Mock exec to handle different commands
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/123\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      // Mock execFile to handle different commands
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/123\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({});
 
@@ -167,21 +187,23 @@ describe("pr endpoint", () => {
         "git@github.com:owner/repo.git",
       );
 
-      // Mock exec to handle different commands
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/456\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      // Mock execFile to handle different commands
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/456\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({});
 
@@ -200,22 +222,24 @@ describe("pr endpoint", () => {
     });
 
     it("should create a PR with custom title and body", async () => {
-      let ghCommand = "";
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          ghCommand = cmd;
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/1\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      let ghArgs: string[] = [];
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            ghArgs = args;
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/1\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({
         title: "Custom Title",
@@ -224,109 +248,117 @@ describe("pr endpoint", () => {
 
       expect(result.success).toBe(true);
       expect(result.prUrl).toContain("github.com/owner/repo/pull");
-      expect(ghCommand).toContain("--title");
-      expect(ghCommand).toContain("Custom Title");
-      expect(ghCommand).toContain("--body");
-      expect(ghCommand).toContain("Custom Body");
+      expect(ghArgs).toContain("--title");
+      expect(ghArgs).toContain("Custom Title");
+      expect(ghArgs).toContain("--body");
+      expect(ghArgs).toContain("Custom Body");
     });
 
     it("should create a draft PR when draft option is true", async () => {
-      let ghCommand = "";
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          ghCommand = cmd;
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/2\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      let ghArgs: string[] = [];
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            ghArgs = args;
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/2\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({ draft: true });
 
       expect(result.success).toBe(true);
-      expect(ghCommand).toContain("--draft");
+      expect(ghArgs).toContain("--draft");
     });
 
     it("should use custom base branch", async () => {
-      let ghCommand = "";
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          ghCommand = cmd;
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/3\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      let ghArgs: string[] = [];
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            ghArgs = args;
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/3\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({ base: "develop" });
 
       expect(result.success).toBe(true);
-      expect(ghCommand).toContain("--base");
-      expect(ghCommand).toContain("develop");
+      expect(ghArgs).toContain("--base");
+      expect(ghArgs).toContain("develop");
     });
 
     it("should open in browser when web option is true", async () => {
-      let ghCommand = "";
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          ghCommand = cmd;
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/4\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      let ghArgs: string[] = [];
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            ghArgs = args;
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/4\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({ web: true });
 
       expect(result.success).toBe(true);
-      expect(ghCommand).toContain("--web");
+      expect(ghArgs).toContain("--web");
     });
 
     it("should generate title from branch name", async () => {
-      let ghCommand = "";
-      execMock.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.includes("gh --version")) {
-          callback(null, "gh version 2.0.0", "");
-        } else if (cmd.includes("gh pr create")) {
-          ghCommand = cmd;
-          callback(
-            null,
-            "https://github.com/owner/repo/pull/5\nPR created successfully",
-            "",
-          );
-        } else if (cmd.includes("git log")) {
-          callback(null, "- feat: add new feature", "");
-        }
-        return {} as any;
-      });
+      let ghArgs: string[] = [];
+      execFileMock.mockImplementation(
+        (file: any, args: any, options: any, callback: any) => {
+          if (file === "gh" && args?.[0] === "--version") {
+            callback(null, "gh version 2.0.0", "");
+          } else if (file === "gh" && args?.[0] === "pr") {
+            ghArgs = args;
+            callback(
+              null,
+              "https://github.com/owner/repo/pull/5\nPR created successfully",
+              "",
+            );
+          } else if (file === "git" && args?.[0] === "log") {
+            callback(null, "- feat: add new feature", "");
+          }
+          return {} as any;
+        },
+      );
 
       const result = await createPullRequest({});
 
       expect(result.success).toBe(true);
       // Should convert "feature/new-endpoint" to "New Endpoint"
-      expect(ghCommand).toContain("--title");
-      expect(ghCommand).toContain("New Endpoint");
+      expect(ghArgs).toContain("--title");
+      expect(ghArgs).toContain("New Endpoint");
     });
   });
 });
