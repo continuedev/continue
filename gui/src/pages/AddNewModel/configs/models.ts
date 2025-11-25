@@ -1121,6 +1121,18 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  gpt5_1: {
+    title: "GPT-5.1",
+    description: "OpenAI's GPT-5.1 model for advanced reasoning and chat",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      title: "GPT-5.1",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt5Codex: {
     title: "GPT-5 Codex",
     description:

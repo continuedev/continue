@@ -111,13 +111,14 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
   openai: {
     title: "OpenAI",
     provider: "openai",
-    description: "Use gpt-5, gpt-4, or any other OpenAI model",
+    description: "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model",
     longDescription:
-      "Use gpt-5, gpt-4, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
+      "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt5,
+      models.gpt5_1,
       models.gpt5Codex,
       models.gpt4o,
       models.gpt4omini,
