@@ -604,6 +604,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.gemini20FlashLite,
       models.gemini20FlashImageGeneration,
       models.gemini25ProExp,
+      models.gemini3ProPreview,
     ],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
