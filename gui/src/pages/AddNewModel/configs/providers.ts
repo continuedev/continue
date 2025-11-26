@@ -41,23 +41,36 @@ const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
 
-// Initialize OpenRouter models placeholder
-let openRouterModelsList: ModelPackage[] = [];
+// Initialize OpenRouter models placeholder with a loading placeholder
+const OPENROUTER_LOADING_PLACEHOLDER: ModelPackage = {
+  title: "Loading models...",
+  description: "Fetching available models from OpenRouter",
+  params: {
+    model: "placeholder",
+    contextLength: 0,
+  },
+  isOpenSource: false,
+};
+
+let openRouterModelsList: ModelPackage[] = [OPENROUTER_LOADING_PLACEHOLDER];
 
 /**
  * Initialize OpenRouter models by fetching from the API
- * This should be called once when the app loads
+ * This should be called once when the component mounts
  */
 export async function initializeOpenRouterModels() {
   try {
-    openRouterModelsList = await getOpenRouterModelsList();
-    // Update the providers object with the fetched models
-    if (providers.openrouter) {
-      providers.openrouter.packages = openRouterModelsList;
+    const models = await getOpenRouterModelsList();
+    if (models.length > 0) {
+      openRouterModelsList = models;
+      // Update the providers object with the fetched models
+      if (providers.openrouter) {
+        providers.openrouter.packages = openRouterModelsList;
+      }
     }
   } catch (error) {
     console.error("Failed to initialize OpenRouter models:", error);
-    openRouterModelsList = [];
+    // Keep placeholder on error so the UI doesn't break
   }
 }
 

@@ -41,8 +41,10 @@ export function AddModelForm({
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // Initialize OpenRouter models from API
-  void initializeOpenRouterModels();
+  // Initialize OpenRouter models from API on component mount
+  useEffect(() => {
+    void initializeOpenRouterModels();
+  }, []);
 
   const popularProviderTitles = [
     providers["openai"]?.title || "",
@@ -68,11 +70,10 @@ export function AddModelForm({
     .filter((provider) => !popularProviderTitles.includes(provider.title))
     .sort((a, b) => a.title.localeCompare(b.title));
 
-  const selectedProviderApiKeyUrl = selectedModel.params.model.startsWith(
-    "codestral",
-  )
-    ? CODESTRAL_URL
-    : selectedProvider.apiKeyUrl;
+  const selectedProviderApiKeyUrl =
+    selectedModel && selectedModel.params.model.startsWith("codestral")
+      ? CODESTRAL_URL
+      : selectedProvider.apiKeyUrl;
 
   function isDisabled() {
     if (selectedProvider.downloadUrl) {
