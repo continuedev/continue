@@ -1409,14 +1409,17 @@ export abstract class BaseLLM implements ILLM {
               yield result.thinkingChunk;
             }
             // Only yield the main chunk if it has content or tool calls
-            const hasToolCalls = result.chunk.role === "assistant" && result.chunk.toolCalls?. length;
-            const hasContent = result.chunk.content &&
+            const hasToolCalls =
+              result.chunk.role === "assistant" &&
+              result.chunk.toolCalls?.length;
+            const hasContent =
+              result.chunk.content &&
               (typeof result.chunk.content === "string"
-                ? result. chunk.content.length > 0
-                : result.chunk. content.length > 0);
+                ? result.chunk.content.length > 0
+                : result.chunk.content.length > 0);
 
             if (hasToolCalls || hasContent) {
-              yield result. chunk;
+              yield result.chunk;
             }
           }
 
@@ -1465,14 +1468,17 @@ export abstract class BaseLLM implements ILLM {
               yield result.thinkingChunk;
             }
             // Only yield the main chunk if it has content or tool calls
-            const hasToolCalls = result.chunk.role === "assistant" && result.chunk.toolCalls?. length;
-            const hasContent = result.chunk.content &&
+            const hasToolCalls =
+              result.chunk.role === "assistant" &&
+              result.chunk.toolCalls?.length;
+            const hasContent =
+              result.chunk.content &&
               (typeof result.chunk.content === "string"
-                ? result. chunk.content.length > 0
-                : result.chunk. content.length > 0);
+                ? result.chunk.content.length > 0
+                : result.chunk.content.length > 0);
 
             if (hasToolCalls || hasContent) {
-              yield result. chunk;
+              yield result.chunk;
             }
           }
 
