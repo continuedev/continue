@@ -9,25 +9,18 @@ import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
-async function getGitignorePatterns(): Promise<{
-  ignorePatterns: string[];
-  negatedPatterns: string[];
-}> {
+async function getGitignorePatterns() {
   const gitIgnorePath = await findUp(".gitignore");
-  if (!gitIgnorePath) return { ignorePatterns: [], negatedPatterns: [] };
+  if (!gitIgnorePath) return [];
   const content = fs.readFileSync(gitIgnorePath, "utf-8");
-  const ignorePatterns: string[] = [];
-  const negatedPatterns: string[] = [];
+  const ignorePatterns = [];
   for (let line of content.trim().split("\n")) {
     line = line.trim();
-    if (line.startsWith("#") || line === "") continue;
-    if (line.startsWith("!")) {
-      negatedPatterns.push(line.slice(1));
-    } else {
-      ignorePatterns.push(line);
-    }
+    if (line.startsWith("#") || line === "") continue; // ignore comments and empty line
+    if (line.startsWith("!")) continue; // ignore negated ignores
+    ignorePatterns.push(line);
   }
-  return { ignorePatterns, negatedPatterns };
+  return ignorePatterns;
 }
 
 // procedure 1: search with ripgrep
@@ -51,12 +44,9 @@ async function searchWithRipgrep(
     command += ` -g "${filePattern}"`;
   }
 
-  const { ignorePatterns, negatedPatterns } = await getGitignorePatterns();
+  const ignorePatterns = await getGitignorePatterns();
   for (const ignorePattern of ignorePatterns) {
     command += ` -g "!${ignorePattern}"`;
-  }
-  for (const negatedPattern of negatedPatterns) {
-    command += ` -g "${negatedPattern}"`;
   }
 
   command += ` "${searchPath}"`;
@@ -71,7 +61,7 @@ async function searchWithGrepOrFindstr(
   filePattern?: string,
 ) {
   const isWindows = process.platform === "win32";
-  const { ignorePatterns, negatedPatterns } = await getGitignorePatterns();
+  const ignorePatterns = await getGitignorePatterns();
   let command: string;
   if (isWindows) {
     const fileSpec = filePattern ? filePattern : "*";
@@ -79,16 +69,12 @@ async function searchWithGrepOrFindstr(
   } else {
     let excludeArgs = "";
     for (const ignorePattern of ignorePatterns) {
-      excludeArgs += ` --exclude="${ignorePattern}" --exclude-dir="${ignorePattern}"`;
-    }
-    let includeArgs = "";
-    for (const negatedPattern of negatedPatterns) {
-      includeArgs += ` --include="${negatedPattern}"`;
+      excludeArgs += ` --exclude="${ignorePattern}" --exclude-dir="${ignorePattern}"`; // use both exclude and exclude-dir because ignorePattern can be a file or directory
     }
     if (filePattern) {
-      command = `grep -R -n -H -I${excludeArgs}${includeArgs} --include="${filePattern}" "${pattern}" .`;
+      command = `find . -type f -path "${filePattern}" -print0 | xargs -0 grep -nH -I${excludeArgs} "${pattern}"`;
     } else {
-      command = `grep -R -n -H -I${excludeArgs}${includeArgs} "${pattern}" .`;
+      command = `grep -R -n -H -I${excludeArgs} "${pattern}" .`;
     }
   }
   return await execPromise(command, { cwd: searchPath });
