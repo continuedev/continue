@@ -14,39 +14,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         }
       } catch (e) {}
 
-      return [
-        "claude-3-5",
-        "claude-3.5",
-        "claude-3-7",
-        "claude-3.7",
-        "claude-sonnet-4",
-        "claude-4-sonnet",
-        "gpt-4",
-        "o3",
-        "gemini",
-        "claude-opus-4",
-        "gemma",
-      ].some((part) => model.toLowerCase().startsWith(part));
+      return ["claude", "gpt-4", "o3", "gemini", "gemma"].some((part) =>
+        model.toLowerCase().startsWith(part),
+      );
     },
     anthropic: (model) => {
-      const lower = model.toLowerCase();
-      if (
-        [
-          "claude-3-5",
-          "claude-3.5",
-          "claude-3-7",
-          "claude-3.7",
-          "claude-sonnet-4",
-          "claude-4-sonnet",
-          "claude-opus-4",
-        ].some((part) => lower.startsWith(part))
-      ) {
+      if (["claude"].some((part) => model.toLowerCase().startsWith(part))) {
         return true;
       }
-      if (lower.includes("claude") && lower.includes("4-5")) {
-        return true;
-      }
-
       return false;
     },
     azure: (model) => {
