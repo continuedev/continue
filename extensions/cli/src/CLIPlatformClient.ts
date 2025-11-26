@@ -40,14 +40,17 @@ export class CLIPlatformClient implements PlatformClient {
 
   private findSecretInProcessEnv(fqsn: FQSN): SecretResult | undefined {
     const secretValue = process.env[fqsn.secretName];
-    if (secretValue) {
+    if (secretValue !== undefined) {
       return {
         found: true,
         fqsn,
         value: secretValue,
         secretLocation: {
           secretName: fqsn.secretName,
-          secretType: SecretType.LocalEnv,
+          // Cast to SecretType.ProcessEnv is necessary because the specific type
+          // ProcessEnvSecretLocation expects secretType to be exactly SecretType.ProcessEnv,
+          // not the general enum SecretType.
+          secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
         },
       };
     }
@@ -106,10 +109,17 @@ export class CLIPlatformClient implements PlatformClient {
       });
 
       // Merge API results into our results array
-      for (let i = 0; i < apiResults.length; i++) {
-        if (apiResults[i]?.found) {
-          results[i] = apiResults[i];
+      // Handle cases where API returns results with found: false or missing results
+      for (let i = 0; i < fqsns.length; i++) {
+        if (i < apiResults.length && apiResults[i]) {
+          if (apiResults[i].found) {
+            results[i] = apiResults[i];
+          }
+          // If found is false or undefined, results[i] remains undefined
+          // and we'll check local sources below
         }
+        // If no result from API for this index, results[i] remains undefined
+        // and we'll check local sources below
       }
     } catch (error) {
       console.warn(
@@ -117,10 +127,13 @@ export class CLIPlatformClient implements PlatformClient {
           error instanceof Error ? error.message : String(error)
         }`,
       );
+      // Continue to check local sources even if API call fails
     }
 
-    // For any secret that wasn't found via API, look in local .env files
+    // For any secret that wasn't found via API (or API call failed),
+    // look in local .env files and process.env as fallback
     for (let i = 0; i < fqsns.length; i++) {
+      // Check if secret was found via API
       if (!results[i]?.found) {
         const secretFromEnv = this.findSecretInLocalEnvFiles(fqsns[i]);
         if (secretFromEnv?.found) {
