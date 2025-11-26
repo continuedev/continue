@@ -118,8 +118,12 @@ export class ConfigHandler {
       const workspaceId = await this.getWorkspaceId();
       const selectedOrgs =
         this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-      // reset selected org to first available org on login, otherwise use saved selection
-      const currentSelection = isLogin ? null : selectedOrgs[workspaceId];
+      let currentSelection = selectedOrgs[workspaceId];
+
+      // reset personal org to first available non-personal org on login
+      if (isLogin && currentSelection === "personal") {
+        currentSelection = null;
+      }
 
       const firstNonPersonal = orgs.find(
         (org) => org.id !== this.PERSONAL_ORG_DESC.id,
