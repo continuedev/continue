@@ -110,19 +110,13 @@ process.on("unhandledRejection", (reason, promise) => {
     });
   }
 
-  // Sentry capture remains the same
-  sentryService.captureException(
-    reason instanceof Error ? reason : new Error(String(reason)),
-    {
-      promise: String(promise),
-    },
-  );
+  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process, just log the error
 });
 
 process.on("uncaughtException", (error) => {
   logger.error("Uncaught Exception:", error);
-  sentryService.captureException(error);
+  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process, just log the error
 });
 
