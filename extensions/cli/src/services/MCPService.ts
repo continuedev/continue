@@ -1,7 +1,4 @@
-import {
-  decodeSecretLocation,
-  getTemplateVariables,
-} from "@continuedev/config-yaml";
+import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -318,7 +315,7 @@ export class MCPService
     const vars = getTemplateVariables(JSON.stringify(serverConfig));
     const secretVars = vars.filter((v) => v.startsWith("secrets."));
     const unrendered = secretVars.map((v) => {
-      return decodeSecretLocation(v.replace("secrets.", "")).secretName;
+      return decodeFQSN(v.replace("secrets.", "")).secretName;
     });
 
     try {
