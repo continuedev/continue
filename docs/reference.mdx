@@ -146,6 +146,10 @@ The `models` section defines the language models used in your configuration. Mod
   - `useRecentlyEdited`: If `true`, includes recently edited files in context.
   - `useRecentlyOpened`: If `true`, includes recently opened files in context.
 
+- `thinkingOpenTag`: Custom opening tag for extracting thinking/reasoning content from streamed responses. Used with models that output thinking content wrapped in custom tags (e.g., `<think>`, `<reasoning>`). Must be used together with `thinkingCloseTag`. See the [vLLM provider documentation](/customize/model-providers/more/vllm#thinking-output-format) for examples.
+
+- `thinkingCloseTag`: Custom closing tag for extracting thinking/reasoning content from streamed responses. Must be used together with `thinkingOpenTag`.
+
 **Example:**
 
 ```yaml title="config.yaml"
@@ -179,6 +183,12 @@ models:
     roles:
       - chat
       - edit
+  - name: vLLM with Custom Thinking Tags
+    provider: vllm
+    model: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+    apiBase: http://localhost:8000/v1
+    thinkingOpenTag: "<think>"
+    thinkingCloseTag: "</think>"
 ```
 
 ---
