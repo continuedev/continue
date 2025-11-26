@@ -29,18 +29,6 @@
               "mission-control",
               "mission-control/tasks",
               "mission-control/workflows",
-              "mission-control/metrics",
-              "mission-control/sharing",
-              {
-                "group": "Governance",
-                "icon": "building",
-                "pages": [
-                  "mission-control/governance/creating-an-org",
-                  "mission-control/governance/org-permissions",
-                  "mission-control/governance/pricing"
-                ]
-              },
-
               {
                 "group": "Integrations",
                 "icon": "plug",
@@ -50,6 +38,17 @@
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
                   "mission-control/integrations/slack-agent"
+                ]
+              },
+              "mission-control/metrics",
+              "mission-control/sharing",
+              {
+                "group": "Governance",
+                "icon": "building",
+                "pages": [
+                  "mission-control/governance/creating-an-org",
+                  "mission-control/governance/org-permissions",
+                  "mission-control/governance/pricing"
                 ]
               },
               {
@@ -300,7 +299,8 @@
               "guides/supabase-mcp-database-workflow",
               "guides/dlt-mcp-continue-cookbook",
               "guides/netlify-mcp-continuous-deployment",
-              "guides/chrome-devtools-mcp-performance"
+              "guides/chrome-devtools-mcp-performance",
+              "guides/klavis-mcp-continue-cookbook"
             ]
           }
         ]
