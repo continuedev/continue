@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
+  initializeOpenRouterModels,
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
@@ -39,6 +40,9 @@ export function AddModelForm({
   );
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
+
+  // Initialize OpenRouter models from API
+  void initializeOpenRouterModels();
 
   const popularProviderTitles = [
     providers["openai"]?.title || "",

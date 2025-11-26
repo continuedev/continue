@@ -3,7 +3,7 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { openRouterModelsList } from "./openRouterModel";
+import { getOpenRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -40,6 +40,26 @@ const completionParamsInputsConfigs = Object.values(completionParamsInputs);
 const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
+
+// Initialize OpenRouter models placeholder
+let openRouterModelsList: ModelPackage[] = [];
+
+/**
+ * Initialize OpenRouter models by fetching from the API
+ * This should be called once when the app loads
+ */
+export async function initializeOpenRouterModels() {
+  try {
+    openRouterModelsList = await getOpenRouterModelsList();
+    // Update the providers object with the fetched models
+    if (providers.openrouter) {
+      providers.openrouter.packages = openRouterModelsList;
+    }
+  } catch (error) {
+    console.error("Failed to initialize OpenRouter models:", error);
+    openRouterModelsList = [];
+  }
+}
 
 export const apiBaseInput: InputDescriptor = {
   inputType: "text",

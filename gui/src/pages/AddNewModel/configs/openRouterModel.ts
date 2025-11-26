@@ -1,5 +1,4 @@
 import { ModelPackage } from "./models";
-import openRouterModelsData from "./openRouterModels.json";
 
 interface OpenRouterModel {
   id: string;
@@ -30,21 +29,45 @@ function convertOpenRouterModelToPackage(model: OpenRouterModel): ModelPackage {
 }
 
 /**
- * Generate ModelPackage objects from OpenRouter models JSON
+ * Fetch OpenRouter models from the API
  */
-export function generateOpenRouterModels(): {
+async function fetchOpenRouterModelsFromAPI(): Promise<OpenRouterModel[]> {
+  const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/models";
+
+  try {
+    const response = await fetch(OPENROUTER_API_URL);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch OpenRouter models: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+
+    if (!data.data || !Array.isArray(data.data)) {
+      console.warn("Invalid OpenRouter models data structure from API");
+      return [];
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching OpenRouter models from API:", error);
+    return [];
+  }
+}
+
+/**
+ * Generate ModelPackage objects from OpenRouter models API
+ */
+async function generateOpenRouterModels(): Promise<{
   [key: string]: ModelPackage;
-} {
+}> {
   const models: { [key: string]: ModelPackage } = {};
 
-  const data = openRouterModelsData as { data: OpenRouterModel[] };
+  const apiModels = await fetchOpenRouterModelsFromAPI();
 
-  if (!data.data || !Array.isArray(data.data)) {
-    console.warn("Invalid OpenRouter models data structure");
-    return models;
-  }
-
-  data.data.forEach((model: OpenRouterModel) => {
+  apiModels.forEach((model: OpenRouterModel) => {
     if (!model.id || !model.name) {
       console.warn("Skipping model with missing id or name", model);
       return;
@@ -64,11 +87,19 @@ export function generateOpenRouterModels(): {
 }
 
 /**
- * Export all OpenRouter models as a pre-generated object
+ * Export a function to fetch all OpenRouter models
+ * This returns a promise since we're now fetching from the API
  */
-export const openRouterModels = generateOpenRouterModels();
+export async function getOpenRouterModels(): Promise<{
+  [key: string]: ModelPackage;
+}> {
+  return generateOpenRouterModels();
+}
 
 /**
- * Export OpenRouter models as an array for use in provider packages
+ * Export a function to get OpenRouter models as an array
  */
-export const openRouterModelsList = Object.values(openRouterModels);
+export async function getOpenRouterModelsList(): Promise<ModelPackage[]> {
+  const models = await getOpenRouterModels();
+  return Object.values(models);
+}
