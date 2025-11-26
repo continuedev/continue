@@ -91,7 +91,26 @@ export function shouldShowExitMessage(): boolean {
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection at:", { promise, reason });
+  // Extract useful information from the reason
+  const errorDetails = {
+    promiseString: String(promise),
+    reasonType: typeof reason,
+    reasonConstructor: reason?.constructor?.name,
+  };
+
+  // If reason is an Error, use it directly for better stack traces
+  if (reason instanceof Error) {
+    logger.error("Unhandled Promise Rejection", reason, errorDetails);
+  } else {
+    // Convert non-Error reasons to Error for consistent handling
+    const error = new Error(`Unhandled rejection: ${String(reason)}`);
+    logger.error("Unhandled Promise Rejection", error, {
+      ...errorDetails,
+      originalReason: String(reason),
+    });
+  }
+
+  // Sentry capture remains the same
   sentryService.captureException(
     reason instanceof Error ? reason : new Error(String(reason)),
     {
