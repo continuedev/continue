@@ -1,5 +1,6 @@
-import { RequestOptions } from "../browser.js";
+import { BLOCK_TYPES, RequestOptions } from "../browser.js";
 import { AssistantUnrolled, ConfigYaml } from "../schemas/index.js";
+import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 
 export function mergePackages(
   current: ConfigYaml,
@@ -26,21 +27,35 @@ export function mergeUnrolledAssistants(
   current: AssistantUnrolled,
   incoming: AssistantUnrolled,
 ): AssistantUnrolled {
-  return {
+  const assistant: AssistantUnrolled = {
     ...current,
-    rules: [...(current.rules ?? []), ...(incoming.rules ?? [])],
-    models: [...(current.models ?? []), ...(incoming.models ?? [])],
-    docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
-    context: [...(current.context ?? []), ...(incoming.context ?? [])],
-    data: [...(current.data ?? []), ...(incoming.data ?? [])],
-    mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
-    prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     env: { ...current.env, ...incoming.env },
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
       incoming.requestOptions,
     ),
   };
+
+  const duplicationDetector = new BlockDuplicationDetector();
+  for (const blockType of BLOCK_TYPES) {
+    const allOfType = [
+      ...(incoming[blockType] ?? []),
+      ...(current[blockType] ?? []),
+    ];
+    const deduplicated: typeof allOfType = [];
+    for (const block of allOfType) {
+      if (block && !duplicationDetector.isDuplicated(block, blockType)) {
+        deduplicated.push(block);
+      }
+    }
+    if (deduplicated.length > 0) {
+      assistant[blockType] = deduplicated as any;
+    } else {
+      assistant[blockType] = undefined;
+    }
+  }
+
+  return assistant;
 }
 
 export function mergeConfigYamlRequestOptions(

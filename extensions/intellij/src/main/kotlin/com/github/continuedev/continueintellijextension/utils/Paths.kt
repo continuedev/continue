@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.utils
 
-import com.intellij.ide.plugins.PluginManager
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.extensions.PluginId
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import java.nio.file.Path
@@ -14,7 +14,7 @@ import java.nio.file.Paths
  */
 fun getContinuePluginPath(): Path {
     val pluginDescriptor =
-        PluginManager.getPlugin(PluginId.getId(ContinueConstants.PLUGIN_ID)) ?: throw Exception("Plugin not found")
+        PluginManagerCore.getPlugin(PluginId.getId(ContinueConstants.PLUGIN_ID)) ?: throw Exception("Plugin not found")
     return pluginDescriptor.pluginPath
 }
 

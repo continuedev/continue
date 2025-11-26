@@ -91,8 +91,8 @@ We strongly encourage using Continue's AI assistance to maintain consistency and
 The easiest way to get started is using our pre-configured documentation agent:
 
 <Steps>
-  <Step title="Install the agent from Continue Hub">
-    Visit [the Docs Assistant - Mintlify in the Hub](https://hub.continue.dev/continuedev/docs-mintlify) and click "Install" to add it to your Continue setup. This agent comes pre-configured with all our documentation standards.
+  <Step title="Install the agent from Continue Mission Control">
+    Visit [the Docs Assistant - Mintlify in Mission Control](https://hub.continue.dev/continuedev/docs-mintlify) and click "Install" to add it to your Continue setup. This agent comes pre-configured with all our documentation standards.
 
     <Info>
     Learn more about Continue Configs in our [config documentation](/guides/understanding-configs).
@@ -139,13 +139,13 @@ If you want more control or customization, you can create your own documentation
   </Step>
   
   <Step title="Add the Continue Docs MCP">
-    Install from Continue Hub: https://hub.continue.dev/continuedev/continue-docs-mcp
+    Install from Continue Mission Control: https://hub.continue.dev/continuedev/continue-docs-mcp
     
     This MCP provides context about Continue's documentation structure and standards.
   </Step>
   
   <Step title="Add Mintlify formatting rules">
-    Install from Continue Hub: https://hub.continue.dev/mintlify/technical-writing-rule
+    Install from Continue Mission Control: https://hub.continue.dev/mintlify/technical-writing-rule
     
     This rule ensures proper Mintlify component formatting.
   </Step>
@@ -298,6 +298,35 @@ const example = "Hello, Continue!";
 
 </Tip>
 
+### Linking Your PR to Issues
+
+<Info>
+
+**Important**: When your PR addresses a specific issue, make sure to link it using GitHub keywords.
+
+</Info>
+
+To automatically link your PR to an issue and close it when the PR is merged, use one of these keywords in your PR description:
+
+- `closes #issue_number`
+- `fixes #issue_number`
+- `resolves #issue_number`
+
+**Example PR description:**
+```markdown
+Improved the installation guide with clearer steps for Windows users.
+
+Closes #1234
+```
+
+This helps us track which issues are being worked on and automatically closes them when your PR is merged.
+
+<Tip>
+
+Learn more about linking PRs to issues in the [GitHub documentation](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/using-keywords-in-issues-and-pull-requests).
+
+</Tip>
+
 ## 💡 Tips for Success
 
 - **Use the Continue agent**: It knows our documentation standards and will save you time
@@ -310,7 +339,7 @@ const example = "Hello, Continue!";
 ## 🆘 Getting Help
 
 - **Start a Discussion**: Use [GitHub Discussions](https://github.com/continuedev/continue/discussions) for documentation issues, suggestions, or questions
-- **Continue agent questions**: Check the [Continue Hub page](https://hub.continue.dev/continuedev/docs-mintlify)
+- **Continue agent questions**: Check the [Continue Mission Control page](https://hub.continue.dev/continuedev/docs-mintlify)
 - **Discord community**: Join our Discord for real-time help
 - **Existing docs**: Review similar pages for formatting examples
 ---

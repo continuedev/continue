@@ -17,7 +17,7 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
-  RuleWithSource,
+  RuleMetadata,
   Session,
   ThinkingChatMessage,
   Tool,
@@ -25,6 +25,7 @@ import {
   ToolCallState,
 } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -500,7 +501,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: RuleMetadata[];
       }>,
     ) => {
       if (state.history[payload.index]) {
@@ -649,6 +650,29 @@ export const sessionSlice = createSlice({
           ) {
             handleStreamingToolCallUpdates(message, lastItem);
           }
+
+          // Attach Responses API output item id to the current assistant message if present
+          // fromResponsesChunk sets message.metadata.responsesOutputItemId when it sees output_item.added for messages
+          if (
+            message.role === "assistant" &&
+            lastMessage.role === "assistant" &&
+            message.metadata?.responsesOutputItemId
+          ) {
+            lastMessage.metadata = lastMessage.metadata || {};
+            lastMessage.metadata.responsesOutputItemId = message.metadata
+              .responsesOutputItemId as string;
+          }
+
+          if (
+            message.role === "thinking" &&
+            message.reasoning_details &&
+            lastMessage.role === "thinking"
+          ) {
+            lastMessage.reasoning_details = mergeReasoningDetails(
+              lastMessage.reasoning_details,
+              message.reasoning_details,
+            );
+          }
         }
       }
     },
@@ -669,6 +693,9 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
+        if (payload.mode) {
+          state.mode = payload.mode;
+        }
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;

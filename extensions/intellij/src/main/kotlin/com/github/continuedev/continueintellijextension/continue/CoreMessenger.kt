@@ -6,8 +6,8 @@ import com.github.continuedev.continueintellijextension.`continue`.process.Conti
 import com.github.continuedev.continueintellijextension.`continue`.process.ContinueProcessHandler
 import com.github.continuedev.continueintellijextension.`continue`.process.ContinueSocketProcess
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.GsonService
 import com.github.continuedev.continueintellijextension.utils.uuid
-import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -18,9 +18,10 @@ class CoreMessenger(
     private val project: Project,
     private val ideProtocolClient: IdeProtocolClient,
     val coroutineScope: CoroutineScope,
-    private val onUnexpectedExit: () -> Unit
+    private val onUnexpectedExit: () -> Unit,
+    private val gsonService: GsonService = service<GsonService>(),
 ) {
-    private val gson = Gson()
+    private val gson = gsonService.gson
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private var process = startContinueProcess()
     private val log = Logger.getInstance(CoreMessenger::class.java.simpleName)
@@ -63,7 +64,8 @@ class CoreMessenger(
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
-            val done = (data as Map<String, Boolean>)["done"]
+            @Suppress("UNCHECKED_CAST")
+            val done = (data as? Map<String, Boolean>)?.get("done")
 
             if (done == true) {
                 responseListeners.remove(messageId)

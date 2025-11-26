@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # This ensures all tags are fetched
 
@@ -73,16 +73,16 @@ jobs:
             platform: alpine
             arch: x64
             npm_config_arch: x64
-          - os: macos-13
+          - os: macos-latest
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-13
+          - os: macos-latest
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .vsix artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
           path: "extensions/vscode/*.vsix"
@@ -112,7 +112,7 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Git
         run: |
@@ -120,7 +120,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: "*-vsix"
           path: vsix-artifacts
@@ -145,7 +145,7 @@ jobs:
     steps:
       # 0. Setup git
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Git
         run: |
@@ -156,7 +156,7 @@ jobs:
         run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
 
       # 1. Download the artifacts
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: "*-vsix"
           path: vsix-artifacts

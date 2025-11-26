@@ -1,0 +1,42 @@
+---
+title: "Rules"
+description: "Rules allow you to provide specific instructions that guide how the AI agent behaves when working with your code. Instead of the AI making assumptions about your coding standards, architecture patterns, or project-specific requirements, you can explicitly define guidelines that ensure consistent, contextually appropriate responses."
+---
+
+Think of these as the guardrails for your AI coding agents:
+
+- **Enforce company-specific coding standards** and security practices
+- **Implement quality checks** that match your engineering culture
+- **Create paved paths** for developers to follow organizational best practices
+
+By implementing rules, you transform the AI from a generic coding agent into a knowledgeable team member that understands your project's unique requirements and constraints.
+
+## How Rules Work
+
+Your agent detects rules and applies the specified rules while in [Agent](/ide-extensions/agent/quick-start), [Chat](/ide-extensions/chat/quick-start), and [Edit](/ide-extensions/edit/quick-start) modes.
+
+## Where to Manage Rules
+
+<Columns cols={2}>
+<Card title="Local Rules (.continue/rules)" icon="folder">
+- Create files in `.continue/rules` folder
+- Automatically appear with Hub configs
+- Edit directly in your file system
+- Version controlled alongside your code
+- Best for project-specific rules (e.g., "remember to generate migrations after modifying the db")
+</Card>
+
+<Card title="Hub Rules" icon="cloud">
+- Manage on [Continue Mission Control](https://hub.continue.dev)
+- Reference in config.yaml with `uses:`
+- Share with team and community
+- Easy to include in multiple agents
+- Best for organization-wide rules (e.g., "always use X library for Y task")
+</Card>
+</Columns>
+
+<Info>
+**Quick Setup**: Start with local rules for immediate use, then promote commonly used rules to the Hub for sharing and reuse.
+</Info>
+
+Learn more in the [rules deep dive](/customize/deep-dives/rules), and view [`rules`](/reference#rules) in the YAML Reference for more details.

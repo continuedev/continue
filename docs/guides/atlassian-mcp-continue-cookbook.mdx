@@ -1,0 +1,511 @@
+---
+title: "Jira Issues and Confluence Pages with Atlassian MCP and Continue"
+description: "Use Continue and the Atlassian Rovo MCP to search, summarize, and manage Jira issues, Confluence pages, and Compass components with natural language prompts."
+sidebarTitle: "Atlassian Workflows with Continue"
+---
+
+<Card title="What You'll Build" icon="atlassian">
+  An Atlassian workflow assistant that uses Continue with the Atlassian Rovo MCP to:
+  - Search and summarize Jira issues across projects
+  - Find and digest Confluence documentation
+  - Create and update Jira issues with natural language
+  - Query Compass components and service dependencies
+  - Automate Atlassian workflows with headless CLI runs
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Continue account with **Hub access**
+  - Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
+- Node.js 18+ installed locally
+- An Atlassian Cloud site with Jira, Confluence, and/or Compass
+- Access to the Atlassian products you want to integrate with
+
+<Note>
+  The Atlassian Rovo MCP Server is currently in **Beta**. Core functionality is available, but some features are still under development.
+</Note>
+
+For all options, first:
+<Steps>
+<Step title="Install Continue CLI">
+  ```bash
+  npm i -g @continuedev/cli
+  ```
+  </Step>
+
+<Step title="Understand OAuth Flow">
+  The Atlassian MCP uses **OAuth 2.1** for authentication. The first time you connect, you'll complete a browser-based authorization flow that respects your existing Atlassian permissions.
+  </Step>
+</Steps>
+
+<Warning>
+  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
+  All data access respects your existing Jira, Confluence, and Compass user permissions.
+</Warning>
+
+## Choose Your Atlassian Agent
+
+<Card title="🚀 Two Specialized Agents" icon="rocket">
+  We've created two ready-to-use agents to help you get started fast - they come pre-configured with optimized prompts, rules, and the Atlassian MCP. You don't have to use these agents, but they're designed to give you the best experience right away. Choose the agent that matches your needs, or create your own custom agent.
+</Card>
+
+### Agent Quick Reference
+
+| Agent | Best For | Use Cases | Link |
+|-------|----------|-----------|------|
+| **Jira Agent** | Issue Management | Search issues, create stories, sprint planning, status updates, bulk operations | [View Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) |
+| **Confluence Agent** | Documentation | Search pages, summarize docs, create/update pages, manage spaces | [View Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) |
+
+<Note>
+  **Cross-product workflows**: Both agents can work with Jira, Confluence, and Compass. Choose based on your primary focus area, or create your own agent using the [Atlassian MCP](https://hub.continue.dev/atlassian/atlassian-mcp). The Atlassian MCP can work with Jira, Compass, or Confluence.
+</Note>
+
+<Tabs>
+  <Tab title="📋 Jira Agent (Recommended for Issue Management)">
+    <Steps>
+      <Step title="Use the Jira Agent">
+        Visit the [Atlassian Continuous AI - Jira Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) on Continue Mission Control. This agent is optimized for:
+        - Searching and filtering Jira issues
+        - Creating and updating issues
+        - Sprint planning and workload analysis
+        - Issue transitions and status updates
+
+        No installation needed - you can start using it immediately from the command line!
+      </Step>
+
+      <Step title="Complete OAuth Authorization">
+        On first use, you'll be prompted to authorize the MCP server in your browser. This is a one-time setup that grants access based on your Atlassian permissions.
+      </Step>
+
+      <Step title="Run Your First Command">
+        From anywhere in your terminal:
+        ```bash
+        cn --agent continuedev/atlassian-continuous-ai-jira-agent "Show me my open issues assigned to me"
+        ```
+        The agent will connect to your Atlassian site and return results.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Pro tip**: Create a shell alias for the Jira agent:
+      ```bash
+      alias jira-ai='cn --agent continuedev/atlassian-continuous-ai-jira-agent'
+      ```
+      Then use: `jira-ai "your prompt"`
+    </Info>
+  </Tab>
+
+  <Tab title="📄 Confluence Agent (Recommended for Documentation)">
+    <Steps>
+      <Step title="Use the Confluence Agent">
+        Visit the [Atlassian Continuous AI - Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) on Continue Mission Control. This agent is optimized for:
+        - Searching and summarizing documentation
+        - Creating and updating Confluence pages
+        - Managing spaces and content
+        - Documentation discovery
+
+        No installation needed - you can start using it immediately from the command line!
+      </Step>
+
+      <Step title="Complete OAuth Authorization">
+        On first use, you'll be prompted to authorize the MCP server in your browser. This is a one-time setup that grants access based on your Atlassian permissions.
+      </Step>
+
+      <Step title="Run Your First Command">
+        From anywhere in your terminal:
+        ```bash
+        cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Summarize the Q2 planning page"
+        ```
+        The agent will connect to your Atlassian site and return results.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Pro tip**: Create a shell alias for the Confluence agent:
+      ```bash
+      alias confluence-ai='cn --agent continuedev/atlassian-continuous-ai-confluence-agent'
+      ```
+      Then use: `confluence-ai "your prompt"`
+    </Info>
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Create a New Agent on Continue Mission Control">
+        Go to the [Continue Mission Control](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+      </Step>
+
+      <Step title="Add Atlassian MCP">
+        Install from Hub (recommended) or add YAML manually. Minimal YAML example:
+
+        ```yaml title="config.yaml"
+        mcpServers:
+          - name: Atlassian Rovo MCP
+            type: sse
+            url: https://mcp.atlassian.com/v1/sse
+            connectionTimeout: 30
+        ```
+
+        Notes:
+        - The Atlassian MCP uses **Server-Sent Events (SSE)** transport type
+        - OAuth is handled automatically on first connection
+        - No API keys or tokens needed in the config
+      </Step>
+
+      <Step title="Test the Connection">
+        Launch Continue and ask:
+        ```
+        List my Jira projects
+        ```
+        You'll be prompted to authorize in your browser if this is your first time.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use Atlassian MCP with Continue CLI, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Continue Mission Control secrets
+
+    The agent will automatically detect and use your configuration along with the Atlassian MCP for Jira, Confluence, and Compass operations.
+
+</Accordion>
+
+---
+
+## Jira Workflows
+
+<Note>
+  **Using the Jira Agent**: All examples below use the [Jira Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-jira-agent) which is optimized for issue management.
+</Note>
+
+Use natural language to explore, triage, and manage Jira issues. The agent calls Atlassian MCP tools under the hood.
+
+<Info>
+  **Running in headless mode**: Add `-p` flag before your prompt and `--auto` flag at the end:
+  ```bash
+  cn --agent continuedev/atlassian-continuous-ai-jira-agent -p "your prompt" --auto
+  ```
+  **Important**: Complete browser OAuth authentication first before using headless mode.
+</Info>
+
+### Search and Discovery
+
+<AccordionGroup>
+  <Accordion title="Find Open Bugs" icon="bug">
+    Search for bugs across your projects.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Find all open bugs in Project Alpha"
+    ```
+  </Accordion>
+
+  <Accordion title="My Assigned Issues" icon="user">
+    Get a list of issues assigned to you.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Show me all issues assigned to me that are in progress"
+    ```
+  </Accordion>
+
+  <Accordion title="Sprint Planning" icon="calendar">
+    Analyze sprint workload and priorities.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "List all issues in the current sprint. Group by assignee and priority. Summarize the workload distribution and flag any overloaded team members."
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Create and Update
+
+<AccordionGroup>
+  <Accordion title="Create Story from Description" icon="plus">
+    Turn natural language into a Jira story.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create a story titled 'Redesign onboarding flow' in Project Alpha. Description: We need to simplify the user registration process by reducing steps from 5 to 3. Target completion: Q3."
+    ```
+  </Accordion>
+
+  <Accordion title="Bulk Issue Creation" icon="list">
+    Create multiple issues from meeting notes or specs.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create five Jira issues from these meeting notes: 1) Fix login timeout bug 2) Update API documentation 3) Implement dark mode toggle 4) Review security audit findings 5) Optimize database queries"
+    ```
+  </Accordion>
+
+  <Accordion title="Update Issue Status" icon="arrows-rotate">
+    Transition issues with natural language.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Move PROJ-123 to In Progress and add a comment: Starting work on this today. ETA: end of week."
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Confluence Workflows
+
+<Note>
+  **Using the Confluence Agent**: All examples below use the [Confluence Agent](https://hub.continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) which is optimized for documentation management.
+</Note>
+
+Access, search, and manage your team's documentation directly from Continue.
+
+<Info>
+  **Running in headless mode**: Add `-p` flag before your prompt and `--auto` flag at the end:
+  ```bash
+  cn --agent continuedev/atlassian-continuous-ai-confluence-agent -p "your prompt" --auto
+  ```
+  **Important**: Complete browser OAuth authentication first before using headless mode.
+</Info>
+
+### Search and Summarize
+
+<AccordionGroup>
+  <Accordion title="Summarize Documentation" icon="book">
+    Get a quick summary of a Confluence page.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Summarize the Q2 planning page from the Engineering space"
+    ```
+  </Accordion>
+
+  <Accordion title="Find Documentation" icon="magnifying-glass">
+    Search for specific information across Confluence.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Find all pages about API authentication in our developer docs"
+    ```
+  </Accordion>
+
+  <Accordion title="List Available Spaces" icon="folder">
+    Discover what Confluence spaces you have access to.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "What Confluence spaces do I have access to?"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Create and Update
+
+<AccordionGroup>
+  <Accordion title="Create Documentation Page" icon="file-plus">
+    Generate a new Confluence page with structured content.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Create a page titled 'Team Goals Q3' in the Engineering space. Include sections for: Objectives, Key Results, and Timeline."
+    ```
+  </Accordion>
+
+  <Accordion title="Update Existing Page" icon="pen-to-square">
+    Modify content on an existing page.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Update the 'Onboarding Guide' page to add a new section about our code review process"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Compass Workflows
+
+<Note>
+  **Using Either Agent**: Compass workflows work with both agents. Use the Jira agent for component-to-issue workflows, or the Confluence agent for component-to-docs workflows.
+</Note>
+
+Query and manage your service architecture with Compass integration.
+
+<Info>
+  **Running in headless mode**: Add `-p` flag before your prompt and `--auto` flag at the end. Complete browser OAuth authentication first before using headless mode.
+</Info>
+
+### Service Discovery
+
+<AccordionGroup>
+  <Accordion title="Query Dependencies" icon="diagram-project">
+    Understand service relationships.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "What services depend on the api-gateway component?"
+    ```
+  </Accordion>
+
+  <Accordion title="Create Service Component" icon="server">
+    Register a new service in Compass.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Create a service component for the current repository. Use the package.json to infer details."
+    ```
+  </Accordion>
+
+  <Accordion title="Bulk Import Components" icon="upload">
+    Import multiple components from structured data.
+
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Import Compass components and custom fields from this CSV: [paste CSV data]"
+    ```
+
+    Or reference a file:
+    ```bash
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Import Compass components from services.csv in the current directory"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Combined Workflows
+
+<Note>
+  **Cross-Product Workflows**: These workflows span multiple Atlassian products. Choose the agent based on your primary focus:
+  - Use **Jira Agent** when the workflow is issue-centric
+  - Use **Confluence Agent** when the workflow is documentation-centric
+</Note>
+
+Integrate actions across Jira, Confluence, and Compass for powerful cross-product workflows.
+
+<Info>
+  **Running in headless mode**: Add `-p` flag before your prompt and `--auto` flag at the end. Complete browser OAuth authentication first before using headless mode.
+</Info>
+
+<AccordionGroup>
+  <Accordion title="Link Jira to Confluence" icon="link">
+    Connect related content across products.
+
+    ```bash
+    # Using Jira Agent for issue-centric workflow
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Link Jira tickets PROJ-123, PROJ-456, and PROJ-789 to the 'Sprint 23 Release Plan' Confluence page"
+    ```
+  </Accordion>
+
+  <Accordion title="Service Documentation Lookup" icon="search">
+    Find documentation for a specific component.
+
+    ```bash
+    # Using Confluence Agent for docs-centric workflow
+    cn --agent continuedev/atlassian-continuous-ai-confluence-agent "Fetch the Confluence documentation page linked to the user-authentication Compass component"
+    ```
+  </Accordion>
+
+  <Accordion title="Release Notes Generation" icon="file-lines">
+    Create release documentation from completed work.
+
+    ```bash
+    # Using Jira Agent to pull issue data and create in Confluence
+    cn --agent continuedev/atlassian-continuous-ai-jira-agent "Generate release notes for all Jira issues completed in Sprint 23. Create a Confluence page in the Release Notes space with: New features (grouped by epic), Bug fixes, Known issues, Deployment instructions"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="OAuth Authorization Issues">
+    - **"Your site admin must authorize this app"**: A site admin needs to complete the OAuth flow first before other users can connect
+    - **Can't complete browser authorization**: Ensure you're logged into the correct Atlassian Cloud site and have necessary permissions
+    - **Connection timeout**: Increase `connectionTimeout` in your MCP config or check your network connection
+  </Accordion>
+
+  <Accordion title="Permission Errors">
+    - **"Access denied" or "Forbidden"**: The MCP respects your existing Atlassian permissions. Verify you have access to the project/space/component you're trying to access
+    - **Can't create issues**: Ensure you have "Create issues" permission in the target Jira project
+    - **Can't edit Confluence pages**: Verify you have edit permissions in the target Confluence space
+  </Accordion>
+
+  <Accordion title="Rate Limiting">
+    - **Standard plan**: Moderate usage thresholds
+    - **Premium/Enterprise plans**: Higher quotas (1,000 requests/hour plus per-user limits)
+    - If you hit rate limits, reduce query frequency or batch operations
+  </Accordion>
+
+  <Accordion title="Beta Limitations">
+    - Bulk operations may be constrained by rate limits
+    - Custom Jira fields may not be recognized without explicit setup
+    - Workspace/site switching not available within a single session
+    - Check [Atlassian Community](https://community.atlassian.com/) for known issues
+  </Accordion>
+</AccordionGroup>
+
+### Admin Considerations
+
+<Card title="For Atlassian Site Admins" icon="shield">
+  **Installation**: The Atlassian Rovo MCP is automatically installed on first OAuth authorization (JIT installation) - no Marketplace installation needed.
+
+  **Managing Access**:
+  - View connected apps in [Admin Hub](https://admin.atlassian.com)
+  - Users can revoke access from their [profile settings](https://id.atlassian.com/manage-profile/apps)
+  - Block user-installed apps via "user-installed apps" control in Admin Hub
+
+  **Security**: All traffic is encrypted via HTTPS (TLS 1.2+), and access respects existing user permissions.
+</Card>
+
+---
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered Atlassian workflow system** that:
+
+- ✅ Uses natural language — Simple prompts for complex Atlassian operations
+- ✅ Spans multiple products — Seamlessly works across Jira, Confluence, and Compass
+- ✅ Respects permissions — Secure OAuth-based access with existing role enforcement
+- ✅ Runs headlessly — Integrate into CI/CD pipelines and automation scripts
+
+<Card title="Continuous AI" icon="rocket">
+  Your Atlassian workflows now operate at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine project management tasks with human oversight through
+  review and approval.
+</Card>
+
+## Next Steps
+
+1. **Explore your projects** - Try the Jira search and triage prompts
+2. **Organize documentation** - Use Confluence workflows to summarize and create pages
+3. **Map your services** - Query Compass for service dependencies
+4. **Customize prompts** - Tailor workflows to your team's specific needs
+5. **Monitor usage** - Track how AI improves your Atlassian workflows
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Atlassian Rovo MCP" icon="link" href="https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/">
+    Official Atlassian MCP documentation
+  </Card>
+  <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
+    How MCP works with Continue agents
+  </Card>
+  <Card title="Continue Mission Control" icon="globe" href="https://hub.continue.dev">
+    Create and manage your agents
+  </Card>
+  <Card title="Atlassian Community" icon="users" href="https://community.atlassian.com/">
+    Get help and share feedback
+  </Card>
+</CardGroup>
+
+## Example Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Release Management" icon="rocket">
+    Automate release notes generation, link issues to documentation, and track deployment status across Jira and Confluence.
+  </Card>
+  <Card title="Sprint Planning" icon="calendar-days">
+    Analyze workload distribution, identify blockers, and generate sprint summaries automatically.
+  </Card>
+  <Card title="Service Ownership" icon="sitemap">
+    Map service dependencies in Compass, link to technical documentation in Confluence, and track related issues in Jira.
+  </Card>
+  <Card title="Onboarding Automation" icon="user-plus">
+    Create standardized Jira onboarding tickets, link to Confluence guides, and track new hire progress.
+  </Card>
+</CardGroup>

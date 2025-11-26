@@ -91,7 +91,7 @@ class FileUtils(
 
     private fun readDocument(file: VirtualFile, maxLength: Int): String? {
         val document = FileDocumentManager.getInstance().getDocument(file)
-            ?: return ""
+            ?: return null
         val length = min(document.textLength, maxLength)
         return document.getText(TextRange(0, length))
     }

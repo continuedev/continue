@@ -10,8 +10,7 @@ jobs:
   run-cn-task:
     uses: ./.github/workflows/run-continue-agent.yml
     with:
-      prompt: "Review every Markdown documentation file and verify that descriptions, examples, or behavior outlines accurately reflect the current code. Only update documentation; do not modify code. Check the corresponding code to confirm behavior before making changes. Correct any inaccuracies or outdated information in descriptions, examples, or behavior outlines. Preserve existing Markdown formatting, style, and structure. Do not add new sections, speculative explanations, or details not present in the code. Only update statements that are clearly incorrect or misleading; do not rewrite text for style or preference. Keep edits minimal and focused, ensuring that the Markdown matches what the code actually does. If verification against the code is ambiguous, leave the documentation unchanged. Use branch name bot/cleanup-<YYMMDD>-<HHMM>"
-      config: continuedev/default-background-agent
+      agent: continuedev/tidy-up-markdown-agent
       branch_name: main
     secrets:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}

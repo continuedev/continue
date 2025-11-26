@@ -33,7 +33,7 @@ For all options, first:
   </Step>
 
 <Step title="Configure GitHub Token">
-  Add your `GITHUB_TOKEN` to your [Continue Hub agent's environment variables](https://hub.continue.dev/settings).
+  Add your `GITHUB_TOKEN` to your [Continue Mission Control agent's environment variables](https://hub.continue.dev/settings).
   </Step>
 </Steps>
 
@@ -45,7 +45,7 @@ For all options, first:
 ## GitHub MCP Workflow Options
 
 <Card title="🚀 Fastest Path to Success" icon="rocket">
-  Use the GitHub MCP from Continue Hub for one-click setup, or add it via CLI.
+  Use the GitHub MCP from Continue Mission Control for one-click setup, or add it via CLI.
 </Card>
 
 After ensuring you meet the **Prerequisites** above, you have two paths to get started:
@@ -53,8 +53,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
-      <Step title="Install GitHub MCP via Continue Hub">
-        Visit the [Anthropic GitHub MCP](https://hub.continue.dev/anthropic/github-mcp) on Continue Hub and click **Install** to add it to your agent.
+      <Step title="Install GitHub MCP via Continue Mission Control">
+        Visit the [GitHub Project Manager Agent](https://hub.continue.dev/continuedev/github-project-manager-agent) on Continue Mission Control and click **Install** to add it to your agent.
 
         The listing provides a pre-configured MCP block; add your `GITHUB_TOKEN` in Hub.
       </Step>
@@ -62,7 +62,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Launch the Agent">
         From your repo root:
         ```bash
-        cn --config continuedev/github-manager-ai
+        cn --agent continuedev/github-project-manager-agent
         ```
         Now try: "List my open issues labeled bug and summarize priorities."
       </Step>
@@ -75,8 +75,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Create a New Agent on Continue Hub">
-        Go to the [Continue Hub](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+      <Step title="Create a New Agent on Continue Mission Control">
+        Go to the [Continue Mission Control](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
       </Step>
 
       <Step title="Add GitHub MCP">
@@ -112,7 +112,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Accordion title="Agent Requirements">
     To use GitHub MCP with Continue CLI, you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Hub secrets
+      - **Your own API keys** added to Continue Mission Control secrets
 
     The agent will automatically detect and use your configuration along with the GitHub MCP for issue and PR operations.
 
@@ -129,6 +129,8 @@ Use natural language to explore, triage, and act on open issues. The agent calls
   - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
+  
+  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 </Info>
 
 ### Triage and Summaries
@@ -136,30 +138,20 @@ Use natural language to explore, triage, and act on open issues. The agent calls
 <Card title="Summarize Open Issues" icon="clipboard-list">
   Get a prioritized overview of current open issues.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 List the 20 most recently updated open issues in this repo.
 Cluster by label and severity. Summarize top priorities.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "List the 20 most recently updated open issues in this repo. Cluster by label and severity. Summarize top priorities." --auto
 ```
 </Card>
 
 <Card title="Owner/Label Filters" icon="filter">
   Narrow by label or assignee.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Show open issues labeled bug or security, assigned to @me.
 Summarize blockers and suggest next steps.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Show open issues labeled bug or security, assigned to @me. Summarize blockers and suggest next steps." --auto
 ```
 </Card>
 
@@ -168,7 +160,7 @@ cn -p "Show open issues labeled bug or security, assigned to @me. Summarize bloc
 <Card title="Comment on an Issue" icon="comment">
   Post an AI-generated status update or checklist.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Find the issue with the most engagement (comments, reactions) in the last 30 days.
 Come up with a triage plan and draft a comment with:
@@ -176,11 +168,6 @@ Come up with a triage plan and draft a comment with:
 - next 2 steps
 - owner and ETA
 Then post the comment.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Find the issue with the most engagement in the last 30 days. Come up with a triage plan and draft a comment (hypothesis, next 2 steps, owner, ETA) and post it." --auto
 ```
 
 <Note>
@@ -191,15 +178,10 @@ cn -p "Find the issue with the most engagement in the last 30 days. Come up with
 <Card title="Find Stale Issues" icon="clock">
   Identify issues that need attention.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Find open issues with no activity in the last 30 days.
 Suggest action (close, needs-repro, or prioritize) and draft comments.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Find open issues with no activity in the last 30 days. Suggest action and draft comments for each." --auto
 ```
 </Card>
 
@@ -214,15 +196,10 @@ Analyze recently merged PRs for change awareness, release notes, and quality sig
 <Card title="Merged PR Digest" icon="code-merge">
   Summarize merged PRs over a time window.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 List PRs merged in the last 7 days.
 Group by area (label or path). Summarize impact and notable changes.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "List PRs merged in the last 7 days. Group by area (label or path). Summarize impact and notable changes." --auto
 ```
 </Card>
 
@@ -231,15 +208,10 @@ cn -p "List PRs merged in the last 7 days. Group by area (label or path). Summar
 <Card title="Generate Release Notes" icon="file-lines">
   Turn merged PRs into crisp release notes.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Generate release notes for PRs merged since tag v1.2.0.
 Use keep-a-changelog sections and include PR numbers/authors.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Generate release notes for PRs merged since tag v1.2.0. Use keep-a-changelog sections and include PR numbers/authors." --auto
 ```
 </Card>
 
@@ -248,16 +220,11 @@ cn -p "Generate release notes for PRs merged since tag v1.2.0. Use keep-a-change
 <Card title="Summarize a PR" icon="magnifying-glass">
   Get a human-readable summary of a recently merged PR with active discussion.
 
-**TUI Mode Prompt:**
+**Prompt:**
 ```
 Find the last merged PR with a significant amount of comments.
 Summarize the conversation, including goal, key changes,
 risk areas, and any follow-ups.
-```
-
-**Headless Mode Prompt:**
-```bash
-cn -p "Find the last merged PR with a significant amount of comments. Summarize the conversation including goal, key changes, risk areas, and follow-ups." --auto
 ```
 </Card>
 
@@ -305,7 +272,7 @@ jobs:
       - name: Weekly Issue Triage Summary
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
-          cn --config continuedev/github-manager-ai \
+          cn --agent continuedev/github-project-manager-agent \
              -p "List open issues updated in the last 14 days. Group by label and priority. Propose top 5 actions and include issue links." \
              --auto > issue_summary.txt
 
@@ -314,14 +281,14 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          REPORT=$(cn --config continuedev/github-manager-ai \
+          REPORT=$(        cn --agent continuedev/github-project-manager-agent \
             -p "Summarize the context for PR #${PR_NUMBER}: related open issues, risk areas, and test suggestions. Keep under 200 words." \
             --auto)
           gh pr comment ${PR_NUMBER} --body "$REPORT"
 ```
 
 <Info>
-  Use `continuedev/github-manager-ai` consistently throughout your automation as the recommended agent configuration.
+  Use `continuedev/github-project-manager-agent` consistently throughout your automation as the recommended agent configuration.
 </Info>
 
 ---
@@ -331,7 +298,7 @@ jobs:
 - **Missing or invalid token:** Ensure `GITHUB_TOKEN` is set and has the required scopes. Try a minimal test: “List 3 open issues in this repo”.
 - **Permissions errors on comment:** Your token must include `public_repo` (public) or `repo` (private) to write comments.
 - **Rate limiting:** Reduce frequency or filter queries; consider using a PAT distinct from the default Actions token when running in CI.
-- **MCP connection timeout:** If using custom YAML, increase `connectionTimeout` or verify the `command`/`args` from the Hub listing.
+- **MCP connection timeout:** If using custom YAML, increase `connectionTimeout` or verify the `command`/`args` from Mission Control listing.
 
 ## What You've Built
 
@@ -361,13 +328,13 @@ After completing this guide, you have a complete **AI-powered GitHub workflow sy
 
 <CardGroup cols={2}>
   <Card title="GitHub MCP (Anthropic)" icon="link" href="https://hub.continue.dev/anthropic/github-mcp">
-    Anthropic GitHub MCP on Continue Hub
+    Anthropic GitHub MCP on Continue Mission Control
   </Card>
   <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
     How MCP works with Continue agents
   </Card>
-  <Card title="GitHub Manager AI Agent" icon="robot" href="https://hub.continue.dev/continuedev/github-manager-ai">
-    Pre-configured agent on Continue Hub
+  <Card title="GitHub Project Manager Agent" icon="robot" href="https://hub.continue.dev/continuedev/github-project-manager-agent">
+    Pre-configured agent on Continue Mission Control
   </Card>
   <Card title="GitHub MCP Server" icon="link" href="https://github.com/github/github-mcp-server/blob/main/README.md">
     Official GitHub MCP server README

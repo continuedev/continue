@@ -121,6 +121,16 @@ cn -p "Update version numbers and create release branch"
 ✅ **Git hooks** for automated checks  
 ✅ **Scheduled tasks** that run unattended
 
+<Info>
+  **Tool Permission Differences Between Modes**
+
+  Tools requiring user confirmation ("ask" permission) like `writeFile` and `runTerminalCommand` are:
+  - **Available in TUI mode** - AI can use them with your approval
+  - **Excluded in headless mode** - AI cannot see or call them
+
+  This prevents the AI from attempting operations that require user interaction when running in automated environments. Choose TUI mode if your workflow needs tools that modify files or run commands.
+</Info>
+
 ### Available Slash Commands
 
 Common slash commands available in CLI:

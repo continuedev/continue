@@ -1,0 +1,510 @@
+---
+title: "Code Review Bot with Continue and GitHub Actions"
+description: "Set up automated, context-aware pull request reviews using Continue CLI in GitHub Actions - privacy-first with custom rules"
+sidebarTitle: "Pull Request Review Bot"
+---
+
+<Card title="What You'll Build" icon="code-pull-request">
+  An automated pull request review system that:
+  - Reviews code automatically when pull requests open or update
+  - Applies your team's custom rules and standards
+  - Runs in your GitHub Actions runner (code is sent directly to your configured LLM)
+  - Posts actionable feedback as pull request comments
+  - Responds to interactive review requests
+</Card>
+
+## Why This Approach?
+
+<CardGroup cols={3}>
+  <Card title="Privacy-First" icon="shield">
+    All logs and processing happen in your runner: Continue CLI runs in GitHub Actions → code to your LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code.
+
+  </Card>
+
+  <Card title="Customizable" icon="sliders">
+    Define team-specific rules in `.continue/rules/` that automatically apply to every pull request.
+
+  </Card>
+
+  <Card title="Context Awareness" icon="robot">
+    Leverage Continue's AI agent for intelligent, context-aware reviews with full control over your configuration.
+
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- A GitHub repository with pull requests
+- Continue account with **Hub access**
+  - Read: [Understanding Configs](/guides/understanding-configs)
+- A Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- Continue assistant configured for code reviews (or use our recommended default)
+
+<Info>
+  **Want to customize the review bot?**
+  
+  You can remix the default review bot configuration at [hub.continue.dev/continuedev/review-bot](https://hub.continue.dev/continuedev/review-bot) to create your own personalized version with custom prompts, rules, and behaviors.
+</Info>
+
+## Quick Setup (10 Minutes)
+
+<Steps>
+
+<Step title="Configure Repository Secrets and Variables">
+
+    Navigate to your repository settings: **Settings → Secrets and variables → Actions**
+
+    **Required Secrets:**
+    - `CONTINUE_API_KEY` - Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+
+    **Optional (for better permissions):**
+    - **Variables** tab: `APP_ID` - GitHub App ID (for enhanced API rate limits)
+    - **Secrets** tab: `APP_PRIVATE_KEY` - GitHub App private key
+
+    <Accordion title="Setting up a GitHub App (Optional but Recommended)">
+
+      For better rate limits and permissions, create a GitHub App:
+
+      1. Go to Settings → Developer settings → GitHub Apps → New GitHub App
+      2. Set permissions:
+          - **Contents**: Read
+          - **Pull Requests**: Write
+          - **Issues**: Write
+      3. Generate a private key
+      4. Install the app on your repository
+      5. Add `APP_ID` as a repository **variable** (Variables tab)
+      6. Add `APP_PRIVATE_KEY` as a repository **secret** (Secrets tab)
+
+      Without a GitHub App, the action will use the default `GITHUB_TOKEN`.
+
+    </Accordion>
+
+  </Step>
+  <Step title="Add Workflow File">
+
+    Create a GitHub Actions workflow file at `.github/workflows/code-review.yml` with the provided configuration.
+
+```yaml
+name: Continue Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # Only run on PRs or when @review-bot is mentioned
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@review-bot'))
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better context
+
+      # Optional: Use GitHub App token for better rate limits
+      - name: Generate App Token
+        id: app-token
+        if: vars.APP_ID != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Continue CLI
+        run: npm i -g @continuedev/cli
+
+      - name: Get Pull Request Details
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          # Get pull request number and details
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER=${{ github.event.pull_request.number }}
+          else
+            PR_NUMBER=$(jq -r .issue.number "$GITHUB_EVENT_PATH")
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          
+          # Get pull request diff
+          gh pr diff $PR_NUMBER > pr.diff
+          
+          # Get changed files
+          gh pr view $PR_NUMBER --json files -q '.files[].path' > changed_files.txt
+
+      - name: Run Continue Review
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          # Check if custom rules exist
+          if [ -d ".continue/rules" ]; then
+            echo "📋 Found custom rules in .continue/rules/"
+            RULES_CONTEXT="Apply the custom rules found in .continue/rules/ directory."
+          else
+            echo "ℹ️  No custom rules found. Using general best practices."
+            RULES_CONTEXT="Review for general best practices, security issues, and code quality."
+          fi
+          
+          # Build review prompt
+          PROMPT="Review this pull request with the following context:
+
+          ## Changed Files
+          $(cat changed_files.txt)
+
+          ## Diff
+          \`\`\`diff
+          $(cat pr.diff)
+          \`\`\`
+
+          ## Instructions
+          $RULES_CONTEXT
+
+          Provide:
+          1. A brief summary of changes
+          2. Key findings (potential issues, security concerns, suggestions)
+          3. Positive observations (good practices, improvements)
+          4. Specific actionable recommendations
+
+          Format as markdown suitable for a GitHub pull request comment."
+
+          # Run Continue CLI in headless mode
+          cn --config continuedev/review-bot \
+             -p "$PROMPT" \
+             --auto > review_output.md
+
+      - name: Post Review Comment
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          # Add header
+          cat > review_comment.md <<'EOF'
+          ## 🤖 AI Code Review
+          
+          EOF
+          
+          # Add review content
+          cat review_output.md >> review_comment.md
+          
+          # Add footer
+          cat >> review_comment.md <<'EOF'
+          
+          ---
+          *Powered by [Continue](https://continue.dev) • Need a focused review? Comment `@review-bot check for [specific concern]`*
+          EOF
+          
+          # Check for existing review comment
+          EXISTING_COMMENT=$(gh pr view ${{ steps.pr.outputs.pr_number }} \
+            --json comments -q '.comments[] | select(.body | contains("🤖 AI Code Review")) | .id' | head -1)
+          
+          if [ -n "$EXISTING_COMMENT" ]; then
+            echo "Updating existing comment..."
+            gh api --method PATCH \
+              "repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT" \
+              -f body="$(cat review_comment.md)"
+          else
+            echo "Creating new comment..."
+            gh pr comment ${{ steps.pr.outputs.pr_number }} \
+              --body-file review_comment.md
+          fi
+```
+</Step >
+
+<Step title="Create Custom Rules (Optional)" >
+
+Define your team's standards in `.continue/rules/`:
+
+<Tabs>
+  <Tab title="Security Rule">
+    
+ Create `.continue/rules/security.md`:
+
+```markdown
+---
+globs: "**/*.{ts,tsx,js,jsx,py}"
+description: "Security Review Standards"
+alwaysApply: true
+---
+
+# Security Checklist
+
+- No hardcoded credentials, API keys, or secrets
+- All user inputs are validated and sanitized
+- SQL queries use parameterization (no string concatenation)
+- Authentication and authorization checks are in place
+- Sensitive data is properly encrypted
+- Error messages don't leak sensitive information
+```
+  </Tab>
+  <Tab title="TypeScript Standards">
+    Create `.continue/rules/typescript.md`:
+
+```markdown
+  ---
+  globs: "**/*.{ts,tsx}"
+  description: "TypeScript Best Practices"
+  ---
+
+  # TypeScript Standards
+
+  - Use strict type checking (avoid `any` types)
+  - Prefer interfaces for object shapes
+  - Use proper error handling with typed errors
+  - Document complex types with JSDoc comments
+  - Export types for public APIs
+  - Use const assertions where appropriate
+```
+</Tab >
+<Tab title="Testing Standards">
+Create `.continue/rules/testing.md`:
+
+```markdown
+---
+globs: "**/*.{test,spec}.{ts,tsx,js,jsx}"
+description: "Testing Requirements"
+---
+
+# Testing Guidelines
+
+- Write tests for new features and bug fixes
+- Test both happy paths and error conditions
+- Use descriptive test names that explain intent
+- Keep tests focused and isolated (no shared state)
+- Mock external dependencies
+- Aim for meaningful assertions, not coverage metrics
+```
+</Tab>
+<Tab title="Python Standards">
+Create `.continue/rules/python.md`:
+
+```markdown
+---
+globs: "**/*.py"
+description: "Python Code Standards"
+---
+
+# Python Best Practices
+
+- Follow PEP 8 style guidelines
+- Use type hints for function signatures
+- Write docstrings for public functions/classes
+- Use context managers for resource management
+- Prefer list comprehensions for simple transformations
+- Handle exceptions explicitly, avoid bare except
+```
+</Tab>
+</Tabs>
+</Step>
+</Steps>
+## How It Works
+
+The workflow follows these steps:
+
+1. **Pull Request Created/Updated** - A pull request is opened or synchronized
+2. **Workflow Triggered** - GitHub Actions workflow starts automatically
+3. **Load Custom Rules** - Reads your team's rules from `.continue/rules/`
+4. **Get Pull Request Diff** - Fetches the diff and list of changed files
+5. **Continue CLI Analyzes Code** - AI agent reviews the code with your rules
+6. **Post or Update Review Comment** - Creates or updates a single PR comment with feedback
+
+## Interactive Commands
+
+Comment on any pull request to trigger focused reviews:
+
+```
+@review-bot check for security issues
+@review-bot review the TypeScript types
+@review-bot explain the architecture changes
+@review-bot focus on error handling
+```
+
+The workflow will respond with a targeted review based on your request.
+
+## Advanced Configuration
+<Tabs>
+  <Tab title="Use Your Own Continue Config">
+    
+  By default, the workflow uses the `continuedev/review-bot` config optimized for code reviews. Replace `continuedev/review-bot` with your own config:
+
+  ```yaml
+  - name: Run Continue Review
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      CONTINUE_ORG: your-org-name      # Add your org
+      CONTINUE_CONFIG: username/config-name  # Add your config
+    run: |
+      cn --config $CONTINUE_ORG/$CONTINUE_CONFIG \
+        -p "$PROMPT" \
+        --auto > review_output.md
+  ```
+
+  Store `CONTINUE_ORG` and `CONTINUE_CONFIG` as repository variables for easy updates.
+</Tab>
+<Tab title="Filter by File Types">
+
+  Only review specific file types in pull requests:
+
+  ```yaml
+  on:
+    pull_request:
+      types: [opened, synchronize, ready_for_review]
+      paths:
+        - '**.ts'
+        - '**.tsx'
+        - '**.py'
+        - '**.go'
+  ```
+</Tab>
+
+<Tab title="Review Size Limits">
+
+  Skip large pull requests that would be expensive to review:
+
+  ```yaml
+  - name: Check PR Size
+    id: size-check
+    env:
+      GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+    run: |
+      ADDITIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json additions -q .additions)
+      DELETIONS=$(gh pr view ${{ steps.pr.outputs.pr_number }} --json deletions -q .deletions)
+      TOTAL=$((ADDITIONS + DELETIONS))
+      
+      if [ $TOTAL -gt 1000 ]; then
+        echo "skip=true" >> $GITHUB_OUTPUT
+        echo "⚠️  Pull request too large for automatic review ($TOTAL lines changed)"
+      else
+        echo "skip=false" >> $GITHUB_OUTPUT
+      fi
+
+  - name: Run Continue Review
+    if: steps.size-check.outputs.skip != 'true'
+    # ... rest of review step
+  ```
+
+</Tab>
+</Tabs>
+## Troubleshooting
+<AccordionGroup>
+<Accordion title="Continue CLI not found">
+- The workflow installs the CLI automatically, but ensure Node.js 20+ is available
+- Check the "Install Continue CLI" step logs for errors
+</Accordion>
+<Accordion title="Authentication failed">
+- Verify your `CONTINUE_API_KEY` is valid
+- Check that GitHub token has required permissions
+</Accordion>
+<Accordion title="No review generated">
+- Verify your Continue config is accessible
+- Check Continue CLI logs in the workflow run
+- Try running locally: `cn -p "Test prompt" --auto`
+</Accordion>
+<Accordion title="Review comment not posted">
+- Ensure `pull-requests: write` permission is set
+- Verify GitHub token has scope to comment on pull requests
+- Check if the repository requires signed commits
+</Accordion>
+</AccordionGroup>
+
+
+## Example Output
+
+Here's what a typical review comment looks like:
+
+> ## 🤖 AI Code Review
+>
+> ### Summary
+> This pull request introduces a new user authentication system with JWT tokens and password hashing. The implementation follows security best practices with a few minor suggestions.
+>
+> ### Key Findings
+>
+> **Security** ✅
+> - Password hashing properly implemented with bcrypt
+> - JWT tokens include appropriate expiry
+> - Input validation present for all endpoints
+>
+> **Code Quality** 💡
+> - Consider adding rate limiting to login endpoint
+> - The `secretKey` should be loaded from environment variables, not hardcoded
+> - Add unit tests for token expiration edge cases
+>
+> ### Positive Observations
+> - Good separation of concerns with middleware pattern
+> - Clear error messages for authentication failures
+> - Proper async/await usage throughout
+>
+> ### Recommendations
+> 1. Move `secretKey` to environment variables (see `.continue/rules/security.md`)
+> 2. Add rate limiting middleware to prevent brute force attacks
+> 3. Consider adding integration tests for the auth flow
+> 4. Document the JWT payload structure
+>
+> ---
+> *Powered by [Continue](https://continue.dev) • Need a focused review? Comment `@review-bot check for security`*
+
+## What You've Built
+
+After completing this setup, you have an **AI-powered code review system** that:
+
+- ✅ **Runs automatically** - Reviews every pull request without manual intervention
+- ✅ **Privacy-first** - CLI runs in your GitHub Actions runner, code sent directly to your configured LLM
+- ✅ **Customizable** - Team-specific rules apply automatically
+- ✅ **Interactive** - Responds to focused review requests
+- ✅ **Continuous** - Updates reviews as pull requests change
+
+<Card title="Continuous AI" icon="rocket">
+  Your pull request workflow now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine code review with human oversight through review and
+  approval.
+</Card>
+
+## Next Steps
+
+1. **Test it out** - Create a test pull request and watch the review appear
+2. **Refine rules** - Add more custom rules specific to your codebase
+3. **Customize prompts** - Adjust the review prompt to match your team's style
+4. **Add metrics** - Track review effectiveness over time
+5. **Create team config** - Set up a shared Continue config for consistent reviews
+
+## Inspiration & Resources
+
+<CardGroup cols={2}>
+  <Card title="CodeBunny" icon="github" href="https://github.com/bdougie/codebunny">
+    Original inspiration - Privacy-first AI code reviews
+  </Card>
+  <Card title="Continue CLI Guide" icon="terminal" href="/guides/cli">
+    Learn more about Continue CLI capabilities
+  </Card>
+  <Card title="Continue Mission Control" icon="globe" href="https://hub.continue.dev">
+    Browse shared configs and create your own
+  </Card>
+  <Card title="Rules Documentation" icon="book" href="/customize/deep-dives/rules">
+    Deep dive into custom rules
+  </Card>
+</CardGroup>
+
+## Community Examples
+
+Share your pull request review bot configuration:
+- Tweet your setup with `#ContinueDev`
+- Share improvements as [GitHub discussions](https://github.com/continuedev/continue/discussions)
+- Contribute example rules to the docs

@@ -1,6 +1,7 @@
 import { IDE, Position } from "../..";
 import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
+import { isSecurityConcern } from "../../indexing/ignore.js";
 import { NextEditProvider } from "../NextEditProvider";
 import { EditAggregator } from "./aggregateEdits";
 import { BeforeAfterDiff, createDiff, DiffFormatType } from "./diffFormatting";
@@ -23,16 +24,18 @@ export const processSmallEdit = async (
     recentlyVisitedRanges: [],
   };
 
-  NextEditProvider.getInstance().addDiffToContext(
-    createDiff({
-      beforeContent: beforeAfterdiff.beforeContent,
-      afterContent: beforeAfterdiff.afterContent,
-      filePath: beforeAfterdiff.filePath,
-      diffType: DiffFormatType.Unified,
-      contextLines: 3, // NOTE: This can change depending on experiments!
-      workspaceDir: currentData.workspaceDir,
-    }),
-  );
+  if (!isSecurityConcern(beforeAfterdiff.filePath)) {
+    NextEditProvider.getInstance().addDiffToContext(
+      createDiff({
+        beforeContent: beforeAfterdiff.beforeContent,
+        afterContent: beforeAfterdiff.afterContent,
+        filePath: beforeAfterdiff.filePath,
+        diffType: DiffFormatType.Unified,
+        contextLines: 3, // NOTE: This can change depending on experiments!
+        workspaceDir: currentData.workspaceDir,
+      }),
+    );
+  }
 
   void processNextEditData({
     filePath: beforeAfterdiff.filePath,

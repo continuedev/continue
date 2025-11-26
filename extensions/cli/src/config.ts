@@ -15,6 +15,32 @@ import {
   getOrganizationId,
 } from "./auth/workos.js";
 import { env } from "./env.js";
+import { posthogService } from "./telemetry/posthogService.js";
+import { getVersion } from "./version.js";
+
+/**
+ * Creates user-agent header value for CLI requests
+ */
+function getUserAgent(): string {
+  const version = getVersion();
+  return `Continue-CLI/${version}`;
+}
+
+/**
+ * Merges user-agent header into request options
+ */
+function mergeUserAgentIntoRequestOptions(
+  requestOptions: ModelConfig["requestOptions"],
+): ModelConfig["requestOptions"] {
+  return {
+    ...requestOptions,
+    headers: {
+      ...requestOptions?.headers,
+      "user-agent": getUserAgent(),
+      "x-continue-unique-id": posthogService.uniqueId,
+    },
+  };
+}
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
@@ -31,7 +57,9 @@ export function createLlmApi(
     model.provider === "continue-proxy"
       ? {
           provider: model.provider,
-          requestOptions: model.requestOptions,
+          requestOptions: mergeUserAgentIntoRequestOptions(
+            model.requestOptions,
+          ),
           apiBase: model.apiBase,
           apiKey: accessToken ?? undefined,
           env: {
@@ -39,7 +67,7 @@ export function createLlmApi(
             orgScopeId: organizationId ?? null,
             proxyUrl:
               (model as { onPremProxyUrl: string | undefined })
-                .onPremProxyUrl ?? undefined,
+                .onPremProxyUrl ?? (env.apiBase ? env.apiBase : undefined),
           },
         }
       : {

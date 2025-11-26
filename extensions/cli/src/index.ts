@@ -216,11 +216,11 @@ addCommonOptions(program)
       }
     }
 
-    // In headless mode, ensure we have a prompt unless using --agent flag
-    // Agent files can provide their own prompts
-    if (options.print && !prompt && !options.agent) {
+    // In headless mode, ensure we have a prompt unless using --agent flag or --resume flag
+    // Agent files can provide their own prompts, and resume can work without new input
+    if (options.print && !prompt && !options.agent && !options.resume) {
       safeStderr(
-        "Error: A prompt is required when using the -p/--print flag, unless --prompt or --agent is provided.\n\n",
+        "Error: A prompt is required when using the -p/--print flag, unless --prompt, --agent, or --resume is provided.\n\n",
       );
       safeStderr("Usage examples:\n");
       safeStderr('  cn -p "please review my current git diff"\n');
@@ -228,6 +228,7 @@ addCommonOptions(program)
       safeStderr('  cn -p "analyze the code in src/"\n');
       safeStderr("  cn -p --agent my-org/my-agent\n");
       safeStderr("  cn -p --prompt my-org/my-prompt\n");
+      safeStderr("  cn -p --resume\n");
       await gracefulExit(1);
     }
 

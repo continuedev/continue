@@ -166,8 +166,6 @@ interface IDE {
 
     suspend fun getClipboardContent(): Map<String, String>
 
-    suspend fun isTelemetryEnabled(): Boolean
-
     suspend fun isWorkspaceRemote(): Boolean
 
     suspend fun getUniqueId(): String
@@ -308,6 +306,11 @@ data class StreamDiffLinesPayload(
     val includeRulesInSystemMessage: Boolean,
     val fileUri: String?,
     val isApply: Boolean
+)
+
+data class GetDiffLinesPayload(
+    val oldContent: String,
+    val newContent: String,
 )
 
 data class AcceptOrRejectDiffPayload(

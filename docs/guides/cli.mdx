@@ -4,8 +4,6 @@ sidebarTitle: "Continue CLI (cn)"
 description: "Learn how to use Continue's command-line interface for context engineering, automated coding tasks, and headless development workflows with customizable models, rules, and tools"
 ---
 
-<Warning>Continue CLI (cn) is currently in Beta</Warning>
-
 `cn` is an open-source, modular coding agent for the command line.
 
 It provides a battle-tested agent loop so you can simply plug in your model, rules, and tools.
@@ -54,9 +52,9 @@ echo "$(git diff) Generate a conventional commit name for the current git change
 
 ## How to Configure Continue CLI
 
-`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can log in to [Continue Hub](/hub/introduction) or use your existing local configuration.
+`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can log in to [Continue Mission Control](/hub/introduction) or use your existing local configuration.
 
-To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-agent` or `cn --config ~/.continue/config.yaml`).
+To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-cli-config` or `cn --config ~/.continue/config.yaml`).
 
 ### How to Add Custom Models
 
@@ -64,7 +62,7 @@ Learn how to add custom models [here](/customize/overview). Then, you can use th
 
 ### How to Configure Rules
 
-`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
+`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from Mission Control. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
 
 ### How to Configure Tools
 

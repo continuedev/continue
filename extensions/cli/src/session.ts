@@ -337,11 +337,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
     const authConfig = loadAuthConfig();
     const accessToken = getAccessToken(authConfig);
 
-    if (
-      !accessToken ||
-      !isAuthenticatedConfig(authConfig) ||
-      !authConfig.userEmail.endsWith("@continue.dev")
-    ) {
+    if (!accessToken || !isAuthenticatedConfig(authConfig)) {
       return [];
     }
 

@@ -5,6 +5,7 @@ import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectSelectedChatModel } from "../slices/configSlice";
+import { selectSelectedProfile } from "../slices/profilesSlice";
 import {
   deleteSessionMetadata,
   newSession,
@@ -13,6 +14,7 @@ import {
   updateSessionMetadata,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { updateSelectedModelByRole } from "../thunks/updateSelectedModelByRole";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -103,7 +105,10 @@ export const loadSession = createAsyncThunk<
   ThunkApiType
 >(
   "session/load",
-  async ({ sessionId, saveCurrentSession: save }, { extra, dispatch }) => {
+  async (
+    { sessionId, saveCurrentSession: save },
+    { extra, dispatch, getState },
+  ) => {
     if (save) {
       const result = await dispatch(
         saveCurrentSession({
@@ -115,6 +120,11 @@ export const loadSession = createAsyncThunk<
     }
     const session = await getSession(extra.ideMessenger, sessionId);
     dispatch(newSession(session));
+
+    // Restore selected chat model from session, if present
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
+    }
   },
 );
 
@@ -127,7 +137,10 @@ export const loadRemoteSession = createAsyncThunk<
   ThunkApiType
 >(
   "session/loadRemote",
-  async ({ remoteId, saveCurrentSession: save }, { extra, dispatch }) => {
+  async (
+    { remoteId, saveCurrentSession: save },
+    { extra, dispatch, getState },
+  ) => {
     if (save) {
       const result = await dispatch(
         saveCurrentSession({
@@ -139,6 +152,35 @@ export const loadRemoteSession = createAsyncThunk<
     }
     const session = await getRemoteSession(extra.ideMessenger, remoteId);
     dispatch(newSession(session));
+
+    // Restore selected chat model from session, if present
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
+    }
+  },
+);
+
+export const selectChatModelForProfile = createAsyncThunk<
+  void,
+  string,
+  ThunkApiType
+>(
+  "session/selectModelForCurrentProfile",
+  async (modelTitle, { extra, dispatch, getState }) => {
+    const state = getState();
+    const modelMatch = state.config.config?.modelsByRole?.chat?.find(
+      (m) => m.title === modelTitle,
+    );
+    const selectedProfile = selectSelectedProfile(state);
+    if (selectedProfile && modelMatch) {
+      await dispatch(
+        updateSelectedModelByRole({
+          role: "chat",
+          modelTitle: modelTitle,
+          selectedProfile,
+        }),
+      );
+    }
   },
 );
 
@@ -168,6 +210,9 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
       session = await getSession(extra.ideMessenger, lastSessionId);
     }
     dispatch(newSession(session));
+    if (session.chatModelTitle) {
+      dispatch(selectChatModelForProfile(session.chatModelTitle));
+    }
   },
 );
 
@@ -246,11 +291,15 @@ export const saveCurrentSession = createAsyncThunk<
       title = NEW_SESSION_TITLE;
     }
 
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const session: Session = {
       sessionId: state.session.id,
       title,
       workspaceDirectory: window.workspacePaths?.[0] || "",
       history: state.session.history,
+      mode: state.session.mode,
+      chatModelTitle: selectedChatModel?.title ?? null,
     };
 
     const result = await dispatch(updateSession(session));

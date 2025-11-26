@@ -47,12 +47,15 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { useStore } from "react-redux";
 import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
+import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -187,11 +190,6 @@ export function Chat() {
 
         setIsCreatingAgent(true);
 
-        // Clear input immediately for better UX
-        if (editorToClearOnSend) {
-          editorToClearOnSend.commands.clearContent();
-        }
-
         // Create agent and track loading state
         void (async () => {
           try {
@@ -217,6 +215,12 @@ export function Chat() {
               selectedCode,
               organizationId,
             });
+
+            // Clear input only after successful API call
+            if (editorToClearOnSend) {
+              editorToClearOnSend.commands.clearContent();
+            }
+
             setIsCreatingAgent(false);
           } catch (error) {
             console.error("Failed to create background agent:", error);
@@ -267,6 +271,18 @@ export function Chat() {
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
         }
+      }
+
+      // Increment localstorage counter for popup
+      const currentCount = getLocalStorage("mainTextEntryCounter");
+      if (currentCount) {
+        setLocalStorage("mainTextEntryCounter", currentCount + 1);
+        if (currentCount === 300) {
+          dispatch(setDialogMessage(<FeedbackDialog />));
+          dispatch(setShowDialog(true));
+        }
+      } else {
+        setLocalStorage("mainTextEntryCounter", 1);
       }
     },
     [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],

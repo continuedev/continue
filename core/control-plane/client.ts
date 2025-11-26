@@ -54,6 +54,39 @@ export interface RemoteSessionMetadata extends BaseSessionMetadata {
   remoteId: string;
 }
 
+export interface AgentSessionMetadata {
+  createdBy: string;
+  github_repo: string;
+  organizationId?: string;
+  idempotencyKey?: string;
+  source?: string;
+  continueApiKeyId?: string;
+  s3Url?: string;
+  prompt?: string | null;
+  createdBySlug?: string;
+}
+
+export interface AgentSessionView {
+  id: string;
+  devboxId: string | null;
+  name: string | null;
+  icon: string | null;
+  status: string;
+  agentStatus: string | null;
+  unread: boolean;
+  state: string;
+  metadata: AgentSessionMetadata;
+  repoUrl: string;
+  branch: string | null;
+  pullRequestUrl: string | null;
+  pullRequestStatus: string | null;
+  tunnelUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  create_time_ms: string;
+  end_time_ms: string;
+}
+
 export class ControlPlaneClient {
   constructor(
     readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
@@ -319,7 +352,6 @@ export class ControlPlaneClient {
 
   /**
    * Check if remote sessions should be enabled based on feature flags
-   * Requires: PostHog feature flag AND @continue.dev email
    */
   public async shouldEnableRemoteSessions(): Promise<boolean> {
     // Check if user is signed in
@@ -327,17 +359,13 @@ export class ControlPlaneClient {
       return false;
     }
 
-    // Check if user has @continue.dev email
     try {
       const sessionInfo = await this.sessionInfoPromise;
       if (isOnPremSession(sessionInfo) || !sessionInfo) {
         return false;
       }
 
-      const hubSession = sessionInfo as HubSessionInfo;
-      const email = hubSession.account?.id;
-
-      return email ? email.includes("@continue.dev") : false;
+      return true;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_check_remote_sessions_enabled",
@@ -355,7 +383,6 @@ export class ControlPlaneClient {
 
   /**
    * Fetch remote agents/sessions from the control plane
-   * Currently restricted to @continue.dev emails for internal use
    */
   public async listRemoteSessions(): Promise<RemoteSessionMetadata[]> {
     if (!(await this.isSignedIn())) {
@@ -363,8 +390,6 @@ export class ControlPlaneClient {
     }
 
     try {
-      // Note: This endpoint is currently restricted to internal @continue.dev users
-      // In the future, this may be expanded to support broader remote session access
       const resp = await this.requestAndHandleError("agents/devboxes", {
         method: "GET",
       });
@@ -545,23 +570,19 @@ export class ControlPlaneClient {
       });
 
       const result = (await resp.json()) as {
-        agents: any[];
+        agents: AgentSessionView[];
         totalCount: number;
       };
 
       return {
-        agents: result.agents.map((agent: any) => ({
+        agents: result.agents.map((agent) => ({
           id: agent.id,
-          name: agent.name || agent.metadata?.name || null,
+          name: agent.name,
           status: agent.status,
-          repoUrl: agent.metadata?.repo_url || agent.repo_url || "",
-          createdAt:
-            agent.created_at || agent.create_time_ms
-              ? new Date(agent.created_at || agent.create_time_ms).toISOString()
-              : new Date().toISOString(),
+          repoUrl: agent.repoUrl,
+          createdAt: agent.createdAt,
           metadata: {
-            github_repo:
-              agent.metadata?.github_repo || agent.metadata?.repo_url,
+            github_repo: agent.metadata.github_repo,
           },
         })),
         totalCount: result.totalCount,
@@ -571,6 +592,75 @@ export class ControlPlaneClient {
         context: "control_plane_list_background_agents",
       });
       return { agents: [], totalCount: 0 };
+    }
+  }
+
+  /**
+   * Get the full agent session information
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent session view including metadata and status
+   */
+  public async getAgentSession(
+    agentSessionId: string,
+  ): Promise<AgentSessionView | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}`,
+        {
+          method: "GET",
+        },
+      );
+
+      return (await resp.json()) as AgentSessionView;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_session",
+        agentSessionId,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Get the state of a specific background agent
+   * @param agentSessionId - The ID of the agent session
+   * @returns The agent's session state including history, workspace, and branch
+   */
+  public async getAgentState(agentSessionId: string): Promise<{
+    session: Session;
+    isProcessing: boolean;
+    messageQueueLength: number;
+    pendingPermission: any;
+  } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}/state`,
+        {
+          method: "GET",
+        },
+      );
+
+      const result = (await resp.json()) as {
+        session: Session;
+        isProcessing: boolean;
+        messageQueueLength: number;
+        pendingPermission: any;
+      };
+      return result;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_get_agent_state",
+        agentSessionId,
+      });
+      return null;
     }
   }
 }

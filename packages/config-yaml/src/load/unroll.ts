@@ -44,7 +44,6 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       cause: "result.success was false",
     });
   } catch (e) {
-    console.error("Failed to parse rolled assistant:", configYaml);
     if (
       e instanceof Error &&
       "cause" in e &&
@@ -721,7 +720,17 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  // Add source slug for mcp servers
+  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  if (
+    id.uriType === "slug" &&
+    "mcpServers" in parsed &&
+    parsed.mcpServers?.[0]
+  ) {
+    parsed.mcpServers[0].sourceSlug = `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+  }
+
+  return parsed;
 }
 
 export function parseMarkdownRuleOrAssistantUnrolled(

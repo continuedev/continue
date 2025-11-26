@@ -54,7 +54,7 @@ export function useInputHistory(historyKey: string) {
       return;
     }
 
-    setCurrentIndex(inputHistory.length + 1);
+    setCurrentIndex(Math.min(inputHistory.length + 1, MAX_HISTORY_LENGTH));
     setInputHistory((prev) => {
       return [...prev, inputValue].slice(-MAX_HISTORY_LENGTH);
     });

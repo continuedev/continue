@@ -98,9 +98,9 @@ First, you'll need to gather your PostHog and GitHub API credentials and add the
 See https://docs.continue.dev/hub/secrets/secret-types#secret-types for adding secrets
 </Tip>
 
-You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Hub account:
+You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Mission Control account:
 
-1.  Go to the [Continue Hub](https://hub.continue.dev)
+1.  Go to the [Continue Mission Control](https://hub.continue.dev)
 2.  Sign in to your account
 3.  Navigate to your user settings
 4.  Look for the "Secrets" section
@@ -134,16 +134,16 @@ You only need to configure the PostHog MCP credential - it automatically handles
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [PostHog GitHub Continuous AI Agent](https://hub.continue.dev/continuedev/awesome-models-posthog-gh) on Continue Hub and click **"Install Agent"** or run:
+        Visit the [PostHog Continuous AI Agent](https://hub.continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
-        cn --config continuedev/awesome-models-posthog-gh
+        cn --agent continuedev/posthog-continuous-ai-agent
         ```
 
         This agent includes:
-        - **Optimized prompts** for [PostHog analysis](https://hub.continue.dev/continuedev/posthog-analysis) and [GitHub issue creation](https://hub.continue.dev/continuedev/posthog-github-issues)
-        - **[Built-in rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules)** for consistent formatting and error handling
-        - **[PostHog MCP](https://hub.continue.dev/posthog/posthog-mcp)** for more reliable API interactions
+        - **Optimized prompts** for PostHog analysis and GitHub issue creation
+        - **Built-in rules** for consistent formatting and error handling
+        - **PostHog MCP** for more reliable API interactions
       </Step>
 
       <Step title="Run the Analysis">
@@ -171,7 +171,7 @@ You only need to configure the PostHog MCP credential - it automatically handles
       ```
     </Step>
     <Step title="Add PostHog + GitHub Analysis Rules">
-    In the Continue Hub, add the [PostHog GitHub Continuous AI Rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) to your account for better formatting and error handling.
+    In the Continue Mission Control, add the [PostHog GitHub Continuous AI Rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) to your account for better formatting and error handling.
     </Step>
     <Step title="Create Your Custom Prompts">
       Use this prompt with Continue CLI to analyze PostHog data and create GitHub issues:
@@ -203,8 +203,8 @@ You only need to configure the PostHog MCP credential - it automatically handles
     To use the pre-built agent, you need either: 
       - **Continue CLI Pro Plan** with
       the models add-on, OR 
-      - **Your own API keys** added to Continue Hub secrets
-      (same as Step 1 below) The agent will automatically detect and use your
+      - **Your own API keys** added to Continue Mission Control secrets
+      The agent will automatically detect and use your
       configuration.
 
 </Accordion>
@@ -355,6 +355,6 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
 - [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
 - [PostHog Error Tracking](https://posthog.com/docs/error-tracking)
 - [GitHub CLI Documentation](https://cli.github.com/)
-- [GitHub MCP on Continue Hub](https://hub.continue.dev/github/github-mcp) (alternative option)
+- [GitHub MCP on Continue Mission Control](https://hub.continue.dev/github/github-mcp) (alternative option)
 - [Continue CLI Guide](https://docs.continue.dev/guides/cli)
 - [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)

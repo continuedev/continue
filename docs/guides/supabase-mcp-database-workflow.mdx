@@ -1,0 +1,512 @@
+---
+title: "Supabase RLS Security Audit and Fixes with MCP"
+description: "Learn how to audit Row Level Security in your Supabase database, identify vulnerabilities, and automatically generate fixes using Continue CLI and Supabase MCP."
+sidebarTitle: "Supabase RLS Security Audit"
+---
+
+<Card title="What You'll Build" icon="shield-check">
+  A security audit workflow that uses Continue CLI with Supabase MCP to identify RLS vulnerabilities, generate secure policies, fix permission issues, and ensure your database follows security best practices.
+</Card>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Use [Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp) to audit database security
+- Identify tables without Row Level Security (RLS) enabled
+- Find and fix overly permissive or missing RLS policies
+- Generate secure RLS migrations following best practices
+- Automate security audits with GitHub Actions
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- [Supabase account](https://supabase.com) with an active project
+- Node.js 18+ installed locally
+- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- Basic understanding of SQL and database concepts
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+
+  <Step title="Set up Continue CLI Account & API Key">
+    1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+    2. Sign up or log in to your Continue account
+    3. Navigate to your organization settings
+    4. Click **"API Keys"** and then **"+ New API Key"**
+    5. Copy the API key immediately (you won't see it again!)
+    6. Login to the CLI: `cn login`
+  </Step>
+</Steps>
+
+<Tip>
+  Continue CLI can analyze your database schema and generate complex SQL queries - you just need to describe what you want in plain language!
+</Tip>
+
+## Step 1: Set Up Your Credentials
+
+First, you'll need to set up access to your Supabase project.
+
+<Tabs>
+  <Tab title="Configure Supabase MCP">
+
+    <Warning>
+      **Security First**: Follow [Supabase's security best practices](https://supabase.com/docs/guides/getting-started/mcp#security-risks) when using MCP:
+      - Never connect to production databases directly
+      - Use development or staging environments
+      - Enable read-only mode when possible
+      - Scope MCP access to specific projects
+    </Warning>
+
+    The Supabase MCP supports OAuth authentication for secure access:
+
+    **OAuth Configuration (Recommended)**
+
+    The Supabase MCP will prompt for OAuth authentication when first used. Simply follow the authorization flow.
+
+    **Remote MCP URL**
+    ```
+    https://mcp.supabase.com/mcp
+    ```
+
+    <Info>
+      The MCP server can be scoped to a specific project for better security. Configure this during setup.
+    </Info>
+
+  </Tab>
+  <Tab title="Supabase Project Setup">
+    To use Supabase MCP effectively, ensure your project has:
+
+    1. **Development Environment** - Create a separate development project:
+       - Go to [Supabase Dashboard](https://supabase.com/dashboard)
+       - Create a new project for development/testing
+       - Copy the project URL and anon key
+
+    2. **Database Schema** - Set up some initial tables for testing:
+       ```sql
+       -- Example schema for testing
+       CREATE TABLE users (
+         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+         email TEXT UNIQUE NOT NULL,
+         created_at TIMESTAMPTZ DEFAULT NOW()
+       );
+
+       CREATE TABLE posts (
+         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+         user_id UUID REFERENCES users(id),
+         title TEXT NOT NULL,
+         content TEXT,
+         published BOOLEAN DEFAULT false,
+         created_at TIMESTAMPTZ DEFAULT NOW()
+       );
+       ```
+
+    3. **Row Level Security (RLS)** - Enable RLS for security:
+       ```sql
+       ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+       ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+       ```
+
+    <Tip>
+      Use [Supabase Branching](https://supabase.com/docs/guides/deployment/branching) to create isolated development branches for safe testing.
+    </Tip>
+
+  </Tab>
+</Tabs>
+
+## Supabase Database Workflow Options
+
+<Card title="Fastest Path to Success" icon="rocket">
+  Skip the manual setup and use our pre-built Supabase Continuous AI agent that includes
+  optimized prompts, rules, and the Supabase MCP for intelligent database management.
+</Card>
+
+<Info>
+  **How Supabase MCP Works**:
+  - Connects to your Supabase project via OAuth
+  - Provides tools for database queries, schema inspection, and migrations
+  - Supports read-only mode for safer operations
+  - Can be scoped to specific projects for security
+</Info>
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate database analysis with AI-powered query optimization and schema insights
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Supabase Agent](https://hub.continue.dev/continuedev/supabase-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --agent continuedev/supabase-agent
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for database analysis and query generation
+        - **Built-in rules** for SQL best practices and security
+        - **[Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp)** for secure database access
+        - **Automatic authentication** via OAuth flow
+      </Step>
+
+      <Step title="Run Database Analysis">
+        Navigate to your project directory and enter this prompt in the Continue CLI TUI:
+        
+        ```
+        Analyze my Supabase database schema and suggest performance optimizations
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Get consistent results with pre-tested prompts and built-in SQL optimization rules.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Add Supabase MCP to Continue CLI">
+        Configure the [Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp) using OAuth:
+
+        The MCP server will automatically prompt for OAuth authentication when you first use it.
+      </Step>
+
+      <Step title="Verify Supabase Connection">
+        Test your Supabase MCP connection with this prompt:
+        
+        ```
+        List all tables in my Supabase database
+        ```
+      </Step>
+
+      <Step title="Create Custom Database Analysis Prompts">
+        Use this prompt template with Continue CLI to analyze your database:
+
+        ```
+        Analyze my Supabase database:
+        - List all tables with row counts
+        - Identify tables without indexes
+        - Find potential N+1 query patterns
+        - Suggest missing foreign key constraints
+        - Recommend index optimizations based on table structure
+        - Generate SQL migrations for suggested improvements
+        - Check for security issues (missing RLS policies)
+        ```
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+  To use the pre-built agent, you need either:
+  - **Continue CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Continue Mission Control secrets
+  
+  The agent will automatically detect and use your configuration. For Supabase MCP:
+  - **Supabase account** with at least one project
+  - **OAuth authentication** (handled automatically)
+  - Development or staging environment (not production)
+</Accordion>
+
+---
+
+<Warning>
+  **Security Best Practices**: 
+  - **Never use MCP with production databases** - Always use development or staging environments
+  - **Enable read-only mode** when analyzing data to prevent accidental modifications
+  - **Scope to specific projects** to limit access
+  - **Use branch databases** for testing schema changes
+</Warning>
+
+## Step 2: Analyze Your Database with AI
+
+Use Continue CLI to perform intelligent database analysis. Enter these prompts in the Continue CLI TUI:
+
+<Tabs>
+  <Tab title="Schema Analysis">
+    **Prompt:**
+    ```
+    Analyze my Supabase database schema and provide:
+    - Complete table structure with data types
+    - Relationships between tables
+    - Missing indexes that could improve performance
+    - Unused or redundant columns
+    - Suggestions for normalization improvements
+    ```
+  </Tab>
+
+  <Tab title="RLS Security Audit">
+    **Prompt:**
+    ```
+    Perform a comprehensive RLS (Row Level Security) audit on my Supabase database:
+    
+    For each table:
+    - Check if RLS is enabled
+    - List all existing RLS policies
+    - Identify tables without any RLS policies (security risk)
+    - Find overly permissive policies (e.g., allowing all operations)
+    - Suggest missing policies based on common patterns
+    - Generate SQL to fix identified security issues
+    
+    Prioritize findings by risk level:
+    1. Critical: Tables with sensitive data but no RLS
+    2. High: Overly permissive policies
+    3. Medium: Missing common policies (e.g., users can only see own data)
+    4. Low: Policy optimization opportunities
+    ```
+  </Tab>
+
+  <Tab title="Fix RLS Policies">
+    **Prompt:**
+    ```
+    Based on the RLS audit, generate SQL migrations to fix all security issues:
+    
+    1. Enable RLS on all tables that don't have it:
+       - Include ALTER TABLE statements
+       - Add comment explaining why RLS is needed
+    
+    2. Create secure default policies for common patterns:
+       - Users can only read/update their own records
+       - Admins have full access (with role checking)
+       - Public read-only access where appropriate
+       - Proper INSERT policies for new records
+    
+    3. Fix overly permissive policies:
+       - Replace 'true' conditions with proper checks
+       - Add user_id or role-based restrictions
+       - Include USING clauses for read operations
+       - Include WITH CHECK clauses for write operations
+    
+    4. For each policy, include:
+       - Clear naming convention (e.g., 'users_select_own')
+       - Comments explaining the security model
+       - Rollback statements
+    
+    Generate the complete migration file with all fixes.
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Available Supabase MCP Capabilities**:
+  - **Database Queries**: Execute SQL queries and analyze results
+  - **Schema Inspection**: View table structures, relationships, and constraints
+  - **Performance Analysis**: Identify slow queries and optimization opportunities
+  - **Security Review**: Check RLS policies and access controls
+  - **Migration Generation**: Create SQL migrations for schema changes
+</Info>
+
+## Step 3: Generate Database Migrations
+
+Create and apply database migrations based on AI recommendations. Enter this prompt in the Continue CLI TUI:
+
+**Example: Complete RLS Security Fix**
+
+```
+I need to secure my Supabase database. Please:
+
+1. First, audit all tables for RLS security issues
+2. Generate a complete migration to fix all issues found
+3. Create a security report I can share with my team
+
+Here's what I need fixed:
+- Enable RLS on all tables
+- Create policies so users can only access their own data
+- Ensure admins (role = 'admin') have full access
+- Add policies for service accounts (role = 'service')
+- Include audit logging for sensitive operations
+
+For the users table specifically:
+- Users can read their own profile
+- Users can update their own profile (except role field)
+- Only admins can view all users
+- Only admins can delete users
+- New users can insert their own record during signup
+
+Generate the complete migration with:
+- All SQL statements
+- Clear policy names and comments
+- Rollback statements
+- A summary of what each policy does
+```
+
+**Expected Output:**
+The AI will generate a complete SQL migration file that:
+- Enables RLS on all tables
+- Creates secure, well-documented policies
+- Follows Supabase security best practices
+- Includes rollback capabilities
+- Provides a security summary for your team
+
+<Tip>
+  **Best Practice**: Always review AI-generated migrations before applying them. Test in a development branch first using Supabase's branching feature.
+</Tip>
+
+## Step 4: Set Up Automated Database Monitoring
+
+Automate database health checks with Continue CLI and GitHub Actions:
+
+```yaml
+name: Database Health Monitor
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  monitor-database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Continue CLI
+        run: |
+          npm install -g @continuedev/cli
+          echo "✅ Continue CLI installed"
+
+      - name: Analyze Database Security
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          echo "🔍 Performing security audit..."
+          
+          # Use Continue CLI to audit RLS and generate fixes
+          cn -p "Using Supabase MCP, perform a comprehensive RLS security audit:
+                 1. Check all tables for RLS enablement
+                 2. Identify tables with missing or weak RLS policies
+                 3. Find overly permissive policies (e.g., 'true' conditions)
+                 4. Check for common security anti-patterns:
+                    - Missing user_id checks
+                    - No role-based access control
+                    - Unrestricted DELETE operations
+                    - Missing WITH CHECK clauses
+                 5. Generate fixes for all security issues found
+                 6. Create a security report with:
+                    - Critical vulnerabilities (tables without RLS)
+                    - High-risk policies that need immediate fixes
+                    - SQL migrations to fix all issues
+                    - Best practice recommendations
+                    - Compliance checklist (GDPR, SOC2, etc.)
+                 
+                 If critical security issues are found:
+                 - Generate the complete fix migration
+                 - Create a GitHub issue with severity labels
+                 - Tag security team members for review"
+
+      - name: Save Health Report
+        run: |
+          echo "## 📊 Database Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "Generated at $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the 'Analyze Database Security' step for the full report" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-health-report
+          path: |
+            *.md
+            *.sql
+```
+
+<Warning>
+  **Required GitHub Secrets**:
+  - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+
+  Add this at: **Repository Settings → Secrets and variables → Actions**
+</Warning>
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered database management system** that:
+
+- **Analyzes schema design** - Identifies optimization opportunities and best practices
+- **Optimizes queries** - Suggests indexes and query rewrites for better performance
+- **Generates migrations** - Creates SQL code for schema improvements
+- **Monitors health** - Runs automated checks for performance and security issues
+- **Provides insights** - Delivers actionable recommendations based on data patterns
+
+<Card title="Continuous AI Database Management" icon="shield-check">
+  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine database analysis and optimization with human oversight for migration approval.
+</Card>
+
+## Advanced Database Prompts
+
+Enhance your workflow with these advanced Continue CLI prompts:
+
+<CardGroup cols={2}>
+  <Card title="Real-time Performance" icon="gauge">
+    Monitor query performance in real-time and get alerts for slow queries exceeding threshold times
+  </Card>
+  <Card title="Data Quality Checks" icon="check-circle">
+    Automatically validate data integrity, find duplicates, and ensure consistency across related tables
+  </Card>
+  <Card title="Access Pattern Analysis" icon="chart-line">
+    Analyze API logs to understand data access patterns and optimize indexes accordingly
+  </Card>
+  <Card title="Cost Optimization" icon="dollar-sign">
+    Review database usage and suggest ways to reduce costs while maintaining performance
+  </Card>
+</CardGroup>
+
+## Security Best Practices
+
+<Warning>
+  **Database Security Guidelines**:
+  - Always use development/staging environments with MCP
+  - Enable read-only mode for analysis tasks
+  - Never store production credentials in code
+  - Review all AI-generated SQL before execution
+  - Use RLS policies to enforce access control
+  - Regularly audit database permissions
+</Warning>
+
+## Troubleshooting
+
+### Supabase MCP Connection Issues
+
+If you encounter connection issues:
+
+1. Verify OAuth authentication is complete
+2. Check your Supabase project is accessible
+3. Ensure you're not connecting to a production database
+4. Verify the MCP URL is correct: `https://mcp.supabase.com/mcp`
+
+### Common Database Analysis Issues
+
+| Issue | Solution |
+|:------|:---------|
+| No tables found | Verify your database has tables created |
+| Permission denied | Check OAuth scopes and project permissions |
+| Slow query analysis | Ensure your database has query logs enabled |
+| Migration failures | Test migrations in a branch database first |
+
+## Next Steps
+
+- Set up [Supabase Edge Functions](https://supabase.com/docs/guides/functions) for automated workflows
+- Configure [Supabase Realtime](https://supabase.com/docs/guides/realtime) for live data monitoring
+- Implement [Database Webhooks](https://supabase.com/docs/guides/database/webhooks) for event-driven automation
+- Join the [Continue Discord](https://discord.gg/continue) for support
+
+## Resources
+
+- [Supabase MCP Documentation](https://supabase.com/docs/guides/getting-started/mcp)
+- [Supabase Database Guide](https://supabase.com/docs/guides/database)
+- [Supabase Security Best Practices](https://supabase.com/docs/guides/database/security)
+- [Model Context Protocol Docs](https://modelcontextprotocol.io/introduction)
+- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
+- [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)

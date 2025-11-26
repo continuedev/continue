@@ -1,4 +1,4 @@
-import { parseAgentFileTools } from "@continuedev/config-yaml";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
@@ -11,7 +11,11 @@ import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { AgentFileServiceState, SERVICE_NAMES } from "./types.js";
+import {
+  AgentFileServiceState,
+  MCPServiceState,
+  SERVICE_NAMES,
+} from "./types.js";
 
 export interface InitializeToolServiceOverrides {
   allow?: string[];
@@ -26,7 +30,6 @@ export interface ToolPermissionServiceState {
   currentMode: PermissionMode;
   isHeadless: boolean;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
-  agentFilePolicyCount?: number;
   originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
 
@@ -61,55 +64,100 @@ export class ToolPermissionService
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AGENT_FILE];
+    return [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP];
   }
 
   /**
    * Generate agent-file-specific policies if an agent file is active
    */
-  private generateAgentFilePolicies(
+  generateAgentFilePolicies(
     agentFileServiceState?: AgentFileServiceState,
-  ): undefined | ToolPermissionPolicy[] {
-    if (!agentFileServiceState?.agentFile?.tools) {
-      return undefined;
+    mcpServiceState?: MCPServiceState,
+  ): ToolPermissionPolicy[] {
+    // With --agent, all available tools are allowed if not specified
+    const parsedTools = agentFileServiceState?.parsedTools;
+    if (!parsedTools) {
+      return [
+        {
+          tool: "*",
+          permission: "allow",
+        },
+      ];
     }
 
-    const parsedTools = parseAgentFileTools(
-      agentFileServiceState.agentFile.tools,
-    );
-    if (parsedTools.tools.length === 0) {
-      return undefined;
-    }
     const policies: ToolPermissionPolicy[] = [];
+    const servers = Array.from(mcpServiceState?.connections?.values() ?? []);
+    for (const mcpServer of parsedTools.mcpServers) {
+      const server = servers?.find(
+        (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
+      );
+      if (!server) {
+        logger.warn("No connected MCP server found ");
+        continue;
+      }
 
-    for (const toolRef of parsedTools.tools) {
-      if (toolRef.mcpServer) {
-        if (toolRef.toolName) {
-          policies.push({
-            tool: `mcp:${toolRef.mcpServer}:${toolRef.toolName}`,
-            permission: "allow",
-          });
-        } else {
-          policies.push({
-            tool: `mcp:${toolRef.mcpServer}:*`,
-            permission: "allow",
-          });
-        }
-      } else if (toolRef.toolName) {
-        policies.push({ tool: toolRef.toolName, permission: "allow" });
+      const specificTools = parsedTools.tools.filter(
+        (t) => t.mcpServer && t.toolName && t.mcpServer === mcpServer,
+      );
+
+      // In the `tools` key of an agent is comma separated strings like
+      // mcp/server, mcp/server2:tool_name, Bash
+      // - this would give the agent access to ALL tools from mcp/server, ONLY tool_name from mcp/server2, and Bash, and no other tools
+      // mcp/server
+      // - this would give the agent access to ALL tools from mcp/server, and no built-ins
+      // built_in, mcp/server
+      // - "built_in" keyword can be used to include all built ins
+      // Blank = all built-in tools
+
+      // Handle MCP first
+      // If ANY mcp tools are specifically called out, only allow those ones for that mcp server
+      // Otherwise the blanket allow will cover all MCP tools
+      if (specificTools.length) {
+        const specificSet = new Set(specificTools.map((t) => t.toolName));
+        const notMentioned = server.tools.filter(
+          (t) => !specificSet.has(t.name),
+        );
+        const allowed: ToolPermissionPolicy[] = specificTools.map((t) => ({
+          tool: t.toolName!,
+          permission: "allow",
+        }));
+        policies.push(...allowed);
+        const disallowed: ToolPermissionPolicy[] = notMentioned.map((t) => ({
+          tool: t.name,
+          permission: "exclude",
+        }));
+        policies.push(...disallowed);
       }
     }
 
-    if (policies.length > 0) {
-      logger.debug(`Generated ${policies.length} agent file tool policies`);
+    // If mcp servers or specific built-in tools are specified
+    // then we only inclue listed built-in tools and exclude all others
+    const hasMcp = !!parsedTools.mcpServers?.length;
+    const specificBuiltIns = parsedTools.tools
+      .filter((t) => !t.mcpServer)
+      .map((t) => t.toolName!);
+    if (specificBuiltIns.length || (hasMcp && !parsedTools.allBuiltIn)) {
+      const allowed: ToolPermissionPolicy[] = specificBuiltIns.map((tool) => ({
+        tool,
+        permission: "allow",
+      }));
+      policies.push(...allowed);
+      const specificBuiltInSet = new Set(specificBuiltIns);
+      const notMentioned = ALL_BUILT_IN_TOOLS.map((t) => t.name).filter(
+        (name) => !specificBuiltInSet.has(name),
+      );
+      const disallowed: ToolPermissionPolicy[] = notMentioned.map((tool) => ({
+        tool,
+        permission: "exclude",
+      }));
+      policies.push(...disallowed);
     }
 
-    if (parsedTools.allBuiltIn) {
-      policies.push({ tool: "*", permission: "allow" });
-      policies.push({ tool: "mcp:*", permission: "exclude" });
-    } else {
-      policies.push({ tool: "*", permission: "exclude" });
-    }
+    // Allow all other tools
+    policies.push({
+      tool: "*",
+      permission: "allow",
+    });
 
     return policies;
   }
@@ -165,6 +213,7 @@ export class ToolPermissionService
   initializeSync(
     runtimeOverrides?: InitializeToolServiceOverrides,
     agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
   ): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService");
 
@@ -178,22 +227,20 @@ export class ToolPermissionService
       this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
-    const agentFilePolicies = this.generateAgentFilePolicies(
-      agentFileServiceState,
-    );
     const modePolicies = this.generateModePolicies();
 
-    // For plan and auto modes, use ONLY mode policies (absolute override)
-    // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
-    if (agentFilePolicies) {
+    if (agentFileServiceState?.agentFile) {
       // Agent file policies take full precedence on init
-      allPolicies = agentFilePolicies;
+      allPolicies = this.generateAgentFilePolicies(
+        agentFileServiceState,
+        mcpServiceState,
+      );
     } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto"
     ) {
-      // Absolute override: ignore all user configuration
+      // For plan and auto modes, use ONLY mode policies (absolute override)
       allPolicies = modePolicies;
     } else {
       // Normal mode: combine mode policies with user configuration
@@ -210,7 +257,6 @@ export class ToolPermissionService
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-      agentFilePolicyCount: (agentFilePolicies ?? []).length,
     });
 
     (this as any).isInitialized = true;
@@ -224,11 +270,16 @@ export class ToolPermissionService
   async doInitialize(
     runtimeOverrides?: InitializeToolServiceOverrides,
     agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
   ): Promise<ToolPermissionServiceState> {
     await ensurePermissionsYamlExists();
 
     // Use the synchronous version after ensuring the file exists
-    return this.initializeSync(runtimeOverrides, agentFileServiceState);
+    return this.initializeSync(
+      runtimeOverrides,
+      agentFileServiceState,
+      mcpServiceState,
+    );
   }
 
   /**

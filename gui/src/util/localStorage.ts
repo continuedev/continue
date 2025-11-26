@@ -6,6 +6,7 @@ type LocalStorageTypes = {
   hasDismissedExploreDialog: boolean;
   onboardingStatus?: OnboardingStatus;
   hasDismissedOnboardingCard: boolean;
+  mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   vsCodeUriScheme: string;
   fontSize: number;
@@ -49,4 +50,11 @@ export function setLocalStorage<T extends keyof LocalStorageTypes>(
   value: LocalStorageTypes[T],
 ): void {
   localStorage.setItem(key, JSON.stringify(value));
+
+  // Dispatch custom event to notify current tab listeners
+  window.dispatchEvent(
+    new CustomEvent("localStorageChange", {
+      detail: { key, value },
+    }),
+  );
 }

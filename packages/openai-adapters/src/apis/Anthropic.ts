@@ -34,6 +34,7 @@ import {
 } from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import { safeParseArgs } from "../util/parseArgs.js";
+import { extractBase64FromDataUrl } from "../util/url.js";
 import {
   CACHING_STRATEGIES,
   CachingStrategyName,
@@ -194,14 +195,22 @@ export class AnthropicApi implements BaseLlmApi {
         if (part.type === "image_url") {
           const dataUrl = part.image_url.url;
           if (dataUrl?.startsWith("data:")) {
-            blocks.push({
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
-                data: dataUrl.split(",")[1],
-              },
-            });
+            const base64Data = extractBase64FromDataUrl(dataUrl);
+            if (base64Data) {
+              blocks.push({
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: getAnthropicMediaTypeFromDataUrl(dataUrl),
+                  data: base64Data,
+                },
+              });
+            } else {
+              console.warn(
+                "Anthropic: skipping image with invalid data URL format",
+                dataUrl,
+              );
+            }
           }
         } else {
           const text = part.type === "text" ? part.text : part.refusal;
@@ -322,7 +331,9 @@ export class AnthropicApi implements BaseLlmApi {
         prompt_tokens: usage?.input_tokens ?? 0,
         prompt_tokens_details: {
           cached_tokens: usage?.cache_read_input_tokens ?? 0,
-        },
+          cache_read_tokens: usage?.cache_read_input_tokens ?? 0,
+          cache_write_tokens: usage?.cache_creation_input_tokens ?? 0,
+        } as any,
       },
       choices: [
         {
@@ -364,9 +375,13 @@ export class AnthropicApi implements BaseLlmApi {
           const startEvent = rawEvent as RawMessageStartEvent;
           usage.prompt_tokens = startEvent.message.usage?.input_tokens ?? 0;
           usage.prompt_tokens_details = {
+            cache_write_tokens:
+              startEvent.message.usage?.cache_creation_input_tokens ?? 0,
+            cache_read_tokens:
+              startEvent.message.usage?.cache_read_input_tokens ?? 0,
             cached_tokens:
               startEvent.message.usage?.cache_read_input_tokens ?? 0,
-          };
+          } as any;
           break;
         case "message_delta":
           const deltaEvent = rawEvent as RawMessageDeltaEvent;
