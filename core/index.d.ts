@@ -687,6 +687,12 @@ export interface LLMOptions {
 
   sourceFile?: string;
   isFromAutoDetect?: boolean;
+
+  // Thinking output format options
+  // These allow configuring custom tags to extract thinking content from the response
+  // For example, vLLM can use <think>...</think> tags instead of the standard reasoning_content field
+  thinkingOpenTag?: string;
+  thinkingCloseTag?: string;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<

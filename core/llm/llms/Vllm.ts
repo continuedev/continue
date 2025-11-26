@@ -20,6 +20,28 @@ interface VllmRerankResponse {
   results: VllmRerankItem[];
 }
 
+/**
+ * vLLM provider for Continue.
+ *
+ * vLLM supports thinking/reasoning outputs in two ways:
+ * 1. Via the standard `reasoning_content` field in the response (default OpenAI format)
+ * 2. Via custom tags in the response content (configurable)
+ *
+ * For custom thinking tag formats, you can configure `thinkingOpenTag` and `thinkingCloseTag`
+ * in the model options. For example:
+ *
+ * ```yaml
+ * models:
+ *   - provider: vllm
+ *     model: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+ *     apiBase: http://localhost:8000
+ *     thinkingOpenTag: "<think>"
+ *     thinkingCloseTag: "</think>"
+ * ```
+ *
+ * See vLLM documentation for more details:
+ * https://docs.vllm.ai/en/latest/features/reasoning_outputs.html
+ */
 class Vllm extends OpenAI {
   static providerName = "vllm";
   constructor(options: LLMOptions) {
