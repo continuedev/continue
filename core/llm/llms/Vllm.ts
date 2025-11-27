@@ -1,5 +1,6 @@
 import { Chunk, LLMOptions } from "../../index.js";
 
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import OpenAI from "./OpenAI.js";
 
 // vLLM-specific rerank response types
@@ -44,6 +45,21 @@ interface VllmRerankResponse {
  */
 class Vllm extends OpenAI {
   static providerName = "vllm";
+
+  // Override useOpenAIAdapterFor to NOT include "streamChat".
+  // vLLM uses the reasoning_content field for thinking output (via vLLM's reasoning parser),
+  // which is not part of the standard OpenAI SDK types. By excluding "streamChat", we force
+  // the use of the parent class's _streamChat method which uses streamSse for direct SSE
+  // parsing. This ensures proper handling of reasoning_content in streaming responses,
+  // as streamSse parses JSON directly and preserves all fields including non-standard ones.
+  protected override useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "chat",
+    "embed",
+    "list",
+    "rerank",
+    "streamFim",
+  ];
+
   constructor(options: LLMOptions) {
     super(options);
 
