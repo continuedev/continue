@@ -1,317 +1,223 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { ChatMessage, LLMOptions } from "../index";
-import { BaseLLM } from "./index";
+import { ThinkingTagExtractor } from "./thinkingTagExtractor";
 
 /**
- * Mock LLM for testing thinking tag extraction during streaming
+ * Unit tests for ThinkingTagExtractor class.
+ * These tests verify the thinking tag extraction functionality that is used
+ * by vLLM provider for custom thinking output formats.
  */
-class MockStreamingLLM extends BaseLLM {
-  static providerName = "mock-streaming";
-
-  private mockChunks: ChatMessage[] = [];
-
-  setMockChunks(chunks: ChatMessage[]) {
-    this.mockChunks = chunks;
-  }
-
-  async *_streamComplete(
-    prompt: string,
-    signal: AbortSignal,
-    options: any,
-  ): AsyncGenerator<string> {
-    yield "not used in these tests";
-  }
-
-  async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: any,
-  ): AsyncGenerator<ChatMessage> {
-    for (const chunk of this.mockChunks) {
-      yield chunk;
-    }
-  }
-}
-
-describe("ThinkingTagExtractor Integration with BaseLLM", () => {
-  let llm: MockStreamingLLM;
+describe("ThinkingTagExtractor", () => {
+  let extractor: ThinkingTagExtractor;
 
   beforeEach(() => {
-    const options: LLMOptions = {
-      model: "mock-model",
-      thinkingOpenTag: "<think>",
-      thinkingCloseTag: "</think>",
-    };
-    llm = new MockStreamingLLM(options);
+    extractor = new ThinkingTagExtractor("<think>", "</think>");
   });
 
-  describe("streamChat with thinking tags", () => {
-    it("should extract thinking content from single chunk", async () => {
-      llm.setMockChunks([
-        {
-          role: "assistant",
-          content: "<think>my thinking</think>my response",
-        },
-      ]);
+  describe("basic functionality", () => {
+    it("should extract thinking content from single text", () => {
+      const result = extractor.process("<think>my thinking</think>my response");
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      expect(chunks).toHaveLength(2);
-      expect(chunks[0]).toEqual({
-        role: "thinking",
-        content: "my thinking",
-      });
-      expect(chunks[1]).toEqual({
-        role: "assistant",
-        content: "my response",
-      });
+      expect(result.thinking).toBe("my thinking");
+      expect(result.content).toBe("my response");
     });
 
-    it("should handle thinking split across multiple chunks", async () => {
-      llm.setMockChunks([
-        { role: "assistant", content: "<think>first " },
-        { role: "assistant", content: "part</think>answer " },
-        { role: "assistant", content: "here" },
-      ]);
+    it("should handle text without thinking tags", () => {
+      const result = extractor.process("just regular content");
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
+      expect(result.thinking).toBe("");
+      expect(result.content).toBe("just regular content");
+    });
 
-      // Should get: thinking chunks as they arrive, then answer chunks
-      const thinkingChunks = chunks.filter((c) => c.role === "thinking");
-      const assistantChunks = chunks.filter((c) => c.role === "assistant");
+    it("should handle only thinking content", () => {
+      const result = extractor.process("<think>only thinking</think>");
 
-      expect(thinkingChunks.length).toBeGreaterThan(0);
-      expect(thinkingChunks.map((c) => c.content).join("")).toBe("first part");
-      expect(assistantChunks.map((c) => c.content).join("")).toBe(
-        "answer here",
+      expect(result.thinking).toBe("only thinking");
+      expect(result.content).toBe("");
+    });
+
+    it("should handle multiple thinking blocks", () => {
+      const result = extractor.process(
+        "<think>first</think>text1<think>second</think>text2",
       );
-    });
 
-    it("should handle partial tags at chunk boundaries", async () => {
-      llm.setMockChunks([
-        { role: "assistant", content: "before<th" },
-        { role: "assistant", content: "ink>thinking</th" },
-        { role: "assistant", content: "ink>after" },
-      ]);
-
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      const thinkingChunks = chunks.filter((c) => c.role === "thinking");
-      const assistantChunks = chunks.filter((c) => c.role === "assistant");
-
-      expect(thinkingChunks.map((c) => c.content).join("")).toBe("thinking");
-      expect(assistantChunks.map((c) => c.content).join("")).toBe(
-        "beforeafter",
-      );
-    });
-
-    it("should flush remaining content at stream end", async () => {
-      llm.setMockChunks([
-        { role: "assistant", content: "<think>incomplete thinking" },
-      ]);
-
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      // Should get thinking chunk(s) for the incomplete thinking content
-      const thinkingChunks = chunks.filter((c) => c.role === "thinking");
-      expect(thinkingChunks.length).toBeGreaterThan(0);
-      expect(thinkingChunks.map((c) => c.content).join("")).toBe(
-        "incomplete thinking",
-      );
-    });
-
-    it("should handle multiple thinking blocks in stream", async () => {
-      llm.setMockChunks([
-        { role: "assistant", content: "<think>first</think>text1" },
-        { role: "assistant", content: "<think>second</think>text2" },
-      ]);
-
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      const thinkingChunks = chunks.filter((c) => c.role === "thinking");
-      const assistantChunks = chunks.filter((c) => c.role === "assistant");
-
-      expect(thinkingChunks.map((c) => c.content).join("")).toBe("firstsecond");
-      expect(assistantChunks.map((c) => c.content).join("")).toBe("text1text2");
-    });
-
-    it("should not emit empty chunks", async () => {
-      llm.setMockChunks([
-        { role: "assistant", content: "<think>only thinking</think>" },
-      ]);
-
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      // Should only have thinking chunk, no empty assistant chunk
-      expect(chunks.every((c) => c.content && c.content.length > 0)).toBe(true);
-      expect(chunks.filter((c) => c.role === "thinking")).toHaveLength(1);
-      expect(chunks.filter((c) => c.role === "assistant")).toHaveLength(0);
+      expect(result.thinking).toBe("firstsecond");
+      expect(result.content).toBe("text1text2");
     });
   });
 
-  describe("streamChat without thinking tags configured", () => {
-    beforeEach(() => {
-      // Create LLM without thinking tags
-      const options: LLMOptions = {
-        model: "mock-model",
-      };
-      llm = new MockStreamingLLM(options);
+  describe("streaming chunks", () => {
+    it("should handle thinking split across multiple chunks", () => {
+      const result1 = extractor.process("<think>first ");
+      const result2 = extractor.process("part</think>answer ");
+      const result3 = extractor.process("here");
+
+      // First chunk starts thinking
+      expect(result1.thinking).toBe("first ");
+      expect(result1.content).toBe("");
+
+      // Second chunk ends thinking and starts content
+      expect(result2.thinking).toBe("part");
+      expect(result2.content).toBe("answer ");
+
+      // Third chunk is all content
+      expect(result3.thinking).toBe("");
+      expect(result3.content).toBe("here");
     });
 
-    it("should pass through content unchanged when no tags configured", async () => {
-      llm.setMockChunks([
-        {
-          role: "assistant",
-          content: "<think>this should not be extracted</think>regular content",
-        },
-      ]);
+    it("should handle partial tags at chunk boundaries", () => {
+      const result1 = extractor.process("before<th");
+      const result2 = extractor.process("ink>thinking</th");
+      const result3 = extractor.process("ink>after");
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
+      // Partial tag should be buffered
+      expect(result1.thinking).toBe("");
+      expect(result1.content).toBe("before");
 
-      expect(chunks).toHaveLength(1);
-      expect(chunks[0]).toEqual({
-        role: "assistant",
-        content: "<think>this should not be extracted</think>regular content",
-      });
+      // Complete the opening tag, buffer closing tag
+      expect(result2.thinking).toBe("thinking");
+      expect(result2.content).toBe("");
+
+      // Complete the closing tag
+      expect(result3.thinking).toBe("");
+      expect(result3.content).toBe("after");
+    });
+
+    it("should handle multiple chunks with complete tags", () => {
+      const result1 = extractor.process("<think>first</think>text1");
+      const result2 = extractor.process("<think>second</think>text2");
+
+      expect(result1.thinking).toBe("first");
+      expect(result1.content).toBe("text1");
+
+      expect(result2.thinking).toBe("second");
+      expect(result2.content).toBe("text2");
     });
   });
 
-  describe("streamChat with native thinking role chunks", () => {
-    it("should handle native thinking role chunks alongside extraction", async () => {
-      // Simulate a provider that sends both native thinking role AND tagged content
-      llm.setMockChunks([
-        { role: "thinking", content: "native thinking" },
-        { role: "assistant", content: "<think>tagged thinking</think>answer" },
-      ]);
+  describe("flush behavior", () => {
+    it("should flush remaining content at stream end", () => {
+      // Process incomplete thinking
+      const result = extractor.process("<think>incomplete thinking");
+      expect(result.thinking).toBe("incomplete thinking");
+      expect(result.content).toBe("");
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
+      // Flush any remaining buffered content
+      const flushed = extractor.flush();
+      expect(flushed.thinking).toBe("");
+      expect(flushed.content).toBe("");
+    });
 
-      const thinkingChunks = chunks.filter((c) => c.role === "thinking");
-      const assistantChunks = chunks.filter((c) => c.role === "assistant");
+    it("should flush partial tag as content when outside thinking block", () => {
+      // Process content with partial opening tag
+      extractor.process("some text<th");
 
-      // Should preserve native thinking chunks and extract tagged thinking
-      expect(thinkingChunks.map((c) => c.content).join("")).toBe(
-        "native thinkingtagged thinking",
-      );
-      expect(assistantChunks.map((c) => c.content).join("")).toBe("answer");
+      // Flush should return the partial tag as content
+      const flushed = extractor.flush();
+      expect(flushed.thinking).toBe("");
+      expect(flushed.content).toBe("<th");
+    });
+
+    it("should flush partial tag as thinking when inside thinking block", () => {
+      // Start thinking block and leave partial closing tag
+      extractor.process("<think>thinking content</th");
+
+      // Flush should return the partial tag as thinking
+      const flushed = extractor.flush();
+      expect(flushed.thinking).toBe("</th");
+      expect(flushed.content).toBe("");
+    });
+
+    it("should reset state after flush", () => {
+      extractor.process("<think>first");
+      extractor.flush();
+
+      // After flush, extractor should be reset
+      const result = extractor.process("new content");
+      expect(result.thinking).toBe("");
+      expect(result.content).toBe("new content");
     });
   });
 
   describe("custom tag formats", () => {
-    it("should work with custom reasoning tags", async () => {
-      const options: LLMOptions = {
-        model: "mock-model",
-        thinkingOpenTag: "<reasoning>",
-        thinkingCloseTag: "</reasoning>",
-      };
-      llm = new MockStreamingLLM(options);
+    it("should work with custom reasoning tags", () => {
+      const customExtractor = new ThinkingTagExtractor(
+        "<reasoning>",
+        "</reasoning>",
+      );
 
-      llm.setMockChunks([
-        {
-          role: "assistant",
-          content: "<reasoning>my reasoning</reasoning>my answer",
-        },
-      ]);
+      const result = customExtractor.process(
+        "<reasoning>my reasoning</reasoning>my answer",
+      );
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
-
-      expect(chunks).toHaveLength(2);
-      expect(chunks[0]).toEqual({
-        role: "thinking",
-        content: "my reasoning",
-      });
-      expect(chunks[1]).toEqual({
-        role: "assistant",
-        content: "my answer",
-      });
+      expect(result.thinking).toBe("my reasoning");
+      expect(result.content).toBe("my answer");
     });
 
-    it("should work with bracket-style tags", async () => {
-      const options: LLMOptions = {
-        model: "mock-model",
-        thinkingOpenTag: "[THINK]",
-        thinkingCloseTag: "[/THINK]",
-      };
-      llm = new MockStreamingLLM(options);
+    it("should work with bracket-style tags", () => {
+      const customExtractor = new ThinkingTagExtractor("[THINK]", "[/THINK]");
 
-      llm.setMockChunks([
-        {
-          role: "assistant",
-          content: "[THINK]internal thought[/THINK]response",
-        },
-      ]);
+      const result = customExtractor.process(
+        "[THINK]internal thought[/THINK]response",
+      );
 
-      const chunks: ChatMessage[] = [];
-      for await (const chunk of llm.streamChat(
-        [{ role: "user", content: "test" }],
-        new AbortController().signal,
-      )) {
-        chunks.push(chunk);
-      }
+      expect(result.thinking).toBe("internal thought");
+      expect(result.content).toBe("response");
+    });
 
-      expect(chunks).toHaveLength(2);
-      expect(chunks[0]).toEqual({
-        role: "thinking",
-        content: "internal thought",
-      });
-      expect(chunks[1]).toEqual({
-        role: "assistant",
-        content: "response",
-      });
+    it("should work with longer custom tags", () => {
+      const customExtractor = new ThinkingTagExtractor(
+        "<|thinking|>",
+        "<|/thinking|>",
+      );
+
+      const result = customExtractor.process(
+        "<|thinking|>deep thought<|/thinking|>answer",
+      );
+
+      expect(result.thinking).toBe("deep thought");
+      expect(result.content).toBe("answer");
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should handle empty string", () => {
+      const result = extractor.process("");
+
+      expect(result.thinking).toBe("");
+      expect(result.content).toBe("");
+    });
+
+    it("should handle nested-looking but not actually nested tags", () => {
+      // Not real nesting since the first </think> closes
+      const result = extractor.process("<think>outer<think>inner</think>after");
+
+      expect(result.thinking).toBe("outer<think>inner");
+      expect(result.content).toBe("after");
+    });
+
+    it("should handle content before thinking", () => {
+      const result = extractor.process("intro<think>thinking</think>outro");
+
+      expect(result.thinking).toBe("thinking");
+      expect(result.content).toBe("introoutro");
+    });
+
+    it("should handle special characters in content", () => {
+      const result = extractor.process(
+        "<think>a < b && c > d</think>result: x < y",
+      );
+
+      expect(result.thinking).toBe("a < b && c > d");
+      expect(result.content).toBe("result: x < y");
+    });
+
+    it("should handle newlines in thinking and content", () => {
+      const result = extractor.process(
+        "<think>line1\nline2</think>response\nmore",
+      );
+
+      expect(result.thinking).toBe("line1\nline2");
+      expect(result.content).toBe("response\nmore");
     });
   });
 });
