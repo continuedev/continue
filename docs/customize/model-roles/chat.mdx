@@ -19,20 +19,20 @@ In Continue, these models are used for normal [Chat](../../ide-extensions/chat/q
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
 
-### Claude Opus 4.1 and Claude Sonnet 4 from Anthropic
+### Claude Opus 4.5 and Claude Sonnet 4 from Anthropic
 
-Our current top recommendations are Claude Opus 4.1 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
+Our current top recommendations are Claude Opus 4.5 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
 
 <Tabs>
   <Tab title="Hub">
-  View the [Claude Opus 4.1 model block](https://hub.continue.dev/anthropic/claude-4-1-opus) or [Claude Sonnet 4 model block](https://hub.continue.dev/anthropic/claude-4-sonnet) on the hub.
+  View the [Claude Opus 4.5 model block](https://hub.continue.dev/anthropic/claude-4-5-opus) or [Claude Sonnet 4 model block](https://hub.continue.dev/anthropic/claude-4-sonnet) on the hub.
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude Opus 4.1
+    - name: Claude Opus 4.5
       provider: anthropic
-      model: claude-4-1-opus
+      model: claude-opus-4-5
       apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </Tab>
@@ -114,20 +114,20 @@ If you prefer to use a model from [xAI](../model-providers/more/xAI), then we re
   </Tab>
 </Tabs>
 
-### Gemini 2.0 Flash from Google
+### Gemini 3 Pro from Google
 
-If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 2.0 Flash.
+If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 3 Pro.
 
 <Tabs>
     <Tab title="Hub">
-    Add the [Gemini 2.0 Flash block](https://hub.continue.dev/google/gemini-2.0-flash) from the hub
+    Add the [Gemini 3 Pro block](https://hub.continue.dev/google/gemini-3-pro-preview) from the hub
     </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Gemini 2.0 Flash
+    - name: Gemini 3 Pro
       provider: gemini
-      model: gemini-2.0-flash
+      model: gemini-3-pro-preview
       apiKey: <YOUR_GEMINI_API_KEY>
   ```
   </Tab>

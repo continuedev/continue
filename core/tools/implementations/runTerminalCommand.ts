@@ -284,8 +284,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
       // Handle case where no workspace is available
       let cwd: string;
-      if (workspaceDirs.length > 0) {
-        cwd = fileURLToPath(workspaceDirs[0]);
+      const fileWorkspaceDir = workspaceDirs.find((dir) =>
+        dir.startsWith("file:/"),
+      );
+      if (fileWorkspaceDir) {
+        cwd = fileURLToPath(fileWorkspaceDir);
       } else {
         // Default to user's home directory with fallbacks
         try {

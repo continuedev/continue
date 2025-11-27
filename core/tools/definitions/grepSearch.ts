@@ -13,7 +13,7 @@ export const grepSearchTool: Tool = {
   function: {
     name: BuiltInToolNames.GrepSearch,
     description:
-      "Performs a regex search over the repository using ripgrep. Will not include results for many build, cache, secrets dirs/files. Output may be truncated, so use targeted queries",
+      "Performs a regular expression (regex) search over the repository using ripgrep. Will not include results for many build, cache, secrets dirs/files. Output may be truncated, so use targeted queries",
     parameters: {
       type: "object",
       required: ["query"],
@@ -21,7 +21,7 @@ export const grepSearchTool: Tool = {
         query: {
           type: "string",
           description:
-            "The search query to use. Must be the exact string to be searched or a valid ripgrep expression. Use regex with alternation (e.g., 'word1|word2|word3) or character classes to find multiple potential words in a single search.",
+            "The regex pattern to search for within file contents. Use regex with alternation (e.g., 'word1|word2|word3') or character classes to find multiple potential words in a single search.",
         },
       },
     },

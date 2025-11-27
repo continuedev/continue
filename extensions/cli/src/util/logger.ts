@@ -44,6 +44,19 @@ function createReplacer() {
       seen.add(value);
     }
 
+    // Handle Error objects explicitly - extract useful properties
+    if (value instanceof Error) {
+      const errorObj: any = {
+        name: value.name,
+        message: value.message,
+        stack: value.stack,
+      };
+      if (value.cause) {
+        errorObj.cause = value.cause;
+      }
+      return errorObj;
+    }
+
     // Handle functions
     if (typeof value === "function") {
       return "[Function]";

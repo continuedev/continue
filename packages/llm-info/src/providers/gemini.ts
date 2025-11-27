@@ -4,10 +4,21 @@ import { AllMediaTypes, ModelProvider } from "../types.js";
 export const Gemini: ModelProvider = {
   models: [
     {
+      model: "gemini-3-pro-preview",
+      displayName: "Gemini 3 Pro Preview",
+      description:
+        "Google's flagship frontier model with high precision multimodal capabilities.",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-3-pro-preview/i,
+      recommendedFor: ["chat"],
+    },
+    {
       model: "gemini-2.5-pro-preview-05-06",
       displayName: "Gemini 2.5 Pro Preview",
       description:
-        "Google's most advanced model with strong reasoning, multimodal capabilities, and advanced coding skills",
+        "Google's advanced model with strong reasoning, multimodal capabilities, and advanced coding skills",
       contextLength: 1048576,
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,
