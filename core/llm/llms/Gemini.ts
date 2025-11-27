@@ -13,6 +13,7 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import {
   GeminiChatContent,
   GeminiChatContentPart,
@@ -40,6 +41,15 @@ class Gemini extends BaseLLM {
     maxStopWords: 5,
     maxEmbeddingBatchSize: 100,
   };
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "chat",
+    "embed",
+    "list",
+    "rerank",
+    "streamChat",
+    "streamFim",
+  ];
 
   // Function to convert completion options to Gemini format
   public convertArgs(options: CompletionOptions): GeminiGenerationConfig {
