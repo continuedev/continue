@@ -20,6 +20,7 @@ import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { post } from "./util/apiClient.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -31,6 +32,9 @@ let showExitMessage: boolean;
 let exitMessageCallback: (() => void) | null;
 let lastCtrlCTime: number;
 
+// Agent ID for serve mode - set when serve command is invoked with --id
+let agentId: string | undefined;
+
 // Initialize state immediately to avoid temporal dead zone issues with exported functions
 (function initializeTUIState() {
   tuiUnmount = null;
@@ -38,6 +42,11 @@ let lastCtrlCTime: number;
   exitMessageCallback = null;
   lastCtrlCTime = 0;
 })();
+
+// Set the agent ID for error reporting (called by serve command)
+export function setAgentId(id: string | undefined) {
+  agentId = id;
+}
 
 // Register TUI cleanup function for graceful shutdown
 export function setTUIUnmount(unmount: () => void) {
@@ -89,6 +98,27 @@ export function shouldShowExitMessage(): boolean {
   return showExitMessage;
 }
 
+// Helper to report unhandled errors to the API when running in serve mode
+async function reportUnhandledErrorToApi(error: Error): Promise<void> {
+  if (!agentId) {
+    // Not running in serve mode with an agent ID, skip API reporting
+    return;
+  }
+
+  try {
+    await post(`agents/${agentId}/status`, {
+      status: "FAILED",
+      errorMessage: `Unhandled error: ${error.message}`,
+    });
+    logger.debug(`Reported unhandled error to API for agent ${agentId}`);
+  } catch (apiError) {
+    // If API reporting fails, just log it - don't crash
+    logger.debug(
+      `Failed to report error to API: ${apiError instanceof Error ? apiError.message : String(apiError)}`,
+    );
+  }
+}
+
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
   // Extract useful information from the reason
@@ -101,12 +131,20 @@ process.on("unhandledRejection", (reason, promise) => {
   // If reason is an Error, use it directly for better stack traces
   if (reason instanceof Error) {
     logger.error("Unhandled Promise Rejection", reason, errorDetails);
+    // Report to API if running in serve mode
+    reportUnhandledErrorToApi(reason).catch(() => {
+      // Silently fail if API reporting errors - already logged in helper
+    });
   } else {
     // Convert non-Error reasons to Error for consistent handling
     const error = new Error(`Unhandled rejection: ${String(reason)}`);
     logger.error("Unhandled Promise Rejection", error, {
       ...errorDetails,
       originalReason: String(reason),
+    });
+    // Report to API if running in serve mode
+    reportUnhandledErrorToApi(error).catch(() => {
+      // Silently fail if API reporting errors - already logged in helper
     });
   }
 
@@ -116,6 +154,10 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on("uncaughtException", (error) => {
   logger.error("Uncaught Exception:", error);
+  // Report to API if running in serve mode
+  reportUnhandledErrorToApi(error).catch(() => {
+    // Silently fail if API reporting errors - already logged in helper
+  });
   // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process, just log the error
 });

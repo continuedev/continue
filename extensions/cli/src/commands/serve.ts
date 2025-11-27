@@ -9,6 +9,7 @@ import { prependPrompt } from "src/util/promptProcessor.js";
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { setAgentId } from "../index.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,
@@ -49,6 +50,9 @@ interface ServeOptions extends ExtendedCommandOptions {
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   await posthogService.capture("sessionStart", {});
+
+  // Set agent ID for error reporting if provided
+  setAgentId(options.id);
 
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;

@@ -150,16 +150,6 @@ export function prepareQueryForRipgrep(query: string): {
   query: string;
   warning?: string;
 } {
-  // Check if it looks like a literal search that should be escaped
-  if (looksLikeLiteralSearch(query)) {
-    return {
-      query: escapeLiteralForRegex(query),
-      warning:
-        "Query contained special regex characters and was escaped for literal text search",
-    };
-  }
-
-  // Otherwise validate and sanitize as regex
   const validation = validateAndSanitizeRegex(query);
 
   return {
