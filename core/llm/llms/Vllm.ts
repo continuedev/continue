@@ -1,6 +1,12 @@
-import { Chunk, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  Chunk,
+  CompletionOptions,
+  LLMOptions,
+} from "../../index.js";
 
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
+import { ThinkingTagExtractor } from "../thinkingTagExtractor.js";
 import OpenAI from "./OpenAI.js";
 
 // vLLM-specific rerank response types
@@ -19,6 +25,24 @@ interface VllmRerankResponse {
     total_tokens: number;
   };
   results: VllmRerankItem[];
+}
+
+/**
+ * vLLM-specific options for thinking output extraction.
+ * These options allow configuring custom tags to extract thinking content from the response.
+ */
+export interface VllmOptions extends LLMOptions {
+  /**
+   * Custom opening tag for extracting thinking/reasoning content from streamed responses.
+   * Used with models that output thinking content wrapped in custom tags (e.g., `<think>`, `<reasoning>`).
+   * Must be used together with `thinkingCloseTag`.
+   */
+  thinkingOpenTag?: string;
+  /**
+   * Custom closing tag for extracting thinking/reasoning content from streamed responses.
+   * Must be used together with `thinkingOpenTag`.
+   */
+  thinkingCloseTag?: string;
 }
 
 /**
@@ -46,6 +70,10 @@ interface VllmRerankResponse {
 class Vllm extends OpenAI {
   static providerName = "vllm";
 
+  // vLLM-specific options for thinking tag extraction
+  private _thinkingOpenTag?: string;
+  private _thinkingCloseTag?: string;
+
   // Override useOpenAIAdapterFor to NOT include "streamChat".
   // vLLM uses the reasoning_content field for thinking output (via vLLM's reasoning parser),
   // which is not part of the standard OpenAI SDK types. By excluding "streamChat", we force
@@ -60,11 +88,84 @@ class Vllm extends OpenAI {
     "streamFim",
   ];
 
-  constructor(options: LLMOptions) {
+  constructor(options: VllmOptions) {
     super(options);
+
+    // Validate that thinking tags are provided together
+    if (
+      (options.thinkingOpenTag && !options.thinkingCloseTag) ||
+      (!options.thinkingOpenTag && options.thinkingCloseTag)
+    ) {
+      throw new Error(
+        "vLLM: Both thinkingOpenTag and thinkingCloseTag must be provided together",
+      );
+    }
+
+    // Store vLLM-specific options
+    this._thinkingOpenTag = options.thinkingOpenTag;
+    this._thinkingCloseTag = options.thinkingCloseTag;
 
     if (options.isFromAutoDetect) {
       this._setupCompletionOptions();
+    }
+  }
+
+  /**
+   * Override _streamChat to handle thinking tag extraction if configured.
+   * This allows vLLM to support models that use custom tags (like <think>...</think>)
+   * instead of the standard reasoning_content field.
+   */
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    // If no custom thinking tags configured, use parent implementation
+    if (!this._thinkingOpenTag || !this._thinkingCloseTag) {
+      for await (const chunk of super._streamChat(messages, signal, options)) {
+        yield chunk;
+      }
+      return;
+    }
+
+    // Use thinking tag extractor for custom tag formats
+    const extractor = new ThinkingTagExtractor(
+      this._thinkingOpenTag,
+      this._thinkingCloseTag,
+    );
+
+    for await (const chunk of super._streamChat(messages, signal, options)) {
+      if (chunk.role === "assistant" && typeof chunk.content === "string") {
+        const extracted = extractor.process(chunk.content);
+
+        // Yield thinking content first
+        if (extracted.thinking) {
+          yield {
+            role: "thinking",
+            content: extracted.thinking,
+          };
+        }
+
+        // Yield regular content if present
+        if (extracted.content) {
+          yield {
+            ...chunk,
+            content: extracted.content,
+          };
+        }
+      } else {
+        // Pass through non-assistant chunks unchanged
+        yield chunk;
+      }
+    }
+
+    // Flush any remaining content from the extractor
+    const flushed = extractor.flush();
+    if (flushed.thinking) {
+      yield { role: "thinking", content: flushed.thinking };
+    }
+    if (flushed.content) {
+      yield { role: "assistant", content: flushed.content };
     }
   }
 

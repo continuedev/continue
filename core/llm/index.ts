@@ -84,134 +84,6 @@ export function isModelInstaller(provider: any): provider is ModelInstaller {
 
 type InteractionStatus = "in_progress" | "success" | "error" | "cancelled";
 
-/**
- * Helper class to extract thinking content from custom tags during streaming.
- * This is used for providers like vLLM that support custom thinking output formats.
- */
-export class ThinkingTagExtractor {
-  private buffer: string = "";
-  private inThinkingBlock: boolean = false;
-  private readonly openTag: string;
-  private readonly closeTag: string;
-
-  constructor(openTag: string, closeTag: string) {
-    this.openTag = openTag;
-    this.closeTag = closeTag;
-  }
-
-  /**
-   * Process a chunk of text and extract thinking/regular content.
-   * Returns an object with the thinking content and regular content that should be yielded.
-   */
-  process(text: string): {
-    thinking: string;
-    content: string;
-  } {
-    this.buffer += text;
-
-    let thinking = "";
-    let content = "";
-
-    while (this.buffer.length > 0) {
-      if (this.inThinkingBlock) {
-        // Look for closing tag
-        const closeIndex = this.buffer.indexOf(this.closeTag);
-        if (closeIndex !== -1) {
-          // Found closing tag - extract thinking content up to it
-          thinking += this.buffer.substring(0, closeIndex);
-          this.buffer = this.buffer.substring(
-            closeIndex + this.closeTag.length,
-          );
-          this.inThinkingBlock = false;
-        } else {
-          // No closing tag yet - check if we might have a partial closing tag at the end
-          const partialMatchLength = this.getPartialMatchLength(
-            this.buffer,
-            this.closeTag,
-          );
-          if (partialMatchLength > 0) {
-            // Keep the potential partial match in the buffer
-            thinking += this.buffer.substring(
-              0,
-              this.buffer.length - partialMatchLength,
-            );
-            this.buffer = this.buffer.substring(
-              this.buffer.length - partialMatchLength,
-            );
-          } else {
-            // No partial match - all content is thinking
-            thinking += this.buffer;
-            this.buffer = "";
-          }
-          break;
-        }
-      } else {
-        // Not in thinking block - look for opening tag
-        const openIndex = this.buffer.indexOf(this.openTag);
-        if (openIndex !== -1) {
-          // Found opening tag
-          content += this.buffer.substring(0, openIndex);
-          this.buffer = this.buffer.substring(openIndex + this.openTag.length);
-          this.inThinkingBlock = true;
-        } else {
-          // No opening tag - check if we might have a partial opening tag at the end
-          const partialMatchLength = this.getPartialMatchLength(
-            this.buffer,
-            this.openTag,
-          );
-          if (partialMatchLength > 0) {
-            // Keep the potential partial match in the buffer
-            content += this.buffer.substring(
-              0,
-              this.buffer.length - partialMatchLength,
-            );
-            this.buffer = this.buffer.substring(
-              this.buffer.length - partialMatchLength,
-            );
-          } else {
-            // No partial match - all content is regular content
-            content += this.buffer;
-            this.buffer = "";
-          }
-          break;
-        }
-      }
-    }
-
-    return { thinking, content };
-  }
-
-  /**
-   * Flush any remaining content in the buffer.
-   * Call this when the stream ends.
-   */
-  flush(): {
-    thinking: string;
-    content: string;
-  } {
-    const result = {
-      thinking: this.inThinkingBlock ? this.buffer : "",
-      content: this.inThinkingBlock ? "" : this.buffer,
-    };
-    this.buffer = "";
-    this.inThinkingBlock = false;
-    return result;
-  }
-
-  /**
-   * Check if the end of the text could be the start of the tag.
-   * Returns the length of the partial match, or 0 if no match.
-   */
-  private getPartialMatchLength(text: string, tag: string): number {
-    for (let i = 1; i < tag.length && i <= text.length; i++) {
-      if (text.slice(-i) === tag.slice(0, i)) {
-        return i;
-      }
-    }
-    return 0;
-  }
-}
-
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
@@ -324,10 +196,6 @@ export abstract class BaseLLM implements ILLM {
 
   isFromAutoDetect?: boolean;
 
-  // Thinking output format options
-  thinkingOpenTag?: string;
-  thinkingCloseTag?: string;
-
   lastRequestId: string | undefined;
 
   private _llmOptions: LLMOptions;
@@ -435,10 +303,6 @@ export abstract class BaseLLM implements ILLM {
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
-
-    // Thinking output format options
-    this.thinkingOpenTag = options.thinkingOpenTag;
-    this.thinkingCloseTag = options.thinkingCloseTag;
   }
 
   get contextLength() {
@@ -1132,54 +996,21 @@ export abstract class BaseLLM implements ILLM {
     return completionOptions;
   }
 
-  // Update the processChatChunk method:
   private processChatChunk(
     chunk: ChatMessage,
     interaction: ILLMInteractionLog | undefined,
-    thinkingExtractor?: ThinkingTagExtractor,
   ): {
     completion: string[];
     thinking: string[];
     usage: Usage | null;
     chunk: ChatMessage;
-    thinkingChunk?: ChatMessage;
   } {
     const completion: string[] = [];
     const thinking: string[] = [];
     let usage: Usage | null = null;
-    let outputChunk = chunk;
-    let thinkingChunk: ChatMessage | undefined;
 
     if (chunk.role === "assistant") {
-      // If we have a thinking extractor, process the content through it
-      if (thinkingExtractor && typeof chunk.content === "string") {
-        const extracted = thinkingExtractor.process(chunk.content);
-
-        if (extracted.thinking) {
-          thinking.push(extracted.thinking);
-          thinkingChunk = {
-            role: "thinking",
-            content: extracted.thinking,
-          };
-        }
-
-        if (extracted.content) {
-          const processedChunk: ChatMessage = {
-            ...chunk,
-            content: extracted.content,
-          };
-          completion.push(this._formatChatMessage(processedChunk));
-          outputChunk = processedChunk;
-        } else {
-          // No regular content in this chunk, just thinking
-          outputChunk = {
-            ...chunk,
-            content: "",
-          };
-        }
-      } else {
-        completion.push(this._formatChatMessage(chunk));
-      }
+      completion.push(this._formatChatMessage(chunk));
     } else if (chunk.role === "thinking" && typeof chunk.content === "string") {
       thinking.push(chunk.content);
     }
@@ -1197,8 +1028,7 @@ export abstract class BaseLLM implements ILLM {
       completion,
       thinking,
       usage,
-      chunk: outputChunk,
-      thinkingChunk,
+      chunk,
     };
   }
 
@@ -1332,12 +1162,6 @@ export abstract class BaseLLM implements ILLM {
     let usage: Usage | undefined = undefined;
     let citations: null | string[] = null;
 
-    // Create thinking tag extractor if custom tags are configured
-    const thinkingExtractor =
-      this.thinkingOpenTag && this.thinkingCloseTag
-        ? new ThinkingTagExtractor(this.thinkingOpenTag, this.thinkingCloseTag)
-        : undefined;
-
     try {
       if (this.templateMessages) {
         for await (const chunk of this._streamComplete(
@@ -1394,46 +1218,13 @@ export abstract class BaseLLM implements ILLM {
           }
 
           for await (const chunk of iterable) {
-            const result = this.processChatChunk(
-              chunk,
-              interaction,
-              thinkingExtractor,
-            );
+            const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);
             thinking.push(...result.thinking);
             if (result.usage !== null) {
               usage = result.usage;
             }
-            // Yield thinking chunk first if present
-            if (result.thinkingChunk) {
-              yield result.thinkingChunk;
-            }
-            // Only yield the main chunk if it has content or tool calls
-            const hasToolCalls =
-              result.chunk.role === "assistant" &&
-              result.chunk.toolCalls?.length;
-            const hasContent =
-              result.chunk.content &&
-              (typeof result.chunk.content === "string"
-                ? result.chunk.content.length > 0
-                : result.chunk.content.length > 0);
-
-            if (hasToolCalls || hasContent) {
-              yield result.chunk;
-            }
-          }
-
-          // Flush any remaining content from the extractor
-          if (thinkingExtractor) {
-            const flushed = thinkingExtractor.flush();
-            if (flushed.thinking) {
-              thinking.push(flushed.thinking);
-              yield { role: "thinking", content: flushed.thinking };
-            }
-            if (flushed.content) {
-              completion.push(flushed.content);
-              yield { role: "assistant", content: flushed.content };
-            }
+            yield result.chunk;
           }
         } else {
           if (logEnabled) {
@@ -1453,46 +1244,13 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            const result = this.processChatChunk(
-              chunk,
-              interaction,
-              thinkingExtractor,
-            );
+            const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);
             thinking.push(...result.thinking);
             if (result.usage !== null) {
               usage = result.usage;
             }
-            // Yield thinking chunk first if present
-            if (result.thinkingChunk) {
-              yield result.thinkingChunk;
-            }
-            // Only yield the main chunk if it has content or tool calls
-            const hasToolCalls =
-              result.chunk.role === "assistant" &&
-              result.chunk.toolCalls?.length;
-            const hasContent =
-              result.chunk.content &&
-              (typeof result.chunk.content === "string"
-                ? result.chunk.content.length > 0
-                : result.chunk.content.length > 0);
-
-            if (hasToolCalls || hasContent) {
-              yield result.chunk;
-            }
-          }
-
-          // Flush any remaining content from the extractor
-          if (thinkingExtractor) {
-            const flushed = thinkingExtractor.flush();
-            if (flushed.thinking) {
-              thinking.push(flushed.thinking);
-              yield { role: "thinking", content: flushed.thinking };
-            }
-            if (flushed.content) {
-              completion.push(flushed.content);
-              yield { role: "assistant", content: flushed.content };
-            }
+            yield result.chunk;
           }
         }
       }
