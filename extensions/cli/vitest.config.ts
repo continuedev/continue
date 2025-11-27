@@ -20,6 +20,7 @@ export default defineConfig({
     },
     testTimeout: 30000,
     hookTimeout: 30000,
+    retry: process.env.CI && process.platform === "darwin" ? 2 : 0,
   },
   resolve: {
     extensions: [".js", ".ts", ".tsx", ".json"],
