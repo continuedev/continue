@@ -27,6 +27,8 @@ Interaction with other input helpers
   - "/" slash command UI is disabled.
 - When in slash command mode (input starts with /):
   - "@" file search suggestions are disabled.
+  - Enter submits the highlighted slash command directly (except /title, which requires Tab to select first).
+  - Tab selects the highlighted command without submitting.
 
 Submission behavior
 
