@@ -1,0 +1,99 @@
+name: GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g., 1.0.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
+      - name: Install CLI dependencies
+        working-directory: extensions/cli
+        run: npm ci
+
+      - name: Build CLI
+        working-directory: extensions/cli
+        run: npm run build
+
+      - name: Update version in package.json
+        working-directory: extensions/cli
+        run: npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Create release artifacts
+        working-directory: extensions/cli
+        run: |
+          # Create tarball
+          tar -czf sw-continue-cli-${{ inputs.version }}.tar.gz dist/ package.json
+
+          # Create zip
+          zip -r sw-continue-cli-${{ inputs.version }}.zip dist/ package.json
+
+          # List artifacts
+          ls -lh sw-continue-cli-*
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create git tag
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ inputs.version }}"
+          git push origin "v${{ inputs.version }}"
+
+          # Create GitHub release with artifacts
+          PRERELEASE_FLAG=""
+          if [[ "${{ inputs.prerelease }}" == "true" ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          gh release create "v${{ inputs.version }}" \
+            extensions/cli/sw-continue-cli-${{ inputs.version }}.tar.gz \
+            extensions/cli/sw-continue-cli-${{ inputs.version }}.zip \
+            --title "sw-continue CLI v${{ inputs.version }}" \
+            --notes "Download the CLI binary for your platform below. Extract and run \`./dist/cn.js\` or add to your PATH." \
+            $PRERELEASE_FLAG
+
+      - name: Output download URLs
+        run: |
+          echo "Release created successfully!"
+          echo ""
+          echo "Download URLs:"
+          echo "Tarball: https://github.com/${{ github.repository }}/releases/download/v${{ inputs.version }}/sw-continue-cli-${{ inputs.version }}.tar.gz"
+          echo "Zip: https://github.com/${{ github.repository }}/releases/download/v${{ inputs.version }}/sw-continue-cli-${{ inputs.version }}.zip"
