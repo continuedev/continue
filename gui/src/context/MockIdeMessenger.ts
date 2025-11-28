@@ -33,25 +33,18 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     contents: "Current file contents",
     path: "file:///Users/user/workspace1/current_file.py",
   },
-  "controlPlane/getFreeTrialStatus": {
-    autocompleteLimit: 1000,
+  "controlPlane/getCreditStatus": {
     optedInToFreeTrial: false,
-    chatLimit: 1000,
-    autocompleteCount: 0,
-    chatCount: 0,
+    creditBalance: 0,
+    hasCredits: false,
+    hasPurchasedCredits: false,
   },
   getWorkspaceDirs: [
     "file:///Users/user/workspace1",
     "file:///Users/user/workspace2",
   ],
-  "history/list": [
-    {
-      title: "Session 1",
-      sessionId: "session-1",
-      dateCreated: new Date().toString(),
-      workspaceDirectory: "/tmp",
-    },
-  ],
+  "history/list": [],
+  "docs/getIndexedPages": [],
   "history/save": undefined,
   getControlPlaneSessionInfo: {
     AUTH_TYPE: AuthType.WorkOsStaging,
@@ -62,14 +55,37 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     },
   },
   "config/getSerializedProfileInfo": {
-    organizations: [],
-    profileId: "test-profile",
+    organizations: [
+      {
+        id: "personal",
+        profiles: [
+          {
+            title: "Local Agent",
+            id: "local",
+            errors: [],
+            profileType: "local",
+            uri: "",
+            iconUrl: "",
+            fullSlug: {
+              ownerSlug: "",
+              packageSlug: "",
+              versionSlug: "",
+            },
+          },
+        ],
+        slug: "",
+        selectedProfileId: "local",
+        name: "Personal",
+        iconUrl: "",
+      },
+    ],
+    profileId: "local",
     result: {
       config: undefined,
       errors: [],
       configLoadInterrupted: false,
     },
-    selectedOrgId: "local",
+    selectedOrgId: "personal",
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
@@ -83,6 +99,10 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
         description: "Mock tool result",
       },
     ],
+  },
+  "context/getSymbolsForFiles": {},
+  "tools/preprocessArgs": {
+    preprocessedArgs: undefined,
   },
   "llm/compileChat": {
     compiledChatMessages: [],
@@ -104,6 +124,16 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     },
   ],
+  listBackgroundAgents: { agents: [], totalCount: 0 },
+};
+
+const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {
+  "tools/evaluatePolicy": async (data) => {
+    return {
+      policy: data.basePolicy,
+      displayValue: undefined,
+    };
+  },
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
@@ -157,7 +187,9 @@ export class MockIdeMessenger implements IIdeMessenger {
   }
 
   responses: MockResponses = { ...DEFAULT_MOCK_CORE_RESPONSES };
-  responseHandlers: MockResponseHandlers = {};
+  responseHandlers: MockResponseHandlers = {
+    ...DEFAULT_MOCK_CORE_RESPONSE_HANDLERS,
+  };
   chatResponse: ChatMessage[] = DEFAULT_CHAT_RESPONSE;
   chatStreamDelay: number = 0;
   setChatResponseText(text: string): void {
@@ -245,7 +277,7 @@ export class MockIdeMessenger implements IIdeMessenger {
 
   resetMocks(): void {
     this.responses = { ...DEFAULT_MOCK_CORE_RESPONSES };
-    this.responseHandlers = {};
+    this.responseHandlers = { ...DEFAULT_MOCK_CORE_RESPONSE_HANDLERS };
     this.chatResponse = DEFAULT_CHAT_RESPONSE;
     this.chatStreamDelay = 0;
   }

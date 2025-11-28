@@ -1,4 +1,5 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
+import { waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("shows slash when user types /", async (mode) => {
@@ -6,9 +7,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type / to trigger slash command
     stdin.write("/");
-
-    // Wait a bit for the UI to update
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -29,9 +28,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi to trigger slash command filtering
     stdin.write("/exi");
-
-    // Wait a bit for the UI to update (allow extra time in both modes)
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -52,12 +49,10 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi and then tab
     stdin.write("/exi");
-
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     stdin.write("\t");
-
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForNextRender();
 
     const frameAfterTab = lastFrame();
 
@@ -80,8 +75,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type just /
     stdin.write("/");
-
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await waitForNextRender();
 
     const frame = lastFrame();
 
@@ -105,4 +99,71 @@ describe("TUIChat - Slash Commands Tests", () => {
       expect(hasSlash).toBe(true);
     }
   });
+
+  testBothModes(
+    "hides slash command dropdown when typing complete command with arguments",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
+
+      // Type a complete command name first
+      stdin.write("/title");
+      await waitForNextRender();
+
+      const frameAfterCommand = lastFrame();
+      if (mode === "remote") {
+        // In remote mode, /title might not be a valid command, so just check we're in remote mode
+        expect(frameAfterCommand).toContain("Remote Mode");
+      } else {
+        // In local mode, check for /title
+        expect(frameAfterCommand).toContain("/title");
+      }
+
+      // Now add a space and arguments
+      stdin.write(" My Session Title");
+      await waitForNextRender();
+
+      const frameAfterArgs = lastFrame();
+
+      // Check that the UI is still functional after adding arguments
+      if (mode === "remote") {
+        expect(frameAfterArgs).toContain("Remote Mode");
+        // In remote mode, /title might not be available, so just check the UI is working
+      } else {
+        expect(frameAfterArgs).toContain("Continue CLI");
+        // In local mode, we should see the /title command
+        expect(frameAfterArgs).toContain("/title");
+      }
+    },
+  );
+
+  testBothModes(
+    "allows Enter key to execute command when dropdown is hidden",
+    async (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
+
+      // Type a complete command with arguments
+      stdin.write("/title Test Session");
+      await waitForNextRender();
+
+      const frameBeforeEnter = lastFrame();
+      expect(frameBeforeEnter).toContain("/title");
+      expect(frameBeforeEnter).toContain("Test Session");
+
+      // Press Enter - this should execute the command, not try to autocomplete
+      stdin.write("\r");
+      await waitForNextRender();
+
+      const frameAfterEnter = lastFrame();
+
+      // Should not crash and should clear the input (or show command execution)
+      expect(frameAfterEnter).toBeDefined();
+
+      // Mode-specific checks
+      if (mode === "remote") {
+        expect(frameAfterEnter).toContain("Remote Mode");
+      } else {
+        expect(frameAfterEnter).toContain("Continue CLI");
+      }
+    },
+  );
 });

@@ -1,14 +1,15 @@
 import type { AssistantUnrolled } from "@continuedev/config-yaml";
 import {
-  describe,
-  it,
-  expect,
-  vi,
   beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
   type MockedFunction,
 } from "vitest";
 
-import type { AuthConfig, AuthenticatedConfig } from "./auth/workos.js";
+import { AuthenticatedConfig } from "./auth/workos-types.js";
+import type { AuthConfig } from "./auth/workos.js";
 import type { ConfigServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
@@ -86,6 +87,7 @@ vi.mock("./session.js", () => ({
   getCurrentSession: vi.fn(() => {
     throw new Error("Session not available");
   }),
+  updateSessionTitle: vi.fn(),
 }));
 
 describe("slashCommands", () => {
@@ -127,7 +129,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -156,7 +158,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(true);
+      ).mockResolvedValue(true);
       (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
         {} as AuthConfig,
       );
@@ -198,7 +200,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(true);
+      ).mockResolvedValue(true);
       (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
         mockAuthConfig,
       );
@@ -229,7 +231,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -262,7 +264,7 @@ describe("slashCommands", () => {
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
-      ).mockReturnValue(false);
+      ).mockResolvedValue(false);
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -278,6 +280,155 @@ describe("slashCommands", () => {
       expect(result?.output).toContain("Test Session");
       expect(result?.output).toContain("/test-home/.continue/cli-sessions/");
       expect(result?.output).toContain(".json");
+    });
+
+    it("should handle /title command with valid title", async () => {
+      const { updateSessionTitle } = await import("./session.js");
+
+      const result = await handleSlashCommands(
+        "/title My New Session Title",
+        mockAssistant,
+      );
+
+      expect(updateSessionTitle).toHaveBeenCalledWith("My New Session Title");
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        'Session title updated to: "My New Session Title"',
+      );
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle /title command with empty title", async () => {
+      const result = await handleSlashCommands("/title", mockAssistant);
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        "Please provide a title. Usage: /title <your title>",
+      );
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle /title command with whitespace-only title", async () => {
+      const result = await handleSlashCommands("/title   ", mockAssistant);
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        "Please provide a title. Usage: /title <your title>",
+      );
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle /title command when session update fails", async () => {
+      const { updateSessionTitle } = await import("./session.js");
+
+      (updateSessionTitle as any).mockImplementation(() => {
+        throw new Error("Failed to save session");
+      });
+
+      const result = await handleSlashCommands(
+        "/title Test Title",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        "Failed to update title: Failed to save session",
+      );
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle custom assistant prompts", async () => {
+      const assistantWithPrompts: AssistantUnrolled = {
+        ...mockAssistant,
+        prompts: [
+          {
+            name: "explain",
+            description: "Explain the code",
+            prompt: "Please explain the following code:",
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/explain some code",
+        assistantWithPrompts,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe(
+        "Please explain the following code:some code",
+      );
+    });
+
+    it("should handle invokable rules", async () => {
+      const assistantWithRules: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          {
+            name: "review",
+            description: "Review this code",
+            rule: "Perform a code review on the following:",
+            invokable: true,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/review some code",
+        assistantWithRules,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe(
+        "Perform a code review on the following: some code",
+      );
+    });
+
+    it("should not treat non-invokable rules as slash commands", async () => {
+      const assistantWithNonInvokableRule: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          {
+            name: "regular",
+            description: "A regular rule",
+            rule: "This is a regular rule",
+            invokable: false,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/regular",
+        assistantWithNonInvokableRule,
+      );
+
+      // Should return null because the rule is not invokable
+      expect(result).toBeNull();
+    });
+
+    it("should handle invokable rules from hub (string rules ignored)", async () => {
+      const assistantWithMixedRules: AssistantUnrolled = {
+        ...mockAssistant,
+        rules: [
+          "string rule",
+          {
+            name: "analyze",
+            description: "Analyze code patterns",
+            rule: "Analyze the following code for patterns:",
+            invokable: true,
+          },
+        ],
+      };
+
+      const result = await handleSlashCommands(
+        "/analyze my code",
+        assistantWithMixedRules,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toBe(
+        "Analyze the following code for patterns: my code",
+      );
     });
   });
 });

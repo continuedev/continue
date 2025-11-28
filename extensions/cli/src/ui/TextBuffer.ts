@@ -137,6 +137,38 @@ export class TextBuffer {
     }
   }
 
+  private deleteLineBackward(): void {
+    if (this._cursor === 0) {
+      return;
+    }
+
+    const lastNewline = this._text.lastIndexOf("\n", this._cursor - 1);
+    const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+
+    if (lineStart === this._cursor) {
+      return;
+    }
+
+    this._text =
+      this._text.slice(0, lineStart) + this._text.slice(this._cursor);
+    this._cursor = lineStart;
+  }
+
+  private deleteLineForward(): void {
+    if (this._cursor >= this._text.length) {
+      return;
+    }
+
+    const nextNewline = this._text.indexOf("\n", this._cursor);
+    const lineEnd = nextNewline === -1 ? this._text.length : nextNewline;
+
+    if (lineEnd === this._cursor) {
+      return;
+    }
+
+    this._text = this._text.slice(0, this._cursor) + this._text.slice(lineEnd);
+  }
+
   moveToStart(): void {
     this._cursor = 0;
   }
@@ -305,26 +337,33 @@ export class TextBuffer {
     const timeSinceLastInput = now - this._lastInputTime;
 
     // If we're already in rapid input mode and this comes quickly, add to buffer
-    if (this._rapidInputBuffer.length > 0 && timeSinceLastInput < 100) {
-      this._rapidInputBuffer += input;
-      this._lastInputTime = now;
+    if (this._rapidInputBuffer.length > 0 && timeSinceLastInput < 200) {
+      const isLikelyTyping = input.length < 50 && timeSinceLastInput >= 50;
 
-      if (this._rapidInputTimer) {
-        clearTimeout(this._rapidInputTimer);
+      if (!isLikelyTyping) {
+        this._rapidInputBuffer += input;
+        this._lastInputTime = now;
+
+        if (this._rapidInputTimer) {
+          clearTimeout(this._rapidInputTimer);
+        }
+
+        // Reset timer: 200ms pause indicates end of paste
+        this._rapidInputTimer = setTimeout(() => {
+          this.finalizeRapidInput();
+        }, 200);
+
+        return true;
       }
-
-      // Reset timer: 200ms pause indicates end of paste
-      this._rapidInputTimer = setTimeout(() => {
-        this.finalizeRapidInput();
-      }, 200);
-
-      return true;
     }
 
     // Fallback paste detection: some terminals send large pastes as rapid chunks
     // instead of using bracketed paste mode. We detect this by timing between inputs.
-    // Only trigger for actually large chunks to avoid interfering with normal typing
-    if (input.length > RAPID_INPUT_THRESHOLD) {
+    // The >= 50 char threshold was restored to detect Terminal.app/Ghostty split pastes
+    if (
+      input.length > RAPID_INPUT_THRESHOLD ||
+      (input.length >= 50 && this._rapidInputBuffer.length === 0)
+    ) {
       this._rapidInputStartPos = this._cursor;
 
       // Accumulate chunks without inserting to avoid visual flicker
@@ -393,13 +432,10 @@ export class TextBuffer {
         this.moveToEnd();
         return true;
       case "u":
-        // Delete from cursor to start of line
-        this._text = this._text.slice(this._cursor);
-        this._cursor = 0;
+        this.deleteLineBackward();
         return true;
       case "k":
-        // Delete from cursor to end of line
-        this._text = this._text.slice(0, this._cursor);
+        this.deleteLineForward();
         return true;
       case "w":
         this.deleteWordBackward();
@@ -413,8 +449,12 @@ export class TextBuffer {
   }
 
   private handleMetaKey(input: string, key: Key): boolean {
-    if (key.backspace || key.delete) {
-      this.deleteWordBackward();
+    if (key.backspace) {
+      this.deleteLineBackward();
+      return true;
+    }
+    if (key.delete) {
+      this.deleteLineForward();
       return true;
     }
     if (key.leftArrow) {
@@ -511,8 +551,7 @@ export class TextBuffer {
     }
 
     // Fallback: detect chunked paste operations
-    // Don't trigger rapid input detection for small inputs (e.g. single characters like "/" or "@")
-    if (input.length > 50 && this.handleRapidInput(input)) {
+    if (this.handleRapidInput(input)) {
       return true;
     }
 

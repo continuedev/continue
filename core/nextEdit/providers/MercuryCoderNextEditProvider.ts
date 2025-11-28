@@ -43,7 +43,7 @@ export class MercuryCoderProvider extends BaseNextEditModelProvider {
     // Extract the code between the markdown code blocks.
     return message.slice(
       message.indexOf("```\n") + "```\n".length,
-      message.lastIndexOf("\n\n```"),
+      message.lastIndexOf("\n```"),
     );
   }
 

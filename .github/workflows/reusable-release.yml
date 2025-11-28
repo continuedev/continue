@@ -51,7 +51,7 @@ jobs:
         working-directory: ${{ inputs.package-path }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -59,7 +59,7 @@ jobs:
         uses: ./.github/actions/setup-packages
 
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
 

@@ -1,0 +1,48 @@
+---
+title: "How to Customize Agent Mode"
+description: "Learn how to customize Agent Mode in Continue to better fit your workflow and coding style."
+sidebarTitle: "Customize Agent Mode"
+---
+
+## How to Add Rules Blocks
+
+Adding Rules can be done in your configuration locally or in Mission Control. You can explore Rules on the Continue Mission Control and refer to the [Rules deep dive](/customize/deep-dives/rules) for more details.
+
+## How to Customize System Messages
+
+You can customize the system messages for Chat, Agent, and Plan modes using model-level configuration:
+
+```yaml
+models:
+  - name: GPT-4o
+    provider: openai
+    model: gpt-4o
+    chatOptions:
+      baseSystemMessage: "You are a helpful coding agent."
+      baseAgentSystemMessage: "You are a systematic coding agent. Break down problems methodically."
+      basePlanSystemMessage: "You are a planning agent. Create clear, actionable steps."
+```
+
+## How to Add MCP Tools
+
+You can add MCP servers to your configuration to give Agent mode access to more tools. Explore [MCP Servers on Mission Control](https://hub.continue.dev/hub?type=mcpServers) and consult the [MCP guide](/customize/deep-dives/mcp) for more details.
+
+## How to Configure Tool Policies
+
+You can adjust the Agent mode's tool usage behavior to three options:
+
+- **Ask First (default)**: Request user permission with "Cancel" and "Continue" buttons
+- **Automatic**: Automatically call the tool without requesting permission
+- **Excluded**: Do not send the tool to the model
+
+:::warning
+Be careful setting tools to "automatic" if their behavior is not read-only.
+:::
+
+To manage tool policies:
+
+1. Click the tools icon in the input toolbar
+2. View and change policies by clicking on the policy text
+3. You can also toggle groups of tools on/off
+
+Tool policies are stored locally per user.

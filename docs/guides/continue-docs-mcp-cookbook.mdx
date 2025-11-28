@@ -1,0 +1,542 @@
+---
+title: "Contributing to Continue with Model Context Protocol (MCP)"
+description: "Use the Continue Docs MCP to write cookbooks, guides, and documentation with AI-powered workflows."
+sidebarTitle: "Continue Docs MCP Cookbook"
+---
+
+<Card title="What You'll Build" icon="book-open-cover">
+  Master using the Continue Docs MCP to contribute documentation, create cookbooks, and maintain consistency across Continue's docs - all through natural language prompts.
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Continue account with **Hub access**
+- Read: [Contributing to Continue Documentation](/CONTRIBUTING) for setup instructions
+- Forked the [continuedev/continue](https://github.com/continuedev/continue) repository
+- Node.js 20+ and Continue CLI installed
+
+<Warning>
+  This cookbook assumes you've read the setup in the [CONTRIBUTING guide](/CONTRIBUTING). If you haven't, start there first.
+</Warning>
+
+## Continue Docs MCP Setup
+
+<Card title="Fastest Path to Success" icon="rocket">
+  Use the pre-built [Docs Assistant - Mintlify agent](https://hub.continue.dev/continuedev/docs-mintlify) that includes the Continue Docs MCP and is ready to use immediately.
+</Card>
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    ```bash
+    # From your Continue docs directory
+    cn --config continuedev/docs-mintlify
+    ```
+
+    This agent includes:
+    - **Continue Docs MCP** for searching Continue documentation
+    - **Mintlify formatting rules** for proper component usage
+    - **Documentation-focused prompts** for common tasks
+  </Tab>
+
+  <Tab title="🛠️ Custom Agent">
+    If you want to customize, create your own agent and add:
+    1. [Continue Docs MCP](https://hub.continue.dev/continuedev/continue-docs-mcp)
+    2. [Mintlify Technical Writing Rule](https://hub.continue.dev/mintlify/technical-writing-rule)
+
+    See the [CONTRIBUTING guide](/CONTRIBUTING#option-2-create-your-own-custom-agent) for details.
+  </Tab>
+</Tabs>
+
+---
+
+## What is the Continue Docs MCP?
+
+<Card title="Continue Docs MCP" icon="circle-info">
+  A Model Context Protocol server built with [Mintlify's MCP generation](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs) that enables semantic search across Continue documentation. [Learn more →](/reference/continue-mcp)
+</Card>
+
+The MCP helps you:
+- **Find examples** from existing documentation
+- **Maintain consistency** with established patterns
+- **Source accurate information** about Continue features
+- **Write better documentation** faster
+
+---
+
+## Documentation Workflows with Prompts
+
+### 🆕 Creating a New Cookbook
+
+Cookbooks show how to use Continue CLI with specific tools or services. Here's how to create one using the Continue Docs MCP:
+
+<Steps>
+  <Step title="Research Existing Cookbooks">
+    ```bash
+    cn --config continuedev/docs-mintlify
+    ```
+
+    **Prompt:**
+    ```
+    "Show me the structure of existing MCP cookbooks in the Continue docs.
+    I want to create a cookbook for GitHub MCP."
+    ```
+
+    The agent will find examples like the dlt, Snyk, and Sanity cookbooks.
+  </Step>
+
+  <Step title="Source Official Documentation">
+    **Prompt:**
+    ```
+    "Using the Continue Docs MCP, find information about how GitHub MCP works.
+    Then search the web for the official GitHub MCP documentation and combine
+    both sources to create a cookbook following the same structure as the
+    dlt cookbook."
+    ```
+
+    The agent will:
+    - Search Continue docs for MCP patterns
+    - Fetch GitHub MCP official documentation
+    - Combine both sources
+    - Generate a cookbook with consistent formatting
+  </Step>
+
+  <Step title="Add to Navigation">
+    **Prompt:**
+    ```
+    "Add my new github-mcp-continue-cookbook.mdx to the docs.json navigation
+    under the Cookbooks section."
+    ```
+  </Step>
+
+  <Step title="Preview and Iterate">
+    ```bash
+    npm run dev
+    # Visit http://localhost:3000
+    ```
+
+    **Refine with prompts:**
+    ```
+    "Add more examples to the troubleshooting section"
+    "Include a CI/CD workflow example using GitHub Actions"
+    "Add authentication setup using environment variables"
+    ```
+  </Step>
+</Steps>
+
+<Info>
+  **Pro Tip:** The agent uses the Continue Docs MCP to maintain consistency with existing cookbooks automatically.
+</Info>
+
+---
+
+### ✏️ Updating Existing Documentation
+
+<Steps>
+  <Step title="Find the Documentation">
+    **Prompt:**
+    ```
+    "Where is the MCP tools documentation located? Show me the file path."
+    ```
+  </Step>
+
+  <Step title="Make Targeted Updates">
+    **Prompt:**
+    ```
+    "Update the MCP tools documentation at docs/customization/mcp-tools.mdx
+    to include information about the new Slack MCP server. Use the Continue
+    Docs MCP to find examples of how other MCP servers are documented, then
+    add a similar section for Slack."
+    ```
+  </Step>
+</Steps>
+
+---
+
+### 📝 Adding New Guides
+
+<Steps>
+  <Step title="Research Similar Content">
+    **Prompt:**
+    ```
+    "I want to create a guide for setting up Continue with Amazon Bedrock.
+    Search the Continue docs for similar model provider setup guides and
+    show me the common structure they follow."
+    ```
+  </Step>
+
+  <Step title="Create the Guide">
+    **Prompt:**
+    ```
+    "Create a new guide at docs/guides/amazon-bedrock-setup.mdx following
+    the structure you found. Include:
+    - Prerequisites
+    - Step-by-step setup with code examples
+    - Configuration options
+    - Troubleshooting common issues
+
+    Use the Continue Docs MCP to find accurate information about Continue's
+    model provider configuration."
+    ```
+  </Step>
+
+  <Step title="Add Navigation Entry">
+    **Prompt:**
+    ```
+    "Add this guide to docs.json under the Model Providers section"
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Real-World Cookbook Examples
+
+### Example 1: PostgreSQL MCP Cookbook
+
+**Prompt:**
+```
+"Create a cookbook for using Continue with PostgreSQL MCP. Follow the same
+structure as the dlt cookbook, but customize it for database operations.
+
+Include these sections:
+1. Quick start with pre-built agent
+2. Manual setup with MCP configuration
+3. Common database tasks (schema exploration, query writing, migrations)
+4. Troubleshooting database connection issues
+
+Use the Continue Docs MCP to find MCP configuration patterns and search the
+web for PostgreSQL MCP documentation."
+```
+
+### Example 2: Sentry Error Tracking Cookbook
+
+**Prompt:**
+```
+"Create a cookbook showing how to use Continue to analyze Sentry errors.
+
+The cookbook should demonstrate:
+1. Setting up Sentry MCP integration
+2. Querying recent errors
+3. Analyzing error patterns with AI
+4. Generating fixes for common errors
+5. CI/CD integration for automated error analysis
+
+Research the Snyk cookbook structure since it's also about error detection,
+and adapt it for Sentry."
+```
+
+### Example 3: OpenAPI Documentation Cookbook
+
+**Prompt:**
+```
+"I want to create a cookbook for using Continue to work with OpenAPI specs.
+
+Show how to:
+1. Load OpenAPI specs into Continue's context
+2. Generate API client code from specs
+3. Create tests based on API endpoints
+4. Update documentation when APIs change
+
+Use the Continue Docs MCP to find how context providers work, then combine
+that with OpenAPI MCP information."
+```
+
+---
+
+## Advanced Prompt Patterns
+
+<CardGroup cols={2}>
+  <Card title="Multi-Source Research" icon="magnifying-glass">
+    ```bash
+    "Use the Continue Docs MCP to understand how agents
+    work in Continue, then search the web for Anthropic's
+    Computer Use MCP. Create a cookbook showing how to
+    combine Continue agents with Computer Use for
+    automated testing."
+    ```
+  </Card>
+
+  <Card title="Cross-Reference Documentation" icon="link">
+    ```bash
+    "Find all mentions of MCP servers across Continue
+    documentation. Then create a comprehensive reference
+    page that links to all MCP-related guides and
+    configurations."
+    ```
+  </Card>
+
+  <Card title="Consistency Checking" icon="check-double">
+    ```bash
+    "Review all cookbook files in docs/guides/ and check
+    if they follow the same structure. List any
+    inconsistencies and suggest updates to make them
+    uniform."
+    ```
+  </Card>
+
+  <Card title="Example Extraction" icon="code">
+    ```bash
+    "Extract all code examples showing MCP server
+    configuration from the Continue docs. Format them
+    as a single reference page with explanations for
+    each pattern."
+    ```
+  </Card>
+</CardGroup>
+
+---
+
+## Testing Your Documentation
+
+### Local Preview
+
+```bash
+cd docs
+npm run dev
+# Visit http://localhost:3000
+```
+
+### Validation Prompts
+
+```bash
+# Check formatting
+"Review this documentation for Mintlify formatting issues and fix any problems"
+
+# Verify links
+"Check all links in this file and ensure they point to existing documentation"
+
+# Test code examples
+"Verify that all code examples in this cookbook are syntactically correct"
+```
+
+---
+
+## Submitting Your Contribution
+
+**Prompt:**
+```bash
+"Create a pull request with my documentation changes and use the repo's
+PR template to write the description"
+```
+
+The agent will:
+- Create a feature branch
+- Stage and commit your changes
+- Push to your fork
+- Generate a PR description following the template
+- Open the PR for review
+
+<Info>
+  See the full [Contributing Guide](/CONTRIBUTING#submitting-your-contribution) for manual PR submission details.
+</Info>
+
+---
+
+## Automated Documentation Checks with GitHub Actions
+
+Add automated documentation checks to your PR workflow using the Continue Docs MCP agent:
+
+```yaml title=".github/workflows/docs-check.yml"
+name: Documentation Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'core/**'
+      - 'extensions/**'
+      - 'packages/**'
+      - 'gui/**'
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Continue CLI
+        run: npm i -g @continuedev/cli
+
+      - name: Analyze Changes for Documentation Needs
+        id: analyze
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          echo "🔍 Analyzing code changes for documentation needs..."
+
+          # Get changed files
+          git diff origin/${{ github.base_ref }}..HEAD --name-only > changed_files.txt
+
+          # Create detailed diff
+          git diff origin/${{ github.base_ref }}..HEAD > changes.diff
+
+          # Use Continue agent to check if docs need updates
+          PROMPT="Review these code changes and determine if documentation updates are needed.
+
+          Changed files: $(cat changed_files.txt | tr '\n' ' ')
+
+          Consider:
+          - New features or APIs
+          - Breaking changes
+          - New configuration options
+          - Modified CLI commands
+          - New MCP integrations
+
+          If docs updates are needed, specify which files in docs/ should be updated.
+          If no updates needed, respond with 'NO_DOCS_NEEDED'.
+          Be specific and concise."
+
+          cn --config continuedev/docs-mintlify -p "$PROMPT" --auto > analysis.md || {
+            echo "⚠️ Analysis failed"
+            echo "needs_docs=false" >> $GITHUB_OUTPUT
+            exit 0
+          }
+
+          if grep -q "NO_DOCS_NEEDED" analysis.md; then
+            echo "needs_docs=false" >> $GITHUB_OUTPUT
+          else
+            echo "needs_docs=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post Documentation Recommendation
+        if: steps.analyze.outputs.needs_docs == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "📝 Creating PR comment with documentation recommendations..."
+
+          cat > pr-comment.md <<'EOF'
+## 📚 Documentation Update Recommended
+
+Based on the code changes in this PR, documentation updates may be needed:
+
+EOF
+
+          cat analysis.md >> pr-comment.md
+
+          cat >> pr-comment.md <<'EOF'
+
+---
+
+### Next Steps
+
+1. Review the suggested documentation areas above
+2. Update relevant files in the `/docs` folder
+3. Consider updating:
+   - API references for interface changes
+   - Guides for workflow changes
+   - Configuration docs for new settings
+   - MCP cookbooks for new integrations
+
+### Resources
+- [Contributing to Docs](/CONTRIBUTING)
+- [Continue Docs MCP Cookbook](/guides/continue-docs-mcp-cookbook)
+
+*This analysis was generated using the Continue Docs MCP agent.*
+EOF
+
+          gh pr comment ${{ github.event.pull_request.number }} --body-file pr-comment.md
+
+      - name: Add Label
+        if: steps.analyze.outputs.needs_docs == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "docs-needed"
+```
+
+<Info>
+  This workflow uses the Continue Docs MCP agent to analyze code changes and automatically comment on PRs when documentation updates are recommended.
+</Info>
+
+---
+
+## Documentation MCP for Other Projects
+
+Want to create documentation MCPs for your own projects? Mintlify makes it easy:
+
+<Steps>
+  <Step title="Set Up Mintlify Docs">
+    ```bash
+    npm i -g mintlify
+    mintlify init
+    ```
+  </Step>
+
+  <Step title="MCP Auto-Generated">
+    Mintlify automatically generates an MCP server for your documentation, enabling semantic search.
+
+    [Learn more about Mintlify MCP generation →](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs)
+  </Step>
+
+  <Step title="Publish to Continue Mission Control">
+    Share your docs MCP on [Continue Mission Control](https://hub.continue.dev/new?type=mcp) so others can use it with Continue agents.
+  </Step>
+</Steps>
+
+<Info>
+  The [Continue Docs MCP](/reference/continue-mcp) itself was built this way!
+</Info>
+
+---
+
+## Key Prompts Cheat Sheet
+
+| Task | Prompt |
+|:-----|:-------|
+| **Find structure** | "Show me the structure of existing cookbooks in Continue docs" |
+| **Create cookbook** | "Create a cookbook for [tool] MCP following the dlt cookbook structure" |
+| **Update docs** | "Update [file] to include information about [feature], using Continue Docs MCP to find examples" |
+| **Add navigation** | "Add [file] to docs.json under the [section] section" |
+| **Check consistency** | "Review this file for consistency with other Continue documentation" |
+| **Fix formatting** | "Review for Mintlify formatting issues and fix any problems" |
+| **Extract examples** | "Find all examples of [topic] in Continue docs" |
+| **Research feature** | "Use Continue Docs MCP to explain how [feature] works in Continue" |
+
+---
+
+## Resources
+
+### Continue Documentation
+- [Contributing Guide](/CONTRIBUTING) - Setup and submission process
+- [Continue Docs MCP Reference](/reference/continue-mcp) - MCP server details
+  - [Understanding Configs](/guides/understanding-configs) - How configs work
+
+### Mintlify
+- [MCP Generation Guide](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs)
+- [Mintlify Documentation](https://mintlify.com/docs)
+
+### Community
+- [Continue Discord](https://discord.gg/continue) - #documentation channel
+- [GitHub Discussions](https://github.com/continuedev/continue/discussions)
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Start Contributing" icon="code" href="/CONTRIBUTING">
+    Set up your environment
+  </Card>
+
+  <Card title="Use Docs Agent" icon="robot" href="https://hub.continue.dev/continuedev/docs-mintlify">
+    Install pre-built agent
+  </Card>
+
+  <Card title="Browse Cookbooks" icon="book-open" href="/guides/overview">
+    See cookbook examples
+  </Card>
+
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/continue">
+    Get help from community
+  </Card>
+</CardGroup>

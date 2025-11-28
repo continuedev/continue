@@ -1,0 +1,181 @@
+---
+title: "Configuring Models, Rules, and Tools"
+description: "Learn how to work with Continue's configuration system. Understand how to use hub models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
+---
+
+## What Are Models, Rules, and Tools?
+
+Continue configs are built from three main types of configuration:
+
+<Columns cols={3}>
+<Card title="Models" icon="cube">
+Language models that power different capabilities like chat, autocomplete, and agent mode
+</Card>
+
+<Card title="Rules" icon="pencil">
+  Guidelines and instructions that shape how the AI behaves and responds
+</Card>
+
+<Card title="Tools" icon="server">
+MCP tools that provide additional capabilities like database access, web search, or custom functions
+</Card>
+</Columns>
+
+There are two places where you can define these configurations:
+
+<Columns cols={2}>
+<Card title="Local" icon="computer">
+Custom configurations you create and manage in your workspace or globally
+</Card>
+
+<Card title="Hub" icon="cloud">
+Pre-built models, rules, and tools from the Continue community that you can import and use immediately
+</Card>
+</Columns>
+
+## Local
+
+Local configurations let you create custom models, rules, and tools that automatically apply to multiple configs, reducing duplication and ensuring consistency across your setup.
+
+<Columns cols={2}>
+<Card title="Global" icon="globe">
+Applied to all configs across all workspaces. Ideal for personal preferences, universal coding standards, or tools you use everywhere.
+</Card>
+<Card title="Workspace" icon="folder-open">
+Applied automatically to all configs when working in a specific project.
+
+Perfect for project-specific setups like TypeScript rules for web apps or the Playwright MCP tool.
+
+</Card>
+
+</Columns>
+
+## Hub
+
+Continue hub uses a slug in the format of `owner/item-name` to resolve blocks.
+
+For example, to use the [Claude 4 Sonnet model](https://hub.continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
+
+Import from Mission Control using the `uses` syntax alongside your custom configurations:
+
+```yaml config.yaml highlight={6}
+name: Team Config
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: anthropic/claude-4-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
+```
+
+### Organization
+
+Organize your local configurations using these directories:
+
+<Columns cols={3}>
+<Card title="Models" icon="cube">
+  `.continue/models`
+</Card>
+
+<Card title="Rules" icon="pencil">
+  `.continue/rules`
+</Card>
+
+<Card title="Tools" icon="server">
+  `.continue/mcpServers`
+</Card>
+</Columns>
+
+## Working with Secrets
+
+Models, and many MCP servers, require a secret for things like API keys.
+
+On Mission Control, you can configure secrets when adding a model or MCP server.
+
+This will use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
+
+When configuring a local model or MCP server, you can use the same mustache notation for secrets which read from:
+
+<Columns cols={2}>
+<Card title="Global" icon="globe">
+`.env` file in `~/.continue/.env`
+</Card>
+
+<Card title="Workspace" icon="folder-open">
+`.env` file at your project root
+</Card>
+</Columns>
+
+<Info>
+**When to use `secrets.` vs `inputs.`**
+
+For most use cases, **use `${{ secrets.SECRET_NAME }}`** directly in your configuration. This is the recommended approach for both personal and organizational workflows.
+
+Use `${{ inputs.INPUT_NAME }}` only when you need flexibility to:
+- Allow users to customize which secret a block uses without editing the block itself
+- Change the secret name without modifying the block configuration
+- Create reusable blocks where different users may have differently-named secrets
+
+This pattern is inspired by GitHub Actions, where inputs provide an abstraction layer between block definitions and user-specific values. For most scenarios, directly referencing `secrets.` keeps configuration simpler and more straightforward.
+</Info>
+
+## Overriding Properties
+
+You can directly override properties using the `override` syntax:
+
+```yaml title="config.yaml" highlight={10-13}
+name: myprofile/custom-config
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+    override:
+      roles:
+        - chat
+```
+
+## Advanced
+
+### Inputs
+
+Models and MCP server authors can configure inputs that require the user to provide a secret value by defining a `${{ inputs.SECRET_NAME }}` value.
+
+For example, here is how you could require that the user provide a value for the `apiKey` property on a model:
+
+```yaml title="config.yaml" highlight={8}
+name: myprofile/custom-model
+version: 1.0.0
+schema: v1
+
+models:
+  - name: My Favorite Model
+    # ... other model properties ...
+    apiKey: ${{ inputs.SECRET_NAME }}
+```
+
+Users then map their secret to this input using a `${{ secrets.SECRET_NAME }}` value that maps to a property name which matches the required input, e.g. `SECRET_NAME`.
+
+```yaml title="config.yaml" highlight={8}
+name: myprofile/custom-config
+version: 1.0.0
+schema: v1
+
+models:
+  - uses: myprofile/custom-model
+    with:
+      SECRET_NAME: ${{ secrets.SECRET_NAME }}
+```
+
+## Next Steps
+
+Now that you understand how models, rules, and tools work, explore:
+
+- **[Config Reference](/reference)**: Detailed documentation of all available properties
+- **[Continue Mission Control](https://hub.continue.dev)**: Browse community models, rules, and tools
+- **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
+- **[Model Roles](/customize/model-roles/intro)**: Understanding how different models work together

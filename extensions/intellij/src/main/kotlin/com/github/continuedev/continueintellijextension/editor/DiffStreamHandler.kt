@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.StreamDiffLinesPayload
+import com.github.continuedev.continueintellijextension.GetDiffLinesPayload
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.application.ApplicationManager
@@ -129,6 +130,138 @@ class DiffStreamHandler(
 
             handleDiffLineResponse(parsed)
         }
+    }
+
+    fun instantApplyDiffLines(
+        currentContent: String,
+        newContent: String
+    ) {
+        isRunning = true
+        sendUpdate(ApplyStateStatus.STREAMING)
+
+        project.service<ContinuePluginService>().coreMessenger?.request(
+            "getDiffLines",
+            GetDiffLinesPayload(
+                oldContent=currentContent,
+                newContent=newContent
+            ),
+            null
+        ) { response ->
+            if (!isRunning) return@request
+
+            val diffLines = parseDiffLinesResponse(response) ?: run {
+                println("Error: Invalid response format for getDiffLines")
+                ApplicationManager.getApplication().invokeLater {
+                    setClosed()
+                }
+                return@request
+            }
+            
+            ApplicationManager.getApplication().invokeLater {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    applyAllDiffLines(diffLines)
+                
+                    createDiffBlocksFromDiffLines(diffLines)
+
+                    cleanupProgressHighlighters()
+                    
+                    if (diffBlocks.isEmpty()) {
+                        setClosed()
+                    } else {
+                        sendUpdate(ApplyStateStatus.DONE)
+                    }
+                    
+                    onFinish()
+                }
+            }
+        }
+    }
+
+    private fun parseDiffLinesResponse(response: Any?): List<Map<String, Any>>? {
+        if (response !is Map<*, *>) return null
+        
+        val success = response["status"] as? String
+        if (success != "success") return null
+        
+        val content = response["content"] as? List<*> ?: return null
+
+        val result = mutableListOf<Map<String, Any>>()
+        for (item in content) {
+            if (item !is Map<*, *>) return null
+
+            val type = item["type"] as? String ?: return null
+            val line = item["line"] as? String ?: return null
+
+            result.add(mapOf("type" to type, "line" to line))
+        }
+
+        return result
+    }
+
+    private fun applyAllDiffLines(diffLines: List<Map<String, Any>>) {
+        var currentLine = startLine
+        
+        diffLines.forEach { line ->
+            val type = getDiffLineType(line["type"] as String)
+            val text = line["line"] as String
+            
+            when (type) {
+                DiffLineType.OLD -> {
+                    // Delete line
+                    val document = editor.document
+                    val start = document.getLineStartOffset(currentLine)
+                    val end = document.getLineEndOffset(currentLine)
+                    document.deleteString(start, if (currentLine < document.lineCount - 1) end + 1 else end)
+                }
+                DiffLineType.NEW -> {
+                    // Insert line
+                    val offset = if (currentLine >= editor.document.lineCount) editor.document.textLength else editor.document.getLineStartOffset(currentLine)
+                    editor.document.insertString(offset, text + "\n")
+                    currentLine++
+                }
+                DiffLineType.SAME -> {
+                    currentLine++
+                }
+            }
+        }
+    }
+
+    private fun createDiffBlocksFromDiffLines(diffLines: List<Map<String, Any>>) {
+        var currentBlock: VerticalDiffBlock? = null
+        var currentLine = startLine
+        
+        diffLines.forEach { line ->
+            val type = getDiffLineType(line["type"] as String)
+            val text = line["line"] as String
+            
+            when (type) {
+                DiffLineType.OLD -> {
+                    if (currentBlock == null) {
+                        currentBlock = createDiffBlock()
+                        currentBlock!!.startLine = currentLine
+                    }
+                    currentBlock!!.deletedLines.add(text)
+                }
+                DiffLineType.NEW -> {
+                    if (currentBlock == null) {
+                        currentBlock = createDiffBlock()
+                        currentBlock!!.startLine = currentLine
+                    }
+                    currentBlock!!.addedLines.add(text)
+                    currentLine++
+                }
+                DiffLineType.SAME -> {
+                    if (currentBlock != null) {
+                        currentBlock!!.onLastDiffLine()
+                        currentBlock = null
+                    }
+                    currentLine++
+                }
+            }
+        }
+        
+        // Handle last block if it doesn't end with SAME
+        currentBlock?.onLastDiffLine()
     }
 
     private fun initUnfinishedRangeHighlights() {

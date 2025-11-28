@@ -50,7 +50,9 @@ export const selectApplyStateByToolCallId = createSelector(
     (_store: RootState, toolCallId: string) => toolCallId,
   ],
   (applyStates, toolCallId) => {
-    return applyStates.states.find((state) => state.toolCallId === toolCallId);
+    return applyStates.states.findLast(
+      (state) => state.toolCallId === toolCallId,
+    );
   },
 );
 

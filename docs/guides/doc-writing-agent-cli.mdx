@@ -1,0 +1,361 @@
+---
+title: "Automating Documentation Updates with Continue CLI"
+sidebarTitle: "Automating Documentation Updates with Continue CLI"
+description: "Learn how to create automated documentation generation workflows using Continue CLI. Set up AI agents to analyze code changes and generate or update documentation automatically in GitHub workflows or local development."
+---
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/rJ2taa8OLvY"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+# Getting Started
+
+This guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Continue CLI, either as part of your local workflow or as part of a GitHub workflow.
+
+This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyze changes and generate the necessary documentation, and commit and push the changes. The goal is to keep the workflow as simple as possible by using straightforward shell commands, Continue CLI prompts, and basic git operations.
+
+## Why Use Continue CLI for Documentation?
+
+<CardGroup cols={2}>
+  <Card title="Intelligent Analysis" icon="brain">
+    AI agents understand your codebase and documentation patterns, analyzing git diffs to identify what needs documenting.
+  </Card>
+
+  <Card title="Automated Workflows" icon="robot">
+    Integrate seamlessly into CI/CD pipelines or local development workflows with minimal setup.
+  </Card>
+
+  <Card title="Contextual Understanding" icon="files">
+    Agents can read files, explore projects, and access Git history to generate accurate, relevant documentation.
+  </Card>
+
+  <Card title="Controlled Permissions" icon="shield">
+    Restrict agent actions to specific files and operations, ensuring safe automated documentation updates.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+<CardGroup cols={1}>
+  <Card title="Node.js 18+" icon="node-js">
+    Continue CLI requires Node.js 18 or higher. Install globally with:
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Card>
+
+  <Card title="Continue API Key" icon="key">
+    Get your API key from [Continue Mission Control](https://hub.continue.dev/settings/api-keys) and set:
+    ```bash
+    export CONTINUE_API_KEY=your_key_here
+    ```
+    <Info>
+    You can use the Continue CLI in headless mode without interactive login by setting the `CONTINUE_API_KEY` environment variable.
+    </Info>
+  </Card>
+
+  <Card title="Git Repository" icon="code">
+    A project with code and documentation, or use an open-source project to experiment with the workflow.
+  </Card>
+</CardGroup>
+
+# Documentation Generation Workflow
+
+## Workflow Overview
+
+The documentation generation process follows these sequential steps:
+
+<Steps>
+  <Step title="Environment Setup">
+    Validate environment, install Continue CLI, and set up authentication with API keys.
+  </Step>
+
+  <Step title="Change Analysis">
+    Generate git diff context and analyze code changes between branches to identify new functionality.
+  </Step>
+
+  <Step title="Branch Creation">
+    Create a dedicated documentation branch following the pattern `{original-branch}-docs-update-{timestamp}`.
+  </Step>
+
+  <Step title="AI Documentation Generation">
+    Use Continue CLI with custom rules to analyze changes and generate or update documentation files.
+    <Tip>
+    Use an agent configuration with rules specific for documentation writing in your project and fine-tune it to work for your team's standards.
+    </Tip>
+  </Step>
+
+  <Step title="Review & Commit">
+    Review generated documentation, commit changes to the docs directory, and push to origin.
+  </Step>
+
+  <Step title="Cleanup">
+    Remove temporary files and output completion summary with branch information.
+  </Step>
+</Steps>
+
+
+
+## Implementation
+
+<Tabs>
+  <Tab title="GitHub Workflow">
+
+### GitHub Actions Implementation
+
+<Info>
+This example uses a manual workflow dispatch that requires two inputs: the repository name and the branch containing your code changes. This is helpful when you want to generate documentation for a feature branch before creating a pull request.
+</Info>
+
+**Required Inputs:**
+- **repository:** The repository you are operating on (format: `owner/repo`)
+- **branch_name:** The name of the branch you have code changes on and want to generate documentation for
+- **continue_config:** The Continue agent configuration to use
+  - Consider setting a default value if you have a default config your'd like to use
+- **continue_org:** The Continue org to use
+  - Consider setting a default value if you have a default org your'd like to use
+
+
+```yaml title=".github/workflows/generate-docs.yml"
+name: Generate Docs for Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository (owner/repo)'
+        required: true
+        default: 'owner/repo'
+      branch_name:
+        description: 'Branch name to generate docs for'
+        required: true
+      continue_config:
+        description: 'Continue agent configuration to use'
+        required: true
+        # Set a default value if you have a default config your'd like to use
+        # default: 'agent-config-name'
+      continue_org:
+        description: 'Continue org to use'
+        required: true
+        # Set a default value if you have a default org your'd like to use
+        # default: 'your-org-name'
+
+jobs:
+  write-docs:
+    runs-on: ubuntu-latest
+    name: Write Documentation for Branch
+    env:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      CONTINUE_ORG: ${{ github.event.inputs.continue_org }}
+      CONTINUE_CONFIG: ${{ github.event.inputs.continue_config }}
+
+    steps:
+
+    - name: Checkout fork repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.inputs.repository || 'owner/repo' }}
+        token: ${{ secrets.GH_PAT }}
+        fetch-depth: 0  # Full history needed for sync
+
+    - name: Setup git configuration
+      run: |
+        git config user.name "github-actions[doc-writer-bot]"
+        git config user.email "yourname@email.com"
+
+    - name: Checkout target branch
+      run: |
+        git fetch origin ${{ github.event.inputs.branch_name }}
+        git checkout ${{ github.event.inputs.branch_name }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Continue CLI
+      run: |
+        echo "Installing Continue CLI..."
+        npm i -g @continuedev/cli
+
+    - name: Verify Continue CLI installation
+      run: |
+        echo "Checking Continue CLI version..."
+        cn --version || exit 1
+
+    - name: Set branch name
+      id: branch
+      run: |
+        BRANCH_NAME="${{ github.event.inputs.branch_name }}-docs-update-$(date +%Y-%m-%d-%H-%M-%S)"
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        echo "Branch name: $BRANCH_NAME"
+
+    - name: Generate git diff context
+      run: |
+        echo "Git changes:" > context.txt
+        git diff origin/main..HEAD --stat >> context.txt
+        echo -e "\n\nFile list:" >> context.txt
+        git diff origin/main..HEAD >> context.txt
+        echo "Generated context file:"
+        cat context.txt
+
+    - name: Create documentation branch
+      run: |
+        echo "Creating branch: ${{ steps.branch.outputs.branch_name }}"
+        git checkout -b "${{ steps.branch.outputs.branch_name }}"
+
+    - name: Generate documentation with Continue CLI
+      run: |
+        echo "Running Continue agent to generate documentation..."
+        cn --config <continue-user>/<agent-config> \
+           --auto \
+           --allow Write \
+           -p \
+           --prompt ./context.txt \
+           "Analyze the provided git diff and identify any new functionality introduced. Summarise the new features in a few sentences. Then search the existing documentation in the site docs/ directory to determine whether these features are already documented in a way that enables users to use them. If documentation is missing or incomplete, create or modify Markdown files under the site diretory (without changing any code) to add clear explanations, usage instructions and examples for the new features in the same style and format as the existing documentation. Finally, print a brief summary of the documentation changes you made."
+
+    - name: Clean up temporary files
+      run: rm -f context.txt
+
+    - name: Commit and push documentation changes
+      run: |
+        echo "Review git status..."
+        git status
+
+        echo "Adding files edited in site directory to git..."
+        git add site/
+
+        echo "Committing changes..."
+        git commit -s -m "docs: update for new functionality from branch ${{ github.event.inputs.branch_name }}"
+
+        echo "Pushing changes to origin..."
+        git push --set-upstream origin "${{ steps.branch.outputs.branch_name }}"
+
+```
+
+  </Tab>
+  <Tab title="Local Development">
+
+### Local Development Implementation
+
+<Warning>
+Make sure to set your `CONTINUE_API_KEY` environment variable before running local scripts to enable headless mode.
+</Warning>
+
+When using the Continue CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
+
+The below shell script snippet shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
+
+For the example snippet below to work you will need to set the following variables:
+- `CONTINUE_ORG`
+- `CONTINUE_CONFIG`
+- `BASE_BRANCH`
+- `COMPARE_BRANCH`
+- `DOCS_BRANCH_NAME`
+
+For example you can either set these as environment variables or as command line arguments to be used by the script.
+
+**Example shell script snippet for generating documentation**
+```bash title="generate-docs.sh"
+#!/bin/bash
+# The script below shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
+
+# Generate git diff context
+echo "Generating git diff context..."
+echo "Git changes:" > context.txt
+git diff "$BASE_BRANCH..$COMPARE_BRANCH" --stat >> context.txt
+echo -e "\n\nFile list:" >> context.txt
+git diff "$BASE_BRANCH..$COMPARE_BRANCH" >> context.txt
+echo "Generated context file:"
+cat context.txt
+
+# Create documentation branch
+echo "Creating branch: $DOCS_BRANCH_NAME"
+git checkout -b "$DOCS_BRANCH_NAME"
+
+# Generate documentation with Continue CLI
+echo "Running Continue agent to generate documentation..."
+cn -config "$CONTINUE_ORG/$CONTINUE_CONFIG" \
+   --auto \
+   --allow Write \
+   -p \
+   --prompt ./context.txt \
+   "Analyze the provided git diff and identify any new functionality introduced. Summarise the new features in a few sentences. Then search the existing documentation in the site docs/ directory to determine whether these features are already documented in a way that enables users to use them. If documentation is missing or incomplete, create or modify Markdown files under the site diretory (without changing any code) to add clear explanations, usage instructions and examples for the new features in the same style and format as the existing documentation. Finally, print a brief summary of the documentation changes you made."
+
+# Clean up temporary files
+echo "Cleaning up temporary files..."
+rm -f context.txt
+
+# Commit and push documentation changes
+echo "Reviewing git status..."
+git status
+
+# Only adding files that have been added and modified in the site directory
+echo "Adding files edited in site directory to git..."
+git add site/
+
+if git diff --cached --quiet; then
+    echo "No documentation changes to commit"
+else
+    echo "Committing changes..."
+    git commit -s -m "docs: update for new functionality from branch $BRANCH_NAME"
+
+    echo "Pushing changes to origin..."
+    git push --set-upstream origin "$DOCS_BRANCH_NAME"
+
+    echo "Documentation branch created and pushed: $DOCS_BRANCH_NAME"
+fi
+```
+
+  </Tab>
+</Tabs>
+
+## Enhancement Ideas
+
+The workflow above is a basic example and can be enhanced in various ways to fit your needs. Here are some ideas:
+
+<CardGroup cols={2}>
+  <Card title="Change Analysis Agent" icon="magnifying-glass">
+    Define a specialized agent for analyzing changes and generating targeted prompts for documentation writers, improving output quality.
+  </Card>
+
+  <Card title="Auto-Documentation on Merge" icon="code-compare">
+    Create GitHub workflows that automatically generate documentation PRs when new features are merged to main.
+  </Card>
+
+  <Card title="Documentation Gap Analysis" icon="clipboard">
+    Build an agent that reviews older merged PRs to identify undocumented features and generates missing documentation.
+  </Card>
+
+  <Card title="Copy Editor Agent" icon="pencil">
+    Add a post-processing agent to enhance writing quality with rules like "use short sentences and simple words."
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Ready to implement automated documentation with Continue CLI? Here are some helpful resources to get you started:
+
+<CardGroup cols={2}>
+  <Card title="Continue CLI Guide" icon="terminal" href="/guides/cli">
+    Learn the fundamentals of using Continue CLI for automated coding tasks and headless workflows.
+  </Card>
+
+  <Card title="Understanding Configs" icon="robot" href="/guides/understanding-configs">
+    Discover how to configure and customize AI configs for your specific documentation needs.
+  </Card>
+
+  <Card title="Video: Leverage AI to help with your docs" icon="video" href="https://www.youtube.com/watch?v=rJ2taa8OLvY">
+    Checkout this video from Tetrate about using Continue Agents to help with writing your docs.
+  </Card>
+
+  <Card title="Continue Mission Control" icon="users" href="https://hub.continue.dev">
+    Browse pre-built agents and configurations from the Continue community.
+  </Card>
+</CardGroup>

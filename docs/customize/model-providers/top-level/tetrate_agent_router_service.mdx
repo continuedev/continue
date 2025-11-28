@@ -8,7 +8,7 @@ The **Tetrate Agent Router Service** provides a unified Gateway for accessing va
 This gateway acts as an intelligent router that can distribute requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
 
 <Tip>
-Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Continue Hub](https://hub.continue.dev/tetrate) to get started fast.
+Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Continue Mission Control](https://hub.continue.dev/tetrate) to get started fast.
 </Tip>
 
 ## Setup
@@ -32,13 +32,13 @@ Go to the [API keys page](https://router.tetrate.ai/api-keys) to get your key
 </Steps>
 
 
-### Quickstart with Continue Hub
+### Quickstart with Continue Mission Control
 
-Fastest way: use preconfigured models from Tetrate on Continue Hub
+Fastest way: use preconfigured models from Tetrate on Continue Mission Control
 
 <Steps>
 <Step title="Browse models">
-Open [Tetrate on Continue Hub](https://hub.continue.dev/tetrate) and pick a model (e.g., [Claude Sonnet 4](https://hub.continue.dev/tetrate/claude-sonnet-4))
+Open [Tetrate on Continue Mission Control](https://hub.continue.dev/tetrate) and pick a model (e.g., [Claude Sonnet 4](https://hub.continue.dev/tetrate/claude-sonnet-4))
 </Step>
 
 <Step title="Use or remix">
@@ -46,14 +46,14 @@ Click "Use Model", or "Remix" to change the model ID if needed
 </Step>
 
 <Step title="Add your API key">
-Add your API key to Continue. See [adding secrets in Continue Hub](/hub/secrets/secret-types) and [managing local secrets in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
+Add your API key to Continue. See [adding secrets in Continue Mission Control](/hub/secrets/secret-types) and [managing local secrets in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
 <Tip>
-Add it as a Continue Hub secret named `TETRATE_API_KEY` to reuse across projects.
+Add it as a Continue Mission Control secret named `TETRATE_API_KEY` to reuse across projects.
 </Tip>
 </Step>
 </Steps>
 
-![Remix a model from Tetrate on Continue Hub](../assets/tetrate-remix.png)
+![Remix a model from Tetrate on Continue Mission Control](../assets/tetrate-remix.png)
 
 <Info>
 If a model is missing, remix a similar one and set the `model` field to the target ID.
@@ -65,7 +65,7 @@ If a model is missing, remix a similar one and set the `model` field to the targ
   <Card title="In Local Agent Configuration" icon="folder" vertical>
     Use a Tetrate model block from the Hub or define it directly in your local agent configuration.
   </Card>
-  <Card title="Continue Hub" icon="cloud" vertical>
+  <Card title="Continue Mission Control" icon="cloud" vertical>
     Use a Tetrate model block from the Hub or define your own on the Hub.
   </Card>
   <Card title="Using Local Model Blocks" icon="file-lines" vertical>
@@ -130,7 +130,7 @@ context:
   - provider: codebase
 ```
 </Tab>
-<Tab title="Continue Hub">
+<Tab title="Continue Mission Control">
 **When to use**: Share configurations across teams or contribute to the community.
 
 **The Model Block:**
@@ -151,7 +151,7 @@ models:
     capabilities:
       - tool_use
 ```
-View the model block `tetrate/claude-sonnet-4` on the [Continue Hub](https://hub.continue.dev/tetrate/claude-sonnet-4).
+View the model block `tetrate/claude-sonnet-4` on the [Continue Mission Control](https://hub.continue.dev/tetrate/claude-sonnet-4).
 
 **Reference it in your Agent configuration:**
 
@@ -168,14 +168,11 @@ context:
   - uses: continuedev/terminal-context
   - uses: continuedev/file-context
 ```
-<Tip>
-To customize, see the [model block creation guide](/hub/blocks/create-a-block).
-</Tip>
 
 </Tab>
 
 <Tab title="Using Local Model Blocks">
-**When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Continue Hub).
+**When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Continue Mission Control).
 
 **The Local Model Block:**
 <Info>

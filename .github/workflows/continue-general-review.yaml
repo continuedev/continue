@@ -1,6 +1,9 @@
 name: Continue General Review
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     types: [opened, ready_for_review]
   issue_comment:
@@ -18,8 +21,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Run Continue PR Review Action
-        uses: continuedev/continue/actions/general-review@e3ed0b6218e5d339e2fb265d06a267e98e7c7585
+        uses: continuedev/continue/actions/general-review@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
-          continue-config: "continuedev/review-bot"
+          continue-agent: "empty-agent"

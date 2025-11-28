@@ -89,7 +89,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -97,7 +97,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 

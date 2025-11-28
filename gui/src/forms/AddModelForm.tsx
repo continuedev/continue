@@ -134,22 +134,6 @@ export function AddModelForm({
         <div className="mx-auto max-w-md p-6">
           <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
 
-          {/* TODO sync free trial limit with hub */}
-          {/* {!hideFreeTrialLimitMessage && hasPassedFTL() && (
-            <p className="text-sm text-gray-400">
-              You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
-              free inputs. To keep using Continue, you can either use your own
-              API key, or use a local LLM. To read more about the options, see
-              our{" "}
-              <a
-                onClick={() => ideMessenger.post("openUrl", CONTINUE_SETUP_URL)}
-              >
-                documentation
-              </a>
-              .
-            </p>
-          )} */}
-
           <div className="my-8 flex flex-col gap-6">
             <div>
               <label className="block text-sm font-medium">Provider</label>

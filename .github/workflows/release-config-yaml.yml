@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   release:
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     uses: ./.github/workflows/reusable-release.yml
     with:
       package-name: "config-yaml"

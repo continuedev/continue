@@ -1,0 +1,798 @@
+---
+title: "Chrome DevTools Performance Optimization Cookbook"
+description: "Measure and optimize web performance with Chrome DevTools MCP, automated performance traces, and Core Web Vitals monitoring using Continue."
+sidebarTitle: "Chrome DevTools MCP for Performance"
+---
+
+<Card title="Debug Performance Like a Pro" icon="gauge-high">
+  Use AI to automatically trace performance, analyze Core Web Vitals, diagnose bottlenecks, and get actionable optimization suggestions directly from Chrome DevTools
+</Card>
+
+<Info>
+  **Did You Know?** Chrome DevTools MCP brings the full power of browser debugging to your AI workflow:
+  - [Performance Traces](https://developer.chrome.com/docs/devtools/performance) with automated analysis
+  - [Network Request Monitoring](https://developer.chrome.com/docs/devtools/network) for bottleneck detection
+  - [Console Debugging](https://developer.chrome.com/docs/devtools/console) with error pattern recognition
+  - [CPU & Network Throttling](https://developer.chrome.com/docs/devtools/performance/reference#throttling) to simulate real-world conditions
+  - [Performance Insights](https://developer.chrome.com/docs/devtools/performance-insights) with AI-powered analysis
+  - [Screenshot Debugging](https://developer.chrome.com/docs/devtools/device-mode) for visual regression detection
+
+This guide shows you how to leverage these features through natural language with Continue CLI!
+
+</Info>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Run automated [performance traces](https://developer.chrome.com/docs/devtools/performance) to capture runtime metrics
+- Analyze [Core Web Vitals](https://web.dev/vitals/) (LCP, FID, CLS, INP) and performance insights
+- Diagnose performance bottlenecks using network and console analysis
+- Test performance under different network and CPU conditions with [throttling](https://developer.chrome.com/docs/devtools/performance/reference#throttling)
+- Automate visual regression testing with [screenshots](https://developer.chrome.com/docs/devtools/device-mode)
+
+## Prerequisites
+
+- Chrome browser installed
+- Web project with a running development server (or deployed URL)
+- Node.js 20+ installed
+- [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
+- [Chrome DevTools MCP](https://hub.continue.dev) configured
+
+## Quick Setup
+
+For all options, first:
+<Steps>
+<Step title="Install Continue CLI">
+    ```bash
+    npm i -g @continuedev/cli
+    ```
+  </Step>
+</Steps>
+
+## Chrome DevTools MCP Workflow Options
+
+<Card title="Fastest Path to Success" icon="rocket">
+  Skip the manual setup and use our pre-built Chrome DevTools agent that includes
+  optimized prompts, rules, and the Chrome DevTools MCP for more consistent results.
+</Card>
+
+After completing **Quick Setup** above, you have two paths to get started:
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate results with optimized prompts and built-in performance analysis
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [Chrome Dev Tools Agent](https://hub.continue.dev/continuedev/chrome-dev-tools-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --agent continuedev/chrome-dev-tools-agent
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for performance analysis and debugging
+        - **Built-in rules** for consistent formatting and error handling
+        - **[Chrome DevTools MCP](https://hub.continue.dev/google/chrome-devtools-mcp)** for reliable browser automation
+      </Step>
+
+      <Step title="Run Performance Analysis">
+        In the TUI that opens, type:
+        ```
+        Analyze performance of http://localhost:3000 and provide optimization recommendations
+        ```
+
+        That's it! The agent handles Chrome automation automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Chrome DevTools MCP integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+    <Steps>
+      <Step title="Add Chrome DevTools MCP to Your Assistant">
+        Visit the [Chrome DevTools MCP](https://hub.continue.dev/google/chrome-devtools-mcp) on Continue Mission Control and add it to your assistant, or add this to your configuration:
+
+        ```yaml
+        name: Chrome DevTools MCP
+        version: 0.0.1
+        schema: v1
+        mcpServers:
+          - name: Chrome DevTools MCP
+            command: npx
+            args:
+              - chrome-devtools-mcp@latest
+        ```
+
+        The MCP will automatically launch Chrome and connect to DevTools when needed.
+      </Step>
+
+      <Step title="Verify Setup">
+        Test the connection:
+
+        **TUI Mode Prompt:**
+        ```
+        Open web.dev and take a screenshot
+        ```
+      </Step>
+
+      <Step title="Run Performance Analysis">
+        Navigate to your project directory:
+
+        **TUI Mode Prompt:**
+        ```
+        Navigate to http://localhost:3000 and record a performance trace. Analyze LCP, FID, and CLS.
+        ```
+      </Step>
+    </Steps>
+
+    <Info>
+      **Manual Setup**: While you can configure the MCP manually, the pre-built agent provides optimized prompts and better error handling for performance analysis workflows.
+    </Info>
+  </Tab>
+</Tabs>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Continue Mission Control secrets
+      - **Chrome browser** installed on your system
+      - **Node.js 20+** to run the MCP via npx
+
+    The agent will automatically detect and use your configuration.
+</Accordion>
+
+---
+
+## Performance Measurement Workflows
+
+The Chrome DevTools MCP enables natural language performance analysis. Here are workflows adapted from real-world use cases:
+
+### Quick Performance Checks
+
+<Card title="Verify Code Changes" icon="check">
+**TUI Mode Prompt:**
+```
+Verify in the browser that your change works as expected.
+```
+</Card>
+
+<Card title="Debug Broken Images" icon="image">
+**TUI Mode Prompt:**
+```
+A few images on localhost:8080 are not loading. What's happening?
+```
+</Card>
+
+<Card title="Debug Form Submission Issues" icon="rectangle-list">
+**TUI Mode Prompt:**
+```
+Why does submitting the form fail after entering an email address?
+```
+</Card>
+
+<Card title="Debug Layout Issues" icon="layer-group">
+**TUI Mode Prompt:**
+```
+The page on localhost:8080 looks strange and off. Check what's happening there.
+```
+</Card>
+
+<Card title="Performance Optimization" icon="gauge-high">
+**TUI Mode Prompt:**
+```
+Localhost:8080 is loading slowly. Make it load faster.
+```
+</Card>
+
+<Card title="Check Core Web Vitals" icon="chart-line">
+**TUI Mode Prompt:**
+```
+Please check the LCP of web.dev.
+```
+</Card>
+
+---
+
+## Performance Analysis Recipes
+
+Now you can use natural language prompts to analyze web performance. The Continue agent automatically calls the appropriate Chrome DevTools MCP tools.
+
+<Info>
+  **Where to run these workflows:**
+  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+
+  **Test in Plan Mode First**: Before running performance measurements, test your prompts in plan mode (see the [Plan Mode Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This shows you what the agent will do without executing it.
+</Info>
+
+### Step 1: Baseline Performance Trace
+
+Establish your current performance baseline:
+
+**TUI Mode Prompt:**
+```
+Navigate to http://localhost:3000 and record a performance trace with page reload. Analyze the trace and show me the LCP, FID, CLS, and total blocking time.
+```
+
+
+<Info>
+
+    Chrome DevTools Performance Panel automatically tracks:
+    - **Core Web Vitals**: LCP, FID, CLS, INP
+    - **Loading Performance**: DOMContentLoaded, Load events, First Paint
+    - **Runtime Performance**: JavaScript execution time, layout shifts, paint events
+    - **Resource Usage**: Memory consumption, CPU utilization
+
+</Info>
+
+### Step 2: Analyze Performance Insights
+
+Deep dive into specific performance issues:
+
+**TUI Mode Prompt:**
+```
+Record a performance trace for http://localhost:3000 and analyze all Performance Insights. For each insight found, provide detailed information about:
+- The specific issue (e.g., DocumentLatency, SlowCSS)
+- Root cause analysis
+- Affected resources or code
+- Recommended optimizations
+- Expected impact on Core Web Vitals
+```
+
+<Info>
+  **Performance Insights**: Chrome DevTools automatically detects common performance issues like:
+  - **Render Blocking Resources**: CSS and JavaScript that delay first paint
+  - **Layout Shifts**: Elements that move during page load
+  - **Long Tasks**: JavaScript execution blocking the main thread
+  - **Slow Network Requests**: Resources taking too long to load
+  - **Unused CSS/JavaScript**: Dead code increasing bundle size
+</Info>
+
+### Step 3: Network Performance Analysis
+
+Identify slow network requests and optimization opportunities:
+
+**TUI Mode Prompt:**
+```
+Navigate to https://my-site.com and:
+1. List all network requests made during page load
+2. Identify the 5 slowest requests and their sizes
+3. Find any requests over 1MB
+4. Detect render-blocking resources
+5. Check for inefficient caching (missing cache headers)
+6. Suggest specific optimizations for each issue found
+```
+
+### Step 4: Throttling Performance Tests
+
+Test performance under real-world network and CPU conditions:
+
+**TUI Mode Prompt:**
+```
+Test my site's performance under different conditions:
+
+1. Navigate to http://localhost:3000
+2. Emulate 4x CPU slowdown and Fast 3G network
+3. Record a performance trace with reload
+4. Analyze LCP and Total Blocking Time
+5. Take a screenshot when page is fully loaded
+
+Then repeat the test with:
+- Slow 3G network + 6x CPU slowdown
+- Offline network (to test service worker)
+
+Compare results and identify which conditions cause the worst performance degradation."
+```
+
+<Info>
+  **Available Network Presets**:
+  - No throttling
+  - Fast 3G (1.6 Mbps down, 0.75 Mbps up)
+  - Slow 3G (400 Kbps down, 400 Kbps up)
+  - Offline
+
+  **CPU Throttling**: 4x, 6x, or custom slowdown to simulate low-end devices
+</Info>
+
+### Step 5: JavaScript Performance Analysis
+
+Identify expensive JavaScript operations:
+
+**TUI Mode Prompt:**
+```
+Record a performance trace for http://localhost:3000 and:
+1. Identify all long tasks (>50ms) blocking the main thread
+2. Find the specific JavaScript functions causing these tasks
+3. Measure total JavaScript execution time
+4. Detect unused JavaScript being loaded
+5. Show the call stack for the longest task
+6. Recommend code splitting or lazy loading opportunities"
+```
+
+## Automated Performance Monitoring
+
+### Step 6: Core Web Vitals Dashboard
+
+Create automated monitoring for Core Web Vitals:
+
+**TUI Mode Prompt:**
+```
+Create a performance monitoring script that:
+1. Opens my site at http://localhost:3000
+2. Records a performance trace with reload
+3. Extracts Core Web Vitals (LCP, FID, CLS, INP)
+4. Checks console for JavaScript errors
+5. Takes a screenshot
+6. Saves results to performance-report.json with format:
+   {
+     'timestamp': 'ISO date',
+     'lcp': number,
+     'fid': number,
+     'cls': number,
+     'inp': number,
+     'errors': array,
+     'screenshot': 'path'
+   }
+
+Save this as scripts/performance-monitor.js that I can run regularly"
+```
+
+### Step 7: Visual Regression Detection
+
+Detect unintended visual changes:
+
+**TUI Mode Prompt:**
+```
+Set up visual regression testing:
+1. Navigate to http://localhost:3000
+2. Take full-page screenshots at:
+   - Desktop viewport (1920x1080)
+   - Tablet viewport (768x1024)
+   - Mobile viewport (375x667)
+3. Save screenshots to screenshots/baseline/
+4. Create a script to compare future screenshots against baseline
+5. Highlight any pixel differences over 5%
+6. Generate a visual diff report"
+```
+
+### Step 8: Performance Budget Enforcement
+
+Set and enforce performance budgets:
+
+**TUI Mode Prompt:**
+```
+Create a performance budget checker that:
+
+Requirements:
+- LCP must be < 2.5 seconds
+- FID must be < 100ms
+- CLS must be < 0.1
+- Total JavaScript < 300KB
+- Total page size < 1MB
+- No console errors
+
+Implementation:
+1. Navigate to http://localhost:3000
+2. Record performance trace with reload
+3. List all network requests and calculate total sizes
+4. Check console messages for errors
+5. Validate all metrics against budgets
+6. Exit with code 1 if any budget is exceeded
+7. Generate a detailed report showing pass/fail for each metric
+
+Save as scripts/performance-budget.js for CI/CD integration"
+```
+
+## Continuous Performance Testing with GitHub Actions
+
+This example demonstrates a **Continuous AI workflow** where performance validation runs automatically in your CI/CD pipeline using Chrome DevTools MCP in headless mode.
+
+### Add GitHub Secrets
+
+Navigate to **Repository Settings → Secrets and variables → Actions** and add:
+
+- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+
+### Create Workflow File
+
+This workflow automatically validates web performance on pull requests using the Continue CLI in headless mode. It records performance traces, extracts Core Web Vitals, and posts a summary report as a PR comment.
+
+Create `.github/workflows/performance-check.yml` in your repository:
+
+```yaml
+name: Performance Check
+
+on:
+  pull_request:
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: |
+          npm install -g @continuedev/cli
+          npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Start Dev Server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000
+
+      - name: Run Performance Tests
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          cn --agent continuedev/chrome-dev-tools-agent \
+             -p "Navigate to http://localhost:3000 and:
+             1. Record performance trace with reload
+             2. Extract LCP, FID, CLS values
+             3. List network requests and calculate total bundle size
+             4. Output results as JSON to performance.json" \
+             --auto
+
+      - name: Check Performance Budgets
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const perf = JSON.parse(fs.readFileSync('performance.json'));
+
+          const budgets = {
+            lcp: 2.5,
+            fid: 100,
+            cls: 0.1,
+            bundleSize: 300000
+          };
+
+          let failed = false;
+          const results = [];
+
+          if (perf.lcp > budgets.lcp) {
+            results.push(`❌ LCP: ${perf.lcp}s (budget: ${budgets.lcp}s)`);
+            failed = true;
+          } else {
+            results.push(`✅ LCP: ${perf.lcp}s`);
+          }
+
+          if (perf.fid > budgets.fid) {
+            results.push(`❌ FID: ${perf.fid}ms (budget: ${budgets.fid}ms)`);
+            failed = true;
+          } else {
+            results.push(`✅ FID: ${perf.fid}ms`);
+          }
+
+          if (perf.cls > budgets.cls) {
+            results.push(`❌ CLS: ${perf.cls} (budget: ${budgets.cls})`);
+            failed = true;
+          } else {
+            results.push(`✅ CLS: ${perf.cls}`);
+          }
+
+          if (perf.bundleSize > budgets.bundleSize) {
+            results.push(`❌ Bundle: ${perf.bundleSize}KB (budget: ${budgets.bundleSize}KB)`);
+            failed = true;
+          } else {
+            results.push(`✅ Bundle: ${perf.bundleSize}KB`);
+          }
+
+          console.log(results.join('\n'));
+
+          if (failed) {
+            process.exit(1);
+          }
+          EOF
+
+      - name: Comment Performance Results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const perf = JSON.parse(fs.readFileSync('performance.json'));
+
+            const comment = `## 📊 Performance Report
+
+            | Metric | Value | Budget | Status |
+            |--------|-------|--------|--------|
+            | LCP | ${perf.lcp}s | 2.5s | ${perf.lcp <= 2.5 ? '✅' : '❌'} |
+            | FID | ${perf.fid}ms | 100ms | ${perf.fid <= 100 ? '✅' : '❌'} |
+            | CLS | ${perf.cls} | 0.1 | ${perf.cls <= 0.1 ? '✅' : '❌'} |
+            | Bundle Size | ${perf.bundleSize}KB | 300KB | ${perf.bundleSize <= 300 ? '✅' : '❌'} |
+
+            ${perf.lcp > 2.5 || perf.fid > 100 || perf.cls > 0.1 || perf.bundleSize > 300
+              ? '⚠️ **Performance budgets exceeded. Please optimize before merging.**'
+              : '✅ **All performance budgets met!**'}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+```
+
+<Info>
+  The Chrome DevTools MCP works in headless Chrome environments. Make sure your CI environment has Chrome installed (it's pre-installed on GitHub Actions ubuntu-latest runners).
+</Info>
+
+## Advanced Performance Workflows
+
+### Step 9: Competitor Comparison
+
+Compare your site's performance with competitors:
+
+**TUI Mode Prompt:**
+```
+Compare performance between my site and competitors:
+
+Sites to test:
+- http://localhost:3000 (my site)
+- https://competitor1.com
+- https://competitor2.com
+
+For each site:
+1. Navigate to homepage
+2. Record performance trace with reload
+3. Extract LCP, FID, CLS, Total Blocking Time
+4. List network requests and calculate total page size
+5. Count JavaScript and CSS files
+
+Create a comparison table showing:
+- Site name
+- All Core Web Vitals
+- Total page size
+- Number of requests
+- Which site performs best for each metric
+
+Provide specific recommendations for how my site can improve based on what competitors do better."
+```
+
+### Step 10: Performance Testing Across Routes
+
+Test performance consistency across your entire site:
+
+**TUI Mode Prompt:**
+```
+Test performance across all major routes:
+
+Routes to test:
+- / (homepage)
+- /products
+- /products/[id] (pick a sample product)
+- /checkout
+- /blog
+
+For each route:
+1. Navigate to the URL
+2. Record performance trace
+3. Extract LCP, Total Blocking Time, bundle size
+4. Check console for errors
+5. Take a screenshot
+
+Generate a report showing:
+- Which routes have the worst LCP
+- Routes with the most JavaScript errors
+- Bundle size variations across routes
+- Recommendations for route-specific optimizations"
+```
+
+### Step 11: Mobile Performance Analysis
+
+Focus on mobile-specific performance issues:
+
+**TUI Mode Prompt:**
+```
+Analyze mobile performance for http://localhost:3000:
+
+1. Resize viewport to mobile (375x667)
+2. Emulate Slow 3G network + 4x CPU slowdown
+3. Record performance trace with reload
+4. Analyze Performance Insights for mobile-specific issues
+5. Check for:
+   - Touch target sizes too small
+   - Horizontal scrolling issues
+   - Oversized images not optimized for mobile
+   - Excessive JavaScript on mobile
+6. Take mobile screenshot
+7. Provide mobile-specific optimization recommendations"
+```
+
+## Performance Troubleshooting
+
+### Debug Performance Regressions
+
+Quickly identify what caused a performance regression:
+
+**TUI Mode Prompt:**
+```
+Debug performance regression on http://localhost:3000:
+
+1. Record performance trace
+2. Analyze all Performance Insights
+3. List console errors and warnings
+4. Check network requests for:
+   - Failed requests
+   - Slow requests (>1s)
+   - Large requests (>500KB)
+5. Identify the top 3 performance bottlenecks
+6. For each bottleneck, suggest:
+   - Root cause
+   - Specific code or resource causing it
+   - Step-by-step fix
+   - Expected performance improvement"
+```
+
+### Performance Issue Quick Reference
+
+| Issue | Quick Fix Command (in cn TUI) |
+| :---- | :---------------------------- |
+| Slow LCP | `"Find render-blocking resources and suggest preloading or deferring"` |
+| High CLS | `"Detect layout shifts and identify unsized images or dynamic content"` |
+| Long Tasks | `"Find JavaScript tasks over 50ms and suggest code splitting"` |
+| Large Bundles | `"List all JavaScript files, identify largest ones, suggest lazy loading"` |
+| Slow Network | `"Find requests over 500KB and suggest compression or optimization"` |
+| Console Errors | `"List all console errors and suggest fixes"` |
+
+## What You've Built
+
+After completing this guide, you have a complete **AI-powered performance analysis system** that:
+
+- ✅ **Uses natural language** — Simple prompts instead of complex DevTools commands
+- ✅ **Analyzes automatically** — AI interprets performance traces and suggests fixes
+- ✅ **Runs continuously** — Automated validation in CI/CD pipelines
+- ✅ **Ensures quality** — Performance checks prevent regressions from shipping
+
+<Card title="Continuous AI" icon="rocket">
+  Your performance workflow now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine performance analysis and debugging with human oversight through review and approval of changes.
+</Card>
+
+## Chrome DevTools MCP Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Performance Tracing" icon="chart-line">
+
+      **Tools Available**
+      - `performance_start_trace`: Start recording with auto-reload
+      - `performance_stop_trace`: Stop and analyze trace
+      - `performance_analyze_insight`: Deep dive into specific issues
+
+  </Card>
+
+  <Card title="Network Debugging" icon="network-wired">
+
+      **Tools Available**
+      - `list_network_requests`: See all requests and sizes
+      - `get_network_request`: Inspect specific request details
+      - `emulate_network`: Test under various network conditions
+
+  </Card>
+
+  <Card title="Console Analysis" icon="terminal">
+
+      **Tools Available**
+      - `list_console_messages`: Get all console logs and errors
+      - `evaluate_script`: Run JavaScript in page context
+      - Automatic error pattern detection
+
+  </Card>
+
+  <Card title="Visual Testing" icon="camera">
+
+      **Tools Available**
+      - `take_screenshot`: Capture full or partial page
+      - `take_snapshot`: Get accessibility tree snapshot
+      - `resize_page`: Test responsive layouts
+
+  </Card>
+</CardGroup>
+
+## Performance Best Practices
+
+Key metrics to monitor for optimal web performance:
+
+<CardGroup cols={3}>
+  <Card title="Core Web Vitals" icon="gauge-high">
+    - LCP < 2.5s (good)
+    - FID < 100ms (good)
+    - CLS < 0.1 (good)
+    - INP < 200ms (good)
+  </Card>
+
+  <Card title="Loading Performance" icon="bolt">
+    - Total page size < 1MB
+    - JavaScript < 300KB
+    - Time to Interactive < 3.8s
+    - First Contentful Paint < 1.8s
+  </Card>
+
+  <Card title="Runtime Performance" icon="microchip">
+    - No long tasks > 50ms
+    - 60 FPS during interactions
+    - No memory leaks
+    - Efficient event listeners
+  </Card>
+</CardGroup>
+
+## Advanced Testing Scenarios
+
+### A/B Test Performance Impact
+
+**TUI Mode Prompt:**
+```
+Compare performance of two implementations:
+1. Test variant A at http://localhost:3000?variant=A
+2. Test variant B at http://localhost:3000?variant=B
+Run each test 5 times and calculate average LCP, FID, CLS
+Determine which variant has better performance and by how much
+```
+
+### Lighthouse Score Tracking
+
+**TUI Mode Prompt:**
+```
+Create a script that runs daily performance audits:
+1. Navigate to production site
+2. Record performance trace
+3. Calculate Lighthouse-style performance score based on:
+   - FCP (10%)
+   - SI (10%)
+   - LCP (25%)
+   - TTI (10%)
+   - TBT (30%)
+   - CLS (15%)
+4. Track score over time in performance-history.json
+5. Alert if score drops below 90
+```
+
+### Performance Regression Detection
+
+**TUI Mode Prompt:**
+```
+Set up automated regression detection:
+1. Record baseline performance for main branch
+2. Save baseline metrics to baseline-perf.json
+3. On each PR, run performance tests
+4. Compare PR metrics with baseline
+5. Flag regressions over 10% for any metric
+6. Generate visual diff report with screenshots
+```
+
+## Next Steps
+
+1. **Analyze your first site** - Try the baseline performance trace on your current project
+2. **Debug bottlenecks** - Use the network analysis prompt to fix slow requests
+3. **Set up CI pipeline** - Add the GitHub Actions workflow to your repo
+4. **Test throttling** - Measure performance under real-world network conditions
+5. **Monitor trends** - Track Core Web Vitals over time
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Chrome DevTools MCP" icon="plug" href="https://github.com/ChromeDevTools/chrome-devtools-mcp">
+    Official Chrome DevTools MCP repository
+  </Card>
+  <Card title="Continue Mission Control" icon="circle-nodes" href="https://hub.continue.dev">
+    Explore more MCP integrations
+  </Card>
+  <Card title="DevTools Documentation" icon="book" href="https://developer.chrome.com/docs/devtools">
+    Complete Chrome DevTools documentation
+  </Card>
+  <Card title="Web Vitals Guide" icon="gauge-high" href="https://web.dev/vitals/">
+    Learn about Core Web Vitals
+  </Card>
+</CardGroup>

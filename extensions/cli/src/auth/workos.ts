@@ -1,45 +1,26 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
-// Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
 import open from "open";
 
+import { logger } from "src/util/logger.js";
+
 import { getApiClient } from "../config.js";
+// eslint-disable-next-line import/order
 import { env } from "../env.js";
+
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
 
-// Config file path
-const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
-
-// Represents an authenticated user's configuration
-export interface AuthenticatedConfig {
-  userId: string;
-  userEmail: string;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  organizationId: string | null; // null means personal organization
-  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
-  modelName?: string; // Name of the selected model
-}
-
-// Represents configuration when using environment variable auth
-export interface EnvironmentAuthConfig {
-  /**
-   * This userId?: undefined; field a trick to help TypeScript differentiate between
-   * AuthenticatedConfig and EnvironmentAuthConfig. Otherwise AuthenticatedConfig is
-   * a possible subtype of EnvironmentAuthConfig and TypeScript gets confused where
-   * type guards are involved.
-   */
-  userId?: undefined;
-  accessToken: string;
-  organizationId: string | null; // Can be set via --org flag in headless mode
-  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
-  modelName?: string; // Name of the selected model
+// Config file path - define as a function to avoid initialization order issues
+function getAuthConfigPath() {
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  return path.join(continueHome, "auth.json");
 }
 
 // Union type representing the possible authentication states
@@ -74,7 +55,9 @@ export function getAccessToken(config: AuthConfig): string | null {
 /**
  * Gets the organization ID from any auth config type
  */
-export function getOrganizationId(config: AuthConfig): string | null {
+export function getOrganizationId(
+  config: AuthConfig,
+): string | null | undefined {
   if (config === null) return null;
   return config.organizationId;
 }
@@ -89,17 +72,32 @@ export function getConfigUri(config: AuthConfig): string | null {
 
 /**
  * Gets the model name from any auth config type
+ * For unauthenticated users or when auth config has no modelName, checks GlobalContext
  */
 export function getModelName(config: AuthConfig): string | null {
-  if (config === null) return null;
-  return config.modelName || null;
+  // Priority 1: Logged-in users with modelName in auth config
+  if (config !== null && config.modelName) {
+    return config.modelName;
+  }
+
+  // Priority 2: Fall back to GlobalContext (for logged-out users or logged-in without modelName)
+  return getPersistedModelName();
 }
 
 // URI utility functions have been moved to ./uriUtils.ts
+import {
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
+
+import { autoSelectOrganizationAndConfig } from "./orgSelection.js";
 import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 import {
-  autoSelectOrganization,
-  createUpdatedAuthConfig,
+  AuthenticatedConfig,
+  DeviceAuthorizationResponse,
+  EnvironmentAuthConfig,
+} from "./workos-types.js";
+import {
   handleCliOrgForAuthenticatedConfig,
   handleCliOrgForEnvironmentAuth,
 } from "./workos.helpers.js";
@@ -130,8 +128,9 @@ export function loadAuthConfig(): AuthConfig {
   }
 
   try {
-    if (fs.existsSync(AUTH_CONFIG_PATH)) {
-      const data = JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+    const authConfigPath = getAuthConfigPath();
+    if (fs.existsSync(authConfigPath)) {
+      const data = JSON.parse(fs.readFileSync(authConfigPath, "utf8"));
 
       // Validate that we have all required fields for authenticated config
       if (
@@ -173,13 +172,14 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
   }
 
   try {
+    const authConfigPath = getAuthConfigPath();
     // Make sure the directory exists
-    const dir = path.dirname(AUTH_CONFIG_PATH);
+    const dir = path.dirname(authConfigPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(AUTH_CONFIG_PATH, JSON.stringify(config, null, 2));
+    fs.writeFileSync(authConfigPath, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Error saving auth config: ${error}`);
   }
@@ -206,21 +206,30 @@ export function updateConfigUri(configUri: string | null): void {
 
 /**
  * Updates the model name in the authentication configuration
+ * Returns the updated config so the caller can update in-memory state
+ * For unauthenticated users, saves to GlobalContext
  */
-export function updateModelName(modelName: string | null): void {
+export function updateModelName(modelName: string | null): AuthConfig {
   // If using CONTINUE_API_KEY environment variable, don't save anything
   if (process.env.CONTINUE_API_KEY) {
-    return;
+    return loadAuthConfig();
   }
 
   const config = loadAuthConfig();
+
+  // If logged in, save to auth.json
   if (config && isAuthenticatedConfig(config)) {
     const updatedConfig: AuthenticatedConfig = {
       ...config,
       modelName: modelName || undefined,
     };
     saveAuthConfig(updatedConfig);
+    return updatedConfig;
   }
+
+  // If logged out, save to GlobalContext
+  persistModelName(modelName);
+  return config;
 }
 
 /**
@@ -237,44 +246,28 @@ export function updateLocalConfigPath(localConfigPath: string | null): void {
 /**
  * Checks if the user is authenticated and the token is valid
  */
-export function isAuthenticated(): boolean {
+export async function isAuthenticated(): Promise<boolean> {
   const config = loadAuthConfig();
 
   if (config === null) {
     return false;
   }
 
-  // Environment auth is always valid
   if (isEnvironmentAuthConfig(config)) {
     return true;
   }
 
-  /**
-   * THIS CODE DOESN'T WORK.
-   * .catch() will never return in a non-async function.
-   * It's a hallucination.
-   **/
   if (Date.now() > config.expiresAt) {
-    // Try refreshing the token
-    refreshToken(config.refreshToken).catch(() => {
-      // If refresh fails, we're not authenticated
+    try {
+      const refreshed = await refreshToken(config.refreshToken);
+      return isAuthenticatedConfig(refreshed);
+    } catch (e) {
+      logger.error("Failed to refresh auto token", e);
       return false;
-    });
+    }
   }
 
   return true;
-}
-
-/**
- * Device authorization response from WorkOS
- */
-interface DeviceAuthorizationResponse {
-  device_code: string;
-  user_code: string;
-  verification_uri: string;
-  verification_uri_complete: string;
-  expires_in: number;
-  interval: number;
 }
 
 /**
@@ -360,7 +353,7 @@ async function pollForDeviceToken(
           accessToken: access_token,
           refreshToken: refresh_token,
           expiresAt: tokenExpiresAt,
-          organizationId: null,
+          organizationId: undefined, // undefined triggers auto-selection, null means personal org selected
         };
 
         // Save the config
@@ -563,20 +556,18 @@ export async function ensureOrganization(
     );
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authenticatedConfig.organizationId !== undefined) {
-    return authenticatedConfig;
+  // Only auto-select if user hasn't made any previous selections
+  // - organizationId === undefined means first-time setup
+  // - configUri being set means they've chosen a specific assistant/config
+  if (
+    authenticatedConfig.organizationId === undefined &&
+    !authenticatedConfig.configUri
+  ) {
+    return autoSelectOrganizationAndConfig(authenticatedConfig);
   }
 
-  // In headless mode, default to personal organization if none saved
-  if (isHeadless) {
-    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  }
-
-  // Need to select organization
-  return autoSelectOrganization(authenticatedConfig);
+  // User already has made a selection (org or config) - respect their choice
+  return authenticatedConfig;
 }
 
 /**
@@ -679,10 +670,9 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
-  const onboardingFlagPath = path.join(
-    env.continueHome,
-    ".onboarding_complete",
-  );
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const onboardingFlagPath = path.join(continueHome, ".onboarding_complete");
 
   // Remove onboarding completion flag so user will go through onboarding again
   if (fs.existsSync(onboardingFlagPath)) {
@@ -698,8 +688,9 @@ export function logout(): void {
     return;
   }
 
-  if (fs.existsSync(AUTH_CONFIG_PATH)) {
-    fs.unlinkSync(AUTH_CONFIG_PATH);
+  const authConfigPath = getAuthConfigPath();
+  if (fs.existsSync(authConfigPath)) {
+    fs.unlinkSync(authConfigPath);
     console.info(chalk.green("Successfully logged out"));
   } else {
     console.info(chalk.yellow("No active session found"));

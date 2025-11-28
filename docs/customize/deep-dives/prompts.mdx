@@ -1,62 +1,106 @@
 ---
-title: "Creating Custom Prompts in Continue"
-description: "Learn how to create reusable prompt files in Continue to streamline repetitive tasks, including examples for code reviews, security checks, and entity generation"
+title: "How to Create and Manage Prompts in Continue"
+description: "Prompts are used to kick off tasks for Agent mode, Plan mode, and Chat mode"
+keywords: [prompts, context, slash command]
+sidebarTitle: "Prompts"
 ---
 
-Prompts are reusable instructions that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks.
+Prompts are included as user messages and are especially useful as instructions for repetitive and/or complex tasks.
 
-<Info>
-  Prompts were previously defined in a `.prompt` file format, but for
-  consistency we now recommend using the same Markdown format as
-  [rules](./rules) and adding `alwaysApply: false` to the frontmatter so
-  that they are manually triggered.
-</Info>
+## Slash commands
 
-## Quick Start: How to Create Your First Prompt File
+By setting `invokable` to `true`, you make the markdown file a prompt, which will be available when you type <kbd>/</kbd> in Chat, Plan, and Agent mode.
 
-Below is a quick example of setting up a prompt file:
-
-1. Create a folder called `.continue/rules` at the top level of your workspace
-2. Add a file called `review-prompt.md` to this folder.
-3. Write the following contents to `review-prompt.md` and save.
-
-```md title="review-prompt.md"
+```md title="explain-invokable.md"
 ---
-name: Redux best practices review
-alwaysApply: false
+name: Explain invokable
+description: Explains what happens when you set invokable to true
+invokable: true
 ---
 
-Review the currently open file for adherence to Redux best practices, as explained in their style guide at https://redux.js.org/style-guide/.
+Explain that when `invokable` is set to `true`, a slash command becomes available in the IDE extensions and CLI
 ```
 
-Now to use this prompt, you can open Chat, type <kbd>/</kbd>, select the prompt, and type out any additional instructions you'd like to add.
+These slash commands can be combined with other instructions, including highlighted code, to provide additional context.
 
-## Example Prompt Templates for Common Use Cases
+## Example: `Create Supabase functions` prompt
 
-Below are more examples to get you started. You can also visit the Hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=prompts).
+Here is a prompt that generates high-quality PostgreSQL functions that adhere to best practices:
 
-### How to Create a Security Review Prompt
-
-```md title="security-review.md"
+```md title="supabase-create-functions.md"
 ---
-name: Security best practices review
-alwaysApply: false
+name: Create Supabase functions
+description: Guidelines for writing Supabase database functions
+invokable: true
 ---
 
-Review the changes in the current git diff for these security best practices:
+# Database: Create functions
 
-- Does the architecture follow security-by-design principles?
-- Are there potential security vulnerabilities in the system design?
-- Is sensitive data handled appropriately throughout the lifecycle?
+You're a Supabase Postgres expert in writing database functions. Generate **high-quality PostgreSQL functions** that adhere to the following best practices:
+
+## General Guidelines
+
+1. **Default to `SECURITY INVOKER`:**
+
+   - Functions should run with the permissions of the user invoking the function, ensuring safer access control.
+   - Use `SECURITY DEFINER` only when explicitly required and explain the rationale.
+
+2. **Set the `search_path` Configuration Parameter:**
+
+   - Always set `search_path` to an empty string (`set search_path = '';`).
+   - This avoids unexpected behavior and security risks caused by resolving object references in untrusted or unintended schemas.
+   - Use fully qualified names (e.g., `schema_name.table_name`) for all database objects referenced within the function.
+
+3. **Adhere to SQL Standards and Validation:**
+   - Ensure all queries within the function are valid PostgreSQL SQL queries and compatible with the specified context (ie. Supabase).
+
+...
 ```
 
-### How to Create a Prompt That References Existing Files
+<Info>You can read the rest of the `Create Supabase functions` prompt [here](http://hub.continue.dev/supabase/create-functions)</Info>
 
-```md title="typeorm-entity-generator.md"
----
-name: Generate a new TypeORM entity
-alwaysApply: false
----
+If you are using a local `config.yaml`, you can add it to your config like this:
 
-Referencing `src/db/dataSource.ts` and `src/db/entity/SampleEntity.ts`, generate a new TypeORM entity based on the following requirements:
+```md title="config.yaml"
+...
+
+prompts:
+  - uses: supabase/create-functions
+
+...
 ```
+
+If you are using Continue Mission Control, you can add it to your config by selecting "Use Rule" [here](https://hub.continue.dev/supabase/create-functions)
+
+To use this prompt, you can open Chat / Agent / Edit, type <kbd>/</kbd>, select the prompt, and type out any additional instructions you'd like to add.
+
+## Using a prompt with `cn (TUI mode)`
+
+You can run this command to start [cn](../../guides/cli) with the [Create Supabase functions](http://hub.continue.dev/supabase/create-functions) prompt.
+
+```
+cn --prompt supabase/create-functions "I need a function that checks for the health status"
+```
+Alternatively, you can start [cn](../../guides/cli) and then type <kbd>/</kbd> to manually invoke the prompt yourself.
+
+## Using a prompt to kick off a Continuous AI workflow with `cn (Headless mode)
+
+You can kick off Continuous AI workflows using a prompt with [cn](../../guides/cli) by adding the `-p` flag.
+
+For example, say you are building a SaaS application and must repeatedly create custom Supabase validation functions for each new feature that accepts user input. 
+
+These functions require you to interpret business requirements, implement complex cross-table logic (like checking user permissions, tier limits, and time-based restrictions), and make judgment calls about edge cases. 
+
+Each function is unique enough that it can't be templated or scripted. This is where kicking off a Continuous AI workflow to get you started can be quite helpful.
+
+Here is a command that you could run whenever you have a new feature:
+
+```
+ cn -p --prompt supabase/create-functions "I need a function for the new feature on my current branch similar to my existing database functions"
+```
+
+<Info>You can see the entire `Create Supabase functions` prompt [here](http://hub.continue.dev/supabase/create-functions)</Info>
+
+When you run this workflow, [cn](../../guides/cli) will checkout your current branch, explore the new and existing code, and then draft a function for you.
+
+You will then be able to review the implementation and improve it before you merge the new feature.

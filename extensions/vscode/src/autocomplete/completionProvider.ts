@@ -333,7 +333,7 @@ export class ContinueCompletionProvider
       let chainExists = this.nextEditProvider.chainExists();
       const processedCount = this.prefetchQueue.processedCount;
       const unprocessedCount = this.prefetchQueue.unprocessedCount;
-      console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
+      // console.debug("isJumping:", isJumping, "/ chainExists:", chainExists);
       this.prefetchQueue.peekThreeProcessed();
 
       let resetChainInFullFileDiff = false;
@@ -351,7 +351,7 @@ export class ContinueCompletionProvider
 
       if (isJumping && chainExists) {
         // Case 2: Jumping (chain exists, jump was taken)
-        console.log("trigger reason: jumping");
+        // console.debug("trigger reason: jumping");
 
         // Reset jump state.
         this.jumpManager.setJumpInProgress(false);
@@ -380,7 +380,7 @@ export class ContinueCompletionProvider
         }
       } else if (chainExists) {
         // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
-        console.log("trigger reason: accepting");
+        // console.debug("trigger reason: accepting");
 
         // Try suggesting jump for each location.
         let isJumpSuggested = false;
@@ -428,9 +428,9 @@ export class ContinueCompletionProvider
         }
 
         if (!isJumpSuggested) {
-          console.log(
-            "No suitable jump location found after trying all positions",
-          );
+          // console.debug(
+          //   "No suitable jump location found after trying all positions",
+          // );
           this.nextEditProvider.deleteChain();
           return undefined;
         }
@@ -642,7 +642,7 @@ export class ContinueCompletionProvider
 
       if (isFim) {
         if (!fimText) {
-          console.log("deleteChain from completionProvider.ts: !fimText");
+          // console.debug("deleteChain from completionProvider.ts: !fimText");
           this.nextEditProvider.deleteChain();
           return undefined;
         }
@@ -679,9 +679,9 @@ export class ContinueCompletionProvider
         // Only time we ever reach this point would be after the jump was taken, or if its after the very first repsonse.
         // In case of jump, this is impossible, as the JumpManager wouldn't have suggested a jump here in the first place.
         // In case of initial response, we suggested a jump.
-        console.log(
-          "deleteChain from completionProvider.ts: diffLines.length === 0",
-        );
+        // console.debug(
+        //   "deleteChain from completionProvider.ts: diffLines.length === 0",
+        // );
         NextEditProvider.getInstance().deleteChain();
       }
 
@@ -718,10 +718,10 @@ export class ContinueCompletionProvider
     if (selectedCompletionInfo) {
       const { text, range } = selectedCompletionInfo;
       if (!outcome.completion.startsWith(text)) {
-        console.log(
-          `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
-          range,
-        );
+        // console.debug(
+        //   `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
+        //   range,
+        // );
         return false;
       }
     }

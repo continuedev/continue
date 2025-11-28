@@ -79,8 +79,8 @@ describe("PosthogService Error Handling", () => {
 
   it("should not capture when service is disabled", async () => {
     // Mock environment variable to disable telemetry
-    const originalEnv = process.env.CONTINUE_CLI_ENABLE_TELEMETRY;
-    process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
+    const originalEnv = process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY;
+    process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
 
     // Create a new service instance to pick up the env var
     const disabledService = new PosthogService();
@@ -95,9 +95,9 @@ describe("PosthogService Error Handling", () => {
 
     // Restore environment
     if (originalEnv === undefined) {
-      delete process.env.CONTINUE_CLI_ENABLE_TELEMETRY;
+      delete process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY;
     } else {
-      process.env.CONTINUE_CLI_ENABLE_TELEMETRY = originalEnv;
+      process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = originalEnv;
     }
   });
 });

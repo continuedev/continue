@@ -1,11 +1,11 @@
 ---
 title: "How to Create and Manage Rules in Continue"
-description: "Rules are used to provide instructions to the model for Agent, Chat, and Edit requests."
-keywords: [rules, .continuerules, system, prompt, message]
+description: "Rules are used to provide system message instructions to the model for Agent mode, Chat mode, and Edit mode requests"
+keywords: [rules, system, prompt, message]
 sidebarTitle: "Rules"
 ---
 
-Rules provide instructions to the model for [Agent](../../features/agent/quick-start), [Chat](../../features/chat/quick-start), and [Edit](../../features/edit/quick-start) requests.
+Rules provide instructions to the model for [Agent mode](../../ide-extensions/agent/quick-start), [Chat](../../ide-extensions/chat/quick-start), and [Edit](../../ide-extensions/edit/quick-start) requests.
 
 <Info>
   Rules are not included in [autocomplete](./autocomplete) or
@@ -19,6 +19,42 @@ You can view the current rules by clicking the pen icon above the main toolbar:
 ![rules input toolbar section](/images/notch-rules.png)
 
 To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#how-to-customize-chat-system-message)).
+
+## Understanding Hub vs Local Rules Integration
+
+<Warning>
+**Important:** Rules created in different locations behave differently and have different synchronization patterns.
+</Warning>
+
+Continue supports two types of rules with different behaviors:
+
+<Columns cols={2}>
+<Card title="Local Rules" icon="folder">
+- **Location**: `.continue/rules` folder in your workspace
+- **Visibility**: Automatically visible when using Hub configs
+- **Creation**: Add rules button in VSCode or manual file creation
+- **File Management**: Creates actual `.md` files you can edit directly
+</Card>
+
+<Card title="Hub Rules" icon="cloud">
+- **Location**: Stored on Continue Mission Control, referenced in config.yaml
+- **Visibility**: Only appear when referenced in assistant configuration
+- **Creation**: Created directly on Hub or copied from local rules
+- **File Management**: No local files created, managed through Hub interface
+</Card>
+</Columns>
+
+### How Rules Are Applied
+
+When using Continue, rules are loaded in this order:
+1. **Hub assistant rules** (if using a Hub-based assistant)
+2. **Referenced Hub rules** (via `uses:` in config.yaml)
+3. **Local workspace rules** (from `.continue/rules` folder)
+4. **Global rules** (from `~/.continue/rules` folder)
+
+<Info>
+**TL;DR**: Local rules show up automatically when using Hub configs. Hub rules show up automatically when referenced in your config.
+</Info>
 
 ## Quick Start: How to Create Your First Rule File
 
@@ -40,22 +76,56 @@ Now test your rules by asking a question about a file in chat.
 
 ![pirate rule test](/images/pirate-rule-test.png)
 
-## How to Create Rules Blocks
+## How to Create Rules
 
-Rules can be added locally using the "Add Rules" button while viewing the Local Agent's rules.
+### Creating Local Rules
+
+Rules can be added locally using the "Add Rules" button.
 
 ![add local rules button](/images/add-local-rules.png)
 
 <Info>
-**Automatically create local rule blocks**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
+**Automatically create local rules**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
-
 </Info>
 
-Rules can also be added to an Agent on the Continue Hub.
+### Creating Hub Rules
 
-Explore available rules [here](https://hub.continue.dev), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
+Rules can also be created and managed on the Continue Mission Control:
+
+1. **Browse existing rules**: [Explore available rules](https://hub.continue.dev/hub?type=rules)
+2. **Create new rules**: [Create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub
+3. **Copy from local rules**: Copy/paste content from your `.continue/rules` files to create Hub rules
+
+### Working Between Hub and Local Rules
+
+<Tabs>
+<Tab title="Hub to VSCode">
+To use Hub rules in your local setup:
+
+1. Reference them in your `config.yaml`:
+   ```yaml
+   rules:
+     - uses: username/my-hub-rule
+   ```
+2. The rule will automatically appear in your rules toolbar
+3. **Note**: No local file is created - the rule exists only on the Hub
+</Tab>
+
+<Tab title="VSCode to Hub">
+To move local rules to the Hub:
+
+1. Copy the content from your `.continue/rules/rule-name.md` file
+2. Go to [Create new rule](https://hub.continue.dev/new?type=block&blockType=rules)
+3. Paste the content and configure the rule
+4. Optionally, remove the local file and reference the Hub rule in your config
+
+<Warning>
+**Current Limitation**: There's no automatic sync from local to Hub. You must manually copy/paste rule content.
+</Warning>
+</Tab>
+</Tabs>
 
 ### How to Configure Rule Properties and Syntax
 
@@ -65,7 +135,7 @@ Explore available rules [here](https://hub.continue.dev), or [create your own](h
   recommend Markdown.
 </Info>
 
-Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
+Rules can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
 
 - `name` (**required** for YAML): A display name/title for the rule
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
@@ -150,19 +220,46 @@ globs: ["**/*.ts", "**/*.tsx"]
 - modularize components into smaller, reusable pieces
 ```
 
+## Troubleshooting Rules
+
+### Issue: Rules Created in Different Places Don't Sync
+
+**Problem**: You created rules in the Hub but don't see them in VSCode, or vice versa.
+
+**Solution**:
+- **Hub rules** only appear when referenced in your config.yaml using the `uses:` syntax
+- **Local rules** automatically appear when using Hub configs
+- There's currently no automatic bidirectional sync
+
+### Issue: "Edit" Links Point to Wrong Location
+
+**Problem**: When you click "Edit" on a rule in VSCode, it tries to open the Hub even though the rule is local, or shows an incorrect URL.
+
+**Root Cause**: This happens when you have a mix of local and Hub rules, and Continue can't properly determine where each rule originates.
+
+**Workaround**:
+1. **For local rules**: Navigate directly to `.continue/rules/` folder and edit the `.md` file
+2. **For Hub rules**: Go directly to your assistant page on [Continue Mission Control](https://hub.continue.dev) and edit from there
+3. Keep track of which rules are local vs Hub-based to avoid confusion
+
+<Info>
+**Known Issue**: This link accuracy problem is tracked in [Linear issue CON-3084](https://linear.app/continue/issue/CON-3084) and will be fixed in a future update.
+</Info>
+
+### Issue: Rules Don't Appear in Assistant
+
+**Problem**: Your rules exist but don't show up in the rules toolbar.
+
+**Check These**:
+1. **File location**: Ensure local rules are in `.continue/rules/` (not `.continue/rule/`)
+2. **File format**: Rules should be `.md` files with proper YAML frontmatter
+3. **Config reference**: Hub rules must be referenced in `config.yaml`
+4. **Assistant type**: Ensure you're using the correct assistant (local vs Hub)
+
 ### How to Customize Chat System Message
 
-Continue includes a simple default system message for [Agent](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Continue includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
-
-### Legacy: .continuerules File (Deprecated)
-
-<Warning>
-  `.continuerules` will be deprecated in a future release. Please use the
-  `.continue/rules` folder instead.
-</Warning>
-
-You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.

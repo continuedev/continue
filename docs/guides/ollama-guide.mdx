@@ -84,10 +84,10 @@ There are multiple ways to configure Ollama models in Continue:
 
 ### Method 1: Using Hub Model Blocks in Local config.yaml
 
-The easiest way is to use [pre-configured model blocks](/reference#local-blocks) from the Continue Hub in your local configuration:
+The easiest way is to use [pre-configured model blocks](/reference#local-blocks) from the Continue Mission Control in your local configuration:
 
-```yaml title="~/.continue/agents/My Local Agent.yaml"
-name: My Local Agent
+```yaml title="~/.continue/configs/config.yaml"
+name: My Local Config
 version: 0.0.1
 schema: v1
 models:
@@ -97,11 +97,11 @@ models:
 ```
 
 <Warning>
-  **Important**: Hub blocks only provide configuration - you still need to pull
-  the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue
+  **Important**: Blocks only provide configuration - you still need to pull
+  the model locally. The block `ollama/deepseek-r1-32b` configures Continue
   to use `model: deepseek-r1:32b`, but the actual model must be installed:
   ```bash
-  # Check what the hub block expects (view on hub.continue.dev)
+  # Check what the block expects (view on hub.continue.dev)
   # Then pull that exact model tag locally
   ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
   ```
@@ -146,7 +146,7 @@ You can update `apiBase` with the IP address of a remote machine serving Ollama.
 
 ### Method 3: Manual Configuration
 
-For custom configurations or models not on the hub:
+For custom configurations or models not in Mission Control:
 
 ```yaml
 models:
@@ -195,7 +195,7 @@ models:
 1. First, add `capabilities: [tool_use]` to your model config
 2. If you still get errors, the model may not actually support tools despite documentation
 3. Use a different model known to work with tools (e.g., Llama 3.1, Mistral)
-4. Alternatively, you can turn on [System Message tools](/features/agent/model-setup#how-system-message-tools-work)
+4. Alternatively, you can turn on [System Message tools](/ide-extensions/agent/model-setup#how-system-message-tools-work)
 
 See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for more details.
 
@@ -233,7 +233,7 @@ PARAMETER num_ctx 4096
 
 ### How to Choose the Right Model
 
-Choose models based on your specific needs (see [recommended models](/customization/models#recommended-models) for more options):
+Choose models based on your specific needs (see [recommended models](/customize/models#recommended-models) for more options):
 
 1. **Code Generation**:
 
@@ -315,8 +315,8 @@ ollama pull deepseek-r1:32b
 **Solution**: Create a local agent file:
 
 ```yaml
-# ~/.continue/agents/Local.yaml
-name: Local Agent
+# ~/.continue/configs/config.yaml
+name: Local Config
 version: 0.0.1
 schema: v1
 models:

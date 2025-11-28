@@ -17,6 +17,7 @@ import {
 } from "@opentelemetry/semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
 
+import { ContinueErrorReason } from "../../../../core/util/errors.js";
 import { isHeadlessMode } from "../util/cli.js";
 import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
@@ -498,9 +499,11 @@ class TelemetryService {
     success: boolean;
     durationMs: number;
     error?: string;
+    errorReason?: ContinueErrorReason;
     decision?: "accept" | "reject";
     source?: string;
     toolParameters?: string;
+    // modelName: string;
   }) {
     if (!this.isEnabled()) return;
 
@@ -517,6 +520,12 @@ class TelemetryService {
     if (options.source) attributes.source = options.source;
     if (options.toolParameters)
       attributes.tool_parameters = options.toolParameters;
+    if (options.errorReason) {
+      attributes.error_reason = options.errorReason;
+    }
+    if (options.error) {
+      attributes.error = options.error;
+    }
 
     // TODO: Implement OTLP logs export
     logger.debug("Tool result event", attributes);

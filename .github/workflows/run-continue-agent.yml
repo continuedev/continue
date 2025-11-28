@@ -1,0 +1,42 @@
+name: Run Continue Agent
+
+on:
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Additional prompting to send to the Continue agent"
+        required: false
+        type: string
+        default: ""
+      agent:
+        description: "The agent to use (e.g., continuedev/github-pr-agent)"
+        required: true
+        type: string
+        default: "continuedev/github-pr-agent"
+      branch_name:
+        description: "The base branch name to work from"
+        required: false
+        type: string
+        default: "main"
+    secrets:
+      CONTINUE_API_KEY:
+        required: true
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call agents endpoint
+        run: |
+          response=$(curl -f -X POST https://api.continue.dev/agents \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CONTINUE_API_KEY }}" \
+            -d '{
+              "prompt": "${{ inputs.prompt }}",
+              "agent": "${{ inputs.agent }}",
+              "branchName": "${{ inputs.branch_name }}",
+              "repoUrl": "https://github.com/${{ github.repository }}"
+            }')
+          id=$(echo $response | jq -r '.id')
+          echo "https://hub.continue.dev/agents/$id"

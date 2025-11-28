@@ -16,6 +16,8 @@ jobs:
   build:
     name: issue metrics
     runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     permissions:
       issues: write
       pull-requests: read
@@ -69,7 +71,7 @@ jobs:
                       ${{ steps.read-metrics.outputs.metrics_content }}
 
       - name: Upload metrics report as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: issue-metrics-report
           path: ./issue_metrics.md

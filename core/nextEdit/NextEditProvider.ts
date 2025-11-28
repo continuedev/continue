@@ -8,6 +8,7 @@ import { ContextRetrievalService } from "../autocomplete/context/ContextRetrieva
 
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
+import { postprocessCompletion } from "../autocomplete/postprocessing/index.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
 import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types.js";
@@ -415,6 +416,7 @@ export class NextEditProvider {
         filePath: helper.filepath,
         diffType: DiffFormatType.Unified,
         contextLines: 3,
+        workspaceDir: workspaceDirs[0], // Use first workspace directory
       }),
     };
 
@@ -459,42 +461,66 @@ export class NextEditProvider {
     // prompts[1] extracts the user prompt from the system-user prompt pair.
     // NOTE: Stream is currently set to false, but this should ideally be a per-model flag.
     // Mercury Coder currently does not support streaming.
-    const msg: ChatMessage = await llm.chat([prompts[1]], token, {
-      stream: false,
-    });
+    const msg: ChatMessage = await llm.chat(
+      this.endpointType === "fineTuned" ? [prompts[1]] : prompts,
+      token,
+      {
+        stream: false,
+      },
+    );
 
     if (typeof msg.content !== "string") {
       return undefined;
     }
 
     // Extract completion using model-specific logic.
-    const nextCompletion = this.modelProvider.extractCompletion(msg.content);
+    let nextCompletion = this.modelProvider.extractCompletion(msg.content);
+
+    // Postprocess the completion (same as autocomplete).
+    const postprocessed = postprocessCompletion({
+      completion: nextCompletion,
+      llm,
+      prefix: helper.prunedPrefix,
+      suffix: helper.prunedSuffix,
+    });
+
+    // Return early if postprocessing filtered out the completion.
+    if (!postprocessed) {
+      return undefined;
+    }
+
+    nextCompletion = postprocessed;
 
     let outcome: NextEditOutcome | undefined;
 
     // Handle based on diff type.
+    const profileType =
+      this.configHandler.currentProfile?.profileDescription.profileType;
+
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
-      outcome = await this.modelProvider.handlePartialFileDiff(
+      outcome = await this.modelProvider.handlePartialFileDiff({
         helper,
         editableRegionStartLine,
         editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
-        this.promptMetadata!,
-        this.ide,
-      );
+        promptMetadata: this.promptMetadata!,
+        ide: this.ide,
+        profileType,
+      });
     } else {
-      outcome = await this.modelProvider.handleFullFileDiff(
+      outcome = await this.modelProvider.handleFullFileDiff({
         helper,
         editableRegionStartLine,
         editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
-        this.promptMetadata!,
-        this.ide,
-      );
+        promptMetadata: this.promptMetadata!,
+        ide: this.ide,
+        profileType,
+      });
     }
 
     if (outcome) {

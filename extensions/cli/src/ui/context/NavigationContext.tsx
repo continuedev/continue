@@ -17,7 +17,10 @@ export type NavigationScreen =
   | "free-trial" // Free trial transition UI
   | "login" // Login prompt
   | "mcp" // MCP selector
+  | "session" // Session selector
+  | "diff" // Full-screen diff overlay
   | "update" // Update selector
+  | "edit" // Edit message selector
   | "session"; // Session selector
 
 interface NavigationState {

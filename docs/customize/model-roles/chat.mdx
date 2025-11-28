@@ -10,7 +10,7 @@ import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
 
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
-In Continue, these models are used for normal [Chat](../../features/chat/quick-start). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
+In Continue, these models are used for normal [Chat](../../ide-extensions/chat/quick-start). The selected chat model will also be used for [Edit](../../ide-extensions/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
 ## Recommended Chat models
 
@@ -19,35 +19,21 @@ In Continue, these models are used for normal [Chat](../../features/chat/quick-s
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
 
-### Claude Opus 4.1 and Claude Sonnet 4 from Anthropic
+### Claude Opus 4.5 and Claude Sonnet 4 from Anthropic
 
-Our current top recommendations are Claude Opus 4.1 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
+Our current top recommendations are Claude Opus 4.5 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
 
 <Tabs>
   <Tab title="Hub">
-  View the [Claude Opus 4.1 model block](https://hub.continue.dev/anthropic/claude-4-1-opus) or [Claude Sonnet 4 model block](https://hub.continue.dev/anthropic/claude-4-sonnet) on the hub.
+  View the [Claude Opus 4.5 model block](https://hub.continue.dev/anthropic/claude-4-5-opus) or [Claude Sonnet 4 model block](https://hub.continue.dev/anthropic/claude-4-sonnet) on the hub.
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude Opus 4.1
+    - name: Claude Opus 4.5
       provider: anthropic
-      model: claude-4-1-opus
+      model: claude-opus-4-5
       apiKey: <YOUR_ANTHROPIC_API_KEY>
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Claude Opus 4.1",
-        "provider": "anthropic",
-        "model": "claude-4-1-opus",
-        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-      }
-    ]
-  }
   ```
   </Tab>
 </Tabs>
@@ -88,134 +74,61 @@ If you prefer to use an open-weight model, then the Gemma family of Models from 
         </Tab>
     </Tabs>
   </Tab>
-  <Tab title="JSON">
-    <Tabs>
-        <Tab title="Ollama">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Gemma 3 27B",
-              "provider": "ollama",
-              "model": "gemma3:27b"
-            }
-          ]
-        }
-        ```
-        </Tab>
-        <Tab title="Together">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Gemma 3 27B",
-              "provider": "together",
-              "model": "google/gemma-2-27b-it",
-              "apiKey": "<YOUR_TOGETHER_API_KEY>"
-            }
-          ]
-        }
-        ```
-        </Tab>
-    </Tabs>
-  </Tab>
 </Tabs>
 
-### GPT-4o from OpenAI
+### GPT-5.1 from OpenAI
 
-If you prefer to use a model from [OpenAI](../model-providers/top-level/openai), then we recommend GPT-4o.
+If you prefer to use a model from [OpenAI](../model-providers/top-level/openai), then we recommend GPT-5.1.
 
 <Tabs>
     <Tab title="Hub">
-    Add the [OpenAI GPT-4o block](https://hub.continue.dev/openai/gpt-4o) from the hub
+    Add the [OpenAI GPT-5.1 block](https://hub.continue.dev/openai/gpt-5.1) from the hub
     </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: GPT-4o
+    - name: GPT-5.1
       provider: openai
-      model: ''
+      model: gpt-5.1
       apiKey: <YOUR_OPENAI_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "GPT-4o",
-        "provider": "openai",
-        "model": "",
-        "apiKey": "<YOUR_OPENAI_API_KEY>"
-      }
-    ]
-  }
-  ```
-  </Tab>
 </Tabs>
 
-### Grok-2 from xAI
+### Grok-4 from xAI
 
-If you prefer to use a model from [xAI](../model-providers/more/xAI), then we recommend Grok-2.
+If you prefer to use a model from [xAI](../model-providers/more/xAI), then we recommend Grok-4.
 
 <Tabs>
     <Tab title="Hub">
-    Add the [xAI Grok-2 block](https://hub.continue.dev/xai/grok-2) from the hub
+    Add the [xAI Grok-4.1 block](https://hub.continue.dev/xai/grok-4-1-fast-non-reasoning) from the hub
     </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Grok-2
+    - name: Grok-4.1
       provider: xAI
-      model: grok-2-latest
+      model: grok-4-1-fast-non-reasoning
       apiKey: <YOUR_XAI_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Grok-2",
-        "provider": "xAI",
-        "model": "grok-2-latest",
-        "apiKey": "<YOUR_XAI_API_KEY>"
-      }
-    ]
-  }
-  ```
-  </Tab>
 </Tabs>
 
-### Gemini 2.0 Flash from Google
+### Gemini 3 Pro from Google
 
-If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 2.0 Flash.
+If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 3 Pro.
 
 <Tabs>
     <Tab title="Hub">
-    Add the [Gemini 2.0 Flash block](https://hub.continue.dev/google/gemini-2.0-flash) from the hub
+    Add the [Gemini 3 Pro block](https://hub.continue.dev/google/gemini-3-pro-preview) from the hub
     </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Gemini 2.0 Flash
+    - name: Gemini 3 Pro
       provider: gemini
-      model: gemini-2.0-flash
+      model: gemini-3-pro-preview
       apiKey: <YOUR_GEMINI_API_KEY>
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Gemini 2.0 Flash",
-        "provider": "gemini",
-        "model": "gemini-2.0-flash",
-        "apiKey": "<YOUR_GEMINI_API_KEY>"
-      }
-    ]
-  }
   ```
   </Tab>
 </Tabs>
@@ -268,49 +181,6 @@ If your local machine can run an 8B parameter model, then we recommend running L
       </Tab>
     </Tabs>
   </Tab>
-  <Tab title="JSON">
-    <Tabs>
-      <Tab title="Ollama">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "ollama",
-            "model": "llama3.1:8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="LM Studio">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "lmstudio",
-            "model": "llama3.1-8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="Msty">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "Llama 3.1 8B",
-            "provider": "msty",
-            "model": "llama3.1-8b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-    </Tabs>
-  </Tab>
 </Tabs>
 
 ### DeepSeek Coder 2 16B
@@ -355,50 +225,6 @@ If your local machine can run a 16B parameter model, then we recommend running D
             model: deepseek-coder-v2:16b
         ```
         </Tab>
-    </Tabs>
-  </Tab>
-  <Tab title="JSON">
-    <Tabs>
-      <Tab title="Ollama">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "ollama",
-            "model": "deepseek-coder-v2:16b",
-            "apiBase": "http://localhost:11434"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="LM Studio">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "lmstudio",
-            "model": "deepseek-coder-v2:16b"
-          }
-        ]
-      }
-      ```
-      </Tab>
-      <Tab title="Msty">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "msty",
-            "model": "deepseek-coder-v2:16b"
-          }
-        ]
-      }
-      ```
-      </Tab>
     </Tabs>
   </Tab>
 </Tabs>

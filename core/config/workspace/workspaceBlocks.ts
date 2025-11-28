@@ -1,11 +1,14 @@
 import {
   BlockType,
   ConfigYaml,
+  createPromptMarkdown,
   createRuleMarkdown,
-  RULE_FILE_EXTENSION,
+  sanitizeRuleName,
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
+import { getContinueGlobalPath } from "../../util/paths";
+import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
 
 const BLOCK_TYPE_CONFIG: Record<
@@ -83,7 +86,10 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
 }
 
 function getFileExtension(blockType: BlockType): string {
-  return blockType === "rules" ? RULE_FILE_EXTENSION : "yaml";
+  if (blockType === "rules" || blockType === "prompts") {
+    return "md";
+  }
+  return "yaml";
 }
 
 export function getFileContent(blockType: BlockType): string {
@@ -91,6 +97,15 @@ export function getFileContent(blockType: BlockType): string {
     return createRuleMarkdown("New Rule", "Your rule content", {
       description: "A description of your rule",
     });
+  } else if (blockType === "prompts") {
+    return createPromptMarkdown(
+      "New prompt",
+      "Please write a thorough suite of unit tests for this code, making sure to cover all relevant edge cases",
+      {
+        description: "New prompt",
+        invokable: true,
+      },
+    );
   } else {
     return YAML.stringify(getContentsForNewBlock(blockType));
   }
@@ -101,9 +116,29 @@ export async function findAvailableFilename(
   blockType: BlockType,
   fileExists: (uri: string) => Promise<boolean>,
   extension?: string,
+  isGlobal?: boolean,
+  baseFilenameOverride?: string,
 ): Promise<string> {
-  const baseFilename = `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
   const fileExtension = extension ?? getFileExtension(blockType);
+  let baseFilename = "";
+
+  const trimmedOverride = baseFilenameOverride?.trim();
+  if (trimmedOverride) {
+    if (blockType === "rules") {
+      const withoutExtension = trimmedOverride.replace(/\.[^./\\]+$/, "");
+      const sanitized = sanitizeRuleName(withoutExtension);
+      baseFilename = sanitized;
+    } else {
+      baseFilename = trimmedOverride;
+    }
+  }
+  if (!baseFilename) {
+    baseFilename =
+      blockType === "rules" && isGlobal
+        ? "global-rule"
+        : `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
+  }
+
   let counter = 0;
   let fileUri: string;
 
@@ -122,6 +157,7 @@ export async function findAvailableFilename(
 export async function createNewWorkspaceBlockFile(
   ide: IDE,
   blockType: BlockType,
+  baseFilename?: string,
 ): Promise<void> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (workspaceDirs.length === 0) {
@@ -136,10 +172,42 @@ export async function createNewWorkspaceBlockFile(
     baseDirUri,
     blockType,
     ide.fileExists.bind(ide),
+    undefined,
+    false,
+    baseFilename,
   );
 
   const fileContent = getFileContent(blockType);
 
   await ide.writeFile(fileUri, fileContent);
   await ide.openFile(fileUri);
+}
+
+export async function createNewGlobalRuleFile(
+  ide: IDE,
+  baseFilename?: string,
+): Promise<void> {
+  try {
+    const globalDir = localPathToUri(getContinueGlobalPath());
+
+    // Create the rules subdirectory within the global directory
+    const rulesDir = joinPathsToUri(globalDir, "rules");
+
+    const fileUri = await findAvailableFilename(
+      rulesDir,
+      "rules",
+      ide.fileExists.bind(ide),
+      undefined,
+      true, // isGlobal = true for global rules
+      baseFilename,
+    );
+
+    const fileContent = getFileContent("rules");
+
+    await ide.writeFile(fileUri, fileContent);
+
+    await ide.openFile(fileUri);
+  } catch (error) {
+    throw error;
+  }
 }

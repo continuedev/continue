@@ -1,6 +1,8 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
+import util from "node:util";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
   if (process.platform === "win32") {
@@ -264,17 +266,21 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     // Fallback to non-streaming for older clients
     const workspaceDirs = await extras.ide.getWorkspaceDirs();
 
-    // Handle case where no workspace is available
-    let cwd: string;
-    if (workspaceDirs.length > 0) {
-      cwd = fileURLToPath(workspaceDirs[0]);
-    } else {
-      // Default to user's home directory with fallbacks
-      try {
-        cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-      } catch (error) {
-        // Final fallback if even process.cwd() fails - use system temp directory
-        cwd = os.tmpdir();
+      // Handle case where no workspace is available
+      let cwd: string;
+      const fileWorkspaceDir = workspaceDirs.find((dir) =>
+        dir.startsWith("file:/"),
+      );
+      if (fileWorkspaceDir) {
+        cwd = fileURLToPath(fileWorkspaceDir);
+      } else {
+        // Default to user's home directory with fallbacks
+        try {
+          cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
+        } catch (error) {
+          // Final fallback if even process.cwd() fails - use system temp directory
+          cwd = os.tmpdir();
+        }
       }
     }
 
@@ -311,11 +317,23 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               stderr += getDecodedOutput(data);
             });
 
-            childProc.on("close", (code) => {
-              // Clean up process tracking
-              if (toolCallId) {
-                removeRunningProcess(toolCallId);
-              }
+              childProc.on("close", (code) => {
+                // Clean up process tracking
+                if (toolCallId) {
+                  removeRunningProcess(toolCallId);
+                }
+
+                if (code === 0) {
+                  resolve({ stdout, stderr });
+                } else {
+                  const error = new ContinueError(
+                    ContinueErrorReason.CommandExecutionFailed,
+                    `Command failed with exit code ${code}`,
+                  );
+                  (error as any).stderr = stderr;
+                  reject(error);
+                }
+              });
 
               if (code === 0) {
                 resolve({ stdout, stderr });

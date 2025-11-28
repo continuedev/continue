@@ -58,10 +58,12 @@ export function useChat({
   onShowUpdateSelector,
   onShowMCPSelector,
   onShowSessionSelector,
-  onLoginPrompt: _onLoginPrompt,
   onClear,
+  onRefreshStatic,
   isRemoteMode = false,
   remoteUrl,
+  onShowDiff,
+  onShowStatusMessage,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -335,13 +337,13 @@ export function useChat({
 
       // Check if there are queued messages and process them after a microtask delay
       // This ensures the GUI state has been updated before processing the next message
-      const queuedMessageData = messageQueue.getLatestMessage();
+      const queuedMessageData = messageQueue.getNextMessage();
       if (queuedMessageData) {
         const { message: latestQueuedMessage, imageMap } = queuedMessageData;
         logger.debug("processing queued message", { latestQueuedMessage });
 
         // Clear queued messages from display since they're about to be processed
-        // Note: messageQueue.getLatestMessage() already cleared the actual queue
+        // Note: messageQueue.getNextMessage() already cleared the actual queue
         setQueuedMessages([]);
 
         await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
@@ -386,12 +388,16 @@ export function useChat({
   const handleSlashCommandProcessing = async (
     message: string,
   ): Promise<string | null> => {
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (isRemoteMode || !assistant) {
+    // Handle slash commands
+    if (!assistant) {
       return message;
     }
 
-    const commandResult = await handleSlashCommands(message, assistant);
+    const commandResult = await handleSlashCommands(message, assistant, {
+      remoteUrl,
+      isRemoteMode,
+    });
+
     if (!commandResult) {
       return message;
     }
@@ -449,7 +455,11 @@ export function useChat({
     message: string,
     imageMap?: Map<string, Buffer>,
     isQueuedMessage: boolean = false,
+    baseHistory?: ChatHistoryItem[],
   ) => {
+    // Use baseHistory if provided (e.g., when editing a message),
+    // otherwise use current chatHistory
+    const currentHistory = baseHistory ?? chatHistory;
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -457,6 +467,8 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
+      onShowDiff,
+      onShowStatusMessage,
     });
 
     if (handled) return;
@@ -468,7 +480,7 @@ export function useChat({
     }
     message = bashProcessedMessage;
 
-    // Handle slash commands
+    // Handle slash commands (MUST happen before remote message handling)
     const processedMessage = await handleSlashCommandProcessing(message);
     if (processedMessage === null) {
       return; // Command was handled and no further processing needed
@@ -516,7 +528,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -583,7 +595,7 @@ export function useChat({
       let currentChatHistory, currentCompactionIndex;
       try {
         const result = await handleAutoCompaction({
-          chatHistory,
+          chatHistory: currentHistory,
           model,
           llmApi,
           compactionIndex,
@@ -713,6 +725,42 @@ export function useChat({
     setQueuedMessages([]);
   };
 
+  const handleEditMessage = async (
+    messageIndex: number,
+    newContent: string,
+  ) => {
+    logger.debug("handleEditMessage called", {
+      messageIndex,
+      currentHistoryLength: chatHistory.length,
+    });
+
+    // Rewind chat history to exclude the message being edited
+    const rewindedHistory = chatHistory.slice(0, messageIndex);
+
+    logger.debug("Rewinding history for edit", {
+      from: chatHistory.length,
+      to: rewindedHistory.length,
+    });
+
+    // Clear any queued messages
+    setQueuedMessages([]);
+
+    // Clear attached files
+    setAttachedFiles([]);
+
+    // Update the session with the rewound history
+    updateSessionHistory(rewindedHistory);
+
+    // Force refresh of StaticChatContent to show truncated history
+    if (onRefreshStatic) {
+      onRefreshStatic();
+    }
+
+    // Resubmit the edited message with the rewound history as the base
+    // This ensures processMessage uses the correct base history
+    await processMessage(newContent, undefined, false, rewindedHistory);
+  };
+
   const handleToolPermissionResponse = async (
     requestId: string,
     approved: boolean,
@@ -741,7 +789,7 @@ export function useChat({
         logger.debug(`Policy created: ${policyRule}`);
 
         // Reload permissions to pick up the new policy without requiring restart
-        await services.mode.getToolPermissionService().reloadPermissions();
+        await services.toolPermissions.reloadPermissions();
       } catch (error) {
         logger.error("Failed to create policy or reload permissions", {
           error,
@@ -795,6 +843,7 @@ export function useChat({
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   };
 }

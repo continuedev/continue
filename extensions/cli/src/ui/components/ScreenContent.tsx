@@ -3,18 +3,21 @@ import React from "react";
 
 import { UpdateServiceState } from "src/services/types.js";
 
-import { listSessions } from "../../session.js";
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
+import { DiffViewer } from "../DiffViewer.js";
+import { EditMessageSelector } from "../EditMessageSelector.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
+import type { ActivePermissionRequest } from "../hooks/useChat.types.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
-import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
-import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
+import { ChatScreenContent } from "./ChatScreenContent.js";
+import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 
 interface ScreenContentProps {
   isScreenActive: (screen: NavigationScreen) => boolean;
@@ -26,7 +29,7 @@ interface ScreenContentProps {
   handleSessionSelect: (sessionId: string) => Promise<void>;
   handleReload: () => Promise<void>;
   closeCurrentScreen: () => void;
-  activePermissionRequest: any;
+  activePermissionRequest: ActivePermissionRequest | null;
   handleToolPermissionResponse: (
     requestId: string,
     approved: boolean,
@@ -43,6 +46,10 @@ interface ScreenContentProps {
   wasInterrupted?: boolean;
   isRemoteMode: boolean;
   onImageInClipboardChange?: (hasImage: boolean) => void;
+  diffContent?: string;
+  chatHistory?: ChatHistoryItem[];
+  handleEditMessage?: (messageIndex: number, newContent: string) => void;
+  onShowEditSelector?: () => void;
 }
 
 function hideScreenContent(state?: UpdateServiceState) {
@@ -75,6 +82,10 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   wasInterrupted = false,
   isRemoteMode,
   onImageInClipboardChange,
+  diffContent,
+  chatHistory = [],
+  handleEditMessage,
+  onShowEditSelector,
 }) => {
   if (hideScreenContent(services.update)) {
     return null;
@@ -137,10 +148,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   // Session selector
   if (isScreenActive("session")) {
-    const sessions = listSessions(20);
     return (
-      <SessionSelector
-        sessions={sessions}
+      <SessionSelectorWithLoading
         onSelect={handleSessionSelect}
         onExit={closeCurrentScreen}
       />
@@ -152,33 +161,50 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return <FreeTrialTransitionUI onReload={handleReload} />;
   }
 
+  // Diff viewer overlay
+  if (isScreenActive("diff")) {
+    return (
+      <DiffViewer
+        diffContent={diffContent || ""}
+        onClose={closeCurrentScreen}
+      />
+    );
+  }
+
+  // Edit message selector
+  if (isScreenActive("edit")) {
+    return (
+      <EditMessageSelector
+        chatHistory={chatHistory}
+        onEdit={(messageIndex, newContent) => {
+          if (handleEditMessage) {
+            handleEditMessage(messageIndex, newContent);
+          }
+          closeCurrentScreen();
+        }}
+        onExit={closeCurrentScreen}
+      />
+    );
+  }
+
   // Chat screen with input area
   if (isScreenActive("chat")) {
-    if (activePermissionRequest) {
-      return (
-        <ToolPermissionSelector
-          toolName={activePermissionRequest.toolName}
-          toolArgs={activePermissionRequest.toolArgs}
-          requestId={activePermissionRequest.requestId}
-          toolCallPreview={activePermissionRequest.toolCallPreview}
-          hasDynamicEvaluation={activePermissionRequest.hasDynamicEvaluation}
-          onResponse={handleToolPermissionResponse}
-        />
-      );
-    }
     return (
-      <UserInput
-        onSubmit={handleUserMessage}
+      <ChatScreenContent
+        activePermissionRequest={activePermissionRequest}
+        handleToolPermissionResponse={handleToolPermissionResponse}
+        handleUserMessage={handleUserMessage}
         isWaitingForResponse={isWaitingForResponse}
         isCompacting={isCompacting}
         inputMode={inputMode}
-        onInterrupt={handleInterrupt}
+        handleInterrupt={handleInterrupt}
         assistant={services.config?.config || undefined}
         wasInterrupted={wasInterrupted}
-        onFileAttached={handleFileAttached}
-        disabled={isInputDisabled}
+        handleFileAttached={handleFileAttached}
+        isInputDisabled={isInputDisabled}
         isRemoteMode={isRemoteMode}
         onImageInClipboardChange={onImageInClipboardChange}
+        onShowEditSelector={onShowEditSelector}
       />
     );
   }

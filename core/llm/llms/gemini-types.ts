@@ -192,6 +192,7 @@ export type GeminiFunctionCallContentPart = {
     name: string;
     args: JSONSchema7Object;
   };
+  thoughtSignature?: string;
 };
 
 export type GeminiFunctionResponseContentPart = {

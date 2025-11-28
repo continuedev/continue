@@ -420,10 +420,10 @@ export function UnifiedTerminalCommand({
   return (
     <StyledTerminalContainer
       fontSize={getFontSize()}
-      className="mb-4"
+      className="mx-2 mb-4"
       data-testid="terminal-container"
     >
-      <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
+      <div className="outline-command-border rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
         {/* Toolbar */}
         <div
           className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${

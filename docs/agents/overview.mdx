@@ -1,0 +1,228 @@
+---
+title: "Agents Overview"
+description: "Standardized AI workflows that combine prompts, rules, and tools to complete specific, repeatable tasks"
+sidebarTitle: "Overview"
+---
+
+<Card title="Agents in Continue" icon="robot">
+  Agents are custom AI workflows that combine a prompt, rules, and tools (MCPs and more) to complete specific, repeatable tasks.
+  They live in the Continue Mission Control and can be executed from Mission Control (web interface), TUI mode, or headless automation.
+</Card>
+
+## What Are Agents?
+
+Agents let your team standardize common workflows like opening GitHub PRs, summarizing analytics, or auditing security. Each agent includes:
+
+### Agent Components
+
+| **Component** | **Description** | **Example** |
+|----------------|-----------------|--------------|
+| **Prompt** | The agent’s main instruction that defines what it does and how it should behave. Additional user input is appended when invoked. | Example prompt: “Summarize ongoing work with status, blockers, and next steps. Use markdown formatting and a concise, professional tone.” |
+| **Rules** | Define consistent standards or behaviors that guide how the agent responds. Rules help ensure reliability across team usage. | “Always include related issue or PR links when summarizing work.” |
+| **Tools / MCPs** | External systems or integrations the agent can call to complete tasks. MCPs (Model Context Protocols) extend functionality through APIs. | GitHub, PostHog, Supabase |
+| **Model** | The large language model that powers the agent’s reasoning and output generation. | Claude Sonnet 4.5 |
+| **Visibility** | Determines who can view or use the agent. Controls access at creation time. | Public, Organization, or Private |
+
+<Info>
+  Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
+</Info>
+
+## Ways to Run Agents
+
+You can run Agents in three main ways:
+
+<Tabs>
+  <Tab title="🌐 Mission Control">
+    **Interactive web interface**
+    
+    Trigger from the Continue Mission Control and review results in real-time.
+    
+    ```bash
+    # Navigate to hub.continue.dev/agents
+    # Click "Run Agent" on any agent
+    # Monitor progress and review outputs
+    ```
+    
+    Perfect for: Interactive debugging, reviewing agent outputs, team collaboration
+  </Tab>
+
+  <Tab title="💻 TUI Mode">
+    **Interactive terminal mode**
+    
+    Launch from terminal for live interaction and testing.
+    
+    ```bash
+    cn --agent my-org/github-pr-agent
+    # Interactive chat interface opens
+    # Type your specific request
+    # Review and approve actions
+    ```
+    
+    Perfect for: Local development, testing prompts, quick one-off tasks
+  </Tab>
+
+  <Tab title="🤖 Headless Mode">
+    **Automated execution**
+    
+    Run one-off or scheduled tasks automatically without interaction.
+    
+    ```bash
+    cn -p --agent my-org/snyk-agent "Run weekly security scan" --auto
+    ```
+    
+    Perfect for: CI/CD pipelines, scheduled tasks, webhook integrations
+  </Tab>
+</Tabs>
+
+## Pre-configured Agents
+
+Skip the setup and use battle-tested agents from our cookbook collection:
+
+<CardGroup cols={2}>
+  <Card title="🔒 Security Scanning" icon="shield-check" href="/guides/snyk-mcp-continue-cookbook">
+    `continuedev/snyk-continuous-ai-agent`
+    Finds vulnerabilities and opens PRs with fixes
+  </Card>
+  
+  <Card title="🐛 GitHub Management" icon="github" href="/guides/github-mcp-continue-cookbook">
+    `continuedev/github-project-manager-agent`
+    Triages issues and manages project workflows
+  </Card>
+  
+  <Card title="📊 Analytics Insights" icon="chart-bar" href="/guides/posthog-github-continuous-ai">
+    `continuedev/posthog-continuous-ai-agent`
+    Analyzes user data and creates actionable tasks
+  </Card>
+  
+  <Card title="⚡ Performance Optimization" icon="gauge-high" href="/guides/netlify-mcp-continuous-deployment">
+    `continuedev/netlify-continuous-ai-agent`
+    Monitors Core Web Vitals and optimizes deployments
+  </Card>
+  
+  <Card title="🗄️ Database Auditing" icon="database" href="/guides/supabase-mcp-database-workflow">
+    `continuedev/supabase-agent`
+    Audits RLS security and generates migrations
+  </Card>
+  
+  <Card title="🔄 Data Pipelines" icon="arrows-rotate" href="/guides/dlt-mcp-continue-cookbook">
+    `continuedev/dlt-agent`
+    Inspects pipelines and debugs load errors
+  </Card>
+</CardGroup>
+
+<Info>
+  **Explore More Agents**: Browse the complete collection of pre-configured agents and MCP integration cookbooks in our [Guides Overview](/guides/overview#mcp-integration-cookbooks).
+</Info>
+
+{/* ## Webhook Integrations
+
+Trigger Agents automatically through secure webhooks for CI/CD integration:
+
+```bash
+POST /webhooks/ingest/:webhookId
+{
+  "payload": { "trigger": "nightly-security-scan" }
+}
+```
+
+Perfect for connecting with:
+- GitHub Actions workflows
+- Monitoring alerts (Sentry, DataDog)
+- Deployment pipelines
+- Scheduled maintenance tasks */}
+
+## Collaboration
+
+Agents are organizational assets — once created, everyone in your org can use them:
+
+| Role | Permissions |
+|------|-------------|
+| **Public** | Use, create, remix, and delete Agents |
+| **Organization** | Share agents with your team |
+| **Private** | Create, edit, and delete Agents for your personal use |
+
+## Getting Started
+
+<Steps>
+  <Step title="Try a Pre-configured Agent">
+    Start with a cookbook agent like `continuedev/github-project-manager-agent`:
+    
+    ```bash
+    cn --agent continuedev/github-project-manager-agent "List open issues labeled bug"
+    ```
+  </Step>
+  
+  <Step title="Practice with TUI Mode">
+    Test agents locally before automation:
+    
+    ```bash
+    cn --agent continuedev/snyk-continuous-ai-agent
+    # Interactive mode - perfect for learning how to use the agent for your use case
+    ```
+  </Step>
+  
+  <Step title="Create Your First Agent">
+    Ready to build custom workflows? Learn how in our [Create and Edit guide](/hub/agents/create-and-edit).
+  </Step>
+  
+  <Step title="Set Up Automation">
+    Integrate with CI/CD using headless mode and webhooks for continuous workflows.
+  </Step>
+</Steps>
+
+## Monitoring
+
+You can monitor all activity for your Agents directly in **Mission Control**.
+
+<AccordionGroup>
+
+  <Accordion title="Inbox Overview">
+    The **Inbox** shows every Task or Workflow run, and you can filter by Agent.
+  </Accordion>
+
+  <Accordion title="Detailed Session View">
+    Click any session in the Inbox to open the Detail page.  
+
+    Each session includes:
+    - **Summary** — what the agent did and why  
+    - **Diff** — generated code changes  
+    - **Logs** — full execution trace, tool calls, and reasoning  
+
+    This is the best way to review output, debug issues, or confirm correctness.
+  </Accordion>
+
+</AccordionGroup>
+
+<Info>
+All monitoring is scoped to your current workspace. 
+</Info>
+
+## Best Practices
+
+The practice of using cloud agents, which we call Continuous AI, requires forethought to set up the right guardrails:
+
+- **Start Small**: Begin with tasks you're confident Continue can accomplish
+- **Use Thorough Prompts**: Agents can run for extended periods, so invest in detailed instructions  
+- **Test Locally First**: Practice with TUI mode before deploying to production
+- **Team Alignment**: Discuss agent usage and adjust code review habits for higher PR volume
+- **Iterate and Improve**: Be willing to refine prompts based on results
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create an Agent" icon="plus" href="/hub/agents/create-and-edit">
+    Build your first custom agent with prompts, rules, and tools
+  </Card>
+  
+  <Card title="Explore Cookbooks" icon="book-open" href="/guides/overview#mcp-integration-cookbooks">
+    Browse pre-built agents for security, analytics, and more
+  </Card>
+  
+  <Card title="CLI Guide" icon="terminal" href="/cli/overview">
+    Learn to run agents from the command line
+  </Card>
+  
+  <Card title="Mission Control" icon="desktop" href="https://hub.continue.dev/agents">
+    Access the web interface to manage agents
+  </Card>
+</CardGroup>

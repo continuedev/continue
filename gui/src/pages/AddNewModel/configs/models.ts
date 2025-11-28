@@ -514,7 +514,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "askSage"],
+    providerOptions: ["groq"],
     isOpenSource: false,
   },
   llama318bChat: {
@@ -592,7 +592,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "nebius"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "nebius"],
     isOpenSource: false,
   },
   llama323bChat: {
@@ -605,7 +605,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "together"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "together"],
     isOpenSource: false,
   },
   llama3211bChat: {
@@ -841,7 +841,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral", "askSage"],
+    providerOptions: ["mistral"],
     isOpenSource: false,
   },
   mistralNemo: {
@@ -855,46 +855,6 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "mistral.png",
     isOpenSource: true,
-  },
-  geminiPro: {
-    title: "Gemini Pro",
-    description: "A highly capable model created by Google DeepMind",
-    params: {
-      title: "Gemini Pro",
-      model: "gemini-pro",
-      contextLength: 32_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
-  gemini15Pro: {
-    title: "Gemini 1.5 Pro",
-    description: "A newer Gemini model with 1M token context length",
-    params: {
-      title: "Gemini 1.5 Pro",
-      model: "gemini-1.5-pro-latest",
-      contextLength: 2_000_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini", "askSage"],
-    isOpenSource: false,
-  },
-  gemini15Flash: {
-    title: "Gemini 1.5 Flash",
-    description:
-      "Fast and versatile multimodal model for scaling across diverse tasks",
-    params: {
-      title: "Gemini 1.5 Flash",
-      model: "gemini-1.5-flash-latest",
-      contextLength: 1_000_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
   },
   gemini20Flash: {
     title: "Gemini 2.0 Flash",
@@ -938,20 +898,7 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
-  gemini25ProExp: {
-    title: "Gemini 2.5 Pro Experimental",
-    description:
-      "Experimental version of Gemini 2.5 Pro with enhanced capabilities and larger output limits.",
-    params: {
-      title: "Gemini 2.5 Pro Experimental",
-      model: "gemini-2.5-pro-exp-03-25",
-      contextLength: 1_048_576,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
+
   gemini25Pro: {
     title: "Gemini 2.5 Pro",
     description:
@@ -959,6 +906,20 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Gemini 2.5 Pro",
       model: "gemini-2.5-pro",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini3ProPreview: {
+    title: "Gemini 3 Pro",
+    description:
+      "Google's latest Pro model with up to 64k output context. Best for complex tasks involving reasoning.",
+    params: {
+      title: "Gemini 3 Pro",
+      model: "gemini-3-pro-preview",
       contextLength: 1_048_576,
       apiKey: "<API_KEY>",
     },
@@ -1120,6 +1081,48 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cohere.png",
     isOpenSource: false,
   },
+  commandAVision072025: {
+    title: "Command A Vision 07-2025",
+    description:
+      "Command A Vision is Cohere's first model capable of processing images, excelling in enterprise use cases such as analyzing charts, graphs, and diagrams, table understanding, OCR, document Q&A, and object detection.",
+    params: {
+      model: "command-a-vision-07-2025",
+      contextLength: 128_000,
+      title: "Command A Vision 07-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandAReasoning082025: {
+    title: "Command A Reasoning 08-2025",
+    description:
+      "Command A Reasoning is Cohere’s first reasoning model, able to ‘think’ before generating an output in a way that allows it to perform well in certain kinds of nuanced problem-solving and agent-based tasks in 23 languages.",
+    params: {
+      model: "command-a-reasoning-08-2025",
+      contextLength: 256_000,
+      title: "Command A Reasoning 08-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandATranslate082025: {
+    title: "Command A Translate 08-2025",
+    description:
+      "Command A Translate is Cohere’s state of the art machine translation model, excelling at a variety of translation tasks on 23 languages",
+    params: {
+      model: "command-a-translate-08-2025",
+      contextLength: 8_000,
+      title: "Command A Translate 08-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
   gpt5: {
     title: "GPT-5",
     description: "OpenAI's next-generation, high-intelligence flagship model",
@@ -1127,6 +1130,31 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-5",
       contextLength: 400_000,
       title: "GPT-5",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt5_1: {
+    title: "GPT-5.1",
+    description: "OpenAI's GPT-5.1 model for advanced reasoning and chat",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      title: "GPT-5.1",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt5Codex: {
+    title: "GPT-5 Codex",
+    description:
+      "OpenAI's most advanced code generation model, optimized for programming tasks",
+    params: {
+      model: "gpt-5-codex",
+      contextLength: 400_000,
+      title: "GPT-5 Codex",
     },
     providerOptions: ["openai"],
     icon: "openai.png",
@@ -1154,7 +1182,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
       title: "GPT-4o",
     },
-    providerOptions: ["openai", "askSage"],
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1165,9 +1193,10 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       model: "gpt-4o-mini",
       contextLength: 128_000,
+
       title: "GPT-4o mini",
     },
-    providerOptions: ["openai", "askSage"],
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1180,7 +1209,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8096,
       title: "GPT-3.5-Turbo",
     },
-    providerOptions: ["openai", "askSage"],
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1194,20 +1223,20 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 4 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "askSage"],
+    providerOptions: ["anthropic", "replicate"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude41Opus: {
-    title: "Claude 4.1 Opus",
-    description: "The most capable model in the Claude 4 series",
+  claude4_5Opus: {
+    title: "Claude 4.5 Opus",
+    description: "The most capable model in the Claude 4.5 series",
     params: {
-      model: "claude-opus-4-1-20250805",
+      model: "claude-opus-4-5",
       contextLength: 200_000,
-      title: "Claude 4.1 Opus",
+      title: "Claude 4.5 Opus",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "askSage"],
+    providerOptions: ["anthropic"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1358,31 +1387,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["watsonx"],
     isOpenSource: false,
   },
-  VertexGemini15Pro: {
-    title: "Gemini 1.5 Pro",
-    description: "A newer Gemini model with 1M token context length",
-    params: {
-      title: "Gemini 1.5 Pro",
-      model: "gemini-1.5-pro-002",
-      contextLength: 2_097_152,
-    },
-    icon: "gemini.png",
-    providerOptions: ["vertexai"],
-    isOpenSource: false,
-  },
-  VertexGemini15Flash: {
-    title: "Gemini 1.5 Flash",
-    description:
-      "Fast and versatile multimodal model for scaling across diverse tasks",
-    params: {
-      title: "Gemini 1.5 Flash",
-      model: "gemini-1.5-flash-002",
-      contextLength: 1_048_576,
-    },
-    icon: "gemini.png",
-    providerOptions: ["vertexai"],
-    isOpenSource: false,
-  },
   vertexMistralLarge: {
     title: "Mistral Large",
     description:
@@ -1396,133 +1400,380 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["vertexai"],
     isOpenSource: false,
   },
+  // OpenAI Models via Ask Sage
+  asksagegpt4o: {
+    title: "GPT-4o*",
+    description:
+      "An even faster version of GPT-4 with stronger multi-modal capabilities.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      maxTokens: 16_384,
+      title: "GPT-4o*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt4omini: {
+    title: "GPT-4o Mini*",
+    description:
+      "A model at less than half the price of gpt-3.5-turbo, but near gpt-4 in capabilities.",
+    params: {
+      model: "gpt-4o-mini",
+      contextLength: 128_000,
+      maxTokens: 16_384,
+      title: "GPT-4o mini*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   asksagegpt4gov: {
-    title: "GPT-4 gov",
+    title: "GPT-4 gov*",
     description:
       "U.S. Government. Most capable model today - which is similar to GPT-4 but approved for use by the U.S. Government.",
     params: {
       model: "gpt4-gov",
       contextLength: 128_000,
-      title: "GPT-4 gov",
+      maxTokens: 4096,
+      title: "GPT-4 gov*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
   asksagegpt4ogov: {
-    title: "GPT-4o gov",
+    title: "GPT-4o gov*",
     description:
       "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
     params: {
       model: "gpt-4o-gov",
       contextLength: 128_000,
-      title: "GPT-4o-gov",
+      maxTokens: 4096,
+      title: "GPT-4o-gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt35: {
+    title: "GPT-3.5*",
+    description: "Azure OpenAI GPT 3.5 Model.",
+    params: {
+      model: "gpt",
+      contextLength: 4096,
+      title: "GPT-3.5*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
   asksagegpt35gov: {
-    title: "GPT-3.5-Turbo gov",
+    title: "GPT-3.5 gov*",
     description: "U.S. Government. Inexpensive and good ROI.",
     params: {
       model: "gpt-gov",
-      contextLength: 8096,
-      title: "GPT-3.5-Turbo gov",
+      contextLength: 16834,
+      maxTokens: 4096,
+      title: "GPT-3.5 gov*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
   asksagegpt4ominigov: {
-    title: "GPT-4o-mini gov",
-    description:
-      "U.S. Government. Latest OpenAI GPT 4o-mini model. More inexpensive than GPT4. Capable of ingesting and analyzing images (JPG, PNG, GIF (20MB files max)). 16,384 token response max.",
+    title: "GPT-4o-mini gov*",
+    description: "OpenAI GPT 4o-mini model.",
     params: {
       model: "gpt-4o-mini-gov",
       contextLength: 128_000,
-      title: "GPT-4o-mini gov",
+      maxTokens: 16_384,
+      title: "GPT-4o-mini gov*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
   asksagegpt4: {
-    title: "GPT-4",
+    title: "GPT-4*",
     description:
       "GPT4 is about 5X more expensive than Ask Sage tokens and 50X more expensive than GPT3.5",
     params: {
       model: "gpt4",
       contextLength: 8_192,
-      title: "GPT-4",
-    },
-    providerOptions: ["openai"],
-    icon: "openai.png",
-    isOpenSource: false,
-  },
-  asksagegpt432: {
-    title: "GPT-4-32k",
-    description:
-      "The GPT-4-32k model is a variant of the GPT-4 model developed by OpenAI. It is designed to handle a larger context window, capable of processing up to 32,768 tokens, which makes it suitable for scenarios that require extensive information integration and data analysis",
-    params: {
-      model: "gpt4-32k",
-      contextLength: 32_768,
-      title: "GPT-4-32k",
+      title: "GPT-4*",
+      apiKey: "",
     },
     providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
   asksagegpto1: {
-    title: "GPT-o1",
+    title: "GPT-o1*",
     description:
       "Latest OpenAI GPT-o1 model. More inexpensive than GPT4. Capable of ingesting and analyzing images (JPG, PNG, GIF (20MB files max)).",
     params: {
       model: "gpt-o1",
       contextLength: 128_000,
-      title: "GPT-o1",
+      maxTokens: 32_768,
+      title: "GPT-o1*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false, // stopped here
+  },
+  asksagegpt41: {
+    title: "GPT-4.1*",
+    description: "Azure OpenAI GPT 4.1 model.",
+    params: {
+      model: "gpt-4.1",
+      contextLength: 1_000_000,
+      maxTokens: 32_768,
+      title: "GPT-4.1*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
-  asksagegpto1mini: {
-    title: "GPT-o1-mini",
-    description:
-      "Latest OpenAI GPT-o1-mini model. More inexpensive than GPT-o1. Capable of ingesting and analyzing images (JPG, PNG, GIF (20MB files max)). 16,384 token response max.",
+  asksagegpt41mini: {
+    title: "GPT-4.1 mini*",
+    description: "Azure OpenAI GPT 4.1 mini model.",
     params: {
-      model: "gpt-o1-mini",
-      contextLength: 128_000,
-      title: "GPT-o1-mini",
+      model: "gpt-4.1-mini",
+      contextLength: 1_000_000,
+      maxTokens: 32_768,
+      title: "GPT-4.1 mini*",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
-  asksagegpto3mini: {
-    title: "GPT-o3-mini",
-    description:
-      "o3-mini can outperform o1 in coding and other reasoning tasks, and is 93% cheaper and has lower latency. It supports function calling, Structured Outputs, streaming, and developer messages. o3-mini comes with a larger context window of 200,000 tokens and a max output of 100,000 tokens",
+  asksagegpt41nano: {
+    title: "GPT-4.1 nano*",
+    description: "Azure OpenAI GPT 4.1 nano model.",
     params: {
-      model: "gpt-o3-mini",
+      model: "gpt-4.1-nano",
+      contextLength: 1_000_000,
+      maxTokens: 32_768,
+      title: "GPT-4.1 nano*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt5: {
+    title: "GPT-5*",
+    description: "OpenAI's GPT-5 model",
+    params: {
+      model: "gpt-5",
+      contextLength: 272_000,
+      maxTokens: 128_000,
+      title: "GPT-5*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt5nano: {
+    title: "GPT-5-nano*",
+    description: "OpenAI's GPT-5-nano model",
+    params: {
+      model: "gpt-5-nano",
+      contextLength: 272_000,
+      maxTokens: 128_000,
+      title: "GPT-5-nano*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt5mini: {
+    title: "GPT-5-mini*",
+    description: "OpenAI's GPT-5-mini model",
+    params: {
+      model: "gpt-5-mini",
+      contextLength: 272_000,
+      maxTokens: 128_000,
+      title: "GPT-5-mini*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpto3: {
+    title: "GPT-o3",
+    description: "Azure OpenAI GPT o3 model.",
+    params: {
+      model: "gpt-o3",
       contextLength: 200_000,
-      title: "GPT-o3-mini",
+      maxTokens: 100_000,
+      title: "GPT-o3",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
-  asksageclaude35gov: {
-    title: "Claude 3.5 Sonnet gov",
+  asksagegpt04mini: {
+    title: "GPT-o4-mini",
+    description: "Azure OpenAI GPT o4-mini model.",
+    params: {
+      model: "gpt-o4-mini",
+      contextLength: 200_000,
+      maxTokens: 100_000,
+      title: "GPT-o4-mini",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksageclaude35Sonnet: {
+    title: "Claude 3.5 Sonnet",
     description:
       "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
     params: {
-      model: "aws-bedrock-claude-35-sonnet-gov",
+      model: "claude-35-sonnet",
       contextLength: 200_000,
-      title: "Claude 3.5 Sonnet gov",
+      title: "Claude 3.5 Sonnet",
+      apiKey: "",
     },
     providerOptions: ["askSage"],
     icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude37sonnet: {
+    title: "Claude 3.7 Sonnet",
+    description: "Anthropic's 3.7 model.",
+    params: {
+      model: "claude-37-sonnet",
+      contextLength: 200_000,
+      title: "Claude 3.7 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude37sonnetgov: {
+    title: "Claude 3.7 Sonnet gov*",
+    description: "Anthropic's 3.7 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-37-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 3.7 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude35gov: {
+    title: "Claude 3.5 Sonnet gov*",
+    description: "Anthropic's 3.5 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-35-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude4s: {
+    title: "Claude 4 Sonnet",
+    description: "Anthropic's Claude 4 Sonnet",
+    params: {
+      model: "claude-4-sonnet",
+      contextLength: 200_000,
+      title: "Claude 4 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude4o: {
+    title: "Claude 4 Opus",
+    description: "Anthropic's Claude 4 Opus",
+    params: {
+      model: "claude-4-opus",
+      contextLength: 200_000,
+      title: "Claude 4 Opus",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude4sonnet: {
+    title: "Claude 4 Sonnet*",
+    description:
+      "Anthropic's most powerful model, designed for complex, reasoning-heavy tasks like agentic search, coding, and writing.",
+    params: {
+      model: "google-claude-4-sonnet",
+      contextLength: 200_000,
+      title: "Claude 4 Sonnet*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45sonnet: {
+    title: "Claude 4.5 Sonnet*",
+    description:
+      "Anthropic's most powerful model, designed for complex, reasoning-heavy tasks like agentic search, coding, and writing.",
+    params: {
+      model: "google-claude-45-sonnet",
+      contextLength: 200_000,
+      title: "Claude 4.5 Sonnet*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude41opus: {
+    title: "Claude 4.1 Opus*",
+    description: "Claude 4.1 Opus",
+    params: {
+      model: "google-claude-4-opus",
+      contextLength: 200_000,
+      title: "Claude 4.1 Opus*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksagenovalite: {
+    title: "Nova Lite*",
+    description: "AWS Gov Nova Lite model.",
+    params: {
+      model: "aws-bedrock-nova-lite-gov",
+      contextLength: 300_000,
+      title: "Nova Lite*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "aws.png",
     isOpenSource: false,
   },
   asksagegroqllama33: {
@@ -1532,7 +1783,9 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Llama 3.3",
       model: "groq-llama33",
       contextLength: 128_000,
+      apiKey: "",
     },
+    providerOptions: ["askSage"],
     icon: "groq.png",
     isOpenSource: true,
   },
@@ -1543,9 +1796,65 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Groq-70B",
       model: "groq-70b",
       contextLength: 8_192,
+      apiKey: "",
     },
+    providerOptions: ["askSage"],
     icon: "groq.png",
     isOpenSource: true,
+  },
+  asksagegemini20Flash: {
+    title: "Gemini 2.0 Flash*",
+    description:
+      "Google's powerful workhorse model with low latency and enhanced performance.",
+    params: {
+      title: "Gemini 2.0 Flash*",
+      model: "google-gemini-20-flash",
+      contextLength: 1_000_000,
+      apiKey: "",
+    },
+    icon: "gemini.png",
+    providerOptions: ["askSage"],
+    isOpenSource: false,
+  },
+  asksagegemini25Pro: {
+    title: "Gemini 2.5 Pro*",
+    description: "Google's Gemini 2.5 Pro model",
+    params: {
+      title: "Gemini 2.5 Pro*",
+      model: "google-gemini-2.5-pro",
+      contextLength: 1_000_000,
+      apiKey: "",
+    },
+    icon: "gemini.png",
+    providerOptions: ["askSage"],
+    isOpenSource: false,
+  },
+  asksagegemini25flash: {
+    title: "Gemini 2.5 Flash*",
+    description: "Google's Gemini 2.5 Flash model",
+    params: {
+      title: "Gemini 2.5 Flash*",
+      model: "google-gemini-2.5-flash",
+      contextLength: 1_000_000,
+      apiKey: "",
+    },
+    icon: "gemini.png",
+    providerOptions: ["askSage"],
+    isOpenSource: false,
+  },
+  asksagegrok4: {
+    title: "Grok 4",
+    description:
+      "xAI's latest and greatest flagship model, offering strong performance in natural language, math and reasoning.",
+    params: {
+      title: "Grok 4",
+      model: "xai-grok",
+      contextLength: 256_000,
+      apiKey: "",
+    },
+    icon: "xAI.png",
+    providerOptions: ["askSage"],
+    isOpenSource: false,
   },
   Qwen2Coder: {
     title: "Qwen 2.5 Coder 7b",
@@ -1585,17 +1894,114 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
-  grokBeta: {
-    title: "Grok Beta",
-    description: "Generative artificial intelligence chatbot developed by xAI.",
-    refUrl: "",
+  grokCodeFast1: {
+    title: "Grok Code Fast 1",
+    description:
+      "A speedy and economical reasoning model that excels at agentic coding",
+    refUrl: "https://docs.x.ai/docs/models/grok-code-fast-1",
     params: {
-      title: "Grok Beta",
-      model: "grok-beta",
-      contextLength: 128_000,
+      title: "Grok Code Fast 1",
+      model: "grok-code-fast-1",
+      contextLength: 256000,
     },
     icon: "xAI.png",
-    providerOptions: ["xAI", "askSage"],
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok4FastReasoning: {
+    title: "Grok 4 Fast Reasoning",
+    description: "xAI's latest advancement in cost-efficient reasoning models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-reasoning",
+    params: {
+      title: "Grok 4 Fast Reasoning",
+      model: "grok-4-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok4FastNonReasoning: {
+    title: "Grok 4 Fast Non-Reasoning",
+    description: "xAI's latest advancement in cost-efficient models",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-fast-non-reasoning",
+    params: {
+      title: "Grok 4 Fast Non-Reasoning",
+      model: "grok-4-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastReasoning: {
+    title: "Grok 4.1 Fast Reasoning",
+    description:
+      "xAI's upgraded reasoning model offering strong performance in complex tasks.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Reasoning",
+      model: "grok-4-1-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastNonReasoning: {
+    title: "Grok 4.1 Fast Non-Reasoning",
+    description:
+      "xAI's upgraded non-reasoning model optimized for speed and efficiency.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-non-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Non-Reasoning",
+      model: "grok-4-1-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok4: {
+    title: "Grok 4",
+    description:
+      "xAI's latest and greatest flagship model, offering strong performance in natural language, math and reasoning.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4",
+    params: {
+      title: "Grok 4",
+      model: "grok-4",
+      contextLength: 256_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok3: {
+    title: "Grok 3",
+    description:
+      "Excels at enterprise use cases like data extraction, coding, and text summarization",
+    refUrl: "https://docs.x.ai/docs/models/grok-3",
+    params: {
+      title: "Grok 3",
+      model: "grok-3",
+      contextLength: 131_072,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok3Mini: {
+    title: "Grok 3 Mini",
+    description:
+      "A lightweight model that thinks before responding. Fast, smart, and great for logic-based tasks that do not require deep domain knowledge.",
+    refUrl: "https://docs.x.ai/docs/models/grok-3-mini",
+    params: {
+      title: "Grok 3 Mini",
+      model: "grok-3-mini",
+      contextLength: 131_072,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
     isOpenSource: false,
   },
   gemma2_2b: {
@@ -1705,25 +2111,13 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["siliconflow"],
     isOpenSource: true,
   },
-  llama4Scout: {
-    title: "Llama 4 Scout Instruct",
-    description: "A model from Meta, fine-tuned for chat",
-    params: {
-      title: "Llama 4 Scout Instruct",
-      model: "Llama-4-Scout-17B-16E-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
   llama4Maverick: {
     title: "Llama 4 Maverick Instruct",
     description: "A model from Meta, fine-tuned for chat",
     params: {
       title: "Llama 4 Maverick Instruct",
       model: "Llama-4-Maverick-17B-128E-Instruct",
-      contextLength: 16_000,
+      contextLength: 128_000,
     },
     icon: "meta.png",
     providerOptions: ["sambanova"],
@@ -1741,6 +2135,18 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+  llama33Swallow70BInstruct: {
+    title: "Llama 3.3 Swallow 70B Instruct",
+    description: "A model from TokyoTech, fine-tuned for chat",
+    params: {
+      title: "Llama 3.3 70B instruct",
+      model: "Llama-3.3-Swallow-70B-Instruct-v0.4",
+      contextLength: 128_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
   llama318BInstruct: {
     title: "Llama3.1 8B",
     description: "A model from Meta, fine-tuned for chat",
@@ -1751,58 +2157,6 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 16_000,
     },
     icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama31405BInstruct: {
-    title: "Llama3.1 405B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.1 405B Instruct",
-      model: "Meta-Llama-3.1-405B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama321BInstruct: {
-    title: "Llama3.2 1B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 1B Instruct",
-      model: "Meta-Llama-3.2-1B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama323BInstruct: {
-    title: "Llama3.2 3B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 3B Instruct",
-      model: "Meta-Llama-3.2-3B-Instruct",
-      contextLength: 8192,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwq32B: {
-    title: "QwQ 32B",
-    description:
-      "QwQ-32B is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
-    params: {
-      title: "QwQ 32B",
-      model: "QwQ-32B",
-      contextLength: 16_000,
-    },
-    icon: "qwen.png",
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
@@ -1824,7 +2178,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
-      contextLength: 8192,
+      contextLength: 32_000,
     },
     icon: "deepseek.png",
     providerOptions: ["sambanova"],
@@ -1842,6 +2196,42 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+  deepseekV31: {
+    title: "DeepSeek V3.1",
+    description: "DeekSeek V3.1 reasoning model from DeepSeek",
+    params: {
+      title: "DeepSeek V3.1",
+      model: "DeepSeek-V3.1",
+      contextLength: 32_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  qwen332B: {
+    title: "Qwen 3 32B",
+    description: "Qwen 3 32B model from Alibaba",
+    params: {
+      title: "Qwen 3 32B",
+      model: "Qwen3-32B",
+      contextLength: 8192,
+    },
+    icon: "qwen.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  gptOss120b: {
+    title: "GPT OSS 120B",
+    description: "GPT oss 120b reasoning model from OpenAI",
+    params: {
+      title: "GPT OSS 120B",
+      model: "gpt-oss-120b",
+      contextLength: 128_000,
+    },
+    icon: "openai.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:
@@ -1850,6 +2240,382 @@ export const models: { [key: string]: ModelPackage } = {
       model: "AUTODETECT",
     } as any,
     providerOptions: [],
+    isOpenSource: false,
+  },
+
+  // CometAPI Models
+
+  // GPT series models via CometAPI
+  cometapiGpt5ChatLatest: {
+    title: "GPT-5 Chat Latest",
+    description:
+      "GPT-5 Chat Latest via CometAPI - OpenAI's most advanced conversational model.",
+    params: {
+      model: "gpt-5-chat-latest",
+      contextLength: 400_000,
+      title: "GPT-5 Chat Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt5Mini: {
+    title: "GPT-5 Mini",
+    description:
+      "GPT-5 Mini via CometAPI - compact version of GPT-5 optimized for efficiency.",
+    params: {
+      model: "gpt-5-mini",
+      contextLength: 400_000,
+      title: "GPT-5 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt5: {
+    title: "GPT-5",
+    description:
+      "GPT-5 via CometAPI - OpenAI's flagship model with advanced reasoning capabilities.",
+    params: {
+      model: "gpt-5",
+      contextLength: 200_000,
+      title: "GPT-5",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiChatgpt4oLatest: {
+    title: "ChatGPT-4o Latest",
+    description:
+      "ChatGPT-4o Latest via CometAPI - latest version of GPT-4o with enhanced capabilities.",
+    params: {
+      model: "chatgpt-4o-latest",
+      contextLength: 128_000,
+      title: "ChatGPT-4o Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGpt41: {
+    title: "GPT-4.1",
+    description:
+      "GPT-4.1 via CometAPI - enhanced version of GPT-4.1 with improved reasoning.",
+    params: {
+      model: "gpt-4.1",
+      contextLength: 100_000,
+      title: "GPT-4.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiO4Mini: {
+    title: "O4 Mini",
+    description:
+      "O4 Mini via CometAPI - OpenAI's reasoning model optimized for efficiency.",
+    params: {
+      model: "o4-mini-2025-04-16",
+      contextLength: 200_000,
+      title: "O4 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiO3Pro: {
+    title: "O3 Pro",
+    description:
+      "O3 Pro via CometAPI - advanced reasoning model with enhanced problem-solving capabilities.",
+    params: {
+      model: "o3-pro-2025-06-10",
+      contextLength: 200_000,
+      title: "O3 Pro",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Claude series models via CometAPI
+  cometapiClaudeOpus41: {
+    title: "Claude Opus 4.1",
+    description:
+      "Claude Opus 4.1 via CometAPI - Anthropic's most capable model with advanced reasoning.",
+    params: {
+      model: "claude-opus-4-1-20250805",
+      contextLength: 200_000,
+      title: "Claude Opus 4.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeOpus41Thinking: {
+    title: "Claude Opus 4.1 Thinking",
+    description:
+      "Claude Opus 4.1 Thinking via CometAPI - version with enhanced thinking capabilities.",
+    params: {
+      model: "claude-opus-4-1-20250805-thinking",
+      contextLength: 200_000,
+      title: "Claude Opus 4.1 Thinking",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeSonnet4: {
+    title: "Claude Sonnet 4",
+    description:
+      "Claude Sonnet 4 via CometAPI - balanced performance and efficiency from Anthropic.",
+    params: {
+      model: "claude-sonnet-4-20250514",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaudeSonnet4Thinking: {
+    title: "Claude Sonnet 4 Thinking",
+    description:
+      "Claude Sonnet 4 Thinking via CometAPI - version with enhanced reasoning capabilities.",
+    params: {
+      model: "claude-sonnet-4-20250514-thinking",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4 Thinking",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaude37SonnetLatest: {
+    title: "Claude 3.7 Sonnet Latest",
+    description:
+      "Claude 3.7 Sonnet Latest via CometAPI - latest version of Claude 3.7 Sonnet.",
+    params: {
+      model: "claude-3-7-sonnet-latest",
+      contextLength: 200_000,
+      title: "Claude 3.7 Sonnet Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiClaude35HaikuLatest: {
+    title: "Claude 3.5 Haiku Latest",
+    description:
+      "Claude 3.5 Haiku Latest via CometAPI - fast and efficient model from Anthropic.",
+    params: {
+      model: "claude-3-5-haiku-latest",
+      contextLength: 200_000,
+      title: "Claude 3.5 Haiku Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Gemini series models via CometAPI
+  cometapiGemini25Pro: {
+    title: "Gemini 2.5 Pro",
+    description:
+      "Gemini 2.5 Pro via CometAPI - Google's advanced multimodal model with enhanced capabilities.",
+    params: {
+      model: "gemini-2.5-pro",
+      contextLength: 1_000_000,
+      title: "Gemini 2.5 Pro",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini25Flash: {
+    title: "Gemini 2.5 Flash",
+    description:
+      "Gemini 2.5 Flash via CometAPI - optimized for speed and efficiency.",
+    params: {
+      model: "gemini-2.5-flash",
+      contextLength: 1_000_000,
+      title: "Gemini 2.5 Flash",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini25FlashLite: {
+    title: "Gemini 2.5 Flash Lite",
+    description:
+      "Gemini 2.5 Flash Lite via CometAPI - lightweight version for faster responses.",
+    params: {
+      model: "gemini-2.5-flash-lite",
+      contextLength: 8_000,
+      title: "Gemini 2.5 Flash Lite",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGemini20Flash: {
+    title: "Gemini 2.0 Flash",
+    description:
+      "Gemini 2.0 Flash via CometAPI - Google's powerful workhorse model with low latency.",
+    params: {
+      model: "gemini-2.0-flash",
+      contextLength: 32_000,
+      title: "Gemini 2.0 Flash",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Grok series models via CometAPI
+  cometapiGrok40709: {
+    title: "Grok 4",
+    description:
+      "Grok 4 via CometAPI - xAI's advanced model with real-time information access.",
+    params: {
+      model: "grok-4-0709",
+      contextLength: 256_000,
+      title: "Grok 4",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGrok3: {
+    title: "Grok 3",
+    description: "Grok 3 via CometAPI - powerful reasoning model from xAI.",
+    params: {
+      model: "grok-3",
+      contextLength: 128_000,
+      title: "Grok 3",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiGrok3Mini: {
+    title: "Grok 3 Mini",
+    description: "Grok 3 Mini via CometAPI - efficient version of Grok 3.",
+    params: {
+      model: "grok-3-mini",
+      contextLength: 128_000,
+      title: "Grok 3 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // DeepSeek series models via CometAPI (additional)
+  cometapiDeepseekV31: {
+    title: "DeepSeek V3.1",
+    description:
+      "DeepSeek V3.1 via CometAPI - enhanced version with improved performance.",
+    params: {
+      model: "deepseek-v3.1",
+      contextLength: 128_000,
+      title: "DeepSeek V3.1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekR10528: {
+    title: "DeepSeek R1",
+    description:
+      "DeepSeek R1 via CometAPI - reasoning model with enhanced problem-solving capabilities.",
+    params: {
+      model: "deepseek-r1-0528",
+      contextLength: 64_000,
+      title: "DeepSeek R1",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekChat: {
+    title: "DeepSeek Chat",
+    description:
+      "DeepSeek Chat via CometAPI - optimized for conversational AI tasks.",
+    params: {
+      model: "deepseek-chat",
+      contextLength: 64_000,
+      title: "DeepSeek Chat",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiDeepseekReasoner: {
+    title: "DeepSeek Reasoner",
+    description:
+      "DeepSeek Reasoner via CometAPI - specialized model for complex reasoning tasks.",
+    params: {
+      model: "deepseek-reasoner",
+      contextLength: 64_000,
+      title: "DeepSeek Reasoner",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Qwen series models via CometAPI
+  cometapiQwen330BA3B: {
+    title: "Qwen 3 30B A3B",
+    description:
+      "Qwen 3 30B A3B via CometAPI - Alibaba's advanced language model with 30B parameters.",
+    params: {
+      model: "qwen3-30b-a3b",
+      contextLength: 128_000,
+      title: "Qwen 3 30B A3B",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  cometapiQwen3CoderPlus: {
+    title: "Qwen 3 Coder Plus",
+    description:
+      "Qwen 3 Coder Plus via CometAPI - specialized coding model from Alibaba.",
+    params: {
+      model: "qwen3-coder-plus-2025-07-22",
+      contextLength: 262_000,
+      title: "Qwen 3 Coder Plus",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
     isOpenSource: false,
   },
 };

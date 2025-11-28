@@ -44,7 +44,7 @@ describe("alwaysApply Behavior", () => {
       alwaysApply: true,
       globs: "**/*.tsx", // Should be ignored since alwaysApply is true
       source: "rules-block",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
     };
 
     // Test with no file context
@@ -83,7 +83,7 @@ describe("alwaysApply Behavior", () => {
       alwaysApply: false,
       globs: "**/*.tsx",
       source: "rules-block",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
     };
 
     // Rule with alwaysApply: false and no globs
@@ -93,7 +93,7 @@ describe("alwaysApply Behavior", () => {
       alwaysApply: false,
       // No globs
       source: "rules-block",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
     };
 
     // Test with no file context
@@ -131,7 +131,7 @@ describe("alwaysApply Behavior", () => {
       name: "Default No Globs Rule",
       rule: "Default rule with no globs",
       source: "rules-block",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
       // No alwaysApply, no globs
     };
 
@@ -141,7 +141,7 @@ describe("alwaysApply Behavior", () => {
       rule: "Default rule with globs",
       globs: "**/*.tsx",
       source: "rules-block",
-      ruleFile: ".continue/rules.md",
+      sourceFile: ".continue/rules.md",
       // No alwaysApply, with globs
     };
 

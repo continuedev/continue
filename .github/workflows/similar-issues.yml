@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout deja-view
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: "bdougie/deja-view"
           # Option 1: Pin to specific commit (most secure)

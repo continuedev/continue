@@ -4,13 +4,13 @@ import {
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
+  DocumentIcon,
   PencilIcon,
   QuestionMarkCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { BotIcon } from "../../components/svg/BotIcon";
 import { ConfigSection } from "./components/ConfigSection";
-import { AgentsSection } from "./sections/AgentsSection";
+import { ConfigsSection } from "./sections/ConfigsSection";
 import { HelpSection } from "./sections/HelpSection";
 import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
 import { ModelsSection } from "./sections/ModelsSection";
@@ -89,16 +89,14 @@ export const topTabSections: TabSection[] = [
     showTopDivider: true,
     tabs: [
       {
-        id: "agents",
-        label: "Agents",
+        id: "configs",
+        label: "Configs",
         component: (
           <ConfigSection>
-            <AgentsSection />
+            <ConfigsSection />
           </ConfigSection>
         ),
-        icon: (
-          <BotIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" size={16} />
-        ),
+        icon: <DocumentIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
       {
         id: "organizations",

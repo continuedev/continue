@@ -100,7 +100,7 @@ export class ConfigHandler {
     return `${workspaceId}:::${orgId}`;
   }
 
-  private async cascadeInit(reason: string) {
+  private async cascadeInit(reason: string, isLogin?: boolean) {
     const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
 
@@ -118,7 +118,12 @@ export class ConfigHandler {
       const workspaceId = await this.getWorkspaceId();
       const selectedOrgs =
         this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-      const currentSelection = selectedOrgs[workspaceId];
+      let currentSelection = selectedOrgs[workspaceId];
+
+      // reset personal org to first available non-personal org on login
+      if (isLogin && currentSelection === "personal") {
+        currentSelection = null;
+      }
 
       const firstNonPersonal = orgs.find(
         (org) => org.id !== this.PERSONAL_ORG_DESC.id,
@@ -402,6 +407,7 @@ export class ConfigHandler {
     const newSession = sessionInfo;
 
     let reload = false;
+    let isLogin = false;
     if (newSession) {
       if (currentSession) {
         if (
@@ -416,6 +422,7 @@ export class ConfigHandler {
       } else {
         // log in
         reload = true;
+        isLogin = true;
       }
     } else {
       if (currentSession) {
@@ -430,7 +437,7 @@ export class ConfigHandler {
         this.ide,
       );
       this.abortCascade();
-      await this.cascadeInit("Control plane session info update");
+      await this.cascadeInit("Control plane session info update", isLogin);
     }
     return reload;
   }
@@ -502,11 +509,13 @@ export class ConfigHandler {
     this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
-      return {
+      const out = {
         config: undefined,
         errors: injectErrors,
         configLoadInterrupted: true,
       };
+      this.notifyConfigListeners(out);
+      return out;
     }
 
     for (const org of this.organizations) {
@@ -537,12 +546,25 @@ export class ConfigHandler {
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
-    void Telemetry.capture("config_reload", {
+    const isSignedIn = await this.controlPlaneClient.isSignedIn();
+
+    const profileDescription = this.currentProfile.profileDescription;
+    const telemetryData: Record<string, any> = {
       duration,
       reason,
       totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
-    });
+      profileType: profileDescription.profileType,
+      isPersonalOrg: this.currentOrg?.id === this.PERSONAL_ORG_DESC.id,
+      errorCount: errors.length,
+      isSignedIn,
+    };
+
+    void Telemetry.capture("config_reload", telemetryData);
+
+    if (errors.length) {
+      Logger.error("Errors loading config: ", errors);
+    }
 
     return {
       config,
@@ -594,10 +616,6 @@ export class ConfigHandler {
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
-
-    if (config.errors?.length) {
-      Logger.error("Errors loading config: ", config.errors);
-    }
     return config;
   }
 

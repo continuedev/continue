@@ -10,7 +10,7 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
+const { copySqlite } = require("./download-copy-sqlite");
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
 const { npmInstall } = require("./npm-install");
@@ -303,14 +303,9 @@ void (async () => {
       );
 
       await Promise.all([
-        copyEsbuild(target),
         copySqlite(target),
         installAndCopyNodeModules(packageToInstall, "@lancedb"),
       ]);
-    } else {
-      // Download esbuild from npm in tmp and copy over
-      console.log("[info] npm installing esbuild binary");
-      await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
     }
   }
 
@@ -349,13 +344,7 @@ void (async () => {
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = [
-    "esbuild",
-    "@esbuild",
-    "@lancedb",
-    "@vscode/ripgrep",
-    "workerpool",
-  ];
+  const NODE_MODULES_TO_COPY = ["@lancedb", "@vscode/ripgrep", "workerpool"];
 
   fs.mkdirSync("out/node_modules", { recursive: true });
 
@@ -381,9 +370,6 @@ void (async () => {
         }),
     ),
   );
-
-  // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmSync(`out/node_modules/esbuild/bin`, { recursive: true });
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
@@ -442,15 +428,7 @@ void (async () => {
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
-    }`,
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
-    `out/node_modules/esbuild/lib/main.js`,
   ]);
 
   console.log(

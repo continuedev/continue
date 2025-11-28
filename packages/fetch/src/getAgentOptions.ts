@@ -21,7 +21,6 @@ export async function getAgentOptions(
     timeout,
     sessionTimeout: timeout,
     keepAlive: true,
-    keepAliveMsecs: timeout,
   };
 
   // Handle ClientCertificateOptions
@@ -38,9 +37,6 @@ export async function getAgentOptions(
 
   if (process.env.VERBOSE_FETCH) {
     console.log(`Fetch agent options:`);
-    console.log(
-      `\tTimeout (sessionTimeout/keepAliveMsecs): ${agentOptions.timeout}`,
-    );
     console.log(`\tTotal CA certs: ${ca.length}`);
     console.log(`\tGlobal/Root CA certs: ${certsCache.fixedCa.length}`);
     console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
