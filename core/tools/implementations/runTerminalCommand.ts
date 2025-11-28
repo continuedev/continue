@@ -56,18 +56,6 @@ const getColorEnv = () => ({
   CLICOLOR_FORCE: "1",
 });
 
-const ENABLED_FOR_REMOTES = [
-  "",
-  "local",
-  "wsl",
-  "dev-container",
-  "devcontainer",
-  "ssh-remote",
-  "attached-container",
-  "codespaces",
-  "tunnel",
-];
-
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const command = getStringArg(args, "command");
   // Default to waiting for completion if not specified
@@ -77,209 +65,9 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
-    // For streaming output
-    if (extras.onPartialOutput) {
-      try {
-        const workspaceDirs = await extras.ide.getWorkspaceDirs();
-
-        // Handle case where no workspace is available
-        let cwd: string;
-        if (workspaceDirs.length > 0) {
-          cwd = fileURLToPath(workspaceDirs[0]);
-        } else {
-          // Default to user's home directory with fallbacks
-          try {
-            cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-          } catch (error) {
-            // Final fallback if even process.cwd() fails - use system temp directory
-            cwd = os.tmpdir();
-          }
-        }
-
-        return new Promise((resolve, reject) => {
-          let terminalOutput = "";
-
-          if (!waitForCompletion) {
-            const status = "Command is running in the background...";
-            if (extras.onPartialOutput) {
-              extras.onPartialOutput({
-                toolCallId,
-                contextItems: [
-                  {
-                    name: "Terminal",
-                    description: "Terminal command output",
-                    content: "",
-                    status: status,
-                  },
-                ],
-              });
-            }
-          }
-
-          // Use spawn with color environment
-          const { shell, args } = getShellCommand(command);
-          const childProc = childProcess.spawn(shell, args, {
-            cwd,
-            env: getColorEnv(), // Add enhanced environment for colors
-          });
-
-          // Track this process for foreground cancellation
-          if (toolCallId && waitForCompletion) {
-            markProcessAsRunning(
-              toolCallId,
-              childProc,
-              extras.onPartialOutput,
-              terminalOutput,
-            );
-          }
-
-          childProc.stdout?.on("data", (data) => {
-            // Skip if this process has been backgrounded
-            if (isProcessBackgrounded(toolCallId)) return;
-
-            const newOutput = getDecodedOutput(data);
-            terminalOutput += newOutput;
-
-            // Update the tracked output for potential cancellation notifications
-            if (toolCallId && waitForCompletion) {
-              updateProcessOutput(toolCallId, terminalOutput);
-            }
-
-            // Send partial output to UI
-            if (extras.onPartialOutput) {
-              const status = waitForCompletion
-                ? ""
-                : "Command is running in the background...";
-              extras.onPartialOutput({
-                toolCallId,
-                contextItems: [
-                  {
-                    name: "Terminal",
-                    description: "Terminal command output",
-                    content: terminalOutput,
-                    status: status,
-                  },
-                ],
-              });
-            }
-          });
-
-          childProc.stderr?.on("data", (data) => {
-            // Skip if this process has been backgrounded
-            if (isProcessBackgrounded(toolCallId)) return;
-
-            const newOutput = getDecodedOutput(data);
-            terminalOutput += newOutput;
-
-            // Update the tracked output for potential cancellation notifications
-            if (toolCallId && waitForCompletion) {
-              updateProcessOutput(toolCallId, terminalOutput);
-            }
-
-            // Send partial output to UI, status is not required
-            if (extras.onPartialOutput) {
-              extras.onPartialOutput({
-                toolCallId,
-                contextItems: [
-                  {
-                    name: "Terminal",
-                    description: "Terminal command output",
-                    content: terminalOutput,
-                  },
-                ],
-              });
-            }
-          });
-
-          // If we don't need to wait for completion, resolve immediately
-          if (!waitForCompletion) {
-            const status = "Command is running in the background...";
-            resolve([
-              {
-                name: "Terminal",
-                description: "Terminal command output",
-                content: terminalOutput,
-                status: status,
-              },
-            ]);
-          }
-
-          childProc.on("close", (code) => {
-            // Clean up process tracking
-            if (toolCallId) {
-              if (isProcessBackgrounded(toolCallId)) {
-                removeBackgroundedProcess(toolCallId);
-                return;
-              }
-              // Remove from foreground tracking if it was tracked
-              removeRunningProcess(toolCallId);
-            }
-
-            if (waitForCompletion) {
-              // Normal completion, resolve now
-              if (!code || code === 0) {
-                const status = "Command completed";
-                resolve([
-                  {
-                    name: "Terminal",
-                    description: "Terminal command output",
-                    content: terminalOutput,
-                    status: status,
-                  },
-                ]);
-              } else {
-                const status = `Command failed with exit code ${code}`;
-                resolve([
-                  {
-                    name: "Terminal",
-                    description: "Terminal command output",
-                    content: terminalOutput,
-                    status: status,
-                  },
-                ]);
-              }
-            } else {
-              // Already resolved, just update the UI with final output
-              if (extras.onPartialOutput) {
-                const status =
-                  code === 0 || !code
-                    ? "\nBackground command completed"
-                    : `\nBackground command failed with exit code ${code}`;
-                extras.onPartialOutput({
-                  toolCallId,
-                  contextItems: [
-                    {
-                      name: "Terminal",
-                      description: "Terminal command output",
-                      content: terminalOutput,
-                      status: status,
-                    },
-                  ],
-                });
-              }
-            }
-          });
-
-          childProc.on("error", (error) => {
-            // Clean up process tracking
-            if (toolCallId) {
-              if (isProcessBackgrounded(toolCallId)) {
-                removeBackgroundedProcess(toolCallId);
-                return;
-              }
-              // Remove from foreground tracking if it was tracked
-              removeRunningProcess(toolCallId);
-            }
-
-            reject(error);
-          });
-        });
-      } catch (error: any) {
-        throw error;
-      }
-    } else {
-      // Fallback to non-streaming for older clients
+  // For streaming output
+  if (extras.onPartialOutput) {
+    try {
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
 
       // Handle case where no workspace is available
@@ -296,152 +84,337 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         }
       }
 
-      if (waitForCompletion) {
-        // Standard execution, waiting for completion
-        try {
-          // Use spawn approach for consistency with streaming version
-          const { shell: nonStreamingShell, args: nonStreamingArgs } =
-            getShellCommand(command);
-          const output = await new Promise<{ stdout: string; stderr: string }>(
-            (resolve, reject) => {
-              const childProc = childProcess.spawn(
-                nonStreamingShell,
-                nonStreamingArgs,
-                {
-                  cwd,
-                  env: getColorEnv(),
-                },
-              );
+      return new Promise((resolve, reject) => {
+        let terminalOutput = "";
 
-              // Track this process for foreground cancellation
+        if (!waitForCompletion) {
+          const status = "Command is running in the background...";
+          if (extras.onPartialOutput) {
+            extras.onPartialOutput({
+              toolCallId,
+              contextItems: [
+                {
+                  name: "Terminal",
+                  description: "Terminal command output",
+                  content: "",
+                  status: status,
+                },
+              ],
+            });
+          }
+        }
+
+        // Use spawn with color environment
+        const { shell, args } = getShellCommand(command);
+        const childProc = childProcess.spawn(shell, args, {
+          cwd,
+          env: getColorEnv(), // Add enhanced environment for colors
+        });
+
+        // Track this process for foreground cancellation
+        if (toolCallId && waitForCompletion) {
+          markProcessAsRunning(
+            toolCallId,
+            childProc,
+            extras.onPartialOutput,
+            terminalOutput,
+          );
+        }
+
+        childProc.stdout?.on("data", (data) => {
+          // Skip if this process has been backgrounded
+          if (isProcessBackgrounded(toolCallId)) return;
+
+          const newOutput = getDecodedOutput(data);
+          terminalOutput += newOutput;
+
+          // Update the tracked output for potential cancellation notifications
+          if (toolCallId && waitForCompletion) {
+            updateProcessOutput(toolCallId, terminalOutput);
+          }
+
+          // Send partial output to UI
+          if (extras.onPartialOutput) {
+            const status = waitForCompletion
+              ? ""
+              : "Command is running in the background...";
+            extras.onPartialOutput({
+              toolCallId,
+              contextItems: [
+                {
+                  name: "Terminal",
+                  description: "Terminal command output",
+                  content: terminalOutput,
+                  status: status,
+                },
+              ],
+            });
+          }
+        });
+
+        childProc.stderr?.on("data", (data) => {
+          // Skip if this process has been backgrounded
+          if (isProcessBackgrounded(toolCallId)) return;
+
+          const newOutput = getDecodedOutput(data);
+          terminalOutput += newOutput;
+
+          // Update the tracked output for potential cancellation notifications
+          if (toolCallId && waitForCompletion) {
+            updateProcessOutput(toolCallId, terminalOutput);
+          }
+
+          // Send partial output to UI, status is not required
+          if (extras.onPartialOutput) {
+            extras.onPartialOutput({
+              toolCallId,
+              contextItems: [
+                {
+                  name: "Terminal",
+                  description: "Terminal command output",
+                  content: terminalOutput,
+                },
+              ],
+            });
+          }
+        });
+
+        // If we don't need to wait for completion, resolve immediately
+        if (!waitForCompletion) {
+          const status = "Command is running in the background...";
+          resolve([
+            {
+              name: "Terminal",
+              description: "Terminal command output",
+              content: terminalOutput,
+              status: status,
+            },
+          ]);
+        }
+
+        childProc.on("close", (code) => {
+          // Clean up process tracking
+          if (toolCallId) {
+            if (isProcessBackgrounded(toolCallId)) {
+              removeBackgroundedProcess(toolCallId);
+              return;
+            }
+            // Remove from foreground tracking if it was tracked
+            removeRunningProcess(toolCallId);
+          }
+
+          if (waitForCompletion) {
+            // Normal completion, resolve now
+            if (!code || code === 0) {
+              const status = "Command completed";
+              resolve([
+                {
+                  name: "Terminal",
+                  description: "Terminal command output",
+                  content: terminalOutput,
+                  status: status,
+                },
+              ]);
+            } else {
+              const status = `Command failed with exit code ${code}`;
+              resolve([
+                {
+                  name: "Terminal",
+                  description: "Terminal command output",
+                  content: terminalOutput,
+                  status: status,
+                },
+              ]);
+            }
+          } else {
+            // Already resolved, just update the UI with final output
+            if (extras.onPartialOutput) {
+              const status =
+                code === 0 || !code
+                  ? "\nBackground command completed"
+                  : `\nBackground command failed with exit code ${code}`;
+              extras.onPartialOutput({
+                toolCallId,
+                contextItems: [
+                  {
+                    name: "Terminal",
+                    description: "Terminal command output",
+                    content: terminalOutput,
+                    status: status,
+                  },
+                ],
+              });
+            }
+          }
+        });
+
+        childProc.on("error", (error) => {
+          // Clean up process tracking
+          if (toolCallId) {
+            if (isProcessBackgrounded(toolCallId)) {
+              removeBackgroundedProcess(toolCallId);
+              return;
+            }
+            // Remove from foreground tracking if it was tracked
+            removeRunningProcess(toolCallId);
+          }
+
+          reject(error);
+        });
+      });
+    } catch (error: any) {
+      throw error;
+    }
+  } else {
+    // Fallback to non-streaming for older clients
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
+
+    // Handle case where no workspace is available
+    let cwd: string;
+    if (workspaceDirs.length > 0) {
+      cwd = fileURLToPath(workspaceDirs[0]);
+    } else {
+      // Default to user's home directory with fallbacks
+      try {
+        cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
+      } catch (error) {
+        // Final fallback if even process.cwd() fails - use system temp directory
+        cwd = os.tmpdir();
+      }
+    }
+
+    if (waitForCompletion) {
+      // Standard execution, waiting for completion
+      try {
+        // Use spawn approach for consistency with streaming version
+        const { shell: nonStreamingShell, args: nonStreamingArgs } =
+          getShellCommand(command);
+        const output = await new Promise<{ stdout: string; stderr: string }>(
+          (resolve, reject) => {
+            const childProc = childProcess.spawn(
+              nonStreamingShell,
+              nonStreamingArgs,
+              {
+                cwd,
+                env: getColorEnv(),
+              },
+            );
+
+            // Track this process for foreground cancellation
+            if (toolCallId) {
+              markProcessAsRunning(toolCallId, childProc, undefined, "");
+            }
+
+            let stdout = "";
+            let stderr = "";
+
+            childProc.stdout?.on("data", (data) => {
+              stdout += getDecodedOutput(data);
+            });
+
+            childProc.stderr?.on("data", (data) => {
+              stderr += getDecodedOutput(data);
+            });
+
+            childProc.on("close", (code) => {
+              // Clean up process tracking
               if (toolCallId) {
-                markProcessAsRunning(toolCallId, childProc, undefined, "");
+                removeRunningProcess(toolCallId);
               }
 
-              let stdout = "";
-              let stderr = "";
-
-              childProc.stdout?.on("data", (data) => {
-                stdout += getDecodedOutput(data);
-              });
-
-              childProc.stderr?.on("data", (data) => {
-                stderr += getDecodedOutput(data);
-              });
-
-              childProc.on("close", (code) => {
-                // Clean up process tracking
-                if (toolCallId) {
-                  removeRunningProcess(toolCallId);
-                }
-
-                if (code === 0) {
-                  resolve({ stdout, stderr });
-                } else {
-                  const error = new ContinueError(
-                    ContinueErrorReason.CommandExecutionFailed,
-                    `Command failed with exit code ${code}`,
-                  );
-                  (error as any).stderr = stderr;
-                  reject(error);
-                }
-              });
-
-              childProc.on("error", (error) => {
-                // Clean up process tracking
-                if (toolCallId) {
-                  removeRunningProcess(toolCallId);
-                }
+              if (code === 0) {
+                resolve({ stdout, stderr });
+              } else {
+                const error = new ContinueError(
+                  ContinueErrorReason.CommandExecutionFailed,
+                  `Command failed with exit code ${code}`,
+                );
+                (error as any).stderr = stderr;
                 reject(error);
-              });
-            },
-          );
+              }
+            });
 
-          const status = "Command completed";
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: output.stdout ?? "",
-              status: status,
-            },
-          ];
-        } catch (error: any) {
-          const status = `Command failed with: ${error.message || error.toString()}`;
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: error.stderr ?? error.toString(),
-              status: status,
-            },
-          ];
-        }
-      } else {
-        // For non-streaming but also not waiting for completion, use spawn
-        // but don't attach any listeners other than error
-        try {
-          // Use spawn with color environment
-          const { shell: detachedShell, args: detachedArgs } =
-            getShellCommand(command);
-          const childProc = childProcess.spawn(detachedShell, detachedArgs, {
-            cwd,
-            env: getColorEnv(), // Add color environment
-            // Detach the process so it's not tied to the parent
-            detached: true,
-            // Redirect to /dev/null equivalent (works cross-platform)
-            stdio: "ignore",
-          });
+            childProc.on("error", (error) => {
+              // Clean up process tracking
+              if (toolCallId) {
+                removeRunningProcess(toolCallId);
+              }
+              reject(error);
+            });
+          },
+        );
 
-          // Even for detached processes, add event handlers to clean up the background process map
-          childProc.on("close", () => {
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-            }
-          });
+        const status = "Command completed";
+        return [
+          {
+            name: "Terminal",
+            description: "Terminal command output",
+            content: output.stdout ?? "",
+            status: status,
+          },
+        ];
+      } catch (error: any) {
+        const status = `Command failed with: ${error.message || error.toString()}`;
+        return [
+          {
+            name: "Terminal",
+            description: "Terminal command output",
+            content: error.stderr ?? error.toString(),
+            status: status,
+          },
+        ];
+      }
+    } else {
+      // For non-streaming but also not waiting for completion, use spawn
+      // but don't attach any listeners other than error
+      try {
+        // Use spawn with color environment
+        const { shell: detachedShell, args: detachedArgs } =
+          getShellCommand(command);
+        const childProc = childProcess.spawn(detachedShell, detachedArgs, {
+          cwd,
+          env: getColorEnv(), // Add color environment
+          // Detach the process so it's not tied to the parent
+          detached: true,
+          // Redirect to /dev/null equivalent (works cross-platform)
+          stdio: "ignore",
+        });
 
-          childProc.on("error", () => {
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-            }
-          });
+        // Even for detached processes, add event handlers to clean up the background process map
+        childProc.on("close", () => {
+          if (isProcessBackgrounded(toolCallId)) {
+            removeBackgroundedProcess(toolCallId);
+          }
+        });
 
-          // Unref the child to allow the Node.js process to exit
-          childProc.unref();
-          const status = "Command is running in the background...";
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: status,
-              status: status,
-            },
-          ];
-        } catch (error: any) {
-          const status = `Command failed with: ${error.message || error.toString()}`;
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: status,
-              status: status,
-            },
-          ];
-        }
+        childProc.on("error", () => {
+          if (isProcessBackgrounded(toolCallId)) {
+            removeBackgroundedProcess(toolCallId);
+          }
+        });
+
+        // Unref the child to allow the Node.js process to exit
+        childProc.unref();
+        const status = "Command is running in the background...";
+        return [
+          {
+            name: "Terminal",
+            description: "Terminal command output",
+            content: status,
+            status: status,
+          },
+        ];
+      } catch (error: any) {
+        const status = `Command failed with: ${error.message || error.toString()}`;
+        return [
+          {
+            name: "Terminal",
+            description: "Terminal command output",
+            content: status,
+            status: status,
+          },
+        ];
       }
     }
   }
-
-  // For remote environments, just run the command
-  // Note: waitForCompletion is not supported in remote environments yet
-  await extras.ide.runCommand(command);
-  return [
-    {
-      name: "Terminal",
-      description: "Terminal command output",
-      content:
-        "Terminal output not available. This is only available in local development environments and not in SSH environments for example.",
-      status: "Command failed",
-    },
-  ];
 };
