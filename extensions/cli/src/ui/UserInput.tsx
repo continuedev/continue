@@ -463,7 +463,22 @@ const UserInput: React.FC<UserInputProps> = ({
 
     if ((key.return && !key.shift) || key.tab) {
       if (filteredCommands.length > 0) {
-        selectSlashCommand(filteredCommands[selectedCommandIndex].name);
+        const commandName = filteredCommands[selectedCommandIndex].name;
+        if (key.return && commandName !== "title") {
+          // select and submit the command
+          const commandText = "/" + commandName;
+          inputHistory.addEntry(commandText);
+          onSubmit(commandText);
+
+          // reset after submitting command
+          textBuffer.clear();
+          setInputText("");
+          setCursorPosition(0);
+          setShowSlashCommands(false);
+          setShowBashMode(false);
+        } else {
+          selectSlashCommand(commandName);
+        }
       }
       return true;
     }
