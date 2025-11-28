@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { GoogleGenAI } from "@google/genai";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -64,20 +64,15 @@ interface GeminiToolDelta
 
 export class GeminiApi implements BaseLlmApi {
   apiBase: string = "https://generativelanguage.googleapis.com/v1beta/";
+  private genAI: GoogleGenAI;
 
   static maxStopSequences = 5;
 
   constructor(protected config: GeminiConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-  }
-
-  private _convertMessages(
-    msgs: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-  ): any[] {
-    return msgs.map((m) => ({
-      role: m.role === "assistant" ? "CHATBOT" : "USER",
-      message: m.content,
-    }));
+    this.genAI = new GoogleGenAI({
+      apiKey: this.config.apiKey,
+    });
   }
 
   private _oaiPartToGeminiPart(
@@ -111,9 +106,8 @@ export class GeminiApi implements BaseLlmApi {
 
   public _convertBody(
     oaiBody: ChatCompletionCreateParams,
-    url: string,
+    isV1API: boolean,
     includeToolCallIds: boolean,
-    overrideIsV1?: boolean,
   ) {
     const generationConfig: any = {};
 
@@ -130,8 +124,6 @@ export class GeminiApi implements BaseLlmApi {
       const stop = Array.isArray(oaiBody.stop) ? oaiBody.stop : [oaiBody.stop];
       generationConfig.stopSequences = stop.filter((x) => x.trim() !== "");
     }
-
-    const isV1API = overrideIsV1 ?? url.includes("/v1/");
 
     const toolCallIdToNameMap = new Map<string, string>();
     oaiBody.messages.forEach((msg) => {
@@ -319,109 +311,74 @@ export class GeminiApi implements BaseLlmApi {
     };
   }
 
-  async *handleStreamResponse(response: any, model: string) {
-    let buffer = "";
+  private async *processStreamResponse(
+    response: AsyncIterable<any>,
+    model: string,
+  ): AsyncGenerator<ChatCompletionChunk> {
     let usage: UsageInfo | undefined = undefined;
-    for await (const chunk of streamResponse(response as any)) {
-      buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
+
+    for await (const chunk of response) {
+      if (chunk.usageMetadata) {
+        usage = {
+          prompt_tokens: chunk.usageMetadata.promptTokenCount || 0,
+          completion_tokens: chunk.usageMetadata.candidatesTokenCount || 0,
+          total_tokens: chunk.usageMetadata.totalTokenCount || 0,
+        };
       }
 
-      const parts = buffer.split("\n,");
-
-      let foundIncomplete = false;
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        let data;
-        try {
-          data = JSON.parse(part);
-        } catch (e) {
-          foundIncomplete = true;
-          continue; // yo!
-        }
-        if (data.error) {
-          throw new Error(data.error.message);
-        }
-
-        // Check for usage metadata
-        if (data.usageMetadata) {
-          usage = {
-            prompt_tokens: data.usageMetadata.promptTokenCount || 0,
-            completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
-            total_tokens: data.usageMetadata.totalTokenCount || 0,
-          };
-        }
-
-        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
-        const contentParts = data?.candidates?.[0]?.content?.parts;
-        if (contentParts) {
-          for (const part of contentParts) {
-            if ("text" in part) {
-              const thoughtSignature = part?.thoughtSignature;
-              if (thoughtSignature) {
-                yield chatChunkFromDelta({
-                  model,
-                  delta: {
-                    role: "assistant",
-                    extra_content: {
-                      google: {
-                        thought_signature: thoughtSignature,
-                      },
-                    },
-                  } as GeminiToolDelta,
-                });
-              }
-
-              yield chatChunk({
-                content: part.text,
-                model,
-              });
-            } else if ("functionCall" in part) {
-              const thoughtSignature = part?.thoughtSignature;
+      const contentParts = chunk?.candidates?.[0]?.content?.parts;
+      if (contentParts) {
+        for (const part of contentParts) {
+          if (part.text !== undefined) {
+            const thoughtSignature = (part as any)?.thoughtSignature;
+            if (thoughtSignature) {
               yield chatChunkFromDelta({
                 model,
                 delta: {
-                  tool_calls: [
-                    {
-                      index: 0,
-                      id: part.functionCall.id ?? uuidv4(),
-                      type: "function",
-                      function: {
-                        name: part.functionCall.name,
-                        arguments: JSON.stringify(part.functionCall.args),
-                      },
-                      ...(thoughtSignature && {
-                        extra_content: {
-                          google: {
-                            thought_signature: thoughtSignature,
-                          },
-                        },
-                      }),
+                  role: "assistant",
+                  extra_content: {
+                    google: {
+                      thought_signature: thoughtSignature,
                     },
-                  ],
-                },
+                  },
+                } as GeminiToolDelta,
               });
             }
+
+            yield chatChunk({
+              content: part.text,
+              model,
+            });
+          } else if (part.functionCall) {
+            const thoughtSignature = (part as any)?.thoughtSignature;
+            yield chatChunkFromDelta({
+              model,
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: (part.functionCall as any).id ?? uuidv4(),
+                    type: "function",
+                    function: {
+                      name: part.functionCall.name ?? "",
+                      arguments: JSON.stringify(part.functionCall.args ?? {}),
+                    },
+                    ...(thoughtSignature && {
+                      extra_content: {
+                        google: {
+                          thought_signature: thoughtSignature,
+                        },
+                      },
+                    }),
+                  },
+                ],
+              },
+            });
           }
-        } else {
-          console.warn("Unexpected response format:", data);
         }
-      }
-      if (foundIncomplete) {
-        buffer = parts[parts.length - 1];
-      } else {
-        buffer = "";
       }
     }
 
-    // Emit usage at the end if we have it
     if (usage) {
       yield usageChatChunk({
         model,
@@ -430,24 +387,55 @@ export class GeminiApi implements BaseLlmApi {
     }
   }
 
+  /**generates stream from @google/genai sdk */
+  private async generateStream(
+    genAI: GoogleGenAI,
+    model: string,
+    convertedBody: ReturnType<typeof this._convertBody>,
+  ) {
+    return genAI.models.generateContentStream({
+      model,
+      contents: convertedBody.contents,
+      config: {
+        systemInstruction: convertedBody.systemInstruction,
+        tools: convertedBody.tools,
+        ...convertedBody.generationConfig,
+      },
+    });
+  }
+
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
-    signal: AbortSignal,
+    _signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
-    const apiURL = new URL(
-      `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
-      this.apiBase,
-    ).toString();
-    const convertedBody = this._convertBody(body, apiURL, true);
-    const resp = await customFetch(this.config.requestOptions)(apiURL, {
-      method: "POST",
-      body: JSON.stringify(convertedBody),
-      signal,
-    });
-    yield* this.handleStreamResponse(resp, body.model);
+    const convertedBody = this._convertBody(
+      body,
+      this.apiBase.includes("/v1/"),
+      true,
+    );
+    const response = await this.generateStream(
+      this.genAI,
+      body.model,
+      convertedBody,
+    );
+    yield* this.processStreamResponse(response, body.model);
   }
+
+  async *streamWithGenAI(
+    genAI: GoogleGenAI,
+    body: ChatCompletionCreateParamsStreaming,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const convertedBody = this._convertBody(body, false, true);
+    const response = await this.generateStream(
+      genAI,
+      body.model,
+      convertedBody,
+    );
+    yield* this.processStreamResponse(response, body.model);
+  }
+
   completionNonStream(
-    body: CompletionCreateParamsNonStreaming,
+    _body: CompletionCreateParamsNonStreaming,
   ): Promise<Completion> {
     throw new Error("Method not implemented.");
   }
