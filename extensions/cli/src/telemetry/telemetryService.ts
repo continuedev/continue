@@ -73,9 +73,9 @@ class TelemetryService {
     );
 
     let telemetryEnabled = true;
-    if (process.env.CONTINUE_TELEMETRY_ENABLED === "0") {
+    if (process.env.CONTINUE_METRICS_ENABLED === "0") {
       telemetryEnabled = false;
-    } else if (process.env.CONTINUE_TELEMETRY_ENABLED === "1") {
+    } else if (process.env.CONTINUE_METRICS_ENABLED === "1") {
       telemetryEnabled = true;
     } else {
       telemetryEnabled = process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0";
