@@ -45,6 +45,9 @@ export class StorageSyncService {
   private missingRepoLogged = false;
   private targets: StorageTargets | null = null;
   private options: StorageSyncStartOptions | null = null;
+  private targetsExpiresAt: number | null = null;
+  private refreshTimer: NodeJS.Timeout | null = null;
+  private isRefreshing = false;
 
   async initialize(): Promise<StorageSyncServiceState> {
     this.stop();
@@ -112,6 +115,7 @@ export class StorageSyncService {
     }
 
     this.targets = targets;
+    this.targetsExpiresAt = Date.now() + 60 * 60 * 1000; // Track 60-minute expiration
     this.options = options;
     this.stopped = false;
     this.uploadInFlight = false;
@@ -130,10 +134,17 @@ export class StorageSyncService {
       ),
     );
 
+    // Schedule proactive URL refresh at 50-minute mark
+    this.scheduleProactiveRefresh();
+
     await this.performUpload();
 
     this.intervalHandle = setInterval(() => {
-      void this.performUpload();
+      this.performUpload().catch((error) => {
+        logger.warn(
+          `Storage sync upload failed in interval: ${formatError(error)}`,
+        );
+      });
     }, intervalMs);
 
     return true;
@@ -178,12 +189,19 @@ export class StorageSyncService {
   stop(): void {
     this.stopped = true;
     this.targets = null;
+    this.targetsExpiresAt = null;
     this.options = null;
     this.uploadInFlight = false;
 
     if (this.intervalHandle) {
       clearInterval(this.intervalHandle);
       this.intervalHandle = null;
+    }
+
+    // Clear refresh timer
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
     }
 
     if (this.state.isEnabled) {
@@ -245,6 +263,59 @@ export class StorageSyncService {
     }
   }
 
+  private async refreshStorageTargets(): Promise<boolean> {
+    if (this.isRefreshing || !this.options) {
+      return false;
+    }
+
+    this.isRefreshing = true;
+    logger.info("Refreshing storage pre-signed URLs...");
+
+    try {
+      const newTargets = await this.requestStorageTargets(
+        this.options.storageId,
+        this.options.accessToken,
+      );
+
+      if (!newTargets) {
+        logger.warn(
+          "Failed to refresh storage URLs - continuing with existing URLs",
+        );
+        return false;
+      }
+
+      this.targets = newTargets;
+      this.targetsExpiresAt = Date.now() + 60 * 60 * 1000; // 60 minutes from now
+      logger.info("Storage URLs refreshed successfully");
+
+      // Schedule next proactive refresh at 50-minute mark
+      this.scheduleProactiveRefresh();
+
+      return true;
+    } catch (error) {
+      logger.warn(`Storage URL refresh error: ${formatError(error)}`);
+      return false;
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
+  private scheduleProactiveRefresh(): void {
+    // Clear any existing refresh timer
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+
+    // Schedule refresh at 50-minute mark (10 minutes before expiry)
+    const refreshIn = 50 * 60 * 1000; // 50 minutes
+    this.refreshTimer = setTimeout(() => {
+      this.refreshStorageTargets().catch((error) => {
+        logger.warn(`Proactive URL refresh failed: ${formatError(error)}`);
+      });
+    }, refreshIn);
+  }
+
   private async uploadToPresignedUrl(
     url: string,
     body: string,
@@ -271,6 +342,16 @@ export class StorageSyncService {
     if (!response.ok) {
       const statusText = `${response.status} ${response.statusText}`.trim();
       const responseBody = await response.text();
+
+      // Detect expired URL (403 Forbidden) and trigger refresh
+      if (response.status === 403) {
+        logger.warn("Storage URL expired (403), triggering refresh...");
+        // Trigger async refresh without blocking the current upload error
+        this.refreshStorageTargets().catch((error) => {
+          logger.debug(`Background URL refresh failed: ${formatError(error)}`);
+        });
+      }
+
       throw new Error(`Storage upload failed (${statusText}): ${responseBody}`);
     }
   }
