@@ -104,4 +104,45 @@ Continue automatically handles vLLM's response format (which uses `results` inst
 
 [Click here](../../model-roles/reranking) to see a list of reranking model providers.
 
+## Thinking output format
+
+vLLM supports thinking/reasoning outputs in two ways:
+
+1. **Standard format** - Via the `reasoning_content` field in the response (default OpenAI format)
+2. **Custom tags** - Via configurable tags in the response content
+
+For models that use custom thinking tag formats (like `<think>...</think>` or `<reasoning>...</reasoning>`), you can configure `thinkingOpenTag` and `thinkingCloseTag` to extract thinking content:
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: DeepSeek R1 Distill
+       provider: vllm
+       model: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+       apiBase: http://localhost:8000/v1
+       thinkingOpenTag: "<think>"
+       thinkingCloseTag: "</think>"
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "DeepSeek R1 Distill",
+         "provider": "vllm",
+         "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+         "apiBase": "http://localhost:8000/v1",
+         "thinkingOpenTag": "<think>",
+         "thinkingCloseTag": "</think>"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+See vLLM's [reasoning outputs documentation](https://docs.vllm.ai/en/latest/features/reasoning_outputs.html) for more details.
+
 The continue implementation uses [OpenAI](../top-level/openai) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)

@@ -996,7 +996,6 @@ export abstract class BaseLLM implements ILLM {
     return completionOptions;
   }
 
-  // Update the processChatChunk method:
   private processChatChunk(
     chunk: ChatMessage,
     interaction: ILLMInteractionLog | undefined,
