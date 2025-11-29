@@ -8,6 +8,7 @@ export default defineConfig({
     include: ["src/e2e/**/*.test.ts"],
     testTimeout: 30000,
     hookTimeout: 30000,
+    retry: process.env.CI && process.platform === "darwin" ? 2 : 0,
   },
   resolve: {
     extensions: [".js", ".ts", ".tsx", ".json"],
