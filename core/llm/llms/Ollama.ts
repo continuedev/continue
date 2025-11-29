@@ -161,47 +161,61 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
+  private modelInfoPromise: Promise<void> | undefined;
+
   constructor(options: LLMOptions) {
     super(options);
+  }
 
-    if (options.model === "AUTODETECT") {
+  /**
+   * Lazily fetch model info from Ollama's api/show endpoint.
+   * This is called on first use rather than in the constructor to avoid
+   * making HTTP requests when models are just being instantiated for config serialization.
+   */
+  private async ensureModelInfo(): Promise<void> {
+    if (this.model === "AUTODETECT") {
       return;
     }
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
+    // If already fetched or in progress, reuse the promise
+    if (this.modelInfoPromise) {
+      return this.modelInfoPromise;
     }
 
-    this.fetch(this.getEndpoint("api/show"), {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ name: this._getModel() }),
-    })
-      .then(async (response) => {
+    this.modelInfoPromise = (async () => {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (this.apiKey) {
+        headers.Authorization = `Bearer ${this.apiKey}`;
+      }
+
+      try {
+        const response = await this.fetch(this.getEndpoint("api/show"), {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({ name: this._getModel() }),
+        });
+
         if (response?.status !== 200) {
-          // console.warn(
-          //   "Error calling Ollama /api/show endpoint: ",
-          //   await response.text(),
-          // );
           return;
         }
+
         const body = await response.json();
         if (body.parameters) {
-          const params = [];
           for (const line of body.parameters.split("\n")) {
-            let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
-            if (parts.length < 2) {
+            const parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
+            if (!parts || parts.length < 2) {
               continue;
             }
-            let key = parts[1];
-            let value = parts[2];
+            const key = parts[1];
+            const value = parts[2];
             switch (key) {
               case "num_ctx":
-                this._contextLength =
-                  options.contextLength ?? Number.parseInt(value);
+                if (!this._contextLength) {
+                  this._contextLength = Number.parseInt(value);
+                }
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {
@@ -210,9 +224,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
                 try {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
-                  console.warn(
-                    `Error parsing stop parameter value "{value}: ${e}`,
-                  );
+                  // Ignore parse errors
                 }
                 break;
               default:
@@ -227,10 +239,12 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
-      })
-      .catch((e) => {
-        // console.warn("Error calling the Ollama /api/show endpoint: ", e);
-      });
+      } catch (e) {
+        // Silently fail - model info is optional
+      }
+    })();
+
+    return this.modelInfoPromise;
   }
 
   // Map of "continue model name" to Ollama actual model name
@@ -369,6 +383,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -414,6 +429,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    await this.ensureModelInfo();
     const ollamaMessages = messages.map(this._convertToOllamaMessage);
     const chatOptions: OllamaChatOptions = {
       model: this._getModel(),
@@ -565,6 +581,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
   }
 
   supportsFim(): boolean {
+    // Note: this returns false until model info is fetched
+    // Could be made async if needed
     return this.fimSupported;
   }
 
@@ -574,6 +592,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -622,21 +641,29 @@ class Ollama extends BaseLLM implements ModelInstaller {
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
-    const response = await this.fetch(
-      // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
-      this.getEndpoint("api/tags"),
-      {
+
+    try {
+      const response = await this.fetch(this.getEndpoint("api/tags"), {
         method: "GET",
         headers: headers,
-      },
-    );
-    const data = await response.json();
-    if (response.ok) {
-      return data.models.map((model: any) => model.name);
-    } else {
-      throw new Error(
-        "Failed to list Ollama models. Make sure Ollama is running.",
-      );
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return data.models.map((model: any) => model.name);
+      } else {
+        console.warn(
+          `Ollama /api/tags returned status ${response.status}:`,
+          data,
+        );
+        throw new Error(
+          "Failed to list Ollama models. Make sure Ollama is running.",
+        );
+      }
+    } catch (error) {
+      console.warn("Failed to list Ollama models:", error);
+      // If Ollama is not running or returns an error, return an empty list
+      // This allows the application to continue without blocking on Ollama
+      return [];
     }
   }
 

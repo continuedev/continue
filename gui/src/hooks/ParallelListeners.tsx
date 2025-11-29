@@ -35,6 +35,9 @@ import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
+const INITIAL_CONFIG_POLLING_INTERVAL = 2_000;
+const INITIAL_CONFIG_POLLING_MAX_ATTEMPTS = 100;
+
 function ParallelListeners() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -43,25 +46,71 @@ function ParallelListeners() {
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
-  const hasDoneInitialConfigLoad = useRef(false);
+
+  const hasReceivedOrRetrievedConfig = useRef(false);
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
   const lastSessionId = useAppSelector((store) => store.session.lastSessionId);
   const [initialSessionId] = useState(sessionId || lastSessionId);
 
+  // Once we know core is up
+  const onInitialConfigLoad = useCallback(async () => {
+    debugger;
+    dispatch(setConfigLoading(false));
+    void dispatch(refreshSessionMetadata({}));
+
+    const jetbrains = isJetBrains();
+    if (jetbrains) {
+      // Save theme colors to local storage for immediate loading in JetBrains
+      void ideMessenger
+        .request("jetbrains/getColors", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            setDocumentStylesFromTheme(result.content);
+          }
+        });
+
+      // Tell JetBrains the webview is ready
+      void ideMessenger
+        .request("jetbrains/onLoad", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            const msg = result.content;
+            (window as any).windowId = msg.windowId;
+            (window as any).serverUrl = msg.serverUrl;
+            (window as any).workspacePaths = msg.workspacePaths;
+            (window as any).vscMachineId = msg.vscMachineId;
+            (window as any).vscMediaUrl = msg.vscMediaUrl;
+          }
+        });
+    }
+
+    ideMessenger.post("docs/initStatuses", undefined);
+    void dispatch(updateFileSymbolsFromHistory());
+
+    if (initialSessionId) {
+      await dispatch(
+        loadSession({
+          sessionId: initialSessionId,
+          saveCurrentSession: false,
+        }),
+      );
+    }
+  }, [initialSessionId, ideMessenger]);
+
   const handleConfigUpdate = useCallback(
-    async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
+    async (result: FromCoreProtocol["configUpdate"][0]) => {
       const {
         result: configResult,
         profileId,
         organizations,
         selectedOrgId,
       } = result;
-      if (isInitial && hasDoneInitialConfigLoad.current) {
-        return;
+      if (hasReceivedOrRetrievedConfig.current === false) {
+        await onInitialConfigLoad();
       }
-      hasDoneInitialConfigLoad.current = true;
+      hasReceivedOrRetrievedConfig.current = true;
       dispatch(setOrganizations(organizations));
       dispatch(setSelectedOrgId(selectedOrgId));
       dispatch(setSelectedProfile(profileId));
@@ -92,56 +141,65 @@ function ParallelListeners() {
         setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
       );
     },
-    [dispatch, hasDoneInitialConfigLoad],
+    [dispatch, hasReceivedOrRetrievedConfig, onInitialConfigLoad],
   );
 
-  // Load config from the IDE
+  // Startup activity
   useEffect(() => {
-    async function initialLoadConfig() {
-      dispatch(setIsSessionMetadataLoading(true));
-      dispatch(setConfigLoading(true));
+    void dispatch(cancelStream());
+    dispatch(setIsSessionMetadataLoading(true));
+    dispatch(setConfigLoading(true));
+
+    // Local storage migration/jetbrains styles loading
+    const jetbrains = isJetBrains();
+    setDocumentStylesFromLocalStorage(jetbrains);
+
+    migrateLocalStorage(dispatch);
+
+    // Poll config just to be safe
+    async function pollInitialConfigLoad() {
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
       );
       if (result.status === "success") {
-        await handleConfigUpdate(true, result.content);
-      }
-      dispatch(setConfigLoading(false));
-      if (initialSessionId) {
-        await dispatch(
-          loadSession({
-            sessionId: initialSessionId,
-            saveCurrentSession: false,
-          }),
-        );
+        console.log("succeeded", result.content);
+        if (hasReceivedOrRetrievedConfig.current === false) {
+          await handleConfigUpdate(result.content);
+        }
+      } else {
+        console.log("Failed");
+        console.error(result.error);
       }
     }
-    void initialLoadConfig();
+    void pollInitialConfigLoad();
+    let pollAttempts = 0;
     const interval = setInterval(() => {
-      if (hasDoneInitialConfigLoad.current) {
-        // Init to run on initial config load
-        ideMessenger.post("docs/initStatuses", undefined);
-        void dispatch(updateFileSymbolsFromHistory());
-        void dispatch(refreshSessionMetadata({}));
-
-        // This triggers sending pending status to the GUI for relevant docs indexes
+      if (hasReceivedOrRetrievedConfig.current) {
         clearInterval(interval);
+      } else if (pollAttempts >= INITIAL_CONFIG_POLLING_MAX_ATTEMPTS) {
+        clearInterval(interval);
+        console.warn(
+          `Config polling stopped after ${INITIAL_CONFIG_POLLING_MAX_ATTEMPTS} attempts`,
+        );
       } else {
-        void initialLoadConfig();
+        console.log("Config load attempt #" + pollAttempts);
+        pollAttempts++;
+        void pollInitialConfigLoad();
       }
-    }, 2_000);
+    }, INITIAL_CONFIG_POLLING_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [hasDoneInitialConfigLoad, ideMessenger, initialSessionId]);
+  }, [hasReceivedOrRetrievedConfig, ideMessenger, handleConfigUpdate]);
 
+  // Handle config update events from core
   useWebviewListener(
     "configUpdate",
     async (update) => {
       if (!update) {
         return;
       }
-      await handleConfigUpdate(false, update);
+      await handleConfigUpdate(update);
     },
     [handleConfigUpdate],
   );
@@ -151,42 +209,6 @@ function ParallelListeners() {
       void dispatch(updateFileSymbolsFromHistory());
     }
   }, [sessionId]);
-
-  // ON LOAD
-  useEffect(() => {
-    // Override persisted state
-    void dispatch(cancelStream());
-
-    const jetbrains = isJetBrains();
-    setDocumentStylesFromLocalStorage(jetbrains);
-
-    if (jetbrains) {
-      // Save theme colors to local storage for immediate loading in JetBrains
-      void ideMessenger
-        .request("jetbrains/getColors", undefined)
-        .then((result) => {
-          if (result.status === "success") {
-            setDocumentStylesFromTheme(result.content);
-          }
-        });
-
-      // Tell JetBrains the webview is ready
-      void ideMessenger
-        .request("jetbrains/onLoad", undefined)
-        .then((result) => {
-          if (result.status === "error") {
-            return;
-          }
-
-          const msg = result.content;
-          (window as any).windowId = msg.windowId;
-          (window as any).serverUrl = msg.serverUrl;
-          (window as any).workspacePaths = msg.workspacePaths;
-          (window as any).vscMachineId = msg.vscMachineId;
-          (window as any).vscMediaUrl = msg.vscMediaUrl;
-        });
-    }
-  }, []);
 
   useWebviewListener(
     "jetbrains/setColors",
@@ -252,10 +274,6 @@ function ParallelListeners() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);
-
-  useEffect(() => {
-    migrateLocalStorage(dispatch);
-  }, []);
 
   return <></>;
 }
