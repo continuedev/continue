@@ -152,5 +152,38 @@ describe("PosthogService", () => {
       expect(client).toBeUndefined();
       expect(dns.lookup).toHaveBeenCalledTimes(1);
     });
+
+    it("returns false when DNS resolves to 0.0.0.0 (blocked)", async () => {
+      const dns: any = (await import("dns/promises")).default;
+      dns.lookup.mockResolvedValueOnce({
+        address: "0.0.0.0",
+        family: 4,
+      } as any);
+      const result = await (service as any).hasInternetConnection();
+      expect(result).toBe(false);
+      expect(dns.lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns false when DNS resolves to localhost", async () => {
+      const dns: any = (await import("dns/promises")).default;
+      dns.lookup.mockResolvedValueOnce({
+        address: "127.0.0.1",
+        family: 4,
+      } as any);
+      const result = await (service as any).hasInternetConnection();
+      expect(result).toBe(false);
+      expect(dns.lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns true when DNS resolves to valid address", async () => {
+      const dns: any = (await import("dns/promises")).default;
+      dns.lookup.mockResolvedValueOnce({
+        address: "1.1.1.1",
+        family: 4,
+      } as any);
+      const result = await (service as any).hasInternetConnection();
+      expect(result).toBe(true);
+      expect(dns.lookup).toHaveBeenCalledTimes(1);
+    });
   });
 });
