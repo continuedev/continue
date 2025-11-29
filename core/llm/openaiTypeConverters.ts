@@ -818,20 +818,34 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           | undefined;
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
 
-        if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-          // Emit full function_call output item
+        if (Array.isArray(toolCalls) && toolCalls.length > 0) {
           const tc = toolCalls[0];
-          const name = tc?.function?.name as string | undefined;
-          const args = tc?.function?.arguments as string | undefined;
           const call_id = tc?.id as string | undefined;
-          const functionCallItem: ResponseFunctionToolCall = {
-            id: respId,
-            type: "function_call",
-            name: name || "",
-            arguments: typeof args === "string" ? args : "{}",
-            call_id: call_id || respId,
-          };
-          input.push(functionCallItem);
+
+          // Only emit function_call if we have an id to use (either respId or call_id)
+          const rawItemId = respId || call_id;
+          if (rawItemId) {
+            // Ensure the Responses item id uses the required prefix (e.g., 'fc')
+            const itemId = rawItemId.startsWith("fc")
+              ? rawItemId
+              : `fc_${rawItemId}`;
+
+            const name = tc?.function?.name as string | undefined;
+            const args = tc?.function?.arguments as string | undefined;
+
+            const functionCallItem: ResponseFunctionToolCall = {
+              id: itemId,
+              type: "function_call",
+              name: name || "",
+              arguments: typeof args === "string" ? args : "{}",
+              call_id: call_id || respId || "",
+            };
+
+            input.push(functionCallItem);
+          } else {
+            // No IDs available, fallback to EasyInput assistant message to avoid emitting an invalid function_call
+            pushMessage("assistant", text || "");
+          }
         } else if (respId) {
           // Emit full assistant output message item
           const outputMessageItem: ResponseOutputMessage = {
