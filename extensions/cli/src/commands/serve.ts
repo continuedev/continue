@@ -28,7 +28,7 @@ import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
-import { gracefulExit } from "../util/exit.js";
+import { gracefulExit, updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
@@ -355,9 +355,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Give a moment for the response to be sent
-    const handleExitResponse = () => {
-      server.close(() => {
+    const handleExitResponse = async () => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
+
+        // Update metadata one final time before exiting
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata(history);
+        } catch (err) {
+          logger.debug("Failed to update metadata (non-critical)", err as any);
+        }
+
         gracefulExit(0).catch((err) => {
           logger.error(`Graceful exit failed: ${formatError(err)}`);
           process.exit(1);
@@ -470,6 +479,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
         state.lastActivity = Date.now();
+
+        // Update metadata after successful agent turn
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata(history);
+        } catch (metadataErr) {
+          // Non-critical: log but don't fail the agent execution
+          logger.debug(
+            "Failed to update metadata after turn (non-critical)",
+            metadataErr as any,
+          );
+        }
       } catch (e: any) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
@@ -526,8 +547,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       );
       state.serverRunning = false;
       stopStorageSync();
-      server.close(() => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
+
+        // Update metadata one final time before exiting
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata(history);
+        } catch (err) {
+          logger.debug("Failed to update metadata (non-critical)", err as any);
+        }
+
         gracefulExit(0).catch((err) => {
           logger.error(`Graceful exit failed: ${formatError(err)}`);
           process.exit(1);
@@ -549,8 +579,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;
     }
-    server.close(() => {
+    server.close(async () => {
       telemetryService.stopActiveTime();
+
+      // Update metadata one final time before exiting
+      try {
+        const history = services.chatHistory?.getHistory();
+        await updateAgentMetadata(history);
+      } catch (err) {
+        logger.debug("Failed to update metadata (non-critical)", err as any);
+      }
+
       gracefulExit(0).catch((err) => {
         logger.error(`Graceful exit failed: ${formatError(err)}`);
         process.exit(1);
