@@ -1510,6 +1510,7 @@ export interface RangeInFileWithNextEditInfo {
   filepath: string;
   range: Range;
   fileContents: string;
+  fileContentsBefore: string;
   editText: string;
   afterCursorPos: Position;
   beforeCursorPos: Position;
