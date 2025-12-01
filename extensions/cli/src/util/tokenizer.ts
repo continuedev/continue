@@ -77,9 +77,7 @@ function countToolOutputTokens(
     if (item.content) {
       tokenCount += encode(item.content).length;
     }
-    if (item.name) {
-      tokenCount += encode(item.name).length;
-    }
+    // Note: item.name is not sent to the model, only used for internal tracking
     tokenCount += 5; // Output structure overhead
   }
   return tokenCount;

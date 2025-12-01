@@ -62,10 +62,18 @@ export async function compactChatHistory(
   const reservedForOutput =
     maxTokens === undefined ? Math.ceil(contextLimit * 0.35) : maxTokens;
 
-  // Account for system message AND safety buffer
+  // Check if system message is already in the history to avoid double-counting
+  const hasSystemMessageInHistory = chatHistory.some(
+    (item) => item.message.role === "system",
+  );
+
+  // Account for system message (if not already in history) AND safety buffer
   const SAFETY_BUFFER = 100;
+  const systemMessageReservation = hasSystemMessageInHistory
+    ? 0
+    : systemMessageTokens;
   const availableForInput =
-    contextLimit - reservedForOutput - systemMessageTokens - SAFETY_BUFFER;
+    contextLimit - reservedForOutput - systemMessageReservation - SAFETY_BUFFER;
 
   // Check if we need to prune to fit within context
   while (

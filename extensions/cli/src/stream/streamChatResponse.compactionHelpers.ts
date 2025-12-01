@@ -116,13 +116,19 @@ export async function handlePostToolValidation(
         systemMessage,
       });
 
-    if (wasCompacted && chatHistorySvc) {
-      chatHistorySvc.setHistory(compactedHistory);
-      chatHistory = chatHistorySvc.getHistory();
+    if (wasCompacted) {
+      // Use the service to update history if available, otherwise use local copy
+      if (chatHistorySvc && typeof chatHistorySvc.setHistory === "function") {
+        chatHistorySvc.setHistory(compactedHistory);
+        chatHistory = chatHistorySvc.getHistory();
+      } else {
+        // Fallback: use the compacted history directly when service unavailable
+        chatHistory = compactedHistory;
+      }
 
       // Verify compaction brought us under the limit
       const postCompactionValidation = validateContextLength(
-        [postToolSystemItem, ...compactedHistory],
+        [postToolSystemItem, ...chatHistory],
         model,
         SAFETY_BUFFER,
       );
@@ -188,9 +194,14 @@ export async function handleNormalAutoCompaction(
       systemMessage,
     });
 
-  if (wasCompacted && chatHistorySvc) {
-    chatHistorySvc.setHistory(updatedChatHistory);
-    return chatHistorySvc.getHistory();
+  if (wasCompacted) {
+    // Use the service to update history if available, otherwise use local copy
+    if (chatHistorySvc && typeof chatHistorySvc.setHistory === "function") {
+      chatHistorySvc.setHistory(updatedChatHistory);
+      return chatHistorySvc.getHistory();
+    }
+    // Fallback: return the compacted history directly when service unavailable
+    return updatedChatHistory;
   }
 
   return chatHistory;
