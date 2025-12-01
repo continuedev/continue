@@ -22,7 +22,11 @@ import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
-import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
+import {
+  handleNormalAutoCompaction,
+  handlePostToolValidation,
+  handlePreApiCompaction,
+} from "./streamChatResponse.compactionHelpers.js";
 import {
   processChunkContent,
   processToolCallDelta,
@@ -128,6 +132,7 @@ interface ProcessStreamingResponseOptions {
   callbacks?: StreamCallbacks;
   isHeadless?: boolean;
   tools?: ChatCompletionTool[];
+  systemMessage: string;
 }
 
 // Process a single streaming response and return whether we need to continue
@@ -140,30 +145,56 @@ export async function processStreamingResponse(
   toolCalls: ToolCall[];
   shouldContinue: boolean;
 }> {
-  const { model, llmApi, abortController, callbacks, isHeadless, tools } =
-    options;
+  const {
+    model,
+    llmApi,
+    abortController,
+    callbacks,
+    isHeadless,
+    tools,
+    systemMessage,
+  } = options;
 
   let chatHistory = options.chatHistory;
 
-  // Validate context length before making the request
-  let validation = validateContextLength(chatHistory, model);
+  // Create temporary system message item for validation
+  const systemMessageItem: ChatHistoryItem = {
+    message: {
+      role: "system",
+      content: systemMessage,
+    },
+    contextItems: [],
+  };
 
-  // Prune last messages until valid
+  // Safety buffer to account for tokenization estimation errors
+  const SAFETY_BUFFER = 100;
+
+  // Validate context length INCLUDING system message
+  let historyWithSystem = [systemMessageItem, ...chatHistory];
+  let validation = validateContextLength(
+    historyWithSystem,
+    model,
+    SAFETY_BUFFER,
+  );
+
+  // Prune last messages until valid (excluding system message)
   while (chatHistory.length > 1 && !validation.isValid) {
     const prunedChatHistory = pruneLastMessage(chatHistory);
-    if (prunedChatHistory.length === chatHistory.length) break;
+    if (prunedChatHistory.length === chatHistory.length) {
+      break;
+    }
     chatHistory = prunedChatHistory;
-    validation = validateContextLength(chatHistory, model);
+
+    // Re-validate with system message
+    historyWithSystem = [systemMessageItem, ...chatHistory];
+    validation = validateContextLength(historyWithSystem, model, SAFETY_BUFFER);
   }
 
   if (!validation.isValid) {
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
 
-  // Get fresh system message and inject it
-  const systemMessage = await services.systemMessage.getSystemMessage(
-    services.toolPermissions.getState().currentMode,
-  );
+  // Create OpenAI format history with validated system message
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
     chatHistory,
     systemMessage,
@@ -329,7 +360,7 @@ export async function processStreamingResponse(
 }
 
 // Main function that handles the conversation loop
-// eslint-disable-next-line complexity, max-params
+// eslint-disable-next-line max-params
 export async function streamChatResponse(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
@@ -368,34 +399,21 @@ export async function streamChatResponse(
 
     logger.debug("debug1 streamChatResponse history", { chatHistory });
 
-    // avoid pre-compaction when compaction is in progress
-    // this also avoids infinite compaction call stacks
-    if (!isCompacting) {
-      // Pre-API auto-compaction checkpoint
-      const { wasCompacted: preCompacted, chatHistory: preCompactHistory } =
-        await handleAutoCompaction(chatHistory, model, llmApi, {
-          isHeadless,
-          callbacks: {
-            onSystemMessage: callbacks?.onSystemMessage,
-            onContent: callbacks?.onContent,
-          },
-        });
+    // Get system message once per iteration (can change based on tool permissions mode)
+    const systemMessage = await services.systemMessage.getSystemMessage(
+      services.toolPermissions.getState().currentMode,
+    );
 
-      if (preCompacted) {
-        logger.debug("Pre-API compaction occurred, updating chat history");
-        // Update chat history after pre-compaction
-        const chatHistorySvc2 = services.chatHistory;
-        if (
-          typeof chatHistorySvc2?.isReady === "function" &&
-          chatHistorySvc2.isReady()
-        ) {
-          chatHistorySvc2.setHistory(preCompactHistory);
-          chatHistory = chatHistorySvc2.getHistory();
-        } else {
-          chatHistory = [...preCompactHistory];
-        }
-      }
-    }
+    // Pre-API auto-compaction checkpoint
+    const preCompactionResult = await handlePreApiCompaction(chatHistory, {
+      model,
+      llmApi,
+      isCompacting,
+      isHeadless,
+      callbacks,
+      systemMessage,
+    });
+    chatHistory = preCompactionResult.chatHistory;
 
     // Recompute tools on each iteration to handle mode changes during streaming
     const tools = await getRequestTools(isHeadless);
@@ -415,6 +433,7 @@ export async function streamChatResponse(
         abortController,
         callbacks,
         tools,
+        systemMessage,
       });
 
     if (abortController?.signal.aborted) {
@@ -447,33 +466,29 @@ export async function streamChatResponse(
       return finalResponse || content || fullResponse;
     }
 
-    // Check for auto-compaction after tool execution
-    if (shouldContinue) {
-      const { wasCompacted, chatHistory: updatedChatHistory } =
-        await handleAutoCompaction(chatHistory, model, llmApi, {
-          isHeadless,
-          callbacks: {
-            onSystemMessage: callbacks?.onSystemMessage,
-            onContent: callbacks?.onContent,
-          },
-        });
+    // After tool execution, validate that we haven't exceeded context limit
+    chatHistory = await handlePostToolValidation(toolCalls, chatHistory, {
+      model,
+      llmApi,
+      isCompacting,
+      isHeadless,
+      callbacks,
+      systemMessage,
+    });
 
-      // Only update chat history if compaction actually occurred
-      if (wasCompacted) {
-        // Always prefer service; local copy is for temporary reads only
-        const chatHistorySvc2 = services.chatHistory;
-        if (
-          typeof chatHistorySvc2?.isReady === "function" &&
-          chatHistorySvc2.isReady()
-        ) {
-          chatHistorySvc2.setHistory(updatedChatHistory);
-          chatHistory = chatHistorySvc2.getHistory();
-        } else {
-          // Fallback only when service is unavailable
-          chatHistory = [...updatedChatHistory];
-        }
-      }
-    }
+    // Normal auto-compaction check at 80% threshold
+    chatHistory = await handleNormalAutoCompaction(
+      chatHistory,
+      shouldContinue,
+      {
+        model,
+        llmApi,
+        isCompacting,
+        isHeadless,
+        callbacks,
+        systemMessage,
+      },
+    );
 
     // Check if we should continue
     if (!shouldContinue) {
