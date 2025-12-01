@@ -4,6 +4,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { services } from "../services/index.js";
+
 import { processStreamingResponse } from "./streamChatResponse.js";
 
 // Mock services
