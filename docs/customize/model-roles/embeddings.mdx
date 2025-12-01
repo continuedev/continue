@@ -37,6 +37,10 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
   </Tab>
     <Tab title="YAML">
     ```yaml title="config.yaml"
+    name: MyProject
+    version: 0.0.1
+    schema: v1
+
     models:
       - name: Voyage Code 3
         provider: voyage
@@ -70,6 +74,10 @@ See [here](../model-providers/top-level/ollama#embeddings-model) for instruction
 <Tabs>
     <Tab title="YAML">
     ```yaml title="config.yaml"
+    name: MyProject
+    version: 0.0.1
+    schema: v1
+
     models:
       - name: default-transformers
         provider: transformers.js
@@ -99,6 +107,10 @@ See [here](../model-providers/top-level/ollama#embeddings-model) for instruction
   </Tab> */}
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: MyProject
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Huggingface TEI Embedder
       provider: huggingface-tei
