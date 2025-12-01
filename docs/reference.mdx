@@ -46,6 +46,8 @@ The `name` property specifies the name of your project or configuration.
 
 ```yaml title="config.yaml"
 name: MyProject
+version: 0.0.1
+schema: v1
 ```
 
 ---
@@ -149,6 +151,9 @@ The `models` section defines the language models used in your configuration. Mod
 **Example:**
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 models:
   - name: GPT-4o
     provider: openai
@@ -198,6 +203,9 @@ More information about usage/params for each context provider can be found [here
 **Example:**
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 context:
   - provider: file
   - provider: code
@@ -218,6 +226,9 @@ Rules are concatenated into the system message for all [Agent](/ide-extensions/a
 Confiugration example:
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 rules:
   - uses: sanity/sanity-opinionated # rules file stored on Continue Mission Control
   - uses: file://user/Desktop/rules.md # rules file stored on local computer
@@ -244,6 +255,9 @@ Prompts can be invoked with a <kbd>/</kbd> command.
 Configuration example:
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 prompts:
   - uses: supabase/create-functions # prompts file stored on Continue Mission Control 
   - uses: file://user/Desktop/prompts.md # prompts file stored on local computer
@@ -278,6 +292,9 @@ List of documentation sites to index.
 **Example:**
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 docs:
   - name: Continue
     startUrl: https://docs.continue.dev/intro
@@ -303,6 +320,9 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 **Example:**
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 mcpServers:
   - name: My MCP Server
     command: uvx
@@ -334,6 +354,9 @@ Destinations to which [development data](/customize/deep-dives/development-data)
 **Example:**
 
 ```yaml title="config.yaml"
+name: MyProject
+version: 0.0.1
+schema: v1
 data:
   - name: Local Data Bank
     destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
