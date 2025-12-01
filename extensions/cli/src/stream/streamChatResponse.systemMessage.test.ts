@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { processStreamingResponse } from "./streamChatResponse.js";
 import { services } from "../services/index.js";
+import { processStreamingResponse } from "./streamChatResponse.js";
 
 // Mock services
 vi.mock("../services/index.js", () => ({
