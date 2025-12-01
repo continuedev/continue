@@ -154,6 +154,50 @@ index abc123..def456 100644
       expect(stats.additions).toBe(7);
       expect(stats.deletions).toBe(3);
     });
+
+    it("should correctly count code with ++ or -- operators", () => {
+      // This tests the edge case where code contains ++ or -- at the start
+      const diff = `diff --git a/counter.js b/counter.js
+index abc123..def456 100644
+--- a/counter.js
++++ b/counter.js
+@@ -1,5 +1,5 @@
+ function increment(counter) {
+-  counter++;
++  ++counter;
+ }
+
+ function decrement(counter) {
+-  counter--;
++  --counter;
+ }`;
+
+      const stats = calculateDiffStats(diff);
+
+      // Should count all 4 changes: 2 additions and 2 deletions
+      // Lines like "+++counter;" should be counted as additions, not skipped as file headers
+      expect(stats.additions).toBe(2);
+      expect(stats.deletions).toBe(2);
+    });
+
+    it("should handle code with multiple + or - at line start", () => {
+      const diff = `diff --git a/operators.c b/operators.c
+--- a/operators.c
++++ b/operators.c
+@@ -1,4 +1,4 @@
+ int main() {
+-  x--;
+-  y++;
++  --x;
++  ++y;
+   return 0;
+ }`;
+
+      const stats = calculateDiffStats(diff);
+
+      expect(stats.additions).toBe(2);
+      expect(stats.deletions).toBe(2);
+    });
   });
 
   describe("extractSummary", () => {

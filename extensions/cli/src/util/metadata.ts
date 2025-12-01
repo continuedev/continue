@@ -32,10 +32,12 @@ export function calculateDiffStats(diffContent: string): DiffStats {
   let deletions = 0;
 
   for (const line of lines) {
-    // Skip diff metadata lines (@@, +++, ---, diff, index, etc.)
+    // Skip diff metadata lines
+    // File headers contain a space: "--- a/file" or "+++ b/file"
+    // But code changes with ++ or -- at start don't: "+++counter;" or "---counter;"
     if (
-      line.startsWith("+++") ||
-      line.startsWith("---") ||
+      (line.startsWith("+++") && (line.length === 3 || line[3] === " ")) ||
+      (line.startsWith("---") && (line.length === 3 || line[3] === " ")) ||
       line.startsWith("@@") ||
       line.startsWith("diff ") ||
       line.startsWith("index ") ||
