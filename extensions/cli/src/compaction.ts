@@ -22,22 +22,27 @@ export interface CompactionCallbacks {
   onError?: (error: Error) => void;
 }
 
+export interface CompactionOptions {
+  callbacks?: CompactionCallbacks;
+  abortController?: AbortController;
+  systemMessageTokens?: number;
+}
+
 /**
  * Compacts a chat history into a summarized form
  * @param chatHistory The current chat history to compact
  * @param model The model configuration
  * @param llmApi The LLM API instance
- * @param callbacks Optional callbacks for streaming updates
- * @param abortController Optional abort controller for cancellation
+ * @param options Optional configuration including callbacks, abort controller, and system message tokens
  * @returns The compacted history with compaction index
  */
 export async function compactChatHistory(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
-  callbacks?: CompactionCallbacks,
-  abortController?: AbortController,
+  options?: CompactionOptions,
 ): Promise<CompactionResult> {
+  const { callbacks, abortController, systemMessageTokens = 0 } = options || {};
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatHistoryItem = {
     message: {
@@ -56,7 +61,11 @@ export async function compactChatHistory(
   const maxTokens = model.defaultCompletionOptions?.maxTokens;
   const reservedForOutput =
     maxTokens === undefined ? Math.ceil(contextLimit * 0.35) : maxTokens;
-  const availableForInput = contextLimit - reservedForOutput;
+
+  // Account for system message AND safety buffer
+  const SAFETY_BUFFER = 100;
+  const availableForInput =
+    contextLimit - reservedForOutput - systemMessageTokens - SAFETY_BUFFER;
 
   // Check if we need to prune to fit within context
   while (

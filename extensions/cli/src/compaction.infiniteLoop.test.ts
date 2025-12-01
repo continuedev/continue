@@ -54,7 +54,7 @@ describe("compaction infinite loop prevention", () => {
     ]);
 
     // This should not hang - it should break out of the loop
-    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
+    const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
     // Should complete successfully even though token count is still too high
     expect(result.compactedHistory).toBeDefined();
@@ -88,7 +88,7 @@ describe("compaction infinite loop prevention", () => {
     ]);
 
     // This should not hang
-    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
+    const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
     expect(result.compactedHistory).toBeDefined();
   });
@@ -129,7 +129,7 @@ describe("compaction infinite loop prevention", () => {
       { role: "user", content: "Another question" },
     ]);
 
-    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
+    const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
     expect(result.compactedHistory).toBeDefined();
     // The function will call countTokens multiple times during the process
