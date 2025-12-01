@@ -160,7 +160,8 @@ function MCPServerPreview({
     sectionKey: string;
   }) => {
     const isExpanded = expandedSections[sectionKey];
-    const hasItems = items.length > 0;
+    const safeItems = Array.isArray(items) ? items : [];
+    const hasItems = safeItems.length > 0;
 
     return (
       <div>
@@ -176,7 +177,7 @@ function MCPServerPreview({
               {icon}
               <span className="text-sm">{title}</span>
               <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-600 px-0.5 text-xs font-medium text-white">
-                {items.length}
+                {safeItems.length}
               </div>
             </div>
           </div>
@@ -186,14 +187,14 @@ function MCPServerPreview({
           <div className="mx-2 my-2 mb-3">
             {hasItems ? (
               <div className="space-y-1">
-                {items.map((item, idx) => {
+                {safeItems.map((item, idx) => {
                   return (
                     <div
                       key={idx}
                       className="text-description rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs"
                     >
-                      <code>{item.name}</code>
-                      {item.description && (
+                      <code>{item?.name ?? "Unknown"}</code>
+                      {item?.description && (
                         <div className="mt-1 text-xs text-gray-500">
                           {item.description}
                         </div>
@@ -337,7 +338,7 @@ function MCPServerPreview({
           allToolsOff={allToolsOff}
           duplicateDetection={duplicateDetection}
         />
-        {server.prompts.length > 0 && (
+        {Array.isArray(server.prompts) && server.prompts.length > 0 && (
           <ResourceRow
             title="Prompts"
             items={server.prompts}
@@ -347,17 +348,21 @@ function MCPServerPreview({
             sectionKey={`${server.id}-prompts`}
           />
         )}
-        {(server.resources.length > 0 ||
-          server.resourceTemplates.length > 0) && (
+        {(Array.isArray(server.resources) && server.resources.length > 0) ||
+        (Array.isArray(server.resourceTemplates) &&
+          server.resourceTemplates.length > 0) ? (
           <ResourceRow
             title="Resources"
-            items={[...server.resources, ...server.resourceTemplates]}
+            items={[
+              ...(server.resources ?? []),
+              ...(server.resourceTemplates ?? []),
+            ]}
             icon={
               <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
             }
             sectionKey={`${server.id}-resources`}
           />
-        )}
+        ) : null}
       </div>
 
       {/* Error display below expandable section */}
@@ -447,10 +452,26 @@ export function ToolsSection() {
         .map((server) => [server.name, server]) ?? [],
     );
 
-    return (servers ?? []).map((doc: MCPServerStatus) => ({
-      block: doc,
-      blockFromYaml: yamlServersByName.get(doc.name),
-    }));
+    // Filter out any invalid servers and ensure they have required properties
+    return (servers ?? [])
+      .filter((doc: MCPServerStatus) => {
+        // Ensure server has required properties to prevent render issues
+        return (
+          doc &&
+          typeof doc.id === "string" &&
+          typeof doc.name === "string" &&
+          doc.name.length > 0 &&
+          Array.isArray(doc.prompts) &&
+          Array.isArray(doc.resources) &&
+          Array.isArray(doc.resourceTemplates) &&
+          Array.isArray(doc.errors) &&
+          Array.isArray(doc.infos)
+        );
+      })
+      .map((doc: MCPServerStatus) => ({
+        block: doc,
+        blockFromYaml: yamlServersByName.get(doc.name),
+      }));
   }, [servers, selectedProfile]);
 
   const handleAddMcpServer = () => {
@@ -524,7 +545,7 @@ export function ToolsSection() {
             {mergedBlocks.length > 0 ? (
               mergedBlocks.map(({ block, blockFromYaml }) => (
                 <MCPServerPreview
-                  key={block.name}
+                  key={block.id || block.name}
                   server={block}
                   serverFromYaml={blockFromYaml}
                   allToolsOff={allToolsOff}

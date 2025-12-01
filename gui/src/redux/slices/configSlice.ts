@@ -36,6 +36,36 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
   rules: [],
 };
 
+/**
+ * Sanitizes MCP server statuses to ensure they have valid properties
+ * and prevent rendering issues from corrupted/incomplete data.
+ */
+function sanitizeMcpServerStatuses(
+  statuses: any[],
+): BrowserSerializedContinueConfig["mcpServerStatuses"] {
+  if (!Array.isArray(statuses)) {
+    return [];
+  }
+
+  return statuses.filter((server) => {
+    // Filter out invalid servers that could cause render loops
+    return (
+      server &&
+      typeof server === "object" &&
+      typeof server.id === "string" &&
+      server.id.length > 0 &&
+      typeof server.name === "string" &&
+      server.name.length > 0 &&
+      // Ensure arrays exist even if empty
+      Array.isArray(server.prompts) &&
+      Array.isArray(server.resources) &&
+      Array.isArray(server.resourceTemplates) &&
+      Array.isArray(server.errors) &&
+      Array.isArray(server.infos)
+    );
+  });
+}
+
 export const INITIAL_CONFIG_SLICE: ConfigState = {
   configError: undefined,
   config: EMPTY_CONFIG,
@@ -66,7 +96,13 @@ export const configSlice = createSlice({
       if (!config) {
         state.config = EMPTY_CONFIG;
       } else {
-        state.config = config;
+        // Sanitize MCP server statuses to prevent render issues
+        state.config = {
+          ...config,
+          mcpServerStatuses: sanitizeMcpServerStatuses(
+            config.mcpServerStatuses,
+          ),
+        };
       }
       state.loading = false;
     },
@@ -74,7 +110,11 @@ export const configSlice = createSlice({
       state,
       { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
     ) => {
-      state.config = config;
+      // Sanitize MCP server statuses when updating config
+      state.config = {
+        ...config,
+        mcpServerStatuses: sanitizeMcpServerStatuses(config.mcpServerStatuses),
+      };
     },
     setConfigLoading: (state, { payload: loading }: PayloadAction<boolean>) => {
       state.loading = loading;
