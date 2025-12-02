@@ -2,10 +2,7 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { compileChatMessages } from "core/llm/countTokens.js";
-import {
-  convertFromUnifiedHistoryWithSystemMessage,
-  convertToUnifiedHistory,
-} from "core/util/messageConversion.js";
+import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageConversion.js";
 import * as dotenv from "dotenv";
 import type {
   ChatCompletionMessageParam,
@@ -22,7 +19,6 @@ import {
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
-import { validateContextLength } from "../util/tokenizer.js";
 
 import { getAllTools, handleToolCalls } from "./handleToolCalls.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
@@ -152,91 +148,56 @@ export async function processStreamingResponse(
     tools,
   } = options;
 
-  // Validate context length before making the request
-  const validation = validateContextLength(chatHistory, model);
-
-  // Get fresh system message and inject it
+  // Get fresh system message
   const systemMessage = await services.systemMessage.getSystemMessage(
     services.toolPermissions.getState().currentMode,
   );
 
-  let openaiChatHistory: ChatCompletionMessageParam[];
-  let chatHistoryToUse = chatHistory;
-
-  // If validation fails, try to prune using compileChatMessages
-  if (!validation.isValid) {
-    logger.warn(
-      "Context length validation failed, attempting to prune messages",
-      {
-        error: validation.error,
-        historyLength: chatHistory.length,
-      },
-    );
-
-    try {
-      // Convert to ChatMessage format for pruning
-      const openaiMessages = convertFromUnifiedHistoryWithSystemMessage(
-        chatHistory,
-        systemMessage,
-      ) as ChatCompletionMessageParam[];
-
-      // Use compileChatMessages to prune
-      const contextLength = model.contextLength || 4096;
-      const maxTokens = model.defaultCompletionOptions?.maxTokens || 1024;
-
-      const result = compileChatMessages({
-        modelName: model.model,
-        msgs: openaiMessages.map((msg) => ({
-          role: msg.role,
-          content: msg.content || "",
-          ...("tool_calls" in msg && msg.tool_calls
-            ? { toolCalls: msg.tool_calls }
-            : {}),
-          ...("tool_call_id" in msg && msg.tool_call_id
-            ? { toolCallId: msg.tool_call_id }
-            : {}),
-        })),
-        knownContextLength: contextLength,
-        maxTokens,
-        supportsImages: false,
-        tools,
-      });
-
-      if (result.didPrune) {
-        logger.info("Successfully pruned chat history to fit context length", {
-          originalLength: chatHistory.length,
-          prunedLength: result.compiledChatMessages.length,
-          contextPercentage: `${(result.contextPercentage * 100).toFixed(1)}%`,
-        });
-
-        // Convert pruned messages back to ChatHistoryItem format
-        const prunedOpenaiMessages = result.compiledChatMessages.map(
-          (msg: any) => ({
-            role: msg.role,
-            content: msg.content,
-            ...(msg.toolCalls ? { tool_calls: msg.toolCalls } : {}),
-            ...(msg.toolCallId ? { tool_call_id: msg.toolCallId } : {}),
-          }),
-        ) as ChatCompletionMessageParam[];
-
-        // Remove system message from the pruned messages to avoid duplication
-        const messagesWithoutSystem = prunedOpenaiMessages.filter(
-          (msg) => msg.role !== "system",
-        );
-        chatHistoryToUse = convertToUnifiedHistory(messagesWithoutSystem);
-      }
-    } catch (pruneError: any) {
-      logger.error("Failed to prune chat history", { error: pruneError });
-      throw new Error(
-        `Context length validation failed and pruning failed: ${pruneError.message}`,
-      );
-    }
-  }
-
-  openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
-    chatHistoryToUse,
+  // Convert unified history to ChatMessage format for compileChatMessages
+  const openaiMessages = convertFromUnifiedHistoryWithSystemMessage(
+    chatHistory,
     systemMessage,
   ) as ChatCompletionMessageParam[];
+
+  // Convert to ChatMessage format and use compileChatMessages to handle pruning
+  const contextLength = model.contextLength || 4096;
+  const maxTokens = model.defaultCompletionOptions?.maxTokens || 1024;
+
+  const chatMessages = openaiMessages.map((msg) => ({
+    role: msg.role,
+    content: msg.content || "",
+    ...("tool_calls" in msg && msg.tool_calls
+      ? { toolCalls: msg.tool_calls }
+      : {}),
+    ...("tool_call_id" in msg && msg.tool_call_id
+      ? { toolCallId: msg.tool_call_id }
+      : {}),
+  }));
+
+  const result = compileChatMessages({
+    modelName: model.model,
+    msgs: chatMessages,
+    knownContextLength: contextLength,
+    maxTokens,
+    supportsImages: false,
+    tools,
+  });
+
+  if (result.didPrune) {
+    logger.info("Chat history pruned to fit context length", {
+      originalLength: chatHistory.length,
+      prunedLength: result.compiledChatMessages.length,
+      contextPercentage: `${(result.contextPercentage * 100).toFixed(1)}%`,
+    });
+  }
+
+  // Convert back to OpenAI format
+  const openaiChatHistory = result.compiledChatMessages.map((msg: any) => ({
+    role: msg.role,
+    content: msg.content,
+    ...(msg.toolCalls ? { tool_calls: msg.toolCalls } : {}),
+    ...(msg.toolCallId ? { tool_call_id: msg.toolCallId } : {}),
+  })) as ChatCompletionMessageParam[];
 
   const requestStartTime = Date.now();
 

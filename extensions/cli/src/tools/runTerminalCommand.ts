@@ -18,23 +18,25 @@ const MAX_OUTPUT_LINES = 5000;
 const MAX_OUTPUT_CHARS = 200000;
 
 // Helper function to truncate command output by both lines and characters
+// Keeps the LAST X lines/chars to capture test/install outcomes
 function truncateOutput(output: string): string {
   const lines = output.split("\n");
   let truncated = output;
   let truncationMsg = "";
 
-  // First check character limit
+  // First check character limit - keep last X characters
   if (output.length > MAX_OUTPUT_CHARS) {
-    truncated = output.substring(0, MAX_OUTPUT_CHARS);
-    truncationMsg = `\n\n[Output truncated to first ${MAX_OUTPUT_CHARS} characters of ${output.length} total]`;
+    const startIndex = output.length - MAX_OUTPUT_CHARS;
+    truncated = output.substring(startIndex);
+    truncationMsg = `[Output truncated: showing last ${MAX_OUTPUT_CHARS} characters of ${output.length} total]\n\n`;
   }
-  // Then check line limit (only if not already truncated by characters)
+  // Then check line limit (only if not already truncated by characters) - keep last X lines
   else if (lines.length > MAX_OUTPUT_LINES) {
-    truncated = lines.slice(0, MAX_OUTPUT_LINES).join("\n");
-    truncationMsg = `\n\n[Output truncated to first ${MAX_OUTPUT_LINES} lines of ${lines.length} total]`;
+    truncated = lines.slice(-MAX_OUTPUT_LINES).join("\n");
+    truncationMsg = `[Output truncated: showing last ${MAX_OUTPUT_LINES} lines of ${lines.length} total]\n\n`;
   }
 
-  return truncationMsg ? truncated + truncationMsg : truncated;
+  return truncationMsg ? truncationMsg + truncated : truncated;
 }
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
