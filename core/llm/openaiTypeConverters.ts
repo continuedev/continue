@@ -774,6 +774,90 @@ function toResponseInputContentList(
   return list;
 }
 
+// Synthesize an orchestrator wrapper
+function synthesizeOrchestratorCall(
+  toolCalls: ToolCallDelta[],
+  input: ResponseInput,
+  respId?: string,
+  prevReasoningId?: string,
+) {
+  // Build subcalls array for the orchestrator from the expanded toolCalls
+  const subcalls = toolCalls.map((tc) => {
+    const fname = tc?.function?.name as string | undefined;
+    const rawArgs = tc?.function?.arguments as string | undefined;
+    let parsedArgs: any = {};
+    try {
+      parsedArgs = rawArgs && rawArgs.length ? JSON.parse(rawArgs) : {};
+    } catch {
+      parsedArgs = rawArgs ?? {};
+    }
+
+    return {
+      // use a single canonical field for the function name
+      function_name: fname || "",
+      parameters: parsedArgs,
+      // preserve original call id when present
+      call_id: tc?.id || undefined,
+      original_arguments: rawArgs || undefined,
+    };
+  });
+
+  const wrapperArgs = { tool_uses: subcalls };
+
+  // Derive a single Responses item id for the orchestrator
+  const rawWrapperId = respId || prevReasoningId;
+  const wrapperItemId =
+    rawWrapperId && rawWrapperId.startsWith("fc")
+      ? rawWrapperId
+      : `fc_${rawWrapperId}`;
+
+  const wrapperCallId = wrapperItemId;
+
+  const functionCallItem: ResponseFunctionToolCall = {
+    id: wrapperItemId,
+    type: "function_call",
+    name: "multi_tool_use",
+    arguments: JSON.stringify(wrapperArgs),
+    call_id: wrapperCallId,
+  };
+
+  input.push(functionCallItem);
+}
+
+function emitFunctionCallsFor(
+  toolCallsArr: ToolCallDelta[],
+  input: ResponseInput,
+  respId?: string,
+  prevReasoningId?: string,
+) {
+  for (let j = 0; j < toolCallsArr.length; j++) {
+    const tc = toolCallsArr[j];
+    const call_id = tc?.id as string | undefined;
+
+    // Prefer respId or prevReasoningId.
+    let rawItemId = respId || prevReasoningId || call_id;
+    if ((respId || prevReasoningId) && toolCallsArr.length > 1) {
+      rawItemId = `${rawItemId}_${j}`;
+    }
+    if (!rawItemId) {
+      // Can't create a valid Responses item id for this call; skip it
+      continue;
+    }
+
+    const itemId = rawItemId.startsWith("fc") ? rawItemId : `fc_${rawItemId}`;
+
+    const functionCallItem: ResponseFunctionToolCall = {
+      id: itemId,
+      type: "function_call",
+      name: tc.function?.name || "",
+      arguments: tc.function?.arguments || "",
+      call_id: call_id || respId || prevReasoningId || "",
+    };
+
+    input.push(functionCallItem);
+  }
+}
+
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
 
@@ -816,36 +900,31 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         const respId = msg.metadata?.responsesOutputItemId as
           | string
           | undefined;
+        const prevMsgForThis = messages[i - 1] as ChatMessage | undefined;
+        const prevReasoningId = prevMsgForThis?.metadata?.reasoningId as
+          | string
+          | undefined;
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
 
         if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-          const tc = toolCalls[0];
-          const call_id = tc?.id as string | undefined;
+          // If multiple tool calls immediately follow a reasoning (thinking)
+          // message, synthesize a single orchestrator function_call so the reasoning
+          // item is followed by exactly one action. This avoids protocol violations
+          // where a reasoning item is followed by multiple function_call items.
+          const shouldSynthesizeOrchestrator =
+            toolCalls.length > 1 && !!prevReasoningId;
 
-          // Only emit function_call if we have an id to use (either respId or call_id)
-          const rawItemId = respId || call_id;
-          if (rawItemId) {
-            // Ensure the Responses item id uses the required prefix (e.g., 'fc')
-            const itemId = rawItemId.startsWith("fc")
-              ? rawItemId
-              : `fc_${rawItemId}`;
-
-            const name = tc?.function?.name as string | undefined;
-            const args = tc?.function?.arguments as string | undefined;
-
-            const functionCallItem: ResponseFunctionToolCall = {
-              id: itemId,
-              type: "function_call",
-              name: name || "",
-              arguments: typeof args === "string" ? args : "{}",
-              call_id: call_id || respId || "",
-            };
-
-            input.push(functionCallItem);
-          } else {
-            // No IDs available, fallback to EasyInput assistant message to avoid emitting an invalid function_call
-            pushMessage("assistant", text || "");
+          if (shouldSynthesizeOrchestrator) {
+            synthesizeOrchestratorCall(
+              toolCalls,
+              input,
+              respId,
+              prevReasoningId,
+            );
           }
+
+          // Emit function_call items directly from toolCalls
+          emitFunctionCallsFor(toolCalls, input, respId, prevReasoningId);
         } else if (respId) {
           // Emit full assistant output message item
           const outputMessageItem: ResponseOutputMessage = {
