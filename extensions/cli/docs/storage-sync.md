@@ -40,11 +40,20 @@ This document captures the responsibilities for both the CLI and backend compone
   - Resolve `storageId` into the desired S3 prefix (e.g., `sessions/<org>/<storageId>/`).
   - Generate two short-lived pre-signed `PUT` URLs: one for `session.json`, one for `diff.txt`.
   - Return both URLs and their keys in the response payload described above.
-- **Expiration**: The initial implementation can hand out URLs with a generous TTL (e.g., 60 minutes). Later we will add CLI-side refresh logic before expiry.
+- **Expiration**: URLs are issued with a 60-minute TTL. The CLI automatically refreshes them before expiry (see URL Refresh Strategy below).
+
+## URL Refresh Strategy
+
+Pre-signed URLs are automatically refreshed using a dual-strategy approach:
+
+1. **Proactive Refresh**: URLs are refreshed at the 50-minute mark (10 minutes before expiry) to prevent disruption
+2. **Reactive Refresh**: If a 403 Forbidden error is detected (indicating expired URLs), an immediate refresh is triggered
+3. **Error Handling**: Upload errors are logged but non-fatal; the service continues running with automatic recovery
+
+This ensures continuous operation during devbox suspension, network interruptions, and clock drift.
 
 ## Open Questions & Future Enhancements
 
-- **URL refresh**: When the presigned URLs expire we currently have no refresh cycle. We'd need either a renewal endpoint or to re-call the existing endpoint on failure.
 - **Upload cadence**: The 30-second interval is hard-coded for now. Consider making it configurable in both CLI and backend policies.
 - **Error telemetry**: Decide if repeated upload failures should trip analytics or circuit breakers.
 - **Diff source**: `diff.txt` currently mirrors the `/diff` endpoint response. Confirm backend expectations for format and size limits.
