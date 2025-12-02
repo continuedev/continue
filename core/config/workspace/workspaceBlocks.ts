@@ -42,9 +42,9 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.models = [
         {
           provider: "anthropic",
-          model: "claude-sonnet-4-latest",
+          model: "claude-sonnet-4-5",
           apiKey: "${{ secrets.ANTHROPIC_API_KEY }}",
-          name: "Claude Sonnet 4",
+          name: "Claude Sonnet 4.5",
           roles: ["chat", "edit"],
         },
       ];
