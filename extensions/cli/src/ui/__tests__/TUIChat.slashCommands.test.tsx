@@ -1,13 +1,23 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
 import { waitForNextRender } from "./TUIChat.testHelper.js";
 
+// macOS needs longer timeouts for UI rendering in tests
+const isMacOS = process.platform === "darwin";
+const waitForRender = async () => {
+  await waitForNextRender();
+  if (isMacOS) {
+    // Add extra wait on macOS for UI to stabilize
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+};
+
 describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("shows slash when user types /", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Type / to trigger slash command
     stdin.write("/");
-    await waitForNextRender();
+    await waitForRender();
 
     const frame = lastFrame();
 
@@ -28,7 +38,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi to trigger slash command filtering
     stdin.write("/exi");
-    await waitForNextRender();
+    await waitForRender();
 
     const frame = lastFrame();
 
@@ -49,10 +59,10 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi and then tab
     stdin.write("/exi");
-    await waitForNextRender();
+    await waitForRender();
 
     stdin.write("\t");
-    await waitForNextRender();
+    await waitForRender();
 
     const frameAfterTab = lastFrame();
 
@@ -75,7 +85,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type just /
     stdin.write("/");
-    await waitForNextRender();
+    await waitForRender();
 
     const frame = lastFrame();
 
@@ -107,7 +117,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Type a complete command name first
       stdin.write("/title");
-      await waitForNextRender();
+      await waitForRender();
 
       const frameAfterCommand = lastFrame();
       if (mode === "remote") {
@@ -120,7 +130,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Now add a space and arguments
       stdin.write(" My Session Title");
-      await waitForNextRender();
+      await waitForRender();
 
       const frameAfterArgs = lastFrame();
 
@@ -143,7 +153,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Type a complete command with arguments
       stdin.write("/title Test Session");
-      await waitForNextRender();
+      await waitForRender();
 
       const frameBeforeEnter = lastFrame();
       expect(frameBeforeEnter).toContain("/title");
@@ -151,7 +161,7 @@ describe("TUIChat - Slash Commands Tests", () => {
 
       // Press Enter - this should execute the command, not try to autocomplete
       stdin.write("\r");
-      await waitForNextRender();
+      await waitForRender();
 
       const frameAfterEnter = lastFrame();
 
