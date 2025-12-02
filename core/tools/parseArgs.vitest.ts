@@ -176,13 +176,6 @@ describe("getStringArg", () => {
     expect(result).toBe('["item1","item2",{"key":"value"}]');
   });
 
-  it("should throw error when non-contents parameter is an object", () => {
-    const args = { filename: { invalid: "object" } };
-    expect(() => getStringArg(args, "filename")).toThrowError(
-      "Argument `filename` must be a string, not an object",
-    );
-  });
-
   it("should handle contents parameter that is already a string", () => {
     const args = { contents: "already a string" };
     const result = getStringArg(args, "contents");

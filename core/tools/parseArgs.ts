@@ -26,19 +26,16 @@ export function getStringArg(
 
   let value = args[argName];
 
-  // Handle case where JSON content was parsed into an object by the tool call parser.
+  // Handle case where JSON was parsed into an object by the tool call parser.
   // If the arguments to the tool call are valid JSON (e.g. the model attempts to create a .json file)
-  // the earlier call to JSON.parse() will have deeply parsed the returned contents.
+  // the earlier call to JSON.parse() will have deeply parsed the returned arguments.
   // If that has happened, convert back to string.
   if (typeof value === "object" && value !== null) {
-    // Special handling for contents parameter which should always be a string
-    if (argName === "contents") {
+    try {
       value = JSON.stringify(value);
       return value;
-    } else {
-      throw new Error(
-        `Argument \`${argName}\` must be a string, not an object`,
-      );
+    } catch (e) {
+      //Swallow this, because it might be fine later.
     }
   }
 
