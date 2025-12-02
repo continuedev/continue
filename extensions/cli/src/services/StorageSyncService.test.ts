@@ -276,4 +276,87 @@ describe("StorageSyncService", () => {
 
     service.stop();
   });
+
+  it("refreshes URLs on 403 error", async () => {
+    const syncSessionHistory = vi.fn();
+    const getCompleteStateSnapshot = vi.fn().mockReturnValue({ test: "data" });
+
+    // Mock initial presign success
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        session: { putUrl: "https://upload/session-old", key: "session.json" },
+        diff: { putUrl: "https://upload/diff-old", key: "diff.txt" },
+      }),
+    });
+
+    // Mock 403 upload failure
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      statusText: "Forbidden",
+      text: async () => "Request has expired",
+    });
+
+    // Mock refresh presign success
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        session: { putUrl: "https://upload/session-new", key: "session.json" },
+        diff: { putUrl: "https://upload/diff-new", key: "diff.txt" },
+      }),
+    });
+
+    gitDiffMock.mockResolvedValue({ diff: "test", repoFound: true });
+
+    const result = await service.startFromOptions({
+      storageOption: "session-123",
+      accessToken: "token",
+      syncSessionHistory,
+      getCompleteStateSnapshot,
+      isActive: () => true,
+    });
+
+    expect(result).toBe(true);
+
+    // Wait for async refresh
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(fetchMock).toHaveBeenCalledTimes(3); // presign + failed upload + refresh
+    expect(service.getState().isEnabled).toBe(true);
+
+    service.stop();
+  });
+
+  it("prevents concurrent refresh requests", async () => {
+    const syncSessionHistory = vi.fn();
+    const getCompleteStateSnapshot = vi.fn().mockReturnValue({});
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        session: { putUrl: "https://upload/session", key: "session.json" },
+        diff: { putUrl: "https://upload/diff", key: "diff.txt" },
+      }),
+    });
+
+    await service.start({
+      storageId: "session-123",
+      accessToken: "token",
+      syncSessionHistory,
+      getCompleteStateSnapshot,
+    });
+
+    const refreshMethod = (service as any).refreshStorageTargets.bind(service);
+    const results = await Promise.all([
+      refreshMethod(),
+      refreshMethod(),
+      refreshMethod(),
+    ]);
+
+    const successCount = results.filter((r) => r === true).length;
+    expect(successCount).toBe(1); // Only first succeeds
+
+    service.stop();
+  });
 });

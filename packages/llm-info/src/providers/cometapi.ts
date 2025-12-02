@@ -154,6 +154,15 @@ export const CometAPI: ModelProvider = {
 
     // Gemini Series
     {
+      model: "gemini-3-pro-preview",
+      displayName: "Gemini 3 Pro Preview",
+      contextLength: 2000000,
+      maxCompletionTokens: 8192,
+      description:
+        "Gemini flagship model with high precision multimodal capabilities.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "gemini-2.5-pro",
       displayName: "Gemini 2.5 Pro",
       contextLength: 2000000,

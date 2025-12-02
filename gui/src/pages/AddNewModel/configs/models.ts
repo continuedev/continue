@@ -913,6 +913,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini3ProPreview: {
+    title: "Gemini 3 Pro",
+    description:
+      "Google's latest Pro model with up to 64k output context. Best for complex tasks involving reasoning.",
+    params: {
+      title: "Gemini 3 Pro",
+      model: "gemini-3-pro-preview",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
   c4aiAyaExpanse8B: {
     title: "C4AI Aya Expanse 8B",
     description:
@@ -1241,14 +1255,13 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude35Haiku: {
-    title: "Claude 3.5 Haiku",
-    description:
-      "The fastest model in the Claude 3.5 series: a compact model for near-instant responsiveness",
+  claude4_5Opus: {
+    title: "Claude 4.5 Opus",
+    description: "The most capable model in the Claude 4.5 series",
     params: {
-      model: "claude-3-5-haiku-latest",
+      model: "claude-opus-4-5",
       contextLength: 200_000,
-      title: "Claude 3.5 Haiku",
+      title: "Claude 4.5 Opus",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
@@ -1268,7 +1281,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-
   graniteChat: {
     title: "Granite Chat 13b",
     description:

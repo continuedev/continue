@@ -46,6 +46,7 @@
   "dependencies": {
     "@sentry/profiling-node": "^9.43.0",
     "fdir": "^6.4.2",
+    "find-up": "^8.0.0",
     "fzf": "^0.5.2",
     "js-yaml": "^4.1.1"
   },
@@ -87,6 +88,7 @@
     "@vitest/ui": "^3.2.4",
     "@workos-inc/node": "^7.45.0",
     "chalk": "^5.4.1",
+    "clipboardy": "^4.0.0",
     "commander": "^14.0.0",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "core": "file:../../core",
@@ -100,7 +102,6 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^9.6.0",
-    "clipboardy": "^4.0.0",
     "express": "^5.1.0",
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",

@@ -46,7 +46,27 @@ export const Anthropic: ModelProvider = {
       recommendedFor: ["chat"],
     },
     {
-      model: "claude-opus-4-20250514",
+      model: "claude-opus-4-5",
+      displayName: "Claude Opus 4.5",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Most intelligent model with the highest level of intelligence and capability.",
+      regex: /claude-(?:4-5-opus|opus-4-5).*/i,
+      recommendedFor: ["chat"],
+    },
+    // order matters for regex conflicts
+    {
+      model: "claude-opus-4.1",
+      displayName: "Claude Opus 4.1",
+      contextLength: 200000,
+      maxCompletionTokens: 32000,
+      description: "Previous iteration on Opus",
+      regex: /claude-(?:4[.-]1-opus|opus-4[.-]1).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-opus-4",
       displayName: "Claude 4 Opus",
       contextLength: 200000,
       maxCompletionTokens: 8192,
@@ -55,6 +75,7 @@ export const Anthropic: ModelProvider = {
       regex: /claude-(?:4-opus|opus-4).*/i,
       recommendedFor: ["chat"],
     },
+
     {
       model: "claude-3-7-sonnet-latest",
       displayName: "Claude 3.7 Sonnet",
