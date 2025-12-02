@@ -42,14 +42,14 @@ export function getStringArg(
     }
   }
 
-  if (!allowEmpty && !value.trim()) {
-    throw new Error(`Argument ${argName} must not be empty or whitespace-only`);
-  }
-
   if (typeof value !== "string") {
     throw new Error(
       `\`${argName}\` argument is required${allowEmpty ? "" : " and must not be empty or whitespace-only"}. (type string)`,
     );
+  }
+
+  if (!allowEmpty && !value.trim()) {
+    throw new Error(`Argument ${argName} must not be empty or whitespace-only`);
   }
 
   return value;
