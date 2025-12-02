@@ -134,7 +134,7 @@ describe("Anthropic", () => {
   test("streamChat should send a valid request", async () => {
     const anthropic = new Anthropic({
       apiKey: "test-api-key",
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiBase: "https://api.anthropic.com/v1/",
     });
 
@@ -155,7 +155,7 @@ describe("Anthropic", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          model: "claude-3-5-sonnet-latest",
+          model: "claude-sonnet-4-5",
           max_tokens: 8192,
           stream: true,
           messages: [
@@ -177,7 +177,7 @@ describe("Anthropic", () => {
   test("chat should send a valid request", async () => {
     const anthropic = new Anthropic({
       apiKey: "test-api-key",
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiBase: "https://api.anthropic.com/v1/",
     });
 
@@ -198,7 +198,7 @@ describe("Anthropic", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          model: "claude-3-5-sonnet-latest",
+          model: "claude-sonnet-4-5",
           max_tokens: 8192,
           stream: true,
           messages: [
@@ -220,7 +220,7 @@ describe("Anthropic", () => {
   test("streamComplete should send a valid request", async () => {
     const anthropic = new Anthropic({
       apiKey: "test-api-key",
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiBase: "https://api.anthropic.com/v1/",
     });
 
@@ -238,7 +238,7 @@ describe("Anthropic", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          model: "claude-3-5-sonnet-latest",
+          model: "claude-sonnet-4-5",
           max_tokens: 8192,
           stream: true,
           messages: [
@@ -260,7 +260,7 @@ describe("Anthropic", () => {
   test("complete should send a valid request", async () => {
     const anthropic = new Anthropic({
       apiKey: "test-api-key",
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiBase: "https://api.anthropic.com/v1/",
     });
 
@@ -278,7 +278,7 @@ describe("Anthropic", () => {
           "x-api-key": "test-api-key",
         },
         body: {
-          model: "claude-3-5-sonnet-latest",
+          model: "claude-sonnet-4-5",
           max_tokens: 8192,
           stream: true,
           messages: [
@@ -301,7 +301,7 @@ describe("Anthropic", () => {
     test("should handle system message", async () => {
       const anthropic = new Anthropic({
         apiKey: "test-api-key",
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-5",
         apiBase: "https://api.anthropic.com/v1/",
       });
 
@@ -325,7 +325,7 @@ describe("Anthropic", () => {
             "x-api-key": "test-api-key",
           },
           body: {
-            model: "claude-3-5-sonnet-latest",
+            model: "claude-sonnet-4-5",
             max_tokens: 8192,
             stream: true,
             messages: [
@@ -347,7 +347,7 @@ describe("Anthropic", () => {
     test("should handle tool calls", async () => {
       const anthropic = new Anthropic({
         apiKey: "test-api-key",
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-5",
         apiBase: "https://api.anthropic.com/v1/",
       });
 
@@ -386,7 +386,7 @@ describe("Anthropic", () => {
             "x-api-key": "test-api-key",
           },
           body: {
-            model: "claude-3-5-sonnet-latest",
+            model: "claude-sonnet-4-5",
             max_tokens: 8192,
             stream: true,
             messages: [
@@ -424,7 +424,7 @@ describe("Anthropic", () => {
     test("should handle custom max tokens", async () => {
       const anthropic = new Anthropic({
         apiKey: "test-api-key",
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-5",
         apiBase: "https://api.anthropic.com/v1/",
       });
 
@@ -446,7 +446,7 @@ describe("Anthropic", () => {
             "x-api-key": "test-api-key",
           },
           body: {
-            model: "claude-3-5-sonnet-latest",
+            model: "claude-sonnet-4-5",
             max_tokens: 1000,
             stream: true,
             messages: [
@@ -470,7 +470,7 @@ describe("Anthropic", () => {
     test("should throw error when API key is missing", async () => {
       const anthropic = new Anthropic({
         apiKey: "",
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-5",
         apiBase: "https://api.anthropic.com/v1/",
       });
 
