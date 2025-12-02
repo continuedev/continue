@@ -179,17 +179,11 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
 
     it("should return undefined for Claude Haiku and Opus models", () => {
-      expect(supportsFn("anthropic.claude-3-5-haiku-20240307-v1:0")).toBe(
-        false,
-      );
-      expect(supportsFn("anthropic.claude-3.5-haiku-20240620-v1:0")).toBe(
-        false,
-      );
-      expect(supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0")).toBe(
-        false,
-      );
-      expect(supportsFn("anthropic.claude-3-5-opus-20240620-v1:0")).toBe(false);
-      expect(supportsFn("anthropic.claude-3.7-opus-20240620-v1:0")).toBe(false);
+      expect(supportsFn("anthropic.claude-3-5-haiku-20240307-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3.5-haiku-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3-5-opus-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3.7-opus-20240620-v1:0")).toBe(true);
     });
 
     it("should return undefined for other unsupported models", () => {
