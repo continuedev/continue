@@ -29,7 +29,7 @@ torch==2.6.0
 keras==2.6.0
 
 # Image processing
-pillow==8.3.2
+pillow==10.0.1
 opencv-python==4.5.3.56
 
 # Data handling and manipulation
