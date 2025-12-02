@@ -45,7 +45,7 @@ The top-level properties in the `config.yaml` configuration file are:
 The `name` property specifies the name of your project or configuration.
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 ```
@@ -151,7 +151,7 @@ The `models` section defines the language models used in your configuration. Mod
 **Example:**
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 models:
@@ -203,7 +203,7 @@ More information about usage/params for each context provider can be found [here
 **Example:**
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 context:
@@ -226,7 +226,7 @@ Rules are concatenated into the system message for all [Agent](/ide-extensions/a
 Confiugration example:
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 rules:
@@ -255,7 +255,7 @@ Prompts can be invoked with a <kbd>/</kbd> command.
 Configuration example:
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 prompts:
@@ -292,7 +292,7 @@ List of documentation sites to index.
 **Example:**
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 docs:
@@ -320,7 +320,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 **Example:**
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 mcpServers:
@@ -354,7 +354,7 @@ Destinations to which [development data](/customize/deep-dives/development-data)
 **Example:**
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 data:
@@ -378,7 +378,7 @@ data:
 Putting it all together, here's a complete example of a `config.yaml` configuration file:
 
 ```yaml title="config.yaml"
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 models:
@@ -453,7 +453,7 @@ You can also use node anchors to avoid duplication of properties. To do so, addi
 ```yaml title="config.yaml"
 %YAML 1.1
 ---
-name: MyProject
+name: My Config
 version: 0.0.1
 schema: v1
 model_defaults: &model_defaults
