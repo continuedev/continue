@@ -70,6 +70,63 @@ function handleContentDisplay(
   }
 }
 
+// Helper function to refresh chat history from service
+function refreshChatHistoryFromService(
+  chatHistory: ChatHistoryItem[],
+  isCompacting: boolean,
+): ChatHistoryItem[] {
+  const chatHistorySvc = services.chatHistory;
+  if (
+    typeof chatHistorySvc?.isReady === "function" &&
+    chatHistorySvc.isReady()
+  ) {
+    try {
+      // use chat history from params when isCompacting is true
+      // otherwise use the full history
+      if (!isCompacting) {
+        return chatHistorySvc.getHistory();
+      }
+    } catch {}
+  }
+  return chatHistory;
+}
+
+// Helper function to handle auto-continuation after compaction
+function handleAutoContinuation(
+  compactionOccurred: boolean,
+  shouldContinue: boolean,
+  chatHistory: ChatHistoryItem[],
+): { shouldAutoContinue: boolean; chatHistory: ChatHistoryItem[] } {
+  if (!compactionOccurred || shouldContinue) {
+    return { shouldAutoContinue: false, chatHistory };
+  }
+
+  logger.debug(
+    "Auto-compaction occurred during this turn - automatically continuing session",
+  );
+
+  // Add a continuation message to the history
+  const chatHistorySvc = services.chatHistory;
+  if (
+    typeof chatHistorySvc?.isReady === "function" &&
+    chatHistorySvc.isReady()
+  ) {
+    chatHistorySvc.addUserMessage("continue");
+    chatHistory = chatHistorySvc.getHistory();
+  } else {
+    chatHistory.push({
+      message: {
+        role: "user",
+        content: "continue",
+      },
+      contextItems: [],
+    });
+  }
+
+  logger.debug("Added continuation message after compaction");
+  return { shouldAutoContinue: true, chatHistory };
+}
+
 // Helper function to process a single chunk
 interface ProcessChunkOptions {
   chunk: any;
@@ -379,22 +436,11 @@ export async function streamChatResponse(
 
   let fullResponse = "";
   let finalResponse = "";
+  let compactionOccurredThisTurn = false; // Track if compaction happened during this conversation turn
 
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
-    const chatHistorySvc = services.chatHistory;
-    if (
-      typeof chatHistorySvc?.isReady === "function" &&
-      chatHistorySvc.isReady()
-    ) {
-      try {
-        // use chat history from params when isCompacting is true
-        // otherwise use the full history
-        if (!isCompacting) {
-          chatHistory = chatHistorySvc.getHistory();
-        }
-      } catch {}
-    }
+    chatHistory = refreshChatHistoryFromService(chatHistory, isCompacting);
     logger.debug("Starting conversation iteration");
 
     logger.debug("debug1 streamChatResponse history", { chatHistory });
@@ -414,6 +460,9 @@ export async function streamChatResponse(
       systemMessage,
     });
     chatHistory = preCompactionResult.chatHistory;
+    if (preCompactionResult.wasCompacted) {
+      compactionOccurredThisTurn = true;
+    }
 
     // Recompute tools on each iteration to handle mode changes during streaming
     const tools = await getRequestTools(isHeadless);
@@ -467,17 +516,25 @@ export async function streamChatResponse(
     }
 
     // After tool execution, validate that we haven't exceeded context limit
-    chatHistory = await handlePostToolValidation(toolCalls, chatHistory, {
-      model,
-      llmApi,
-      isCompacting,
-      isHeadless,
-      callbacks,
-      systemMessage,
-    });
+    const postToolResult = await handlePostToolValidation(
+      toolCalls,
+      chatHistory,
+      {
+        model,
+        llmApi,
+        isCompacting,
+        isHeadless,
+        callbacks,
+        systemMessage,
+      },
+    );
+    chatHistory = postToolResult.chatHistory;
+    if (postToolResult.wasCompacted) {
+      compactionOccurredThisTurn = true;
+    }
 
     // Normal auto-compaction check at 80% threshold
-    chatHistory = await handleNormalAutoCompaction(
+    const compactionResult = await handleNormalAutoCompaction(
       chatHistory,
       shouldContinue,
       {
@@ -489,9 +546,28 @@ export async function streamChatResponse(
         systemMessage,
       },
     );
+    chatHistory = compactionResult.chatHistory;
+    if (compactionResult.wasCompacted) {
+      compactionOccurredThisTurn = true;
+    }
 
-    // Check if we should continue
-    if (!shouldContinue) {
+    // If compaction happened during this turn and we're about to stop,
+    // automatically send a continuation message to keep the agent going
+    const autoContinueResult = handleAutoContinuation(
+      compactionOccurredThisTurn,
+      shouldContinue,
+      chatHistory,
+    );
+    chatHistory = autoContinueResult.chatHistory;
+    const shouldAutoContinue = autoContinueResult.shouldAutoContinue;
+
+    // Reset flag to avoid infinite continuation
+    if (shouldAutoContinue) {
+      compactionOccurredThisTurn = false;
+    }
+
+    // Check if we should continue (skip break if auto-continuing after compaction)
+    if (!shouldContinue && !shouldAutoContinue) {
       break;
     }
   }
