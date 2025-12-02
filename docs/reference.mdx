@@ -46,7 +46,7 @@ The `name` property specifies the name of your project or configuration.
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 ```
 
@@ -152,7 +152,7 @@ The `models` section defines the language models used in your configuration. Mod
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 models:
   - name: GPT-4o
@@ -204,7 +204,7 @@ More information about usage/params for each context provider can be found [here
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 context:
   - provider: file
@@ -227,7 +227,7 @@ Confiugration example:
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 rules:
   - uses: sanity/sanity-opinionated # rules file stored on Continue Mission Control
@@ -256,7 +256,7 @@ Configuration example:
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 prompts:
   - uses: supabase/create-functions # prompts file stored on Continue Mission Control 
@@ -293,7 +293,7 @@ List of documentation sites to index.
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 docs:
   - name: Continue
@@ -321,7 +321,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 mcpServers:
   - name: My MCP Server
@@ -355,7 +355,7 @@ Destinations to which [development data](/customize/deep-dives/development-data)
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 data:
   - name: Local Data Bank
@@ -379,7 +379,7 @@ Putting it all together, here's a complete example of a `config.yaml` configurat
 
 ```yaml title="config.yaml"
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 models:
   - uses: anthropic/claude-3.5-sonnet
@@ -454,7 +454,7 @@ You can also use node anchors to avoid duplication of properties. To do so, addi
 %YAML 1.1
 ---
 name: My Config
-version: 0.0.1
+version: 1.0.0
 schema: v1
 model_defaults: &model_defaults
   provider: openai
