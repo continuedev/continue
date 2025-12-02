@@ -76,7 +76,7 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
     "file:///test.txt",
     {
       start: { line: 99, character: 0 }, // 100 - 1
-      end: { line: 104, character: Number.MAX_SAFE_INTEGER }, // 105 - 1
+      end: { line: 104, character: 2147483647 }, // 105 - 1 (Int.MAX_VALUE for Kotlin compatibility)
     },
   );
 
@@ -84,7 +84,7 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
     "file:///test.txt",
     {
       start: { line: 4, character: 0 }, // 5 - 1
-      end: { line: 99, character: Number.MAX_SAFE_INTEGER }, // 100 - 1
+      end: { line: 99, character: 2147483647 }, // 100 - 1 (Int.MAX_VALUE for Kotlin compatibility)
     },
   );
 });
@@ -199,6 +199,6 @@ test("readFileRangeImpl handles normal ranges correctly", async () => {
   // Verify correct 0-based conversion
   expect(mockIde.readRangeInFile).toHaveBeenCalledWith("file:///test.txt", {
     start: { line: 1, character: 0 }, // 2 - 1
-    end: { line: 3, character: Number.MAX_SAFE_INTEGER }, // 4 - 1
+    end: { line: 3, character: 2147483647 }, // 4 - 1 (Int.MAX_VALUE for Kotlin compatibility)
   });
 });

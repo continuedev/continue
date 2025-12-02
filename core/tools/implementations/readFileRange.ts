@@ -52,7 +52,7 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
     },
     end: {
       line: endLine - 1, // Convert from 1-based to 0-based
-      character: Number.MAX_SAFE_INTEGER, // Read to end of line
+      character: 2147483647, // Read to end of line (Int.MAX_VALUE for Kotlin compatibility)
     },
   });
 
