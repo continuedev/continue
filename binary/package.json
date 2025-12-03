@@ -16,7 +16,7 @@
       "out/tree-sitter-wasms/*"
     ],
     "targets": [
-      "node18-darwin-arm64"
+      "node20-darwin-arm64"
     ],
     "outputPath": "bin"
   },
@@ -36,7 +36,7 @@
     "cross-env": "^7.0.3",
     "esbuild": "0.19.11",
     "jest": "^29.7.0",
-    "pkg": "^5.8.1",
+    "@yao-pkg/pkg": "^6.10.1",
     "rimraf": "^5.0.7",
     "ts-jest": "^29.1.4",
     "typescript": "^5.6.3"
@@ -55,7 +55,7 @@
     "tar": "^7.5.1",
     "undici": "^7.16.0",
     "uuid": "^9.0.1",
-    "vectordb": "0.4.20",
+    "vectordb": "^0.4.20",
     "win-ca": "^3.5.1"
   }
 }

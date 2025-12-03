@@ -18,7 +18,7 @@
       "../../out/package.json"
     ],
     "targets": [
-      "node18-macos-arm64"
+      "node20-macos-arm64"
     ],
     "outputPath": "bin"
   },
