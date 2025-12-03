@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { pathToUri, uriToPath, slugToUri, uriToSlug } from "./uriUtils.js";
-import { join, resolve, normalize } from "path";
 import { platform } from "os";
+import { resolve, normalize } from "path";
+
+import { describe, it, expect } from "vitest";
+
+import { pathToUri, uriToPath, slugToUri, uriToSlug } from "./uriUtils.js";
 
 describe("uriUtils", () => {
   describe("pathToUri", () => {

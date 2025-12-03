@@ -20,7 +20,7 @@ export function uriToPath(uri: string): string | null {
   }
   try {
     return fileURLToPath(uri);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
