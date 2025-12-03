@@ -113,6 +113,98 @@ line 3 foo`;
     });
   });
 
+  describe("case insensitive match strategy", () => {
+    it("should find multiple occurrences with different cases", () => {
+      const content = "const Foo = 'FOO';";
+      const search = "foo";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(2);
+      expect(matches[0]).toEqual({
+        startIndex: 6,
+        endIndex: 9,
+        strategyName: "caseInsensitiveMatch",
+      });
+      expect(matches[1]).toEqual({
+        startIndex: 13,
+        endIndex: 16,
+        strategyName: "caseInsensitiveMatch",
+      });
+    });
+
+    it("should handle mixed case patterns", () => {
+      const content = "const MyVariable = 'value';";
+      const search = "mYvArIaBlE";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toEqual({
+        startIndex: 6,
+        endIndex: 16,
+        strategyName: "caseInsensitiveMatch",
+      });
+    });
+
+    it("should find multiple matches with varying cases", () => {
+      const content = "Hello world, HELLO universe, hello there";
+      const search = "hello";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(3);
+      expect(matches[0]).toEqual({
+        startIndex: 0,
+        endIndex: 5,
+        strategyName: "caseInsensitiveMatch",
+      });
+      expect(matches[1]).toEqual({
+        startIndex: 13,
+        endIndex: 18,
+        strategyName: "caseInsensitiveMatch",
+      });
+      expect(matches[2]).toEqual({
+        startIndex: 29,
+        endIndex: 34,
+        strategyName: "caseInsensitiveMatch",
+      });
+    });
+
+    it("should handle multi-line content with case differences", () => {
+      const content = `function Test() {
+  return TRUE;
+}`;
+      const search = "test";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toEqual({
+        startIndex: 9,
+        endIndex: 13,
+        strategyName: "caseInsensitiveMatch",
+      });
+    });
+
+    it("should preserve original content length in match", () => {
+      const content = "const VARIABLE = 'value';";
+      const search = "variable";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].endIndex - matches[0].startIndex).toBe(8);
+      expect(content.slice(matches[0].startIndex, matches[0].endIndex)).toBe(
+        "VARIABLE",
+      );
+    });
+
+    it("should not match when exact and trimmed strategies succeed", () => {
+      const content = "const foo = 'bar';";
+      const search = "foo";
+      const matches = findSearchMatches(content, search);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].strategyName).toBe("exactMatch");
+    });
+  });
+
   describe("whitespace ignored match strategy", () => {
     it("should find matches ignoring internal whitespace", () => {
       const content = "const foo = bar;";
