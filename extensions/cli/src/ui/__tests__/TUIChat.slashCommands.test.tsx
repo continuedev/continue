@@ -29,9 +29,12 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Type /exi to trigger slash command filtering
     stdin.write("/exi");
 
-    const frame = lastFrame();
+    let frame = lastFrame();
 
-    waitForCondition(() => lastFrame()?.includes("/exi") ?? false);
+    await waitForCondition(() => {
+      frame = lastFrame();
+      return frame?.includes("/exi") ?? false;
+    });
 
     // Should show the typed command
     expect(frame).toContain("/exi");
