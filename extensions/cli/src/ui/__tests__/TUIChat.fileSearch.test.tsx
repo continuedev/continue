@@ -1,5 +1,5 @@
 import { renderInMode, testSingleMode } from "./TUIChat.dualModeHelper.js";
-import { waitForNextRender } from "./TUIChat.testHelper.js";
+import { waitForCondition } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - @ File Search Tests", () => {
   testSingleMode("shows @ character when user types @", "local", async () => {
@@ -34,10 +34,9 @@ describe("TUIChat - @ File Search Tests", () => {
       // Type @ followed by text to filter files
       stdin.write("@READ");
 
-      // Wait for file search to filter and display results
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       const frame = lastFrame()!;
+
+      waitForCondition(() => lastFrame()!.includes("@READ"));
 
       // Should show the typed text
       expect(frame).toContain("@READ");
@@ -58,9 +57,10 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type multiple @ characters
     stdin.write("@@test");
     // Wait for UI update
-    await waitForNextRender();
 
     const frame = lastFrame();
+
+    await waitForCondition(() => lastFrame()?.includes("@@test") ?? false);
 
     // Should handle multiple @ without crashing
     expect(frame).toBeDefined();
