@@ -20,7 +20,7 @@ async function isUriWithinWorkspace(ide: IDE, uri: string): Promise<boolean> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   const { foundInDir, uri: foundUri } = findUriInDirs(uri, workspaceDirs);
 
-  // Check both: within workspace path AND the resolved file exists
+  // Check both: within workspace path AND resolved file exists
   if (foundInDir !== null) {
     return await ide.fileExists(foundUri);
   }
