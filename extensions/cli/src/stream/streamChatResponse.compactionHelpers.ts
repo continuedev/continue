@@ -66,11 +66,11 @@ export async function handlePostToolValidation(
   toolCalls: ToolCall[],
   chatHistory: ChatHistoryItem[],
   options: CompactionHelperOptions,
-): Promise<ChatHistoryItem[]> {
+): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
   const { model, llmApi, isHeadless, callbacks, systemMessage } = options;
 
   if (toolCalls.length === 0) {
-    return chatHistory;
+    return { chatHistory, wasCompacted: false };
   }
 
   // Get updated history after tool execution
@@ -150,6 +150,7 @@ export async function handlePostToolValidation(
         inputTokens: postCompactionValidation.inputTokens,
         contextLimit: postCompactionValidation.contextLimit,
       });
+      return { chatHistory, wasCompacted: true };
     } else {
       // Compaction failed, cannot continue
       logger.error("Failed to compact history after tool execution overflow");
@@ -159,7 +160,7 @@ export async function handlePostToolValidation(
     }
   }
 
-  return chatHistory;
+  return { chatHistory, wasCompacted: false };
 }
 
 /**
@@ -169,11 +170,11 @@ export async function handleNormalAutoCompaction(
   chatHistory: ChatHistoryItem[],
   shouldContinue: boolean,
   options: CompactionHelperOptions,
-): Promise<ChatHistoryItem[]> {
+): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
   const { model, llmApi, isHeadless, callbacks, systemMessage } = options;
 
   if (!shouldContinue) {
-    return chatHistory;
+    return { chatHistory, wasCompacted: false };
   }
 
   const chatHistorySvc = services.chatHistory;
@@ -198,11 +199,14 @@ export async function handleNormalAutoCompaction(
     // Use the service to update history if available, otherwise use local copy
     if (chatHistorySvc && typeof chatHistorySvc.setHistory === "function") {
       chatHistorySvc.setHistory(updatedChatHistory);
-      return chatHistorySvc.getHistory();
+      return {
+        chatHistory: chatHistorySvc.getHistory(),
+        wasCompacted: true,
+      };
     }
     // Fallback: return the compacted history directly when service unavailable
-    return updatedChatHistory;
+    return { chatHistory: updatedChatHistory, wasCompacted: true };
   }
 
-  return chatHistory;
+  return { chatHistory, wasCompacted: false };
 }
