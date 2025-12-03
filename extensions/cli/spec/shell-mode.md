@@ -44,8 +44,8 @@ Output handling
 - Stdout is streamed into memory; Stderr is captured and appended as a trailing "Stderr: ..." section on success.
 - If the process exits non-zero and Stderr contains content, the tool call is marked as error and the error text is shown.
 - Output is truncated to the first 5000 lines if exceeded.
-- Timeout behavior: If no output is received for 30 seconds (configurable in tests), the process is terminated and the result includes a note like:
-  "[Command timed out after 30 seconds of no output]".
+- Timeout behavior: If no output is received for 120 seconds (configurable in tests), the process is terminated and the result includes a note like:
+  "[Command timed out after 120 seconds of no output]".
 
 Keyboard behaviors (summary)
 

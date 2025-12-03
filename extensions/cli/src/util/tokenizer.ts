@@ -23,6 +23,67 @@ export function getModelContextLimit(model: ModelConfig): number {
 }
 
 /**
+ * Count tokens in message content (string or multimodal array)
+ */
+function countContentTokens(content: string | any[]): number {
+  if (typeof content === "string") {
+    return encode(content).length;
+  }
+
+  if (Array.isArray(content)) {
+    let tokenCount = 0;
+    for (const part of content) {
+      if (part.type === "text" && part.text) {
+        tokenCount += encode(part.text).length;
+      }
+      if (part.type === "imageUrl") {
+        tokenCount += 1024; // Rough estimate for image tokens
+      }
+    }
+    return tokenCount;
+  }
+
+  return 0;
+}
+
+/**
+ * Count tokens in a single tool call function
+ */
+function countToolCallFunctionTokens(
+  toolCallFunction: { name?: string; arguments?: string } | undefined,
+): number {
+  if (!toolCallFunction) {
+    return 0;
+  }
+
+  let tokenCount = 0;
+  tokenCount += encode(toolCallFunction.name ?? "").length + 10; // Function name and structure overhead
+  tokenCount += encode(toolCallFunction.arguments ?? "").length; // Arguments
+  return tokenCount;
+}
+
+/**
+ * Count tokens in tool call outputs
+ */
+function countToolOutputTokens(
+  output: Array<{ content?: string; name?: string }> | undefined,
+): number {
+  if (!output) {
+    return 0;
+  }
+
+  let tokenCount = 0;
+  for (const item of output) {
+    if (item.content) {
+      tokenCount += encode(item.content).length;
+    }
+    // Note: item.name is not sent to the model, only used for internal tracking
+    tokenCount += 5; // Output structure overhead
+  }
+  return tokenCount;
+}
+
+/**
  * Estimate the token count for a single ChatHistoryItem
  * @param historyItem The ChatHistoryItem to count tokens for
  * @returns The estimated token count
@@ -36,35 +97,20 @@ export function countChatHistoryItemTokens(
     const message = historyItem.message;
 
     // Count tokens in content
-    if (typeof message.content === "string") {
-      tokenCount += encode(message.content).length;
-    } else if (Array.isArray(message.content)) {
-      // Handle array content (e.g., multimodal messages)
-      for (const part of message.content) {
-        if (part.type === "text" && part.text) {
-          tokenCount += encode(part.text).length;
-        }
-        // Images and other content types have their own token costs
-        // but we'll use a rough estimate for now
-        if (part.type === "imageUrl") {
-          tokenCount += 1024; // Rough estimate for image tokens
-        }
-      }
-    }
+    tokenCount += countContentTokens(message.content);
 
     // Add tokens for role (roughly 1-2 tokens)
     tokenCount += 2;
 
     // Add tokens for tool calls if present
-    if ("toolCalls" in message && message.toolCalls) {
+    // Skip if toolCallStates exists to avoid double-counting (toolCallStates includes the tool calls)
+    if (
+      "toolCalls" in message &&
+      message.toolCalls &&
+      !historyItem.toolCallStates
+    ) {
       for (const toolCall of message.toolCalls) {
-        if (!toolCall.function) {
-          continue;
-        }
-        // Function name and structure overhead
-        tokenCount += encode(toolCall.function.name ?? "").length + 10;
-        // Arguments
-        tokenCount += encode(toolCall.function.arguments ?? "").length;
+        tokenCount += countToolCallFunctionTokens(toolCall.function);
       }
     }
 
@@ -78,6 +124,16 @@ export function countChatHistoryItemTokens(
       tokenCount += encode(contextItem.content).length;
       tokenCount += encode(contextItem.name).length;
       tokenCount += 5; // Context item structure overhead
+    }
+
+    // Add tokens for tool call states (tool results/outputs)
+    if (historyItem.toolCallStates) {
+      for (const toolState of historyItem.toolCallStates) {
+        // Count tokens in tool call function (name + arguments)
+        tokenCount += countToolCallFunctionTokens(toolState.toolCall?.function);
+        // Count tokens in tool outputs (can be very large - thousands of tokens)
+        tokenCount += countToolOutputTokens(toolState.output);
+      }
     }
 
     return tokenCount;
@@ -197,11 +253,13 @@ export function getAutoCompactMessage(model: ModelConfig): string {
  * Validates that the input tokens + max_tokens don't exceed context limit
  * @param chatHistory The chat history to validate
  * @param model The model configuration
+ * @param safetyBuffer Additional token buffer to account for estimation errors (default: 0)
  * @returns Validation result with error details if invalid
  */
 export function validateContextLength(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
+  safetyBuffer: number = 0,
 ): {
   isValid: boolean;
   error?: string;
@@ -216,12 +274,12 @@ export function validateContextLength(
   // If maxTokens is not set, use 35% default reservation for output
   const reservedForOutput =
     maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
-  const totalRequired = inputTokens + reservedForOutput;
+  const totalRequired = inputTokens + reservedForOutput + safetyBuffer;
 
   if (totalRequired > contextLimit) {
     return {
       isValid: false,
-      error: `Context length exceeded: input (${inputTokens.toLocaleString()}) + max_tokens (${reservedForOutput.toLocaleString()}) = ${totalRequired.toLocaleString()} > context_limit (${contextLimit.toLocaleString()})`,
+      error: `Context length exceeded: input (${inputTokens.toLocaleString()}) + max_tokens (${reservedForOutput.toLocaleString()})${safetyBuffer > 0 ? ` + buffer (${safetyBuffer})` : ""} = ${totalRequired.toLocaleString()} > context_limit (${contextLimit.toLocaleString()})`,
       inputTokens,
       contextLimit,
       maxTokens: reservedForOutput,

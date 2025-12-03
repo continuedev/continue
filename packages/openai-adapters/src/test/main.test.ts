@@ -70,7 +70,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   },
   {
     provider: "anthropic",
-    model: "claude-3-5-haiku-latest",
+    model: "claude-haiku-4-5",
     apiKey: process.env.ANTHROPIC_API_KEY!,
     roles: ["chat"],
     options: {
