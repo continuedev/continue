@@ -88,7 +88,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       const TIMEOUT_MS =
         process.env.NODE_ENV === "test" && process.env.TEST_TERMINAL_TIMEOUT
           ? parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10)
-          : 30000; // 30 seconds default, configurable for tests
+          : 120000; // 120 seconds default, configurable for tests
 
       const resetTimeout = () => {
         if (timeoutId) {
