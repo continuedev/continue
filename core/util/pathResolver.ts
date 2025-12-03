@@ -18,11 +18,11 @@ export interface ResolvedPath {
  */
 async function isUriWithinWorkspace(ide: IDE, uri: string): Promise<boolean> {
   const workspaceDirs = await ide.getWorkspaceDirs();
-  const { foundInDir } = findUriInDirs(uri, workspaceDirs);
+  const { foundInDir, uri: foundUri } = findUriInDirs(uri, workspaceDirs);
 
   // Check both: within workspace path AND file exists
   if (foundInDir !== null) {
-    return await ide.fileExists(uri);
+    return await ide.fileExists(foundUri);
   }
 
   return false;
