@@ -2,6 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
+import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -317,14 +318,43 @@ export const streamNormalInput = createAsyncThunk<
       generatedCalls3,
       toolPolicies,
     );
-    const anyRequireApproval = policies.find(
+    const autoApprovedPolicies = policies.filter(
+      ({ policy }) => policy === "allowedWithoutPermission",
+    );
+    const needsApprovalPolicies = policies.filter(
       ({ policy }) => policy === "allowedWithPermission",
     );
 
     // 4. Execute remaining tool calls
-    // Only set inactive if not all tools were auto-approved
-    // This prevents UI flashing for auto-approved tools
-    if (originalToolCalls.length === 0 || anyRequireApproval) {
+    if (originalToolCalls.length === 0) {
+      dispatch(setInactive());
+    } else if (needsApprovalPolicies.length > 0) {
+      const builtInReadonlyAutoApproved = autoApprovedPolicies.filter(
+        ({ toolCallState }) =>
+          toolCallState.tool?.group === BUILT_IN_GROUP_NAME &&
+          toolCallState.tool?.readonly,
+      );
+
+      if (builtInReadonlyAutoApproved.length > 0) {
+        const state4 = getState();
+        if (streamAborter.signal.aborted || !state4.session.isStreaming) {
+          return;
+        }
+        await Promise.all(
+          builtInReadonlyAutoApproved.map(async ({ toolCallState }) => {
+            unwrapResult(
+              await dispatch(
+                callToolById({
+                  toolCallId: toolCallState.toolCallId,
+                  isAutoApproved: true,
+                  depth: depth + 1,
+                }),
+              ),
+            );
+          }),
+        );
+      }
+
       dispatch(setInactive());
     } else {
       // auto stream cases increase thunk depth by 1 for debugging
@@ -334,7 +364,6 @@ export const streamNormalInput = createAsyncThunk<
         return;
       }
       if (generatedCalls4.length > 0) {
-        // All that didn't fail are auto approved - call them
         await Promise.all(
           generatedCalls4.map(async ({ toolCallId }) => {
             unwrapResult(
@@ -349,7 +378,6 @@ export const streamNormalInput = createAsyncThunk<
           }),
         );
       } else {
-        // All failed - stream on
         for (const { toolCallId } of originalToolCalls) {
           unwrapResult(
             await dispatch(

@@ -11,6 +11,10 @@ It's often useful to select a different model to respond to Edit instructions th
 In Continue, you can add `edit` to a model's roles to specify that it can be used for Edit requests. If no edit models are specified, the selected `chat` model is used.
 
 ```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
 models:
   - name: Claude 4 Sonnet
     provider: anthropic
