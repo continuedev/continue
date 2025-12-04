@@ -50,6 +50,89 @@ For all options, first:
   </Step>
 </Steps>
 
+## Headless Linux Setup
+
+<Accordion title="Running Chrome DevTools MCP on Headless Linux (CI/CD, Runloop, etc.)">
+
+  Chrome DevTools MCP requires a display to run Chrome/Chromium. On headless Linux systems (like GitHub Actions runners, Runloop devboxes, or Docker containers), you need to set up a virtual display using Xvfb.
+
+  ### Quick Setup for Ubuntu/Debian
+
+  ```bash
+  # Install Chromium and Xvfb
+  sudo apt update
+  sudo apt install -y chromium chromium-driver xvfb
+
+  # Create symlink (Chrome DevTools MCP expects Chrome at /opt/google/chrome/chrome)
+  sudo mkdir -p /opt/google/chrome
+  sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome
+
+  # Start virtual display
+  Xvfb :99 -screen 0 1920x1080x24 &
+  export DISPLAY=:99
+  ```
+
+  ### Runloop Blueprint
+
+  For Runloop devboxes, we provide pre-configured blueprint scripts that handle all setup automatically:
+
+  **Python:**
+  ```bash
+  # From the Continue repository root
+  python create_chrome_devtools_blueprint.py
+  ```
+
+  **TypeScript:**
+  ```bash
+  # From the Continue repository root
+  npx ts-node create_chrome_devtools_blueprint.ts
+  ```
+
+  These scripts create a Runloop blueprint with:
+  - Chromium and ChromeDriver pre-installed
+  - Xvfb configured and auto-started
+  - Proper symlinks and environment variables
+  - Continue CLI with latest version
+
+  See [`RUNLOOP_BLUEPRINT_README.md`](https://github.com/continuedev/continue/blob/main/RUNLOOP_BLUEPRINT_README.md) for detailed documentation.
+
+  ### GitHub Actions Setup
+
+  The Chrome DevTools MCP works out of the box on GitHub Actions `ubuntu-latest` runners with minimal setup:
+
+  ```yaml
+  steps:
+    - name: Setup Chrome DevTools Environment
+      run: |
+        sudo apt update
+        sudo apt install -y chromium chromium-driver xvfb
+        sudo mkdir -p /opt/google/chrome
+        sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome
+
+    - name: Start Virtual Display
+      run: |
+        Xvfb :99 -screen 0 1920x1080x24 &
+        sleep 2
+      env:
+        DISPLAY: ":99"
+  ```
+
+  The Continue repository's stable release workflow automatically updates a Runloop blueprint with these configurations. See [`.github/workflows/runloop-blueprint-template.json`](https://github.com/continuedev/continue/blob/main/.github/workflows/runloop-blueprint-template.json).
+
+  ### Troubleshooting
+
+  **"Missing X server" error:**
+  - Verify Xvfb is running: `ps aux | grep Xvfb`
+  - Check DISPLAY variable: `echo $DISPLAY`
+
+  **"Could not find Chrome executable" error:**
+  - Verify symlink: `ls -la /opt/google/chrome/chrome`
+  - Check Chromium installation: `which chromium`
+
+  For detailed Linux setup instructions, see [`linux-setup.md`](https://github.com/continuedev/continue/blob/main/linux-setup.md).
+
+</Accordion>
+
 ## Chrome DevTools MCP Workflow Options
 
 <Card title="Fastest Path to Success" icon="rocket">
