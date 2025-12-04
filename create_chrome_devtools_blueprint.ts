@@ -70,8 +70,7 @@ WORKDIR /home/user
 
   while (info.status !== "build_complete" && info.status !== "build_failed") {
     if (retries >= maxRetries) {
-      console.error("Blueprint build timed out after 5 minutes");
-      return null;
+      throw new Error("Blueprint build timed out after 5 minutes");
     }
     await new Promise((resolve) => setTimeout(resolve, 5000));
     info = await blueprint.get_info();
@@ -85,7 +84,7 @@ WORKDIR /home/user
     for (const log of logResult.logs) {
       console.log(`${log.level}: ${log.message}`);
     }
-    return null;
+    throw new Error("Blueprint build failed");
   }
 
   console.log(`Blueprint build complete! ID: ${blueprint.id}`);

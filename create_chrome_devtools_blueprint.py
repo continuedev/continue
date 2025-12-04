@@ -72,8 +72,7 @@ WORKDIR /home/user
 
     while blueprint.status not in ["ready", "failed"]:
         if retries >= max_retries:
-            print("Blueprint build timed out after 5 minutes")
-            return None
+            raise TimeoutError("Blueprint build timed out after 5 minutes")
         time.sleep(5)
         # Refresh blueprint info
         blueprints = runloop.blueprints.list()
@@ -89,7 +88,7 @@ WORKDIR /home/user
         log_result = runloop.blueprints.logs(blueprint.id)
         for log in log_result.logs:
             print(f"{log.level}: {log.message}")
-        return None
+        raise RuntimeError("Blueprint build failed")
 
     print(f"Blueprint build complete! ID: {blueprint.id}")
     print("\nTo create a devbox from this blueprint:")
@@ -100,4 +99,8 @@ WORKDIR /home/user
     return blueprint
 
 if __name__ == "__main__":
-    create_chrome_devtools_blueprint()
+    try:
+        create_chrome_devtools_blueprint()
+    except Exception as e:
+        print(f"Error creating blueprint: {e}")
+        exit(1)
