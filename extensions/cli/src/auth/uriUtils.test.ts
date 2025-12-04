@@ -1,9 +1,9 @@
 import { platform } from "os";
-import { resolve, normalize } from "path";
+import { normalize, resolve } from "path";
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { pathToUri, uriToPath, slugToUri, uriToSlug } from "./uriUtils.js";
+import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
 
 describe("uriUtils", () => {
   describe("pathToUri", () => {
@@ -78,9 +78,12 @@ describe("uriUtils", () => {
     it("should convert file URIs to Unix-style paths", () => {
       const uri = "file:///home/user/documents/file.txt";
       const result = uriToPath(uri);
-      expect(result).toBeTruthy();
-      expect(result).toContain("file.txt");
-      if (platform() !== "win32") {
+      // On Windows, Unix-style URIs without a drive letter are invalid
+      if (platform() === "win32") {
+        expect(result).toBeNull();
+      } else {
+        expect(result).toBeTruthy();
+        expect(result).toContain("file.txt");
         expect(result).toBe("/home/user/documents/file.txt");
       }
     });
