@@ -55,7 +55,7 @@ export class PosthogService {
     };
 
     if (typeof this._hasInternetConnection !== "undefined") {
-      void refetchConnection();
+      void refetchConnection(); // check in background if connection became available
       return this._hasInternetConnection;
     }
 
