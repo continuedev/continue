@@ -1,0 +1,43 @@
+# Chrome DevTools MCP Development Container
+# Based on linux-setup.md instructions
+
+FROM ubuntu:22.04
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set up display for headless operation
+ENV DISPLAY=:99
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    chromium-browser \
+    chromium-chromedriver \
+    xvfb \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symlink for Chrome DevTools MCP
+# The MCP looks for Chrome at /opt/google/chrome/chrome
+RUN mkdir -p /opt/google/chrome && \
+    ln -s /usr/bin/chromium-browser /opt/google/chrome/chrome
+
+# Create a startup script to run Xvfb
+RUN echo '#!/bin/bash\n\
+# Start Xvfb in the background\n\
+Xvfb :99 -screen 0 1920x1080x24 &\n\
+# Wait a moment for Xvfb to start\n\
+sleep 2\n\
+# Execute the command passed to docker run\n\
+exec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# Set working directory
+WORKDIR /workspace
+
+# Use the entrypoint script to ensure Xvfb is running
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command (can be overridden)
+CMD ["/bin/bash"]
