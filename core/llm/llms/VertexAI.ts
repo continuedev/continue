@@ -5,6 +5,7 @@ import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 
@@ -22,6 +23,15 @@ class VertexAI extends BaseLLM {
   };
 
   private clientPromise: Promise<AuthClient | void>;
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "chat",
+    "embed",
+    "list",
+    "rerank",
+    "streamChat",
+    "streamFim",
+  ];
 
   /*
       Vertex Supports 3 different URL formats 
