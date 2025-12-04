@@ -1,5 +1,5 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
-import { waitForNextRender } from "./TUIChat.testHelper.js";
+import { waitForCondition, waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("shows slash when user types /", async (mode) => {
@@ -28,9 +28,13 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /exi to trigger slash command filtering
     stdin.write("/exi");
-    await waitForNextRender();
 
-    const frame = lastFrame();
+    let frame = lastFrame();
+
+    await waitForCondition(() => {
+      frame = lastFrame();
+      return frame?.includes("/exi") ?? false;
+    });
 
     // Should show the typed command
     expect(frame).toContain("/exi");

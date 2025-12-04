@@ -29,7 +29,7 @@ export function ToolCallDiv({
 
   const shouldShowGroupedUI = toolCallStates.length > 1 && isStreamingComplete;
   const activeCalls = toolCallStates.filter(
-    (call) => call.status !== "canceled",
+    (call) => call.status !== "canceled" && call.status !== "done",
   );
 
   const renderToolCall = (toolCallState: ToolCallState) => {
