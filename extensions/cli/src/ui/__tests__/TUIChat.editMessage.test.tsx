@@ -1,18 +1,5 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
-
-async function waitForCondition(
-  conditionFn: () => boolean,
-  timeoutMs = 2000,
-  intervalMs = 50,
-): Promise<void> {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeoutMs) {
-    if (conditionFn()) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-}
+import { waitForCondition } from "./TUIChat.testHelper.js";
 
 /**
  * Integration tests for the message edit feature in TUIChat

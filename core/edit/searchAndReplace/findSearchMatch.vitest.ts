@@ -109,8 +109,11 @@ describe("findSearchMatch", () => {
       const searchContent = "hello";
       const result = findSearchMatch(fileContent, searchContent);
 
-      // Should not match due to case sensitivity, will fall through to other strategies
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        startIndex: 0,
+        endIndex: 5,
+        strategyName: "caseInsensitiveMatch",
+      });
     });
   });
 
@@ -148,6 +151,32 @@ describe("findSearchMatch", () => {
         startIndex: 0,
         endIndex: 12,
         strategyName: "trimmedMatch",
+      });
+    });
+  });
+
+  describe("Case insensitive match strategy fallback", () => {
+    it("should match when case differs", () => {
+      const result = findSearchMatch(
+        "const myVariable = 42;",
+        "const MYVARIABLE = 42;",
+      );
+      expect(result).toEqual({
+        startIndex: 0,
+        endIndex: 22,
+        strategyName: "caseInsensitiveMatch",
+      });
+    });
+
+    it("should match mixed case in middle of file", () => {
+      const result = findSearchMatch(
+        "function HandleClick() {",
+        "function handleclick() {",
+      );
+      expect(result).toEqual({
+        startIndex: 0,
+        endIndex: 24,
+        strategyName: "caseInsensitiveMatch",
       });
     });
   });
