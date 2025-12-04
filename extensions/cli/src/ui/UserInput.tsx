@@ -468,7 +468,13 @@ const UserInput: React.FC<UserInputProps> = ({
           // select and submit the command
           const commandText = "/" + commandName;
           inputHistory.addEntry(commandText);
-          onSubmit(commandText);
+
+          // queue up when responding/generating
+          if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {
+            void messageQueue.enqueueMessage(commandText);
+          } else {
+            onSubmit(commandText);
+          }
 
           // reset after submitting command
           textBuffer.clear();
