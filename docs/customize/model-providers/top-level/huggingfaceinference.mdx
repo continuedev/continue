@@ -16,7 +16,11 @@ You can access your access token from [Hugging Face](https://huggingface.co/sett
 
 <Tabs>
   <Tab title="YAML">
-  ```yaml title="config.yaml"
+  ```yaml title="config.yaml"  
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: deepseek
       provider: huggingface-inference-providers
@@ -55,6 +59,10 @@ Before you can use Inference Endpoints, you need to create an endpoint. You can 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: deepseek
       provider: huggingface-inference-endpoints
