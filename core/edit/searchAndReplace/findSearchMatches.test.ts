@@ -146,7 +146,7 @@ line 3 foo`;
     });
 
     it("should find multiple matches with varying cases", () => {
-      const content = "Hello world, HELLO universe, hello there";
+      const content = "Hello world, HELLO universe, HeLLo there";
       const search = "hello";
       const matches = findSearchMatches(content, search);
 
