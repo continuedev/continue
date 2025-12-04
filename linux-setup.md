@@ -16,8 +16,10 @@ On ARM64 Linux, Google Chrome is not officially supported, so we use Chromium in
 
 ```bash
 sudo apt update
-sudo apt install -y chromium chromium-driver
+sudo apt install -y --no-install-recommends chromium chromium-driver
 ```
+
+**Note:** We use `--no-install-recommends` to avoid Python version conflicts with the base system.
 
 ### 2. Create Symlink for Chrome DevTools MCP
 

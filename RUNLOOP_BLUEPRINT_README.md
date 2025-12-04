@@ -129,8 +129,8 @@ The blueprint is based on `runloop:runloop/starter-arm64` and includes:
 
 1. **System Packages**: Installs via `apt-get`
 
-   - chromium-browser
-   - chromium-chromedriver
+   - chromium
+   - chromium-driver
    - xvfb
    - curl
    - ca-certificates
@@ -149,6 +149,16 @@ The blueprint is based on `runloop:runloop/starter-arm64` and includes:
 4. **Launch Commands**:
    - Starts Xvfb in background on devbox creation
    - Waits for Xvfb to be ready
+
+## Automated Blueprint Updates
+
+The blueprint is automatically updated on every stable CLI release via the GitHub Actions workflow (`.github/workflows/stable-release.yml`). The blueprint configuration is stored in `.github/workflows/runloop-blueprint-template.json`.
+
+When a new stable version of `@continuedev/cli` is published, the workflow:
+
+1. Publishes the new version to npm
+2. Creates a GitHub release
+3. Publishes an updated "cn" blueprint to Runloop with the latest configuration
 
 ## Troubleshooting
 
@@ -183,7 +193,7 @@ Verify the symlink:
 
 ```bash
 ls -la /opt/google/chrome/chrome
-which chromium-browser
+which chromium
 ```
 
 ## Blueprint Updates
