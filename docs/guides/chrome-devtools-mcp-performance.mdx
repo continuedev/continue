@@ -113,8 +113,7 @@ For all options, first:
       run: |
         Xvfb :99 -screen 0 1920x1080x24 &
         sleep 2
-      env:
-        DISPLAY: ":99"
+        echo "DISPLAY=:99" >> $GITHUB_ENV
   ```
 
   The Continue repository's stable release workflow automatically updates a Runloop blueprint with these configurations. See [`.github/workflows/runloop-blueprint-template.json`](https://github.com/continuedev/continue/blob/main/.github/workflows/runloop-blueprint-template.json).
