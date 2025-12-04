@@ -31,8 +31,8 @@ RUN npm i -g @continuedev/cli@latest
 
 # Create symlink for Chrome DevTools MCP
 # The MCP looks for Chrome at /opt/google/chrome/chrome
-RUN sudo mkdir -p /opt/google/chrome && \\
-    sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome
+RUN mkdir -p /opt/google/chrome && \\
+    ln -s /usr/bin/chromium /opt/google/chrome/chrome
 
 # Create a startup script to run Xvfb
 RUN echo '#!/bin/bash\\n\\
@@ -62,14 +62,21 @@ WORKDIR /home/user
 
   console.log(`Blueprint created with ID: ${blueprint.id}`);
 
-  // Wait for blueprint to build
+  // Wait for blueprint to build (with timeout)
   console.log("Waiting for blueprint to build...");
   let info = await blueprint.get_info();
+  const maxRetries = 60; // 5 minutes total (60 * 5 seconds)
+  let retries = 0;
 
   while (info.status !== "build_complete" && info.status !== "build_failed") {
+    if (retries >= maxRetries) {
+      console.error("Blueprint build timed out after 5 minutes");
+      return null;
+    }
     await new Promise((resolve) => setTimeout(resolve, 5000));
     info = await blueprint.get_info();
     console.log(`Blueprint status: ${info.status}`);
+    retries++;
   }
 
   if (info.status === "build_failed") {

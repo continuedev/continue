@@ -24,14 +24,16 @@ RUN mkdir -p /opt/google/chrome && \
     ln -s /usr/bin/chromium-browser /opt/google/chrome/chrome
 
 # Create a startup script to run Xvfb
-RUN echo '#!/bin/bash\n\
-# Start Xvfb in the background\n\
-Xvfb :99 -screen 0 1920x1080x24 &\n\
-# Wait a moment for Xvfb to start\n\
-sleep 2\n\
-# Execute the command passed to docker run\n\
-exec "$@"' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+RUN cat > /entrypoint.sh <<'EOF'
+#!/bin/bash
+# Start Xvfb in the background
+Xvfb :99 -screen 0 1920x1080x24 &
+# Wait a moment for Xvfb to start
+sleep 2
+# Execute the command passed to docker run
+exec "$@"
+EOF
+RUN chmod +x /entrypoint.sh
 
 # Set working directory
 WORKDIR /workspace

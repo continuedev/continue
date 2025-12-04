@@ -34,8 +34,8 @@ RUN npm i -g @continuedev/cli@latest
 
 # Create symlink for Chrome DevTools MCP
 # The MCP looks for Chrome at /opt/google/chrome/chrome
-RUN sudo mkdir -p /opt/google/chrome && \\
-    sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome
+RUN mkdir -p /opt/google/chrome && \\
+    ln -s /usr/bin/chromium /opt/google/chrome/chrome
 
 # Create a startup script to run Xvfb
 RUN echo '#!/bin/bash\\n\\
@@ -65,10 +65,15 @@ WORKDIR /home/user
 
     print(f"Blueprint created with ID: {blueprint.id}")
 
-    # Wait for blueprint to build
+    # Wait for blueprint to build (with timeout)
     print("Waiting for blueprint to build...")
+    max_retries = 60  # 5 minutes total (60 * 5 seconds)
+    retries = 0
 
     while blueprint.status not in ["ready", "failed"]:
+        if retries >= max_retries:
+            print("Blueprint build timed out after 5 minutes")
+            return None
         time.sleep(5)
         # Refresh blueprint info
         blueprints = runloop.blueprints.list()
@@ -77,6 +82,7 @@ WORKDIR /home/user
                 blueprint = bp
                 break
         print(f"Blueprint status: {blueprint.status}")
+        retries += 1
 
     if blueprint.status == "failed":
         print("Blueprint build failed. Checking logs...")
