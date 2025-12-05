@@ -19,6 +19,7 @@ export function isModelCapable(
     /qwen/,
     /llama/,
     /nemotron/,
+    /grok/
     /mistral/,
   ];
 

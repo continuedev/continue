@@ -4,6 +4,24 @@
 
 Model Context Protocol is a protocol for giving models access to resources and tools. MCP servers can run locally (stdio) or be remote (http/streamable/etc). See https://modelcontextprotocol.io/specification. The Continue CLI uses MCP to extend model's capabilities with MCP prompts and tools. MCP server configurations are stored in the `mcpServers` field of an assistant/config.yaml configuration.
 
+## Secret Resolution
+
+MCP server configurations often require secrets (API keys, tokens, etc.) referenced using template variables like `${{ secrets.API_KEY }}`. The CLI resolves these secrets in the following order:
+
+1. **Organization/Package Secrets**: First attempts to resolve secrets through the Continue API for organization or package-level secrets
+2. **Local Environment Variables**: Falls back to local environment variables if:
+   - The API secret exists but isn't accessible locally (e.g., in devboxes or restricted environments)
+   - The secret isn't found in organization/package secrets
+
+Local environment variables are checked in this priority order:
+
+- `process.env` (runtime environment variables)
+- `~/.continue/.env`
+- `<workspace>/.continue/.env`
+- `<workspace>/.env`
+
+This fallback mechanism ensures MCP servers can start successfully in environments where organization secrets aren't accessible, such as development containers or CI/CD pipelines, by allowing environment variables to provide the required credentials.
+
 ## MCP Service
 
 The CLI has an MCP Service should manage connections to MCP servers and provide state to the terminal app regarding MCP server connections.
