@@ -56,11 +56,6 @@ describe("TUIChat - User Input Tests", () => {
       stdin.write("!@#$%^&*()");
       await waitForNextRender();
 
-      // Remote mode needs extra time for rendering in CI
-      if (mode === "remote") {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-
       const frame = lastFrame();
 
       // Should handle special characters without crashing
