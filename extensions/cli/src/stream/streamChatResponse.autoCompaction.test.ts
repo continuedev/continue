@@ -18,6 +18,7 @@ vi.mock("../session.js", () => ({
   })),
   saveSession: vi.fn(),
   updateSessionHistory: vi.fn(),
+  trackSessionUsage: vi.fn(),
 }));
 
 vi.mock("../util/tokenizer.js", () => ({
