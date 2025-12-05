@@ -15,6 +15,7 @@ vi.mock("../compaction.js", () => ({
 
 vi.mock("../session.js", () => ({
   updateSessionHistory: vi.fn(),
+  trackSessionUsage: vi.fn(),
 }));
 
 vi.mock("../util/tokenizer.js", () => ({
