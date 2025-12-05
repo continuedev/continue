@@ -1,0 +1,324 @@
+---
+title: "Atlassian Integration"
+description: "Connect Jira and Confluence to automate project management and documentation with Continue Agents"
+---
+
+## Overview
+
+Connect Atlassian products (Jira and Confluence) to Continue Mission Control to enable agents to manage issues, track projects, and maintain documentation. When Atlassian is enabled, Continue can automate ticket creation, sync documentation, and streamline development workflows.
+
+<Card title="What You Can Do with Atlassian Integration" icon="atlassian">
+
+  - Automatically create and update Jira issues from code changes
+  - Sync documentation between Confluence and your codebase
+  - Generate release notes and project updates
+  - Track development progress across projects
+  - Automate sprint planning and backlog grooming
+  - Create PRs linked to Jira tickets
+
+</Card>
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
+
+  </Step>
+
+  <Step title="Connect Atlassian">
+
+    Click "Connect" next to Atlassian. You'll need the following credentials:
+
+    - **Atlassian Domain**: Your Atlassian domain (e.g., `your-company.atlassian.net`)
+    - **Email**: Your Atlassian account email
+    - **API Token**: Generate from Atlassian account settings
+
+  </Step>
+
+  <Step title="Generate API Token">
+
+    To create an API token:
+    1. Go to [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
+    2. Click "Create API token"
+    3. Give it a descriptive name (e.g., "Continue Mission Control")
+    4. Copy the token immediately (it won't be shown again)
+
+  </Step>
+
+  <Step title="Add Credentials to Mission Control">
+
+    Paste your domain, email, and API token into the integration form and click "Create Connection"
+
+  </Step>
+
+</Steps>
+
+<Tip>
+
+  **Security Best Practice**: Create a dedicated API token for Continue rather than reusing existing tokens. This makes it easier to revoke access if needed.
+
+</Tip>
+
+## Use Cases
+
+### Automated Issue Management
+
+Create agents that manage your Jira backlog:
+
+<Card title="Issue Creator Agent" icon="ticket">
+
+  **Task Example**: "Create Jira tickets for all TODO comments in the codebase with priority based on code location"
+
+  **What the Agent Does**:
+  - Scans codebase for TODO and FIXME comments
+  - Creates Jira issues with relevant context
+  - Links issues to code files and line numbers
+  - Assigns priority based on file criticality
+
+  **Run in Mission Control**: Schedule weekly or after major releases
+
+</Card>
+
+### Sprint Planning Automation
+
+Streamline sprint planning with intelligent automation:
+
+<Card title="Sprint Planner Agent" icon="calendar-days">
+
+  **Task Example**: "Analyze backlog items and create a proposed sprint plan based on team velocity and priorities"
+
+  **What the Agent Does**:
+  - Reviews open Jira issues and their estimates
+  - Considers team capacity and historical velocity
+  - Groups related tickets together
+  - Creates a proposed sprint with balanced workload
+
+  **Run in Mission Control**: Run before sprint planning meetings
+
+</Card>
+
+### Documentation Sync
+
+Keep Confluence and code documentation in sync:
+
+<Card title="Docs Sync Agent" icon="book-open">
+
+  **Task Example**: "Update Confluence API documentation to match current OpenAPI spec"
+
+  **What the Agent Does**:
+  - Parses API specifications from codebase
+  - Compares with existing Confluence documentation
+  - Updates or creates Confluence pages with changes
+  - Notifies team of significant API changes
+
+  **Run in Mission Control**: Trigger on API spec changes or schedule weekly
+
+</Card>
+
+### Release Management
+
+Automate release notes and changelog generation:
+
+<Card title="Release Notes Agent" icon="megaphone">
+
+  **Task Example**: "Generate release notes from closed Jira tickets since last release and publish to Confluence"
+
+  **What the Agent Does**:
+  - Queries Jira for tickets closed since last release
+  - Categorizes changes (features, fixes, improvements)
+  - Generates formatted release notes
+  - Creates or updates Confluence release page
+
+  **Run in Mission Control**: Trigger manually before releases
+
+</Card>
+
+### Project Tracking
+
+Monitor development progress and blockers:
+
+<Card title="Project Health Agent" icon="chart-line">
+
+  **Task Example**: "Analyze current sprint progress and identify blocked or at-risk items"
+
+  **What the Agent Does**:
+  - Reviews sprint board status
+  - Identifies tickets without recent updates
+  - Flags dependencies and blockers
+  - Generates summary report in Confluence
+
+  **Run in Mission Control**: Schedule daily during active sprints
+
+</Card>
+
+### Code-to-Ticket Linking
+
+Maintain traceability between code and requirements:
+
+<Card title="Ticket Linker Agent" icon="link">
+
+  **Task Example**: "Review recent PRs and ensure they're linked to appropriate Jira tickets"
+
+  **What the Agent Does**:
+  - Scans merged PRs without Jira ticket references
+  - Analyzes PR content to find related tickets
+  - Adds Jira ticket links to PRs and vice versa
+  - Reports PRs that may need ticket creation
+
+  **Run in Mission Control**: Run daily or after PR merges
+
+</Card>
+
+## Running Atlassian Agents in Mission Control
+
+You can run Atlassian-connected agents in two ways:
+
+### 1. Manual Tasks
+
+Trigger agents on-demand for project management:
+
+1. Go to [Mission Control Agents](https://hub.continue.dev/agents)
+2. Select or create an Atlassian-enabled agent
+3. Click "Run Agent" and provide your task description
+4. Monitor progress and review results in real-time
+
+**Example Tasks:**
+- "Summarize all critical bugs from the last sprint"
+- "Create architecture decision records in Confluence for recent technical decisions"
+- "Update the project roadmap based on current velocity"
+
+### 2. Automated Workflows
+
+Set up agents to run automatically:
+
+- **Scheduled**: Run daily standup summaries, weekly backlog reviews
+- **Triggered**: Execute on Jira events (new critical bug, sprint completion)
+- **Webhook**: Integrate with CI/CD to update tickets on deployments
+
+<Tip>
+
+  Start with manual tasks to refine your Jira queries and Confluence formatting, then convert successful patterns to automated workflows.
+
+</Tip>
+
+## Integration with GitHub
+
+Combine Atlassian with GitHub for complete development workflow automation:
+
+<Steps>
+
+  <Step title="Connect Both Integrations">
+
+    Enable both Atlassian and GitHub integrations in Mission Control
+
+  </Step>
+
+  <Step title="Create a Unified Development Agent">
+
+    Build an agent that:
+    - Creates PRs for Jira tickets
+    - Updates ticket status based on PR state
+    - Links code changes to requirements
+    - Updates Confluence with technical decisions
+
+  </Step>
+
+  <Step title="Set Up End-to-End Workflow">
+
+    Configure the agent to run throughout the development lifecycle
+
+  </Step>
+
+</Steps>
+
+## Monitoring Agent Activity
+
+Track your agent's project management automation:
+
+1. **View in Mission Control**: See all agent runs and their outputs
+2. **Check Jira**: Verify tickets are created and updated correctly
+3. **Review Confluence**: Ensure documentation is accurate and well-formatted
+4. **Monitor Metrics**: Track automation impact on team velocity
+
+## Troubleshooting
+
+<Accordion title="Authentication failures">
+
+  **Problem**: Agent can't connect to Atlassian services
+
+  **Solutions**:
+  - Verify API token hasn't expired
+  - Check that email matches the token's account
+  - Ensure domain includes `.atlassian.net`
+  - Regenerate token if necessary
+
+</Accordion>
+
+<Accordion title="Permission denied errors">
+
+  **Problem**: Agent can't create or update items
+
+  **Solutions**:
+  - Verify your Atlassian account has appropriate permissions
+  - Check project-level permissions in Jira
+  - Ensure space permissions are correct in Confluence
+  - Contact your Atlassian admin if needed
+
+</Accordion>
+
+<Accordion title="Issues not found or accessible">
+
+  **Problem**: Agent reports Jira issues don't exist
+
+  **Solutions**:
+  - Verify issue keys are correct (e.g., PROJECT-123)
+  - Check that you have access to the project
+  - Ensure issues aren't in a restricted project
+  - Verify your API token has read access
+
+</Accordion>
+
+<Accordion title="Confluence pages not updating">
+
+  **Problem**: Documentation changes aren't reflected in Confluence
+
+  **Solutions**:
+  - Check that you have edit permissions for the space
+  - Verify page IDs are correct
+  - Ensure Confluence Cloud API is accessible
+  - Review agent logs for specific error messages
+
+</Accordion>
+
+<Accordion title="Rate limiting errors">
+
+  **Problem**: Agent hits Atlassian API rate limits
+
+  **Solutions**:
+  - Reduce frequency of automated workflows
+  - Batch operations where possible
+  - Implement exponential backoff in agent logic
+  - Consider upgrading Atlassian plan for higher limits
+
+</Accordion>
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Atlassian MCP Cookbook" icon="book-open" href="/guides/atlassian-mcp-continue-cookbook">
+
+    Comprehensive guide to project management automation with Atlassian and Continue
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+
+    Combine Atlassian with GitHub for complete DevOps automation
+
+  </Card>
+
+</CardGroup>

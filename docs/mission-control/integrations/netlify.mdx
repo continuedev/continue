@@ -1,0 +1,324 @@
+---
+title: "Netlify Integration"
+description: "Automate deployments and site management with Continue Agents connected to Netlify"
+---
+
+## Overview
+
+Connect Netlify to Continue Mission Control to enable agents to manage deployments, monitor site performance, and automate your continuous deployment pipeline. When Netlify is enabled, Continue can trigger builds, manage environments, and respond to deployment events.
+
+<Card title="What You Can Do with Netlify Integration" icon="globe">
+
+  - Automatically trigger and monitor deployments
+  - Manage environment variables and build settings
+  - Create and test deploy previews
+  - Monitor site performance and uptime
+  - Automate rollback on errors or failed tests
+  - Generate deployment reports and notifications
+
+</Card>
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
+
+  </Step>
+
+  <Step title="Connect Netlify">
+
+    Click "Connect" next to Netlify. You'll need:
+
+    - **Personal Access Token**: Generate from Netlify account settings
+
+  </Step>
+
+  <Step title="Generate Netlify Access Token">
+
+    To create a personal access token:
+    1. Log into your [Netlify account](https://app.netlify.com)
+    2. Go to **User Settings** → **Applications** → **Personal access tokens**
+    3. Click "New access token"
+    4. Give it a descriptive name (e.g., "Continue Mission Control")
+    5. Copy the token immediately
+
+  </Step>
+
+  <Step title="Add Token to Mission Control">
+
+    Paste your access token into the integration form and click "Create Connection"
+
+  </Step>
+
+</Steps>
+
+<Tip>
+
+  **Token Scope**: Personal access tokens have full access to your Netlify account. Create a token specifically for Continue to maintain security and easy revocation if needed.
+
+</Tip>
+
+## Use Cases
+
+### Automated Deployment Management
+
+Create agents that manage your deployment pipeline:
+
+<Card title="Deployment Manager Agent" icon="rocket">
+
+  **Task Example**: "Deploy the staging branch to preview environment and run smoke tests"
+
+  **What the Agent Does**:
+  - Triggers Netlify build for specified branch
+  - Monitors build progress and logs
+  - Runs automated tests on deploy preview
+  - Reports results and preview URL
+
+  **Run in Mission Control**: Trigger on PR creation or manual request
+
+</Card>
+
+### Environment Configuration
+
+Automate environment variable management:
+
+<Card title="Config Sync Agent" icon="sliders">
+
+  **Task Example**: "Sync environment variables from .env.example to all Netlify sites"
+
+  **What the Agent Does**:
+  - Reads environment variable definitions
+  - Updates Netlify site settings
+  - Verifies variables are set correctly
+  - Triggers rebuild if necessary
+
+  **Run in Mission Control**: Run after config updates or schedule periodic audits
+
+</Card>
+
+### Performance Monitoring
+
+Track and respond to site performance issues:
+
+<Card title="Performance Guard Agent" icon="gauge-high">
+
+  **Task Example**: "Monitor production deployment and rollback if Core Web Vitals degrade"
+
+  **What the Agent Does**:
+  - Tracks deployment performance metrics
+  - Compares against baseline thresholds
+  - Automatically rolls back if issues detected
+  - Creates incident report with details
+
+  **Run in Mission Control**: Set up as continuous monitoring for production
+
+</Card>
+
+### Deploy Preview Testing
+
+Automate testing of deploy previews:
+
+<Card title="Preview Tester Agent" icon="vial">
+
+  **Task Example**: "Run visual regression tests on deploy preview and comment results on PR"
+
+  **What the Agent Does**:
+  - Waits for deploy preview to be ready
+  - Executes test suite against preview URL
+  - Captures screenshots and differences
+  - Posts results as PR comment
+
+  **Run in Mission Control**: Trigger on deploy preview creation
+
+</Card>
+
+### Site Health Monitoring
+
+Proactively monitor site availability and health:
+
+<Card title="Site Monitor Agent" icon="heart-pulse">
+
+  **Task Example**: "Check all production sites every hour and create alerts for downtime or errors"
+
+  **What the Agent Does**:
+  - Pings production sites to verify availability
+  - Checks for broken links or 500 errors
+  - Monitors SSL certificate expiration
+  - Creates incidents for issues found
+
+  **Run in Mission Control**: Schedule hourly health checks
+
+</Card>
+
+### Automated Rollback
+
+Implement intelligent rollback strategies:
+
+<Card title="Smart Rollback Agent" icon="rotate-left">
+
+  **Task Example**: "Monitor error rates after deployment and rollback if errors exceed 1%"
+
+  **What the Agent Does**:
+  - Tracks error metrics post-deployment
+  - Analyzes error patterns and severity
+  - Triggers rollback to previous version if threshold exceeded
+  - Notifies team with incident details
+
+  **Run in Mission Control**: Set up as post-deployment monitoring
+
+</Card>
+
+## Running Netlify Agents in Mission Control
+
+You can run Netlify-connected agents in two ways:
+
+### 1. Manual Tasks
+
+Trigger agents on-demand for deployment operations:
+
+1. Go to [Mission Control Agents](https://hub.continue.dev/agents)
+2. Select or create a Netlify-enabled agent
+3. Click "Run Agent" and provide your task description
+4. Monitor progress and review results in real-time
+
+**Example Tasks:**
+- "Create a new deploy preview for the feature/redesign branch"
+- "List all sites and their current deployment status"
+- "Update production environment variables for API endpoints"
+
+### 2. Automated Workflows
+
+Set up agents to run automatically:
+
+- **Event-triggered**: Execute on Git push, PR creation, or deployment completion
+- **Scheduled**: Run daily site audits or weekly performance reviews
+- **Threshold-based**: Trigger on metric anomalies or build failures
+
+<Tip>
+
+  Start with manual deployment tasks to validate your workflow, then automate repetitive deployment patterns and monitoring tasks.
+
+</Tip>
+
+## Integration with GitHub
+
+Combine Netlify with GitHub for complete CI/CD automation:
+
+<Steps>
+
+  <Step title="Connect Both Integrations">
+
+    Enable both Netlify and GitHub integrations in Mission Control
+
+  </Step>
+
+  <Step title="Create a CI/CD Agent">
+
+    Build an agent that:
+    - Monitors GitHub for new PRs
+    - Triggers Netlify deploy previews
+    - Runs automated tests on preview
+    - Updates PR status and adds preview URL
+    - Manages production deployments on merge
+
+  </Step>
+
+  <Step title="Set Up Deployment Pipeline">
+
+    Configure the agent to handle the entire deployment workflow automatically
+
+  </Step>
+
+</Steps>
+
+## Monitoring Agent Activity
+
+Track your agent's deployment automation:
+
+1. **View in Mission Control**: See all agent runs and deployment actions
+2. **Check Netlify Dashboard**: Verify builds and deployments
+3. **Review Deploy Logs**: Ensure builds complete successfully
+4. **Monitor Metrics**: Track deployment frequency and success rate
+
+## Troubleshooting
+
+<Accordion title="Authentication failures">
+
+  **Problem**: Agent can't connect to Netlify API
+
+  **Solutions**:
+  - Verify personal access token is correct
+  - Check that token hasn't been revoked
+  - Ensure token has necessary permissions
+  - Try regenerating the token
+
+</Accordion>
+
+<Accordion title="Build triggers not working">
+
+  **Problem**: Agent can't trigger Netlify builds
+
+  **Solutions**:
+  - Verify you have deploy permissions for the site
+  - Check that the site exists and is accessible
+  - Ensure build hooks are configured if using webhooks
+  - Review Netlify API rate limits
+
+</Accordion>
+
+<Accordion title="Environment variable updates failing">
+
+  **Problem**: Can't update site environment variables
+
+  **Solutions**:
+  - Confirm you have admin access to the site
+  - Check variable name format (no spaces or special chars)
+  - Ensure values are properly escaped
+  - Verify API token has write permissions
+
+</Accordion>
+
+<Accordion title="Deploy previews not found">
+
+  **Problem**: Agent can't locate deploy previews
+
+  **Solutions**:
+  - Verify branch name is correct
+  - Check that deploy previews are enabled for the site
+  - Ensure the commit has triggered a build
+  - Wait for build to complete before querying
+
+</Accordion>
+
+<Accordion title="Performance monitoring issues">
+
+  **Problem**: Can't retrieve site performance metrics
+
+  **Solutions**:
+  - Verify Netlify Analytics is enabled for the site
+  - Check that your plan includes analytics access
+  - Ensure time range for queries is valid
+  - Review API documentation for metrics endpoints
+
+</Accordion>
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Netlify MCP Cookbook" icon="book-open" href="/guides/netlify-mcp-continuous-deployment">
+
+    Complete guide to continuous deployment automation with Netlify and Continue
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+
+    Combine Netlify with GitHub for end-to-end CI/CD automation
+
+  </Card>
+
+</CardGroup>
