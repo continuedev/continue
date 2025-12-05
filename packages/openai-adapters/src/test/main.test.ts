@@ -107,7 +107,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
       skipTools: false,
       expectUsage: true,
     },
-  },
+  }, // Note: Mistral FIM can be slow, increased timeout in test
   // {
   //   provider: "deepseek",
   //   model: "deepseek-coder",
@@ -209,7 +209,12 @@ if (process.env.IGNORE_API_KEY_TESTS === "true") {
       return;
     }
     describe(`${config.provider}/${config.model}`, () => {
-      vi.setConfig({ testTimeout: 30000 });
+      // Increase timeout for Mistral FIM which can be slow
+      const timeout =
+        config.provider === "mistral" && config.roles?.includes("autocomplete")
+          ? 60000
+          : 30000;
+      vi.setConfig({ testTimeout: timeout });
       testConfig({ name: config.model, ...config });
     });
   });
