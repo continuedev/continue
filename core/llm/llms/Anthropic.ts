@@ -426,6 +426,7 @@ class Anthropic extends BaseLLM {
     const headers = getAnthropicHeaders(
       this.apiKey,
       shouldCacheSystemMessage || shouldCachePrompt,
+      this.apiBase,
     );
 
     const body: MessageCreateParams = {
