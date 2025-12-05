@@ -1,4 +1,5 @@
 import { streamSse } from "@continuedev/fetch";
+import { GoogleGenAI } from "@google/genai";
 import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 import {
   ChatCompletion,
@@ -30,6 +31,7 @@ export class VertexAIApi implements BaseLlmApi {
   geminiInstance: GeminiApi;
   mistralInstance: OpenAIApi;
   private clientPromise?: Promise<AuthClient | void>;
+  private genAI?: GoogleGenAI;
   static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
 
   constructor(protected config: VertexAIConfig) {
@@ -49,6 +51,22 @@ export class VertexAIApi implements BaseLlmApi {
       provider: "mistral",
       apiKey: "dud",
     });
+
+    this.setupGenAI();
+  }
+
+  private setupGenAI(): void {
+    const { apiKey, env } = this.config;
+
+    if (apiKey) {
+      this.genAI = new GoogleGenAI({ apiKey });
+    } else if (env?.projectId && env?.region) {
+      this.genAI = new GoogleGenAI({
+        vertexai: true,
+        project: env.projectId,
+        location: env.region,
+      });
+    }
   }
 
   private setupAuthentication(): void {
@@ -204,14 +222,9 @@ export class VertexAIApi implements BaseLlmApi {
 
   private convertGeminiBody(
     oaiBody: ChatCompletionCreateParams,
-    url: URL,
+    isV1API: boolean,
   ): object {
-    return this.geminiInstance._convertBody(
-      oaiBody,
-      url.toString(),
-      false,
-      false,
-    );
+    return this.geminiInstance._convertBody(oaiBody, isV1API, false);
   }
 
   async chatCompletionNonStream(
@@ -241,7 +254,10 @@ export class VertexAIApi implements BaseLlmApi {
         url = this.buildUrl(
           `publishers/google/models/${body.model}:generateContent`,
         );
-        requestBody = this.convertGeminiBody(body, url);
+        requestBody = this.convertGeminiBody(
+          body,
+          url.toString().includes("/v1/"),
+        );
         break;
       case "mistral":
         url = this.buildUrl(
@@ -305,54 +321,19 @@ export class VertexAIApi implements BaseLlmApi {
       );
     }
 
-    const headers = await this.getAuthHeaders();
-    let url: URL;
-    let requestBody: any;
-
     switch (vertexProvider) {
       case "anthropic":
-        url = this.buildUrl(
+        const anthropicHeaders = await this.getAuthHeaders();
+        const url = this.buildUrl(
           `publishers/anthropic/models/${body.model}:streamRawPredict`,
         );
-        requestBody = this.convertAnthropicBody(body);
-        break;
-      case "gemini":
-        url = this.buildUrl(
-          `publishers/google/models/${body.model}:streamGenerateContent`,
-        );
-        requestBody = this.convertGeminiBody(body, url);
-        break;
-      case "mistral":
-        url = this.buildUrl(
-          `publishers/mistralai/models/${body.model}:streamRawPredict`,
-        );
-        requestBody = body;
-        break;
-      default:
-        throw new Error(`Unsupported model: ${body.model}`);
-    }
+        const requestBody = this.convertAnthropicBody(body);
 
-    switch (vertexProvider) {
-      case "mistral":
-        const mistralResponse =
-          await this.mistralInstance.openai.chat.completions.create(
-            this.mistralInstance.modifyChatBody(body),
-            {
-              signal,
-              headers,
-            },
-          );
-        for await (const result of mistralResponse) {
-          yield result;
-        }
-        break;
-      case "anthropic":
-      case "gemini":
         const response = await customFetch(this.config.requestOptions)(
           url.toString(),
           {
             method: "POST",
-            headers,
+            headers: anthropicHeaders,
             body: JSON.stringify(requestBody),
             signal,
           },
@@ -366,17 +347,36 @@ export class VertexAIApi implements BaseLlmApi {
         }
 
         if (response.status === 499) {
-          return; // Aborted by user
+          return;
         }
-        if (vertexProvider === "gemini") {
-          yield* this.geminiInstance.handleStreamResponse(response, body.model);
-        } else {
-          yield* this.anthropicInstance.handleStreamResponse(
-            response,
-            body.model,
+        yield* this.anthropicInstance.handleStreamResponse(
+          response,
+          body.model,
+        );
+        break;
+      case "gemini":
+        if (!this.genAI) {
+          throw new Error("VertexAI: GoogleGenAI not initialized");
+        }
+        yield* this.geminiInstance.streamWithGenAI(this.genAI, body);
+        break;
+      case "mistral":
+        const headers = await this.getAuthHeaders();
+        const mistralResponse =
+          await this.mistralInstance.openai.chat.completions.create(
+            this.mistralInstance.modifyChatBody(body),
+            {
+              signal,
+              headers,
+            },
           );
+        for await (const result of mistralResponse) {
+          yield result;
         }
         break;
+
+      default:
+        throw new Error(`Unsupported model: ${body.model}`);
     }
   }
 
