@@ -1,0 +1,41 @@
+name: Test VSCode Darwin Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-darwin-x64:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+      - name: Build VS Code extension (darwin-x64)
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: darwin
+          arch: x64
+          npm_config_arch: x64
+          pre-release: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-darwin-arm64:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+      - name: Build VS Code extension (darwin-arm64)
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: darwin
+          arch: arm64
+          npm_config_arch: arm64
+          pre-release: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
