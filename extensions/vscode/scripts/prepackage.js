@@ -314,7 +314,9 @@ void (async () => {
       );
     }
   } else {
-    console.warn(`[warn] No LanceDB package mapping found for target ${target}`);
+    console.warn(
+      `[warn] No LanceDB package mapping found for target ${target}`,
+    );
   }
 
   if (!skipInstalls) {
