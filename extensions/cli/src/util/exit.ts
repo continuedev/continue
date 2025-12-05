@@ -1,7 +1,7 @@
 import type { ChatHistoryItem } from "core/index.js";
 
-import { getSessionUsage, getTotalSessionCost } from "../session.js";
 import { sentryService } from "../sentry.js";
+import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
 import { getGitDiffSnapshot } from "./git.js";
@@ -61,14 +61,24 @@ export async function updateAgentMetadata(
       }
     }
 
-    // Extract total session cost
+    // Extract session usage (cost and token counts)
     try {
-      const totalCost = getTotalSessionCost();
-      if (totalCost > 0) {
-        metadata.totalCost = parseFloat(totalCost.toFixed(6));
+      const usage = getSessionUsage();
+      if (usage.totalCost > 0) {
+        metadata.usage = {
+          totalCost: parseFloat(usage.totalCost.toFixed(6)),
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          ...(usage.promptTokensDetails?.cachedTokens && {
+            cachedTokens: usage.promptTokensDetails.cachedTokens,
+          }),
+          ...(usage.promptTokensDetails?.cacheWriteTokens && {
+            cacheWriteTokens: usage.promptTokensDetails.cacheWriteTokens,
+          }),
+        };
       }
     } catch (err) {
-      logger.debug("Failed to get session cost (non-critical)", err as any);
+      logger.debug("Failed to get session usage (non-critical)", err as any);
     }
 
     // Post metadata if we have any
