@@ -55,11 +55,6 @@ console.log("[info] Using target: ", target);
 
 const exe = os === "win32" ? ".exe" : "";
 
-const isArmTarget =
-  target === "darwin-arm64" ||
-  target === "linux-arm64" ||
-  target === "win32-arm64";
-
 const isWinTarget = target?.startsWith("win");
 const isLinuxTarget = target?.startsWith("linux");
 const isMacTarget = target?.startsWith("darwin");
@@ -288,25 +283,44 @@ void (async () => {
     );
   });
 
-  if (!skipInstalls) {
-    // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-    // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-    if (isArmTarget) {
-      // lancedb binary
-      const packageToInstall = {
-        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-        "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
-      }[target];
-      console.log(
-        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-      );
+  const lancedbPackagesByTarget = {
+    "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+    "darwin-x64": "@lancedb/vectordb-darwin-x64",
+    "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+    "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
+    "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
+    "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+  };
 
-      await Promise.all([
-        copySqlite(target),
-        installAndCopyNodeModules(packageToInstall, "@lancedb"),
-      ]);
+  const packageToInstall = lancedbPackagesByTarget[target];
+  if (packageToInstall) {
+    const packageDirName = packageToInstall.split("/").pop();
+    const expectedPackagePath = path.join(
+      __dirname,
+      "..",
+      "node_modules",
+      "@lancedb",
+      packageDirName,
+    );
+
+    if (!fs.existsSync(expectedPackagePath)) {
+      console.log(
+        `[info] Installing LanceDB binary for ${target}: ${packageToInstall}`,
+      );
+      await installAndCopyNodeModules(packageToInstall, "@lancedb");
+    } else {
+      console.log(
+        `[info] LanceDB binary already present for ${target} at ${expectedPackagePath}`,
+      );
     }
+  } else {
+    console.warn(`[warn] No LanceDB package mapping found for target ${target}`);
+  }
+
+  if (!skipInstalls) {
+    await copySqlite(target);
+  } else {
+    console.log("[info] Skipping sqlite download because SKIP_INSTALLS=true");
   }
 
   console.log("[info] Copying sqlite node binding from core");
