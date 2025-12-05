@@ -3,6 +3,17 @@
   "system_setup_commands": [
     "npm i -g @continuedev/cli@latest",
     "sudo apt update",
-    "sudo apt install -y ripgrep"
-  ]
+    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb",
+    "sudo mkdir -p /opt/google/chrome",
+    "sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome"
+  ],
+  "launch_parameters": {
+    "launch_commands": [
+      "nohup Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &",
+      "sleep 2"
+    ],
+    "environment_variables": {
+      "DISPLAY": ":99"
+    }
+  }
 }
