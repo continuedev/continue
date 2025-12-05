@@ -284,6 +284,7 @@ export async function processStreamingResponse(
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
+  let fullUsage: any = null;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -301,6 +302,7 @@ export async function processStreamingResponse(
       if (chunk.usage) {
         inputTokens = chunk.usage.prompt_tokens || 0;
         outputTokens = chunk.usage.completion_tokens || 0;
+        fullUsage = chunk.usage; // Capture full usage including cache details
       }
 
       // Check if we should abort
@@ -338,6 +340,7 @@ export async function processStreamingResponse(
       outputTokens,
       model,
       tools,
+      fullUsage,
     });
     const totalDuration = responseEndTime - requestStartTime;
 
@@ -347,6 +350,8 @@ export async function processStreamingResponse(
       toolCallsCount: toolCallsMap.size,
       inputTokens,
       outputTokens,
+      cacheReadTokens: fullUsage?.prompt_tokens_details?.cache_read_tokens,
+      cacheWriteTokens: fullUsage?.prompt_tokens_details?.cache_write_tokens,
       cost,
       duration: totalDuration,
     });

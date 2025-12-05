@@ -11,6 +11,7 @@ import { ToolPermissionServiceState } from "src/services/ToolPermissionService.j
 
 import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
+import { getTotalSessionCost } from "../session.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -442,6 +443,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
           hasImageInClipboard={hasImageInClipboard}
+          isVerboseMode={isVerboseMode}
+          totalCost={getTotalSessionCost()}
         />
       </Box>
     </Box>

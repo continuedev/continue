@@ -1,5 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { getSessionUsage, getTotalSessionCost } from "../session.js";
 import { sentryService } from "../sentry.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
@@ -60,6 +61,16 @@ export async function updateAgentMetadata(
       }
     }
 
+    // Extract total session cost
+    try {
+      const totalCost = getTotalSessionCost();
+      if (totalCost > 0) {
+        metadata.totalCost = parseFloat(totalCost.toFixed(6));
+      }
+    } catch (err) {
+      logger.debug("Failed to get session cost (non-critical)", err as any);
+    }
+
     // Post metadata if we have any
     if (Object.keys(metadata).length > 0) {
       await postAgentMetadata(agentId, metadata);
@@ -71,10 +82,59 @@ export async function updateAgentMetadata(
 }
 
 /**
+ * Display session usage breakdown in verbose mode
+ */
+function displaySessionUsage(): void {
+  const isVerbose = process.argv.includes("--verbose");
+  if (!isVerbose) {
+    return;
+  }
+
+  try {
+    const usage = getSessionUsage();
+    if (usage.totalCost === 0) {
+      return; // No usage to display
+    }
+
+    console.log("\n" + "=".repeat(60));
+    console.log("Session Usage Summary");
+    console.log("=".repeat(60));
+    console.log(`Total Cost: $${usage.totalCost.toFixed(6)}`);
+    console.log("");
+    console.log("Token Usage:");
+    console.log(`  Input Tokens:      ${usage.promptTokens.toLocaleString()}`);
+    console.log(
+      `  Output Tokens:     ${usage.completionTokens.toLocaleString()}`,
+    );
+
+    if (usage.promptTokensDetails?.cachedTokens) {
+      console.log(
+        `  Cache Read Tokens: ${usage.promptTokensDetails.cachedTokens.toLocaleString()}`,
+      );
+    }
+
+    if (usage.promptTokensDetails?.cacheWriteTokens) {
+      console.log(
+        `  Cache Write Tokens: ${usage.promptTokensDetails.cacheWriteTokens.toLocaleString()}`,
+      );
+    }
+
+    const totalTokens = usage.promptTokens + usage.completionTokens;
+    console.log(`  Total Tokens:      ${totalTokens.toLocaleString()}`);
+    console.log("=".repeat(60) + "\n");
+  } catch (err) {
+    logger.debug("Failed to display session usage (non-critical)", err as any);
+  }
+}
+
+/**
  * Exit the process after flushing telemetry and error reporting.
  * Use this instead of process.exit() to avoid losing metrics/logs.
  */
 export async function gracefulExit(code: number = 0): Promise<void> {
+  // Display session usage breakdown in verbose mode
+  displaySessionUsage();
+
   try {
     // Flush metrics (forceFlush + shutdown inside service)
     await telemetryService.shutdown();
