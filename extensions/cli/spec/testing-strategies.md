@@ -63,6 +63,11 @@ This document provides an overview of the different testing strategies used in t
 - [`src/ui/__tests__/TUIChat.input.test.tsx`](../src/ui/__tests__/TUIChat.input.test.tsx) - Input handling tests
 - [`src/ui/MarkdownRenderer.test.tsx`](../src/ui/MarkdownRenderer.test.tsx) - Markdown rendering tests
 
+**Test Helpers**:
+
+- [`src/ui/__tests__/TUIChat.testHelper.ts`](../src/ui/__tests__/TUIChat.testHelper.ts) - Core test utilities including `waitForCondition`
+- [`src/ui/__tests__/TUIChat.dualModeHelper.tsx`](../src/ui/__tests__/TUIChat.dualModeHelper.tsx) - Helpers for testing in local and remote modes
+
 **Test Checklist**: See [`src/ui/UI_TEST_CHECKLIST.md`](../src/ui/UI_TEST_CHECKLIST.md) for comprehensive UI testing guidelines.
 
 ### 4. E2E (End-to-End) Tests
@@ -147,3 +152,26 @@ npx vitest --coverage
 7. **Minimal mocking**: Only mock external dependencies and APIs
 8. **Test error cases**: Include negative test cases and edge conditions
 9. **Maintain test isolation**: Each test should be independent
+
+### UI Testing Best Practices
+
+When testing terminal UI components with Ink:
+
+- **Use `waitForCondition` for UI updates**: Prefer polling with `waitForCondition` over fixed delays to wait for UI state changes. This is more reliable across different environments (especially CI) and prevents flaky tests.
+
+  ```typescript
+  // ✅ Good: Poll until the expected content appears
+  let frame = "";
+  await waitForCondition(() => {
+    frame = lastFrame() ?? "";
+    return frame.includes("expected content");
+  });
+
+  // ❌ Avoid: Fixed delays are unreliable
+  await waitForNextRender();
+  const frame = lastFrame();
+  ```
+
+- **Test in both local and remote modes**: Use `testBothModes` from the dual mode helper to ensure features work consistently in both modes
+- **Wait for specific conditions**: Check for the actual content you expect rather than arbitrary timeouts
+- **Handle async rendering**: Terminal UI rendering is asynchronous; always wait for conditions before assertions
