@@ -53,26 +53,46 @@ describe("isModelCapable", () => {
   });
 
   describe("Local/Ollama models", () => {
-    test("should consider larger models as not capable", () => {
-      expect(isModelCapable("ollama", "llama2-70b")).toBe(false);
-      expect(isModelCapable("local", "codellama-34b")).toBe(false);
+    test("should consider Llama models as capable (matches llama pattern)", () => {
+      expect(isModelCapable("ollama", "llama2-70b")).toBe(true);
+      expect(isModelCapable("ollama", "llama2-7b")).toBe(true);
+      expect(isModelCapable("local", "codellama-34b")).toBe(true);
     });
 
-    test("should consider smaller models as less capable", () => {
-      expect(isModelCapable("ollama", "llama2-7b")).toBe(false);
-      expect(isModelCapable("local", "mistral-7b")).toBe(false);
+    test("should consider Mistral models as capable (matches mistral pattern)", () => {
+      expect(isModelCapable("local", "mistral-7b")).toBe(true);
+      expect(isModelCapable("ollama", "mistral-small")).toBe(true);
+    });
+
+    test("should consider non-capable local models as not capable", () => {
+      expect(isModelCapable("ollama", "falcon-7b")).toBe(false);
+      expect(isModelCapable("local", "starcoder-base")).toBe(false);
     });
   });
 
   describe("Meta/Llama models", () => {
-    test("should consider large Llama models as not capable", () => {
-      expect(isModelCapable("llama", "llama-2-70b")).toBe(false);
-      expect(isModelCapable("meta", "llama-65b")).toBe(false);
+    test("should consider Llama models as capable", () => {
+      expect(isModelCapable("openai", "Llama 3.3 70B")).toBe(true);
+      expect(isModelCapable("openai", "Llama 3.3 Nemotron 49B")).toBe(true);
+      expect(
+        isModelCapable(
+          "nvidia",
+          "nvidia/Llama-3_3-Nemotron-Super-49B-v1",
+          "nvidia/Llama-3_3-Nemotron-Super-49B-v1",
+        ),
+      ).toBe(true);
+      expect(isModelCapable("meta", "llama-3.1-70b")).toBe(true);
     });
 
-    test("should consider small Llama models as less capable", () => {
-      expect(isModelCapable("llama", "llama-2-7b")).toBe(false);
-      expect(isModelCapable("meta", "llama-13b")).toBe(false);
+    test("should consider Nemotron models as capable", () => {
+      expect(isModelCapable("nvidia", "Llama 3.3 Nemotron 49B")).toBe(true);
+      expect(isModelCapable("nvidia", "nemotron-4-340b")).toBe(true);
+    });
+
+    test("should consider Mistral models as capable", () => {
+      expect(isModelCapable("mistral", "Mistral Small 24B")).toBe(true);
+      expect(isModelCapable("mistral", "mistral-large")).toBe(true);
+      expect(isModelCapable("mistralai", "mistral-small-24b")).toBe(true);
     });
   });
 
@@ -83,12 +103,13 @@ describe("isModelCapable", () => {
   });
 
   describe("Hugging Face models", () => {
-    test("should consider code-specific models as not capable", () => {
-      expect(isModelCapable("huggingface", "codellama-instruct")).toBe(false);
-      expect(isModelCapable("huggingface", "starcoder-base")).toBe(false);
+    test("should consider Llama/Mistral models as capable even on HuggingFace", () => {
+      expect(isModelCapable("huggingface", "codellama-instruct")).toBe(true);
+      expect(isModelCapable("huggingface", "mistral-7b-instruct")).toBe(true);
     });
 
-    test("should consider general chat models as less capable", () => {
+    test("should consider non-capable models as not capable", () => {
+      expect(isModelCapable("huggingface", "starcoder-base")).toBe(false);
       expect(isModelCapable("huggingface", "falcon-7b")).toBe(false);
     });
   });
@@ -145,9 +166,11 @@ describe("isModelCapable", () => {
     });
 
     test("should consider models not capable when neither name nor model match", () => {
-      // Case where neither matches
-      expect(isModelCapable("custom", "llama-7b", "local-model")).toBe(false);
+      // Case where neither matches capable patterns
       expect(isModelCapable("custom", "falcon-7b", "random-model")).toBe(false);
+      expect(isModelCapable("custom", "unknown-model", "local-model")).toBe(
+        false,
+      );
     });
   });
 });
