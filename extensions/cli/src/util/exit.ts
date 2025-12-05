@@ -106,32 +106,32 @@ function displaySessionUsage(): void {
       return; // No usage to display
     }
 
-    console.log("\n" + "=".repeat(60));
-    console.log("Session Usage Summary");
-    console.log("=".repeat(60));
-    console.log(`Total Cost: $${usage.totalCost.toFixed(6)}`);
-    console.log("");
-    console.log("Token Usage:");
-    console.log(`  Input Tokens:      ${usage.promptTokens.toLocaleString()}`);
-    console.log(
+    logger.info("\n" + "=".repeat(60));
+    logger.info("Session Usage Summary");
+    logger.info("=".repeat(60));
+    logger.info(`Total Cost: $${usage.totalCost.toFixed(6)}`);
+    logger.info("");
+    logger.info("Token Usage:");
+    logger.info(`  Input Tokens:      ${usage.promptTokens.toLocaleString()}`);
+    logger.info(
       `  Output Tokens:     ${usage.completionTokens.toLocaleString()}`,
     );
 
     if (usage.promptTokensDetails?.cachedTokens) {
-      console.log(
+      logger.info(
         `  Cache Read Tokens: ${usage.promptTokensDetails.cachedTokens.toLocaleString()}`,
       );
     }
 
     if (usage.promptTokensDetails?.cacheWriteTokens) {
-      console.log(
+      logger.info(
         `  Cache Write Tokens: ${usage.promptTokensDetails.cacheWriteTokens.toLocaleString()}`,
       );
     }
 
     const totalTokens = usage.promptTokens + usage.completionTokens;
-    console.log(`  Total Tokens:      ${totalTokens.toLocaleString()}`);
-    console.log("=".repeat(60) + "\n");
+    logger.info(`  Total Tokens:      ${totalTokens.toLocaleString()}`);
+    logger.info("=".repeat(60) + "\n");
   } catch (err) {
     logger.debug("Failed to display session usage (non-critical)", err as any);
   }
