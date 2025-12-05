@@ -91,6 +91,20 @@ runTest(
 
 ## Helper Functions
 
+### `waitForCondition(conditionFn, timeoutMs?, intervalMs?)`
+
+**Preferred approach** for waiting on UI state changes. Polls until a condition is true:
+
+```typescript
+let frame = "";
+await waitForCondition(() => {
+  frame = renderResult.lastFrame() ?? "";
+  return frame.includes("expected content");
+});
+```
+
+This is more reliable than fixed delays, especially in CI environments. See [testing-strategies.md](../../spec/testing-strategies.md#ui-testing-best-practices) for more details.
+
 ### `sendMessage(ctx, message, waitTime?)`
 
 Sends a message and waits for it to be processed:
@@ -158,7 +172,7 @@ npm test -- --coverage
 1. **Write mode-agnostic tests by default** - Most functionality should work the same in both modes
 2. **Use helper functions** - They handle mode-specific details automatically
 3. **Test server state in remote mode** - Verify both UI and server state for comprehensive coverage
-4. **Handle async operations properly** - Use appropriate wait times and state checks
+4. **Use `waitForCondition` for UI updates** - Prefer polling with `waitForCondition` over fixed delays to avoid flaky tests
 5. **Clean up resources** - The framework handles server lifecycle automatically
 
 ## Debugging
