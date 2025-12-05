@@ -29,8 +29,9 @@ export function ToolCallDiv({
 
   const shouldShowGroupedUI = toolCallStates.length > 1 && isStreamingComplete;
   const activeCalls = toolCallStates.filter(
-    (call) => call.status !== "canceled" && call.status !== "done",
+    (call) => call.status !== "canceled",
   );
+  const pendingCalls = toolCallStates.filter((call) => call.status !== "done");
 
   const renderToolCall = (toolCallState: ToolCallState) => {
     const tool = availableTools.find(
@@ -92,7 +93,7 @@ export function ToolCallDiv({
       <div className="border-border rounded-lg border px-4 py-3 pb-0">
         <GroupedToolCallHeader
           toolCallStates={toolCallStates}
-          activeCalls={activeCalls}
+          activeCalls={pendingCalls.length > 0 ? pendingCalls : activeCalls}
           open={open}
           onToggle={() => setOpen(!open)}
         />
