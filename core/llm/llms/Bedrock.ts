@@ -40,6 +40,27 @@ interface PromptCachingMetrics {
   cacheWriteInputTokens: number;
 }
 
+/**
+ * Checks if a model supports the memory tool (Claude 4+ models only)
+ */
+function supportsMemoryTool(modelName: string | undefined): boolean {
+  if (!modelName) {
+    return false;
+  }
+
+  const normalized = modelName.toLowerCase();
+
+  const supportedModels = [
+    "claude-sonnet-4-5-20250929", // Claude Sonnet 4.5
+    "claude-sonnet-4-20250514", // Claude Sonnet 4
+    "claude-haiku-4-5-20251001", // Claude Haiku 4.5
+    "claude-opus-4-1-20250805", // Claude Opus 4.1
+    "claude-opus-4-20250514", // Claude Opus 4
+  ];
+
+  return supportedModels.some((model) => normalized.includes(model));
+}
+
 class Bedrock extends BaseLLM {
   static providerName = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
@@ -282,8 +303,13 @@ class Bedrock extends BaseLLM {
     let toolConfig: undefined | ToolConfiguration = undefined;
     const availableTools = new Set<string>();
     if (supportsTools && options.tools && options.tools.length > 0) {
-      toolConfig = {
-        tools: options.tools.map((tool) => ({
+      const isClaudeModel = options.model.includes("claude");
+
+      // For Claude models, filter out tools with a type property
+      // For other models, include all tools
+      const toolSpecs = options.tools
+        .filter((tool) => !isClaudeModel || !tool.function.type)
+        .map((tool) => ({
           toolSpec: {
             name: tool.function.name,
             description: tool.function.description,
@@ -291,12 +317,17 @@ class Bedrock extends BaseLLM {
               json: tool.function.parameters,
             },
           },
-        })),
-      } as ToolConfiguration;
-      const shouldCacheToolsConfig = this.completionOptions.promptCaching;
-      if (shouldCacheToolsConfig) {
-        toolConfig.tools!.push({ cachePoint: { type: "default" } });
+        }));
+
+      if (toolSpecs.length > 0) {
+        toolConfig = { tools: toolSpecs } as ToolConfiguration;
+        const shouldCacheToolsConfig = this.completionOptions.promptCaching;
+        if (shouldCacheToolsConfig) {
+          toolConfig.tools!.push({ cachePoint: { type: "default" } });
+        }
       }
+
+      // Add all tool names to availableTools set
       options.tools.forEach((tool) => {
         availableTools.add(tool.function.name);
       });
@@ -330,6 +361,29 @@ class Bedrock extends BaseLLM {
           .slice(0, 4),
       },
       additionalModelRequestFields: {
+        tools:
+          options.model.includes("claude") && options.tools
+            ? options.tools
+                .filter((tool) => {
+                  if (!tool.function.type) {
+                    return false;
+                  }
+                  // Check if this is a memory tool - only allow for Claude 4+ models
+                  if (tool.function.type.startsWith("memory_")) {
+                    if (!supportsMemoryTool(options.model)) {
+                      console.warn(
+                        `Bedrock: Memory tool "${tool.function.name}" (${tool.function.type}) is only supported on Claude 4+ models, skipping for model: ${options.model}`,
+                      );
+                      return false;
+                    }
+                  }
+                  return true;
+                })
+                .map((tool) => ({
+                  name: tool.function.name,
+                  type: tool.function.type,
+                }))
+            : undefined,
         thinking: options.reasoning
           ? {
               type: "enabled",
@@ -337,7 +391,10 @@ class Bedrock extends BaseLLM {
             }
           : undefined,
         anthropic_beta: options.model.includes("claude")
-          ? ["fine-grained-tool-streaming-2025-05-14"]
+          ? [
+              "fine-grained-tool-streaming-2025-05-14",
+              "context-management-2025-06-27",
+            ]
           : undefined,
       },
     };
