@@ -11,7 +11,6 @@ import { ToolPermissionServiceState } from "src/services/ToolPermissionService.j
 
 import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
-import { getTotalSessionCost } from "../session.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -20,6 +19,7 @@ import {
   ModelServiceState,
   UpdateServiceState,
 } from "../services/types.js";
+import { getTotalSessionCost } from "../session.js";
 import { logger } from "../util/logger.js";
 
 import { ActionStatus } from "./components/ActionStatus.js";

@@ -15,8 +15,8 @@ import {
   serviceContainer,
   services,
 } from "../services/index.js";
-import { posthogService } from "../telemetry/posthogService.js";
 import { trackSessionUsage } from "../session.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   executeToolCall,

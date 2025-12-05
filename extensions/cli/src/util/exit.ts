@@ -1,7 +1,7 @@
 import type { ChatHistoryItem } from "core/index.js";
 
-import { getSessionUsage, getTotalSessionCost } from "../session.js";
 import { sentryService } from "../sentry.js";
+import { getSessionUsage, getTotalSessionCost } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
 import { getGitDiffSnapshot } from "./git.js";
