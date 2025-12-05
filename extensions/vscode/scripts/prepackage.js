@@ -293,9 +293,11 @@ void (async () => {
   };
 
   const packageToInstall = lancedbPackagesByTarget[target];
+  let packageDirName;
+  let expectedPackagePath;
   if (packageToInstall) {
-    const packageDirName = packageToInstall.split("/").pop();
-    const expectedPackagePath = path.join(
+    packageDirName = packageToInstall.split("/").pop();
+    expectedPackagePath = path.join(
       __dirname,
       "..",
       "node_modules",
@@ -308,6 +310,11 @@ void (async () => {
         `[info] Installing LanceDB binary for ${target}: ${packageToInstall}`,
       );
       await installAndCopyNodeModules(packageToInstall, "@lancedb");
+      if (!fs.existsSync(expectedPackagePath)) {
+        throw new Error(
+          `Failed to install LanceDB binary at ${expectedPackagePath}`,
+        );
+      }
     } else {
       console.log(
         `[info] LanceDB binary already present for ${target} at ${expectedPackagePath}`,
@@ -388,6 +395,27 @@ void (async () => {
   );
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
+
+  if (packageDirName && expectedPackagePath) {
+    const expectedOutPackagePath = path.join(
+      __dirname,
+      "..",
+      "out",
+      "node_modules",
+      "@lancedb",
+      packageDirName,
+    );
+    if (!fs.existsSync(expectedOutPackagePath)) {
+      fs.mkdirSync(expectedOutPackagePath, { recursive: true });
+      fs.cpSync(expectedPackagePath, expectedOutPackagePath, {
+        recursive: true,
+        dereference: true,
+      });
+      console.log(
+        `[info] Ensured LanceDB binary copied to ${expectedOutPackagePath}`,
+      );
+    }
+  }
 
   // Copy over any worker files
   fs.cpSync(
