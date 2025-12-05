@@ -235,7 +235,7 @@ describe("LLM", () => {
       model: "gemini-2.0-flash-exp",
       apiKey: process.env.GEMINI_API_KEY,
     }),
-    { skip: true }, // Temporarily skipped due to @google/genai getReader issue
+    { skip: false },
   );
   testLLM(
     new Mistral({
