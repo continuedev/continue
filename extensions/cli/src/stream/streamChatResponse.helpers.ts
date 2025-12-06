@@ -1,4 +1,5 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
+/* eslint-disable max-lines */
 
 import type { ToolStatus, Usage } from "core/index.js";
 import { calculateRequestCost } from "core/llm/utils/calculateRequestCost.js";

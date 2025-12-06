@@ -193,7 +193,7 @@ interface ProcessStreamingResponseOptions {
 }
 
 // Process a single streaming response and return whether we need to continue
-// eslint-disable-next-line max-statements
+// eslint-disable-next-line max-statements, complexity
 export async function processStreamingResponse(
   options: ProcessStreamingResponseOptions,
 ): Promise<{
