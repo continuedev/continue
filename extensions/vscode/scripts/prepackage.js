@@ -35,6 +35,15 @@ const args = process.argv;
 if (args[2] === "--target") {
   target = args[3];
 }
+if (!target) {
+  const envTarget =
+    process.env.CONTINUE_VSCODE_TARGET ||
+    process.env.CONTINUE_BUILD_TARGET ||
+    process.env.VSCODE_TARGET;
+  if (envTarget && typeof envTarget === "string") {
+    target = envTarget.trim();
+  }
+}
 
 let os;
 let arch;
@@ -405,14 +414,20 @@ void (async () => {
       "@lancedb",
       packageDirName,
     );
-    if (!fs.existsSync(expectedOutPackagePath)) {
+    const expectedOutIndexPath = path.join(expectedOutPackagePath, "index.node");
+    if (!fs.existsSync(expectedOutIndexPath)) {
+      rimrafSync(expectedOutPackagePath);
       fs.mkdirSync(expectedOutPackagePath, { recursive: true });
       fs.cpSync(expectedPackagePath, expectedOutPackagePath, {
         recursive: true,
         dereference: true,
       });
       console.log(
-        `[info] Ensured LanceDB binary copied to ${expectedOutPackagePath}`,
+        `[info] Copied LanceDB binary to ${expectedOutPackagePath}`,
+      );
+    } else {
+      console.log(
+        `[info] LanceDB binary already copied at ${expectedOutIndexPath}`,
       );
     }
   }
