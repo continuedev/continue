@@ -322,6 +322,15 @@ export function createSession(history: ChatHistoryItem[] = []): Session {
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    usage: {
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    },
   };
   SessionManager.getInstance().setSession(session);
   return session;
@@ -553,6 +562,15 @@ export function startNewSession(history: ChatHistoryItem[] = []): Session {
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    usage: {
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    },
   };
 
   manager.setSession(newSession);
