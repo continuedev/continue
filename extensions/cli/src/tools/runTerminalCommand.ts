@@ -48,7 +48,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       timeout: {
         type: "number",
         description:
-          "Optional timeout in seconds (max 600). Only use this parameter when a command takes too long and times out with the default 120 second timeout.",
+          "Optional timeout in seconds (max 600). Use this parameter for commands that take longer than the default 180 second timeout.",
       },
     },
   },
