@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { ToolExtras } from "../..";
 import * as walkDirModule from "../../indexing/walkDir";
-import { lsToolImpl, resolveLsToolDirPath } from "./lsTool";
+import { lsToolImpl } from "./lsTool";
 
 vi.mock("../../indexing/walkDir");
 
@@ -11,30 +11,6 @@ const mockExtras = {
     getWorkspaceDirs: async () => ["dir1"],
   },
 } as unknown as ToolExtras;
-
-test("resolveLsToolDirPath handles undefined path", () => {
-  expect(resolveLsToolDirPath(undefined)).toBe("/");
-});
-
-test("resolveLsToolDirPath handles empty string", () => {
-  expect(resolveLsToolDirPath("")).toBe("/");
-});
-
-test("resolveLsToolDirPath handles dot", () => {
-  expect(resolveLsToolDirPath(".")).toBe("/");
-});
-
-test("resolveLsToolDirPath handles dot relative", () => {
-  expect(resolveLsToolDirPath("./hi")).toBe("./hi");
-});
-
-test("resolveLsToolDirPath normalizes backslashes to forward slashes", () => {
-  expect(resolveLsToolDirPath("path\\to\\dir")).toBe("path/to/dir");
-});
-
-test("resolveLsToolDirPath preserves forward slashes", () => {
-  expect(resolveLsToolDirPath("path/to/dir")).toBe("path/to/dir");
-});
 
 test("lsToolImpl truncates output when entries exceed MAX_LS_TOOL_LINES", async () => {
   // Generate more than MAX_LS_TOOL_LINES entries (which is 200)
