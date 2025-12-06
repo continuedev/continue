@@ -414,7 +414,10 @@ void (async () => {
       "@lancedb",
       packageDirName,
     );
-    const expectedOutIndexPath = path.join(expectedOutPackagePath, "index.node");
+    const expectedOutIndexPath = path.join(
+      expectedOutPackagePath,
+      "index.node",
+    );
     if (!fs.existsSync(expectedOutIndexPath)) {
       rimrafSync(expectedOutPackagePath);
       fs.mkdirSync(expectedOutPackagePath, { recursive: true });
@@ -422,9 +425,7 @@ void (async () => {
         recursive: true,
         dereference: true,
       });
-      console.log(
-        `[info] Copied LanceDB binary to ${expectedOutPackagePath}`,
-      );
+      console.log(`[info] Copied LanceDB binary to ${expectedOutPackagePath}`);
     } else {
       console.log(
         `[info] LanceDB binary already copied at ${expectedOutIndexPath}`,
