@@ -1671,6 +1671,14 @@
       "created_at": "2025-12-04T21:40:15Z",
       "repoId": 644686905,
       "pullRequestNo": 9012
+    },
+    {
+      "name": "beDmitry",
+      "id": 114160146,
+      "comment_id": 3620494006,
+      "created_at": "2025-12-06T14:43:54Z",
+      "repoId": 644686905,
+      "pullRequestNo": 9052
     }
   ]
 }
