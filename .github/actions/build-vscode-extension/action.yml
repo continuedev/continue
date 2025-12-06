@@ -111,8 +111,11 @@ runs:
 
     - name: Prepackage the extension
       shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
       run: |
         cd extensions/vscode
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
         npm run prepackage -- --target ${{ steps.set-target.outputs.target }}
 
     - name: Re-install esbuild
@@ -146,14 +149,20 @@ runs:
 
     - name: Package extension (build artifacts)
       shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
       run: |
         cd extensions/vscode
-        npm run package
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
+        npm run package -- --target ${{ steps.set-target.outputs.target }}
 
     - name: Package extension (.vsix files)
       shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
       run: |
         cd extensions/vscode
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
         if [ "${{ inputs.pre-release }}" = "true" ]; then
           npx vsce package --pre-release --no-dependencies --target ${{ steps.set-target.outputs.target }}
         else

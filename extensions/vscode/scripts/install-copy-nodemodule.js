@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ncp = require("ncp").ncp;
+const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util");
 
@@ -64,7 +65,11 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     });
   } finally {
     // Clean up the temporary directory
-    // rimrafSync(tempDir);
+    try {
+      rimrafSync(tempDir);
+    } catch (err) {
+      console.warn("[warn] Failed to remove temp directory", tempDir, err);
+    }
 
     // Return to the original directory
     process.chdir(currentDir);
