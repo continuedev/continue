@@ -114,6 +114,9 @@ export class HistoryManager {
     if (session.chatModelTitle !== undefined) {
       orderedSession.chatModelTitle = session.chatModelTitle;
     }
+    if (session.usage !== undefined) {
+      orderedSession.usage = session.usage;
+    }
 
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),

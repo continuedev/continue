@@ -82,6 +82,15 @@ describe("SessionManager", () => {
         title: "Untitled Session",
         workspaceDirectory: process.cwd(),
         history: [],
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalCost: 0,
+          promptTokensDetails: {
+            cachedTokens: 0,
+            cacheWriteTokens: 0,
+          },
+        },
       });
     });
 
@@ -102,6 +111,15 @@ describe("SessionManager", () => {
         title: "Untitled Session",
         workspaceDirectory: process.cwd(),
         history: [],
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalCost: 0,
+          promptTokensDetails: {
+            cachedTokens: 0,
+            cacheWriteTokens: 0,
+          },
+        },
       });
     });
 
