@@ -3,7 +3,7 @@
   "system_setup_commands": [
     "npm i -g @continuedev/cli@latest",
     "sudo apt update",
-    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb",
+    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb docker.io docker-compose",
     "sudo mkdir -p /opt/google/chrome",
     "sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome"
   ],
