@@ -5,7 +5,7 @@
     "npm i -g @continuedev/cli@latest",
     "sudo apt update",
     "printf '#!/bin/sh\\nexit 101\\n' | sudo tee /usr/sbin/policy-rc.d > /dev/null && sudo chmod +x /usr/sbin/policy-rc.d",
-    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb",
+    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb docker-compose-v2",
     "sudo rm /usr/sbin/policy-rc.d",
     "sudo mkdir -p /opt/google/chrome",
     "sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome",
