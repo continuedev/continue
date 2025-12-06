@@ -272,10 +272,6 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
-  /** Optional: per-session UI mode (chat/agent/plan/background) */
-  mode?: MessageModes;
-  /** Optional: title of the selected chat model for this session */
-  chatModelTitle?: string | null;
 }
 
 export interface BaseSessionMetadata {
@@ -348,6 +344,7 @@ export interface ToolCall {
     name: string;
     arguments: string;
   };
+  responsesOutputItemId?: string;
 }
 
 export interface ToolCallDelta {
@@ -357,6 +354,7 @@ export interface ToolCallDelta {
     name?: string;
     arguments?: string;
   };
+  responsesOutputItemId?: string;
 }
 
 export interface ToolResultChatMessage {

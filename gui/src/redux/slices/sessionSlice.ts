@@ -87,9 +87,12 @@ export function handleToolCallsInMessage(
 
     // Initialize tool call states for each filtered tool call in the message
     // Each tool call gets its own state to track generation/execution progress
-    lastItem.toolCallStates = filteredToolCalls.map((toolCallDelta) =>
-      addToolCallDeltaToState(toolCallDelta, undefined),
-    );
+    lastItem.toolCallStates = filteredToolCalls.map((toolCallDelta) => {
+      const state = addToolCallDeltaToState(toolCallDelta, undefined);
+      state.toolCall.responsesOutputItemId =
+        (message.metadata?.responsesOutputItemId as string) ?? undefined;
+      return state;
+    });
 
     // Update the message's toolCalls array to reflect the processed tool calls
     // We can safely cast because we verified the role above
@@ -116,6 +119,7 @@ export function handleToolCallsInMessage(
 function applyToolCallDelta(
   toolCallDelta: ToolCallDelta,
   toolCallStates: ToolCallState[],
+  responsesOutputItemId: string,
 ): void {
   // Find existing state by matching toolCallId - this ensures we update
   // the correct tool call even when multiple tool calls are being streamed
@@ -150,6 +154,7 @@ function applyToolCallDelta(
     toolCallStates[existingStateIndex] = updatedState;
   } else {
     // Add new tool call state for a newly discovered tool call
+    updatedState.toolCall.responsesOutputItemId = responsesOutputItemId;
     toolCallStates.push(updatedState);
   }
 }
@@ -181,7 +186,11 @@ export function handleStreamingToolCallUpdates(
 
     // Process each filtered tool call delta, matching by ID to update the correct state
     filteredToolCalls.forEach((toolCallDelta) => {
-      applyToolCallDelta(toolCallDelta, updatedToolCallStates);
+      applyToolCallDelta(
+        toolCallDelta,
+        updatedToolCallStates,
+        message.metadata?.responsesOutputItemId as string,
+      );
     });
 
     // Replace the entire tool call states array with the updated version
@@ -693,9 +702,6 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
-        if (payload.mode) {
-          state.mode = payload.mode;
-        }
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;

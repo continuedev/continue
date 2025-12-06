@@ -63,6 +63,8 @@ export function addToolCallDeltaToState(
         name: mergedName,
         arguments: mergedArgs,
       },
+      responsesOutputItemId:
+        currentCall?.responsesOutputItemId,
     },
     toolCallId: callId,
     parsedArgs,
