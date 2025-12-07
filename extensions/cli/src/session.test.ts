@@ -10,6 +10,7 @@ import {
   createSession,
   getCurrentSession,
   hasSession,
+  loadOrCreateSessionById,
   loadSession,
   saveSession,
   startNewSession,
@@ -36,17 +37,24 @@ vi.mock("./util/logger.js", () => ({
     error: vi.fn(),
   },
 }));
-vi.mock("../../core/util/history.js", () => ({
-  default: {
-    save: vi.fn(),
-    load: vi.fn(() => ({
-      sessionId: "test-session-id",
-      title: "Test Session",
-      workspaceDirectory: "/test/workspace",
-      history: [],
-    })),
-    list: vi.fn(() => []),
-  },
+const mockHistoryManager: any = vi.hoisted(() => ({
+  save: vi.fn((session: any) => {
+    // Mimic writing the session payload to disk so expectations on fs still work
+    fs.writeFileSync(
+      `/home/test/.continue/sessions/${session.sessionId}.json`,
+      JSON.stringify(session),
+    );
+  }),
+  load: vi.fn(() => ({
+    sessionId: "test-session-id",
+    title: "Test Session",
+    workspaceDirectory: "/test/workspace",
+    history: [],
+  })),
+  list: vi.fn(() => []),
+}));
+vi.mock("core/util/history.js", () => ({
+  default: mockHistoryManager,
 }));
 
 const mockFs = vi.mocked(fs);
@@ -71,6 +79,9 @@ describe("SessionManager", () => {
     mockFs.readFileSync.mockReturnValue("[]");
     mockFs.readdirSync.mockReturnValue([]);
     mockFs.statSync.mockReturnValue({ mtime: new Date() } as any);
+
+    // Ensure each test starts with a fresh session
+    clearSession();
   });
 
   describe("getCurrentSession", () => {
@@ -144,6 +155,13 @@ describe("SessionManager", () => {
       const currentSession = getCurrentSession();
 
       expect(currentSession).toBe(session);
+    });
+
+    it("should use provided sessionId when supplied", () => {
+      const session = createSession([], "custom-session-id");
+
+      expect(session.sessionId).toBe("custom-session-id");
+      expect(uuidv4).not.toHaveBeenCalled();
     });
   });
 
@@ -232,6 +250,42 @@ describe("SessionManager", () => {
       // After modification, system messages are filtered out
       expect(savedData.history).toHaveLength(1);
       expect(savedData.history[0].message.role).toBe("user");
+    });
+  });
+
+  describe("loadOrCreateSessionById", () => {
+    it("should load an existing session and set it as current", () => {
+      const existingSession: Session = {
+        sessionId: "existing-id",
+        title: "Existing",
+        workspaceDirectory: "/test/workspace",
+        history: [
+          {
+            message: { role: "user", content: "hi" },
+            contextItems: [],
+          },
+        ],
+      };
+
+      mockHistoryManager.load.mockReturnValue(existingSession);
+
+      const session = loadOrCreateSessionById("existing-id");
+
+      expect(session).toBe(existingSession);
+      expect(mockHistoryManager.load).toHaveBeenCalledWith("existing-id");
+      expect(getCurrentSession()).toBe(existingSession);
+    });
+
+    it("should create a new session when none exists for the id", () => {
+      mockHistoryManager.load.mockImplementation(() => {
+        throw new Error("not found");
+      });
+
+      const session = loadOrCreateSessionById("new-id");
+
+      expect(session.sessionId).toBe("new-id");
+      expect(session.history).toEqual([]);
+      expect(getCurrentSession()).toBe(session);
     });
   });
 

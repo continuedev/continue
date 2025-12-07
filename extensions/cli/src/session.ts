@@ -316,9 +316,12 @@ export function loadSession(): Session | null {
 /**
  * Create a new session
  */
-export function createSession(history: ChatHistoryItem[] = []): Session {
+export function createSession(
+  history: ChatHistoryItem[] = [],
+  sessionId?: string,
+): Session {
   const session: Session = {
-    sessionId: uuidv4(),
+    sessionId: sessionId ?? uuidv4(),
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
@@ -524,6 +527,24 @@ export function loadSessionById(sessionId: string): Session | null {
     logger.error("Error loading session by ID:", error);
     return null;
   }
+}
+
+/**
+ * Load an existing session by ID or create a new one with that ID.
+ * Useful for long-lived processes (e.g., cn serve) that need to
+ * preserve chat history across restarts for the same storage/agent id.
+ */
+export function loadOrCreateSessionById(
+  sessionId: string,
+  history: ChatHistoryItem[] = [],
+): Session {
+  const existing = loadSessionById(sessionId);
+  if (existing) {
+    SessionManager.getInstance().setSession(existing);
+    return existing;
+  }
+
+  return createSession(history, sessionId);
 }
 
 /**
