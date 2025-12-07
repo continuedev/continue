@@ -23,7 +23,11 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession, getCompleteStateSnapshot } from "../session.js";
+import {
+  createSession,
+  getCompleteStateSnapshot,
+  loadOrCreateSessionById,
+} from "../session.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -142,7 +146,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     });
   }
 
-  const session = createSession(initialHistory);
+  const trimmedId = options.id?.trim();
+  const session =
+    trimmedId && trimmedId.length > 0
+      ? loadOrCreateSessionById(trimmedId, initialHistory)
+      : createSession(initialHistory);
 
   // Align ChatHistoryService with server session and enable remote mode
   try {
