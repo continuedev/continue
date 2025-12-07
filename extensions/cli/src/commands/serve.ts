@@ -451,11 +451,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         })() ?? [];
 
       if (shouldQueueInitialPrompt(existingHistory, initialPrompt)) {
-        console.log(chalk.dim("\nProcessing initial prompt..."));
+        logger.info(chalk.dim("\nProcessing initial prompt..."));
         await messageQueue.enqueueMessage(initialPrompt);
         processMessages(state, llmApi);
       } else {
-        console.log(
+        logger.info(
           chalk.dim(
             "Skipping initial prompt because existing conversation history was found.",
           ),
