@@ -16,6 +16,7 @@
   "devDependencies": {
     "@typescript-eslint/parser": "^8.40.0",
     "concurrently": "^9.1.2",
+    "eslint": "^8",
     "eslint-plugin-import": "^2.29.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",

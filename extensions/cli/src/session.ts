@@ -6,6 +6,8 @@ import type {
   BaseSessionMetadata,
   ChatHistoryItem,
   Session,
+  SessionUsage,
+  Usage,
 } from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
@@ -75,6 +77,15 @@ export function getSessionFilePath(): string {
 class SessionManager {
   private static instance: SessionManager;
   private currentSession: Session | null = null;
+  private sessionUsage: SessionUsage = {
+    totalCost: 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    promptTokensDetails: {
+      cachedTokens: 0,
+      cacheWriteTokens: 0,
+    },
+  };
 
   private constructor() {}
 
@@ -97,6 +108,7 @@ class SessionManager {
         title: DEFAULT_SESSION_TITLE,
         workspaceDirectory: process.cwd(),
         history: [],
+        usage: { ...this.sessionUsage },
       };
     }
     return this.currentSession;
@@ -104,6 +116,7 @@ class SessionManager {
 
   setSession(session: Session): void {
     this.currentSession = session;
+    this.syncUsageFromSession();
   }
 
   updateHistory(history: ChatHistoryItem[]): void {
@@ -120,6 +133,15 @@ class SessionManager {
 
   clear(): void {
     this.currentSession = null;
+    this.sessionUsage = {
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    };
   }
 
   hasSession(): boolean {
@@ -128,6 +150,63 @@ class SessionManager {
 
   getSessionId(): string {
     return this.getCurrentSession().sessionId;
+  }
+
+  trackUsage(cost: number, usage: Usage): void {
+    // Accumulate cost
+    this.sessionUsage.totalCost += cost;
+
+    // Accumulate token counts
+    this.sessionUsage.promptTokens += usage.promptTokens;
+    this.sessionUsage.completionTokens += usage.completionTokens;
+
+    // Accumulate cache tokens if present
+    if (usage.promptTokensDetails?.cachedTokens) {
+      this.sessionUsage.promptTokensDetails =
+        this.sessionUsage.promptTokensDetails || {};
+      this.sessionUsage.promptTokensDetails.cachedTokens =
+        (this.sessionUsage.promptTokensDetails.cachedTokens || 0) +
+        usage.promptTokensDetails.cachedTokens;
+    }
+
+    if (usage.promptTokensDetails?.cacheWriteTokens) {
+      this.sessionUsage.promptTokensDetails =
+        this.sessionUsage.promptTokensDetails || {};
+      this.sessionUsage.promptTokensDetails.cacheWriteTokens =
+        (this.sessionUsage.promptTokensDetails.cacheWriteTokens || 0) +
+        usage.promptTokensDetails.cacheWriteTokens;
+    }
+
+    // Update session and persist
+    const session = this.getCurrentSession();
+    session.usage = { ...this.sessionUsage };
+    saveSession(); // Persist immediately
+  }
+
+  getTotalCost(): number {
+    return this.sessionUsage.totalCost;
+  }
+
+  getUsage(): SessionUsage {
+    return { ...this.sessionUsage };
+  }
+
+  private syncUsageFromSession(): void {
+    const session = this.currentSession;
+    if (session?.usage) {
+      this.sessionUsage = { ...session.usage };
+    } else {
+      // Migrate old sessions that only had totalCost
+      this.sessionUsage = {
+        totalCost: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        promptTokensDetails: {
+          cachedTokens: 0,
+          cacheWriteTokens: 0,
+        },
+      };
+    }
   }
 }
 
@@ -237,12 +316,24 @@ export function loadSession(): Session | null {
 /**
  * Create a new session
  */
-export function createSession(history: ChatHistoryItem[] = []): Session {
+export function createSession(
+  history: ChatHistoryItem[] = [],
+  sessionId?: string,
+): Session {
   const session: Session = {
-    sessionId: uuidv4(),
+    sessionId: sessionId ?? uuidv4(),
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    usage: {
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    },
   };
   SessionManager.getInstance().setSession(session);
   return session;
@@ -439,6 +530,24 @@ export function loadSessionById(sessionId: string): Session | null {
 }
 
 /**
+ * Load an existing session by ID or create a new one with that ID.
+ * Useful for long-lived processes (e.g., cn serve) that need to
+ * preserve chat history across restarts for the same storage/agent id.
+ */
+export function loadOrCreateSessionById(
+  sessionId: string,
+  history: ChatHistoryItem[] = [],
+): Session {
+  const existing = loadSessionById(sessionId);
+  if (existing) {
+    SessionManager.getInstance().setSession(existing);
+    return existing;
+  }
+
+  return createSession(history, sessionId);
+}
+
+/**
  * Update the current session's history
  */
 export function updateSessionHistory(history: ChatHistoryItem[]): void {
@@ -474,8 +583,38 @@ export function startNewSession(history: ChatHistoryItem[] = []): Session {
     title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
+    usage: {
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    },
   };
 
   manager.setSession(newSession);
   return newSession;
+}
+
+/**
+ * Track cost for the current session
+ */
+export function trackSessionUsage(cost: number, usage: Usage): void {
+  SessionManager.getInstance().trackUsage(cost, usage);
+}
+
+/**
+ * Get the total cost for the current session
+ */
+export function getTotalSessionCost(): number {
+  return SessionManager.getInstance().getTotalCost();
+}
+
+/**
+ * Get the full usage statistics for the current session
+ */
+export function getSessionUsage(): SessionUsage {
+  return SessionManager.getInstance().getUsage();
 }
