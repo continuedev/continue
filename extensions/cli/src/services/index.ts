@@ -5,6 +5,7 @@ import { logger } from "../util/logger.js";
 import { AgentFileService } from "./AgentFileService.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
+import { BackgroundProcessService } from "./BackgroundProcessService.js";
 import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
@@ -43,6 +44,7 @@ const storageSyncService = new StorageSyncService();
 const agentFileService = new AgentFileService();
 const toolPermissionService = new ToolPermissionService();
 const systemMessageService = new SystemMessageService();
+const backgroundProcessService = new BackgroundProcessService();
 
 /**
  * Initialize all services and register them with the service container
@@ -296,6 +298,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies for now, but could depend on SESSION in future
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.BACKGROUND_PROCESSES,
+    () => backgroundProcessService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -357,6 +365,7 @@ export const services = {
   storageSync: storageSyncService,
   agentFile: agentFileService,
   toolPermissions: toolPermissionService,
+  backgroundProcesses: backgroundProcessService,
 } as const;
 
 // Export the service container for advanced usage

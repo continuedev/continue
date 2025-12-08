@@ -16,6 +16,10 @@ export function addCommonOptions(command: Command): Command {
     .option("--verbose", "Enable verbose logging")
     .option("--beta-status-tool", "Enable beta status tool")
     .option(
+      "--beta-persistent-terminal-tools",
+      "Enable beta background process tools (BashOutput, KillProcess, ListProcesses)",
+    )
+    .option(
       "--rule <rule>",
       "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
       (value: string, previous: string[] | undefined) => {
@@ -104,6 +108,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "auto",
     "tools",
     "verbose",
+    "betaPersistentTerminalTools",
     "rule",
     "mcp",
     "model",

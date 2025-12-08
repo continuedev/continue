@@ -1,6 +1,8 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { sentryService } from "../sentry.js";
+import { serviceContainer, SERVICE_NAMES } from "../services/index.js";
+import { BackgroundProcessService } from "../services/BackgroundProcessService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
@@ -144,6 +146,16 @@ function displaySessionUsage(): void {
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
   displaySessionUsage();
+
+  // Clean up background processes
+  try {
+    const bgService = await serviceContainer.get<BackgroundProcessService>(
+      SERVICE_NAMES.BACKGROUND_PROCESSES,
+    );
+    await bgService.cleanup();
+  } catch (err) {
+    logger.debug("Background process cleanup error (ignored)", err as any);
+  }
 
   try {
     // Flush metrics (forceFlush + shutdown inside service)
