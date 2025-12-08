@@ -17,17 +17,18 @@ The Continue CLI should emit metrics that provide insights into:
 
 ### Environment Variables
 
-| Environment Variable            | Description                                               | Example Values                       |
-| ------------------------------- | --------------------------------------------------------- | ------------------------------------ |
-| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables OTEL telemetry collection (required)              | `1`                                  |
-| `OTEL_METRICS_EXPORTER`         | Metrics exporter type(s) (comma-separated)                | `console`, `otlp`, `prometheus`      |
-| `OTEL_LOGS_EXPORTER`            | Logs/events exporter type(s) (comma-separated)            | `console`, `otlp`                    |
-| `OTEL_EXPORTER_OTLP_PROTOCOL`   | Protocol for OTLP exporter (all signals)                  | `grpc`, `http/json`, `http/protobuf` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`   | OTLP collector endpoint (all signals)                     | `http://localhost:4317`              |
-| `OTEL_EXPORTER_OTLP_HEADERS`    | Authentication headers for OTLP                           | `Authorization=Bearer token`         |
-| `OTEL_METRIC_EXPORT_INTERVAL`   | Export interval in milliseconds (default: 60000)          | `5000`, `60000`                      |
-| `OTEL_LOGS_EXPORT_INTERVAL`     | Logs export interval in milliseconds (default: 5000)      | `1000`, `10000`                      |
-| `OTEL_LOG_USER_PROMPTS`         | Enable logging of user prompt content (default: disabled) | `1` to enable                        |
+| Environment Variable            | Description                                                     | Example Values                       |
+| ------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| `CONTINUE_METRICS_ENABLED`      | Enables OTEL telemetry collection (preferred, takes precedence) | `0` to disable, `1` to enable        |
+| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables OTEL telemetry collection (legacy, lower precedence)    | `0` to disable, `1` to enable        |
+| `OTEL_METRICS_EXPORTER`         | Metrics exporter type(s) (comma-separated)                      | `console`, `otlp`, `prometheus`      |
+| `OTEL_LOGS_EXPORTER`            | Logs/events exporter type(s) (comma-separated)                  | `console`, `otlp`                    |
+| `OTEL_EXPORTER_OTLP_PROTOCOL`   | Protocol for OTLP exporter (all signals)                        | `grpc`, `http/json`, `http/protobuf` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`   | OTLP collector endpoint (all signals)                           | `http://localhost:4317`              |
+| `OTEL_EXPORTER_OTLP_HEADERS`    | Authentication headers for OTLP                                 | `Authorization=Bearer token`         |
+| `OTEL_METRIC_EXPORT_INTERVAL`   | Export interval in milliseconds (default: 60000)                | `5000`, `60000`                      |
+| `OTEL_LOGS_EXPORT_INTERVAL`     | Logs export interval in milliseconds (default: 5000)            | `1000`, `10000`                      |
+| `OTEL_LOG_USER_PROMPTS`         | Enable logging of user prompt content (default: disabled)       | `1` to enable                        |
 
 ### Metrics Cardinality Control
 

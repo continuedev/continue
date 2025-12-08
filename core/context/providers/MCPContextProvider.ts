@@ -80,17 +80,15 @@ class MCPContextProvider extends BaseContextProvider {
 
     return await Promise.all(
       contents.map(async (resource) => {
-        const content = resource.text;
-        if (typeof content !== "string") {
+        if (!("text" in resource) || typeof resource.text !== "string") {
           throw new Error(
             "Continue currently only supports text resources from MCP",
           );
         }
-
         return {
           name: resource.uri,
           description: resource.uri,
-          content,
+          content: resource.text,
           uri: {
             type: "url",
             value: resource.uri,

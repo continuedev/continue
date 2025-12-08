@@ -6,13 +6,13 @@ import OpenRouter from "./OpenRouter";
 describe("OpenRouter Anthropic Caching", () => {
   it("should detect Anthropic models correctly", () => {
     const openRouter = new OpenRouter({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiKey: "test-key",
     });
 
     // Test private method through modifyChatBody
     const body: ChatCompletionCreateParams = {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       messages: [],
     };
 
@@ -22,7 +22,7 @@ describe("OpenRouter Anthropic Caching", () => {
 
   it("should add cache_control to user messages when caching is enabled", () => {
     const openRouter = new OpenRouter({
-      model: "anthropic/claude-3.5-sonnet",
+      model: "anthropic/claude-sonnet-4.5",
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: true,
@@ -31,7 +31,7 @@ describe("OpenRouter Anthropic Caching", () => {
     });
 
     const body: ChatCompletionCreateParams = {
-      model: "anthropic/claude-3.5-sonnet",
+      model: "anthropic/claude-sonnet-4.5",
       messages: [
         { role: "user", content: "First message" },
         { role: "assistant", content: "Response" },
@@ -71,7 +71,7 @@ describe("OpenRouter Anthropic Caching", () => {
 
   it("should correctly handle cache_control with system messages present", () => {
     const openRouter = new OpenRouter({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: true,
@@ -80,7 +80,7 @@ describe("OpenRouter Anthropic Caching", () => {
     });
 
     const body: ChatCompletionCreateParams = {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       messages: [
         { role: "system", content: "You are a helpful assistant" },
         { role: "user", content: "First user message" },
@@ -137,7 +137,7 @@ describe("OpenRouter Anthropic Caching", () => {
 
   it("should add cache_control to system message when caching is enabled", () => {
     const openRouter = new OpenRouter({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: false,
@@ -146,7 +146,7 @@ describe("OpenRouter Anthropic Caching", () => {
     });
 
     const body: ChatCompletionCreateParams = {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       messages: [
         { role: "system", content: "You are a helpful assistant" },
         { role: "user", content: "Hello" },
@@ -176,7 +176,7 @@ describe("OpenRouter Anthropic Caching", () => {
 
   it("should handle array content correctly", () => {
     const openRouter = new OpenRouter({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: true,
@@ -185,7 +185,7 @@ describe("OpenRouter Anthropic Caching", () => {
     });
 
     const body: ChatCompletionCreateParams = {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-5",
       messages: [
         {
           role: "user",

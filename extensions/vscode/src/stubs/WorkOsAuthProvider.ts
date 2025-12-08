@@ -206,11 +206,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
   public static useOnboardingUri: boolean = false;
   get redirectUri() {
-    if (WorkOsAuthProvider.useOnboardingUri) {
-      const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/auth/${env.uriScheme}-redirect`;
-      return url.toString();
-    }
     return this.ideRedirectUri;
   }
 

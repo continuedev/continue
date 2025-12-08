@@ -107,7 +107,7 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Import Apple certificate
-        uses: apple-actions/import-codesign-certs@v5
+        uses: apple-actions/import-codesign-certs@v6
         with:
           keychain: ${{ github.run_id }}
           keychain-password: ${{ github.run_id }}
@@ -491,7 +491,7 @@ jobs:
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
-        uses: JetBrains/qodana-action@v2025.2.2
+        uses: JetBrains/qodana-action@v2025.2.3
         with:
           cache-default-branch-only: true
 

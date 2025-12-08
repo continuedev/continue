@@ -14,39 +14,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         }
       } catch (e) {}
 
-      return [
-        "claude-3-5",
-        "claude-3.5",
-        "claude-3-7",
-        "claude-3.7",
-        "claude-sonnet-4",
-        "claude-4-sonnet",
-        "gpt-4",
-        "o3",
-        "gemini",
-        "claude-opus-4",
-        "gemma",
-      ].some((part) => model.toLowerCase().startsWith(part));
+      return ["claude", "gpt-4", "o3", "gemini", "gemma"].some((part) =>
+        model.toLowerCase().startsWith(part),
+      );
     },
     anthropic: (model) => {
-      const lower = model.toLowerCase();
-      if (
-        [
-          "claude-3-5",
-          "claude-3.5",
-          "claude-3-7",
-          "claude-3.7",
-          "claude-sonnet-4",
-          "claude-4-sonnet",
-          "claude-opus-4",
-        ].some((part) => lower.startsWith(part))
-      ) {
+      if (model.includes("claude-2") || model.includes("claude-instant")) {
+        return false;
+      }
+      if (["claude"].some((part) => model.toLowerCase().startsWith(part))) {
         return true;
       }
-      if (lower.includes("claude") && lower.includes("4-5")) {
-        return true;
-      }
-
       return false;
     },
     azure: (model) => {
@@ -125,15 +103,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       );
     },
     bedrock: (model) => {
+      if (model.includes("claude-2") || model.includes("claude-instant")) {
+        return false;
+      }
       if (
         [
-          "claude-3-5-sonnet",
-          "claude-3.5-sonnet",
-          "claude-3-7-sonnet",
-          "claude-3.7-sonnet",
-          "claude-sonnet-4",
-          "claude-4-sonnet",
-          "claude-opus-4",
+          "claude",
           "nova-lite",
           "nova-pro",
           "nova-micro",
@@ -280,8 +255,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o3",
         "openai/o4",
         "openai/gpt-oss",
-        "anthropic/claude-3",
-        "anthropic/claude-4",
+        "anthropic/claude",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
@@ -391,7 +365,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
   const recs: RegExp[][] = [
     [/o[134]/],
     [/deepseek/, /r1|reasoner/],
-    [/gemini/, /2\.5|3/, /pro/],
+    [/gemini/, /2\.5/, /pro/],
+    [/gemini/, /3-pro/],
     [/gpt/, /-5|5\.1/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
