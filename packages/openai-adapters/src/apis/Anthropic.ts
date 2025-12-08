@@ -456,7 +456,7 @@ export class AnthropicApi implements BaseLlmApi {
 
   private getHeaders(): Record<string, string> {
     const enableCaching = this.config?.cachingStrategy !== "none";
-    return getAnthropicHeaders(this.config.apiKey, enableCaching);
+    return getAnthropicHeaders(this.config.apiKey, enableCaching, this.apiBase);
   }
 
   async completionNonStream(
