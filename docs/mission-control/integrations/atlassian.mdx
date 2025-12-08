@@ -1,20 +1,21 @@
 ---
 title: "Atlassian Integration"
-description: "Connect Jira and Confluence to automate project management and documentation with Continue Agents"
+description: "Connect Jira, Confluence, and Compass to automate project management with Continue Agents"
 ---
 
 ## Overview
 
-Connect Atlassian products (Jira and Confluence) to Continue Mission Control to enable agents to manage issues, track projects, and maintain documentation. When Atlassian is enabled, Continue can automate ticket creation, sync documentation, and streamline development workflows.
+Connect Jira, Confluence, and Compass to Continue Mission Control to enable agents to manage issues, search tickets, summarize pages, and bulk-process tasks using natural language. When Atlassian is enabled, Continue can automatically translate technical code changes into business-friendly updates, keeping stakeholders informed.
 
-<Card title="What You Can Do with Atlassian Integration" icon="atlassian">
+<Card title="What You Can Do with Atlassian Integration" icon="diagram-project">
 
-  - Automatically create and update Jira issues from code changes
-  - Sync documentation between Confluence and your codebase
-  - Generate release notes and project updates
-  - Track development progress across projects
-  - Automate sprint planning and backlog grooming
-  - Create PRs linked to Jira tickets
+  - Automatically update Jira tickets with business-friendly summaries on PR merge
+  - Search issues and create tickets using natural language
+  - Summarize Confluence pages and documentation
+  - Bulk-process tasks across multiple tickets
+  - Triage incoming issues automatically
+  - Generate documentation from code changes
+  - Track development progress with stakeholder-friendly language
 
 </Card>
 
@@ -24,43 +25,75 @@ Connect Atlassian products (Jira and Confluence) to Continue Mission Control to 
 
   <Step title="Navigate to Integrations">
 
-    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
+    Go to your [Atlassian Integration Settings](https://hub.continue.dev/integrations/atlassian).
 
   </Step>
 
   <Step title="Connect Atlassian">
 
-    Click "Connect" next to Atlassian. You'll need the following credentials:
-
-    - **Atlassian Domain**: Your Atlassian domain (e.g., `your-company.atlassian.net`)
-    - **Email**: Your Atlassian account email
-    - **API Token**: Generate from Atlassian account settings
+    Click Setup -> "Connect" next to Atlassian. 
 
   </Step>
+  <Step title="Authorize Continue">
 
-  <Step title="Generate API Token">
-
-    To create an API token:
-    1. Go to [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
-    2. Click "Create API token"
-    3. Give it a descriptive name (e.g., "Continue Mission Control")
-    4. Copy the token immediately (it won't be shown again)
-
-  </Step>
-
-  <Step title="Add Credentials to Mission Control">
-
-    Paste your domain, email, and API token into the integration form and click "Create Connection"
-
+    In the Atlassian authorization screen:
+    1. Log into your Atlassian account
+    2. Review the requested permissions
+    3. Click "Authorize" to complete the connection
   </Step>
 
 </Steps>
 
-<Tip>
 
-  **Security Best Practice**: Create a dedicated API token for Continue rather than reusing existing tokens. This makes it easier to revoke access if needed.
+ ## Workflows
 
-</Tip>
+### Update Jira Tickets
+
+**Trigger**: On PR merge  
+**Description**: Connect Jira, Confluence, and Compass to your agents. Search issues, create tickets, summarize pages, and bulk-process tasks with natural language.
+
+When a pull request is merged, this workflow automatically:
+
+1. **Extracts Jira Ticket ID** - Finds the ticket reference from:
+   - PR title (e.g., `[PROJ-123] Add feature`)
+   - Branch name (e.g., `feature/PROJ-123-description`)
+   - PR description or comments
+
+2. **Analyzes Code Changes** - Reviews the merged PR to identify:
+   - What changed (files, features, components)
+   - Why it matters (business value, problem solved)
+   - Impact (user-facing changes, performance improvements)
+   - Risk level (Low/Medium/High based on scope)
+
+3. **Creates Business Summary** - Translates technical changes into clear, non-technical language:
+   - Focuses on **outcomes over implementation**
+   - Highlights **business value** and user benefits
+   - Uses **plain language** avoiding technical jargon
+   - Explains who benefits and how
+
+4. **Updates Jira Ticket** - Posts a formatted comment with:
+   - Business-friendly summary of what was accomplished
+   - Key changes in business terms
+   - Impact on users or stakeholders
+   - Technical metadata (files changed, merge details, PR link)
+
+5. **Comments on PR** - Adds a link back to the updated Jira ticket
+
+<Card title="Why This Matters" icon="users">
+
+  Technical code changes are often difficult for stakeholders to understand. This workflow bridges the gap between development and business by:
+  - Keeping product managers informed without technical details
+  - Providing business stakeholders with clear progress updates
+  - Reducing manual ticket updates for developers
+  - Creating a clear audit trail of work completed
+
+</Card>
+
+<Info>
+
+  **Smart Translation**: The agent automatically converts technical terms into business language. For example, "Refactored authentication module" becomes "Users can now stay logged in longer without interruptions."
+
+</Info>
 
 ## Use Cases
 
@@ -156,51 +189,31 @@ Monitor development progress and blockers:
 
 ### Code-to-Ticket Linking
 
-Maintain traceability between code and requirements:
+Process multiple tickets with natural language commands:
 
-<Card title="Ticket Linker Agent" icon="link">
+<Card title="Bulk Ticket Processor" icon="list-check">
 
-  **Task Example**: "Review recent PRs and ensure they're linked to appropriate Jira tickets"
-
+  **Task Example**: "Update all tickets tagged 'needs-review' with current status from linked PRs"
   **What the Agent Does**:
-  - Scans merged PRs without Jira ticket references
-  - Analyzes PR content to find related tickets
-  - Adds Jira ticket links to PRs and vice versa
-  - Reports PRs that may need ticket creation
 
-  **Run in Mission Control**: Run daily or after PR merges
 
+
+
+  - Searches Jira using natural language queries
+
+  **Run in Mission Control**: Run manually or on schedule
 </Card>
 
 ## Running Atlassian Agents in Mission Control
 
-You can run Atlassian-connected agents in two ways:
+## Running Supabase Agents in Mission Control
 
-### 1. Manual Tasks
+You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
 
-Trigger agents on-demand for project management:
-
-1. Go to [Mission Control Agents](https://hub.continue.dev/hub?type=agents)
-2. Select or create an Atlassian-enabled agent
-3. Click "Run Agent" and provide your task description
-4. Monitor progress and review results in real-time
-
-**Example Tasks:**
-- "Summarize all critical bugs from the last sprint"
-- "Create architecture decision records in Confluence for recent technical decisions"
-- "Update the project roadmap based on current velocity"
-
-### 2. Automated Workflows
-
-Set up agents to run automatically:
-
-- **Scheduled**: Run daily standup summaries, weekly backlog reviews
-- **Triggered**: Execute on Jira events (new critical bug, sprint completion)
-- **Webhook**: Integrate with CI/CD to update tickets on deployments
 
 <Tip>
 
-  Start with manual tasks to refine your Jira queries and Confluence formatting, then convert successful patterns to automated workflows.
+  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
 
 </Tip>
 
@@ -219,20 +232,63 @@ Combine Atlassian with GitHub for complete development workflow automation:
   <Step title="Create a Unified Development Agent">
 
     Build an agent that:
-    - Creates PRs for Jira tickets
+    - Extracts Jira ticket IDs from PRs automatically
     - Updates ticket status based on PR state
-    - Links code changes to requirements
-    - Updates Confluence with technical decisions
+    - Translates code changes into business summaries
+    - Posts bidirectional links between Jira and GitHub
 
   </Step>
 
-  <Step title="Set Up End-to-End Workflow">
+  <Step title="Set Up Automated Workflow">
 
-    Configure the agent to run throughout the development lifecycle
+    Configure the "Update Jira Tickets" workflow to run on every PR merge
 
   </Step>
 
 </Steps>
+
+## Optional Workflow Enhancements
+
+Extend the base workflow with these powerful features:
+
+### Smart Tagging
+
+Automatically add Jira labels based on code changes:
+
+- `frontend-update` - UI/UX changes detected
+- `backend-update` - API or database changes
+- `bugfix` - Resolves bugs or issues
+- `feature` - New functionality added
+- `security` - Security improvements
+- `performance` - Performance optimizations
+
+### Stakeholder Mentions
+
+Tag relevant people in Jira based on components modified:
+
+- Payment processing changes → `@finance-team`
+- User interface changes → `@product-manager`
+- Security updates → `@security-lead`
+- API modifications → `@api-architect`
+
+### Release Notes Generation
+
+Accumulate business-friendly summaries for release documentation:
+
+- Store formatted summaries in `.release-notes/{version}/`
+- Automatically compile summaries into Confluence release pages
+- Generate customer-facing changelog from Jira updates
+- Include impact metrics and user benefits
+
+### Metrics Tracking
+
+Log metadata for reporting and analytics:
+
+- Time from ticket creation to PR merge
+- Number of files changed per ticket
+- Business impact category (high/medium/low)
+- Stakeholder engagement (comments, mentions)
+- Risk level distribution across releases
 
 ## Monitoring Agent Activity
 
