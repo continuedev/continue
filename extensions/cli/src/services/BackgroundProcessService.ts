@@ -209,6 +209,24 @@ export class BackgroundProcessService extends BaseService<BackgroundProcessServi
     child.on("error", (error) => {
       logger.debug(`Background process ${id} error: ${error.message}`);
       processInfo.stderrBuffer.append(`Process error: ${error.message}`);
+
+      // Mark as exited since error event may fire without close event
+      // (e.g., when process fails to spawn)
+      processInfo.exitCode = 1;
+      processInfo.exitTime = Date.now();
+      processInfo.status = "exited";
+      processInfo.child = null;
+
+      // Update state
+      const updatedProcesses = new Map(this.currentState.processes);
+      updatedProcesses.set(id, processInfo);
+      this.setState({
+        ...this.currentState,
+        processes: updatedProcesses,
+      });
+
+      // Emit event
+      this.emit("processExited", { id, exitCode: 1 });
     });
 
     // Add to registry
