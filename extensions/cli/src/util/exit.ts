@@ -1,5 +1,4 @@
 import type { ChatHistoryItem } from "core/index.js";
-
 import type { BackgroundProcessService } from "../services/BackgroundProcessService.js";
 
 import { sentryService } from "../sentry.js";
