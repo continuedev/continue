@@ -1,20 +1,21 @@
 ---
 title: "Netlify Integration"
-description: "Automate deployments and site management with Continue Agents connected to Netlify"
+description: "Give your agents access to Netlify's API and CLI to manage deployments and optimize website performance"
 ---
 
 ## Overview
 
-Connect Netlify to Continue Mission Control to enable agents to manage deployments, monitor site performance, and automate your continuous deployment pipeline. When Netlify is enabled, Continue can trigger builds, manage environments, and respond to deployment events.
+Connect Netlify to Continue Mission Control to give your agents access to Netlify's API and CLI. Create projects, deploy applications, configure domains, and manage infrastructure with natural language. When Netlify is enabled, Continue can analyze bundle sizes, audit performance, and prevent performance regressions.
 
-<Card title="What You Can Do with Netlify Integration" icon="globe">
+<Card title="What You Can Do with Netlify Integration" icon="bolt">
 
-  - Automatically trigger and monitor deployments
-  - Manage environment variables and build settings
-  - Create and test deploy previews
-  - Monitor site performance and uptime
-  - Automate rollback on errors or failed tests
-  - Generate deployment reports and notifications
+  - Run Lighthouse audits on PR previews and production
+  - Compare bundle sizes and analyze performance regressions
+  - Automatically detect configuration issues (minification, caching, tree-shaking)
+  - Block PRs that introduce critical performance problems
+  - Generate detailed performance reports with actionable fixes
+  - Create projects and manage domains with natural language
+  - Configure build settings and environment variables
 
 </Card>
 
@@ -61,113 +62,292 @@ Connect Netlify to Continue Mission Control to enable agents to manage deploymen
 
 </Tip>
 
+## Workflows
+
+### Optimize Website Performance
+
+**Trigger**: On PR merge  
+**Description**: Run Lighthouse audits on PR preview and production to compare performance
+
+When a pull request is merged, this performance-focused workflow automatically:
+
+1. **Retrieves Deployment Information** - Uses Netlify MCP to get:
+   - Production deploy URL and metadata
+   - Deploy preview URL for the PR branch
+   - Build artifacts and configuration
+
+2. **Analyzes Bundle Sizes** - Compares JavaScript and CSS bundles:
+   - Downloads and measures all asset files
+   - Calculates total bundle size for both deploys
+   - Identifies largest individual files
+   - Detects unminified or bloated assets
+
+3. **Reviews Build Configuration** - Examines:
+   - `vite.config.ts` or `webpack.config.js` for minification settings
+   - `netlify.toml` for cache headers and build commands
+   - `package.json` for redundant or oversized dependencies
+
+4. **Identifies Performance Issues** - Classifies problems by severity:
+   - 🔴 **Critical**: Minification disabled, bundle size >50% increase, no caching
+   - ⚠️ **Warning**: No code splitting, large chunks >500KB, 20-50% bundle increase
+   - ℹ️ **Info**: Suboptimal configurations, bundle size less than 20% increase
+
+5. **Generates Actionable Report** - Posts to PR with:
+   - Bundle size comparison table
+   - Root cause analysis with file references and line numbers
+   - Code fixes that can be copy-pasted
+   - Merge recommendation (Approved/Review Needed/Blocked)
+   - Expected improvements from each fix
+
+<Card title="Why This Matters" icon="gauge-high">
+
+  Performance regressions often slip through code review because:
+  - Bundle size increases aren't visible in diffs
+  - Configuration errors (disabled minification) go unnoticed
+  - Redundant dependencies accumulate over time
+  
+  This workflow catches these issues automatically before they reach production.
+
+</Card>
+
+<Info>
+
+  **Smart Analysis**: The agent doesn't just report bundle sizes—it analyzes build configurations, identifies root causes, and provides specific code fixes with line numbers.
+
+</Info>
+
+#### Example Performance Report
+
+After analyzing a deploy preview, the agent posts a comprehensive PR comment like this:
+
+```markdown
+## 📊 Netlify Performance Analysis
+
+### Deploy Information
+- **Production**: https://site.netlify.app
+  - Deployed: 2h ago
+  - Commit: abc1234
+- **Preview**: https://deploy-preview-123--site.netlify.app
+  - Deployed: 5m ago
+  - Branch: feature-branch-name
+  - Commit: def5678
+
+### 📦 Bundle Size Analysis
+
+| Asset Type | Production | Preview | Change | Status |
+|------------|-----------|---------|--------|--------|
+| JavaScript | 245 KB | 671 KB | +426 KB (+174%) | 🔴 Critical |
+| CSS | 12 KB | 12 KB | 0 KB | ✅ |
+| Images | 180 KB | 180 KB | 0 KB | ✅ |
+| **Total** | **437 KB** | **863 KB** | **+426 KB (+97%)** | 🔴 Critical |
+
+### 🔍 Root Cause Analysis
+
+**🔴 Critical Issue 1: Minification Disabled**
+- **File**: `frontend/vite.config.ts:20`
+- **Problem**: Build has `minify: false`
+- **Impact**: 671 KB unminified JavaScript (should be ~200 KB minified)
+- **Fix**:
+  \```typescript
+  // frontend/vite.config.ts
+  build: {
+    minify: 'terser',  // Enable minification
+  }
+  \```
+- **Expected improvement**: -70% bundle size
+
+**🔴 Critical Issue 2: Redundant Dependencies**
+- **Files**: `frontend/package.json:22-29`
+- **Problem**: Multiple date libraries bundled
+  - lodash: 528 KB
+  - moment: 232 KB
+  - date-fns: 76 KB
+  - dayjs: 7 KB
+- **Fix**: Remove redundant libraries:
+  \```bash
+  npm uninstall lodash moment date-fns
+  \```
+- **Expected improvement**: -800 KB bundle
+
+### 🎯 Verdict: 🔴 BLOCK - Critical Performance Regression
+
+**Summary**: This PR introduces severe performance issues:
+- Bundle size increased by 426 KB (+174%)
+- No minification enabled
+- Multiple redundant dependencies
+
+**Recommendation**: Do not merge until critical issues are resolved.
+
+### ✅ Action Plan
+
+**Must fix before merge:**
+1. Enable minification in vite.config.ts
+2. Remove lodash, moment, date-fns (keep only dayjs)
+3. Enable tree-shaking
+4. Configure proper Cache-Control headers
+
+**Expected results after fixes:**
+- Bundle: ~250 KB (+5 KB from production, acceptable)
+- All assets properly cached
+- Fast initial and repeat visits
+```
+
+### Performance Issue Classification
+
+The agent categorizes issues by severity:
+
+<Accordion title="🔴 Critical - Block Merge">
+
+  **Issues that must be fixed before merging:**
+  - Minification disabled (`minify: false`)
+  - Tree-shaking disabled (`treeshake: false`)
+  - No caching headers (`Cache-Control: no-cache`)
+  - Production source maps enabled
+  - Bundle size increase >50%
+  - Redundant dependencies (lodash + underscore, moment + date-fns + dayjs)
+
+  **Action**: Agent recommends blocking the merge
+
+</Accordion>
+
+<Accordion title="⚠️ Warning - Review Required">
+
+  **Issues that need attention:**
+  - No code splitting (single large bundle)
+  - Suboptimal cache headers (max-age too low)
+  - Large individual chunks (>500KB)
+  - Unoptimized images
+  - Bundle size increase 20-50%
+
+  **Action**: Agent recommends careful review before merging
+
+</Accordion>
+
+<Accordion title="ℹ️ Info - Optimization Opportunities">
+
+  **Non-blocking improvements:**
+  - Could use better code splitting
+  - Modern browser features could replace polyfills
+  - CSS not extracted/split
+  - Bundle size increase <20%
+
+  **Action**: Agent approves merge but suggests optimizations
+
+</Accordion>
+
 ## Use Cases
 
-### Automated Deployment Management
+### Infrastructure as Code
 
-Create agents that manage your deployment pipeline:
+Manage Netlify infrastructure with natural language:
 
-<Card title="Deployment Manager Agent" icon="rocket">
+<Card title="Infrastructure Manager" icon="server">
 
-  **Task Example**: "Deploy the staging branch to preview environment and run smoke tests"
+  **Task Example**: "Create a new Netlify site for the marketing-site repo with custom domain marketing.company.com"
 
   **What the Agent Does**:
-  - Triggers Netlify build for specified branch
-  - Monitors build progress and logs
-  - Runs automated tests on deploy preview
-  - Reports results and preview URL
+  - Creates new Netlify project via API
+  - Connects to specified Git repository
+  - Configures build settings and commands
+  - Sets up custom domain and SSL
+  - Configures environment variables
 
-  **Run in Mission Control**: Trigger on PR creation or manual request
+  **Run in Mission Control**: Run manually when creating new projects
 
 </Card>
 
-### Environment Configuration
+### Build Configuration Optimization
 
-Automate environment variable management:
+Automatically optimize build settings:
 
-<Card title="Config Sync Agent" icon="sliders">
+<Card title="Build Optimizer" icon="wrench">
 
-  **Task Example**: "Sync environment variables from .env.example to all Netlify sites"
+  **Task Example**: "Audit all Netlify sites for missing cache headers and suboptimal build configs"
 
   **What the Agent Does**:
-  - Reads environment variable definitions
-  - Updates Netlify site settings
-  - Verifies variables are set correctly
-  - Triggers rebuild if necessary
+  - Reviews `netlify.toml` and build settings
+  - Checks cache header configurations
+  - Identifies missing optimizations
+  - Generates recommended configuration changes
+  - Can apply fixes automatically
 
-  **Run in Mission Control**: Run after config updates or schedule periodic audits
+  **Run in Mission Control**: Run monthly or after adding new sites
 
 </Card>
 
-### Performance Monitoring
+### Performance Auditing
 
-Track and respond to site performance issues:
+Prevent performance regressions before deployment:
 
-<Card title="Performance Guard Agent" icon="gauge-high">
+<Card title="Performance Auditor" icon="gauge-high">
 
-  **Task Example**: "Monitor production deployment and rollback if Core Web Vitals degrade"
+  **Task Example**: "Analyze bundle sizes and configurations, block PRs with critical performance issues"
 
   **What the Agent Does**:
-  - Tracks deployment performance metrics
-  - Compares against baseline thresholds
-  - Automatically rolls back if issues detected
-  - Creates incident report with details
+  - Compares preview and production bundle sizes
+  - Detects disabled minification or tree-shaking
+  - Identifies redundant dependencies (lodash + underscore, multiple date libraries)
+  - Checks cache configuration
+  - Posts detailed report with fixes to PR
+  - Recommends approval, review, or blocking merge
 
-  **Run in Mission Control**: Set up as continuous monitoring for production
+  **Run in Mission Control**: Triggered automatically on PR merge
 
 </Card>
 
-### Deploy Preview Testing
+### Dependency Analysis
 
-Automate testing of deploy previews:
+Identify and fix problematic dependencies:
 
-<Card title="Preview Tester Agent" icon="vial">
+<Card title="Dependency Auditor" icon="magnifying-glass">
 
-  **Task Example**: "Run visual regression tests on deploy preview and comment results on PR"
+  **Task Example**: "Find redundant or oversized dependencies across all projects"
 
   **What the Agent Does**:
-  - Waits for deploy preview to be ready
-  - Executes test suite against preview URL
-  - Captures screenshots and differences
-  - Posts results as PR comment
+  - Scans `package.json` files in all Netlify sites
+  - Identifies duplicate functionality (multiple date/utility libraries)
+  - Finds oversized packages (>100KB)
+  - Suggests lightweight alternatives
+  - Calculates potential bundle size savings
 
-  **Run in Mission Control**: Trigger on deploy preview creation
+  **Run in Mission Control**: Run quarterly for dependency cleanup
 
 </Card>
 
-### Site Health Monitoring
+### Continuous Performance Monitoring
 
-Proactively monitor site availability and health:
+Track performance trends over time:
 
-<Card title="Site Monitor Agent" icon="heart-pulse">
+<Card title="Performance Tracker" icon="chart-line">
 
-  **Task Example**: "Check all production sites every hour and create alerts for downtime or errors"
+  **Task Example**: "Generate a performance trend report for the last 30 deploys"
 
   **What the Agent Does**:
-  - Pings production sites to verify availability
-  - Checks for broken links or 500 errors
-  - Monitors SSL certificate expiration
-  - Creates incidents for issues found
+  - Queries deploy history via Netlify MCP
+  - Tracks bundle size over time
+  - Identifies gradual performance degradation
+  - Highlights deploysthat introduced regressions
+  - Generates visualization of trends
 
-  **Run in Mission Control**: Schedule hourly health checks
+  **Run in Mission Control**: Schedule weekly for ongoing monitoring
 
 </Card>
 
-### Automated Rollback
+### Domain and SSL Management
 
-Implement intelligent rollback strategies:
+Manage domains using natural language:
 
-<Card title="Smart Rollback Agent" icon="rotate-left">
+<Card title="Domain Manager" icon="globe">
 
-  **Task Example**: "Monitor error rates after deployment and rollback if errors exceed 1%"
+  **Task Example**: "Add www.example.com to my site and configure SSL"
 
   **What the Agent Does**:
-  - Tracks error metrics post-deployment
-  - Analyzes error patterns and severity
-  - Triggers rollback to previous version if threshold exceeded
-  - Notifies team with incident details
+  - Configures custom domains via Netlify API
+  - Sets up SSL certificates automatically
+  - Configures DNS records and redirects
+  - Verifies domain setup and SSL status
 
-  **Run in Mission Control**: Set up as post-deployment monitoring
+  **Run in Mission Control**: Run manually when adding domains
 
 </Card>
 
@@ -193,13 +373,13 @@ Trigger agents on-demand for deployment operations:
 
 Set up agents to run automatically:
 
-- **Event-triggered**: Execute on Git push, PR creation, or deployment completion
-- **Scheduled**: Run daily site audits or weekly performance reviews
-- **Threshold-based**: Trigger on metric anomalies or build failures
+- **PR-triggered**: Audit performance when pull requests are merged
+- **Scheduled**: Run weekly bundle size audits across all sites
+- **Manual**: Analyze specific deploys or troubleshoot performance issues
 
 <Tip>
 
-  Start with manual deployment tasks to validate your workflow, then automate repetitive deployment patterns and monitoring tasks.
+  Start with manual performance audits on specific PRs to refine your thresholds, then enable automated workflows to catch all performance regressions.
 
 </Tip>
 
@@ -257,9 +437,9 @@ Track your agent's deployment automation:
 
 </Accordion>
 
-<Accordion title="Build triggers not working">
+<Accordion title="Deploy not ready">
 
-  **Problem**: Agent can't trigger Netlify builds
+  **Problem**: Deploy preview is still building when agent tries to analyze
 
   **Solutions**:
   - Verify you have deploy permissions for the site
@@ -269,15 +449,27 @@ Track your agent's deployment automation:
 
 </Accordion>
 
-<Accordion title="Environment variable updates failing">
+<Accordion title="No deploys found">
 
-  **Problem**: Can't update site environment variables
+  **Problem**: Agent can't find deploy preview for the branch
 
   **Solutions**:
-  - Confirm you have admin access to the site
-  - Check variable name format (no spaces or special chars)
-  - Ensure values are properly escaped
-  - Verify API token has write permissions
+  - Verify branch name is correct
+  - Check that PR has triggered a Netlify build
+  - Ensure deploy previews are enabled in Netlify settings
+  - Confirm the repository is connected to Netlify
+
+</Accordion>
+
+<Accordion title="Bundle analysis failures">
+
+  **Problem**: Agent can't download or analyze bundles
+
+  **Solutions**:
+  - Verify deploy URLs are accessible
+  - Check for authentication requirements on preview
+  - Ensure assets are being generated correctly
+  - Review build logs for errors
 
 </Accordion>
 
