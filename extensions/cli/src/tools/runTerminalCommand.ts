@@ -5,8 +5,7 @@ import {
   type ToolPolicy,
 } from "@continuedev/terminal-security";
 
-import { serviceContainer, SERVICE_NAMES } from "../services/index.js";
-import { BackgroundProcessService } from "../services/BackgroundProcessService.js";
+import type { BackgroundProcessService } from "../services/BackgroundProcessService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -109,6 +108,9 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         return "Error: Background process execution requires the --beta-persistent-terminal-tools flag. Please restart with this flag enabled.";
       }
 
+      const { serviceContainer, SERVICE_NAMES } = await import(
+        "../services/index.js"
+      );
       const service = await serviceContainer.get<BackgroundProcessService>(
         SERVICE_NAMES.BACKGROUND_PROCESSES,
       );
