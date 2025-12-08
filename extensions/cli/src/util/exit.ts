@@ -1,5 +1,4 @@
 import type { ChatHistoryItem } from "core/index.js";
-import type { BackgroundProcessService } from "../services/BackgroundProcessService.js";
 
 import { sentryService } from "../sentry.js";
 import { getSessionUsage } from "../session.js";
@@ -151,7 +150,7 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     const { serviceContainer, SERVICE_NAMES } = await import(
       "../services/index.js"
     );
-    const bgService = await serviceContainer.get<BackgroundProcessService>(
+    const bgService = await serviceContainer.get(
       SERVICE_NAMES.BACKGROUND_PROCESSES,
     );
     await bgService.cleanup();
