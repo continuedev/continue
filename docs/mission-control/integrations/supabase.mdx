@@ -341,41 +341,6 @@ You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) o
 
 </Tip>
 
-## Integration with GitHub
-
-Combine Supabase with GitHub for complete database security automation:
-
-<Steps>
-
-  <Step title="Connect Both Integrations">
-
-    Enable both Supabase and GitHub integrations in Mission Control
-
-  </Step>
-
-  <Step title="Create a Security Pipeline">
-
-    Build an agent that:
-    - Monitors PRs for database changes
-    - Audits RLS policies automatically
-    - Generates security fixes
-    - Commits migrations to the PR branch
-    - Posts detailed audit reports
-
-  </Step>
-
-  <Step title="Set Up Automated Auditing">
-
-    Configure the agent to run automatically on all PRs that modify:
-    - Migration files
-    - Database queries
-    - Schema definitions
-    - Supabase client usage
-
-  </Step>
-
-</Steps>
-
 ## Common RLS Policy Patterns
 
 The agent recognizes and implements these standard security patterns:
@@ -436,15 +401,6 @@ FOR SELECT USING (
   (auth.uid() = user_id OR is_published = true)
 );
 ```
-
-## Monitoring Agent Activity
-
-Track your agent's database security performance:
-
-1. **View in Mission Control**: See all agent runs and security fixes
-2. **Check PR Comments**: Review detailed audit reports on each PR
-3. **Verify Migrations**: Ensure generated SQL follows best practices
-4. **Monitor Metrics**: Track security gap trends over time
 
 ## Troubleshooting
 
