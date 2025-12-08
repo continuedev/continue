@@ -10,7 +10,12 @@
     "sudo mkdir -p /opt/google/chrome",
     "sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome",
     "curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash",
-    "sudo apt-get install -y infisical"
+    "sudo apt-get install -y infisical",
+    "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg",
+    "sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg",
+    "echo 'deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null",
+    "sudo apt update",
+    "sudo apt install -y gh"
   ],
   "launch_parameters": {
     "launch_commands": [
