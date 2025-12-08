@@ -145,6 +145,7 @@ export const SERVICE_NAMES = {
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
+  BACKGROUND_PROCESSES: "backgroundProcesses",
 } as const;
 
 /**

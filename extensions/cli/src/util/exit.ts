@@ -145,6 +145,19 @@ export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
   displaySessionUsage();
 
+  // Clean up background processes
+  try {
+    const { serviceContainer, SERVICE_NAMES } = await import(
+      "../services/index.js"
+    );
+    const bgService: any = await serviceContainer.get(
+      SERVICE_NAMES.BACKGROUND_PROCESSES,
+    );
+    await bgService.cleanup();
+  } catch (err) {
+    logger.debug("Background process cleanup error (ignored)", err as any);
+  }
+
   try {
     // Flush metrics (forceFlush + shutdown inside service)
     await telemetryService.shutdown();

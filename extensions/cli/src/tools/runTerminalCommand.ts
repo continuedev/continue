@@ -5,6 +5,7 @@ import {
   type ToolPolicy,
 } from "@continuedev/terminal-security";
 
+import type { BackgroundProcessService } from "../services/BackgroundProcessService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -14,7 +15,10 @@ import {
 import { Tool } from "./types.js";
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
-function getShellCommand(command: string): { shell: string; args: string[] } {
+export function getShellCommand(command: string): {
+  shell: string;
+  args: string[];
+} {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
     return {
@@ -50,6 +54,11 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         description:
           "Optional timeout in seconds (max 600). Use this parameter for commands that take longer than the default 180 second timeout.",
       },
+      run_in_background: {
+        type: "boolean",
+        description:
+          "Run command in background and return immediately. Use BashOutput tool to monitor output. Useful for long-running processes like dev servers.",
+      },
     },
   },
   readonly: false,
@@ -83,10 +92,33 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
   run: async ({
     command,
     timeout,
+    run_in_background,
   }: {
     command: string;
     timeout?: number;
+    run_in_background?: boolean;
   }): Promise<string> => {
+    // If background mode, delegate to service
+    if (run_in_background) {
+      // Check if beta flag is enabled
+      const isBetaEnabled = process.argv.includes(
+        "--beta-persistent-terminal-tools",
+      );
+      if (!isBetaEnabled) {
+        return "Error: Background process execution requires the --beta-persistent-terminal-tools flag. Please restart with this flag enabled.";
+      }
+
+      const { serviceContainer, SERVICE_NAMES } = await import(
+        "../services/index.js"
+      );
+      const service = await serviceContainer.get<BackgroundProcessService>(
+        SERVICE_NAMES.BACKGROUND_PROCESSES,
+      );
+      const result = await service.startProcess(command, process.cwd());
+      return result.message;
+    }
+
+    // Existing foreground execution logic
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);

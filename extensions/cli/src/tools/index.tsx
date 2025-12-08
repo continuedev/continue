@@ -19,10 +19,13 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
 import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
+import { bashOutputTool } from "./bashOutput.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
+import { killProcessTool } from "./killProcess.js";
 import { listFilesTool } from "./listFiles.js";
+import { listProcessesTool } from "./listProcesses.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
@@ -50,6 +53,13 @@ function getAgentIdFromArgs(): string | undefined {
     return args[idIndex + 1];
   }
   return undefined;
+}
+
+/**
+ * Check if the --beta-persistent-terminal-tools flag is enabled
+ */
+function isBetaPersistentTerminalToolsEnabled(): boolean {
+  return process.argv.includes("--beta-persistent-terminal-tools");
 }
 
 // Base tools that are always available
@@ -80,6 +90,12 @@ export async function getAllAvailableTools(
   const agentId = getAgentIdFromArgs();
   if (agentId) {
     tools.push(reportFailureTool);
+  }
+
+  // Add background process tools if beta flag is enabled
+  if (isBetaPersistentTerminalToolsEnabled()) {
+    tools.push(bashOutputTool, killProcessTool, listProcessesTool);
+    logger.debug("Beta persistent terminal tools enabled");
   }
 
   // If model is capable, exclude editTool in favor of multiEditTool
