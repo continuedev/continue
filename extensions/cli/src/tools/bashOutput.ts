@@ -57,7 +57,7 @@ export const bashOutputTool: Tool = {
         const regex = new RegExp(filter);
         stdout = stdout.filter((line) => regex.test(line));
         stderr = stderr.filter((line) => regex.test(line));
-      } catch (e) {
+      } catch {
         return `Error: Invalid regex pattern: ${filter}`;
       }
     }

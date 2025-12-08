@@ -1,8 +1,8 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { sentryService } from "../sentry.js";
-import { serviceContainer, SERVICE_NAMES } from "../services/index.js";
 import { BackgroundProcessService } from "../services/BackgroundProcessService.js";
+import { serviceContainer, SERVICE_NAMES } from "../services/index.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
