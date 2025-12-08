@@ -38,11 +38,11 @@ When background processes are enabled, the following tools become available to t
 
 The existing `Bash` tool gains a new `run_in_background` parameter:
 
-```typescript
-Bash({
-  command: "npm run dev",
-  run_in_background: true,
-});
+```json
+{
+  "command": "npm run dev",
+  "run_in_background": true
+}
 // Returns: "Background process started with ID 1..."
 ```
 
@@ -50,11 +50,11 @@ Bash({
 
 Read buffered output from a background process:
 
-```typescript
-BashOutput({
-  bash_id: 1,
-  filter: "Local:.*http://localhost", // Optional regex filter
-});
+```json
+{
+  "bash_id": 1,
+  "filter": "Local:.*http://localhost"  // Optional regex filter
+}
 // Returns filtered output showing server URL
 ```
 
@@ -66,8 +66,8 @@ BashOutput({
 
 List all running background processes:
 
-```typescript
-ListProcesses();
+```json
+{}
 // Returns list of active processes with IDs, commands, and status
 ```
 
@@ -75,8 +75,10 @@ ListProcesses();
 
 Terminate a background process:
 
-```typescript
-KillProcess({ bash_id: 1 });
+```json
+{
+  "bash_id": 1
+}
 // Returns confirmation of process termination
 ```
 
@@ -90,10 +92,10 @@ cn chat --beta-persistent-terminal-tools "start the dev server and tell me when 
 
 The agent can:
 
-1. Start the server with `Bash({ command: "npm run dev", run_in_background: true })`
-2. Poll for ready signal with `BashOutput({ bash_id: 1, filter: "ready" })`
+1. Start the server in the background
+2. Poll for ready signal using `BashOutput` with a filter pattern
 3. Continue with other tasks once the server is running
-4. Clean up with `KillProcess({ bash_id: 1 })` when done
+4. Clean up the process when done using `KillProcess`
 
 ### Running Tests Against a Live Server
 
@@ -132,9 +134,8 @@ The agent can start multiple background processes simultaneously and monitor the
 
 ### Lifecycle
 
-- Processes are spawned using Node.js `spawn`
-- Exit codes are tracked and reported
-- Automatic cleanup on CLI exit via `gracefulExit()` handler
+- Exit codes are tracked and reported when processes terminate
+- Automatic cleanup on CLI exit ensures no orphaned processes
 - No persistence across CLI sessions
 
 ## Limitations
