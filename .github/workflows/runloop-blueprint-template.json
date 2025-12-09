@@ -1,5 +1,5 @@
 {
-  "name": "cn-test",
+  "name": "cn",
   "dockerfile": "FROM runloop:runloop/universal-ubuntu-24.04-x86_64-dnd",
   "system_setup_commands": [
     "npm i -g @continuedev/cli@latest",
