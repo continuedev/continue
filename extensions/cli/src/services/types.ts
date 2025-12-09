@@ -125,6 +125,11 @@ export interface AgentFileServiceState {
   parsedRules: ReturnType<typeof parseAgentFileRules> | null;
 }
 
+export interface ArtifactUploadServiceState {
+  uploadsInProgress: number;
+  lastError: string | null;
+}
+
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 
@@ -145,6 +150,7 @@ export const SERVICE_NAMES = {
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
+  ARTIFACT_UPLOAD: "artifactUpload",
 } as const;
 
 /**

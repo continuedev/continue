@@ -7,6 +7,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { uploadArtifactTool } from "./uploadArtifact.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
@@ -23,4 +24,5 @@ export const ALL_BUILT_IN_TOOLS = [
   writeChecklistTool,
   exitTool,
   reportFailureTool,
+  uploadArtifactTool,
 ];

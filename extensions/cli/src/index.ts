@@ -379,6 +379,10 @@ program
     "--id <storageId>",
     "Upload session snapshots to Continue-managed storage using the provided identifier",
   )
+  .option(
+    "--beta-upload-artifact-tool",
+    "Enable beta UploadArtifact tool for uploading screenshots, videos, and logs",
+  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "serve" });

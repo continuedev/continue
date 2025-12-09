@@ -35,4 +35,6 @@ export interface ExtendedCommandOptions extends BaseCommandOptions {
   readonly?: boolean;
   /** Start in auto mode (all tools allowed) */
   auto?: boolean;
+  /** Enable beta UploadArtifact tool */
+  betaUploadArtifactTool?: boolean;
 }
