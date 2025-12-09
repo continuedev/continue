@@ -1,9 +1,10 @@
 import { exec, spawn } from "child_process";
 
+import { PreprocessedToolCall } from "src/tools/types.js";
+
 import { getCurrentSession, getSessionFilePath } from "../session.js";
 import { logger } from "../util/logger.js";
 
-import { PreprocessedToolCall } from "src/tools/types.js";
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import type { ModelServiceState } from "./types.js";
@@ -112,21 +113,26 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
   }
 
   async trackToolUse(toolCall: PreprocessedToolCall, hookEventName: "PreToolUse" | "PostToolUse"): Promise<void> {
-    if (!this.currentState.isEnabled) {
-      return;
-    }
-    const isFileEdit = ["Edit", "MultiEdit", "Write"].includes(toolCall.name);
-    if (!isFileEdit) {
-      return;
-    }
-
-    const filePath = this.extractFilePathFromToolCall(toolCall);
-    if (filePath) {
-      if (hookEventName === "PreToolUse") {
-        await this.beforeFileEdit(filePath);
-      } else if (hookEventName === "PostToolUse") {
-        await this.afterFileEdit(filePath);
+    try {
+      if (!this.currentState.isEnabled) {
+        return;
       }
+      const isFileEdit = ["Edit", "MultiEdit", "Write"].includes(toolCall.name);
+      if (!isFileEdit) {
+        return;
+      }
+  
+      const filePath = this.extractFilePathFromToolCall(toolCall);
+      if (filePath) {
+        if (hookEventName === "PreToolUse") {
+          await this.beforeFileEdit(filePath);
+        } else if (hookEventName === "PostToolUse") {
+          await this.afterFileEdit(filePath);
+        }
+      }
+    } catch (error) {
+      logger.warn("git-ai tool use tracking failed", { error, toolCall, hookEventName });
+      // Don't throw - allow tool use to proceed without Git AI checkpoint
     }
   }
 
