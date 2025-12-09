@@ -10,6 +10,7 @@ import { AuthService } from "./AuthService.js";
 import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
+import { GitAiIntegrationService } from "./GitAiIntegrationService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
@@ -46,6 +47,7 @@ const agentFileService = new AgentFileService();
 const toolPermissionService = new ToolPermissionService();
 const systemMessageService = new SystemMessageService();
 const artifactUploadService = new ArtifactUploadService();
+const gitAiIntegrationService = new GitAiIntegrationService();
 
 /**
  * Initialize all services and register them with the service container
@@ -310,6 +312,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies for now, but could depend on SESSION in future
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.GIT_AI_INTEGRATION,
+    () => gitAiIntegrationService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -372,11 +380,13 @@ export const services = {
   agentFile: agentFileService,
   toolPermissions: toolPermissionService,
   artifactUpload: artifactUploadService,
+  gitAiIntegration: gitAiIntegrationService,
 } as const;
 
 // Export the service container for advanced usage
 export { serviceContainer };
 
 // Export service names and types
-export type * from "./types.js";
-export { SERVICE_NAMES } from "./types.js";
+  export type * from "./types.js";
+  export { SERVICE_NAMES } from "./types.js";
+

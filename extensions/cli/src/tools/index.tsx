@@ -196,10 +196,32 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   };
 }
 
+function extractFilePathFromToolCall(
+  toolCall: PreprocessedToolCall,
+): string | null {
+  const preprocessed = toolCall.preprocessResult;
+  if (!preprocessed?.args) return null;
+
+  const args = preprocessed.args;
+
+  // Extract file path based on tool type
+  if (toolCall.name === "Edit" && args.resolvedPath) {
+    return args.resolvedPath;
+  } else if (toolCall.name === "MultiEdit" && args.file_path) {
+    return args.file_path;
+  } else if (toolCall.name === "Write" && args.filepath) {
+    return args.filepath;
+  }
+
+  return null;
+}
+
 export async function executeToolCall(
   toolCall: PreprocessedToolCall,
 ): Promise<string> {
   const startTime = Date.now();
+  const FILE_EDIT_TOOLS = ["Edit", "MultiEdit", "Write"];
+  const isFileEdit = FILE_EDIT_TOOLS.includes(toolCall.name);
 
   try {
     logger.debug("Executing tool", {
@@ -207,12 +229,29 @@ export async function executeToolCall(
       arguments: toolCall.arguments,
     });
 
+    // GIT-AI CHECKPOINT: Call before file editing (BLOCKING)
+    if (isFileEdit) {
+      const filePath = extractFilePathFromToolCall(toolCall);
+      if (filePath) {
+        await services.gitAiIntegration.beforeFileEdit(filePath);
+      }
+    }
+
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
     );
     const duration = Date.now() - startTime;
+
+    // GIT-AI CHECKPOINT: Call after file editing (NON-BLOCKING)
+    if (isFileEdit) {
+      const filePath = extractFilePathFromToolCall(toolCall);
+      if (filePath) {
+        // Don't await - run in background to avoid blocking
+        void services.gitAiIntegration.afterFileEdit(filePath);
+      }
+    }
 
     telemetryService.logToolResult({
       toolName: toolCall.name,
