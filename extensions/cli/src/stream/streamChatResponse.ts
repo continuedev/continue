@@ -517,14 +517,14 @@ export async function streamChatResponse(
     handleContentDisplay(content, callbacks, isHeadless);
 
     // Handle tool calls and check for early return. This updates history via ChatHistoryService.
-    const shouldReturn = await handleToolCalls(
+    const shouldReturn = await handleToolCalls({
       toolCalls,
       chatHistory,
       content,
       callbacks,
       isHeadless,
       usage,
-    );
+    });
 
     if (shouldReturn) {
       return finalResponse || content || fullResponse;

@@ -24,14 +24,20 @@ import {
 } from "./streamChatResponse.helpers.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
+interface HandleToolCallsOptions {
+  toolCalls: ToolCall[];
+  chatHistory: ChatHistoryItem[];
+  content: string;
+  callbacks: StreamCallbacks | undefined;
+  isHeadless: boolean;
+  usage?: any;
+}
+
 export async function handleToolCalls(
-  toolCalls: ToolCall[],
-  chatHistory: ChatHistoryItem[],
-  content: string,
-  callbacks: StreamCallbacks | undefined,
-  isHeadless: boolean,
-  usage?: any,
+  options: HandleToolCallsOptions,
 ): Promise<boolean> {
+  const { toolCalls, chatHistory, content, callbacks, isHeadless, usage } =
+    options;
   const chatHistorySvc = services.chatHistory;
   const useService =
     typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
