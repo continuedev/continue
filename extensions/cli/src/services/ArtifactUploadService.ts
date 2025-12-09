@@ -5,6 +5,7 @@ import { env } from "../env.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 
+import { BaseService } from "./BaseService.js";
 import type { ArtifactUploadServiceState } from "./types.js";
 
 /**
@@ -50,18 +51,16 @@ export interface ArtifactUploadResult {
  * This two-step process provides security (backend controls access) and performance
  * (direct S3 upload without proxying through backend).
  */
-export class ArtifactUploadService {
-  private state: ArtifactUploadServiceState = {
-    uploadsInProgress: 0,
-    lastError: null,
-  };
-
-  async initialize(): Promise<ArtifactUploadServiceState> {
-    return this.getState();
+export class ArtifactUploadService extends BaseService<ArtifactUploadServiceState> {
+  constructor() {
+    super("artifactUpload", {
+      uploadsInProgress: 0,
+      lastError: null,
+    });
   }
 
-  getState(): ArtifactUploadServiceState {
-    return { ...this.state };
+  async doInitialize(): Promise<ArtifactUploadServiceState> {
+    return this.getState();
   }
 
   /**
@@ -90,7 +89,7 @@ export class ArtifactUploadService {
     const contentType = options.contentType ?? this.inferContentType(filename);
 
     this.setState({
-      uploadsInProgress: this.state.uploadsInProgress + 1,
+      uploadsInProgress: this.currentState.uploadsInProgress + 1,
       lastError: null,
     });
 
@@ -108,7 +107,7 @@ export class ArtifactUploadService {
       if (!presignedData) {
         const error = "Failed to obtain presigned upload URL";
         this.setState({
-          uploadsInProgress: this.state.uploadsInProgress - 1,
+          uploadsInProgress: this.currentState.uploadsInProgress - 1,
           lastError: error,
         });
         return { success: false, filename, error };
@@ -124,7 +123,7 @@ export class ArtifactUploadService {
 
       logger.info(`Successfully uploaded artifact: ${filename}`);
       this.setState({
-        uploadsInProgress: this.state.uploadsInProgress - 1,
+        uploadsInProgress: this.currentState.uploadsInProgress - 1,
         lastError: null,
       });
 
@@ -133,7 +132,7 @@ export class ArtifactUploadService {
       const errorMsg = formatError(error);
       logger.error(`Failed to upload artifact ${filename}: ${errorMsg}`);
       this.setState({
-        uploadsInProgress: this.state.uploadsInProgress - 1,
+        uploadsInProgress: this.currentState.uploadsInProgress - 1,
         lastError: errorMsg,
       });
       return { success: false, filename, error: errorMsg };
@@ -270,9 +269,5 @@ export class ArtifactUploadService {
     };
 
     return contentTypeMap[ext] || "application/octet-stream";
-  }
-
-  private setState(next: ArtifactUploadServiceState): void {
-    this.state = { ...next };
   }
 }
