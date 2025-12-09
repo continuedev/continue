@@ -2,7 +2,9 @@ import { exec, spawn } from "child_process";
 
 import { getCurrentSession, getSessionFilePath } from "../session.js";
 import { logger } from "../util/logger.js";
+
 import { BaseService } from "./BaseService.js";
+
 import { services } from "./index.js";
 
 interface GitAiHookInput {
