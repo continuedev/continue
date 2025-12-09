@@ -196,32 +196,10 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   };
 }
 
-function extractFilePathFromToolCall(
-  toolCall: PreprocessedToolCall,
-): string | null {
-  const preprocessed = toolCall.preprocessResult;
-  if (!preprocessed?.args) return null;
-
-  const args = preprocessed.args;
-
-  // Extract file path based on tool type
-  if (toolCall.name === "Edit" && args.resolvedPath) {
-    return args.resolvedPath;
-  } else if (toolCall.name === "MultiEdit" && args.file_path) {
-    return args.file_path;
-  } else if (toolCall.name === "Write" && args.filepath) {
-    return args.filepath;
-  }
-
-  return null;
-}
-
 export async function executeToolCall(
   toolCall: PreprocessedToolCall,
 ): Promise<string> {
   const startTime = Date.now();
-  const FILE_EDIT_TOOLS = ["Edit", "MultiEdit", "Write"];
-  const isFileEdit = FILE_EDIT_TOOLS.includes(toolCall.name);
 
   try {
     logger.debug("Executing tool", {
@@ -229,13 +207,8 @@ export async function executeToolCall(
       arguments: toolCall.arguments,
     });
 
-    // GIT-AI CHECKPOINT: Call before file editing (BLOCKING)
-    if (isFileEdit) {
-      const filePath = extractFilePathFromToolCall(toolCall);
-      if (filePath) {
-        await services.gitAiIntegration.beforeFileEdit(filePath);
-      }
-    }
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PreToolUse");
 
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
@@ -244,14 +217,8 @@ export async function executeToolCall(
     );
     const duration = Date.now() - startTime;
 
-    // GIT-AI CHECKPOINT: Call after file editing (NON-BLOCKING)
-    if (isFileEdit) {
-      const filePath = extractFilePathFromToolCall(toolCall);
-      if (filePath) {
-        // Don't await - run in background to avoid blocking
-        void services.gitAiIntegration.afterFileEdit(filePath);
-      }
-    }
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PostToolUse");
 
     telemetryService.logToolResult({
       toolName: toolCall.name,

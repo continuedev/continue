@@ -3,6 +3,7 @@ import { exec, spawn } from "child_process";
 import { getCurrentSession, getSessionFilePath } from "../session.js";
 import { logger } from "../util/logger.js";
 
+import { PreprocessedToolCall } from "src/tools/types.js";
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import type { ModelServiceState } from "./types.js";
@@ -110,6 +111,25 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
     });
   }
 
+  async trackToolUse(toolCall: PreprocessedToolCall, hookEventName: "PreToolUse" | "PostToolUse"): Promise<void> {
+    if (!this.currentState.isEnabled) {
+      return;
+    }
+    const isFileEdit = ["Edit", "MultiEdit", "Write"].includes(toolCall.name);
+    if (!isFileEdit) {
+      return;
+    }
+
+    const filePath = this.extractFilePathFromToolCall(toolCall);
+    if (filePath) {
+      if (hookEventName === "PreToolUse") {
+        await this.beforeFileEdit(filePath);
+      } else if (hookEventName === "PostToolUse") {
+        await this.afterFileEdit(filePath);
+      }
+    }
+  }
+
   async beforeFileEdit(filePath: string): Promise<void> {
     if (!this.currentState.isEnabled) {
       return;
@@ -198,5 +218,25 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
 
   setEnabled(enabled: boolean): void {
     this.setState({ isEnabled: enabled });
+  }
+
+  extractFilePathFromToolCall(
+    toolCall: PreprocessedToolCall,
+  ): string | null {
+    const preprocessed = toolCall.preprocessResult;
+    if (!preprocessed?.args) return null;
+  
+    const args = preprocessed.args;
+  
+    // Extract file path based on tool type
+    if (toolCall.name === "Edit" && args.resolvedPath) {
+      return args.resolvedPath;
+    } else if (toolCall.name === "MultiEdit" && args.file_path) {
+      return args.file_path;
+    } else if (toolCall.name === "Write" && args.filepath) {
+      return args.filepath;
+    }
+  
+    return null;
   }
 }
