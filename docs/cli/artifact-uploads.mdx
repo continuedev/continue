@@ -1,0 +1,256 @@
+---
+title: "Artifact Uploads"
+description: "Upload screenshots, videos, and logs from CLI agents for debugging and review"
+sidebarTitle: "Artifact Uploads"
+---
+
+<Card title="Artifact Uploads (Beta)" icon="upload">
+  Enable your CLI agents to upload screenshots, videos, and logs to agent session storage for debugging and user review.
+</Card>
+
+## Overview
+
+The artifact upload feature allows Continue agents running in CLI mode to upload files directly to session storage. This is useful for:
+
+- **Visual debugging**: Agents can capture and upload screenshots of errors or UI states
+- **Log collection**: Upload detailed log files for analysis
+- **Video recordings**: Capture screen recordings for complex issues
+
+<Info>
+  This feature is currently in beta and requires the `--beta-upload-artifact-tool` flag to enable.
+</Info>
+
+## Prerequisites
+
+Before using artifact uploads, ensure you have:
+
+- Continue CLI installed (`npm i -g @continuedev/cli`)
+- Authenticated with Continue (`cn login`)
+- Running agents in serve mode with an agent session ID
+
+## Enabling Artifact Uploads
+
+To enable the `UploadArtifact` tool in your agent session:
+
+```bash
+cn serve --id <agentSessionId> --beta-upload-artifact-tool
+```
+
+**Required flags:**
+
+- `--id <agentSessionId>`: Specifies the agent session to upload artifacts to
+- `--beta-upload-artifact-tool`: Enables the beta artifact upload tool
+
+## Using the UploadArtifact Tool
+
+Once enabled, agents can use the `UploadArtifact` tool to upload files:
+
+```typescript
+// The agent calls this tool with the file path
+{
+  "name": "UploadArtifact",
+  "parameters": {
+    "filePath": "/tmp/screenshot.png"
+  }
+}
+```
+
+### Supported File Types
+
+The following file types are supported:
+
+**Images:**
+- `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`
+
+**Videos:**
+- `.mp4`, `.mov`, `.avi`, `.webm`
+
+**Text/Logs:**
+- `.log`, `.txt`, `.json`, `.xml`, `.csv`, `.html`
+
+### Size Limits
+
+- **Per-file limit**: 50MB maximum
+- **Total session storage**: 500MB maximum
+
+<Warning>
+  If an artifact with the same filename already exists in the session, it will be overwritten by the new upload.
+</Warning>
+
+## Example Use Cases
+
+### Screenshot Upload
+
+An agent can capture a screenshot and upload it for user review:
+
+```bash
+# Agent takes a screenshot
+screenshot /tmp/app-error.png
+
+# Agent uploads it
+UploadArtifact { "filePath": "/tmp/app-error.png" }
+```
+
+### Log File Upload
+
+Upload detailed logs for debugging:
+
+```bash
+# Generate logs
+npm test > /tmp/test-results.log 2>&1
+
+# Upload logs
+UploadArtifact { "filePath": "/tmp/test-results.log" }
+```
+
+### Multiple Artifacts
+
+An agent can upload multiple files during a session:
+
+```typescript
+// Upload screenshot
+UploadArtifact { "filePath": "/tmp/screenshot1.png" }
+
+// Upload related logs
+UploadArtifact { "filePath": "/tmp/debug.log" }
+
+// Upload video recording
+UploadArtifact { "filePath": "/tmp/recording.mp4" }
+```
+
+## Viewing Artifacts
+
+After upload, artifacts are available in the **Artifacts tab** of the agent session in Continue Mission Control:
+
+1. Navigate to [Continue Mission Control](https://hub.continue.dev)
+2. Open the agent session
+3. Click the **Artifacts** tab to view all uploaded files
+
+## Error Handling
+
+The tool provides detailed error messages for common issues:
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `File not found` | File path doesn't exist | Verify the file path is correct and absolute |
+| `File is too large` | File exceeds 50MB limit | Compress the file or split into smaller parts |
+| `Storage limit exceeded` | Session has used 500MB total | Delete old artifacts or reduce uploads |
+| `File type not supported` | Invalid file extension | Use a supported file format |
+| `Authentication required` | Not logged in | Run `cn login` to authenticate |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use absolute paths">
+    Always provide absolute file paths (e.g., `/tmp/screenshot.png`) rather than relative paths to avoid confusion.
+  </Accordion>
+
+  <Accordion title="Clean up temporary files">
+    Delete temporary files after uploading to save disk space on the agent machine.
+  </Accordion>
+
+  <Accordion title="Use descriptive filenames">
+    Name files clearly to make them easy to identify in the Artifacts tab (e.g., `error-login-page.png` instead of `screenshot.png`).
+  </Accordion>
+
+  <Accordion title="Compress large files">
+    For large screenshots or videos, consider compressing them before upload to stay within the 50MB limit.
+  </Accordion>
+
+  <Accordion title="Monitor storage usage">
+    Keep track of total session storage (500MB limit) to avoid hitting the limit during long-running sessions.
+  </Accordion>
+</AccordionGroup>
+
+## Programmatic Usage
+
+For custom implementations, you can use the artifact upload service directly:
+
+```typescript
+import { services } from "./services/index.js";
+
+// Upload a single file
+const result = await services.artifactUpload.uploadArtifact({
+  agentSessionId: process.env.AGENT_SESSION_ID,
+  filePath: "/tmp/screenshot.png",
+  accessToken: process.env.CONTINUE_API_KEY,
+});
+
+if (result.success) {
+  console.log(`Uploaded: ${result.filename}`);
+} else {
+  console.error(`Failed: ${result.error}`);
+}
+
+// Upload multiple files
+const results = await services.artifactUpload.uploadArtifacts(
+  process.env.AGENT_SESSION_ID,
+  ["/tmp/screenshot1.png", "/tmp/debug.log"],
+  process.env.CONTINUE_API_KEY,
+);
+
+results.forEach((result) => {
+  console.log(`${result.filename}: ${result.success ? "✓" : "✗"}`);
+});
+```
+
+## Environment Variables
+
+When running in Continue's devbox environment, these variables are automatically set:
+
+- `CONTINUE_API_KEY`: Authentication token
+- `CONTINUE_API_BASE`: API base URL (defaults to `https://api.continue.dev/`)
+- `AGENT_SESSION_ID`: Current agent session identifier
+
+## Security
+
+Artifact uploads use a secure two-step process:
+
+1. **Request validation**: Backend validates file size, type, and user permissions
+2. **Direct upload**: Files upload directly to S3 using time-limited presigned URLs (15-minute expiry)
+
+This ensures:
+- Only authenticated users can upload
+- File types and sizes are validated before upload
+- No sensitive files can be uploaded (executables are blocked)
+- Storage limits prevent abuse
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tool not available in agent">
+    Ensure you're running with both `--id <agentSessionId>` and `--beta-upload-artifact-tool` flags.
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    Run `cn login` to authenticate. Verify you have a valid Continue API key.
+  </Accordion>
+
+  <Accordion title="File upload fails">
+    Check the file exists, is under 50MB, and has a supported extension. Review error messages for specific guidance.
+  </Accordion>
+
+  <Accordion title="Storage limit reached">
+    Delete old artifacts from the session in Mission Control, or wait for automatic cleanup policies to take effect.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Overview" icon="terminal" href="/cli/overview">
+    Learn more about Continue CLI features
+  </Card>
+  
+  <Card title="Agents" icon="robot" href="/agents/overview">
+    Understand how agents work in Continue
+  </Card>
+  
+  <Card title="Mission Control" icon="globe" href="/mission-control">
+    Access and manage agent sessions
+  </Card>
+  
+  <Card title="CLI Quick Start" icon="rocket" href="/cli/quick-start">
+    Get started with Continue CLI
+  </Card>
+</CardGroup>
