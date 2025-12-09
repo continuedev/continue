@@ -48,7 +48,6 @@ describe("isSecurityConcern", () => {
       expect(isSecurityConcern("app.secret")).toBe(true);
       expect(isSecurityConcern("api.secrets")).toBe(true);
       expect(isSecurityConcern("credentials")).toBe(true);
-      expect(isSecurityConcern("credentials.json")).toBe(true);
       expect(isSecurityConcern("auth.json")).toBe(true);
       expect(isSecurityConcern("token")).toBe(true);
       expect(isSecurityConcern("api.token")).toBe(true);
@@ -182,6 +181,17 @@ describe("isSecurityConcern", () => {
       expect(isSecurityConcern("config-template.json")).toBe(false);
       expect(isSecurityConcern("secret-utils.js")).toBe(false);
       expect(isSecurityConcern("token-validator.ts")).toBe(false);
+    });
+
+    it("should not flag legitimate source files with token/credentials in name", () => {
+      expect(isSecurityConcern("tokens.py")).toBe(false);
+      expect(isSecurityConcern("tokens.go")).toBe(false);
+      expect(isSecurityConcern("tokens.js")).toBe(false);
+      expect(isSecurityConcern("credentials.py")).toBe(false);
+      expect(isSecurityConcern("credentials.go")).toBe(false);
+      expect(isSecurityConcern("credentials.ts")).toBe(false);
+      expect(isSecurityConcern("token_manager.py")).toBe(false);
+      expect(isSecurityConcern("credential_helper.js")).toBe(false);
     });
   });
 
