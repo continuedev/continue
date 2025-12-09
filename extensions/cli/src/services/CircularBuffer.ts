@@ -1,12 +1,16 @@
+import RingBuffer from "ringbufferjs";
+
+/**
+ * CircularBuffer is a wrapper around ringbufferjs that provides
+ * line-based storage with line length limits and incremental reading.
+ */
 export class CircularBuffer {
-  private buffer: string[] = [];
-  private maxLines: number;
+  private buffer: RingBuffer<string>;
   private maxLineLength: number;
   private totalLinesWritten: number = 0;
-  private startIndex: number = 0; // Where the buffer logically starts
 
   constructor(maxLines = 10000, maxLineLength = 2000) {
-    this.maxLines = maxLines;
+    this.buffer = new RingBuffer(maxLines);
     this.maxLineLength = maxLineLength;
   }
 
@@ -17,56 +21,37 @@ export class CircularBuffer {
         ? line.substring(0, this.maxLineLength) + "..."
         : line;
 
-    if (this.buffer.length < this.maxLines) {
-      // Buffer not full yet
-      this.buffer.push(truncatedLine);
-    } else {
-      // Buffer is full, overwrite oldest
-      const writeIndex = this.startIndex % this.maxLines;
-      this.buffer[writeIndex] = truncatedLine;
-      this.startIndex++;
-    }
-
+    this.buffer.enq(truncatedLine);
     this.totalLinesWritten++;
   }
 
   getLines(fromLine?: number): string[] {
     const from = fromLine ?? 0;
+    const bufferSize = this.buffer.size();
+
+    // If buffer is empty, return empty array
+    if (bufferSize === 0) {
+      return [];
+    }
+
+    // Calculate the oldest line still in buffer
+    const oldestLineInBuffer = this.totalLinesWritten - bufferSize;
 
     // If requesting lines before buffer start, clamp to start
-    const effectiveFrom = Math.max(
-      from,
-      this.totalLinesWritten - this.buffer.length,
-    );
+    const effectiveFrom = Math.max(from, oldestLineInBuffer);
 
     // If requesting lines beyond what we've written, return empty
     if (effectiveFrom >= this.totalLinesWritten) {
       return [];
     }
 
-    const startOffset =
-      effectiveFrom - (this.totalLinesWritten - this.buffer.length);
-    const endOffset =
-      this.totalLinesWritten - (this.totalLinesWritten - this.buffer.length);
+    // Calculate how many lines to skip from the front and how many to return
+    const skipCount = effectiveFrom - oldestLineInBuffer;
+    const returnCount = this.totalLinesWritten - effectiveFrom;
 
-    // Handle circular buffer reading
-    if (this.buffer.length < this.maxLines) {
-      // Buffer not full yet, simple slice
-      return this.buffer.slice(startOffset);
-    } else {
-      // Buffer is full and circular
-      const physicalStart = this.startIndex % this.maxLines;
-      const logicalStart = startOffset;
-      const count = endOffset - startOffset;
-
-      const result: string[] = [];
-      for (let i = 0; i < count; i++) {
-        const physicalIndex =
-          (physicalStart + logicalStart + i) % this.maxLines;
-        result.push(this.buffer[physicalIndex]);
-      }
-      return result;
-    }
+    // Get all lines from buffer and slice to get the desired range
+    const allLines = this.buffer.peekN(bufferSize);
+    return allLines.slice(skipCount, skipCount + returnCount);
   }
 
   getTotalLinesWritten(): number {
@@ -74,8 +59,10 @@ export class CircularBuffer {
   }
 
   clear(): void {
-    this.buffer = [];
+    // Empty the buffer by dequeueing all elements
+    while (!this.buffer.isEmpty()) {
+      this.buffer.deq();
+    }
     this.totalLinesWritten = 0;
-    this.startIndex = 0;
   }
 }

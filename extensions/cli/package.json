@@ -48,7 +48,8 @@
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",
     "fzf": "^0.5.2",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "ringbufferjs": "^2.0.0"
   },
   "devDependencies": {
     "@continuedev/config-yaml": "file:../../packages/config-yaml",
