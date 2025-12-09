@@ -17,7 +17,12 @@ import type {
 } from "openai/resources/responses/responses.js";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { customFetch } from "../util.js";
+import {
+  customFetch,
+  chatChunk,
+  usageChatChunk,
+  chatChunkFromDelta,
+} from "../util.js";
 import {
   createResponsesStreamState,
   fromResponsesChunk,
@@ -31,13 +36,46 @@ import {
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
+import { createOpenAI } from "@ai-sdk/openai";
+import { streamText, generateText, streamObject } from "ai";
+import { convertVercelStream } from "../vercelStreamConverter.js";
+import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
+  private openaiProvider?: ReturnType<typeof createOpenAI>;
+  private useVercelSDK: boolean;
 
   constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
+    this.useVercelSDK = process.env.USE_VERCEL_AI_SDK_OPENAI === "true";
+
+    if (this.useVercelSDK) {
+      // New Vercel AI SDK implementation
+      // Only use customFetch if we have request options that need it
+      // Otherwise use native fetch (Vercel AI SDK requires Web Streams API)
+      const hasRequestOptions =
+        config.requestOptions &&
+        (config.requestOptions.headers ||
+          config.requestOptions.proxy ||
+          config.requestOptions.caBundlePath ||
+          config.requestOptions.clientCertificate ||
+          config.requestOptions.extraBodyProperties);
+
+      this.openaiProvider = createOpenAI({
+        apiKey: config.apiKey ?? "",
+        baseURL:
+          this.apiBase !== "https://api.openai.com/v1/"
+            ? this.apiBase
+            : undefined,
+        fetch: hasRequestOptions
+          ? customFetch(config.requestOptions)
+          : undefined,
+      });
+    }
+
+    // Always create the original OpenAI client for fallback
     this.openai = new OpenAI({
       // Necessary because `new OpenAI()` will throw an error if there is no API Key
       apiKey: config.apiKey ?? "",
@@ -114,6 +152,14 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    if (
+      this.useVercelSDK &&
+      this.openaiProvider &&
+      !this.shouldUseResponsesEndpoint(body.model)
+    ) {
+      return this.chatCompletionNonStreamVercel(body, signal);
+    }
+
     if (this.shouldUseResponsesEndpoint(body.model)) {
       const response = await this.responsesNonStream(body, signal);
       return responseToChatCompletion(response);
@@ -127,10 +173,87 @@ export class OpenAIApi implements BaseLlmApi {
     return response;
   }
 
+  private async chatCompletionNonStreamVercel(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<ChatCompletion> {
+    if (!this.openaiProvider) {
+      throw new Error("Vercel AI SDK provider not initialized");
+    }
+
+    const modifiedBody = this.modifyChatBody({ ...body });
+    const model = this.openaiProvider(modifiedBody.model);
+
+    // Convert OpenAI tools to Vercel AI SDK format
+    const vercelTools = convertToolsToVercelFormat(modifiedBody.tools);
+
+    const result = await generateText({
+      model,
+      messages: modifiedBody.messages as any,
+      temperature: modifiedBody.temperature ?? undefined,
+      maxTokens:
+        modifiedBody.max_completion_tokens ??
+        modifiedBody.max_tokens ??
+        undefined,
+      topP: modifiedBody.top_p ?? undefined,
+      frequencyPenalty: modifiedBody.frequency_penalty ?? undefined,
+      presencePenalty: modifiedBody.presence_penalty ?? undefined,
+      stopSequences: modifiedBody.stop as string[] | undefined,
+      tools: vercelTools,
+      toolChoice: modifiedBody.tool_choice as any,
+      abortSignal: signal,
+    });
+
+    // Convert Vercel AI SDK result to OpenAI ChatCompletion format
+    const toolCalls = result.toolCalls?.map((tc, index) => ({
+      id: tc.toolCallId,
+      type: "function" as const,
+      function: {
+        name: tc.toolName,
+        arguments: JSON.stringify(tc.args),
+      },
+    }));
+
+    return {
+      id: result.response?.id ?? "",
+      object: "chat.completion",
+      created: Date.now(),
+      model: modifiedBody.model,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: result.text,
+            tool_calls: toolCalls,
+            refusal: null,
+          },
+          finish_reason:
+            result.finishReason === "tool-calls" ? "tool_calls" : "stop",
+          logprobs: null,
+        },
+      ],
+      usage: {
+        prompt_tokens: result.usage.promptTokens,
+        completion_tokens: result.usage.completionTokens,
+        total_tokens: result.usage.totalTokens,
+      },
+    };
+  }
+
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    if (
+      this.useVercelSDK &&
+      this.openaiProvider &&
+      !this.shouldUseResponsesEndpoint(body.model)
+    ) {
+      yield* this.chatCompletionStreamVercel(body, signal);
+      return;
+    }
+
     if (this.shouldUseResponsesEndpoint(body.model)) {
       for await (const chunk of this.responsesStream(body, signal)) {
         yield chunk;
@@ -157,6 +280,43 @@ export class OpenAIApi implements BaseLlmApi {
     if (lastChunkWithUsage) {
       yield lastChunkWithUsage;
     }
+  }
+
+  private async *chatCompletionStreamVercel(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    if (!this.openaiProvider) {
+      throw new Error("Vercel AI SDK provider not initialized");
+    }
+
+    const modifiedBody = this.modifyChatBody({ ...body });
+    const model = this.openaiProvider(modifiedBody.model);
+
+    // Convert OpenAI tools to Vercel AI SDK format
+    const vercelTools = convertToolsToVercelFormat(modifiedBody.tools);
+
+    const stream = await streamText({
+      model,
+      messages: modifiedBody.messages as any,
+      temperature: modifiedBody.temperature ?? undefined,
+      maxTokens:
+        modifiedBody.max_completion_tokens ??
+        modifiedBody.max_tokens ??
+        undefined,
+      topP: modifiedBody.top_p ?? undefined,
+      frequencyPenalty: modifiedBody.frequency_penalty ?? undefined,
+      presencePenalty: modifiedBody.presence_penalty ?? undefined,
+      stopSequences: modifiedBody.stop as string[] | undefined,
+      tools: vercelTools,
+      toolChoice: modifiedBody.tool_choice as any,
+      abortSignal: signal,
+    });
+
+    // Convert Vercel AI SDK stream to OpenAI format
+    yield* convertVercelStream(stream.fullStream as any, {
+      model: modifiedBody.model,
+    });
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,

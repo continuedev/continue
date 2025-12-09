@@ -51,9 +51,16 @@ import {
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { streamText, generateText } from "ai";
+import { convertVercelStream } from "../vercelStreamConverter.js";
+import { convertOpenAIMessagesToVercel } from "../openaiToVercelMessages.js";
+import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
+  private anthropicProvider?: ReturnType<typeof createAnthropic>;
+  private useVercelSDK: boolean;
 
   constructor(
     protected config: AnthropicConfig & {
@@ -63,6 +70,33 @@ export class AnthropicApi implements BaseLlmApi {
     this.apiBase = config.apiBase ?? this.apiBase;
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
+    }
+
+    this.useVercelSDK = process.env.USE_VERCEL_AI_SDK_ANTHROPIC === "true";
+
+    if (this.useVercelSDK) {
+      // New Vercel AI SDK implementation
+      // Only use customFetch if we have request options that need it
+      // Otherwise use native fetch (Vercel AI SDK requires Web Streams API)
+      const hasRequestOptions =
+        config.requestOptions &&
+        (config.requestOptions.headers ||
+          config.requestOptions.proxy ||
+          config.requestOptions.caBundlePath ||
+          config.requestOptions.clientCertificate ||
+          config.requestOptions.extraBodyProperties);
+
+      this.anthropicProvider = createAnthropic({
+        apiKey: config.apiKey ?? "",
+        baseURL:
+          this.apiBase !== "https://api.anthropic.com/v1/" &&
+          this.apiBase !== "https://api.anthropic.com/v1"
+            ? this.apiBase.replace(/\/$/, "")
+            : undefined,
+        fetch: hasRequestOptions
+          ? customFetch(config.requestOptions)
+          : undefined,
+      });
     }
   }
 
@@ -303,6 +337,14 @@ export class AnthropicApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    // Check if message history contains tool results
+    // Vercel SDK cannot handle pre-existing tool call conversations
+    const hasToolMessages = body.messages.some((msg) => msg.role === "tool");
+
+    if (this.useVercelSDK && this.anthropicProvider && !hasToolMessages) {
+      return this.chatCompletionNonStreamVercel(body, signal);
+    }
+
     const response = await customFetch(this.config.requestOptions)(
       new URL("messages", this.apiBase),
       {
@@ -347,6 +389,91 @@ export class AnthropicApi implements BaseLlmApi {
           index: 0,
         },
       ],
+    };
+  }
+
+  private async chatCompletionNonStreamVercel(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<ChatCompletion> {
+    if (!this.anthropicProvider) {
+      throw new Error("Vercel AI SDK Anthropic provider not initialized");
+    }
+
+    // Convert OpenAI messages to Vercel AI SDK CoreMessage format
+    const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
+
+    // Extract system message
+    const systemMsg = vercelMessages.find((msg) => msg.role === "system");
+    const systemText =
+      systemMsg && typeof systemMsg.content === "string"
+        ? systemMsg.content
+        : undefined;
+
+    // Filter out system messages - Vercel AI SDK handles them separately
+    const nonSystemMessages = vercelMessages.filter(
+      (msg) => msg.role !== "system",
+    );
+
+    const model = this.anthropicProvider(body.model);
+
+    // Convert OpenAI tools to Vercel AI SDK format
+    const vercelTools = convertToolsToVercelFormat(body.tools);
+
+    const result = await generateText({
+      model,
+      system: systemText,
+      messages: nonSystemMessages as any,
+      temperature: body.temperature ?? undefined,
+      maxTokens: body.max_tokens ?? undefined,
+      topP: body.top_p ?? undefined,
+      stopSequences: body.stop as string[] | undefined,
+      tools: vercelTools,
+      toolChoice: body.tool_choice as any,
+      abortSignal: signal,
+    });
+
+    // Convert Vercel AI SDK result to OpenAI ChatCompletion format
+    const toolCalls = result.toolCalls?.map((tc) => ({
+      id: tc.toolCallId,
+      type: "function" as const,
+      function: {
+        name: tc.toolName,
+        arguments: JSON.stringify(tc.args),
+      },
+    }));
+
+    return {
+      id: result.response?.id ?? "",
+      object: "chat.completion",
+      created: Date.now(),
+      model: body.model,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: result.text,
+            tool_calls: toolCalls,
+            refusal: null,
+          },
+          finish_reason:
+            result.finishReason === "tool-calls" ? "tool_calls" : "stop",
+          logprobs: null,
+        },
+      ],
+      usage: {
+        prompt_tokens: result.usage.promptTokens,
+        completion_tokens: result.usage.completionTokens,
+        total_tokens: result.usage.totalTokens,
+        prompt_tokens_details: {
+          cached_tokens:
+            (result.usage as any).promptTokensDetails?.cachedTokens ?? 0,
+          cache_read_tokens:
+            (result.usage as any).promptTokensDetails?.cachedTokens ?? 0,
+          cache_write_tokens: 0,
+        } as any,
+      },
     };
   }
 
@@ -442,6 +569,15 @@ export class AnthropicApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
+    // Check if message history contains tool results
+    // Vercel SDK cannot handle pre-existing tool call conversations
+    const hasToolMessages = body.messages.some((msg) => msg.role === "tool");
+
+    if (this.useVercelSDK && this.anthropicProvider && !hasToolMessages) {
+      yield* this.chatCompletionStreamVercel(body, signal);
+      return;
+    }
+
     const response = await customFetch(this.config.requestOptions)(
       new URL("messages", this.apiBase),
       {
@@ -452,6 +588,68 @@ export class AnthropicApi implements BaseLlmApi {
       },
     );
     yield* this.handleStreamResponse(response, body.model);
+  }
+
+  private async *chatCompletionStreamVercel(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    if (!this.anthropicProvider) {
+      throw new Error("Vercel AI SDK Anthropic provider not initialized");
+    }
+
+    // Convert OpenAI messages to Vercel AI SDK CoreMessage format
+    const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
+
+    // Extract system message
+    const systemMsg = vercelMessages.find((msg) => msg.role === "system");
+    const systemText =
+      systemMsg && typeof systemMsg.content === "string"
+        ? systemMsg.content
+        : undefined;
+
+    // Filter out system messages - Vercel AI SDK handles them separately
+    const nonSystemMessages = vercelMessages.filter(
+      (msg) => msg.role !== "system",
+    );
+
+    const model = this.anthropicProvider(body.model);
+
+    // Convert OpenAI tools to Vercel AI SDK format
+    const vercelTools = convertToolsToVercelFormat(body.tools);
+
+    const stream = await streamText({
+      model,
+      system: systemText,
+      messages: nonSystemMessages as any,
+      temperature: body.temperature ?? undefined,
+      maxTokens: body.max_tokens ?? undefined,
+      topP: body.top_p ?? undefined,
+      stopSequences: body.stop as string[] | undefined,
+      tools: vercelTools,
+      toolChoice: body.tool_choice as any,
+      abortSignal: signal,
+    });
+
+    // Convert Vercel AI SDK stream to OpenAI format
+    for await (const chunk of convertVercelStream(stream.fullStream as any, {
+      model: body.model,
+    })) {
+      // Enhance usage chunks with Anthropic-specific cache token details
+      if (chunk.usage) {
+        const usage = await stream.usage;
+        if (usage) {
+          chunk.usage.prompt_tokens_details = {
+            cached_tokens:
+              (usage as any).promptTokensDetails?.cachedTokens ?? 0,
+            cache_read_tokens:
+              (usage as any).promptTokensDetails?.cachedTokens ?? 0,
+            cache_write_tokens: 0,
+          } as any;
+        }
+      }
+      yield chunk;
+    }
   }
 
   private getHeaders(): Record<string, string> {
