@@ -124,7 +124,11 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   /**
    * Add an assistant message to the history
    */
-  addAssistantMessage(content: string, toolCalls?: any[]): ChatHistoryItem {
+  addAssistantMessage(
+    content: string,
+    toolCalls?: any[],
+    usage?: any,
+  ): ChatHistoryItem {
     const message: any = {
       role: "assistant",
       content,
@@ -132,6 +136,10 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 
     if (toolCalls && toolCalls.length > 0) {
       message.toolCalls = toolCalls;
+    }
+
+    if (usage) {
+      message.usage = usage;
     }
 
     const toolCallStates = toolCalls?.map((tc) => {
