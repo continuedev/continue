@@ -4,7 +4,6 @@ import * as path from "path";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
 import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
-import { services } from "../services/index.js";
 import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
@@ -41,6 +40,10 @@ export const uploadArtifactTool: Tool = {
   isBuiltIn: true,
   run: async (args: { filePath: string }): Promise<string> => {
     try {
+      // Import services here to avoid circular dependency
+      // services/index.ts -> ToolPermissionService -> allBuiltIns -> uploadArtifact -> services/index.ts
+      const { services } = await import("../services/index.js");
+
       const trimmedPath = args.filePath?.trim();
       if (!trimmedPath) {
         throw new ContinueError(
