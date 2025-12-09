@@ -23,6 +23,8 @@ export interface BaseCommandOptions {
   exclude?: string[];
   /** Agent file slug from the hub (--agent) */
   agent?: string;
+  /** Enable beta UploadArtifact tool */
+  betaUploadArtifactTool?: boolean;
 }
 
 /**
@@ -35,6 +37,4 @@ export interface ExtendedCommandOptions extends BaseCommandOptions {
   readonly?: boolean;
   /** Start in auto mode (all tools allowed) */
   auto?: boolean;
-  /** Enable beta UploadArtifact tool */
-  betaUploadArtifactTool?: boolean;
 }
