@@ -24,7 +24,7 @@ export const uploadArtifactTool: Tool = {
   name: "UploadArtifact",
   displayName: "Upload Artifact",
   description:
-    "Upload a file (screenshot, video, log) to the session artifacts for user review. Supported formats: images (png, jpg, jpeg, gif, webp), videos (mp4, mov, avi, webm), and text files (log, txt, json, xml, csv, html). Maximum file size: 50MB. If an artifact with the same filename already exists, it will be overwritten with the new file.",
+    "Upload a file (screenshot, video, log) to the session artifacts for user review. Supported formats: images (png, jpg, jpeg, gif, webp), videos (mp4, mov, avi, webm), and text files. Maximum file size: 50MB. If an artifact with the same filename already exists, it will be overwritten with the new file.",
   parameters: {
     type: "object",
     required: ["filePath"],
