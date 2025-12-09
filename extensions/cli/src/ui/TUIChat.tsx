@@ -19,6 +19,7 @@ import {
   ModelServiceState,
   UpdateServiceState,
 } from "../services/types.js";
+import { getTotalSessionCost } from "../session.js";
 import { logger } from "../util/logger.js";
 
 import { ActionStatus } from "./components/ActionStatus.js";
@@ -442,6 +443,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
           hasImageInClipboard={hasImageInClipboard}
+          isVerboseMode={isVerboseMode}
+          totalCost={getTotalSessionCost()}
         />
       </Box>
     </Box>

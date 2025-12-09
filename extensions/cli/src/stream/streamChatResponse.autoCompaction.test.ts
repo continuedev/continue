@@ -18,11 +18,13 @@ vi.mock("../session.js", () => ({
   })),
   saveSession: vi.fn(),
   updateSessionHistory: vi.fn(),
+  trackSessionUsage: vi.fn(),
 }));
 
 vi.mock("../util/tokenizer.js", () => ({
   shouldAutoCompact: vi.fn(),
   getAutoCompactMessage: vi.fn(),
+  countChatHistoryItemTokens: vi.fn(() => 100), // Mock return value
 }));
 
 vi.mock("../util/formatError.js", () => ({
@@ -35,6 +37,17 @@ vi.mock("../util/logger.js", () => ({
     debug: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
+  },
+}));
+
+vi.mock("../services/index.js", () => ({
+  services: {
+    systemMessage: {
+      getSystemMessage: vi.fn(() => Promise.resolve("System message")),
+    },
+    toolPermissions: {
+      getState: vi.fn(() => ({ currentMode: "enabled" })),
+    },
   },
 }));
 
@@ -137,7 +150,10 @@ describe("handleAutoCompaction", () => {
       mockChatHistory,
       mockModel,
       mockLlmApi,
-      expect.any(Object),
+      expect.objectContaining({
+        callbacks: expect.any(Object),
+        systemMessageTokens: expect.any(Number),
+      }),
     );
     expect(updateSessionHistory).toHaveBeenCalledWith(
       mockCompactionResult.compactedHistory,
