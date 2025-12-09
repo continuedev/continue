@@ -236,11 +236,13 @@ export function AssistantAndOrgListbox({
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
-                        void ideMessenger.request("controlPlane/openUrl", {
-                          path: ORGANIZATION_SETTINGS_ONBOARDING(
-                            currentOrg.slug,
-                          ),
-                        });
+                        if (currentOrg.slug) {
+                          void ideMessenger.request("controlPlane/openUrl", {
+                            path: ORGANIZATION_SETTINGS_ONBOARDING(
+                              currentOrg.slug,
+                            ),
+                          });
+                        }
                         close();
                       }}
                       variant="ghost"
