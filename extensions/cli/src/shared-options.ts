@@ -17,7 +17,7 @@ export function addCommonOptions(command: Command): Command {
     .option("--beta-status-tool", "Enable beta status tool")
     .option(
       "--beta-persistent-terminal-tools",
-      "Enable beta background process tools (BashOutput, KillProcess, ListProcesses)",
+      "Enable beta background process tools (ReadBackgroundProcessOutput, KillProcess, ListProcesses)",
     )
     .option(
       "--rule <rule>",

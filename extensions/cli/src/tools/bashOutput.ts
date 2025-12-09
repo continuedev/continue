@@ -3,8 +3,8 @@ import type { BackgroundProcessService } from "../services/BackgroundProcessServ
 import { Tool } from "./types.js";
 
 export const bashOutputTool: Tool = {
-  name: "BashOutput",
-  displayName: "Bash Output",
+  name: "ReadBackgroundProcessOutput",
+  displayName: "Read Background Process Output",
   description:
     "Read output from a background process started with Bash tool's run_in_background parameter. Returns new output since last read.",
   parameters: {

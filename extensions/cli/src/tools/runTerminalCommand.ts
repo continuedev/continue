@@ -57,7 +57,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       run_in_background: {
         type: "boolean",
         description:
-          "Run command in background and return immediately. Use BashOutput tool to monitor output. Useful for long-running processes like dev servers.",
+          "Run command in background and return immediately. Use ReadBackgroundProcessOutput tool to monitor output. Useful for long-running processes like dev servers.",
       },
     },
   },

@@ -159,7 +159,7 @@ export class BackgroundProcessService extends BaseService<BackgroundProcessServi
 
     return {
       id,
-      message: `Background process started with ID ${id} (PID: ${child.pid}). Use BashOutput to monitor output:\n  BashOutput(bash_id: ${id})`,
+      message: `Background process started with ID ${id} (PID: ${child.pid}). Use ReadBackgroundProcessOutput to monitor output:\n  ReadBackgroundProcessOutput(bash_id: ${id})`,
     };
   }
 

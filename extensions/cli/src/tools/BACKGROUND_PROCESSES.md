@@ -21,7 +21,7 @@ This feature unlocks new capabilities like automated testing of live application
 1. **BackgroundProcessService** - Manages background process lifecycle, output buffering, and cleanup
 2. **Modified Bash Tool** - Added `run_in_background` parameter
 3. **Three New Tools**:
-   - `BashOutput` - Read buffered output from background processes
+   - `ReadBackgroundProcessOutput` - Read buffered output from background processes
    - `KillProcess` - Terminate a background process
    - `ListProcesses` - List all running background processes
 
@@ -31,7 +31,7 @@ This feature unlocks new capabilities like automated testing of live application
 - **Output Buffering**: Circular buffer (10K lines per process) prevents memory exhaustion
 - **Process Limit**: Max 10 concurrent background processes
 - **Lifecycle**: Automatic cleanup on session end via `gracefulExit()`
-- **Readiness Detection**: Agent uses regex filtering in `BashOutput` to detect "ready" signals
+- **Readiness Detection**: Agent uses regex filtering in `ReadBackgroundProcessOutput` to detect "ready" signals
 
 ## Usage
 
@@ -52,7 +52,7 @@ Bash({
 // Returns: "Background process started with ID 1..."
 
 // 2. Poll for ready signal
-BashOutput({
+ReadBackgroundProcessOutput({
   bash_id: 1,
   filter: "Local:.*http://localhost",
 });
