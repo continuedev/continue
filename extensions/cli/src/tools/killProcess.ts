@@ -5,7 +5,9 @@ import { Tool } from "./types.js";
 export const killProcessTool: Tool = {
   name: "KillProcess",
   displayName: "Kill Process",
-  description: "Terminate a background process by ID.",
+  description: `Terminate a background process by ID.
+
+Use this to stop dev servers, cancel long-running builds, or clean up test processes when you're done with them. The process will be killed immediately (SIGTERM).`,
   parameters: {
     type: "object",
     required: ["bash_id"],

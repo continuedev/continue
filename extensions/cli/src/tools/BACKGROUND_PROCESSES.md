@@ -49,20 +49,87 @@ Bash({
   command: "npm run dev",
   run_in_background: true,
 });
-// Returns: "Background process started with ID 1..."
+// Returns: "Background process started with ID 1 (PID: 12345).
+//           Use ReadBackgroundProcessOutput to monitor output:
+//           ReadBackgroundProcessOutput(bash_id: 1)"
 
-// 2. Poll for ready signal
+// 2. Monitor output incrementally (returns only NEW lines each call)
+ReadBackgroundProcessOutput({ bash_id: 1 });
+// First call: Shows all output up to this point
+// Later calls: Only shows lines written since previous call
+
+// 3. Use regex filter to detect specific events
 ReadBackgroundProcessOutput({
   bash_id: 1,
   filter: "Local:.*http://localhost",
 });
-// Returns filtered output showing server URL
+// Returns only lines matching the pattern
 
-// 3. Take screenshots or run tests
-// ... other agent work ...
+// 4. Check all processes
+ListProcesses();
+// Shows all background processes with status, runtime, PIDs
 
-// 4. Clean up when done
+// 5. Take screenshots, run tests, or do other work
+// ... processes continue running ...
+
+// 6. Clean up when done
 KillProcess({ bash_id: 1 });
+// Terminates the process immediately (SIGTERM)
+```
+
+### Common Usage Patterns
+
+**Pattern 1: Wait for Server to Start**
+
+```typescript
+// Start server
+Bash({ command: "npm run dev", run_in_background: true });
+
+// Poll until ready
+while (true) {
+  const output = ReadBackgroundProcessOutput({
+    bash_id: 1,
+    filter: "server.*listening|ready.*http",
+  });
+  if (output includes server URL) break;
+  // Wait a moment before next check
+}
+
+// Now safe to proceed with tests/screenshots
+```
+
+**Pattern 2: Monitor Build Progress**
+
+```typescript
+// Start build
+Bash({ command: "npm run build:watch", run_in_background: true });
+
+// Check for completion
+const output = ReadBackgroundProcessOutput({
+  bash_id: 1,
+  filter: "Build complete|Error",
+});
+
+// Handle success or error
+```
+
+**Pattern 3: Parallel Execution**
+
+```typescript
+// Start multiple processes
+Bash({ command: "npm run backend", run_in_background: true }); // ID 1
+Bash({ command: "npm run frontend", run_in_background: true }); // ID 2
+
+// Monitor both
+ReadBackgroundProcessOutput({ bash_id: 1 }); // Backend output
+ReadBackgroundProcessOutput({ bash_id: 2 }); // Frontend output
+
+// List all
+ListProcesses(); // Shows both processes
+
+// Clean up
+KillProcess({ bash_id: 1 });
+KillProcess({ bash_id: 2 });
 ```
 
 ## Beta Status

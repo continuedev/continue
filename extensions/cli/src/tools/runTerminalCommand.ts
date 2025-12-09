@@ -12,6 +12,9 @@ import {
   isPullRequestCommand,
 } from "../telemetry/utils.js";
 
+import { bashOutputTool } from "./bashOutput.js";
+import { killProcessTool } from "./killProcess.js";
+import { listProcessesTool } from "./listProcesses.js";
 import { Tool } from "./types.js";
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
@@ -56,8 +59,15 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       },
       run_in_background: {
         type: "boolean",
-        description:
-          "Run command in background and return immediately. Use ReadBackgroundProcessOutput tool to monitor output. Useful for long-running processes like dev servers.",
+        description: `Run command in background and return immediately. Useful for long-running processes like dev servers, file watchers, or tests.
+
+Example workflow:
+1. Start process: Bash(command: "npm run dev", run_in_background: true)
+2. Monitor output: ${bashOutputTool.name}(bash_id: 1)
+3. Check all processes: ${listProcessesTool.name}()
+4. Terminate when done: ${killProcessTool.name}(bash_id: 1)
+
+The process will continue running even after this tool returns, allowing you to check its output incrementally using ${bashOutputTool.name}.`,
       },
     },
   },

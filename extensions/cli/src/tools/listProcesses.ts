@@ -5,7 +5,9 @@ import { Tool } from "./types.js";
 export const listProcessesTool: Tool = {
   name: "ListProcesses",
   displayName: "List Processes",
-  description: "List all background processes and their status.",
+  description: `List all background processes and their status.
+
+Shows process ID, command, status (running/exited), PID, runtime, and exit code (if exited). Use this to check which background processes are active and get their IDs for reading output or terminating them.`,
   parameters: {
     type: "object",
     properties: {},

@@ -5,8 +5,11 @@ import { Tool } from "./types.js";
 export const bashOutputTool: Tool = {
   name: "ReadBackgroundProcessOutput",
   displayName: "Read Background Process Output",
-  description:
-    "Read output from a background process started with Bash tool's run_in_background parameter. Returns new output since last read.",
+  description: `Read output from a background process started with Bash tool's run_in_background parameter.
+
+Returns only NEW output since the last read - subsequent calls will only show lines that were written after the previous call. This allows efficient incremental monitoring without re-reading the entire output each time.
+
+Use this to check if a dev server has started, monitor build progress, watch for test results, or check for errors in long-running processes.`,
   parameters: {
     type: "object",
     required: ["bash_id"],
