@@ -4,8 +4,8 @@ import { getCurrentSession, getSessionFilePath } from "../session.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
-
-import { services } from "./index.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import type { ModelServiceState } from "./types.js";
 
 interface GitAiHookInput {
   session_id: string;
@@ -124,10 +124,10 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
       const session = getCurrentSession();
       const sessionFilePath = getSessionFilePath();
 
-      // Get current model from ModelService
-      const modelState = services.model.getState();
-      console.log("modelState", modelState);
-      const modelName = modelState?.model?.model;
+      // Get current model from ModelService via serviceContainer
+      const modelState =
+        serviceContainer.getSync<ModelServiceState>("model");
+      const modelName = modelState?.value?.model?.model;
 
       const hookInput: GitAiHookInput = {
         session_id: session.sessionId,
@@ -167,10 +167,10 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
       const session = getCurrentSession();
       const sessionFilePath = getSessionFilePath();
 
-      // Get current model from ModelService
-      const modelState = services.model.getState();
-      console.log("modelState", modelState);
-      const modelName = modelState?.model?.model;
+      // Get current model from ModelService via serviceContainer
+      const modelState =
+        serviceContainer.getSync<ModelServiceState>("model");
+      const modelName = modelState?.value?.model?.model;
 
       const hookInput: GitAiHookInput = {
         session_id: session.sessionId,
