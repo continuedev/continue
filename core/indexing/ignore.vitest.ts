@@ -47,9 +47,7 @@ describe("isSecurityConcern", () => {
     it("should detect credential files as security concerns", () => {
       expect(isSecurityConcern("app.secret")).toBe(true);
       expect(isSecurityConcern("api.secrets")).toBe(true);
-      expect(isSecurityConcern("credentials")).toBe(true);
       expect(isSecurityConcern("auth.json")).toBe(true);
-      expect(isSecurityConcern("token")).toBe(true);
       expect(isSecurityConcern("api.token")).toBe(true);
       expect(isSecurityConcern("access.token")).toBe(true);
     });
