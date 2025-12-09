@@ -201,6 +201,7 @@ export async function processStreamingResponse(
   finalContent: string; // Added field for final content only
   toolCalls: ToolCall[];
   shouldContinue: boolean;
+  usage?: any;
 }> {
   const {
     model,
@@ -344,6 +345,12 @@ export async function processStreamingResponse(
     });
     const totalDuration = responseEndTime - requestStartTime;
 
+    // Enhance fullUsage with model and cost for saving to session
+    if (fullUsage) {
+      fullUsage.model = model.model;
+      fullUsage.cost_cents = Math.round(cost * 100); // Convert dollars to cents
+    }
+
     logger.debug("Stream complete", {
       chunkCount,
       responseLength: aiResponse.length,
@@ -382,6 +389,7 @@ export async function processStreamingResponse(
         finalContent: aiResponse,
         toolCalls: [],
         shouldContinue: false,
+        usage: fullUsage,
       };
     }
 
@@ -418,6 +426,7 @@ export async function processStreamingResponse(
     finalContent: finalContent,
     toolCalls: validToolCalls,
     shouldContinue: validToolCalls.length > 0,
+    usage: fullUsage,
   };
 }
 
@@ -478,7 +487,7 @@ export async function streamChatResponse(
     });
 
     // Get response from LLM
-    const { content, toolCalls, shouldContinue } =
+    const { content, toolCalls, shouldContinue, usage } =
       await processStreamingResponse({
         isHeadless,
         chatHistory,
@@ -514,6 +523,7 @@ export async function streamChatResponse(
       content,
       callbacks,
       isHeadless,
+      usage,
     );
 
     if (shouldReturn) {
