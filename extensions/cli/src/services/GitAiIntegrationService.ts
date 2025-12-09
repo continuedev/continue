@@ -112,7 +112,10 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
     });
   }
 
-  async trackToolUse(toolCall: PreprocessedToolCall, hookEventName: "PreToolUse" | "PostToolUse"): Promise<void> {
+  async trackToolUse(
+    toolCall: PreprocessedToolCall,
+    hookEventName: "PreToolUse" | "PostToolUse",
+  ): Promise<void> {
     try {
       if (!this.currentState.isEnabled) {
         return;
@@ -121,7 +124,7 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
       if (!isFileEdit) {
         return;
       }
-  
+
       const filePath = this.extractFilePathFromToolCall(toolCall);
       if (filePath) {
         if (hookEventName === "PreToolUse") {
@@ -131,7 +134,11 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
         }
       }
     } catch (error) {
-      logger.warn("git-ai tool use tracking failed", { error, toolCall, hookEventName });
+      logger.warn("git-ai tool use tracking failed", {
+        error,
+        toolCall,
+        hookEventName,
+      });
       // Don't throw - allow tool use to proceed without Git AI checkpoint
     }
   }
@@ -151,8 +158,7 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
       const sessionFilePath = getSessionFilePath();
 
       // Get current model from ModelService via serviceContainer
-      const modelState =
-        serviceContainer.getSync<ModelServiceState>("model");
+      const modelState = serviceContainer.getSync<ModelServiceState>("model");
       const modelName = modelState?.value?.model?.model;
 
       const hookInput: GitAiHookInput = {
@@ -194,8 +200,7 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
       const sessionFilePath = getSessionFilePath();
 
       // Get current model from ModelService via serviceContainer
-      const modelState =
-        serviceContainer.getSync<ModelServiceState>("model");
+      const modelState = serviceContainer.getSync<ModelServiceState>("model");
       const modelName = modelState?.value?.model?.model;
 
       const hookInput: GitAiHookInput = {
@@ -226,14 +231,12 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
     this.setState({ isEnabled: enabled });
   }
 
-  extractFilePathFromToolCall(
-    toolCall: PreprocessedToolCall,
-  ): string | null {
+  extractFilePathFromToolCall(toolCall: PreprocessedToolCall): string | null {
     const preprocessed = toolCall.preprocessResult;
     if (!preprocessed?.args) return null;
-  
+
     const args = preprocessed.args;
-  
+
     // Extract file path based on tool type
     if (toolCall.name === "Edit" && args.resolvedPath) {
       return args.resolvedPath;
@@ -242,7 +245,7 @@ export class GitAiIntegrationService extends BaseService<GitAiIntegrationService
     } else if (toolCall.name === "Write" && args.filepath) {
       return args.filepath;
     }
-  
+
     return null;
   }
 }

@@ -387,6 +387,5 @@ export const services = {
 export { serviceContainer };
 
 // Export service names and types
-  export type * from "./types.js";
-  export { SERVICE_NAMES } from "./types.js";
-
+export type * from "./types.js";
+export { SERVICE_NAMES } from "./types.js";
