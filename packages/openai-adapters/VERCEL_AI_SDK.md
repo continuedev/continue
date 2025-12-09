@@ -122,7 +122,7 @@ Vercel AI SDK uses different formats than OpenAI. We handle conversion transpare
   function: {
     name: "readFile",
     description: "Read a file",
-    parameters: { /* JSON Schema */ }
+    parameters: { /* JSON Schema */ } // Optional - defaults to empty schema
   }
 }
 
@@ -133,6 +133,9 @@ Vercel AI SDK uses different formats than OpenAI. We handle conversion transpare
     parameters: aiJsonSchema({ /* JSON Schema */ })
   }
 }
+
+// When parameters is undefined, an empty schema is provided:
+// parameters: { type: 'object', properties: {} }
 ```
 
 **Stream Events:**
