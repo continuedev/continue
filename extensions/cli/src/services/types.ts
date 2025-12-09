@@ -127,6 +127,7 @@ export interface AgentFileServiceState {
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
+export type { GitAiIntegrationServiceState } from "./GitAiIntegrationService.js";
 
 /**
  * Service names as constants to prevent typos
@@ -145,6 +146,7 @@ export const SERVICE_NAMES = {
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
+  GIT_AI_INTEGRATION: "gitAiIntegration",
 } as const;
 
 /**
