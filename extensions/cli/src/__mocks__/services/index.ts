@@ -9,6 +9,12 @@ export const services = {
     getAvailableOrganizations: vi.fn(() => Promise.resolve([])),
   },
   toolPermissions: vi.mocked(new ToolPermissionService()),
+  artifactUpload: {
+    uploadArtifact: vi.fn(() =>
+      Promise.resolve({ success: true, filename: "test.png" }),
+    ),
+    uploadArtifacts: vi.fn(() => Promise.resolve([])),
+  },
 };
 
 export const reloadService = vi.fn(() => Promise.resolve(undefined));
@@ -27,4 +33,5 @@ export const SERVICE_NAMES = {
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
+  ARTIFACT_UPLOAD: "artifactUpload",
 } as const;
