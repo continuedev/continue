@@ -39,10 +39,8 @@ export const DEFAULT_SECURITY_IGNORE_FILETYPES = [
   "*.secret",
   "*.secrets",
   "credentials",
-  "credentials.*",
   "auth.json",
   "token",
-  "token.*",
   "*.token",
 
   // Backup files that might contain sensitive data
