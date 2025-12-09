@@ -217,7 +217,7 @@ export class OpenAIApi implements BaseLlmApi {
     return {
       id: result.response?.id ?? "",
       object: "chat.completion",
-      created: Date.now(),
+      created: Math.floor(Date.now() / 1000),
       model: modifiedBody.model,
       choices: [
         {

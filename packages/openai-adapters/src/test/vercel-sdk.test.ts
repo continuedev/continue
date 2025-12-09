@@ -29,20 +29,21 @@ function testVercelProvider(config: VercelTestConfig, featureFlag: string) {
   describe(`${config.provider}/${config.model} (Vercel SDK)`, () => {
     vi.setConfig({ testTimeout: 30000 });
 
-    // Set feature flag for this test suite
+    let api: ReturnType<typeof getLlmApi>;
+
+    // Set feature flag and create API instance in beforeAll
     beforeAll(() => {
       process.env[featureFlag] = "true";
+      api = getLlmApi({
+        provider: config.provider as any,
+        apiKey: config.apiKey,
+        apiBase: config.apiBase,
+        env: config.env,
+      });
     });
 
     afterAll(() => {
       delete process.env[featureFlag];
-    });
-
-    const api = getLlmApi({
-      provider: config.provider as any,
-      apiKey: config.apiKey,
-      apiBase: config.apiBase,
-      env: config.env,
     });
 
     testChat(api, model, {

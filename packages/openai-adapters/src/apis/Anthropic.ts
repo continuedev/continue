@@ -427,7 +427,11 @@ export class AnthropicApi implements BaseLlmApi {
       temperature: body.temperature ?? undefined,
       maxTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
-      stopSequences: body.stop as string[] | undefined,
+      stopSequences: body.stop
+        ? Array.isArray(body.stop)
+          ? body.stop
+          : [body.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: body.tool_choice as any,
       abortSignal: signal,
@@ -625,7 +629,11 @@ export class AnthropicApi implements BaseLlmApi {
       temperature: body.temperature ?? undefined,
       maxTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
-      stopSequences: body.stop as string[] | undefined,
+      stopSequences: body.stop
+        ? Array.isArray(body.stop)
+          ? body.stop
+          : [body.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: body.tool_choice as any,
       abortSignal: signal,

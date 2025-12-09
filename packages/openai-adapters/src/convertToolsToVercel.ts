@@ -26,7 +26,9 @@ export function convertToolsToVercelFormat(
     if (tool.type === "function") {
       vercelTools[tool.function.name] = {
         description: tool.function.description,
-        parameters: aiJsonSchema(tool.function.parameters as any),
+        parameters: aiJsonSchema(
+          tool.function.parameters ?? { type: "object", properties: {} },
+        ),
       };
     }
   }
