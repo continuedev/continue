@@ -51,6 +51,7 @@ export const streamThunkWrapper = createAsyncThunk<
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         await dispatch(cancelStream());
       } else {
+        await dispatch(cancelStream());
         dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
         dispatch(setShowDialog(true));
 
@@ -62,6 +63,7 @@ export const streamThunkWrapper = createAsyncThunk<
         };
 
         posthog.capture("gui_stream_error", errorData);
+        return;
       }
     }
   }
