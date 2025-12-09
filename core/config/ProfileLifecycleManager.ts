@@ -33,6 +33,7 @@ export interface OrganizationDescription {
   name: string;
   slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
   policy?: Policy;
+  isAdmin?: boolean;
 }
 
 export type OrgWithProfiles = OrganizationDescription & {

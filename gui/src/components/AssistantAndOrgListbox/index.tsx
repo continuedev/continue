@@ -16,7 +16,10 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
-import { CONFIG_ROUTES } from "../../util/navigation";
+import {
+  CONFIG_ROUTES,
+  ORGANIZATION_SETTINGS_ONBOARDING,
+} from "../../util/navigation";
 import {
   Button,
   Listbox,
@@ -220,8 +223,36 @@ export function AssistantAndOrgListbox({
                     </Button>
                   </div>
                 </div>
+                <div className="px-1.5 pb-1">
+                  <span className="text-description text-2xs">
+                    Selecting an org uses your config in that org
+                  </span>
+                </div>
 
                 <OrganizationOptions onClose={close} />
+
+                {currentOrg?.isAdmin && currentOrg.slug && (
+                  <div className="px-1.5 py-1">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void ideMessenger.request("controlPlane/openUrl", {
+                          path: ORGANIZATION_SETTINGS_ONBOARDING(
+                            currentOrg.slug,
+                          ),
+                        });
+                        close();
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                    >
+                      <span className="text-2xs">
+                        Configure org default configs (all users)
+                      </span>
+                    </Button>
+                  </div>
+                )}
 
                 <Divider className="!mb-0 mt-0.5" />
               </>

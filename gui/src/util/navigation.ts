@@ -35,3 +35,7 @@ export const CONFIG_ROUTES = {
   SETTINGS: buildConfigRoute("settings"),
   HELP: buildConfigRoute("help"),
 } as const;
+
+// Organization settings paths
+export const ORGANIZATION_SETTINGS_ONBOARDING = (orgSlug: string) =>
+  `/organizations/${orgSlug}/settings/onboarding`;
