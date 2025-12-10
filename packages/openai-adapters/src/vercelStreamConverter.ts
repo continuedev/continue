@@ -123,12 +123,27 @@ export function convertVercelStreamPart(
     case "finish":
       // Emit usage chunk at the end if usage data is present
       if (part.usage && part.usage.completionTokens !== undefined) {
+        // Check for Anthropic-specific cache token details
+        const promptTokensDetails =
+          (part.usage as any).promptTokensDetails?.cachedTokens !== undefined
+            ? {
+                cached_tokens:
+                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
+                cache_read_tokens:
+                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
+                cache_write_tokens: 0,
+              }
+            : undefined;
+
         return usageChatChunk({
           model,
           usage: {
             prompt_tokens: part.usage.promptTokens || 0,
             completion_tokens: part.usage.completionTokens || 0,
             total_tokens: part.usage.totalTokens || 0,
+            ...(promptTokensDetails
+              ? { prompt_tokens_details: promptTokensDetails as any }
+              : {}),
           },
         });
       }
