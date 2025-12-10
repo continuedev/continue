@@ -191,7 +191,7 @@ export class OpenAIApi implements BaseLlmApi {
     const model = this.openaiProvider(modifiedBody.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
-    const vercelTools = convertToolsToVercelFormat(modifiedBody.tools);
+    const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);
 
     const result = await generateText({
       model,
@@ -312,7 +312,7 @@ export class OpenAIApi implements BaseLlmApi {
     const model = this.openaiProvider(modifiedBody.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
-    const vercelTools = convertToolsToVercelFormat(modifiedBody.tools);
+    const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);
 
     const stream = await streamText({
       model,

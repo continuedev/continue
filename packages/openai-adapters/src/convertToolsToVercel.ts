@@ -3,7 +3,6 @@
  */
 
 import type { ChatCompletionCreateParams } from "openai/resources/index.js";
-import { jsonSchema as aiJsonSchema } from "ai";
 
 /**
  * Converts OpenAI tool format to Vercel AI SDK format.
@@ -14,12 +13,14 @@ import { jsonSchema as aiJsonSchema } from "ai";
  * @param openaiTools - Array of OpenAI tools or undefined
  * @returns Object with tool names as keys, or undefined if no tools
  */
-export function convertToolsToVercelFormat(
+export async function convertToolsToVercelFormat(
   openaiTools?: ChatCompletionCreateParams["tools"],
-): Record<string, any> | undefined {
+): Promise<Record<string, any> | undefined> {
   if (!openaiTools || openaiTools.length === 0) {
     return undefined;
   }
+
+  const { jsonSchema: aiJsonSchema } = await import("ai");
 
   const vercelTools: Record<string, any> = {};
   for (const tool of openaiTools) {

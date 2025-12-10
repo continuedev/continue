@@ -3,17 +3,17 @@ import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 import type { ChatCompletionCreateParams } from "openai/resources/index.js";
 
 describe("convertToolsToVercelFormat", () => {
-  test("returns undefined for undefined tools", () => {
-    const result = convertToolsToVercelFormat(undefined);
+  test("returns undefined for undefined tools", async () => {
+    const result = await convertToolsToVercelFormat(undefined);
     expect(result).toBeUndefined();
   });
 
-  test("returns undefined for empty tools array", () => {
-    const result = convertToolsToVercelFormat([]);
+  test("returns undefined for empty tools array", async () => {
+    const result = await convertToolsToVercelFormat([]);
     expect(result).toBeUndefined();
   });
 
-  test("converts single function tool", () => {
+  test("converts single function tool", async () => {
     const tools: ChatCompletionCreateParams["tools"] = [
       {
         type: "function",
@@ -34,7 +34,7 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
     expect(result).toHaveProperty("readFile");
@@ -47,7 +47,7 @@ describe("convertToolsToVercelFormat", () => {
     expect(result?.readFile.parameters).toBeDefined();
   });
 
-  test("converts multiple function tools", () => {
+  test("converts multiple function tools", async () => {
     const tools: ChatCompletionCreateParams["tools"] = [
       {
         type: "function",
@@ -78,7 +78,7 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
     expect(Object.keys(result!)).toHaveLength(2);
@@ -88,7 +88,7 @@ describe("convertToolsToVercelFormat", () => {
     expect(result?.writeFile.description).toBe("Write a file");
   });
 
-  test("handles tool without description", () => {
+  test("handles tool without description", async () => {
     const tools: ChatCompletionCreateParams["tools"] = [
       {
         type: "function",
@@ -102,14 +102,14 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
     expect(result).toHaveProperty("testTool");
     expect(result?.testTool.description).toBeUndefined();
   });
 
-  test("filters out non-function tools", () => {
+  test("filters out non-function tools", async () => {
     const tools: any[] = [
       {
         type: "function",
@@ -125,7 +125,7 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
     expect(Object.keys(result!)).toHaveLength(1);
@@ -133,7 +133,7 @@ describe("convertToolsToVercelFormat", () => {
     expect(result).not.toHaveProperty("customTool");
   });
 
-  test("returns undefined if all tools are filtered out", () => {
+  test("returns undefined if all tools are filtered out", async () => {
     const tools: any[] = [
       {
         type: "custom", // Not a function type
@@ -141,12 +141,12 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeUndefined();
   });
 
-  test("preserves parameter schema structure", () => {
+  test("preserves parameter schema structure", async () => {
     const tools: ChatCompletionCreateParams["tools"] = [
       {
         type: "function",
@@ -178,7 +178,7 @@ describe("convertToolsToVercelFormat", () => {
       },
     ];
 
-    const result = convertToolsToVercelFormat(tools);
+    const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
     expect(result?.complexTool.parameters).toBeDefined();

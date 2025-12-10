@@ -426,7 +426,7 @@ export class AnthropicApi implements BaseLlmApi {
     const model = this.anthropicProvider(body.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
-    const vercelTools = convertToolsToVercelFormat(body.tools);
+    const vercelTools = await convertToolsToVercelFormat(body.tools);
 
     const result = await generateText({
       model,
@@ -639,7 +639,7 @@ export class AnthropicApi implements BaseLlmApi {
     const model = this.anthropicProvider(body.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
-    const vercelTools = convertToolsToVercelFormat(body.tools);
+    const vercelTools = await convertToolsToVercelFormat(body.tools);
 
     const stream = await streamText({
       model,
