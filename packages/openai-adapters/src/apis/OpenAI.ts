@@ -334,42 +334,36 @@ export class OpenAIApi implements BaseLlmApi {
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    let hasEmittedUsage = false;
     for await (const chunk of convertVercelStream(stream.fullStream as any, {
       model: modifiedBody.model,
     })) {
-      if (chunk.usage) {
-        hasEmittedUsage = true;
-      }
       yield chunk;
     }
 
-    // Fallback: If fullStream didn't emit usage, get it from stream.usage Promise
-    if (!hasEmittedUsage) {
-      const finalUsage = await stream.usage;
-      if (finalUsage) {
-        const promptTokens =
-          typeof finalUsage.promptTokens === "number"
-            ? finalUsage.promptTokens
-            : 0;
-        const completionTokens =
-          typeof finalUsage.completionTokens === "number"
-            ? finalUsage.completionTokens
-            : 0;
-        const totalTokens =
-          typeof finalUsage.totalTokens === "number"
-            ? finalUsage.totalTokens
-            : promptTokens + completionTokens;
+    // Get final usage from stream.usage Promise (finish event has incomplete data)
+    const finalUsage = await stream.usage;
+    if (finalUsage) {
+      const promptTokens =
+        typeof finalUsage.promptTokens === "number"
+          ? finalUsage.promptTokens
+          : 0;
+      const completionTokens =
+        typeof finalUsage.completionTokens === "number"
+          ? finalUsage.completionTokens
+          : 0;
+      const totalTokens =
+        typeof finalUsage.totalTokens === "number"
+          ? finalUsage.totalTokens
+          : promptTokens + completionTokens;
 
-        yield usageChatChunk({
-          model: modifiedBody.model,
-          usage: {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
-            total_tokens: totalTokens,
-          },
-        });
-      }
+      yield usageChatChunk({
+        model: modifiedBody.model,
+        usage: {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: totalTokens,
+        },
+      });
     }
   }
   async completionNonStream(

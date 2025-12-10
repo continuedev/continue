@@ -78,7 +78,7 @@ describe("convertVercelStreamPart", () => {
     });
   });
 
-  test("converts finish to usage chunk", () => {
+  test("finish event returns null (usage comes from stream.usage Promise)", () => {
     const part: VercelStreamPart = {
       type: "finish",
       finishReason: "stop",
@@ -91,12 +91,8 @@ describe("convertVercelStreamPart", () => {
 
     const result = convertVercelStreamPart(part, options);
 
-    expect(result).not.toBeNull();
-    expect(result?.usage).toEqual({
-      prompt_tokens: 100,
-      completion_tokens: 50,
-      total_tokens: 150,
-    });
+    // Finish event should not emit usage - caller will use stream.usage Promise
+    expect(result).toBeNull();
   });
 
   test("throws error for error event", () => {
@@ -250,16 +246,15 @@ describe("convertVercelStream", () => {
       chunks.push(chunk);
     }
 
-    // Should only get chunks for: text-delta (2), tool-call (1), finish (1) = 4 chunks
-    // step-start and step-finish are filtered out
-    expect(chunks).toHaveLength(4);
+    // Should only get chunks for: text-delta (2), tool-call (1) = 3 chunks
+    // step-start, step-finish, and finish are filtered out (finish usage comes from stream.usage Promise)
+    expect(chunks).toHaveLength(3);
 
     expect(chunks[0].choices[0].delta.content).toBe("Hello ");
     expect(chunks[1].choices[0].delta.content).toBe("world");
     expect(chunks[2].choices[0].delta.tool_calls?.[0].function?.name).toBe(
       "test",
     );
-    expect(chunks[3].usage).toBeDefined();
   });
 
   test("throws error when stream contains error event", async () => {
