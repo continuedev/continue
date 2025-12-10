@@ -121,8 +121,22 @@ export function convertVercelStreamPart(
       });
 
     case "finish":
-      // Emit usage chunk at the end if usage data is present
-      if (part.usage && part.usage.completionTokens !== undefined) {
+      // Emit usage from finish event if available
+      // The finish event DOES contain the final usage in most cases
+      if (part.usage) {
+        const promptTokens =
+          typeof part.usage.promptTokens === "number"
+            ? part.usage.promptTokens
+            : 0;
+        const completionTokens =
+          typeof part.usage.completionTokens === "number"
+            ? part.usage.completionTokens
+            : 0;
+        const totalTokens =
+          typeof part.usage.totalTokens === "number"
+            ? part.usage.totalTokens
+            : promptTokens + completionTokens;
+
         // Check for Anthropic-specific cache token details
         const promptTokensDetails =
           (part.usage as any).promptTokensDetails?.cachedTokens !== undefined
@@ -138,16 +152,15 @@ export function convertVercelStreamPart(
         return usageChatChunk({
           model,
           usage: {
-            prompt_tokens: part.usage.promptTokens || 0,
-            completion_tokens: part.usage.completionTokens || 0,
-            total_tokens: part.usage.totalTokens || 0,
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: totalTokens,
             ...(promptTokensDetails
               ? { prompt_tokens_details: promptTokensDetails as any }
               : {}),
           },
         });
       }
-      // If no usage data, don't emit a usage chunk
       return null;
 
     case "error":

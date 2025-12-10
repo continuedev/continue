@@ -665,7 +665,7 @@ export class AnthropicApi implements BaseLlmApi {
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    // Note: fullStream includes a "finish" event with usage, which convertVercelStream will handle
+    // The finish event in fullStream contains the usage data
     yield* convertVercelStream(stream.fullStream as any, {
       model: body.model,
     });
