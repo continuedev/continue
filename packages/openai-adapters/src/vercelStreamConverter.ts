@@ -121,15 +121,19 @@ export function convertVercelStreamPart(
       });
 
     case "finish":
-      // Emit usage chunk at the end
-      return usageChatChunk({
-        model,
-        usage: {
-          prompt_tokens: part.usage.promptTokens,
-          completion_tokens: part.usage.completionTokens,
-          total_tokens: part.usage.totalTokens,
-        },
-      });
+      // Emit usage chunk at the end if usage data is present
+      if (part.usage && part.usage.completionTokens !== undefined) {
+        return usageChatChunk({
+          model,
+          usage: {
+            prompt_tokens: part.usage.promptTokens || 0,
+            completion_tokens: part.usage.completionTokens || 0,
+            total_tokens: part.usage.totalTokens || 0,
+          },
+        });
+      }
+      // If no usage data, don't emit a usage chunk
+      return null;
 
     case "error":
       // Errors should be thrown, not converted to chunks

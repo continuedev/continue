@@ -407,6 +407,9 @@ export class AnthropicApi implements BaseLlmApi {
     const { convertToolsToVercelFormat } = await import(
       "../convertToolsToVercel.js"
     );
+    const { convertToolChoiceToVercel } = await import(
+      "../convertToolChoiceToVercel.js"
+    );
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
@@ -441,7 +444,7 @@ export class AnthropicApi implements BaseLlmApi {
           : [body.stop]
         : undefined,
       tools: vercelTools,
-      toolChoice: body.tool_choice as any,
+      toolChoice: convertToolChoiceToVercel(body.tool_choice),
       abortSignal: signal,
     });
 
@@ -620,6 +623,9 @@ export class AnthropicApi implements BaseLlmApi {
       "../convertToolsToVercel.js"
     );
     const { convertVercelStream } = await import("../vercelStreamConverter.js");
+    const { convertToolChoiceToVercel } = await import(
+      "../convertToolChoiceToVercel.js"
+    );
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
@@ -654,7 +660,7 @@ export class AnthropicApi implements BaseLlmApi {
           : [body.stop]
         : undefined,
       tools: vercelTools,
-      toolChoice: body.tool_choice as any,
+      toolChoice: convertToolChoiceToVercel(body.tool_choice),
       abortSignal: signal,
     });
 
@@ -662,20 +668,28 @@ export class AnthropicApi implements BaseLlmApi {
     for await (const chunk of convertVercelStream(stream.fullStream as any, {
       model: body.model,
     })) {
-      // Enhance usage chunks with Anthropic-specific cache token details
-      if (chunk.usage) {
-        const usage = await stream.usage;
-        if (usage) {
-          chunk.usage.prompt_tokens_details = {
-            cached_tokens:
-              (usage as any).promptTokensDetails?.cachedTokens ?? 0,
-            cache_read_tokens:
-              (usage as any).promptTokensDetails?.cachedTokens ?? 0,
-            cache_write_tokens: 0,
-          } as any;
-        }
-      }
       yield chunk;
+    }
+
+    // Emit final usage chunk with Anthropic-specific cache token details
+    const finalUsage = await stream.usage;
+    if (finalUsage) {
+      const { usageChatChunk } = await import("../util.js");
+      yield usageChatChunk({
+        model: body.model,
+        usage: {
+          prompt_tokens: finalUsage.promptTokens,
+          completion_tokens: finalUsage.completionTokens,
+          total_tokens: finalUsage.totalTokens,
+          prompt_tokens_details: {
+            cached_tokens:
+              (finalUsage as any).promptTokensDetails?.cachedTokens ?? 0,
+            cache_read_tokens:
+              (finalUsage as any).promptTokensDetails?.cachedTokens ?? 0,
+            cache_write_tokens: 0,
+          } as any,
+        },
+      });
     }
   }
 

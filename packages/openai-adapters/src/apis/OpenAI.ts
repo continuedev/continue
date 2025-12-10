@@ -182,6 +182,9 @@ export class OpenAIApi implements BaseLlmApi {
     const { convertToolsToVercelFormat } = await import(
       "../convertToolsToVercel.js"
     );
+    const { convertToolChoiceToVercel } = await import(
+      "../convertToolChoiceToVercel.js"
+    );
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);
@@ -206,7 +209,7 @@ export class OpenAIApi implements BaseLlmApi {
           : [modifiedBody.stop]
         : undefined,
       tools: vercelTools,
-      toolChoice: modifiedBody.tool_choice as any,
+      toolChoice: convertToolChoiceToVercel(modifiedBody.tool_choice),
       abortSignal: signal,
     });
 
@@ -299,6 +302,9 @@ export class OpenAIApi implements BaseLlmApi {
       "../convertToolsToVercel.js"
     );
     const { convertVercelStream } = await import("../vercelStreamConverter.js");
+    const { convertToolChoiceToVercel } = await import(
+      "../convertToolChoiceToVercel.js"
+    );
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);
@@ -323,14 +329,29 @@ export class OpenAIApi implements BaseLlmApi {
           : [modifiedBody.stop]
         : undefined,
       tools: vercelTools,
-      toolChoice: modifiedBody.tool_choice as any,
+      toolChoice: convertToolChoiceToVercel(modifiedBody.tool_choice),
       abortSignal: signal,
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    yield* convertVercelStream(stream.fullStream as any, {
+    for await (const chunk of convertVercelStream(stream.fullStream as any, {
       model: modifiedBody.model,
-    });
+    })) {
+      yield chunk;
+    }
+
+    // Emit final usage chunk from stream.usage Promise
+    const finalUsage = await stream.usage;
+    if (finalUsage) {
+      yield usageChatChunk({
+        model: modifiedBody.model,
+        usage: {
+          prompt_tokens: finalUsage.promptTokens,
+          completion_tokens: finalUsage.completionTokens,
+          total_tokens: finalUsage.totalTokens,
+        },
+      });
+    }
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
