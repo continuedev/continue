@@ -41,54 +41,20 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
     );
 
-    // DIAGNOSTIC: Check source index.node size before delay
-    const packageSubdir = packageName.replace("@lancedb/", "");
-    const sourceIndexNode = path.join(
-      tempDir,
-      "node_modules",
-      toCopy,
-      packageSubdir,
-      "index.node",
-    );
-    if (fs.existsSync(sourceIndexNode)) {
-      const srcStats = fs.statSync(sourceIndexNode);
-      console.log(
-        `[diag] Source index.node BEFORE delay: ${sourceIndexNode} size=${srcStats.size}`,
-      );
-    } else {
-      console.log(`[diag] Source index.node NOT FOUND at ${sourceIndexNode}`);
-    }
-
     // Without this it seems the file isn't completely written to disk
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // DIAGNOSTIC: Check source index.node size after delay
-    if (fs.existsSync(sourceIndexNode)) {
-      const srcStats = fs.statSync(sourceIndexNode);
-      console.log(
-        `[diag] Source index.node AFTER delay: ${sourceIndexNode} size=${srcStats.size}`,
-      );
-    }
-
-    // DIAGNOSTIC: Check destination before copy
+    // Remove existing destination directory to ensure fresh copy
+    // ncp's clobber option doesn't reliably overwrite cached files
+    const packageSubdir = packageName.replace("@lancedb/", "");
     const destDir = path.join(
       currentDir,
       "node_modules",
       toCopy,
       packageSubdir,
     );
-    const destIndexNode = path.join(destDir, "index.node");
-    if (fs.existsSync(destIndexNode)) {
-      const destStats = fs.statSync(destIndexNode);
-      console.log(
-        `[diag] Dest index.node BEFORE copy: ${destIndexNode} size=${destStats.size}`,
-      );
-      // FIX: Remove existing destination directory to ensure fresh copy
-      // ncp's clobber option doesn't reliably overwrite files from cache
-      console.log(`[info] Removing existing ${destDir} to ensure fresh copy`);
+    if (fs.existsSync(destDir)) {
       rimrafSync(destDir);
-    } else {
-      console.log(`[diag] Dest index.node does not exist before copy`);
     }
 
     // Copy the installed package back to the current directory
@@ -96,7 +62,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       ncp(
         path.join(tempDir, "node_modules", toCopy),
         path.join(currentDir, "node_modules", toCopy),
-        { dereference: true, clobber: true },
+        { dereference: true },
         (error) => {
           if (error) {
             console.error(
@@ -110,16 +76,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
         },
       );
     });
-
-    // DIAGNOSTIC: Check destination after copy
-    if (fs.existsSync(destIndexNode)) {
-      const destStats = fs.statSync(destIndexNode);
-      console.log(
-        `[diag] Dest index.node AFTER copy: ${destIndexNode} size=${destStats.size}`,
-      );
-    } else {
-      console.log(`[diag] Dest index.node NOT FOUND after copy!`);
-    }
   } finally {
     // Clean up the temporary directory
     try {
