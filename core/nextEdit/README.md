@@ -11,7 +11,10 @@
 - The following happens after the trigger:
   - User's current cursor position is captured.
   - We define an editable range, ±5 lines from the current cursor position.
-  - User's most recent edit is captured as a unified diff. (this is currently buggy)
+  - User's edit history is captured as unified diffs, including:
+    - The very first edit to a file (tracked via document content cache)
+    - All intermediate edits (aggregated into clusters)
+    - In-progress edits that haven't been finalized yet (the user's most recent typing)
   - This is sent to the model, which returns a new editable range with next edit predictions.
   - We display this new editable range in a SVG decoration.
   - User can either tab to accept or esc to reject.
@@ -20,8 +23,7 @@
 
 ## What needs to be worked on?
 
-- User edit captures.
-- Find a better way to trigger next edit (this links back to the diff capture problem).
+- Find a better way to trigger next edit.
   - We can see that next edit triggers as soon as the user accepts a change. This is because autocomplete runs the same way.
   - I think autocomplete has some filter logic that doesn't display the ghost text under some conditions, which I am guessing are the following:
     - The model does not have any more completions to create.
