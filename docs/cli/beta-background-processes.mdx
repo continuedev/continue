@@ -1,0 +1,185 @@
+---
+title: "Background Process Execution (Beta)"
+description: "Run long-running terminal commands in the background while the AI continues other tasks"
+sidebarTitle: "Background Processes"
+---
+
+<Warning>
+  This feature is in beta and may change. Enable with the `--beta-persistent-terminal-tools` flag.
+</Warning>
+
+## Overview
+
+Background process execution allows the Continue CLI agent to run long-running terminal commands in the background, enabling workflows where processes like dev servers need to continue while the agent performs other tasks.
+
+## Motivation
+
+Previously, the `Bash` tool would block until a command completed. This made it impossible for the agent to:
+
+- Start a dev server and then take screenshots of the running application
+- Launch multiple long-running processes concurrently
+- Monitor ongoing processes while continuing other work
+
+Background process execution unlocks capabilities like automated testing of live applications, parallel command execution, and better handling of persistent services.
+
+## Enabling Background Processes
+
+To enable this beta feature, start the CLI with the `--beta-persistent-terminal-tools` flag:
+
+```bash
+cn chat --beta-persistent-terminal-tools "help me build and test my app"
+```
+
+## Available Tools
+
+When background processes are enabled, the following tools become available to the AI:
+
+### Bash (Enhanced)
+
+The existing `Bash` tool gains a new `run_in_background` parameter:
+
+```typescript
+Bash({
+  command: "npm run dev",
+  run_in_background: true,
+});
+// Returns: "Background process started with ID 1..."
+```
+
+### BashOutput
+
+Read buffered output from a background process:
+
+```typescript
+BashOutput({
+  bash_id: 1,
+  filter: "Local:.*http://localhost", // Optional regex filter
+});
+// Returns filtered output showing server URL
+```
+
+**Parameters:**
+- `bash_id` (required): The process ID to read output from
+- `filter` (optional): A regex pattern to filter output lines
+
+### ListProcesses
+
+List all running background processes:
+
+```typescript
+ListProcesses();
+// Returns list of active processes with IDs, commands, and status
+```
+
+### KillProcess
+
+Terminate a background process:
+
+```typescript
+KillProcess({ bash_id: 1 });
+// Returns confirmation of process termination
+```
+
+## Example Workflows
+
+### Starting and Monitoring a Dev Server
+
+```bash
+cn chat --beta-persistent-terminal-tools "start the dev server and tell me when it's ready"
+```
+
+The agent can:
+
+1. Start the server with `Bash({ command: "npm run dev", run_in_background: true })`
+2. Poll for ready signal with `BashOutput({ bash_id: 1, filter: "ready" })`
+3. Continue with other tasks once the server is running
+4. Clean up with `KillProcess({ bash_id: 1 })` when done
+
+### Running Tests Against a Live Server
+
+```bash
+cn chat --beta-persistent-terminal-tools "start the app and run e2e tests against it"
+```
+
+The agent can:
+
+1. Start the application server in the background
+2. Wait for the server to be ready using output monitoring
+3. Run tests using a separate `Bash` command
+4. Clean up the server process after tests complete
+
+### Parallel Command Execution
+
+```bash
+cn chat --beta-persistent-terminal-tools "build the frontend and backend in parallel"
+```
+
+The agent can start multiple background processes simultaneously and monitor their progress.
+
+## Technical Details
+
+### Process Management
+
+- **Process IDs**: Sequential numeric IDs (1, 2, 3...) for simple reference
+- **Process Limit**: Maximum 10 concurrent background processes
+- **Session Scope**: Processes are automatically terminated when the CLI exits
+
+### Output Buffering
+
+- **Buffer Size**: 10,000 lines per process
+- **Circular Buffer**: Oldest lines are discarded when the buffer is full
+- **Incremental Reading**: `BashOutput` returns only new output since the last read
+
+### Lifecycle
+
+- Processes are spawned using Node.js `spawn`
+- Exit codes are tracked and reported
+- Automatic cleanup on CLI exit via `gracefulExit()` handler
+- No persistence across CLI sessions
+
+## Limitations
+
+<Warning>
+  - Processes are **session-scoped** and killed when the CLI exits
+  - **No persistence** across agent sessions
+  - Output buffer **limited to 10K lines** per process
+  - **No built-in readiness detection** (agent must parse output)
+  - Maximum **10 concurrent processes**
+</Warning>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Dev Server Testing" icon="server">
+    Start development servers and test running applications automatically
+  </Card>
+  
+  <Card title="Parallel Builds" icon="layer-group">
+    Run multiple build processes concurrently to speed up workflows
+  </Card>
+  
+  <Card title="Log Monitoring" icon="list-check">
+    Monitor application logs while performing other development tasks
+  </Card>
+  
+  <Card title="Service Orchestration" icon="gears">
+    Start and manage multiple services for integration testing
+  </Card>
+</CardGroup>
+
+## Feedback
+
+This feature is in beta. Please share feedback:
+
+- [GitHub Discussions](https://github.com/continuedev/continue/discussions)
+- [Discord Community](https://discord.com/invite/EfJEfdFnDQ)
+
+## Future Considerations
+
+Potential enhancements being considered:
+
+- Persistent processes across sessions
+- Process groups and orchestration
+- Built-in readiness detection for common frameworks
+- Extended output history and streaming
+- Process resource monitoring and alerts

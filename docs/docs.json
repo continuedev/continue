@@ -87,6 +87,7 @@
               "cli/overview",
               "cli/install",
               "cli/quick-start",
+              "cli/beta-background-processes",
               "cli/guides"
             ]
           },
