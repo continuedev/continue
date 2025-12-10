@@ -21,6 +21,7 @@ import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { isSecurityConcern } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
+import { EditAggregator } from "./context/aggregateEdits.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
@@ -399,13 +400,28 @@ export class NextEditProvider {
         opts?.usingFullFileDiff ?? false,
       );
 
+    // Build diffContext including in-progress edits
+    // The finalized diffs are in this.diffContext, but we also need to include
+    // any in-progress edits that haven't been finalized yet (the user's most recent typing)
+    const combinedDiffContext = [...this.diffContext];
+    try {
+      const inProgressDiff = EditAggregator.getInstance().getInProgressDiff(
+        helper.filepath,
+      );
+      if (inProgressDiff) {
+        combinedDiffContext.push(inProgressDiff);
+      }
+    } catch (e) {
+      // EditAggregator may not be initialized yet, ignore
+    }
+
     // Build context for model-specific prompt generation.
     const context: ModelSpecificContext = {
       helper,
       snippetPayload,
       editableRegionStartLine,
       editableRegionEndLine,
-      diffContext: this.diffContext,
+      diffContext: combinedDiffContext,
       autocompleteContext: this.autocompleteContext,
       historyDiff: createDiff({
         beforeContent:
