@@ -51,15 +51,10 @@ import {
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { streamText, generateText } from "ai";
-import { convertVercelStream } from "../vercelStreamConverter.js";
-import { convertOpenAIMessagesToVercel } from "../openaiToVercelMessages.js";
-import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
-  private anthropicProvider?: ReturnType<typeof createAnthropic>;
+  private anthropicProvider?: any;
   private useVercelSDK: boolean;
 
   constructor(
@@ -73,28 +68,31 @@ export class AnthropicApi implements BaseLlmApi {
     }
 
     this.useVercelSDK = process.env.USE_VERCEL_AI_SDK_ANTHROPIC === "true";
+  }
 
-    if (this.useVercelSDK) {
-      // New Vercel AI SDK implementation
+  private async initializeVercelProvider() {
+    if (!this.anthropicProvider && this.useVercelSDK) {
+      const { createAnthropic } = await import("@ai-sdk/anthropic");
+
       // Only use customFetch if we have request options that need it
       // Otherwise use native fetch (Vercel AI SDK requires Web Streams API)
       const hasRequestOptions =
-        config.requestOptions &&
-        (config.requestOptions.headers ||
-          config.requestOptions.proxy ||
-          config.requestOptions.caBundlePath ||
-          config.requestOptions.clientCertificate ||
-          config.requestOptions.extraBodyProperties);
+        this.config.requestOptions &&
+        (this.config.requestOptions.headers ||
+          this.config.requestOptions.proxy ||
+          this.config.requestOptions.caBundlePath ||
+          this.config.requestOptions.clientCertificate ||
+          this.config.requestOptions.extraBodyProperties);
 
       this.anthropicProvider = createAnthropic({
-        apiKey: config.apiKey ?? "",
+        apiKey: this.config.apiKey ?? "",
         baseURL:
           this.apiBase !== "https://api.anthropic.com/v1/" &&
           this.apiBase !== "https://api.anthropic.com/v1"
             ? this.apiBase.replace(/\/$/, "")
             : undefined,
         fetch: hasRequestOptions
-          ? customFetch(config.requestOptions)
+          ? customFetch(this.config.requestOptions)
           : undefined,
       });
     }
@@ -366,7 +364,7 @@ export class AnthropicApi implements BaseLlmApi {
       id: completion.id,
       object: "chat.completion",
       model: body.model,
-      created: Date.now(),
+      created: Math.floor(Date.now() / 1000),
       usage: {
         total_tokens: (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
         completion_tokens: usage?.output_tokens ?? 0,
@@ -396,9 +394,19 @@ export class AnthropicApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    await this.initializeVercelProvider();
+
     if (!this.anthropicProvider) {
       throw new Error("Vercel AI SDK Anthropic provider not initialized");
     }
+
+    const { generateText } = await import("ai");
+    const { convertOpenAIMessagesToVercel } = await import(
+      "../openaiToVercelMessages.js"
+    );
+    const { convertToolsToVercelFormat } = await import(
+      "../convertToolsToVercel.js"
+    );
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
@@ -427,7 +435,11 @@ export class AnthropicApi implements BaseLlmApi {
       temperature: body.temperature ?? undefined,
       maxTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
-      stopSequences: body.stop as string[] | undefined,
+      stopSequences: body.stop
+        ? Array.isArray(body.stop)
+          ? body.stop
+          : [body.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: body.tool_choice as any,
       abortSignal: signal,
@@ -446,7 +458,7 @@ export class AnthropicApi implements BaseLlmApi {
     return {
       id: result.response?.id ?? "",
       object: "chat.completion",
-      created: Date.now(),
+      created: Math.floor(Date.now() / 1000),
       model: body.model,
       choices: [
         {
@@ -594,9 +606,20 @@ export class AnthropicApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
+    await this.initializeVercelProvider();
+
     if (!this.anthropicProvider) {
       throw new Error("Vercel AI SDK Anthropic provider not initialized");
     }
+
+    const { streamText } = await import("ai");
+    const { convertOpenAIMessagesToVercel } = await import(
+      "../openaiToVercelMessages.js"
+    );
+    const { convertToolsToVercelFormat } = await import(
+      "../convertToolsToVercel.js"
+    );
+    const { convertVercelStream } = await import("../vercelStreamConverter.js");
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
@@ -625,7 +648,11 @@ export class AnthropicApi implements BaseLlmApi {
       temperature: body.temperature ?? undefined,
       maxTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
-      stopSequences: body.stop as string[] | undefined,
+      stopSequences: body.stop
+        ? Array.isArray(body.stop)
+          ? body.stop
+          : [body.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: body.tool_choice as any,
       abortSignal: signal,

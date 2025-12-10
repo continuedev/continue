@@ -36,44 +36,16 @@ import {
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
-import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, generateText, streamObject } from "ai";
-import { convertVercelStream } from "../vercelStreamConverter.js";
-import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
-  private openaiProvider?: ReturnType<typeof createOpenAI>;
+  private openaiProvider?: any;
   private useVercelSDK: boolean;
 
   constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
     this.useVercelSDK = process.env.USE_VERCEL_AI_SDK_OPENAI === "true";
-
-    if (this.useVercelSDK) {
-      // New Vercel AI SDK implementation
-      // Only use customFetch if we have request options that need it
-      // Otherwise use native fetch (Vercel AI SDK requires Web Streams API)
-      const hasRequestOptions =
-        config.requestOptions &&
-        (config.requestOptions.headers ||
-          config.requestOptions.proxy ||
-          config.requestOptions.caBundlePath ||
-          config.requestOptions.clientCertificate ||
-          config.requestOptions.extraBodyProperties);
-
-      this.openaiProvider = createOpenAI({
-        apiKey: config.apiKey ?? "",
-        baseURL:
-          this.apiBase !== "https://api.openai.com/v1/"
-            ? this.apiBase
-            : undefined,
-        fetch: hasRequestOptions
-          ? customFetch(config.requestOptions)
-          : undefined,
-      });
-    }
 
     // Always create the original OpenAI client for fallback
     this.openai = new OpenAI({
@@ -82,6 +54,33 @@ export class OpenAIApi implements BaseLlmApi {
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
     });
+  }
+
+  private async initializeVercelProvider() {
+    if (!this.openaiProvider && this.useVercelSDK) {
+      const { createOpenAI } = await import("@ai-sdk/openai");
+
+      // Only use customFetch if we have request options that need it
+      // Otherwise use native fetch (Vercel AI SDK requires Web Streams API)
+      const hasRequestOptions =
+        this.config.requestOptions &&
+        (this.config.requestOptions.headers ||
+          this.config.requestOptions.proxy ||
+          this.config.requestOptions.caBundlePath ||
+          this.config.requestOptions.clientCertificate ||
+          this.config.requestOptions.extraBodyProperties);
+
+      this.openaiProvider = createOpenAI({
+        apiKey: this.config.apiKey ?? "",
+        baseURL:
+          this.apiBase !== "https://api.openai.com/v1/"
+            ? this.apiBase
+            : undefined,
+        fetch: hasRequestOptions
+          ? customFetch(this.config.requestOptions)
+          : undefined,
+      });
+    }
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
     // Add stream_options to include usage in streaming responses
@@ -177,9 +176,16 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    await this.initializeVercelProvider();
+
     if (!this.openaiProvider) {
       throw new Error("Vercel AI SDK provider not initialized");
     }
+
+    const { generateText } = await import("ai");
+    const { convertToolsToVercelFormat } = await import(
+      "../convertToolsToVercel.js"
+    );
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);
@@ -198,7 +204,11 @@ export class OpenAIApi implements BaseLlmApi {
       topP: modifiedBody.top_p ?? undefined,
       frequencyPenalty: modifiedBody.frequency_penalty ?? undefined,
       presencePenalty: modifiedBody.presence_penalty ?? undefined,
-      stopSequences: modifiedBody.stop as string[] | undefined,
+      stopSequences: modifiedBody.stop
+        ? Array.isArray(modifiedBody.stop)
+          ? modifiedBody.stop
+          : [modifiedBody.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: modifiedBody.tool_choice as any,
       abortSignal: signal,
@@ -217,7 +227,7 @@ export class OpenAIApi implements BaseLlmApi {
     return {
       id: result.response?.id ?? "",
       object: "chat.completion",
-      created: Date.now(),
+      created: Math.floor(Date.now() / 1000),
       model: modifiedBody.model,
       choices: [
         {
@@ -286,9 +296,17 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    await this.initializeVercelProvider();
+
     if (!this.openaiProvider) {
       throw new Error("Vercel AI SDK provider not initialized");
     }
+
+    const { streamText } = await import("ai");
+    const { convertToolsToVercelFormat } = await import(
+      "../convertToolsToVercel.js"
+    );
+    const { convertVercelStream } = await import("../vercelStreamConverter.js");
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);
@@ -307,7 +325,11 @@ export class OpenAIApi implements BaseLlmApi {
       topP: modifiedBody.top_p ?? undefined,
       frequencyPenalty: modifiedBody.frequency_penalty ?? undefined,
       presencePenalty: modifiedBody.presence_penalty ?? undefined,
-      stopSequences: modifiedBody.stop as string[] | undefined,
+      stopSequences: modifiedBody.stop
+        ? Array.isArray(modifiedBody.stop)
+          ? modifiedBody.stop
+          : [modifiedBody.stop]
+        : undefined,
       tools: vercelTools,
       toolChoice: modifiedBody.tool_choice as any,
       abortSignal: signal,
