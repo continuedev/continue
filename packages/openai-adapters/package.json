@@ -21,7 +21,7 @@
     "@continuedev/config-yaml": "^1.36.0",
     "@continuedev/fetch": "^1.6.0",
     "@google/genai": "^1.30.0",
-    "ai": "^4.0.33",
+    "ai": "^5.0.108",
     "dotenv": "^16.5.0",
     "google-auth-library": "^10.4.1",
     "json-schema": "^0.4.0",
