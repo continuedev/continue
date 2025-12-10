@@ -334,55 +334,10 @@ export class OpenAIApi implements BaseLlmApi {
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    for await (const chunk of convertVercelStream(stream.fullStream as any, {
+    // The finish event in fullStream contains the usage data
+    yield* convertVercelStream(stream.fullStream as any, {
       model: modifiedBody.model,
-    })) {
-      yield chunk;
-    }
-
-    // Get final usage from stream.usage Promise (finish event has incomplete data)
-    try {
-      const finalUsage = await stream.usage;
-      console.log("[OpenAI Vercel] stream.usage resolved:", {
-        finalUsage,
-        type: typeof finalUsage,
-        keys: finalUsage ? Object.keys(finalUsage) : [],
-      });
-
-      if (finalUsage) {
-        const promptTokens =
-          typeof finalUsage.promptTokens === "number"
-            ? finalUsage.promptTokens
-            : 0;
-        const completionTokens =
-          typeof finalUsage.completionTokens === "number"
-            ? finalUsage.completionTokens
-            : 0;
-        const totalTokens =
-          typeof finalUsage.totalTokens === "number"
-            ? finalUsage.totalTokens
-            : promptTokens + completionTokens;
-
-        console.log("[OpenAI Vercel] Emitting usage:", {
-          promptTokens,
-          completionTokens,
-          totalTokens,
-        });
-
-        yield usageChatChunk({
-          model: modifiedBody.model,
-          usage: {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
-            total_tokens: totalTokens,
-          },
-        });
-      } else {
-        console.warn("[OpenAI Vercel] stream.usage resolved to falsy value");
-      }
-    } catch (error) {
-      console.error("[OpenAI Vercel] Error awaiting stream.usage:", error);
-    }
+    });
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,

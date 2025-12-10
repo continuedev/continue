@@ -665,45 +665,10 @@ export class AnthropicApi implements BaseLlmApi {
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    for await (const chunk of convertVercelStream(stream.fullStream as any, {
+    // The finish event in fullStream contains the usage data
+    yield* convertVercelStream(stream.fullStream as any, {
       model: body.model,
-    })) {
-      yield chunk;
-    }
-
-    // Get final usage from stream.usage Promise (finish event has incomplete data)
-    const finalUsage = await stream.usage;
-    if (finalUsage) {
-      const { usageChatChunk } = await import("../util.js");
-      const promptTokens =
-        typeof finalUsage.promptTokens === "number"
-          ? finalUsage.promptTokens
-          : 0;
-      const completionTokens =
-        typeof finalUsage.completionTokens === "number"
-          ? finalUsage.completionTokens
-          : 0;
-      const totalTokens =
-        typeof finalUsage.totalTokens === "number"
-          ? finalUsage.totalTokens
-          : promptTokens + completionTokens;
-
-      yield usageChatChunk({
-        model: body.model,
-        usage: {
-          prompt_tokens: promptTokens,
-          completion_tokens: completionTokens,
-          total_tokens: totalTokens,
-          prompt_tokens_details: {
-            cached_tokens:
-              (finalUsage as any).promptTokensDetails?.cachedTokens ?? 0,
-            cache_read_tokens:
-              (finalUsage as any).promptTokensDetails?.cachedTokens ?? 0,
-            cache_write_tokens: 0,
-          } as any,
-        },
-      });
-    }
+    });
   }
 
   private getHeaders(): Record<string, string> {
