@@ -348,12 +348,25 @@ export class OpenAIApi implements BaseLlmApi {
     if (!hasEmittedUsage) {
       const finalUsage = await stream.usage;
       if (finalUsage) {
+        const promptTokens =
+          typeof finalUsage.promptTokens === "number"
+            ? finalUsage.promptTokens
+            : 0;
+        const completionTokens =
+          typeof finalUsage.completionTokens === "number"
+            ? finalUsage.completionTokens
+            : 0;
+        const totalTokens =
+          typeof finalUsage.totalTokens === "number"
+            ? finalUsage.totalTokens
+            : promptTokens + completionTokens;
+
         yield usageChatChunk({
           model: modifiedBody.model,
           usage: {
-            prompt_tokens: finalUsage.promptTokens,
-            completion_tokens: finalUsage.completionTokens,
-            total_tokens: finalUsage.totalTokens,
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: totalTokens,
           },
         });
       }
