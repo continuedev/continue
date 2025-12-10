@@ -83,6 +83,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       console.log(
         `[diag] Dest index.node BEFORE copy: ${destIndexNode} size=${destStats.size}`,
       );
+      // FIX: Remove existing destination directory to ensure fresh copy
+      // ncp's clobber option doesn't reliably overwrite files from cache
+      console.log(`[info] Removing existing ${destDir} to ensure fresh copy`);
+      rimrafSync(destDir);
     } else {
       console.log(`[diag] Dest index.node does not exist before copy`);
     }
