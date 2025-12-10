@@ -53,9 +53,42 @@ async function bundleForBinary(target) {
 
   // copy @lancedb to bin folders
   console.log("[info] Copying @lancedb files to bin");
-  fs.copyFileSync(
-    `node_modules/${TARGET_TO_LANCEDB[target]}/index.node`,
-    `${targetDir}/index.node`,
+  const lancedbSource = `node_modules/${TARGET_TO_LANCEDB[target]}/index.node`;
+  const lancedbDest = `${targetDir}/index.node`;
+
+  // Diagnostic: check source file before copying
+  if (fs.existsSync(lancedbSource)) {
+    const sourceStats = fs.statSync(lancedbSource);
+    console.log(
+      `[info] Source ${lancedbSource} size: ${sourceStats.size} bytes`,
+    );
+    if (sourceStats.size === 0) {
+      console.error(`[error] Source file ${lancedbSource} is EMPTY!`);
+      // List what's in the lancedb directory
+      const lancedbDir = `node_modules/${TARGET_TO_LANCEDB[target]}`;
+      console.log(
+        `[info] Contents of ${lancedbDir}:`,
+        fs.readdirSync(lancedbDir),
+      );
+    }
+  } else {
+    console.error(`[error] Source file ${lancedbSource} does NOT exist!`);
+    // List what's in node_modules/@lancedb
+    const lancedbParent = "node_modules/@lancedb";
+    if (fs.existsSync(lancedbParent)) {
+      console.log(
+        `[info] Contents of ${lancedbParent}:`,
+        fs.readdirSync(lancedbParent),
+      );
+    }
+  }
+
+  fs.copyFileSync(lancedbSource, lancedbDest);
+
+  // Diagnostic: verify destination after copying
+  const destStats = fs.statSync(lancedbDest);
+  console.log(
+    `[info] Destination ${lancedbDest} size: ${destStats.size} bytes`,
   );
 
   const downloadPromises = [];
