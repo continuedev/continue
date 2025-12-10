@@ -196,7 +196,7 @@ export class OpenAIApi implements BaseLlmApi {
       model,
       messages: modifiedBody.messages as any,
       temperature: modifiedBody.temperature ?? undefined,
-      maxTokens:
+      maxOutputTokens:
         modifiedBody.max_completion_tokens ??
         modifiedBody.max_tokens ??
         undefined,
@@ -219,7 +219,7 @@ export class OpenAIApi implements BaseLlmApi {
       type: "function" as const,
       function: {
         name: tc.toolName,
-        arguments: JSON.stringify(tc.args),
+        arguments: JSON.stringify(tc.input),
       },
     }));
 
@@ -243,9 +243,9 @@ export class OpenAIApi implements BaseLlmApi {
         },
       ],
       usage: {
-        prompt_tokens: result.usage.promptTokens,
-        completion_tokens: result.usage.completionTokens,
-        total_tokens: result.usage.totalTokens,
+        prompt_tokens: result.usage.inputTokens ?? 0,
+        completion_tokens: result.usage.outputTokens ?? 0,
+        total_tokens: result.usage.totalTokens ?? 0,
       },
     };
   }
@@ -316,7 +316,7 @@ export class OpenAIApi implements BaseLlmApi {
       model,
       messages: modifiedBody.messages as any,
       temperature: modifiedBody.temperature ?? undefined,
-      maxTokens:
+      maxOutputTokens:
         modifiedBody.max_completion_tokens ??
         modifiedBody.max_tokens ??
         undefined,
