@@ -12,8 +12,8 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.10",
-    "@ai-sdk/openai": "^1.0.10",
+    "@ai-sdk/anthropic": "^2.0.54",
+    "@ai-sdk/openai": "^2.0.80",
     "@anthropic-ai/sdk": "^0.67.0",
     "@aws-sdk/client-bedrock-runtime": "^3.931.0",
     "@aws-sdk/credential-providers": "^3.931.0",

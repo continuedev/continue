@@ -187,7 +187,7 @@ export class OpenAIApi implements BaseLlmApi {
     );
 
     const modifiedBody = this.modifyChatBody({ ...body });
-    const model = this.openaiProvider(modifiedBody.model);
+    const model = this.openaiProvider.chat(modifiedBody.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);
@@ -307,7 +307,7 @@ export class OpenAIApi implements BaseLlmApi {
     );
 
     const modifiedBody = this.modifyChatBody({ ...body });
-    const model = this.openaiProvider(modifiedBody.model);
+    const model = this.openaiProvider.chat(modifiedBody.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);

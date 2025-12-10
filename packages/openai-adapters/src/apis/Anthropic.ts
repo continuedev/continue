@@ -426,7 +426,7 @@ export class AnthropicApi implements BaseLlmApi {
       (msg) => msg.role !== "system",
     );
 
-    const model = this.anthropicProvider(body.model);
+    const model = this.anthropicProvider.chat(body.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(body.tools);
@@ -642,7 +642,7 @@ export class AnthropicApi implements BaseLlmApi {
       (msg) => msg.role !== "system",
     );
 
-    const model = this.anthropicProvider(body.model);
+    const model = this.anthropicProvider.chat(body.model);
 
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(body.tools);
