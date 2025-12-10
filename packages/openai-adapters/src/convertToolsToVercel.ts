@@ -8,7 +8,7 @@ import type { ChatCompletionCreateParams } from "openai/resources/index.js";
  * Converts OpenAI tool format to Vercel AI SDK format.
  *
  * OpenAI format: { type: "function", function: { name, description, parameters: JSONSchema } }
- * Vercel format: { [toolName]: { description, parameters: aiJsonSchema(JSONSchema) } }
+ * Vercel format (AI SDK v5): { [toolName]: { description, inputSchema: aiJsonSchema(JSONSchema) } }
  *
  * @param openaiTools - Array of OpenAI tools or undefined
  * @returns Object with tool names as keys, or undefined if no tools
@@ -27,7 +27,7 @@ export async function convertToolsToVercelFormat(
     if (tool.type === "function") {
       vercelTools[tool.function.name] = {
         description: tool.function.description,
-        parameters: aiJsonSchema(
+        inputSchema: aiJsonSchema(
           tool.function.parameters ?? { type: "object", properties: {} },
         ),
       };
