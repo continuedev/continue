@@ -339,7 +339,7 @@ export class AnthropicApi implements BaseLlmApi {
     // Vercel SDK cannot handle pre-existing tool call conversations
     const hasToolMessages = body.messages.some((msg) => msg.role === "tool");
 
-    if (this.useVercelSDK && this.anthropicProvider && !hasToolMessages) {
+    if (this.useVercelSDK && !hasToolMessages) {
       return this.chatCompletionNonStreamVercel(body, signal);
     }
 
@@ -585,7 +585,7 @@ export class AnthropicApi implements BaseLlmApi {
     // Vercel SDK cannot handle pre-existing tool call conversations
     const hasToolMessages = body.messages.some((msg) => msg.role === "tool");
 
-    if (this.useVercelSDK && this.anthropicProvider && !hasToolMessages) {
+    if (this.useVercelSDK && !hasToolMessages) {
       yield* this.chatCompletionStreamVercel(body, signal);
       return;
     }

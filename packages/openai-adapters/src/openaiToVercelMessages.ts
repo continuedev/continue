@@ -55,7 +55,7 @@ export function convertOpenAIMessagesToVercel(
       case "user":
         vercelMessages.push({
           role: "user",
-          content: typeof msg.content === "string" ? msg.content : msg.content,
+          content: msg.content,
         });
         break;
 

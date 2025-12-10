@@ -151,11 +151,7 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    if (
-      this.useVercelSDK &&
-      this.openaiProvider &&
-      !this.shouldUseResponsesEndpoint(body.model)
-    ) {
+    if (this.useVercelSDK && !this.shouldUseResponsesEndpoint(body.model)) {
       return this.chatCompletionNonStreamVercel(body, signal);
     }
 
@@ -255,11 +251,7 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    if (
-      this.useVercelSDK &&
-      this.openaiProvider &&
-      !this.shouldUseResponsesEndpoint(body.model)
-    ) {
+    if (this.useVercelSDK && !this.shouldUseResponsesEndpoint(body.model)) {
       yield* this.chatCompletionStreamVercel(body, signal);
       return;
     }
