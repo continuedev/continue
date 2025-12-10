@@ -10,15 +10,15 @@ dotenv.config();
 
 if (process.env.ANTHROPIC_API_KEY) {
   describe("Multi-turn Tool Call Test (Anthropic)", () => {
-    beforeAll(() => {
-      process.env.USE_VERCEL_AI_SDK_ANTHROPIC = "true";
-    });
+    // Set feature flag at describe-time (before test collection)
+    process.env.USE_VERCEL_AI_SDK_ANTHROPIC = "true";
 
     afterAll(() => {
       delete process.env.USE_VERCEL_AI_SDK_ANTHROPIC;
     });
 
     test("should handle multi-turn conversation with tool calls and tool results", async () => {
+      // Create fresh API instance with flag already set
       const api = getLlmApi({
         provider: "anthropic",
         apiKey: process.env.ANTHROPIC_API_KEY!,
