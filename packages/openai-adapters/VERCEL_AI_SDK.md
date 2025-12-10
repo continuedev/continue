@@ -1,5 +1,31 @@
 # Vercel AI SDK Integration
 
+## Current Version
+
+This package uses **Vercel AI SDK v5.0.52** (upgraded from v4.3.19).
+
+### Key Changes in v5
+
+- **@ai-sdk/gateway** - New provider adapter for simplified multi-provider support
+- **@ai-sdk/provider** - Updated to v2.0.0 (breaking changes from v1.x)
+- **@ai-sdk/provider-utils** - Updated to v3.0.9 (breaking changes from v2.x)
+- **zod peer dependency** - Now requires `^3.25.76 || ^4` (previously `^3.0.0`)
+- **React dependencies removed** - No longer includes UI-related packages (@ai-sdk/react, @ai-sdk/ui-utils, swr, throttleit)
+
+### Migration Notes
+
+**Zod Version Requirement:**
+The AI SDK v5 requires zod `^3.25.76` or `^4`. If you're using an older version of zod in your workspace, you may need to upgrade:
+
+```bash
+npm install zod@^3.25.76
+# or
+npm install zod@^4
+```
+
+**Breaking Changes:**
+The v4 → v5 upgrade includes breaking changes in the provider abstractions. However, these are **fully handled internally** by the openai-adapters package. Consumers of this package should see no changes in behavior.
+
 ## Why
 
 ### The Problem
