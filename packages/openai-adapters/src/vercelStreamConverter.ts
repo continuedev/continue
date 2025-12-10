@@ -121,7 +121,7 @@ export function convertVercelStreamPart(
       });
 
     case "finish":
-      // Emit usage chunk at the end if usage data is present and valid
+      // Emit usage chunk at the end if usage data is present
       if (part.usage) {
         const promptTokens =
           typeof part.usage.promptTokens === "number"
@@ -136,34 +136,31 @@ export function convertVercelStreamPart(
             ? part.usage.totalTokens
             : promptTokens + completionTokens;
 
-        // Only emit usage chunk if we have meaningful token counts
-        if (promptTokens > 0 || completionTokens > 0) {
-          // Check for Anthropic-specific cache token details
-          const promptTokensDetails =
-            (part.usage as any).promptTokensDetails?.cachedTokens !== undefined
-              ? {
-                  cached_tokens:
-                    (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
-                  cache_read_tokens:
-                    (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
-                  cache_write_tokens: 0,
-                }
-              : undefined;
+        // Check for Anthropic-specific cache token details
+        const promptTokensDetails =
+          (part.usage as any).promptTokensDetails?.cachedTokens !== undefined
+            ? {
+                cached_tokens:
+                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
+                cache_read_tokens:
+                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
+                cache_write_tokens: 0,
+              }
+            : undefined;
 
-          return usageChatChunk({
-            model,
-            usage: {
-              prompt_tokens: promptTokens,
-              completion_tokens: completionTokens,
-              total_tokens: totalTokens,
-              ...(promptTokensDetails
-                ? { prompt_tokens_details: promptTokensDetails as any }
-                : {}),
-            },
-          });
-        }
+        return usageChatChunk({
+          model,
+          usage: {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: totalTokens,
+            ...(promptTokensDetails
+              ? { prompt_tokens_details: promptTokensDetails as any }
+              : {}),
+          },
+        });
       }
-      // If no valid usage data, don't emit a usage chunk
+      // If no usage data in finish event, return null
       return null;
 
     case "error":
