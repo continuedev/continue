@@ -334,10 +334,25 @@ export class OpenAIApi implements BaseLlmApi {
     });
 
     // Convert Vercel AI SDK stream to OpenAI format
-    // Note: fullStream includes a "finish" event with usage, which convertVercelStream will handle
-    yield* convertVercelStream(stream.fullStream as any, {
+    // Note: We need to consume fullStream first, then await stream.usage Promise
+    for await (const chunk of convertVercelStream(stream.fullStream as any, {
       model: modifiedBody.model,
-    });
+    })) {
+      yield chunk;
+    }
+
+    // Await final usage from stream.usage Promise (resolves after fullStream completes)
+    const finalUsage = await stream.usage;
+    if (finalUsage) {
+      yield usageChatChunk({
+        model: modifiedBody.model,
+        usage: {
+          prompt_tokens: finalUsage.promptTokens,
+          completion_tokens: finalUsage.completionTokens,
+          total_tokens: finalUsage.totalTokens,
+        },
+      });
+    }
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
