@@ -25,6 +25,8 @@ import {
   CompletionUsage,
 } from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/resources/index.js";
+import raindrop from "raindrop-ai/otel";
+
 import { AnthropicConfig } from "../types.js";
 import {
   chatChunk,
@@ -431,6 +433,9 @@ export class AnthropicApi implements BaseLlmApi {
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(body.tools);
 
+    // Check if Raindrop is enabled
+    const raindropEnabled = process.env.RAINDROP_ENABLED === "true";
+
     const result = await generateText({
       model,
       system: systemText,
@@ -446,6 +451,20 @@ export class AnthropicApi implements BaseLlmApi {
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(body.tool_choice),
       abortSignal: signal,
+      // Enable telemetry for Raindrop
+      experimental_telemetry: raindropEnabled
+        ? {
+            isEnabled: true,
+            functionId: "anthropic-non-stream",
+            metadata: {
+              ...raindrop.metadata({
+                userId: process.env.RAINDROP_USER_ID || "unknown",
+                convoId: process.env.RAINDROP_CONVO_ID,
+                eventName: process.env.RAINDROP_EVENT_NAME,
+              }),
+            },
+          }
+        : undefined,
     });
 
     // Convert Vercel AI SDK result to OpenAI ChatCompletion format
@@ -647,6 +666,9 @@ export class AnthropicApi implements BaseLlmApi {
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(body.tools);
 
+    // Check if Raindrop is enabled
+    const raindropEnabled = process.env.RAINDROP_ENABLED === "true";
+
     const stream = await streamText({
       model,
       system: systemText,
@@ -662,6 +684,20 @@ export class AnthropicApi implements BaseLlmApi {
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(body.tool_choice),
       abortSignal: signal,
+      // Enable telemetry for Raindrop
+      experimental_telemetry: raindropEnabled
+        ? {
+            isEnabled: true,
+            functionId: "anthropic-stream",
+            metadata: {
+              ...raindrop.metadata({
+                userId: process.env.RAINDROP_USER_ID || "unknown",
+                convoId: process.env.RAINDROP_CONVO_ID,
+                eventName: process.env.RAINDROP_EVENT_NAME,
+              }),
+            },
+          }
+        : undefined,
     });
 
     // Convert Vercel AI SDK stream to OpenAI format

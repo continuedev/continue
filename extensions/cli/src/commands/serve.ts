@@ -1,9 +1,15 @@
+/* eslint-disable max-lines */
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { posthogService } from "src/telemetry/posthogService.js";
+import {
+  raindropService,
+  setupRaindropMetadataFromParams,
+} from "src/telemetry/raindropService.js";
 import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
@@ -71,6 +77,19 @@ export function shouldQueueInitialPrompt(
   return !hasConversation;
 }
 
+/**
+ * Get the actual prompt from parameter or stdin.
+ * Checks stdin for piped input if no prompt parameter provided.
+ */
+function getActualPrompt(prompt?: string): string | undefined {
+  if (prompt) {
+    return prompt;
+  }
+  // Try to read from stdin (for piped input like: cat file | cn serve)
+  const stdinInput = readStdinSync();
+  return stdinInput || undefined;
+}
+
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   await posthogService.capture("sessionStart", {});
@@ -79,14 +98,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   setAgentId(options.id);
 
   // Check if prompt should come from stdin instead of parameter
-  let actualPrompt = prompt;
-  if (!prompt) {
-    // Try to read from stdin (for piped input like: cat file | cn serve)
-    const stdinInput = readStdinSync();
-    if (stdinInput) {
-      actualPrompt = stdinInput;
-    }
-  }
+  const actualPrompt = getActualPrompt(prompt);
 
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
@@ -102,6 +114,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     toolPermissionOverrides: permissionOverrides,
     headless: true, // Skip onboarding in serve mode
   });
+
+  // Set Raindrop metadata if enabled
+  if (raindropService.isEnabled()) {
+    const authState = await getService<AuthServiceState>(SERVICE_NAMES.AUTH);
+    setupRaindropMetadataFromParams(
+      authState.authConfig?.userId || "anonymous",
+      uuidv4(), // Generate unique ID for serve session
+      "cn-serve",
+    );
+  }
 
   // Get initialized services from the service container
   const [configState, modelState, permissionsState, agentFileState] =

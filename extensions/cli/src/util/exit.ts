@@ -2,6 +2,7 @@ import type { ChatHistoryItem } from "core/index.js";
 
 import { sentryService } from "../sentry.js";
 import { getSessionUsage } from "../session.js";
+import { raindropService } from "../telemetry/raindropService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
 import { getGitDiffSnapshot } from "./git.js";
@@ -150,6 +151,13 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     await telemetryService.shutdown();
   } catch (err) {
     logger.debug("Telemetry shutdown error (ignored)", err as any);
+  }
+
+  try {
+    // Shutdown Raindrop SDK if initialized
+    await raindropService.shutdown();
+  } catch (err) {
+    logger.debug("Raindrop shutdown error (ignored)", err as any);
   }
 
   try {
