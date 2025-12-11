@@ -15,7 +15,9 @@ import type {
   Response,
   ResponseStreamEvent,
 } from "openai/resources/responses/responses.js";
+import raindrop from "raindrop-ai/otel";
 import { z } from "zod";
+
 import { OpenAIConfigSchema } from "../types.js";
 import {
   customFetch,
@@ -192,6 +194,9 @@ export class OpenAIApi implements BaseLlmApi {
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);
 
+    // Check if Raindrop is enabled
+    const raindropEnabled = process.env.RAINDROP_ENABLED === "true";
+
     const result = await generateText({
       model,
       messages: modifiedBody.messages as any,
@@ -211,6 +216,20 @@ export class OpenAIApi implements BaseLlmApi {
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(modifiedBody.tool_choice),
       abortSignal: signal,
+      // Enable telemetry for Raindrop
+      experimental_telemetry: raindropEnabled
+        ? {
+            isEnabled: true,
+            functionId: "openai-non-stream",
+            metadata: {
+              ...raindrop.metadata({
+                userId: process.env.RAINDROP_USER_ID || "unknown",
+                convoId: process.env.RAINDROP_CONVO_ID,
+                eventName: process.env.RAINDROP_EVENT_NAME,
+              }),
+            },
+          }
+        : undefined,
     });
 
     // Convert Vercel AI SDK result to OpenAI ChatCompletion format
@@ -312,6 +331,9 @@ export class OpenAIApi implements BaseLlmApi {
     // Convert OpenAI tools to Vercel AI SDK format
     const vercelTools = await convertToolsToVercelFormat(modifiedBody.tools);
 
+    // Check if Raindrop is enabled
+    const raindropEnabled = process.env.RAINDROP_ENABLED === "true";
+
     const stream = await streamText({
       model,
       messages: modifiedBody.messages as any,
@@ -331,6 +353,20 @@ export class OpenAIApi implements BaseLlmApi {
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(modifiedBody.tool_choice),
       abortSignal: signal,
+      // Enable telemetry for Raindrop
+      experimental_telemetry: raindropEnabled
+        ? {
+            isEnabled: true,
+            functionId: "openai-stream",
+            metadata: {
+              ...raindrop.metadata({
+                userId: process.env.RAINDROP_USER_ID || "unknown",
+                convoId: process.env.RAINDROP_CONVO_ID,
+                eventName: process.env.RAINDROP_EVENT_NAME,
+              }),
+            },
+          }
+        : undefined,
     });
 
     // Convert Vercel AI SDK stream to OpenAI format

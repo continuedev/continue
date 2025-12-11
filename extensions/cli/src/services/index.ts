@@ -1,5 +1,6 @@
 import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
+import { raindropService } from "../telemetry/raindropService.js";
 import { setBetaUploadArtifactToolEnabled } from "../tools/toolsConfig.js";
 import { logger } from "../util/logger.js";
 
@@ -55,6 +56,9 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
   const commandOptions = initOptions.options || {};
+
+  // Initialize Raindrop observability early (opt-in via RAINDROP_API_KEY)
+  await raindropService.initialize();
 
   // Configure beta tools based on command options
   if (commandOptions.betaUploadArtifactTool) {

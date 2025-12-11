@@ -44,11 +44,15 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.54",
+    "@ai-sdk/openai": "^2.0.80",
     "@sentry/profiling-node": "^9.43.0",
+    "ai": "^5.0.109",
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",
     "fzf": "^0.5.2",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "raindrop-ai": "^0.0.69"
   },
   "devDependencies": {
     "@continuedev/config-yaml": "file:../../packages/config-yaml",
@@ -59,10 +63,13 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-metrics-otlp-grpc": "^0.203.0",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.203.0",
     "@opentelemetry/instrumentation-fs": "^0.23.0",
     "@opentelemetry/instrumentation-http": "^0.203.0",
     "@opentelemetry/resources": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.203.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@opentelemetry/semantic-conventions": "^1.36.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
