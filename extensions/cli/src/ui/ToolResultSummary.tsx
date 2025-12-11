@@ -115,6 +115,57 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     }
   }
 
+  // show streaming output for task tool output
+  if (toolName === "Task") {
+    const metadataIndex = content.indexOf("<task_metadata>");
+    const actualOutput =
+      metadataIndex >= 0 ? content.slice(0, metadataIndex).trim() : content;
+
+    if (!actualOutput) {
+      return (
+        <Box>
+          <Text color="dim">⎿ </Text>
+          <Text color="dim"> Task executing...</Text>
+        </Box>
+      );
+    }
+
+    const outputLines = actualOutput.split("\n");
+    const MAX_TASK_OUTPUT_LINES = 20;
+
+    if (outputLines.length <= MAX_TASK_OUTPUT_LINES) {
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Task output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text>{actualOutput.trimEnd()}</Text>
+          </Box>
+        </Box>
+      );
+    } else {
+      const lastLines = outputLines.slice(-MAX_TASK_OUTPUT_LINES).join("\n");
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Task output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text color="dim">
+              ... +{outputLines.length - MAX_TASK_OUTPUT_LINES} lines
+            </Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text>{lastLines.trimEnd()}</Text>
+          </Box>
+        </Box>
+      );
+    }
+  }
+
   // Handle all other cases with text summary
   const getSummary = () => {
     // Check if this is a user cancellation first

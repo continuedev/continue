@@ -28,6 +28,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
+import { taskTool } from "./task.js";
 import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
 import {
   type Tool,
@@ -118,6 +119,27 @@ export async function getAllAvailableTools(
   if (isHeadless) {
     tools.push(exitTool);
   }
+
+  // // Add Task tool for primary sessions only (not child sessions)
+  // // Check if current session is a child session by checking for parentSessionId
+  // const chatHistoryService = await serviceContainer.get<ChatHistoryState>(
+  //   SERVICE_NAMES.CHAT_HISTORY,
+  // );
+
+  // // Get current session ID and load the session to check for parentSessionId
+  // const sessionId = chatHistoryService?.sessionId;
+  // let isChildSession = false;
+  // logger.debug("debug1 sessionId", { sessionId });
+  // if (sessionId) {
+  //   const { loadSessionById } = await import("../session.js");
+  //   const currentSession = loadSessionById(sessionId);
+  //   isChildSession = currentSession?.parentSessionId !== undefined;
+  // }
+
+  // Only add Task tool if this is NOT a child session (prevents recursion)
+  // if (!isChildSession) {
+  tools.push(taskTool);
+  // }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
@@ -211,6 +233,7 @@ export async function executeToolCall(
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
+      { toolCallId: toolCall.id },
     );
     const duration = Date.now() - startTime;
 
