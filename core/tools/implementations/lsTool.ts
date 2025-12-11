@@ -2,25 +2,20 @@ import ignore from "ignore";
 
 import { ToolImpl } from ".";
 import { walkDir } from "../../indexing/walkDir";
-import { resolveInputPath } from "../../util/pathResolver";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
-
-export function resolveLsToolDirPath(dirPath: string | undefined) {
-  if (!dirPath || dirPath === ".") {
-    return "/";
-  }
-  // Don't strip leading slash from absolute paths - let the resolver handle it
-  if (dirPath.startsWith(".") && !dirPath.startsWith("./")) {
-    return dirPath.slice(1);
-  }
-  return dirPath.replace(/\\/g, "/");
-}
+import { resolveInputPath } from "../../util/pathResolver";
 
 const MAX_LS_TOOL_LINES = 200;
 
 export const lsToolImpl: ToolImpl = async (args, extras) => {
-  const dirPath = resolveLsToolDirPath(args?.dirPath);
-  const resolvedPath = await resolveInputPath(extras.ide, dirPath);
+  if (!args.dirPath) {
+    throw new ContinueError(
+      ContinueErrorReason.Unspecified,
+      `No paths to explore were provided`,
+    );
+  }
+
+  const resolvedPath = await resolveInputPath(extras.ide, args?.dirPath);
   if (!resolvedPath) {
     throw new ContinueError(
       ContinueErrorReason.DirectoryNotFound,
