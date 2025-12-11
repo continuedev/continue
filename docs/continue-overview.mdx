@@ -191,7 +191,7 @@ Skip the setup and use battle-tested agents from our cookbook collection:
 
 ### Editing an Agent
 
-You can edit any agent you own or that belongs to your organization.
+You can edit any agent you own or that has Organization-level access.
 
 <Steps>
   <Step title="Access the Agent">
@@ -338,8 +338,8 @@ Mission Control is where developers and teams use Continue to power everyday cod
   <Card title="Create & Run Tasks" icon="list" href="/mission-control/tasks">
     Trigger your AI Agents and review or approve the results. 
   </Card>
-   <Card title="Manage Your Agents" icon="robot" href="/agents/intro">
-        Create, configure, and monitor your custom Agents across repositories.
+  <Card title="Manage Your Agents" icon="robot" href="/agents/intro">
+    Create, configure, and monitor your custom Agents across repositories.
   </Card>
  <Card title="Set Up Workflows" icon="clock" href="/mission-control/workflows">
     Schedule recurring Tasks, connect webhooks to trigger Agents automatically, or add 
@@ -411,7 +411,7 @@ Agents are built from reusable components that you can create, share, and custom
   </Card>
 </CardGroup>
 
-Components are the building blocks for agents that you can create new or remix from an existing component. When you create a component in mission control, it becomes available according to the permissions you set: Personal, Public, or Organization.
+You can create new agent components or remix from an existing component. When you create a component in mission control, it becomes available according to the permissions you set: Personal, Public, or Organization.
 
 ### Component Inputs
 
@@ -437,7 +437,7 @@ A Task is a unit of work shared between you and an agent. You trigger the task, 
     Select the **Agent** you want to use for this task.
   </Step>
   <Step title="Select Your Repository">
-    Pick the **repository** and **branch** where the Agent will work.
+    Select the **repository** and **branch** the Agent will branch off of.
   </Step>
   <Step title="Describe the Task">
     Add your user input — clear instructions for what you want the agent to accomplish.
@@ -530,11 +530,6 @@ Each Agent or Component can be published with one of three visibility levels:
 - **Organization**: Visible to everyone in your organization. Ideal for internal workflows, standardized agents, and shared tooling.
 - **Public**: Available to everyone in Continue Mission Control. Perfect for templates, community contributions, and reusable examples.
 
-### Community
-
-Join our Discord to connect with thousands of developers using Continue and share your experiences. Share your feedback in GitHub discussions to let us know what you think of Mission Control.
-
-
 ## Configs
 
 ### Introduction to Configs
@@ -548,7 +543,7 @@ Configs are flexible containers that combine multiple components to create power
 
 ### How Configs Work
 
-Think of configs as recipes for AI assistance. Each config defines:
+Each config defines:
 - What models to use for different tasks (chat, autocomplete, code editing)
 - Which tools are available through MCP servers
 - How the AI behaves through rules and guidelines
@@ -559,7 +554,7 @@ This flexibility lets you create specialized setups for different contexts, like
 ### Config Permissions
 
 When creating configs, you can set visibility levels:
-- **Personal**: Only you can see and use the config
+- **Private**: Only you and your org admins can see the config
 - **Public**: Anyone can discover and use your config
 - **Organization**: Members of your organization can access the config
 
@@ -582,7 +577,7 @@ All configs follow the `config.yaml` format, whether you're using Mission Contro
 
 ### How to Create a Config
 
-To create a config from scratch, select "New config" in the top bar. Choose a name, slug, description, and icon for your config.
+To create a config from scratch, navigate to [your config settings](https://hub.continue.dev/settings/configs). Choose a name, slug, description, and icon for your config.
 
 The easiest way to create a config is to click "Create config" with the default configuration and then add/remove blocks using the sidebar. Alternatively, you can edit the config YAML directly before clicking "Create config".
 
