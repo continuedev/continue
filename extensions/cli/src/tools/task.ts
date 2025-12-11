@@ -17,7 +17,7 @@ export const taskTool: Tool = {
 
   parameters: {
     type: "object",
-    required: ["description", "prompt", "subagent_type"],
+    required: ["description", "prompt", "subagent_name"],
     properties: {
       description: {
         type: "string",
@@ -27,8 +27,7 @@ export const taskTool: Tool = {
         type: "string",
         description: "The task for the agent to perform",
       },
-      // todo: change this to subagent name
-      subagent_type: {
+      subagent_name: {
         type: "string",
         description:
           "The type of specialized agent to use for this task (e.g., 'general')",
@@ -37,12 +36,12 @@ export const taskTool: Tool = {
   },
 
   preprocess: async (args) => {
-    const { description, subagent_type } = args;
+    const { description, subagent_name } = args;
 
-    const agent = getAgent(subagent_type);
+    const agent = getAgent(subagent_name);
     if (!agent) {
       throw new Error(
-        `Unknown agent type: ${subagent_type}. Available agents: general`,
+        `Unknown agent type: ${subagent_name}. Available agents: general`,
       );
     }
 
@@ -58,14 +57,14 @@ export const taskTool: Tool = {
   },
 
   run: async (args, context?: { toolCallId: string }) => {
-    const { description, prompt, subagent_type } = args;
+    const { prompt, subagent_name } = args;
 
-    logger.debug("debug1", { args, context });
+    logger.debug("debug1 subagent args", { args, context });
 
     // Get agent configuration
-    const agent = getAgent(subagent_type);
+    const agent = getAgent(subagent_name);
     if (!agent) {
-      throw new Error(`Unknown agent type: ${subagent_type}`);
+      throw new Error(`Unknown agent type: ${subagent_name}`);
     }
 
     // Get parent session ID from chat history service
@@ -83,7 +82,6 @@ export const taskTool: Tool = {
     const result = await executeSubAgent({
       agent,
       prompt,
-      description,
       parentSessionId,
       abortController,
       onOutputUpdate: context?.toolCallId
@@ -100,6 +98,8 @@ export const taskTool: Tool = {
           }
         : undefined,
     });
+
+    logger.debug("debug1 subagent result->", { result });
 
     const output = [
       result.response,

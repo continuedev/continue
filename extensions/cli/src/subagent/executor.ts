@@ -13,7 +13,6 @@ import { AgentConfig } from "./types.js";
 export interface SubAgentExecutionOptions {
   agent: AgentConfig;
   prompt: string;
-  description?: string;
   parentSessionId: string;
   abortController: AbortController;
   onOutputUpdate?: (output: string) => void;
@@ -25,7 +24,6 @@ export interface SubAgentExecutionOptions {
 export interface SubAgentResult {
   success: boolean;
   response: string;
-  summary: string;
   error?: string;
 }
 
@@ -66,13 +64,11 @@ async function buildAgentSystemMessage(agent: AgentConfig): Promise<string> {
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
-  const { agent, prompt, description, abortController, onOutputUpdate } =
-    options;
+  const { agent, prompt, abortController, onOutputUpdate } = options;
 
   try {
     logger.debug("Starting subagent execution", {
       agent: agent.name,
-      description,
     });
 
     // Get model and LLM API from model service
@@ -121,15 +117,11 @@ export async function executeSubAgent(
       chatHistorySvc.isReady = () => false;
     }
 
-    const userMessage = description
-      ? `Task: ${description}\n\n${prompt}`
-      : prompt;
-
     const chatHistory = [
       {
         message: {
           role: "user",
-          content: userMessage,
+          content: prompt,
         },
         contextItems: [],
       },
@@ -174,8 +166,6 @@ export async function executeSubAgent(
         history: chatHistory,
       });
 
-      const summary = response.substring(0, 150); // summary should be the last message only - this is not needed
-
       logger.debug("Subagent execution completed", {
         agent: agent.name,
         responseLength: response.length,
@@ -184,7 +174,6 @@ export async function executeSubAgent(
       return {
         success: true,
         response,
-        summary: summary + (response.length > 150 ? "..." : ""),
       };
     } finally {
       // Restore original system message function
@@ -206,7 +195,6 @@ export async function executeSubAgent(
     return {
       success: false,
       response: "",
-      summary: `Failed: ${error.message}`,
       error: error.message,
     };
   }
