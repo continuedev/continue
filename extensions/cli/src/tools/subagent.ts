@@ -1,6 +1,6 @@
 import { services } from "../services/index.js";
 import {
-  generateTaskToolDescription,
+  generateSubagentToolDescription,
   getAgent,
 } from "../subagent/builtInAgents.js";
 import { executeSubAgent } from "../subagent/executor.js";
@@ -8,10 +8,10 @@ import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
 
-export const taskTool: Tool = {
-  name: "Task",
-  displayName: "Task",
-  description: generateTaskToolDescription(),
+export const subagentTool: Tool = {
+  name: "Subagent",
+  displayName: "Subagent",
+  description: generateSubagentToolDescription(),
   readonly: false,
   isBuiltIn: true,
 

@@ -22,10 +22,10 @@ export const BUILT_IN_AGENTS: Record<string, AgentConfig> = {
       runTerminalCommand: true,
       Fetch: true,
       writeChecklist: true,
-      // Explicitly disable Task to prevent recursion
-      Task: false,
+      // Explicitly disable Subagent to prevent recursion
+      Subagent: false,
     },
-    // model: "haiku-4-5-latest", // if the model is not there, skip the task tool (check api key?)
+    // model: "haiku-4-5-latest", // if the model is not there, skip the subagent tool (check api key?)
     systemPrompt: `You are a specialized task execution agent.
 
 Your role:
@@ -58,13 +58,13 @@ export function listSubagents(): AgentConfig[] {
 /**
  * Generate dynamic tool description listing available agents
  */
-export function generateTaskToolDescription(): string {
+export function generateSubagentToolDescription(): string {
   const agents = listSubagents();
   const agentList = agents
     .map((agent) => `  - ${agent.name}: ${agent.description}`)
     .join("\n");
 
-  return `Launch a specialized agent to handle complex, multi-step tasks autonomously.
+  return `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
 
 Available agent types:
 ${agentList}

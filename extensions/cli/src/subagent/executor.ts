@@ -91,7 +91,7 @@ export async function executeSubAgent(
     logger.debug("debug1 Filtered tools for agent", {
       agent: agent.name,
       toolCount: allowedTools.length,
-      tools: allowedTools.map((t) => t.name).filter((t) => t !== "Task"),
+      tools: allowedTools.map((t) => t.name).filter((t) => t !== "Subagent"), // explicityly remove subagent to prevent recursion
     });
 
     // Build agent system message

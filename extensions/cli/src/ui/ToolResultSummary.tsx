@@ -115,8 +115,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     }
   }
 
-  // show streaming output for task tool output
-  if (toolName === "Task") {
+  // show streaming output for subagent tool output
+  if (toolName === "Subagent") {
     const metadataIndex = content.indexOf("<task_metadata>");
     const actualOutput =
       metadataIndex >= 0 ? content.slice(0, metadataIndex).trim() : content;
@@ -125,7 +125,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box>
           <Text color="dim">⎿ </Text>
-          <Text color="dim"> Task executing...</Text>
+          <Text color="dim"> Subagent executing...</Text>
         </Box>
       );
     }
@@ -138,7 +138,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         <Box flexDirection="column">
           <Box>
             <Text color="dim">⎿ </Text>
-            <Text color="dim"> Task output:</Text>
+            <Text color="dim"> Subagent output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text>{actualOutput.trimEnd()}</Text>
@@ -151,7 +151,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         <Box flexDirection="column">
           <Box>
             <Text color="dim">⎿ </Text>
-            <Text color="dim"> Task output:</Text>
+            <Text color="dim"> Subagent output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color="dim">
