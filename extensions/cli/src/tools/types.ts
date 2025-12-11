@@ -37,7 +37,7 @@ export interface Tool {
   description: string;
   parameters: ToolParametersSchema;
   preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
-  run: (args: any) => Promise<string>;
+  run: (args: any, context?: { toolCallId: string }) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly
   isBuiltIn: boolean;
   evaluateToolCallPolicy?: (

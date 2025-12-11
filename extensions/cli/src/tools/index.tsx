@@ -120,26 +120,7 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
-  // // Add Task tool for primary sessions only (not child sessions)
-  // // Check if current session is a child session by checking for parentSessionId
-  // const chatHistoryService = await serviceContainer.get<ChatHistoryState>(
-  //   SERVICE_NAMES.CHAT_HISTORY,
-  // );
-
-  // // Get current session ID and load the session to check for parentSessionId
-  // const sessionId = chatHistoryService?.sessionId;
-  // let isChildSession = false;
-  // logger.debug("debug1 sessionId", { sessionId });
-  // if (sessionId) {
-  //   const { loadSessionById } = await import("../session.js");
-  //   const currentSession = loadSessionById(sessionId);
-  //   isChildSession = currentSession?.parentSessionId !== undefined;
-  // }
-
-  // Only add Task tool if this is NOT a child session (prevents recursion)
-  // if (!isChildSession) {
   tools.push(taskTool);
-  // }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
