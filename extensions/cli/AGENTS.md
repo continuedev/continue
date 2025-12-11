@@ -46,6 +46,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
    - Code search functionality
    - Terminal command execution
    - Diff viewing
+   - Subagents for delegating complex multi-step tasks (see [`docs/subagents.md`](./docs/subagents.md))
    - Exit tool (headless mode only)
 
 6. **MCP Integration** (`src/mcp.ts`): Model Context Protocol service for extended tool capabilities
