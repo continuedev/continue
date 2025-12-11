@@ -132,6 +132,7 @@ export interface ArtifactUploadServiceState {
 
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
+export type { GitAiIntegrationServiceState } from "./GitAiIntegrationService.js";
 
 /**
  * Service names as constants to prevent typos
@@ -151,6 +152,7 @@ export const SERVICE_NAMES = {
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
   ARTIFACT_UPLOAD: "artifactUpload",
+  GIT_AI_INTEGRATION: "gitAiIntegration",
 } as const;
 
 /**
