@@ -16,9 +16,9 @@ sidebarTitle: "Create & Edit"
 
 <Steps>
   <Step title="🧭 Navigate to Create Agent">
-    From the Continue Mission Control top navigation bar, select **"+"** → **"New Agent"**.
+    Navigate to the [New Agent page](https://hub.continue.dev/new?type=agent).
     
-    This opens the **Create an Agent (beta)** form with all required fields.
+    This opens the **Create an Agent** form with all required fields.
 
   </Step>
 
@@ -30,9 +30,9 @@ sidebarTitle: "Create & Edit"
     | **Name** | Display name shown in Mission Control | `GitHub PR Agent` |
     | **Prompt** | First instruction the agent receives | `Open a GitHub PR to fix the specified issue.` |
     | **Description** | What the agent does | `Creates a pull request and includes AI-generated summaries.` |
-    | **Tools (MCPs)** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase` |
-    | **Rules** | Add any organizational rules | `continuedev/gh-pr-commit-workflow, continuedev/summarization` |
-    | **Model** | Choose a default LLM | `Claude Sonnet 4.5` |
+    | **Tools ([MCPs](https://hub.continue.dev/hub?type=mcpServers))** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase` |
+    | **[Rules](https://hub.continue.dev/hub?type=rules)** | Add any organizational rules | `continuedev/gh-pr-commit-workflow` |
+    | **[Model](https://hub.continue.dev/hub?type=models)** | Choose a default LLM | `Claude Sonnet 4.5` |
     | **Owner + Slug** | Determines namespace | `my-org/github-pr-agent` |
     | **Visibility** | Access level | `Public, Organization, or Private` |
 
@@ -70,8 +70,7 @@ sidebarTitle: "Create & Edit"
 
 ## Editing an Agent
 
-You can edit any agent you own or that belongs to your organization.
-
+You can edit any agent you own or that has Organization-level access.
 <Steps>
   <Step title="🧭 Access the Agent">
     From the **Agents** page or Mission Control view, click your agent's name, then select **"Edit Agent"**.
