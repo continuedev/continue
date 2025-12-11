@@ -1,7 +1,5 @@
 import { AgentConfig } from "./types.js";
 
-// todo - move this to the subagent directory
-
 /**
  * Built-in agent configurations
  */
@@ -11,20 +9,7 @@ export const BUILT_IN_AGENTS: Record<string, AgentConfig> = {
     displayName: "General Agent",
     description:
       "General-purpose agent for researching complex questions and executing multi-step tasks autonomously",
-    tools: {
-      // Enable all standard tools (refactor to use BUILTIN_TOOLS)
-      Read: true,
-      Write: true,
-      Edit: true,
-      multiEdit: true,
-      listFiles: true,
-      searchCode: true,
-      runTerminalCommand: true,
-      Fetch: true,
-      writeChecklist: true,
-      // Explicitly disable Subagent to prevent recursion
-      Subagent: false,
-    },
+    availableTools: [],
     // model: "haiku-4-5-latest", // if the model is not there, skip the subagent tool (check api key?)
     systemPrompt: `You are a specialized task execution agent.
 
@@ -49,18 +34,10 @@ export function getAgent(name: string): AgentConfig | null {
 }
 
 /**
- * List all available subagents
- */
-export function listSubagents(): AgentConfig[] {
-  return Object.values(BUILT_IN_AGENTS);
-}
-
-/**
  * Generate dynamic tool description listing available agents
  */
 export function generateSubagentToolDescription(): string {
-  const agents = listSubagents();
-  const agentList = agents
+  const agentList = Object.values(BUILT_IN_AGENTS)
     .map((agent) => `  - ${agent.name}: ${agent.description}`)
     .join("\n");
 

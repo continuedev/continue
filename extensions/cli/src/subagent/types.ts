@@ -9,7 +9,7 @@ export interface AgentConfig {
   /** Description of when to use this agent */
   description: string;
   /** Tool configuration - which tools are available to this agent */
-  tools: Record<string, boolean>;
+  availableTools: string[];
   /** Optional custom system prompt for the agent */
   systemPrompt?: string;
 }

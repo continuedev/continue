@@ -1,8 +1,12 @@
 import type { ChatHistoryItem } from "core";
 
-import { services } from "../services/index.js";
+import {
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../services/index.js";
+import { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
-import { Tool } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
 import { AgentConfig } from "./types.js";
@@ -25,17 +29,6 @@ export interface SubAgentResult {
   success: boolean;
   response: string;
   error?: string;
-}
-
-/**
- * Filter tools based on agent configuration
- */
-function filterToolsByAgent(allTools: Tool[], agent: AgentConfig): Tool[] {
-  return allTools.filter((tool) => {
-    const toolName = tool.name;
-    // If tool is explicitly disabled in agent config, filter it out
-    return agent.tools[toolName] !== false;
-  });
 }
 
 /**
@@ -64,11 +57,16 @@ async function buildAgentSystemMessage(agent: AgentConfig): Promise<string> {
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
-  const { agent, prompt, abortController, onOutputUpdate } = options;
+  const mainAgentPermissionsState =
+    await serviceContainer.get<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+
+  const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
 
   try {
     logger.debug("Starting subagent execution", {
-      agent: agent.name,
+      agent: subAgent.name,
     });
 
     // Get model and LLM API from model service
@@ -79,23 +77,23 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    logger.debug("debug1 model and llmapi", { model, llmApi });
+    logger.debug("debug1 model and llmapi", { model, llmApi, subAgent });
 
-    // Get all available tools
-    const { getAllAvailableTools } = await import("../tools/index.js");
-    const allTools = await getAllAvailableTools(true); // headless mode
+    // allow all tools for now
+    // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
 
-    // Filter tools based on agent configuration
-    const allowedTools = filterToolsByAgent(allTools, agent);
-
-    logger.debug("debug1 Filtered tools for agent", {
-      agent: agent.name,
-      toolCount: allowedTools.length,
-      tools: allowedTools.map((t) => t.name).filter((t) => t !== "Subagent"), // explicityly remove subagent to prevent recursion
-    });
+    serviceContainer.set<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+      {
+        ...mainAgentPermissionsState,
+        permissions: {
+          policies: [{ tool: "*", permission: "allow" }],
+        },
+      },
+    );
 
     // Build agent system message
-    const systemMessage = await buildAgentSystemMessage(agent);
+    const systemMessage = await buildAgentSystemMessage(subAgent);
 
     // Store original system message function
     const originalGetSystemMessage = services.systemMessage?.getSystemMessage;
@@ -167,7 +165,7 @@ export async function executeSubAgent(
       });
 
       logger.debug("Subagent execution completed", {
-        agent: agent.name,
+        agent: subAgent.name,
         responseLength: response.length,
       });
 
@@ -185,10 +183,16 @@ export async function executeSubAgent(
       if (chatHistorySvc && originalIsReady) {
         chatHistorySvc.isReady = originalIsReady;
       }
+
+      // Restore original main agent tool permissions
+      serviceContainer.set<ToolPermissionServiceState>(
+        SERVICE_NAMES.TOOL_PERMISSIONS,
+        mainAgentPermissionsState,
+      );
     }
   } catch (error: any) {
     logger.error("Subagent execution failed", {
-      agent: agent.name,
+      agent: subAgent.name,
       error: error.message,
     });
 
