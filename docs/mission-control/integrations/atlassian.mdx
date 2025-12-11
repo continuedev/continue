@@ -97,10 +97,9 @@ When a pull request is merged, this workflow automatically:
 
 ## Use Cases
 
-### Automated Issue Management
+You can also create your own Atlassian-connected agents in Mission Control. Here are some examples for these use cases:
 
-Create agents that manage your Jira backlog:
-
+<Columns cols={2}>
 <Card title="Issue Creator Agent" icon="ticket">
 
   **Task Example**: "Create Jira tickets for all TODO comments in the codebase with priority based on code location"
@@ -115,7 +114,6 @@ Create agents that manage your Jira backlog:
 
 </Card>
 
-### Sprint Planning Automation
 
 Streamline sprint planning with intelligent automation:
 
@@ -133,10 +131,6 @@ Streamline sprint planning with intelligent automation:
 
 </Card>
 
-### Documentation Sync
-
-Keep Confluence and code documentation in sync:
-
 <Card title="Docs Sync Agent" icon="book-open">
 
   **Task Example**: "Update Confluence API documentation to match current OpenAPI spec"
@@ -150,10 +144,6 @@ Keep Confluence and code documentation in sync:
   **Run in Mission Control**: Trigger on API spec changes or schedule weekly
 
 </Card>
-
-### Release Management
-
-Automate release notes and changelog generation:
 
 <Card title="Release Notes Agent" icon="megaphone">
 
@@ -169,10 +159,6 @@ Automate release notes and changelog generation:
 
 </Card>
 
-### Project Tracking
-
-Monitor development progress and blockers:
-
 <Card title="Project Health Agent" icon="chart-line">
 
   **Task Example**: "Analyze current sprint progress and identify blocked or at-risk items"
@@ -186,28 +172,9 @@ Monitor development progress and blockers:
   **Run in Mission Control**: Schedule daily during active sprints
 
 </Card>
-
-### Code-to-Ticket Linking
-
-Process multiple tickets with natural language commands:
-
-<Card title="Bulk Ticket Processor" icon="list-check">
-
-  **Task Example**: "Update all tickets tagged 'needs-review' with current status from linked PRs"
-  **What the Agent Does**:
-
-
-
-
-  - Searches Jira using natural language queries
-
-  **Run in Mission Control**: Run manually or on schedule
-</Card>
+</Columns>
 
 ## Running Atlassian Agents in Mission Control
-
-## Running Supabase Agents in Mission Control
-
 You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
 
 
@@ -220,9 +187,8 @@ You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) o
 
 ## Optional Workflow Enhancements
 
-Extend the base workflow with these powerful features:
-
-### Smart Tagging
+<AccordionGroup>
+<Accordion title="Smart Tagging">
 
 Automatically add Jira labels based on code changes:
 
@@ -232,8 +198,8 @@ Automatically add Jira labels based on code changes:
 - `feature` - New functionality added
 - `security` - Security improvements
 - `performance` - Performance optimizations
-
-### Stakeholder Mentions
+</Accordion>
+<Accordion title="Stakeholder Mentions">
 
 Tag relevant people in Jira based on components modified:
 
@@ -241,8 +207,8 @@ Tag relevant people in Jira based on components modified:
 - User interface changes → `@product-manager`
 - Security updates → `@security-lead`
 - API modifications → `@api-architect`
-
-### Release Notes Generation
+</Accordion>
+<Accordion title="Release Notes Generation">
 
 Accumulate business-friendly summaries for release documentation:
 
@@ -250,8 +216,8 @@ Accumulate business-friendly summaries for release documentation:
 - Automatically compile summaries into Confluence release pages
 - Generate customer-facing changelog from Jira updates
 - Include impact metrics and user benefits
-
-### Metrics Tracking
+</Accordion>
+<Accordion title="Metrics Tracking">
 
 Log metadata for reporting and analytics:
 
@@ -260,7 +226,8 @@ Log metadata for reporting and analytics:
 - Business impact category (high/medium/low)
 - Stakeholder engagement (comments, mentions)
 - Risk level distribution across releases
-
+</Accordion>
+</AccordionGroup>
 
 ## Troubleshooting
 
