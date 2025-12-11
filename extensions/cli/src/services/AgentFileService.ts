@@ -1,7 +1,15 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import {
+  AgentFile,
+  parseAgentFile,
   parseAgentFileRules,
   parseAgentFileTools,
 } from "@continuedev/config-yaml";
+
+import { getErrorString } from "src/util/error.js";
 
 import {
   agentFileProcessor,
@@ -44,37 +52,52 @@ export class AgentFileService
     return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
   }
 
+  async getAgentFile(agentPath: string): Promise<AgentFile> {
+    try {
+      const parts = agentPath.split("/");
+      if (parts.length === 2 && parts[0] && parts[1] && !parts.includes(".")) {
+        try {
+          return await loadPackageFromHub(agentPath, agentFileProcessor);
+        } catch (e) {
+          logger.info(
+            `Failed to load agent file from slug-like path ${agentPath}: ${getErrorString(e)}`,
+          );
+          // slug COULD be path, fall back to relative path
+        }
+      }
+      const resolvedPath = agentPath.startsWith("file:/")
+        ? fileURLToPath(agentPath)
+        : path.resolve(agentPath);
+      const content = fs.readFileSync(resolvedPath, "utf-8");
+      return parseAgentFile(content);
+    } catch (e) {
+      throw new Error(
+        `Failed to load agent from ${agentPath}: ${getErrorString(e)}`,
+      );
+    }
+  }
+
   /**
    * Initialize the agent file service with a hub slug
    */
   async doInitialize(
-    agentFileSlug: string | undefined,
+    agentFilePath: string | undefined,
     authServiceState: AuthServiceState,
     apiClientState: ApiClientServiceState,
   ): Promise<AgentFileServiceState> {
-    if (!agentFileSlug) {
+    if (!agentFilePath) {
       return {
         ...EMPTY_AGENT_FILE_STATE,
       };
     }
 
     try {
-      const parts = agentFileSlug.split("/");
-      if (parts.length !== 2) {
-        throw new Error(
-          `Invalid agent slug format. Expected "owner/package", got: ${agentFileSlug}`,
-        );
-      }
-
-      const agentFile = await loadPackageFromHub(
-        agentFileSlug,
-        agentFileProcessor,
-      );
+      const agentFile = await this.getAgentFile(agentFilePath);
 
       // Set the basic agent file state
       this.setState({
         agentFile,
-        slug: agentFileSlug,
+        slug: agentFilePath,
       });
 
       if (agentFile.model) {

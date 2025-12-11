@@ -3,13 +3,86 @@ import * as fs from "fs";
 import * as util from "util";
 
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+import { findUp } from "find-up";
 
 import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
+async function getGitignorePatterns() {
+  const gitIgnorePath = await findUp(".gitignore");
+  if (!gitIgnorePath) return [];
+  const content = fs.readFileSync(gitIgnorePath, "utf-8");
+  const ignorePatterns = [];
+  for (let line of content.trim().split("\n")) {
+    line = line.trim();
+    if (line.startsWith("#") || line === "") continue; // ignore comments and empty line
+    if (line.startsWith("!")) continue; // ignore negated ignores
+    ignorePatterns.push(line);
+  }
+  return ignorePatterns;
+}
+
+// procedure 1: search with ripgrep
+export async function checkIfRipgrepIsInstalled(): Promise<boolean> {
+  try {
+    await execPromise("rg --version");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function searchWithRipgrep(
+  pattern: string,
+  searchPath: string,
+  filePattern?: string,
+) {
+  let command = `rg --line-number --with-filename --color never "${pattern}"`;
+
+  if (filePattern) {
+    command += ` -g "${filePattern}"`;
+  }
+
+  const ignorePatterns = await getGitignorePatterns();
+  for (const ignorePattern of ignorePatterns) {
+    command += ` -g "!${ignorePattern}"`;
+  }
+
+  command += ` "${searchPath}"`;
+  const { stdout, stderr } = await execPromise(command);
+  return { stdout, stderr };
+}
+
+// procedure 2: search with grep on unix or findstr on windows
+async function searchWithGrepOrFindstr(
+  pattern: string,
+  searchPath: string,
+  filePattern?: string,
+) {
+  const isWindows = process.platform === "win32";
+  const ignorePatterns = await getGitignorePatterns();
+  let command: string;
+  if (isWindows) {
+    const fileSpec = filePattern ? filePattern : "*";
+    command = `findstr /S /N /P /R "${pattern}" "${fileSpec}"`; // findstr does not support ignoring patterns
+  } else {
+    let excludeArgs = "";
+    for (const ignorePattern of ignorePatterns) {
+      excludeArgs += ` --exclude="${ignorePattern}" --exclude-dir="${ignorePattern}"`; // use both exclude and exclude-dir because ignorePattern can be a file or directory
+    }
+    if (filePattern) {
+      command = `find . -type f -path "${filePattern}" -print0 | xargs -0 grep -nH -I${excludeArgs} "${pattern}"`;
+    } else {
+      command = `grep -R -n -H -I${excludeArgs} "${pattern}" .`;
+    }
+  }
+  return await execPromise(command, { cwd: searchPath });
+}
+
 // Default maximum number of results to display
 const DEFAULT_MAX_RESULTS = 100;
+const MAX_LINE_LENGTH = 1000;
 
 export const searchCodeTool: Tool = {
   name: "Search",
@@ -63,15 +136,26 @@ export const searchCodeTool: Tool = {
       );
     }
 
-    let command = `rg --line-number --with-filename --color never "${args.pattern}"`;
-
-    if (args.file_pattern) {
-      command += ` -g "${args.file_pattern}"`;
-    }
-
-    command += ` "${searchPath}"`;
+    let stdout = "",
+      stderr = "";
     try {
-      const { stdout, stderr } = await execPromise(command);
+      if (await checkIfRipgrepIsInstalled()) {
+        const results = await searchWithRipgrep(
+          args.pattern,
+          searchPath,
+          args.file_pattern,
+        );
+        stdout = results.stdout;
+        stderr = results.stderr;
+      } else {
+        const results = await searchWithGrepOrFindstr(
+          args.pattern,
+          searchPath,
+          args.file_pattern,
+        );
+        stdout = results.stdout;
+        stderr = results.stderr;
+      }
 
       if (stderr) {
         return `Warning during search: ${stderr}\n\n${stdout}`;
@@ -84,7 +168,13 @@ export const searchCodeTool: Tool = {
       }
 
       // Split the results into lines and limit the number of results
-      const lines = stdout.split("\n");
+      const splitLines = stdout.split("\n");
+      const lines = splitLines.filter((line) => line.length <= MAX_LINE_LENGTH);
+      if (lines.length === 0) {
+        return `No matches found for pattern "${args.pattern}"${
+          args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+        }.`;
+      }
       const truncated = lines.length > DEFAULT_MAX_RESULTS;
       const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
       const resultText = limitedLines.join("\n");
@@ -105,13 +195,8 @@ export const searchCodeTool: Tool = {
           args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
         }.`;
       }
-      if (error instanceof Error) {
-        if (error.message.includes("command not found")) {
-          throw new Error(`ripgrep is not installed.`);
-        }
-      }
       throw new Error(
-        `Error executing ripgrep: ${
+        `Error executing search: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

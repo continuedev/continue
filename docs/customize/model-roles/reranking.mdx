@@ -12,7 +12,7 @@ In Continue, rerankers are designated using the `rerank` role and used by [codeb
 ## Recommended reranking models
 
 <Info>
-  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customization/models#recommended-models).
+  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customize/models#recommended-models).
 </Info>
 
 If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, which is listed below along with the rest of the options for rerankers.
@@ -24,12 +24,20 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
 <Tabs>
   <Tab title="Hub">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - uses: voyageai/rerank-2
   ```
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: My Voyage Reranker
       provider: voyage
@@ -52,6 +60,10 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
   </Tab> */}
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Cohere Reranker
       provider: cohere
@@ -74,6 +86,10 @@ If you only have access to a single LLM, then you can use it as a reranker. This
   </Tab> */}
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: LLM Reranker
       provider: openai
@@ -97,6 +113,10 @@ If you only have access to a single LLM, then you can use it as a reranker. This
   </Tab> */}
     <Tab title="YAML">
     ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
     models:
       - name: Huggingface-tei Reranker
         provider: huggingface-tei

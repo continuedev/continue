@@ -12,7 +12,8 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-yaml": "^1.29.0"
+    "@continuedev/config-yaml": "^1.36.0",
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

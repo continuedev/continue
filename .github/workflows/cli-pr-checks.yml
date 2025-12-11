@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.run_attempt > 1
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Track workflow rerun
         uses: ./.github/actions/track-rerun
 
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6

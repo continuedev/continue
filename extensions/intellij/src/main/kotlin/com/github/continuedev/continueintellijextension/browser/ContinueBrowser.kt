@@ -88,7 +88,7 @@ class ContinueBrowser(
         val json = gsonService.gson.toJson(BrowserMessage(messageType, messageId, data))
         val jsCode = """window.postMessage($json, "*");"""
         try {
-            browser.executeJavaScriptAsync(jsCode)
+            browser.cefBrowser.executeJavaScript(jsCode, getGuiUrl(), 0)
         } catch (error: IllegalStateException) {
             log.warn(error)
         }

@@ -144,6 +144,50 @@ describe("getStringArg", () => {
       "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
   });
+
+  it("should convert parsed JSON object to string for contents parameter", () => {
+    // This simulates the case where JSON.parse() has converted a JSON string into an object
+    const args = { contents: { key: "value", number: 123 } };
+    const result = getStringArg(args, "contents");
+    expect(result).toBe('{"key":"value","number":123}');
+  });
+
+  it("should convert nested JSON object to string for contents parameter", () => {
+    const args = {
+      contents: {
+        user: {
+          name: "John",
+          details: {
+            age: 30,
+            preferences: ["coding", "reading"],
+          },
+        },
+      },
+    };
+    const result = getStringArg(args, "contents");
+    const expected =
+      '{"user":{"name":"John","details":{"age":30,"preferences":["coding","reading"]}}}';
+    expect(result).toBe(expected);
+  });
+
+  it("should convert JSON array to string for contents parameter", () => {
+    const args = { contents: ["item1", "item2", { key: "value" }] };
+    const result = getStringArg(args, "contents");
+    expect(result).toBe('["item1","item2",{"key":"value"}]');
+  });
+
+  it("should handle contents parameter that is already a string", () => {
+    const args = { contents: "already a string" };
+    const result = getStringArg(args, "contents");
+    expect(result).toBe("already a string");
+  });
+
+  it("should handle contents parameter that is null", () => {
+    const args = { contents: null };
+    expect(() => getStringArg(args, "contents")).toThrowError(
+      "`contents` argument is required and must not be empty or whitespace-only. (type string)",
+    );
+  });
 });
 
 describe("getOptionalStringArg", () => {

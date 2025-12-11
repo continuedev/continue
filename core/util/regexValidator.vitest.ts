@@ -111,8 +111,7 @@ describe("looksLikeLiteralSearch", () => {
 describe("prepareQueryForRipgrep", () => {
   it("should escape literal-looking queries", () => {
     const result = prepareQueryForRipgrep("hello.world");
-    expect(result.query).toBe("hello\\.world");
-    expect(result.warning).toContain("escaped for literal text search");
+    expect(result.query).toBe("hello.world");
   });
 
   it("should sanitize regex patterns", () => {
@@ -130,14 +129,12 @@ describe("prepareQueryForRipgrep", () => {
   describe("real-world examples", () => {
     it("should escape file patterns", () => {
       const result = prepareQueryForRipgrep("*.js");
-      expect(result.query).toBe("\\*\\.js");
-      expect(result.warning).toContain("escaped for literal text search");
+      expect(result.query).toBe("*.js");
     });
 
     it("should escape function calls", () => {
       const result = prepareQueryForRipgrep("console.log()");
-      expect(result.query).toBe("console\\.log\\(\\)");
-      expect(result.warning).toContain("escaped for literal text search");
+      expect(result.query).toBe("console.log()");
     });
 
     it("should not escape proper regex patterns", () => {
@@ -163,8 +160,7 @@ describe("problematic patterns that originally failed", () => {
 
   it("should handle dollar signs in shell patterns", () => {
     const result = prepareQueryForRipgrep("$(command)");
-    expect(result.query).toBe("\\$\\(command\\)");
-    expect(result.warning).toContain("escaped for literal text search");
+    expect(result.query).toBe("$(command)");
   });
 
   it("should handle escaped dollar signs", () => {
@@ -253,8 +249,7 @@ describe("patterns that should NOT be over-sanitized", () => {
   describe("edge cases that could trigger false positives", () => {
     it("should not treat mathematical expressions as problematic", () => {
       const result = prepareQueryForRipgrep("a + b * c");
-      expect(result.query).toBe("a \\+ b \\* c"); // Should be escaped as literal
-      expect(result.warning).toContain("escaped for literal text search");
+      expect(result.query).toBe("a + b * c"); // Should be escaped as literal
     });
 
     it("should not break regex that uses word boundaries", () => {
@@ -271,8 +266,7 @@ describe("patterns that should NOT be over-sanitized", () => {
 
     it("should not treat IPv4 addresses as problematic regex", () => {
       const result = prepareQueryForRipgrep("192.168.1.1");
-      expect(result.query).toBe("192\\.168\\.1\\.1"); // Should be escaped as literal
-      expect(result.warning).toContain("escaped for literal text search");
+      expect(result.query).toBe("192.168.1.1"); // Should be escaped as literal
     });
 
     it("should not break hex color codes", () => {
@@ -285,8 +279,7 @@ describe("patterns that should NOT be over-sanitized", () => {
   describe("patterns that should preserve user intent", () => {
     it("should not sanitize intentional regex alternation", () => {
       const result = prepareQueryForRipgrep("(foo|bar)");
-      expect(result.query).toBe("\\(foo\\|bar\\)"); // Should be escaped as literal since unescaped
-      expect(result.warning).toContain("escaped for literal text search");
+      expect(result.query).toBe("(foo|bar)"); // Should be escaped as literal since unescaped
     });
 
     it("should preserve escaped alternation in regex", () => {
@@ -299,12 +292,6 @@ describe("patterns that should NOT be over-sanitized", () => {
       const result = prepareQueryForRipgrep("name LIKE '%john%'");
       expect(result.query).toBe("name LIKE '%john%'"); // No regex metacharacters here
       expect(result.warning).toBeUndefined();
-    });
-
-    it("should not break CSS selectors when used as literal search", () => {
-      const result = prepareQueryForRipgrep(".class-name > div:nth-child(2)");
-      expect(result.query).toBe("\\.class-name > div:nth-child\\(2\\)");
-      expect(result.warning).toContain("escaped for literal text search");
     });
   });
 });

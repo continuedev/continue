@@ -598,7 +598,6 @@ export const sessionSlice = createSlice({
               },
               contextItems: [],
             };
-            handleToolCallsInMessage(message, historyItem);
             state.history.push(historyItem);
             lastItem = state.history[state.history.length - 1];
             lastMessage = lastItem.message;
@@ -693,6 +692,9 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
+        if (payload.mode) {
+          state.mode = payload.mode;
+        }
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;

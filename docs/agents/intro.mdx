@@ -57,6 +57,78 @@ Use Mission Control to kick off agents for:
   **New to agents?** Check out our [pre-configured agents](/hub/agents/overview#pre-configured-agents) to test out a workflow immediately.
 </Info>
 
+## Try an Agent First: Your 60-Second Challenge
+
+Before creating your own agent, let's see one in action! The fastest way to experience the power of Continue agents is with our demo repository.
+
+![Agent Mission Control](/images/hub/assets/images/agent-mission-control.gif)
+
+### See an Agent Create a Pull Request in Under 60 Seconds
+
+<Steps>
+  <Step title="🍴 Fork Our Demo Repository">
+    Get a safe sandbox to experiment with:
+    
+    **Option 1: GitHub Web Interface**
+    Visit [github.com/continuedev/demo-project](https://github.com/continuedev/demo-project) and click **Fork**
+    
+    **Option 2: GitHub CLI**
+    ```bash
+    gh repo fork continuedev/demo-project
+    ```
+  </Step>
+
+  <Step title="🎯 Access Mission Control">
+    Go to [hub.continue.dev/agents](https://hub.continue.dev/agents) and:
+    - **Connect GitHub** and authorize Continue when prompted
+    - This gives agents access to create PRs in your repositories
+  </Step>
+
+  <Step title="🚀 Run Your First Agent">
+    **Target your forked demo repo** and try one of these commands:
+    
+    <Tabs>
+      <Tab title="Add New Feature">
+        ```
+        Create a new function that calculates fibonacci numbers.
+        ```
+      </Tab>
+      
+      <Tab title="Fix Existing Bug">
+        ```
+        Fix the TypeError in api/users.ts
+        ```
+      </Tab>
+      
+      <Tab title="Add Documentation">
+        ```
+        Add comprehensive README documentation with setup instructions.
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="✨ Watch the Magic">
+    **Result:** A fully-formed Pull Request opens in your demo repo with:
+    - Complete implementation or fix
+    - Proper commit messages
+    - Detailed PR description
+    - Ready for review and merge
+  </Step>
+</Steps>
+
+<Info>
+  **Why Use the Demo Repo?**
+  - **Safe testing environment** - No risk to your production code
+  - **Pre-configured issues** - Common bugs and features to practice with
+  - **Immediate results** - See agents in action without setup complexity
+  - **Learn by example** - Study the generated code and PR descriptions
+</Info>
+
+<Tip>
+  Once you see how agents work with the demo repo, you'll understand exactly how to create and customize your own for real projects!
+</Tip>
+
 ## Example Workflow Tasks
 
 Here are some example tasks you can try with your agents:

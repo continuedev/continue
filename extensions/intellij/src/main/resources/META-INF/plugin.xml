@@ -155,6 +155,14 @@
             <override-text place="GoToAction" text="Settings"/>
         </action>
 
+        <action id="continue.reloadPage"
+                class="com.github.continuedev.continueintellijextension.actions.ReloadBrowserAction"
+                icon="AllIcons.Actions.Refresh"
+                text="Reload Continue Browser"
+                description="Reload Continue Browser">
+            <override-text place="GoToAction" text="Reload Continue Browser"/>
+        </action>
+
         <action id="continue.openLogs"
                 class="com.github.continuedev.continueintellijextension.actions.OpenLogsAction"
                 icon="AllIcons.General.ShowInfos"
@@ -167,6 +175,7 @@
             <reference ref="continue.newContinueSession"/>
             <reference ref="continue.viewHistory"/>
             <reference ref="continue.openConfigPage"/>
+            <reference ref="continue.reloadPage" />
         </group>
 
         <action id="continue.focusContinueInput"

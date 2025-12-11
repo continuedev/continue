@@ -66,7 +66,7 @@ jobs:
             arch: arm64
             npm_config_arch: arm64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -96,7 +96,7 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Git
         run: |
@@ -131,7 +131,7 @@ jobs:
     steps:
       # 0. Setup git
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Git
         run: |
@@ -183,7 +183,7 @@ jobs:
           echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           commit-message: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"

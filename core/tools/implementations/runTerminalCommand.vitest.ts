@@ -1,20 +1,21 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  afterAll,
-  vi,
-} from "vitest";
 import * as childProcess from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { IDE, ToolExtras } from "../..";
 import * as processTerminalStates from "../../util/processTerminalStates";
-import { runTerminalCommandImpl } from "./runTerminalCommand";
 import { runTerminalCommandTool } from "../definitions/runTerminalCommand";
+import { runTerminalCommandImpl } from "./runTerminalCommand";
 
 // We're using real child processes, so ensure these aren't mocked
 vi.unmock("node:child_process");
@@ -475,6 +476,206 @@ describe("runTerminalCommandImpl", () => {
       }
       process.cwd = originalCwd;
     }
+  });
+
+  describe("cwd handling", () => {
+    describe("workspace directory handling", () => {
+      it("should use file:// URI when available", async () => {
+        const fileUri = "file:///home/user/workspace";
+        mockGetWorkspaceDirs.mockResolvedValue([fileUri]);
+
+        // We can't easily test the internal cwd without mocking child_process,
+        // but we can verify the function doesn't throw with file URIs
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should skip non-file URIs and use the first file:// URI", async () => {
+        const workspaceDirs = [
+          "vscode-vfs://github/user/repo",
+          "untitled:/Untitled-1",
+          "file:///home/user/workspace",
+          "file:///home/user/other-workspace",
+        ];
+        mockGetWorkspaceDirs.mockResolvedValue(workspaceDirs);
+
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should handle workspace with only non-file URIs", async () => {
+        const workspaceDirs = [
+          "vscode-vfs://github/user/repo",
+          "untitled:/Untitled-1",
+        ];
+        mockGetWorkspaceDirs.mockResolvedValue(workspaceDirs);
+
+        // Should fall back to HOME/USERPROFILE or process.cwd() without throwing
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should handle empty workspace directories", async () => {
+        mockGetWorkspaceDirs.mockResolvedValue([]);
+
+        // Should fall back to HOME/USERPROFILE or process.cwd() without throwing
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should properly convert file:// URIs to paths", () => {
+        const fileUri = "file:///home/user/workspace";
+        const expectedPath = "/home/user/workspace";
+
+        // Test that fileURLToPath works correctly with file:// URIs
+        expect(fileURLToPath(fileUri)).toBe(expectedPath);
+      });
+
+      it("should throw error when trying to convert non-file URI", () => {
+        const nonFileUri = "vscode-vfs://github/user/repo";
+
+        // This demonstrates why the fix is needed - fileURLToPath throws on non-file URIs
+        expect(() => fileURLToPath(nonFileUri)).toThrow();
+      });
+    });
+
+    describe("remote environment handling", () => {
+      it("should use ide.runCommand for non-enabled remote environments", async () => {
+        const extras = createMockExtras({
+          remoteName: "some-unsupported-remote",
+        });
+
+        const result = await runTerminalCommandImpl(
+          { command: "echo test" },
+          extras,
+        );
+
+        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
+        expect(result[0].content).toContain("Terminal output not available");
+      });
+
+      it("should handle local environment with file URIs", async () => {
+        mockGetWorkspaceDirs.mockResolvedValue(["file:///home/user/workspace"]);
+
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras({ remoteName: "local" }),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should handle WSL environment", async () => {
+        mockGetWorkspaceDirs.mockResolvedValue(["file:///home/user/workspace"]);
+
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras({ remoteName: "wsl" }),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should handle dev-container environment", async () => {
+        mockGetWorkspaceDirs.mockResolvedValue(["file:///workspace"]);
+
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras({ remoteName: "dev-container" }),
+          ),
+        ).resolves.toBeDefined();
+      });
+    });
+
+    describe("fallback behavior", () => {
+      it("should use HOME environment variable as fallback", async () => {
+        const originalHome = process.env.HOME;
+        process.env.HOME = "/home/testuser";
+
+        mockGetWorkspaceDirs.mockResolvedValue([
+          "vscode-vfs://github/user/repo",
+        ]);
+
+        try {
+          await expect(
+            runTerminalCommandImpl(
+              { command: "echo test", waitForCompletion: false },
+              createMockExtras(),
+            ),
+          ).resolves.toBeDefined();
+        } finally {
+          process.env.HOME = originalHome;
+        }
+      });
+
+      it("should use USERPROFILE on Windows as fallback", async () => {
+        const originalHome = process.env.HOME;
+        const originalUserProfile = process.env.USERPROFILE;
+
+        delete process.env.HOME;
+        process.env.USERPROFILE = "C:\\Users\\TestUser";
+
+        mockGetWorkspaceDirs.mockResolvedValue([]);
+
+        try {
+          await expect(
+            runTerminalCommandImpl(
+              { command: "echo test", waitForCompletion: false },
+              createMockExtras(),
+            ),
+          ).resolves.toBeDefined();
+        } finally {
+          process.env.HOME = originalHome;
+          process.env.USERPROFILE = originalUserProfile;
+        }
+      });
+
+      it("should use os.tmpdir() as final fallback", async () => {
+        const originalHome = process.env.HOME;
+        const originalUserProfile = process.env.USERPROFILE;
+        const originalCwd = process.cwd;
+
+        delete process.env.HOME;
+        delete process.env.USERPROFILE;
+        // Mock process.cwd to throw an error
+        process.cwd = vi.fn().mockImplementation(() => {
+          throw new Error("No cwd available");
+        }) as typeof process.cwd;
+
+        mockGetWorkspaceDirs.mockResolvedValue([]);
+
+        try {
+          // Should fall back to os.tmpdir() without throwing
+          await expect(
+            runTerminalCommandImpl(
+              { command: "echo test", waitForCompletion: false },
+              createMockExtras(),
+            ),
+          ).resolves.toBeDefined();
+        } finally {
+          process.env.HOME = originalHome;
+          process.env.USERPROFILE = originalUserProfile;
+          process.cwd = originalCwd;
+        }
+      });
+    });
   });
 });
 

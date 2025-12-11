@@ -31,7 +31,7 @@ Continue supports two types of rules with different behaviors:
 <Columns cols={2}>
 <Card title="Local Rules" icon="folder">
 - **Location**: `.continue/rules` folder in your workspace
-- **Visibility**: Automatically visible when using Hub assistants
+- **Visibility**: Automatically visible when using Hub configs
 - **Creation**: Add rules button in VSCode or manual file creation
 - **File Management**: Creates actual `.md` files you can edit directly
 </Card>
@@ -53,7 +53,7 @@ When using Continue, rules are loaded in this order:
 4. **Global rules** (from `~/.continue/rules` folder)
 
 <Info>
-**TL;DR**: Local rules show up automatically when using Hub assistants. Hub rules show up automatically when referenced in your config.
+**TL;DR**: Local rules show up automatically when using Hub configs. Hub rules show up automatically when referenced in your config.
 </Info>
 
 ## Quick Start: How to Create Your First Rule File
@@ -94,7 +94,7 @@ For example, you can say "Create a rule for this", and a rule will be created fo
 
 Rules can also be created and managed on the Continue Mission Control:
 
-1. **Browse existing rules**: [Explore available rules](https://hub.continue.dev/explore?type=rules)
+1. **Browse existing rules**: [Explore available rules](https://hub.continue.dev/hub?type=rules)
 2. **Create new rules**: [Create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub
 3. **Copy from local rules**: Copy/paste content from your `.continue/rules` files to create Hub rules
 
@@ -228,7 +228,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 **Solution**:
 - **Hub rules** only appear when referenced in your config.yaml using the `uses:` syntax
-- **Local rules** automatically appear when using Hub assistants
+- **Local rules** automatically appear when using Hub configs
 - There's currently no automatic bidirectional sync
 
 ### Issue: "Edit" Links Point to Wrong Location

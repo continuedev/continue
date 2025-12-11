@@ -34,15 +34,57 @@ export function getAnthropicErrorMessage(response: ErrorResponse): string {
   }
 }
 
+/**
+ * Detects if the given API base URL is an Azure-hosted Anthropic endpoint.
+ * Azure AI Foundry hosts Anthropic models but requires a different auth header.
+ *
+ * Supported Azure endpoint patterns:
+ * - *.services.ai.azure.com (Azure AI Foundry)
+ * - *.cognitiveservices.azure.com (Azure Cognitive Services)
+ *
+ * @param apiBase - The API base URL to check
+ * @returns true if the endpoint is an Azure-hosted Anthropic endpoint
+ */
+export function isAzureAnthropicEndpoint(apiBase?: string): boolean {
+  if (!apiBase) {
+    return false;
+  }
+
+  try {
+    const url = new URL(apiBase);
+    const hostname = url.hostname.toLowerCase();
+    return (
+      hostname.endsWith(".services.ai.azure.com") ||
+      hostname.endsWith(".cognitiveservices.azure.com")
+    );
+  } catch {
+    // Invalid URL - fall back to false
+    return false;
+  }
+}
+
 export function getAnthropicHeaders(
   apiKey: string,
   enableCaching: boolean,
+  apiBase?: string,
 ): Record<string, string> {
+  const isAzure = isAzureAnthropicEndpoint(apiBase);
+
+  // Warn if Azure endpoint is used with Anthropic-style key
+  if (isAzure && apiKey.startsWith("sk-ant-")) {
+    console.warn(
+      "[Continue] Azure endpoint detected but API key appears to be a standard Anthropic key (sk-ant-*). " +
+        "Azure endpoints require Azure API keys from your AI Foundry resource.",
+    );
+  }
+
+  const authHeaderName = isAzure ? "api-key" : "x-api-key";
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
     "anthropic-version": "2023-06-01",
-    "x-api-key": apiKey,
+    [authHeaderName]: apiKey,
   };
 
   if (enableCaching) {

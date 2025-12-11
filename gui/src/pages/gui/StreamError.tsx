@@ -5,7 +5,7 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
+import { DISCORD_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
 import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
@@ -250,7 +250,11 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       {/* Expandable technical details using ToggleDiv */}
       {message && (
         <div className="mb-2">
-          <ToggleDiv title="View error output" testId="error-output-toggle">
+          <ToggleDiv
+            title="View error output"
+            testId="error-output-toggle"
+            defaultOpen
+          >
             <div className="flex flex-col gap-0 rounded-sm">
               <code className="text-editor-foreground block max-h-48 overflow-y-auto p-3 font-mono text-xs">
                 {parsedError}
@@ -286,11 +290,27 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", GITHUB_LINK);
+              const issueTitle = `Error: ${selectedModel?.title || "Model"} - ${statusCode || "Unknown error"}`;
+              const issueBody = `**Error Details**
+
+Model: ${selectedModel?.title || "Unknown"}
+Provider: ${selectedModel?.provider || "Unknown"}
+Status Code: ${statusCode || "N/A"}
+
+**Error Output**
+\`\`\`
+${parsedError}
+\`\`\`
+
+**Additional Context**
+Please add any additional context about the error here
+`;
+              const url = `https://github.com/continuedev/continue/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+              ideMessenger.post("openUrl", url);
             }}
           >
             <GithubIcon className="h-5 w-5" />
-            <span className="xs:flex hidden">Github</span>
+            <span className="xs:flex hidden">Open GitHub issue</span>
           </GhostButton>
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"

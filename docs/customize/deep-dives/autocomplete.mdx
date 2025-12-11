@@ -21,6 +21,10 @@ If you want to have the best autocomplete experience, we recommend using Codestr
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Codestral
       provider: mistral
@@ -68,6 +72,10 @@ Then, add the model to your configuration:
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Qwen 1.5b Autocomplete Model
       provider: ollama
@@ -104,6 +112,10 @@ For example:
 <Tab title="YAML">
 
 ```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
 models:
   - name: Qwen3 without Thinking for Autocomplete
     provider: ollama
@@ -163,9 +175,9 @@ The `config.json` configuration format offers configuration options through `tab
 
 ## Autocomplete FAQs and Troubleshooting in Continue
 
-### I want better completions, should I use GPT-4?
+### I want better completions, should I use GPT-5?
 
-Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templating/AutocompleteTemplate.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
+Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templating/AutocompleteTemplate.ts)). Some of the best commercial models like GPT-5 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
 
 ### Autocomplete Not Working – How to Fix It
 

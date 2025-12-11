@@ -14,8 +14,8 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-yaml": "file:../config-yaml",
-    "@openapitools/openapi-generator-cli": "^2.24.0",
+    "@continuedev/config-yaml": "^1.36.0",
+    "@openapitools/openapi-generator-cli": "^2.25.1",
     "express": "^4.18.2",
     "swagger-ui-express": "^5.0.0"
   },

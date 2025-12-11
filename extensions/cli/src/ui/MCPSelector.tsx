@@ -288,7 +288,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
       case "explore-mcp-servers":
         // Open the MCP servers hub in the default browser
         const open = (await import("open")).default;
-        await open("https://hub.continue.dev/explore?type=mcpServers");
+        await open("https://hub.continue.dev/hub?type=mcpServers");
         setMessage("Opened MCP servers hub in browser");
         break;
       case "back":

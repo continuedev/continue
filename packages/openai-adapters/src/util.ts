@@ -158,7 +158,52 @@ export function customFetch(
   if (process.env.FEATURE_FLAG_DISABLE_CUSTOM_FETCH) {
     return patchedFetch;
   }
+
+  function letRequestOptionsOverrideAuthHeaders(init: any): any {
+    if (!init || !init.headers || !requestOptions || !requestOptions.headers) {
+      return init;
+    }
+
+    // Check if custom Authorization or x-api-key headers are provided
+    const hasCustomAuth =
+      requestOptions.headers["Authorization"] ||
+      requestOptions.headers["authorization"];
+    const hasCustomXApiKey =
+      requestOptions.headers["x-api-key"] ||
+      requestOptions.headers["X-Api-Key"];
+
+    // Remove default auth headers if custom ones are provided
+    if (hasCustomAuth || hasCustomXApiKey) {
+      if (init.headers instanceof Headers) {
+        if (hasCustomAuth) {
+          init.headers.delete("Authorization");
+        }
+        if (hasCustomXApiKey) {
+          init.headers.delete("x-api-key");
+        }
+      } else if (Array.isArray(init.headers)) {
+        init.headers = init.headers.filter((header: [string, string]) => {
+          const headerLower = (header[0] ?? "").toLowerCase();
+          if (hasCustomAuth && headerLower === "authorization") return false;
+          if (hasCustomXApiKey && headerLower === "x-api-key") return false;
+          return true;
+        });
+      } else if (typeof init.headers === "object") {
+        if (hasCustomAuth) {
+          delete init.headers["Authorization"];
+          delete init.headers["authorization"];
+        }
+        if (hasCustomXApiKey) {
+          delete init.headers["x-api-key"];
+          delete init.headers["X-Api-Key"];
+        }
+      }
+    }
+    return init;
+  }
+
   return (req: URL | string | Request, init?: any) => {
+    init = letRequestOptionsOverrideAuthHeaders(init);
     if (typeof req === "string" || req instanceof URL) {
       return fetchwithRequestOptions(req, init, requestOptions);
     } else {

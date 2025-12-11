@@ -13,15 +13,15 @@ global.fetch = vi
   .mockImplementation(async (url: string | URL, ...args) => {
     const urlString = url.toString();
 
-    // Mock the default-agent API call
-    if (urlString.includes("get-assistant/continuedev/default-agent")) {
+    // Mock the default config API call
+    if (urlString.includes("get-assistant/continuedev/default-cli-config")) {
       return {
         ok: true,
         status: 200,
         json: async () => ({
           configResult: {
             config: {
-              name: "Default Agent",
+              name: "Default Config",
               version: "0.0.1",
               schema: "v1",
               models: [

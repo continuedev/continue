@@ -14,39 +14,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         }
       } catch (e) {}
 
-      return [
-        "claude-3-5",
-        "claude-3.5",
-        "claude-3-7",
-        "claude-3.7",
-        "claude-sonnet-4",
-        "claude-4-sonnet",
-        "gpt-4",
-        "o3",
-        "gemini",
-        "claude-opus-4",
-        "gemma",
-      ].some((part) => model.toLowerCase().startsWith(part));
+      return ["claude", "gpt-4", "o3", "gemini", "gemma"].some((part) =>
+        model.toLowerCase().startsWith(part),
+      );
     },
     anthropic: (model) => {
-      const lower = model.toLowerCase();
-      if (
-        [
-          "claude-3-5",
-          "claude-3.5",
-          "claude-3-7",
-          "claude-3.7",
-          "claude-sonnet-4",
-          "claude-4-sonnet",
-          "claude-opus-4",
-        ].some((part) => lower.startsWith(part))
-      ) {
+      if (model.includes("claude-2") || model.includes("claude-instant")) {
+        return false;
+      }
+      if (["claude"].some((part) => model.toLowerCase().startsWith(part))) {
         return true;
       }
-      if (lower.includes("claude") && lower.includes("4-5")) {
-        return true;
-      }
-
       return false;
     },
     azure: (model) => {
@@ -100,7 +78,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     cohere: (model) => {
-      return model.toLowerCase().startsWith("command");
+      const lower = model.toLowerCase();
+      if (lower.startsWith("command-a-vision")) {
+        return false;
+      }
+      return lower.startsWith("command");
     },
     gemini: (model) => {
       // All gemini models support function calling
@@ -116,20 +98,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
-      return ["grok-3", "grok-4", "grok-code"].some((val) =>
+      return ["grok-3", "grok-4", "grok-4-1", "grok-code"].some((val) =>
         lowerCaseModel.includes(val),
       );
     },
     bedrock: (model) => {
+      if (model.includes("claude-2") || model.includes("claude-instant")) {
+        return false;
+      }
       if (
         [
-          "claude-3-5-sonnet",
-          "claude-3.5-sonnet",
-          "claude-3-7-sonnet",
-          "claude-3.7-sonnet",
-          "claude-sonnet-4",
-          "claude-4-sonnet",
-          "claude-opus-4",
+          "claude",
           "nova-lite",
           "nova-pro",
           "nova-micro",
@@ -276,8 +255,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o3",
         "openai/o4",
         "openai/gpt-oss",
-        "anthropic/claude-3",
-        "anthropic/claude-4",
+        "anthropic/claude",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
@@ -388,10 +366,12 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/o[134]/],
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
-    [/gpt-5/],
+    [/gemini/, /3-pro/],
+    [/gpt/, /-5|5\.1/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
     [/grok-code/],
+    [/grok-4-1|grok-4\.1/],
     [/claude/, /4-5/],
   ];
   for (const combo of recs) {

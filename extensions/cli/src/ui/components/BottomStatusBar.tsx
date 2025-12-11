@@ -21,6 +21,8 @@ export interface BottomStatusBarProps {
   closeCurrentScreen: () => void;
   contextPercentage?: number;
   hasImageInClipboard?: boolean;
+  isVerboseMode?: boolean;
+  totalCost?: number;
 }
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
@@ -33,6 +35,8 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   closeCurrentScreen,
   contextPercentage,
   hasImageInClipboard,
+  isVerboseMode,
+  totalCost,
 }) => {
   const [_refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -71,6 +75,17 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
               •{" "}
             </Text>
             <ContextPercentageDisplay percentage={contextPercentage} />
+          </React.Fragment>
+        )}
+        {isVerboseMode && totalCost !== undefined && totalCost > 0 && (
+          <React.Fragment>
+            <Text key="cost-separator" color="dim">
+              {" "}
+              •{" "}
+            </Text>
+            <Text key="cost-display" color="dim">
+              Cost: ${totalCost.toFixed(4)}
+            </Text>
           </React.Fragment>
         )}
       </Box>

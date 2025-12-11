@@ -176,3 +176,6 @@ keys
 
 .channels_cache.json
 .users_cache.json
+.copy-status
+.copy-log
+

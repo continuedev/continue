@@ -60,6 +60,25 @@ function trimmedMatch(
 }
 
 /**
+ * Case-insensitive matching strategy
+ */
+function caseInsensitiveMatch(
+  fileContent: string,
+  searchContent: string,
+): BasicMatchResult | null {
+  const lowerFileContent = fileContent.toLowerCase();
+  const lowerSearchContent = searchContent.toLowerCase();
+  const index = lowerFileContent.indexOf(lowerSearchContent);
+  if (index !== -1) {
+    return {
+      startIndex: index,
+      endIndex: index + searchContent.length,
+    };
+  }
+  return null;
+}
+
+/**
  * Whitespace-ignored matching strategy
  * Removes all whitespace from both content and search, then finds the match
  */
@@ -284,6 +303,7 @@ function findFuzzyMatch(
 const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
   { strategy: exactMatch, name: "exactMatch" },
   { strategy: trimmedMatch, name: "trimmedMatch" },
+  { strategy: caseInsensitiveMatch, name: "caseInsensitiveMatch" },
   { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
   // { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
 ];

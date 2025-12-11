@@ -185,7 +185,7 @@ describe("serializeAgentFile", () => {
     const agentFile: AgentFile = {
       name: "Test Agent File",
       description: "A test agent file",
-      model: "anthropic/claude-3-sonnet",
+      model: "anthropic/claude-sonnet-4-5",
       tools: "tool1, tool2",
       rules: "rule1, rule2",
       prompt: "This is the test prompt",
@@ -486,6 +486,258 @@ describe("parseAgentFileTools", () => {
     });
   });
 
+  describe("URL-based MCP references", () => {
+    it("should parse HTTPS URL without tool name", () => {
+      const result = parseAgentFileTools("https://mcp.example.com");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://mcp.example.com" }],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse HTTP URL without tool name", () => {
+      const result = parseAgentFileTools("http://mcp.example.com");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "http://mcp.example.com" }],
+        mcpServers: ["http://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse HTTPS URL with port", () => {
+      const result = parseAgentFileTools("https://mcp.example.com:8080");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://mcp.example.com:8080" }],
+        mcpServers: ["https://mcp.example.com:8080"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse HTTPS URL with tool name", () => {
+      const result = parseAgentFileTools("https://mcp.example.com:tool_name");
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com", toolName: "tool_name" },
+        ],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse HTTP URL with tool name", () => {
+      const result = parseAgentFileTools("http://mcp.example.com:my_tool");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "http://mcp.example.com", toolName: "my_tool" }],
+        mcpServers: ["http://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse HTTPS URL with port and tool name", () => {
+      const result = parseAgentFileTools(
+        "https://mcp.example.com:8080:tool_name",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com:8080", toolName: "tool_name" },
+        ],
+        mcpServers: ["https://mcp.example.com:8080"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse URL with path", () => {
+      const result = parseAgentFileTools("https://api.example.com/mcp");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://api.example.com/mcp" }],
+        mcpServers: ["https://api.example.com/mcp"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse URL with path and tool name", () => {
+      const result = parseAgentFileTools(
+        "https://api.example.com/mcp:tool_name",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://api.example.com/mcp", toolName: "tool_name" },
+        ],
+        mcpServers: ["https://api.example.com/mcp"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse URL with query parameters", () => {
+      const result = parseAgentFileTools(
+        "https://api.example.com/mcp?key=value",
+      );
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://api.example.com/mcp?key=value" }],
+        mcpServers: ["https://api.example.com/mcp?key=value"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse URL with query parameters and tool name", () => {
+      const result = parseAgentFileTools(
+        "https://api.example.com/mcp?key=value:tool_name",
+      );
+      expect(result).toEqual({
+        tools: [
+          {
+            mcpServer: "https://api.example.com/mcp?key=value",
+            toolName: "tool_name",
+          },
+        ],
+        mcpServers: ["https://api.example.com/mcp?key=value"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse tool names with hyphens", () => {
+      const result = parseAgentFileTools("https://mcp.example.com:read-alerts");
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com", toolName: "read-alerts" },
+        ],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse tool names with mixed alphanumeric and special chars", () => {
+      const result = parseAgentFileTools(
+        "https://mcp.example.com:tool_name-123",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com", toolName: "tool_name-123" },
+        ],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse multiple URL-based MCP references", () => {
+      const result = parseAgentFileTools(
+        "https://mcp1.example.com:tool1, https://mcp2.example.com:tool2",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp1.example.com", toolName: "tool1" },
+          { mcpServer: "https://mcp2.example.com", toolName: "tool2" },
+        ],
+        mcpServers: ["https://mcp1.example.com", "https://mcp2.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse mixed URL and slug-based MCP references", () => {
+      const result = parseAgentFileTools(
+        "https://mcp.example.com:tool1, owner/package:tool2, bash",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com", toolName: "tool1" },
+          { mcpServer: "owner/package", toolName: "tool2" },
+          { toolName: "bash" },
+        ],
+        mcpServers: ["https://mcp.example.com", "owner/package"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should deduplicate URL-based MCP servers", () => {
+      const result = parseAgentFileTools(
+        "https://mcp.example.com:tool1, https://mcp.example.com:tool2, https://mcp.example.com",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://mcp.example.com", toolName: "tool1" },
+          { mcpServer: "https://mcp.example.com", toolName: "tool2" },
+          { mcpServer: "https://mcp.example.com" },
+        ],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should reject URL with whitespace in tool name", () => {
+      expect(() =>
+        parseAgentFileTools("https://mcp.example.com:tool name"),
+      ).toThrow(
+        'Invalid URL-based MCP tool reference "https://mcp.example.com:tool name": the part after the last colon must be either a port number or a valid tool name',
+      );
+    });
+
+    it("should reject URL with invalid characters after colon", () => {
+      expect(() =>
+        parseAgentFileTools("https://mcp.example.com:invalid@tool"),
+      ).toThrow(
+        'Invalid URL-based MCP tool reference "https://mcp.example.com:invalid@tool": the part after the last colon must be either a port number or a valid tool name',
+      );
+    });
+
+    it("should reject URL with whitespace before colon", () => {
+      expect(() =>
+        parseAgentFileTools("https://mcp.example.com :tool"),
+      ).toThrow(
+        'Invalid MCP tool reference "https://mcp.example.com :tool": colon-separated tool references cannot contain whitespace',
+      );
+    });
+
+    it("should handle URL-based MCP with built_in keyword", () => {
+      const result = parseAgentFileTools(
+        "built_in, https://mcp.example.com:tool1",
+      );
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://mcp.example.com", toolName: "tool1" }],
+        mcpServers: ["https://mcp.example.com"],
+        allBuiltIn: true,
+      });
+    });
+
+    it("should parse localhost URLs", () => {
+      const result = parseAgentFileTools("http://localhost:3000");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "http://localhost:3000" }],
+        mcpServers: ["http://localhost:3000"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse localhost URLs with tool name", () => {
+      const result = parseAgentFileTools("http://localhost:3000:my_tool");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "http://localhost:3000", toolName: "my_tool" }],
+        mcpServers: ["http://localhost:3000"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse IP address URLs", () => {
+      const result = parseAgentFileTools("https://192.168.1.1:8080");
+      expect(result).toEqual({
+        tools: [{ mcpServer: "https://192.168.1.1:8080" }],
+        mcpServers: ["https://192.168.1.1:8080"],
+        allBuiltIn: false,
+      });
+    });
+
+    it("should parse IP address URLs with tool name", () => {
+      const result = parseAgentFileTools("https://192.168.1.1:8080:tool_name");
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "https://192.168.1.1:8080", toolName: "tool_name" },
+        ],
+        mcpServers: ["https://192.168.1.1:8080"],
+        allBuiltIn: false,
+      });
+    });
+  });
+
   describe("whitespace validation in colon-separated MCP tool references", () => {
     it("should reject MCP tool reference with space after colon", () => {
       expect(() => parseAgentFileTools("owner/slug: tool")).toThrow(
@@ -599,6 +851,55 @@ describe("parseAgentFileTools", () => {
       // Note: This behavior may or may not be desired, but documents current behavior
       // Built-in tools (no slash) don't trigger the whitespace check
       expect(() => parseAgentFileTools("my tool")).not.toThrow();
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should handle empty tool names correctly", () => {
+      const result = parseAgentFileTools("owner/package:,https://example.com:");
+      expect(result.tools).toEqual([
+        { mcpServer: "owner/package", toolName: "" },
+        { mcpServer: "https://example.com", toolName: "" },
+      ]);
+    });
+
+    it("should handle trailing commas", () => {
+      const result = parseAgentFileTools("bash, owner/package,");
+      expect(result.tools).toEqual([
+        { toolName: "bash" },
+        { mcpServer: "owner/package" },
+      ]);
+    });
+
+    it("should handle multiple consecutive commas", () => {
+      const result = parseAgentFileTools("bash,,owner/package");
+      expect(result.tools).toEqual([
+        { toolName: "bash" },
+        { mcpServer: "owner/package" },
+      ]);
+    });
+
+    it("should parse complex real-world example", () => {
+      const result = parseAgentFileTools(
+        "built_in, linear/mcp, sentry/mcp:read-alerts, https://custom-mcp.internal.com:8443:custom_tool, bash",
+      );
+      expect(result).toEqual({
+        tools: [
+          { mcpServer: "linear/mcp" },
+          { mcpServer: "sentry/mcp", toolName: "read-alerts" },
+          {
+            mcpServer: "https://custom-mcp.internal.com:8443",
+            toolName: "custom_tool",
+          },
+          { toolName: "bash" },
+        ],
+        mcpServers: [
+          "linear/mcp",
+          "sentry/mcp",
+          "https://custom-mcp.internal.com:8443",
+        ],
+        allBuiltIn: true,
+      });
     });
   });
 });
