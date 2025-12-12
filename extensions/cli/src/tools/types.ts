@@ -35,6 +35,7 @@ export interface Tool {
   name: string;
   displayName: string;
   description: string;
+  type?: string;
   parameters: ToolParametersSchema;
   preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
   run: (args: any) => Promise<string>;
