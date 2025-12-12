@@ -157,19 +157,19 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
       - name: Cache gui node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
@@ -375,13 +375,13 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
@@ -528,7 +528,7 @@ jobs:
 
       # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
           key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}
