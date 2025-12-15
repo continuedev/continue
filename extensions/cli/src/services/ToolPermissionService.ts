@@ -1,4 +1,4 @@
-import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
+import { BUILT_IN_TOOL_NAMES } from "../tools/builtInToolNames.js";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
@@ -143,7 +143,7 @@ export class ToolPermissionService
       }));
       policies.push(...allowed);
       const specificBuiltInSet = new Set(specificBuiltIns);
-      const notMentioned = ALL_BUILT_IN_TOOLS.map((t) => t.name).filter(
+      const notMentioned = BUILT_IN_TOOL_NAMES.filter(
         (name) => !specificBuiltInSet.has(name),
       );
       const disallowed: ToolPermissionPolicy[] = notMentioned.map((tool) => ({
