@@ -4,25 +4,18 @@
  */
 export const BUILT_IN_TOOL_NAMES = [
   "Read",
-  "Write",
   "Edit",
   "MultiEdit",
+  "Write",
   "List",
   "Search",
   "Bash",
   "Fetch",
   "Checklist",
-  "ReportFailure",
-  "Exit",
-  "Diff",
-  "LS",
-  "Glob",
-  "Grep",
-  "NotebookRead",
-  "NotebookEdit",
-  "WebFetch",
-  "WebSearch",
   "Subagent",
+  "Exit",
+  "ReportFailure",
+  "UploadArtifact",
 ] as const;
 
 export type BuiltInToolName = (typeof BUILT_IN_TOOL_NAMES)[number];
