@@ -1,10 +1,6 @@
 import type { ChatHistoryItem } from "core";
 
-import {
-  SERVICE_NAMES,
-  serviceContainer,
-  services,
-} from "../services/index.js";
+import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { logger } from "../util/logger.js";
@@ -34,7 +30,10 @@ export interface SubAgentResult {
 /**
  * Build system message for the agent
  */
-async function buildAgentSystemMessage(agent: AgentConfig): Promise<string> {
+async function buildAgentSystemMessage(
+  agent: AgentConfig,
+  services: any,
+): Promise<string> {
   const baseMessage = services.systemMessage
     ? await services.systemMessage.getSystemMessage(
         services.toolPermissions.getState().currentMode,
@@ -69,6 +68,9 @@ export async function executeSubAgent(
       agent: subAgent.name,
     });
 
+    // Lazy import services to avoid circular dependency
+    const { services } = await import("../services/index.js");
+
     // Get model and LLM API from model service
     const modelState = services.model.getState();
     const { model, llmApi } = modelState;
@@ -93,7 +95,7 @@ export async function executeSubAgent(
     );
 
     // Build agent system message
-    const systemMessage = await buildAgentSystemMessage(subAgent);
+    const systemMessage = await buildAgentSystemMessage(subAgent, services);
 
     // Store original system message function
     const originalGetSystemMessage = services.systemMessage?.getSystemMessage;
