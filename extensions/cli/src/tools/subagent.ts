@@ -1,4 +1,3 @@
-import { services } from "../services/index.js";
 import {
   generateSubagentToolDescription,
   getAgent,
@@ -66,6 +65,9 @@ export const subagentTool: Tool = {
     if (!agent) {
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
+
+    // Lazy import services to avoid circular dependency
+    const { services } = await import("../services/index.js");
 
     // Get parent session ID from chat history service
     const chatHistoryService = services.chatHistory;
