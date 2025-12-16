@@ -207,12 +207,18 @@ export async function executeToolCall(
       arguments: toolCall.arguments,
     });
 
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PreToolUse");
+
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
     );
     const duration = Date.now() - startTime;
+
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PostToolUse");
 
     telemetryService.logToolResult({
       toolName: toolCall.name,
