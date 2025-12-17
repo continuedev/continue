@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "changelog"]
           },
           {
             "group": "Mission Control",
