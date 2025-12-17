@@ -701,10 +701,6 @@
       "destination": "/customize/overview"
     },
     {
-      "source": "/changelog",
-      "destination": "/reference"
-    },
-    {
       "source": "/customization/code-config",
       "destination": "/reference"
     },
