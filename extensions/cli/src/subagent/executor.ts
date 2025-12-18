@@ -72,8 +72,8 @@ export async function executeSubAgent(
     const { services } = await import("../services/index.js");
 
     // Get model and LLM API from model service
-    const modelState = services.model.getState();
-    const { model, llmApi } = modelState;
+    const modelState = services.model.getSubagentModel();
+    const { model, llmApi } = modelState ?? {};
 
     if (!model || !llmApi) {
       throw new Error("Model or LLM API not available");

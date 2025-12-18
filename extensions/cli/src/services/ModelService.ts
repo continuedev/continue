@@ -305,4 +305,28 @@ export class ModelService
       return nameMatches;
     });
   }
+
+  /**
+   * Get a subagent model
+   */
+  getSubagentModel(): ModelServiceState | null {
+    const state = this.getState();
+    if (!state.assistant) {
+      return null;
+    }
+
+    const subagentModel = state.assistant.models?.find((model) =>
+      model?.roles?.includes("apply"),
+    );
+    if (!subagentModel) {
+      return null;
+    }
+
+    return {
+      llmApi: createLlmApi(subagentModel, state.authConfig),
+      model: subagentModel,
+      assistant: state.assistant,
+      authConfig: state.authConfig,
+    };
+  }
 }
