@@ -4,7 +4,7 @@
 
 </div>
 
-<h1 align="center">Continue</h1>
+<h1 align="center">✨ Continue ✨</h1>
 
 <div align="center">
 
@@ -25,34 +25,34 @@
 
 <div align="center">
 
-**Ship faster with Continuous AI**
+**🚀 Ship faster with Continuous AI**
 
-**The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
+**💡 The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
 
 </div>
 
 Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
 
-### Quick Install
+### ⚡ Quick Install
 
 ```bash
 npm i -g @continuedev/cli
 cn
 ```
 
-## Cloud Agents
+## ☁️ Cloud Agents
 
 Set workflows to run automatically on [PR opens](https://docs.continue.dev/guides/continuous-ai#pattern-2-the-pr-review-agent), [schedules](https://docs.continue.dev/guides/continuous-ai#pattern-1-the-async-triage-bot), or [any event trigger](https://docs.continue.dev/cli/quick-start#headless-mode)
 
 ![Cloud Agents](docs/images/background-agent.gif)
 
-## CLI Agents
+## 💻 CLI Agents
 
 Watch workflows execute in real-time and approve decisions step-by-step from your [terminal](https://docs.continue.dev/cli/quick-start#tui-mode)
 
 ![CLI Agents](docs/images/cli-agent.gif)
 
-## IDE Agents
+## 🔧 IDE Agents
 
 Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—let agents handle the refactoring while you keep coding
 
@@ -60,11 +60,11 @@ Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?item
 
 </div>
 
-## Contributing
+## 🤝 Contributing
 
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
 join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
 
-## License
+## 📄 License
 
 [Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
