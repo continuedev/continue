@@ -39,4 +39,4 @@ jobs:
               "repoUrl": "https://github.com/${{ github.repository }}"
             }')
           id=$(echo $response | jq -r '.id')
-          echo "https://hub.continue.dev/agents/$id"
+          echo "https://hub.continue.dev/hub?type=agents/$id"

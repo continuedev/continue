@@ -1,0 +1,526 @@
+---
+title: "Supabase Integration"
+description: "Monitor database security, generate migrations, and optimize queries with Continue Agents connected to Supabase"
+---
+
+## Overview
+
+Connect Supabase to Continue Mission Control to enable AI-powered database workflows. When Supabase is enabled, Continue can audit Row Level Security (RLS) policies, generate secure migrations, optimize queries, and maintain database security automatically.
+
+<Card title="What You Can Do with Supabase Integration" icon="database">
+
+  - Automatically audit RLS policies on every PR
+  - Generate secure migrations for missing security policies
+  - Identify and fix critical security gaps
+  - Optimize database queries and schemas
+  - Monitor database performance and security
+  - Validate schema changes before deployment
+
+</Card>
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to the [Supabase Integration](https://hub.continue.dev/integrations/supabase).
+
+  </Step>
+
+  <Step title="Connect Supabase">
+
+    Click "Connect" to Supabase. 
+
+  </Step>
+
+  <Step title="Authorize Supabase Access">
+
+    You'll be redirected to Supabase to authorize Continue:
+    1. Select the Supabase organization and project to connect
+    2. Review the requested permissions
+    3. Click "Authorize" to complete the connection
+
+  </Step>
+
+  <Step title="Configure Workflows">
+
+    After connecting, set up your first workflow. The integration supports:
+    - **On PR open**: Audit RLS policies when PRs are created
+    - **Manual tasks**: Run database operations on-demand
+    - **Scheduled jobs**: Periodic security audits and performance checks
+
+  </Step>
+
+</Steps>
+
+## Workflows
+
+### Supabase security review
+
+**Trigger**: On PR open  
+**Description**: Connect your Supabase workspace to agents that can explore schemas, run queries, create and update documents, and handle migrations using natural language
+
+When a pull request is opened, this security-focused workflow automatically:
+
+1. **Analyzes PR Changes** - Identifies affected tables from:
+   - Migration files (`supabase/migrations/*.sql`)
+   - SDK/library usage (`.from('table_name')` calls)
+   - Schema references in type definitions
+
+2. **Audits RLS Policies** - Uses Supabase MCP to inspect:
+   - Whether RLS is enabled on affected tables
+   - Existing policy configurations
+   - Potential security gaps
+
+3. **Classifies Security Risks** - Prioritizes findings by severity:
+   - 🔴 **Critical**: No RLS on tables with sensitive data
+   - 🟠 **High**: Overly permissive policies (e.g., `USING (true)`)
+   - 🟡 **Medium**: Missing standard access patterns
+   - 🟢 **Low**: Policy optimization opportunities
+
+4. **Generates SQL Migrations** - Creates fixes for Critical/High/Medium issues:
+   - Enables RLS on unprotected tables
+   - Adds missing user-scoped policies
+   - Implements proper access controls
+   - Includes rollback commands
+
+5. **Commits Fixes to PR Branch** - Automatically pushes security fixes
+6. **Posts Comprehensive Comment** - Explains all findings and changes
+
+<Card title="Why This Matters" icon="shield-check">
+
+  Row Level Security (RLS) is Supabase's primary security mechanism. Without proper RLS policies:
+  - Users can access other users' private data
+  - Unauthorized modifications can occur
+  - Sensitive information may be exposed
+  
+  This workflow automatically catches these issues before they reach production.
+
+</Card>
+
+<Info>
+
+  **Smart Scoping**: The agent only audits tables directly referenced in your PR changes, not your entire database. This keeps audits focused and efficient.
+
+</Info>
+
+#### Example PR Comment
+
+After auditing RLS policies, the agent posts a comprehensive comment like this:
+
+```markdown
+## 🔒 Supabase RLS Policy Audit
+
+### Scope
+This audit covers **3 tables** referenced in this PR:
+- user_profiles (detected in: migration file)
+- comments (detected in: SDK usage in src/api/comments.ts)
+- posts (detected in: migration file)
+
+### Summary
+- ✅ 1 table with proper RLS
+- ⚠️ 2 tables requiring attention
+- 🔴 1 critical security gap found
+
+### Findings
+
+| Table | Risk Level | Issue | Status |
+|-------|------------|-------|--------|
+| `user_profiles` | 🔴 Critical | No RLS enabled | ✅ Fixed in commit abc123 |
+| `comments` | 🟡 Medium | Missing delete policy | ✅ Fixed in commit abc123 |
+| `posts` | 🟢 Low | Policy optimization possible | 💡 Recommendation |
+
+### Changes Made
+
+- Enabled RLS on `user_profiles`
+- Added policies: `user_profiles_select_own`, `user_profiles_update_own`, `comments_delete_own`
+- See full migration: `supabase/migrations/20241118120000_rls_security_fixes.sql`
+
+### Recommendations (Low Priority)
+
+- **posts table**: Consider renaming policy `posts_policy_1` to `posts_select_owner` for clarity
+
+### Policy Patterns Used
+
+**User-scoped access** (users access only their own data):
+\```sql
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id)
+\```
+
+### Next Steps
+
+- ✅ Review the migration file and committed changes
+- ✅ Test the policies in your development environment
+- ✅ Merge this PR once you've verified the security improvements
+```
+
+### Security Risk Levels Explained
+
+<Accordion title="🔴 Critical - Immediate Fix Required">
+
+  **What it means**: Tables with no RLS that contain sensitive data
+
+  **Examples**:
+  - User profiles, emails, or authentication data
+  - Financial information or payment details
+  - Private messages or personal content
+  - New tables created without RLS
+
+  **What the agent does**: Automatically enables RLS and adds basic policies
+
+</Accordion>
+
+<Accordion title="🟠 High - Important Security Gap">
+
+  **What it means**: Overly permissive policies that could allow unauthorized access
+
+  **Examples**:
+  - Policies using `USING (true)` without justification
+  - Write access without proper validation
+  - Admin policies that don't verify admin status
+  - Missing `WITH CHECK` clauses
+
+  **What the agent does**: Generates restrictive policies with proper checks
+
+</Accordion>
+
+<Accordion title="🟡 Medium - Missing Best Practices">
+
+  **What it means**: Partial RLS coverage or missing standard patterns
+
+  **Examples**:
+  - SELECT policy exists but no UPDATE/DELETE
+  - No user-scoped policies for personal data
+  - Missing public read policies where appropriate
+  - Incomplete CRUD policy coverage
+
+  **What the agent does**: Adds missing policies following standard patterns
+
+</Accordion>
+
+<Accordion title="🟢 Low - Optimization Opportunity">
+
+  **What it means**: Policies work but could be improved
+
+  **Examples**:
+  - Poor policy naming conventions
+  - Inefficient policy logic
+  - Missing documentation
+  - Duplicate or redundant policies
+
+  **What the agent does**: Suggests improvements in PR comment (no auto-fix)
+
+</Accordion>
+
+## Use Cases
+
+### Automated Security Audits
+
+Catch security issues before they reach production:
+
+<Card title="RLS Policy Auditor" icon="shield-exclamation">
+
+  **Task Example**: Automatically audit RLS on every PR that touches database schema or queries
+
+  **What the Agent Does**:
+  - Scans PR for database-related changes
+  - Identifies all affected tables
+  - Checks RLS status and policies
+  - Generates fixes for security gaps
+  - Commits migrations to the PR branch
+
+  **Run in Mission Control**: Triggered automatically on PR open
+
+</Card>
+
+### Database Migration Generation
+
+Create secure migrations automatically:
+
+<Card title="Migration Generator" icon="file-code">
+
+  **Task Example**: "Generate a migration to add RLS policies for the new messages table"
+
+  **What the Agent Does**:
+  - Analyzes table structure and purpose
+  - Determines appropriate access patterns
+  - Generates SQL with RLS policies
+  - Includes proper naming and comments
+  - Adds rollback commands
+
+  **Run in Mission Control**: Run manually or on schema changes
+
+</Card>
+
+### Query Optimization
+
+Improve database performance:
+
+<Card title="Query Optimizer" icon="gauge-high">
+
+  **Task Example**: "Analyze slow queries and suggest optimizations"
+
+  **What the Agent Does**:
+  - Identifies queries in your codebase
+  - Checks for missing indexes
+  - Suggests query rewrites
+  - Recommends schema changes
+  - Estimates performance impact
+
+  **Run in Mission Control**: Schedule weekly performance reviews
+
+</Card>
+
+### Schema Validation
+
+Ensure schema changes follow best practices:
+
+<Card title="Schema Validator" icon="table">
+
+  **Task Example**: "Validate that all new tables follow our schema standards"
+
+  **What the Agent Does**:
+  - Checks naming conventions
+  - Validates data types and constraints
+  - Ensures proper indexes exist
+  - Verifies RLS is enabled
+  - Reviews foreign key relationships
+
+  **Run in Mission Control**: Triggered on migration file changes
+
+</Card>
+
+### Access Pattern Analysis
+
+Understand how your database is used:
+
+<Card title="Access Analyzer" icon="chart-line">
+
+  **Task Example**: "Analyze SDK usage patterns and suggest RLS policies"
+
+  **What the Agent Does**:
+  - Scans codebase for Supabase client calls
+  - Identifies data access patterns
+  - Detects security anti-patterns
+  - Recommends appropriate RLS policies
+  - Generates migration files
+
+  **Run in Mission Control**: Run before major releases
+
+</Card>
+
+### Development Environment Sync
+
+Keep dev and production schemas aligned:
+
+<Card title="Schema Sync Agent" icon="arrows-rotate">
+
+  **Task Example**: "Compare dev and production schemas and generate sync migrations"
+
+  **What the Agent Does**:
+  - Connects to multiple Supabase projects
+  - Compares schema definitions
+  - Identifies differences
+  - Generates sync migrations
+  - Validates compatibility
+
+  **Run in Mission Control**: Schedule or run manually
+
+</Card>
+
+## Running Supabase Agents in Mission Control
+
+You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
+
+
+<Tip>
+
+  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
+
+</Tip>
+
+## Common RLS Policy Patterns
+
+The agent recognizes and implements these standard security patterns:
+
+### User-Scoped Access
+
+Users can only access their own data:
+
+```sql
+-- SELECT: Users can read their own records
+CREATE POLICY "users_select_own" ON user_profiles
+FOR SELECT USING (auth.uid() = user_id);
+
+-- UPDATE: Users can update their own records
+CREATE POLICY "users_update_own" ON user_profiles
+FOR UPDATE USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: Users can delete their own records
+CREATE POLICY "users_delete_own" ON user_profiles
+FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Admin Override
+
+Admins can access all data while users access only their own:
+
+```sql
+CREATE POLICY "posts_select_owner_or_admin" ON posts
+FOR SELECT USING (
+  auth.uid() = user_id OR 
+  auth.jwt() ->> 'role' = 'admin'
+);
+```
+
+### Public Read, Authenticated Write
+
+Anyone can read, only authenticated users can write:
+
+```sql
+-- Public read access
+CREATE POLICY "public_posts_select" ON public_posts
+FOR SELECT USING (true);
+
+-- Authenticated insert only
+CREATE POLICY "public_posts_insert_auth" ON public_posts
+FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+```
+
+### Soft Delete Handling
+
+Exclude soft-deleted records from queries:
+
+```sql
+CREATE POLICY "posts_select_not_deleted" ON posts
+FOR SELECT USING (
+  deleted_at IS NULL AND
+  (auth.uid() = user_id OR is_published = true)
+);
+```
+
+## Troubleshooting
+
+<Accordion title="Authentication issues">
+
+  **Problem**: Agent can't connect to Supabase
+
+  **Solutions**:
+  - Re-authenticate through the integrations page
+  - Verify OAuth token hasn't expired (expires after 7 days)
+  - Check project permissions
+  - Ensure Supabase project is accessible
+  - For CI/CD, verify environment variables are set
+
+</Accordion>
+
+<Accordion title="No tables detected in PR">
+
+  **Problem**: Agent reports no tables found to audit
+
+  **Solutions**:
+  - Verify PR contains database-related changes
+  - Check that migration files use standard naming
+  - Ensure SDK calls use `.from('table_name')` pattern
+  - Review PR for schema/type definition changes
+
+</Accordion>
+
+<Accordion title="RLS policies not generated">
+
+  **Problem**: Agent identifies issues but doesn't create fixes
+
+  **Solutions**:
+  - Check if issues are Low priority (agent suggests only)
+  - Verify agent has write access to repository
+  - Review error messages in agent logs
+  - Ensure Supabase MCP connection is working
+  - Check if migration directory exists
+
+</Accordion>
+
+<Accordion title="Generated policies too restrictive">
+
+  **Problem**: Auto-generated RLS policies block legitimate access
+
+  **Solutions**:
+  - Review and adjust policies in the generated migration
+  - Add custom logic for your specific access patterns
+  - Mark tables for manual policy creation if needed
+  - Provide feedback to improve future policy generation
+
+</Accordion>
+
+<Accordion title="Migration conflicts">
+
+  **Problem**: Generated migration conflicts with existing changes
+
+  **Solutions**:
+  - Review both migrations and merge manually
+  - Ensure migration timestamps are unique
+  - Check for duplicate policy names
+  - Adjust generated migration as needed
+
+</Accordion>
+
+## Security Best Practices
+
+<Warning>
+
+  **Development vs. Production**:
+  - Always test RLS policies in development first
+  - Use separate Supabase projects for dev/staging/prod
+  - Never disable RLS on production tables
+  - Review all generated policies before deploying
+  - Test policies with different user roles
+
+</Warning>
+
+<Card title="RLS Policy Checklist" icon="list-check">
+
+  Before deploying RLS changes, verify:
+  - [ ] RLS is enabled on all sensitive tables
+  - [ ] Policies cover all CRUD operations (SELECT, INSERT, UPDATE, DELETE)
+  - [ ] User-scoped data includes `auth.uid()` checks
+  - [ ] Admin overrides verify admin role properly
+  - [ ] Public access is intentional and documented
+  - [ ] Policies include `WITH CHECK` clauses for writes
+  - [ ] Soft deletes filter out `deleted_at IS NOT NULL`
+  - [ ] Policy names follow naming conventions
+  - [ ] Rollback commands are included
+  - [ ] Policies are tested with different user scenarios
+
+</Card>
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Supabase MCP Cookbook" icon="book-open" href="/guides/supabase-mcp-database-workflow">
+
+    Complete guide to database security automation with Supabase and Continue
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+
+    Combine Supabase with GitHub for automated security workflows
+
+  </Card>
+
+  <Card title="Supabase RLS Documentation" icon="book" href="https://supabase.com/docs/guides/auth/row-level-security">
+
+    Official Supabase Row Level Security documentation
+
+  </Card>
+
+  <Card title="Supabase MCP Docs" icon="code" href="https://supabase.com/docs/guides/getting-started/mcp">
+
+    Learn about the Supabase MCP Server.
+
+  </Card>
+
+</CardGroup>

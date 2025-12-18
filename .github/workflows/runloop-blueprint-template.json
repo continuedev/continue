@@ -1,5 +1,5 @@
 {
-  "name": "cn-test",
+  "name": "cn",
   "dockerfile": "FROM runloop:runloop/universal-ubuntu-24.04-x86_64-dnd",
   "system_setup_commands": [
     "npm i -g @continuedev/cli@latest",
@@ -20,6 +20,7 @@
   "launch_parameters": {
     "launch_commands": [
       "export DISPLAY=:99",
+      "export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
       "nohup Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &",
       "sleep 2",
       "sudo mkdir -p /home/user",

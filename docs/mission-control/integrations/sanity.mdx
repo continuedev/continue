@@ -1,0 +1,349 @@
+---
+title: "Sanity Integration"
+description: "Automate content management and schema validation with Continue Agents connected to Sanity"
+---
+
+## Overview
+
+Connect Sanity to Continue Mission Control to enable agents to manage content, validate schemas, execute GROQ queries, and automate your content workflows. When Sanity is enabled, Continue can explore document types, update content, handle migrations, and maintain content quality across your projects.
+
+<Card title="What You Can Do with Sanity Integration" icon="pen-to-square">
+
+  - Automatically validate content and schemas on every PR
+  - Execute GROQ queries to analyze and update content
+  - Generate documentation from your content model
+  - Manage content migrations between environments
+  - Monitor content quality and consistency
+  - Automate content creation and updates
+
+</Card>
+
+## Setup
+
+<Steps>
+
+  <Step title="Navigate to Integrations">
+
+    Go to [the Sanity Integrations](https://hub.continue.dev/integrations/sanity).
+
+  </Step>
+
+  <Step title="Connect Sanity">
+
+    "Connect" to Sanity. The integration uses OAuth authentication through the Sanity MCP.
+
+  </Step>
+
+  <Step title="Authorize Sanity Access">
+
+    Select the Sanity organization and project to connect
+
+  </Step>
+
+  <Step title="Configure Workflows">
+
+    After connecting, set up your first workflow. The integration supports:
+    - **On PR open**: Validate schemas and content when PRs are created
+    - **Manual tasks**: Run content operations on-demand
+    - **Scheduled jobs**: Periodic content audits and maintenance
+
+  </Step>
+
+</Steps>
+
+
+## Workflows
+
+### Update Sanity schema docs
+
+**Trigger**: On PR open  
+**Description**: Skip the GROQ lookup. Agents manage your content through conversation.
+
+When a pull request modifies schema files (`schemas/**/*.{ts,js,tsx,jsx}`, `schemaTypes/**/*`, or `sanity.config.{ts,js}`), this workflow automatically:
+
+1. **Connects to Sanity** - Fetches the complete current schema using Sanity MCP
+2. **Analyzes Changes** - Identifies new, modified, or removed document types
+3. **Updates Documentation** - Generates comprehensive documentation including:
+   - Complete field descriptions and validation rules
+   - Relationship diagrams between document types
+   - GROQ query examples for each type
+   - Usage guidance for developers and content teams
+4. **Commits to PR Branch** - Adds documentation directly to the existing PR branch
+5. **Posts PR Comment** - Provides a detailed summary of documented changes
+
+<Card title="What Gets Documented" icon="book">
+
+  For each document type, the agent generates:
+  - **Field Reference**: Every field with type, validation, and description
+  - **Relationships**: Visual diagram showing references between types
+  - **Query Examples**: Practical GROQ queries for common operations
+  - **Studio Behavior**: How fields appear and function in Sanity Studio
+  - **Validation Rules**: All constraints and requirements
+  - **Usage Notes**: Important gotchas and best practices
+
+</Card>
+
+<Info>
+
+  **Documentation Location**: By default, docs are created at `docs/content-model.md`. The agent searches for existing documentation in several standard locations and preserves your structure.
+
+</Info>
+
+#### Example PR Comment
+
+After updating the documentation, the agent posts a comprehensive comment like this:
+
+```markdown
+## 📝 Schema Documentation Updated
+
+I've automatically updated the content model documentation based on the schema changes in this PR.
+
+### 📋 Changes Documented
+
+**New Document Types** (2)
+- ✨ `product` - E-commerce product listings
+- ✨ `review` - Customer product reviews
+
+**Modified Document Types** (1)
+- 📝 `article` - Added `featured` boolean field, updated `title` validation
+
+### 📄 Documentation Location
+
+📖 [View Updated Documentation](./docs/content-model.md)
+
+### 📊 Schema Overview
+
+- **Total Document Types**: 12
+- **Total Fields**: 87
+- **Types Modified in this PR**: 3
+- **New Fields Added**: 5
+
+### 🔗 Key Relationships Changed
+
+- `product` now references `review` (one-to-many)
+- `article.featured` added for homepage curation
+```
+
+## Use Cases
+
+### Content Validation
+
+Automatically validate content structure and quality:
+
+<Card title="Content Validator Agent" icon="check-circle">
+
+  **Task Example**: "Check all blog posts for required fields and broken references"
+
+  **What the Agent Does**:
+  - Scans documents for missing required fields
+  - Validates references between documents
+  - Checks for orphaned content
+  - Reports inconsistencies and suggests fixes
+
+  **Run in Mission Control**: Schedule daily or trigger on content updates
+
+</Card>
+
+### Schema Management
+
+Manage and evolve your content schemas:
+
+<Card title="Schema Analyzer Agent" icon="diagram-project">
+
+  **Task Example**: "Analyze the product schema and suggest optimizations for better performance"
+
+  **What the Agent Does**:
+  - Reviews document type definitions
+  - Identifies unused or redundant fields
+  - Suggests schema improvements
+  - Validates relationships and data integrity
+
+  **Run in Mission Control**: Run before major schema changes
+
+</Card>
+
+### Content Migration
+
+Automate content structure changes:
+
+<Card title="Migration Manager Agent" icon="right-left">
+
+  **Task Example**: "Migrate all blog posts from the old schema to the new format"
+
+  **What the Agent Does**:
+  - Reads content from old schema structure
+  - Transforms data to match new schema
+  - Validates migrated content
+  - Creates migration report with any issues
+
+  **Run in Mission Control**: Run manually for controlled migrations
+
+</Card>
+
+### GROQ Query Execution
+
+Run complex queries to analyze content:
+
+<Card title="Content Analyzer Agent" icon="magnifying-glass">
+
+  **Task Example**: "Find all articles published in Q4 2023 with over 10,000 views"
+
+  **What the Agent Does**:
+  - Executes GROQ queries against your dataset
+  - Analyzes results and identifies patterns
+  - Generates reports and visualizations
+  - Exports data for further analysis
+
+  **Run in Mission Control**: Run on-demand for content insights
+
+</Card>
+
+### Schema Documentation
+
+Automatically maintain comprehensive schema documentation:
+
+<Card title="Schema Docs Agent" icon="book">
+
+  **Task Example**: "Generate comprehensive documentation for all document types and their relationships"
+
+  **What the Agent Does**:
+  - Fetches complete schema from Sanity
+  - Documents every field with types, validation, and descriptions
+  - Creates Mermaid diagrams showing document relationships
+  - Includes practical GROQ query examples
+  - Preserves manual documentation sections
+  - Updates statistics (total types, field counts)
+
+  **Run in Mission Control**: Triggered automatically on PR open when schema files change
+
+  **Documentation Structure**:
+  - Table of contents with all document types
+  - Detailed field tables for each type
+  - Relationship diagrams
+  - Query examples for common operations
+  - Validation rules and Studio configurations
+
+</Card>
+
+### Content Localization
+
+Manage multi-language content:
+
+<Card title="Localization Agent" icon="language">
+
+  **Task Example**: "Verify all product pages have complete Spanish and French translations"
+
+  **What the Agent Does**:
+  - Identifies missing translations
+  - Validates localized field structure
+  - Reports incomplete content
+  - Suggests content for translation
+
+  **Run in Mission Control**: Schedule weekly translation audits
+
+</Card>
+
+## Running Sanity Agents in Mission Control
+
+You can run Sanity-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
+
+
+<Tip>
+
+  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
+
+</Tip>
+
+
+## Troubleshooting
+
+<Accordion title="Authentication expired">
+
+  **Problem**: Agent shows authentication errors
+
+  **Solutions**:
+  - Re-authenticate through the integrations page (OAuth expires after 7 days)
+  - For CI/CD workflows, use environment variables instead
+  - Check that project permissions haven't changed
+  - Verify the Sanity project still exists
+
+</Accordion>
+
+<Accordion title="Schema not found">
+
+  **Problem**: Agent can't locate schema definitions
+
+  **Solutions**:
+  - Verify schema files are in the correct location
+  - Check that the project ID is correct
+  - Ensure you're connected to the right dataset
+  - Confirm schema files are properly exported
+
+</Accordion>
+
+<Accordion title="GROQ query errors">
+
+  **Problem**: Queries fail or return unexpected results
+
+  **Solutions**:
+  - Validate GROQ syntax in Sanity Vision
+  - Check that referenced fields exist
+  - Verify document types are spelled correctly
+  - Review query complexity and optimize if needed
+
+</Accordion>
+
+<Accordion title="Content validation failures">
+
+  **Problem**: Agent reports content doesn't match schema
+
+  **Solutions**:
+  - Check for recent schema changes
+  - Verify required fields are present
+  - Review field type mismatches
+  - Run migration to update content structure
+
+</Accordion>
+
+<Accordion title="Migration issues">
+
+  **Problem**: Content migration fails or produces errors
+
+  **Solutions**:
+  - Test migration on a small subset first
+  - Validate both old and new schemas
+  - Check for data type conflicts
+  - Review migration logs for specific errors
+  - Use transactions for atomic updates
+
+</Accordion>
+
+## Support & Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Sanity MCP Cookbook" icon="book-open" href="/guides/sanity-mcp-continue-cookbook">
+
+    Complete guide to content management automation with Sanity and Continue
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+
+    Combine Sanity with GitHub for automated content workflows
+
+  </Card>
+
+  <Card title="Sanity Documentation" icon="book" href="https://www.sanity.io/docs">
+
+    Official Sanity documentation and guides
+
+  </Card>
+
+  <Card title="GROQ Reference" icon="code" href="https://www.sanity.io/docs/groq">
+
+    Learn GROQ query language for content queries
+
+  </Card>
+
+</CardGroup>

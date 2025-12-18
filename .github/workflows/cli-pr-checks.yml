@@ -72,7 +72,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache CLI node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: extensions/cli/node_modules
           key: ${{ runner.os }}-node${{ matrix.node-version }}-cli-modules-${{ hashFiles('extensions/cli/package-lock.json') }}
