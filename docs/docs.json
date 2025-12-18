@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "changelog"]
           },
           {
             "group": "Mission Control",
@@ -699,10 +699,6 @@
     {
       "source": "/customize/deep-dives/vscode-actions",
       "destination": "/customize/overview"
-    },
-    {
-      "source": "/changelog",
-      "destination": "/reference"
     },
     {
       "source": "/customization/code-config",
