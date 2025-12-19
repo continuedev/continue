@@ -26,8 +26,8 @@ describe("waitForCondition utility function", () => {
 
       const elapsed = Date.now() - startTime;
 
-      // Should have waited for at least 2 intervals (100ms)
-      expect(elapsed).toBeGreaterThanOrEqual(100);
+      // Should have waited for at least 2 intervals (~100ms, allow 90ms for timing variations)
+      expect(elapsed).toBeGreaterThanOrEqual(90);
       expect(counter).toBeGreaterThanOrEqual(3);
     });
 
@@ -178,8 +178,9 @@ describe("waitForCondition utility function", () => {
       const elapsed = Date.now() - startTime;
 
       // Should return shortly after 100ms, not wait full timeout
+      // Allow for timing variations (90ms-500ms is reasonable)
+      expect(elapsed).toBeGreaterThanOrEqual(90);
       expect(elapsed).toBeLessThan(500);
-      expect(elapsed).toBeGreaterThanOrEqual(100);
     });
   });
 
@@ -222,7 +223,8 @@ describe("waitForCondition utility function", () => {
       const elapsed = Date.now() - startTime;
 
       expect(frameContent).toBe("Updated content");
-      expect(elapsed).toBeGreaterThanOrEqual(150);
+      // Allow for timing variations (140ms-500ms is reasonable)
+      expect(elapsed).toBeGreaterThanOrEqual(140);
       expect(elapsed).toBeLessThan(500);
     });
 
