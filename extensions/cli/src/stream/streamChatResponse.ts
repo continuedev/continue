@@ -457,8 +457,6 @@ export async function streamChatResponse(
     chatHistory = refreshChatHistoryFromService(chatHistory, isCompacting);
     logger.debug("Starting conversation iteration");
 
-    logger.debug("debug1 streamChatResponse history", { chatHistory });
-
     // Get system message once per iteration (can change based on tool permissions mode)
     const systemMessage = await services.systemMessage.getSystemMessage(
       services.toolPermissions.getState().currentMode,

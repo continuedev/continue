@@ -308,15 +308,9 @@ export class ModelService
 
   getSubagentModels() {
     const state = this.getState();
-    logger.debug("debug1 getSubagentModels", {
-      assistant: state.assistant,
-    });
     if (!state.assistant) {
       return [];
     }
-    logger.debug("debug1 getSubagentModels", {
-      assistantModels: state.assistant.models,
-    });
     const subagentModels = state.assistant.models
       ?.filter((model) => !!model)
       .filter((model) => !!model.name) // filter out models without a name

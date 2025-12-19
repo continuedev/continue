@@ -1,5 +1,4 @@
 import { services } from "../services/index.js";
-import { logger } from "../util/logger.js";
 
 /**
  * Get an agent by name
@@ -24,7 +23,7 @@ export function generateSubagentToolDescription(): string {
     )
     .join("\n");
 
-  const temp = `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
+  return `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
 
 Available agent types:
 ${agentList}
@@ -38,8 +37,4 @@ When to use this tool:
 When NOT to use this tool:
 - Tasks you can complete directly with available tools
 - Trivial operations that don't require multiple steps`;
-
-  logger.debug("debug1 temp->", { temp });
-
-  return temp;
 }

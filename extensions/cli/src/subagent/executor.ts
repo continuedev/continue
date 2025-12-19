@@ -45,8 +45,6 @@ async function buildAgentSystemMessage(
 
   const agentPrompt = agent.model?.chatOptions?.baseSystemMessage || "";
 
-  logger.debug("debug1 agentPrompt", { agentPrompt });
-
   // Combine base system message with agent-specific prompt
   if (agentPrompt) {
     return `${baseMessage}\n\n${agentPrompt}`;
@@ -77,8 +75,6 @@ export async function executeSubAgent(
     if (!model || !llmApi) {
       throw new Error("Model or LLM API not available");
     }
-
-    logger.debug("debug1 model and llmapi", { subAgent });
 
     // allow all tools for now
     // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
@@ -159,11 +155,6 @@ export async function executeSubAgent(
         typeof lastMessage?.message?.content === "string"
           ? lastMessage.message.content
           : "";
-
-      logger.debug("debug1 response was", {
-        response,
-        history: chatHistory,
-      });
 
       logger.debug("Subagent execution completed", {
         agent: model?.name,

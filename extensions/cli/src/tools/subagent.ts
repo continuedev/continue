@@ -58,7 +58,7 @@ export const subagentTool: Tool = {
   run: async (args, context?: { toolCallId: string }) => {
     const { prompt, subagent_name } = args;
 
-    logger.debug("debug1 subagent args", { args, context });
+    logger.debug("subagent args", { args, context });
 
     // Get agent configuration
     const agent = getAgent(subagent_name);
@@ -101,7 +101,7 @@ export const subagentTool: Tool = {
         : undefined,
     });
 
-    logger.debug("debug1 subagent result->", { result });
+    logger.debug("subagent result", { result });
 
     const output = [
       result.response,
