@@ -314,7 +314,7 @@ export class ModelService
     const subagentModels = state.assistant.models
       ?.filter((model) => !!model)
       .filter((model) => !!model.name) // filter out models without a name
-      .filter((model) => model.roles?.includes("apply")) // filter with role subagent
+      .filter((model) => model.roles?.includes("subagent")) // filter with role subagent
       .filter((model) => !!model.chatOptions?.baseSystemMessage); // filter those with a system message
 
     if (!subagentModels) {

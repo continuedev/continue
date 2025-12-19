@@ -3,7 +3,7 @@ import { services } from "../services/index.js";
 /**
  * Get an agent by name
  */
-export function getAgent(name: string) {
+export function getSubagent(name: string) {
   return (
     services.model
       .getSubagentModels()
@@ -23,18 +23,14 @@ export function generateSubagentToolDescription(): string {
     )
     .join("\n");
 
-  return `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
+  // todo: refine this prompt later
+  return `Launch a specialized subagent to handle a specific task.
 
-Available agent types:
+Here are the available subagents:
 ${agentList}
+`;
+}
 
-When to use this tool:
-- Complex research tasks requiring multiple file reads and searches
-- Multi-step implementation tasks
-- Tasks that benefit from autonomous execution
-- When you need to parallelize independent work
-
-When NOT to use this tool:
-- Tasks you can complete directly with available tools
-- Trivial operations that don't require multiple steps`;
+export function getAgentNames(): string[] {
+  return services.model.getSubagentModels().map((model) => model.model.name);
 }

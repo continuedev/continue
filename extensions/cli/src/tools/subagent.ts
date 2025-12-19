@@ -1,7 +1,8 @@
 import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
-  getAgent,
+  getSubagent,
+  getAgentNames as getSubagentNames,
 } from "../subagent/get-agents.js";
 import { logger } from "../util/logger.js";
 
@@ -28,8 +29,9 @@ export const subagentTool: Tool = {
       },
       subagent_name: {
         type: "string",
-        description:
-          "The type of specialized agent to use for this task (e.g., 'general')",
+        description: `The type of specialized agent to use for this task. Available agents: ${getSubagentNames().join(
+          ", ",
+        )}`,
       },
     },
   },
@@ -37,7 +39,7 @@ export const subagentTool: Tool = {
   preprocess: async (args) => {
     const { description, subagent_name } = args;
 
-    const agent = getAgent(subagent_name);
+    const agent = getSubagent(subagent_name);
     if (!agent) {
       throw new Error(
         `Unknown agent type: ${subagent_name}. Available agents: general`,
@@ -61,7 +63,7 @@ export const subagentTool: Tool = {
     logger.debug("subagent args", { args, context });
 
     // Get agent configuration
-    const agent = getAgent(subagent_name);
+    const agent = getSubagent(subagent_name);
     if (!agent) {
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
