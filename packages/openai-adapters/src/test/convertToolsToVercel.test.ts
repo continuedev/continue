@@ -2,6 +2,15 @@ import { describe, test, expect } from "vitest";
 import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 import type { ChatCompletionCreateParams } from "openai/resources/index.js";
 
+/**
+ * Tests for convertToolsToVercelFormat function
+ *
+ * This function converts OpenAI tool format to Vercel AI SDK v5 format.
+ * Key changes in v5:
+ * - `parameters` renamed to `inputSchema`
+ * - Tool format: { [toolName]: { description, inputSchema: aiJsonSchema(JSONSchema) } }
+ */
+
 describe("convertToolsToVercelFormat", () => {
   test("returns undefined for undefined tools", async () => {
     const result = await convertToolsToVercelFormat(undefined);
@@ -42,9 +51,9 @@ describe("convertToolsToVercelFormat", () => {
       "description",
       "Read a file from disk",
     );
-    expect(result?.readFile).toHaveProperty("parameters");
-    // Check that parameters were wrapped with aiJsonSchema
-    expect(result?.readFile.parameters).toBeDefined();
+    // AI SDK v5: uses inputSchema instead of parameters
+    expect(result?.readFile).toHaveProperty("inputSchema");
+    expect(result?.readFile.inputSchema).toBeDefined();
   });
 
   test("converts multiple function tools", async () => {
@@ -146,7 +155,7 @@ describe("convertToolsToVercelFormat", () => {
     expect(result).toBeUndefined();
   });
 
-  test("preserves parameter schema structure", async () => {
+  test("preserves parameter schema structure (AI SDK v5: inputSchema)", async () => {
     const tools: ChatCompletionCreateParams["tools"] = [
       {
         type: "function",
@@ -181,9 +190,9 @@ describe("convertToolsToVercelFormat", () => {
     const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
-    expect(result?.complexTool.parameters).toBeDefined();
-    // The parameters should be wrapped but still contain the original schema structure
-    // We can't easily test the internal structure of aiJsonSchema, but we can verify it exists
-    expect(result?.complexTool.parameters).toBeTruthy();
+    // AI SDK v5: uses inputSchema instead of parameters
+    expect(result?.complexTool.inputSchema).toBeDefined();
+    // The inputSchema should be wrapped with aiJsonSchema
+    expect(result?.complexTool.inputSchema).toBeTruthy();
   });
 });
