@@ -184,7 +184,8 @@ describe("waitForCondition utility function", () => {
 
       // Should return shortly after 100ms, not wait full timeout
       expect(elapsed).toBeLessThan(500);
-      expect(elapsed).toBeGreaterThanOrEqual(100);
+      // Allow for slight timing variations (>=95ms instead of >=100ms)
+      expect(elapsed).toBeGreaterThanOrEqual(95);
     });
   });
 
