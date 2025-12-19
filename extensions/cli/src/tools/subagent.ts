@@ -1,8 +1,8 @@
+import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getAgent,
-} from "../subagent/builtInAgents.js";
-import { executeSubAgent } from "../subagent/executor.js";
+} from "../subagent/get-agents.js";
 import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
