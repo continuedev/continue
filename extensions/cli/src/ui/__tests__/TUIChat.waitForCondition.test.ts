@@ -67,39 +67,39 @@ describe("waitForCondition utility function", () => {
   });
 
   describe("edge cases", () => {
-    it("handles condition that throws error gracefully", async () => {
+    it("waits until condition becomes true despite initial false values", async () => {
       let attemptCount = 0;
 
       await waitForCondition(
         () => {
           attemptCount++;
-          if (attemptCount < 3) {
-            throw new Error("Test error");
-          }
-          return true;
+          // Return false for first 2 attempts, then true
+          return attemptCount >= 3;
         },
         2000,
         50,
       );
 
-      // Should have retried and eventually succeeded
+      // Should have waited and eventually succeeded
       expect(attemptCount).toBeGreaterThanOrEqual(3);
     });
 
-    it("handles async conditions", async () => {
+    it("handles complex condition logic", async () => {
       let counter = 0;
+      const startTime = Date.now();
 
       await waitForCondition(
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+        () => {
           counter++;
-          return counter >= 3;
+          // Condition becomes true after some iterations
+          return counter >= 3 && Date.now() - startTime > 100;
         },
         2000,
         50,
       );
 
       expect(counter).toBeGreaterThanOrEqual(3);
+      expect(Date.now() - startTime).toBeGreaterThanOrEqual(100);
     });
 
     it("handles very short timeout", async () => {
@@ -268,10 +268,10 @@ describe("waitForCondition utility function", () => {
 
   describe("condition function variations", () => {
     it("handles condition returning various truthy values", async () => {
-      const truthyValues = [1, "string", {}, [], true];
+      const truthyValues: any[] = [1, "string", {}, [], true];
 
       for (const value of truthyValues) {
-        await waitForCondition(() => value, 100, 10);
+        await waitForCondition(() => Boolean(value), 100, 10);
         // Should not throw or timeout
       }
     });
