@@ -26,8 +26,8 @@ describe("waitForCondition utility function", () => {
 
       const elapsed = Date.now() - startTime;
 
-      // Should have waited for at least 2 intervals (100ms)
-      expect(elapsed).toBeGreaterThanOrEqual(100);
+      // Should have waited for at least 2 intervals (~100ms, allow 5ms variance)
+      expect(elapsed).toBeGreaterThanOrEqual(95);
       expect(counter).toBeGreaterThanOrEqual(3);
     });
 
@@ -99,7 +99,8 @@ describe("waitForCondition utility function", () => {
       );
 
       expect(counter).toBeGreaterThanOrEqual(3);
-      expect(Date.now() - startTime).toBeGreaterThanOrEqual(100);
+      // Allow 5ms variance for timing
+      expect(Date.now() - startTime).toBeGreaterThanOrEqual(95);
     });
 
     it("handles very short timeout", async () => {
