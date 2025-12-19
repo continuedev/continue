@@ -7,7 +7,13 @@
  */
 export function isHeadlessMode(): boolean {
   const args = process.argv.slice(2);
-  return args.includes("-p") || args.includes("--print");
+  const wantsHelp = args.includes("--help") || args.includes("-h");
+  const isAcp = args.includes("acp") || args.includes("--acp");
+  return (
+    args.includes("-p") ||
+    args.includes("--print") ||
+    (isAcp && !wantsHelp)
+  );
 }
 
 export function isServe(): boolean {

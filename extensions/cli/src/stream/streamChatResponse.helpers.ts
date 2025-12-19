@@ -429,6 +429,13 @@ export async function preprocessStreamedToolCalls(
     } catch (error) {
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
+      callbacks?.onToolCallUpdate?.({
+        toolCallId: toolCall.id,
+        toolName: toolCall.name,
+        toolArgs: toolCall.arguments,
+        status: "errored",
+        error: error instanceof Error ? error.message : String(error),
+      });
 
       const errorReason =
         error instanceof ContinueError
@@ -548,6 +555,13 @@ export async function executeStreamedToolCalls(
           call.name,
           "canceled",
         );
+        callbacks?.onToolCallUpdate?.({
+          toolCallId: call.id,
+          toolName: call.name,
+          toolArgs: call.arguments,
+          status: "canceled",
+          error: deniedMessage,
+        });
         // Immediate service update for UI feedback
         try {
           services.chatHistory.addToolResult(
@@ -565,6 +579,12 @@ export async function executeStreamedToolCalls(
       try {
         services.chatHistory.updateToolStatus(call.id, "calling");
       } catch {}
+      callbacks?.onToolCallUpdate?.({
+        toolCallId: call.id,
+        toolName: call.name,
+        toolArgs: call.arguments,
+        status: "calling",
+      });
 
       // Start execution immediately for approved calls
       execPromises.push(
@@ -583,6 +603,13 @@ export async function executeStreamedToolCalls(
             };
             entriesByIndex.set(index, entry);
             callbacks?.onToolResult?.(toolResult, call.name, "done");
+            callbacks?.onToolCallUpdate?.({
+              toolCallId: call.id,
+              toolName: call.name,
+              toolArgs: call.arguments,
+              status: "done",
+              output: toolResult,
+            });
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
@@ -606,6 +633,13 @@ export async function executeStreamedToolCalls(
               status: "errored",
             });
             callbacks?.onToolError?.(errorMessage, call.name);
+            callbacks?.onToolCallUpdate?.({
+              toolCallId: call.id,
+              toolName: call.name,
+              toolArgs: call.arguments,
+              status: "errored",
+              error: errorMessage,
+            });
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
@@ -632,6 +666,13 @@ export async function executeStreamedToolCalls(
         status: "errored",
       });
       callbacks?.onToolError?.(errorMessage, call.name);
+      callbacks?.onToolCallUpdate?.({
+        toolCallId: call.id,
+        toolName: call.name,
+        toolArgs: call.arguments,
+        status: "errored",
+        error: errorMessage,
+      });
       // Treat permission errors like execution errors but do not stop the batch
       try {
         services.chatHistory.addToolResult(

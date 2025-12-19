@@ -6,6 +6,7 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
+import { acp } from "./commands/acp.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
@@ -396,6 +397,24 @@ program
 
     await serve(prompt, mergedOptions);
   });
+
+// ACP subcommand
+addCommonOptions(
+  program
+    .command("acp", { hidden: true })
+    .description("Run Continue as an ACP stdio server"),
+).action(async (options) => {
+  await posthogService.capture("cliCommand", { command: "acp" });
+
+  const mergedOptions = mergeParentOptions(program, options);
+
+  if (mergedOptions.verbose) {
+    logger.setLevel("debug");
+    logger.debug("Verbose logging enabled");
+  }
+
+  await acp(mergedOptions);
+});
 
 // Remote test subcommand (for development)
 program
