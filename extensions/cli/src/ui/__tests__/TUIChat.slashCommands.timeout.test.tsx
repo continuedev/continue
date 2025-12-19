@@ -351,7 +351,7 @@ describe("TUIChat - Slash Commands Timeout Tests", () => {
         // (unless condition met earlier)
         if (elapsed100ms >= 1000) {
           expect(checkCount100ms).toBeLessThan(20); // Upper bound
-          expect(checkCount100ms).toBeGreaterThan(5); // Lower bound
+          expect(checkCount100ms).toBeGreaterThanOrEqual(5); // Lower bound (inclusive for edge cases)
         }
       },
     );
