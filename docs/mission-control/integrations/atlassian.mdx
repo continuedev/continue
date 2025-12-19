@@ -2,301 +2,74 @@
 title: "Atlassian Integration"
 description: "Connect Jira, Confluence, and Compass to automate project management with Continue Agents"
 ---
-
-## Overview
-
-Connect Jira, Confluence, and Compass to Continue Mission Control to enable agents to manage issues, search tickets, summarize pages, and bulk-process tasks using natural language. When Atlassian is enabled, Continue can automatically translate technical code changes into business-friendly updates, keeping stakeholders informed.
-
-<Card title="What You Can Do with Atlassian Integration" icon="diagram-project">
-
-  - Automatically update Jira tickets with business-friendly summaries on PR merge
+<Card
+  title="Connect Atlassian to enable agents to:"
+  icon="diagram-project"
+  href="https://hub.continue.dev/integrations/atlassian"
+>
+  - Update Jira tickets automatically on PR merge
+  - Translate code changes into business-friendly summaries
   - Search issues and create tickets using natural language
   - Summarize Confluence pages and documentation
-  - Bulk-process tasks across multiple tickets
-  - Triage incoming issues automatically
-  - Generate documentation from code changes
-  - Track development progress with stakeholder-friendly language
-
-</Card>
-
-## Setup
-
-<Steps>
-
-  <Step title="Navigate to Integrations">
-
-    Go to your [Atlassian Integration Settings](https://hub.continue.dev/integrations/atlassian).
-
-  </Step>
-
-  <Step title="Connect Atlassian">
-
-    Click "Connect" to Atlassian. 
-
-  </Step>
-  <Step title="Authorize Continue">
-
-    In the Atlassian authorization screen:
-    1. Log into your Atlassian account
-    2. Review the requested permissions
-    3. Click "Authorize" to complete the connection
-  </Step>
-
-</Steps>
-
-
- ## Workflows
-
-### Update Jira Tickets
-
-**Trigger**: On PR merge  
-**Description**: Connect Jira, Confluence, and Compass to your agents. Search issues, create tickets, summarize pages, and bulk-process tasks with natural language.
-
-When a pull request is merged, this workflow automatically:
-
-1. **Extracts Jira Ticket ID** - Finds the ticket reference from:
-   - PR title (e.g., `[PROJ-123] Add feature`)
-   - Branch name (e.g., `feature/PROJ-123-description`)
-   - PR description or comments
-
-2. **Analyzes Code Changes** - Reviews the merged PR to identify:
-   - What changed (files, features, components)
-   - Why it matters (business value, problem solved)
-   - Impact (user-facing changes, performance improvements)
-   - Risk level (Low/Medium/High based on scope)
-
-3. **Creates Business Summary** - Translates technical changes into clear, non-technical language:
-   - Focuses on **outcomes over implementation**
-   - Highlights **business value** and user benefits
-   - Uses **plain language** avoiding technical jargon
-   - Explains who benefits and how
-
-4. **Updates Jira Ticket** - Posts a formatted comment with:
-   - Business-friendly summary of what was accomplished
-   - Key changes in business terms
-   - Impact on users or stakeholders
-   - Technical metadata (files changed, merge details, PR link)
-
-5. **Comments on PR** - Adds a link back to the updated Jira ticket
-
-<Card title="Why This Matters" icon="users">
-
-  Technical code changes are often difficult for stakeholders to understand. This workflow bridges the gap between development and business by:
-  - Keeping product managers informed without technical details
-  - Providing business stakeholders with clear progress updates
-  - Reducing manual ticket updates for developers
-  - Creating a clear audit trail of work completed
-
-</Card>
-
-<Info>
-
-  **Smart Translation**: The agent automatically converts technical terms into business language. For example, "Refactored authentication module" becomes "Users can now stay logged in longer without interruptions."
-
-</Info>
-
-## Use Cases
-
-You can also create your own Atlassian-connected agents in Mission Control. Here are some examples for these use cases:
-
-<Columns cols={2}>
-<Card title="Issue Creator Agent" icon="ticket">
-
-  **Task Example**: "Create Jira tickets for all TODO comments in the codebase with priority based on code location"
-
-  **What the Agent Does**:
-  - Scans codebase for TODO and FIXME comments
-  - Creates Jira issues with relevant context
-  - Links issues to code files and line numbers
-  - Assigns priority based on file criticality
-
-  **Run in Mission Control**: Schedule weekly or after major releases
-
+  - Reduce manual project-management overhead for developers
 </Card>
 
 
-Streamline sprint planning with intelligent automation:
+## Access & Permissions
 
-<Card title="Sprint Planner Agent" icon="calendar-days">
+When connecting Atlassian, you’ll authorize Continue to access Jira, Confluence, and Compass data based on your account permissions.
 
-  **Task Example**: "Analyze backlog items and create a proposed sprint plan based on team velocity and priorities"
+- **Project and space access**  
+  Agents can only access Jira projects and Confluence spaces you are permitted to view or edit.
 
-  **What the Agent Does**:
-  - Reviews open Jira issues and their estimates
-  - Considers team capacity and historical velocity
-  - Groups related tickets together
-  - Creates a proposed sprint with balanced workload
+- **Permissions**  
+  Approved permissions allow Continue to read and update Jira tickets, summarize Confluence pages, and create links back to related pull requests.
 
-  **Run in Mission Control**: Run before sprint planning meetings
 
-</Card>
+## Official Workflow Templates
 
-<Card title="Docs Sync Agent" icon="book-open">
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Atlassian-based updates.
 
-  **Task Example**: "Update Confluence API documentation to match current OpenAPI spec"
-
-  **What the Agent Does**:
-  - Parses API specifications from codebase
-  - Compares with existing Confluence documentation
-  - Updates or creates Confluence pages with changes
-  - Notifies team of significant API changes
-
-  **Run in Mission Control**: Trigger on API spec changes or schedule weekly
-
-</Card>
-
-<Card title="Release Notes Agent" icon="megaphone">
-
-  **Task Example**: "Generate release notes from closed Jira tickets since last release and publish to Confluence"
-
-  **What the Agent Does**:
-  - Queries Jira for tickets closed since last release
-  - Categorizes changes (features, fixes, improvements)
-  - Generates formatted release notes
-  - Creates or updates Confluence release page
-
-  **Run in Mission Control**: Trigger manually before releases
-
-</Card>
-
-<Card title="Project Health Agent" icon="chart-line">
-
-  **Task Example**: "Analyze current sprint progress and identify blocked or at-risk items"
-
-  **What the Agent Does**:
-  - Reviews sprint board status
-  - Identifies tickets without recent updates
-  - Flags dependencies and blockers
-  - Generates summary report in Confluence
-
-  **Run in Mission Control**: Schedule daily during active sprints
-
-</Card>
-</Columns>
-
-## Running Atlassian Agents in Mission Control
-You can run Supabase-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
-
+<CardGroup cols={2}>
+  <Card title="Update Jira Tickets" icon="ticket">
+    Automatically translate merged pull requests into clear, business-friendly Jira updates that explain what changed, why it matters, and who benefits.
+  </Card>
+</CardGroup>
 
 <Tip>
-
-  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
-
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → Atlassian](https://hub.continue.dev/integrations/atlassian)**.
 </Tip>
 
 
-## Optional Workflow Enhancements
+## Advanced Use Cases
 
-<AccordionGroup>
-<Accordion title="Smart Tagging">
+<Accordion title="Advanced: Custom Atlassian Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
 
-Automatically add Jira labels based on code changes:
-
-- `frontend-update` - UI/UX changes detected
-- `backend-update` - API or database changes
-- `bugfix` - Resolves bugs or issues
-- `feature` - New functionality added
-- `security` - Security improvements
-- `performance` - Performance optimizations
-</Accordion>
-<Accordion title="Stakeholder Mentions">
-
-Tag relevant people in Jira based on components modified:
-
-- Payment processing changes → `@finance-team`
-- User interface changes → `@product-manager`
-- Security updates → `@security-lead`
-- API modifications → `@api-architect`
-</Accordion>
-<Accordion title="Release Notes Generation">
-
-Accumulate business-friendly summaries for release documentation:
-
-- Store formatted summaries in `.release-notes/{version}/`
-- Automatically compile summaries into Confluence release pages
-- Generate customer-facing changelog from Jira updates
-- Include impact metrics and user benefits
-</Accordion>
-<Accordion title="Metrics Tracking">
-
-Log metadata for reporting and analytics:
-
-- Time from ticket creation to PR merge
-- Number of files changed per ticket
-- Business impact category (high/medium/low)
-- Stakeholder engagement (comments, mentions)
-- Risk level distribution across releases
-</Accordion>
-</AccordionGroup>
-
-## Troubleshooting
-
-<Accordion title="Authentication failures">
-
-  **Problem**: Agent can't connect to Atlassian services
-
-  **Solutions**:
-  - Verify API token hasn't expired
-  - Check that email matches the token's account
-  - Ensure domain includes `.atlassian.net`
-  - Regenerate token if necessary
-
+- Generate stakeholder-ready release notes from Jira activity
+- Summarize sprint progress and risks in Confluence
+- Automatically triage incoming Jira issues
+- Create tickets from TODOs or code comments
+- Maintain audit trails linking code changes to business outcomes
 </Accordion>
 
-<Accordion title="Permission denied errors">
 
-  **Problem**: Agent can't create or update items
+## Support & Resources
 
-  **Solutions**:
-  - Verify your Atlassian account has appropriate permissions
-  - Check project-level permissions in Jira
-  - Ensure space permissions are correct in Confluence
-  - Contact your Atlassian admin if needed
-
-</Accordion>
-
-<Accordion title="Issues not found or accessible">
-
-  **Problem**: Agent reports Jira issues don't exist
-
-  **Solutions**:
-  - Verify issue keys are correct (e.g., PROJECT-123)
-  - Check that you have access to the project
-  - Ensure issues aren't in a restricted project
-  - Verify your API token has read access
-
-</Accordion>
-
-<Accordion title="Confluence pages not updating">
-
-  **Problem**: Documentation changes aren't reflected in Confluence
-
-  **Solutions**:
-  - Check that you have edit permissions for the space
-  - Verify page IDs are correct
-  - Ensure Confluence Cloud API is accessible
-  - Review agent logs for specific error messages
-
-</Accordion>
-
-<Accordion title="Rate limiting errors">
-
-  **Problem**: Agent hits Atlassian API rate limits
-
-  **Solutions**:
-  - Reduce frequency of automated workflows
-  - Batch operations where possible
-  - Implement exponential backoff in agent logic
-  - Consider upgrading Atlassian plan for higher limits
-
-</Accordion>
-
-## Resources
-
-
-  <Card title="Atlassian MCP Cookbook" icon="book-open" href="/guides/atlassian-mcp-continue-cookbook">
-
-    Comprehensive guide to project management automation with Atlassian and Continue
-
+<CardGroup cols={2}>
+  <Card
+    title="Atlassian MCP Cookbook"
+    icon="book-open"
+    href="/guides/atlassian-mcp-continue-cookbook"
+  >
+    Practical examples for automating Jira and Confluence with Continue agents.
   </Card>
 
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="https://hub.continue.dev/settings/integrations/github"
+  >
+    Combine Atlassian and GitHub to keep code and tickets in sync.
+  </Card>
+</CardGroup>
