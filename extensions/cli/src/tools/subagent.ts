@@ -49,7 +49,7 @@ export const subagentTool: Tool = {
       preview: [
         {
           type: "text",
-          content: `Spawning ${agent.displayName} to: ${description}`,
+          content: `Spawning ${agent.model.name} to: ${description}`,
         },
       ],
     };

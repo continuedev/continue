@@ -1,47 +1,30 @@
-import { AgentConfig } from "./types.js";
-
-/**
- * Built-in agent configurations
- */
-export const BUILT_IN_AGENTS: Record<string, AgentConfig> = {
-  general: {
-    name: "general",
-    displayName: "General Agent",
-    description:
-      "General-purpose agent for researching complex questions and executing multi-step tasks autonomously",
-    availableTools: [],
-    // model: "haiku-4-5-latest", // if the model is not there, skip the subagent tool (check api key?)
-    systemPrompt: `You are a specialized task execution agent.
-
-Your role:
-- Work autonomously to complete the given task
-- Use available tools effectively
-- Provide clear, concise results
-- If you cannot complete the task, explain why clearly
-
-Important:
-- Focus on the specific task at hand
-- Avoid unnecessary explanations or preamble in your final response
-- Return actionable results`,
-  },
-};
+import { services } from "../services/index.js";
+import { logger } from "../util/logger.js";
 
 /**
  * Get an agent by name
  */
-export function getAgent(name: string): AgentConfig | null {
-  return BUILT_IN_AGENTS[name] || null;
+export function getAgent(name: string) {
+  return (
+    services.model
+      .getSubagentModels()
+      .find((model) => model.model.name === name) ?? null
+  );
 }
 
 /**
  * Generate dynamic tool description listing available agents
  */
 export function generateSubagentToolDescription(): string {
-  const agentList = Object.values(BUILT_IN_AGENTS)
-    .map((agent) => `  - ${agent.name}: ${agent.description}`)
+  const agentList = services.model
+    .getSubagentModels()
+    .map(
+      (subagentModel) =>
+        `  - ${subagentModel.model.name}: ${subagentModel.model.chatOptions?.baseSystemMessage}`,
+    )
     .join("\n");
 
-  return `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
+  const temp = `Launch a specialized subagent to handle complex, multi-step tasks autonomously.
 
 Available agent types:
 ${agentList}
@@ -53,8 +36,10 @@ When to use this tool:
 - When you need to parallelize independent work
 
 When NOT to use this tool:
-- Simple single-file reads (use Read tool instead)
-- Single searches (use searchCode tool instead)
 - Tasks you can complete directly with available tools
 - Trivial operations that don't require multiple steps`;
+
+  logger.debug("debug1 temp->", { temp });
+
+  return temp;
 }

@@ -306,27 +306,31 @@ export class ModelService
     });
   }
 
-  /**
-   * Get a subagent model
-   */
-  getSubagentModel(): ModelServiceState | null {
+  getSubagentModels() {
     const state = this.getState();
+    logger.debug("debug1 getSubagentModels", {
+      assistant: state.assistant,
+    });
     if (!state.assistant) {
-      return null;
+      return [];
     }
+    logger.debug("debug1 getSubagentModels", {
+      assistantModels: state.assistant.models,
+    });
+    const subagentModels = state.assistant.models
+      ?.filter((model) => !!model)
+      .filter((model) => !!model.name) // filter out models without a name
+      .filter((model) => model.roles?.includes("apply")) // filter with role subagent
+      .filter((model) => !!model.chatOptions?.baseSystemMessage); // filter those with a system message
 
-    const subagentModel = state.assistant.models?.find((model) =>
-      model?.roles?.includes("apply"),
-    );
-    if (!subagentModel) {
-      return null;
+    if (!subagentModels) {
+      return [];
     }
-
-    return {
-      llmApi: createLlmApi(subagentModel, state.authConfig),
-      model: subagentModel,
+    return subagentModels?.map((model) => ({
+      llmApi: createLlmApi(model, state.authConfig),
+      model,
       assistant: state.assistant,
       authConfig: state.authConfig,
-    };
+    }));
   }
 }

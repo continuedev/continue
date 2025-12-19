@@ -1,17 +1,20 @@
 import type { ChatHistoryItem } from "core";
 
-import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
+import {
+  ModelServiceState,
+  SERVICE_NAMES,
+  serviceContainer,
+  services,
+} from "../services/index.js";
 import { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { logger } from "../util/logger.js";
-
-import { AgentConfig } from "./types.js";
 
 /**
  * Options for executing a subagent
  */
 export interface SubAgentExecutionOptions {
-  agent: AgentConfig;
+  agent: ModelServiceState;
   prompt: string;
   parentSessionId: string;
   abortController: AbortController;
@@ -31,7 +34,7 @@ export interface SubAgentResult {
  * Build system message for the agent
  */
 async function buildAgentSystemMessage(
-  agent: AgentConfig,
+  agent: ModelServiceState,
   services: any,
 ): Promise<string> {
   const baseMessage = services.systemMessage
@@ -40,7 +43,9 @@ async function buildAgentSystemMessage(
       )
     : "";
 
-  const agentPrompt = agent.systemPrompt || "";
+  const agentPrompt = agent.model?.chatOptions?.baseSystemMessage || "";
+
+  logger.debug("debug1 agentPrompt", { agentPrompt });
 
   // Combine base system message with agent-specific prompt
   if (agentPrompt) {
@@ -65,21 +70,15 @@ export async function executeSubAgent(
 
   try {
     logger.debug("Starting subagent execution", {
-      agent: subAgent.name,
+      agent: subAgent.model?.name,
     });
 
-    // Lazy import services to avoid circular dependency
-    const { services } = await import("../services/index.js");
-
-    // Get model and LLM API from model service
-    const modelState = services.model.getSubagentModel();
-    const { model, llmApi } = modelState ?? {};
-
+    const { model, llmApi } = subAgent;
     if (!model || !llmApi) {
       throw new Error("Model or LLM API not available");
     }
 
-    logger.debug("debug1 model and llmapi", { model, llmApi, subAgent });
+    logger.debug("debug1 model and llmapi", { subAgent });
 
     // allow all tools for now
     // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
@@ -167,7 +166,7 @@ export async function executeSubAgent(
       });
 
       logger.debug("Subagent execution completed", {
-        agent: subAgent.name,
+        agent: model?.name,
         responseLength: response.length,
       });
 
@@ -194,7 +193,7 @@ export async function executeSubAgent(
     }
   } catch (error: any) {
     logger.error("Subagent execution failed", {
-      agent: subAgent.name,
+      agent: subAgent.model?.name,
       error: error.message,
     });
 
