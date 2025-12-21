@@ -82,6 +82,42 @@ If your keyboard shortcuts are not resolving, you may have other commands that a
 
 ## MCP Server connection issues
 
+### Ollama model errors with MCP tool calling
+
+Certain Ollama models may encounter errors during MCP tool calling operations, particularly after tool execution when the model processes tool results.
+
+<AccordionGroup>
+  <Accordion title="Mistral/Ministral: 'Unexpected role system after role tool'">
+    **Error message:**
+    ```
+    400 Bad Request: Unexpected role 'system' after role 'tool'
+    ```
+
+    **Cause:** Mistral family models don't accept system messages appearing after tool messages in the conversation.
+
+    **Solution:** This issue is automatically handled by Continue's message normalization (added in v1.1.x). If you're still experiencing this error:
+    - Ensure you're using the latest version of Continue
+    - The normalization automatically reorders system messages before tool interactions
+    - No configuration changes are required
+  </Accordion>
+
+  <Accordion title="Gemma models: 'Invalid tool_calls: unknown variant index'">
+    **Error message:**
+    ```
+    400 Bad Request: Invalid 'tool_calls': unknown variant 'index'
+    ```
+
+    **Cause:** Gemma models don't recognize the 'index' field in tool_calls structure.
+
+    **Solution:** This issue is automatically handled by Continue's message normalization (added in v1.1.x). If you're still experiencing this error:
+    - Ensure you're using the latest version of Continue  
+    - The normalization automatically removes the 'index' field from tool calls
+    - No configuration changes are required
+
+    **Note:** Some Gemma models may still experience compatibility issues with MCP tool calling even after normalization. Consider using alternative models like DeepSeek, Qwen, or Mistral for reliable MCP tool support.
+  </Accordion>
+</AccordionGroup>
+
 ### "spawn ENAMETOOLONG" error on macOS
 
 If you're seeing an error like `Failed to connect to "<MCP Server Name>"` with `Error: spawn ENAMETOOLONG` when using MCP servers on macOS, this is due to the environment being too large when spawning the MCP process.

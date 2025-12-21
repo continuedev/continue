@@ -168,7 +168,7 @@ models:
 
 ### Model Capabilities and Tool Support
 
-Some Ollama models support tools (function calling) which is required for Agent mode. However, not all models that claim tool support work correctly:
+Some Ollama models support tools (function calling) which is required for Agent mode and MCP integration. However, not all models that claim tool support work correctly:
 
 #### Checking Tool Support
 
@@ -180,6 +180,10 @@ models:
     capabilities:
       - tool_use # Add this to enable tools
 ```
+
+<Info>
+  **MCP Tool Calling Compatibility**: Continue automatically handles message normalization for Ollama models to ensure compatibility with MCP tool calling. This includes fixing known issues with Mistral and Gemma models. No additional configuration is required.
+</Info>
 
 <Warning>
   **Known Issue**: Some models like DeepSeek R1 may show "Agent mode is not
@@ -307,7 +311,19 @@ ollama pull deepseek-r1:32b
 
 1. Add `capabilities: [tool_use]` to your model config
 2. If still not working, the model may not actually support tools
-3. Switch to a model with confirmed tool support (Llama 3.1, Mistral)
+3. Switch to a model with confirmed tool support (Llama 3.1, Mistral, DeepSeek, Qwen)
+
+#### MCP Tool Calling Errors
+
+**Problem**: Errors like "Unexpected role 'system' after role 'tool'" (Mistral) or "Invalid 'tool_calls': unknown variant 'index'" (Gemma)
+
+**Solution**: These errors are automatically handled by Continue's message normalization system. If you encounter them:
+
+1. Ensure you're using Continue v1.1.x or later
+2. The normalization happens automatically - no configuration needed
+3. For persistent issues, see the [troubleshooting guide](/troubleshooting#ollama-model-errors-with-mcp-tool-calling)
+
+**Recommended models for MCP tool calling**: DeepSeek V3, Qwen3 family, Llama 3.1, Mistral (all versions)
 
 #### Using Hub Blocks in Local Config
 
@@ -369,6 +385,17 @@ Use Continue with Ollama to:
 - Suggest improvements
 - Identify potential bugs
 - Generate documentation
+
+## Using Ollama with MCP Tools
+
+Ollama models can be used with MCP (Model Context Protocol) servers for enhanced functionality. When using MCP tools:
+
+- **Ensure tool support**: Add `capabilities: [tool_use]` to your model configuration
+- **Choose compatible models**: DeepSeek V3, Qwen3 family, Llama 3.1, and Mistral models work well with MCP tools
+- **Automatic normalization**: Continue automatically handles model-specific message formatting to ensure compatibility
+- **Error handling**: If you encounter tool calling errors, check the [troubleshooting guide](/troubleshooting#ollama-model-errors-with-mcp-tool-calling)
+
+For more information on MCP integration, see the [MCP guides](/guides/overview#mcp-integration-cookbooks).
 
 ## Conclusion
 
