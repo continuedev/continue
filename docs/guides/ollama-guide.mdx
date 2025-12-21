@@ -199,6 +199,24 @@ models:
 
 See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for more details.
 
+#### MCP Tool Calling Compatibility
+
+When using Ollama models with [MCP (Model Context Protocol)](/customize/deep-dives/mcp) in agent mode, Continue automatically handles model-specific message formatting requirements:
+
+<Info>
+  **Automatic Fix**: Continue includes message normalization that runs automatically for Mistral, Ministral, and Gemma models when using MCP tool calling. No configuration needed.
+</Info>
+
+**Mistral/Ministral models** require system messages before tool interactions:
+- Continue automatically reorders messages to comply with this requirement
+- Fixes: `400 Bad Request: Unexpected role 'system' after role 'tool'` error
+
+**Gemma3 models** reject tool_calls with an `index` field:
+- Continue automatically removes the `index` field for Gemma models
+- Fixes: `400 Bad Request: Invalid 'tool_calls': unknown variant 'index'` error
+
+For more details about MCP tool calling issues and verified working models, see [Ollama MCP troubleshooting](/troubleshooting#ollama-mcp-tool-calling-issues).
+
 ### How to Configure Advanced Settings
 
 For optimal performance, consider these advanced configuration options:
@@ -307,7 +325,9 @@ ollama pull deepseek-r1:32b
 
 1. Add `capabilities: [tool_use]` to your model config
 2. If still not working, the model may not actually support tools
-3. Switch to a model with confirmed tool support (Llama 3.1, Mistral)
+3. Switch to a model with confirmed tool support (Llama 3.1, Mistral, DeepSeek V3.1, Qwen3)
+
+For MCP tool calling, see [verified working models](/troubleshooting#ollama-mcp-tool-calling-issues) that have been tested with Continue.
 
 #### Using Hub Blocks in Local Config
 

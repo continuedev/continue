@@ -8,7 +8,8 @@ description: "Comprehensive guide to resolving common issues with Continue, incl
 3. [Download an older version](#download-an-older-version)
 4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
 5. [MCP Server connection issues](#mcp-server-connection-issues)
-6. [Check FAQs for common issues](/faqs)
+6. [Ollama MCP tool calling issues](#ollama-mcp-tool-calling-issues)
+7. [Check FAQs for common issues](/faqs)
 
 ## Check the logs
 
@@ -104,6 +105,60 @@ To find the full path to a command on your system:
 
 This issue typically affects macOS users with large development environments and is being tracked in [#7870](https://github.com/continuedev/continue/issues/7870) and [#6699](https://github.com/continuedev/continue/issues/6699).
 
+## Ollama MCP tool calling issues
+
+When using Ollama models with MCP tool calling in agent mode, certain models may experience compatibility issues due to message formatting requirements. Continue automatically handles these cases with message normalization.
+
+### Mistral and Ministral models
+
+<Warning>
+  **Error**: `400 Bad Request: Unexpected role 'system' after role 'tool'`
+</Warning>
+
+Mistral family models (including Mistral Large 3 and Ministral 3) require system messages to appear before any tool interactions. Continue automatically reorders system messages when detected:
+
+- System messages appearing after tool messages are converted to user messages
+- System messages before tool interactions are preserved
+
+**No action required** - this is handled automatically by Continue's message normalization.
+
+### Gemma3 models
+
+<Warning>
+  **Error**: `400 Bad Request: Invalid 'tool_calls': unknown variant 'index'`
+</Warning>
+
+Gemma3 models (e.g., Gemma3 27B) reject tool_calls containing an `index` field. Continue automatically removes this field for Gemma models.
+
+**Note**: If you're still experiencing issues with Gemma models, the `index` field may be added at a different point in the processing pipeline. In this case, try using an alternative model that's confirmed to work with MCP tool calling.
+
+### Verified working models
+
+The following Ollama models have been tested and confirmed to work with MCP tool calling:
+
+<AccordionGroup>
+  <Accordion title="Confirmed Working Models">
+    - DeepSeek V3.1 (671B Cloud)
+    - Qwen3 Coder (480B Cloud)
+    - Qwen3 VL (235B Cloud)
+    - Qwen3 Next (80B Cloud)
+    - Cogito 2.1 (671B Cloud)
+    - GLM 4.6 (Cloud)
+    - Minimax M2 (Cloud)
+    - Kimi K2 (1T Cloud)
+    - Mistral Large 3 (675B Cloud)*
+    - Ministral 3*
+    
+    *Fixed by message normalization
+  </Accordion>
+</AccordionGroup>
+
+### Related issues
+
+For more information about model-specific compatibility and MCP tool calling:
+- [MCP Configuration Guide](/customize/deep-dives/mcp)
+- [Ollama Setup Guide](/guides/ollama-guide)
+- [Model Capabilities](/customize/deep-dives/model-capabilities)
 
 ## Still having trouble?
 

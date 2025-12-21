@@ -25,6 +25,12 @@ explore available MCP servers
 
 <Info>MCP can only be used in the **agent** mode.</Info>
 
+### Model Compatibility
+
+When using MCP with Ollama models, Continue automatically handles model-specific message formatting requirements. For example, Mistral/Ministral models require system messages before tool interactions, and Gemma3 models reject certain tool_call fields. Continue normalizes these messages automatically—no configuration needed.
+
+For details on verified working models and troubleshooting, see [Ollama MCP tool calling issues](/troubleshooting#ollama-mcp-tool-calling-issues).
+
 ## Quick Start: How to Set Up Your First MCP Server
 
 Below is a quick example of setting up a new MCP server for use in your config:
