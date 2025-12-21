@@ -1,0 +1,1 @@
+Add message normalization for Ollama model compatibility with MCP tool calling (fixes Mistral Large 3, Ministral 3, Gemma3 27B)
