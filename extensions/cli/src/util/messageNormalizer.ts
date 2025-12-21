@@ -94,7 +94,8 @@ function normalizeForGemma(
     // Remove 'index' field from each tool call
     const cleanedToolCalls = msg.tool_calls.map((call: any) => {
       // Create a new object without the 'index' field
-      const { index, ...cleanedCall } = call;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { index: _index, ...cleanedCall } = call;
       return cleanedCall;
     });
 
