@@ -51,11 +51,27 @@ Added message normalization layer that detects model family and applies appropri
 - Model doesn't recognize 'index' field in tool_calls structure
 - Solution: Strip 'index' field from tool_calls while preserving id, type, and function fields
 
-#### Testing
+#### Testing Results
 
-- Tested with 8 working models (Qwen3 Coder, Qwen3 VL, Cogito, GLM, Minimax, Kimi)
-- Confirmed no regression for working models
-- Ready for testing with Mistral/Gemma models once build completes
+**✅ Working Models (MCP Tool Calling Confirmed):**
+
+- DeepSeek V3.1 (671B Cloud) - Full MCP integration working
+- Qwen3 Coder (480B Cloud) - Full MCP integration working
+- Qwen3 VL (235B Cloud) - Full MCP integration working
+- Qwen3 Next (80B Cloud) - Full MCP integration working
+- Cogito 2.1 (671B Cloud) - Full MCP integration working
+- GLM 4.6 (Cloud) - Full MCP integration working
+- Minimax M2 (Cloud) - Full MCP integration working
+- Kimi K2 (1T Cloud) - Full MCP integration working
+
+**❌ Known Limitation:**
+
+- Gemma3 (27B Cloud) - Fails with `index` field error
+  - Issue: `index` field added after normalization by OpenAI adapter layer
+  - Impact: Cannot use MCP tool calling
+  - Status: Not a priority - all important models work
+
+**Key Finding:** DeepSeek V3.1 now works perfectly with MCP tools. Original issue may have been environmental or fixed in recent Ollama updates.
 
 #### Upstream Contribution
 
