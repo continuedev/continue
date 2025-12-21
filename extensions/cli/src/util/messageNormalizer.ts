@@ -27,7 +27,7 @@ export function normalizeMessagesForModel(
   const modelLower = modelName.toLowerCase();
 
   // Detect model family and apply appropriate normalization
-  if (modelLower.includes("mistral")) {
+  if (modelLower.includes("mistral") || modelLower.includes("ministral")) {
     return normalizeForMistral(messages);
   } else if (modelLower.includes("gemma")) {
     return normalizeForGemma(messages);
