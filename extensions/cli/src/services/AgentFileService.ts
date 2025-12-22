@@ -58,7 +58,7 @@ export class AgentFileService
       if (parts.length === 2 && parts[0] && parts[1] && !parts.includes(".")) {
         try {
           return await loadPackageFromHub(agentPath, agentFileProcessor);
-        } catch (e) {
+        } catch {
           // slug COULD be path, fall back to relative path
         }
       }

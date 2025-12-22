@@ -525,17 +525,17 @@ You are a helpful agent`;
         expect(result).toEqual(mockAgentFile);
       });
 
-      it("should fallback to file path when hub loading fails for slug-like path", async () => {
+      it("should fallback to file path when hub loading fails for slug-like path with .md extension", async () => {
         mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
         mockPathResolve.mockImplementation((p: string) => `/resolved/${p}`);
         mockReadFileSync.mockReturnValue(mockFileContent);
 
-        const result = await agentFileService.getAgentFile("owner/agent");
+        const result = await agentFileService.getAgentFile("owner/agent.md");
 
-        expect(mockLoadPackageFromHub).toHaveBeenCalled();
-        expect(mockPathResolve).toHaveBeenCalledWith("owner/agent");
+        expect(mockLoadPackageFromHub).toHaveBeenCalled(); // Two-part paths try hub first
+        expect(mockPathResolve).toHaveBeenCalledWith("owner/agent.md");
         expect(mockReadFileSync).toHaveBeenCalledWith(
-          "/resolved/owner/agent",
+          "/resolved/owner/agent.md",
           "utf-8",
         );
         expect(result).toBeDefined();
@@ -641,13 +641,9 @@ You are a helpful agent`;
 
     describe("path format edge cases", () => {
       it("should treat single-part path as file path, not hub slug", async () => {
-        const singlePath = "agent";
-        mockPathResolve.mockReturnValue("/resolved/agent");
+        const singlePath = "agent.md";
+        mockPathResolve.mockReturnValue("/resolved/agent.md");
         mockReadFileSync.mockReturnValue(mockFileContent);
-        // Make hub loading fail so it falls back to file system
-        mockLoadPackageFromHub.mockRejectedValueOnce(
-          new Error("Not a hub slug"),
-        );
 
         const result = await agentFileService.getAgentFile(singlePath);
 
@@ -658,13 +654,9 @@ You are a helpful agent`;
       });
 
       it("should treat three-part path as file path, not hub slug", async () => {
-        const threePath = "path/to/agent";
-        mockPathResolve.mockReturnValue("/resolved/path/to/agent");
+        const threePath = "path/to/agent.md";
+        mockPathResolve.mockReturnValue("/resolved/path/to/agent.md");
         mockReadFileSync.mockReturnValue(mockFileContent);
-        // Make hub loading fail so it falls back to file system
-        mockLoadPackageFromHub.mockRejectedValueOnce(
-          new Error("Not a hub slug"),
-        );
 
         const result = await agentFileService.getAgentFile(threePath);
 
@@ -675,29 +667,20 @@ You are a helpful agent`;
       });
 
       it("should not treat two-part path with empty part as hub slug", async () => {
-        const emptyPartPath = "owner/";
-        mockPathResolve.mockReturnValue("/resolved/owner/");
-        mockReadFileSync.mockReturnValue(mockFileContent);
-        // Make hub loading fail so it falls back to file system
-        mockLoadPackageFromHub.mockRejectedValueOnce(
-          new Error("Not a hub slug"),
-        );
+        const emptyPartPath = "owner/"; // Empty second part
 
-        const result = await agentFileService.getAgentFile(emptyPartPath);
+        // With the new behavior, non-markdown paths throw errors
+        await expect(
+          agentFileService.getAgentFile(emptyPartPath),
+        ).rejects.toThrow("Not a markdown file");
 
-        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
-        expect(mockPathResolve).toHaveBeenCalledWith(emptyPartPath);
-        expect(result).toBeDefined();
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled(); // Empty part means no hub attempt
       });
 
       it("should not treat path starting with slash as hub slug", async () => {
-        const slashPath = "/owner/agent";
+        const slashPath = "/owner/agent.md";
         mockPathResolve.mockReturnValue(slashPath);
         mockReadFileSync.mockReturnValue(mockFileContent);
-        // Make hub loading fail so it falls back to file system
-        mockLoadPackageFromHub.mockRejectedValueOnce(
-          new Error("Not a hub slug"),
-        );
 
         const result = await agentFileService.getAgentFile(slashPath);
 
@@ -741,19 +724,29 @@ You are a helpful agent`;
         ).rejects.toThrow("Failed to load agent from ./invalid.md");
       });
 
-      it("should throw error when hub loading fails and file fallback also fails", async () => {
-        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
-        mockPathResolve.mockReturnValue("/resolved/owner/agent");
+      it("should throw error when file reading fails for markdown path", async () => {
+        mockPathResolve.mockReturnValue("/resolved/owner/agent.md");
         mockReadFileSync.mockImplementation(() => {
           throw new Error("File not found");
         });
+
+        await expect(
+          agentFileService.getAgentFile("owner/agent.md"),
+        ).rejects.toThrow("Failed to load agent from owner/agent.md");
+        await expect(
+          agentFileService.getAgentFile("owner/agent.md"),
+        ).rejects.toThrow("File not found");
+      });
+
+      it("should throw error for non-markdown paths without trying file fallback", async () => {
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
 
         await expect(
           agentFileService.getAgentFile("owner/agent"),
         ).rejects.toThrow("Failed to load agent from owner/agent");
         await expect(
           agentFileService.getAgentFile("owner/agent"),
-        ).rejects.toThrow("File not found");
+        ).rejects.toThrow("Not a markdown file");
       });
 
       it("should handle permission errors when reading files", async () => {
