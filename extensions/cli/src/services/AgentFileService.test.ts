@@ -725,6 +725,7 @@ You are a helpful agent`;
       });
 
       it("should throw error when file reading fails for markdown path", async () => {
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
         mockPathResolve.mockReturnValue("/resolved/owner/agent.md");
         mockReadFileSync.mockImplementation(() => {
           throw new Error("File not found");
