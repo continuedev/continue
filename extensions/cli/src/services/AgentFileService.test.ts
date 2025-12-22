@@ -752,6 +752,59 @@ You are a helpful agent`;
         ).rejects.toThrow("Hub error");
       });
 
+      it("should re-throw 404 error for non-existent hub slugs", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(
+          new Error("404: Agent not found"),
+        );
+
+        await expect(
+          agentFileService.getAgentFile("owner/nonexistent"),
+        ).rejects.toThrow("Failed to load agent from owner/nonexistent");
+        await expect(
+          agentFileService.getAgentFile("owner/nonexistent"),
+        ).rejects.toThrow("404: Agent not found");
+
+        // Verify it tried hub but not file system
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "owner/nonexistent",
+          expect.any(Object),
+        );
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should re-throw network error for hub slugs", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Network timeout"));
+
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("Failed to load agent from owner/agent");
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("Network timeout");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should re-throw authentication error for hub slugs", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(
+          new Error("401: Unauthorized"),
+        );
+
+        await expect(
+          agentFileService.getAgentFile("private/agent"),
+        ).rejects.toThrow("Failed to load agent from private/agent");
+        await expect(
+          agentFileService.getAgentFile("private/agent"),
+        ).rejects.toThrow("401: Unauthorized");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
       it("should handle permission errors when reading files", async () => {
         mockPathResolve.mockReturnValue("/restricted/file.md");
         mockReadFileSync.mockImplementation(() => {
@@ -768,6 +821,152 @@ You are a helpful agent`;
         await expect(
           agentFileService.getAgentFile("./restricted-file.md"),
         ).rejects.toThrow("EACCES: permission denied");
+      });
+    });
+
+    describe("hub slug vs file path distinction", () => {
+      it("should prioritize hub for two-part paths without extension", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+
+        const result = await agentFileService.getAgentFile("owner/agent");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "owner/agent",
+          expect.any(Object),
+        );
+        expect(result).toEqual(mockAgentFile);
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should fall back to file for two-part markdown paths when hub fails", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(
+          new Error("Hub not available"),
+        );
+        mockPathResolve.mockReturnValue("/resolved/owner/agent.md");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+
+        const result = await agentFileService.getAgentFile("owner/agent.md");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        expect(mockReadFileSync).toHaveBeenCalledWith(
+          "/resolved/owner/agent.md",
+          "utf-8",
+        );
+        expect(result.name).toBe("Test Agent");
+      });
+
+      it("should not fall back to file for two-part non-markdown paths when hub fails", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(
+          new Error("Hub connection failed"),
+        );
+
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("Failed to load agent from owner/agent");
+        await expect(
+          agentFileService.getAgentFile("owner/agent"),
+        ).rejects.toThrow("Hub connection failed");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should handle hub slugs with hyphens correctly", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+
+        const result = await agentFileService.getAgentFile(
+          "continue-dev/cloud-agent",
+        );
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "continue-dev/cloud-agent",
+          expect.any(Object),
+        );
+        expect(result).toEqual(mockAgentFile);
+      });
+
+      it("should handle hub slugs with numbers correctly", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockResolvedValue(mockAgentFile);
+
+        const result = await agentFileService.getAgentFile("owner123/agent456");
+
+        expect(mockLoadPackageFromHub).toHaveBeenCalledWith(
+          "owner123/agent456",
+          expect.any(Object),
+        );
+        expect(result).toEqual(mockAgentFile);
+      });
+
+      it("should reject hub slugs with dots in parts", async () => {
+        const pathWithDot = "owner.com/agent";
+        mockPathResolve.mockReturnValue("/resolved/owner.com/agent");
+
+        // This should NOT be treated as a hub slug because it contains a dot
+        // It will fail with "Not a markdown file" error
+        await expect(
+          agentFileService.getAgentFile(pathWithDot),
+        ).rejects.toThrow("Not a markdown file");
+
+        expect(mockLoadPackageFromHub).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("markdown file extension detection", () => {
+      it("should recognize .md extension", async () => {
+        mockPathResolve.mockReturnValue("/path/agent.md");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+
+        const result = await agentFileService.getAgentFile("./agent.md");
+
+        expect(result).toBeDefined();
+        expect(mockReadFileSync).toHaveBeenCalled();
+      });
+
+      it("should recognize .markdown extension", async () => {
+        mockPathResolve.mockReturnValue("/path/agent.markdown");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+
+        const result = await agentFileService.getAgentFile("./agent.markdown");
+
+        expect(result).toBeDefined();
+        expect(mockReadFileSync).toHaveBeenCalled();
+      });
+
+      it("should reject files without markdown extension", async () => {
+        await expect(
+          agentFileService.getAgentFile("./agent.txt"),
+        ).rejects.toThrow("Not a markdown file");
+
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should reject files with .MD extension (case sensitivity)", async () => {
+        // The current implementation is case-sensitive
+        await expect(
+          agentFileService.getAgentFile("./agent.MD"),
+        ).rejects.toThrow("Not a markdown file");
+
+        expect(mockReadFileSync).not.toHaveBeenCalled();
+      });
+
+      it("should handle markdown extension in two-part hub-like paths", async () => {
+        mockLoadPackageFromHub.mockReset();
+        mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
+        mockPathResolve.mockReturnValue("/resolved/dir/file.md");
+        mockReadFileSync.mockReturnValue(mockFileContent);
+
+        const result = await agentFileService.getAgentFile("dir/file.md");
+
+        // Should try hub first (two-part path)
+        expect(mockLoadPackageFromHub).toHaveBeenCalled();
+        // Then fall back to file (has .md extension)
+        expect(mockReadFileSync).toHaveBeenCalled();
+        expect(result.name).toBe("Test Agent");
       });
     });
 
