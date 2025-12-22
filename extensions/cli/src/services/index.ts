@@ -324,7 +324,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     SERVICE_NAMES.OCEAN_BUS,
     async () => {
       const oceanBusUrl = process.env.OCEAN_BUS_URL || "http://localhost:8765";
-      await oceanBusService.start();
+      // Start connection in background - don't block initialization
+      oceanBusService.start().catch((err) => {
+        logger.warn(`Ocean-bus connection failed: ${err.message}`);
+      });
       return {
         connected: oceanBusService.isConnected(),
         url: oceanBusUrl,

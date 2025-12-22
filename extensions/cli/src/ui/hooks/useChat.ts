@@ -226,6 +226,16 @@ export function useChat({
       // This prevents interrupting active work
       await messageQueue.enqueueMessage(formattedMessage);
       logger.info("Ocean-bus event queued for processing");
+
+      // If LLM is idle, trigger queue processing
+      if (!isWaitingForResponse && !isCompacting) {
+        const queuedMessageData = messageQueue.getNextMessage();
+        if (queuedMessageData) {
+          const { message: queuedMessage, imageMap } = queuedMessageData;
+          setQueuedMessages([]);
+          await handleUserMessage(queuedMessage, imageMap);
+        }
+      }
     };
 
     oceanBus.on("event", handleOceanBusEvent);
