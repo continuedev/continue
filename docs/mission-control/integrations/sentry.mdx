@@ -1,138 +1,87 @@
 ---
 title: "Sentry Integration"
-description: "Automatically triage and resolve errors with Continue Agents connected to Sentry"
+description: "Connect Sentry to Mission Control so agents can automatically respond to production errors, analyzing issues as they occur and proposing fixes before they escalate."
 ---
 
-## Overview
 
-Connect Sentry to Continue Mission Control to enable agents to automatically detect, analyze, and resolve production errors. When Sentry is enabled, Continue can generate PRs to fix issues, analyze error patterns, and maintain application health.
 
-<Card title="What You Can Do with Sentry Integration" icon="shield-exclamation">
-
-  - Automatically generate PRs to resolve new errors
-  - Analyze error patterns and identify root causes
-  - Prioritize issues based on impact and frequency
-  - Create detailed bug reports with stack traces
+<Card
+  title="Connect Sentry to enable agents to:"
+  icon="shield-exclamation"
+  href="https://hub.continue.dev/integrations/sentry"
+>
+  - Analyze production errors as they occur
+  - Investigate stack traces and recent code changes
+  - Generate pull requests to resolve issues
+  - Create contextual GitHub issues
   - Monitor error trends across releases
-
 </Card>
 
-## Setup
 
-<Steps>
+## Official Workflow Templates
 
-  <Step title="Navigate to the Sentry Integration">
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Sentry-based remediation.
 
-    Go to [Sentry Integration](https://hub.continue.dev/integrations/sentry).
-  </Step>
-
-  <Step title="Connect Sentry">
-
-    Click "Connect". You'll need the following credentials:
-
-    - **Sentry Organization Slug**: Your organization name (e.g., "my-company")
-    - **Auth Token**: Internal integration token from Sentry
-    - **Client Secret**: For webhook signature verification
-     - **API Key**: For MCP support
-
-  </Step>
-
-  <Step title="Configure Sentry Internal Integration">
-
-    In your Sentry account:
-    1. Create a new [internal integration](https://docs.sentry.io/product/integrations/integration-platform/)
-    2. Set the webhook URL to `https://api.continue.dev/webhooks/sentry`
-    3. Select "Read and Write" access for "Issue and Event"
-    4. Select "issue" in the webhooks section and click Save Changes
-    5. Copy the Auth Token and Client Secret
-
-  </Step>
-
-  <Step title="Add Credentials to Mission Control">
-
-    Paste all three values into the integration form and click "Create Connection"
-
-  </Step>
-
-</Steps>
+<CardGroup cols={2}>
+  <Card title="Auto-fix Sentry Issues" icon="shield-check">
+    Automatically analyze and fix production errors when Sentry detects new issues.
+  </Card>
+</CardGroup>
 
 <Tip>
-
-  **How to get these credentials:**
-  1. Create a new **internal integration** in Sentry
-  2. Set the webhook URL to `https://api.continue.dev/webhooks/sentry`
-  3. Select "Read and Write" access for "Issue and Event"
-  4. Select "issue" in the webhooks section and click Save Changes
-  5. Find your organization slug in the Sentry URL (your-slug.sentry.io)
-  6. Copy the Auth Token and Client Secret from the integration
-
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **Mission Control → Integrations → Sentry**.
 </Tip>
 
-## Running Sentry Agents in Mission Control
+### Advanced Use Cases
 
-You can run Sentry-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows).
+<Accordion title="Advanced: Custom Sentry Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
 
-<Tip>
-
-  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
-
-</Tip>
-
-
-## Troubleshooting
-
-<Accordion title="Webhooks not triggering">
-
-  **Problem**: Agent isn't running when new errors occur
-
-  **Solutions**:
-  - Verify webhook URL is correct in Sentry
-  - Check that "issue" is selected in webhook events
-  - Ensure Client Secret matches in both Sentry and Mission Control
-  - Review webhook delivery logs in Sentry
-
+- Trigger investigations only for high-impact or high-frequency errors
+- Route specific error types to specialized agents
+- Correlate Sentry issues with recent deploys or feature flags
+- Generate weekly error trend summaries for engineering teams
+- Combine Sentry signals with GitHub or analytics data
 </Accordion>
+---
+## Access & Permissions
 
-<Accordion title="Agent can't access Sentry data">
+When connecting Sentry, you’ll authorize Continue to receive error events and access issue data.
 
-  **Problem**: Agent returns errors when trying to fetch issue details
+- **Project and issue access**  
+  Agents can access Sentry projects and issues you have permission to view within your organization.
 
-  **Solutions**:
-  - Verify Auth Token has "Read and Write" access for "Issue and Event"
-  - Check that organization slug is correct
-  - Ensure token hasn't expired
-  - Confirm project permissions in Sentry
+- **Permissions**  
+  Approved permissions allow Continue to analyze error events, read issue details, and create pull requests or GitHub issues on your behalf.
 
-</Accordion>
 
-<Accordion title="PRs not linking to Sentry issues">
+You can update or revoke access at any time from Sentry or the Mission Control Hub.
 
-  **Problem**: Generated PRs don't reference the Sentry issue
-
-  **Solutions**:
-  - Ensure both Sentry and GitHub integrations are connected
-  - Verify agent has permission to access both services
-  - Check that the agent prompt includes instructions to link issues
-  - Review agent logs for errors
-
-</Accordion>
+<Info>
+  Connecting Sentry requires creating an **[internal integration](https://sentry.io/settings/developer-settings/new-internal/)** in your Sentry organization.  
+  
+  You’ll be asked for your organization slug and credentials that allow Continue to receive issue and event data via webhooks and API access.
+  
+  Full credential setup is handled in the Mission Control Hub.
+</Info>
+---
 
 ## Support & Resources
 
 <CardGroup cols={2}>
-
-  <Card title="Sentry MCP Cookbook" icon="book-open" href="/guides/sentry-mcp-error-monitoring">
-
-    Comprehensive guide to using Sentry with Continue agents
-
+  <Card
+    title="Sentry MCP Cookbook"
+    icon="book-open"
+    href="/guides/sentry-mcp-error-monitoring"
+  >
+    Practical examples for working with Sentry data using Continue agents.
   </Card>
 
-  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
-
-    Combine Sentry with GitHub for complete automation
-
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="/mission-control/integrations/github"
+  >
+    Combine Sentry and GitHub to automate error remediation.
   </Card>
-
 </CardGroup>
-
-

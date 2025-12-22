@@ -40,7 +40,8 @@
                   "mission-control/integrations/slack-agent",
                   "mission-control/integrations/posthog",
                   "mission-control/integrations/atlassian",
-                  "mission-control/integrations/netlify"
+                  "mission-control/integrations/netlify",
+                  "mission-control/integrations/supabase"
                 ]
               },
               "mission-control/metrics",
