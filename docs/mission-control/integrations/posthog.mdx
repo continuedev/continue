@@ -1,238 +1,84 @@
 ---
 title: "PostHog Integration"
-description: "Leverage product analytics and feature flags with Continue Agents connected to PostHog"
+description: "Connect PostHog to Mission Control so agents can keep analytics and tracking in sync with code changes, ensuring dashboards reflect what actually shipped."
 ---
 
-## Overview
-
-Connect PostHog to Continue Mission Control to enable agents to analyze user behavior, manage feature flags, and optimize product experiences. When PostHog is enabled, Continue can analyze product metrics, automate feature rollouts, and create data-driven development tasks.
-
-<Card title="What You Can Do with PostHog Integration" icon="chart-line">
-
-  - Analyze user behavior patterns and create optimization tasks
-  - Manage feature flags and gradual rollouts
-  - Generate insights from product analytics
-  - Automate A/B test analysis and reporting
-  - Monitor conversion funnels and user journeys
-  - Create PRs based on analytics insights
-
+<Card
+  title="Connect PostHog to enable agents to:"
+  icon="chart-line"
+  href="https://hub.continue.dev/integrations/posthog"
+>
+  - Update analytics dashboards automatically after PRs merge
+  - Keep tracking and feature usage aligned with shipped code
+  - Analyze user behavior and product adoption trends
+  - Reduce manual analytics maintenance for engineering teams
 </Card>
 
-## Setup
+---
 
-<Steps>
+## Official Workflow Templates
 
-  <Step title="Navigate to Integrations">
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate PostHog updates.
 
-    Go to your [Integrations Settings](https://hub.continue.dev/integrations).
-
-  </Step>
-
-  <Step title="Connect PostHog">
-
-    Click "Connect" next to PostHog. You'll need the following credentials:
-
-    - **Project API Key**: Your PostHog project API key
-    - **Host URL**: Your PostHog instance URL (e.g., `https://app.posthog.com` or your self-hosted URL)
-
-  </Step>
-
-  <Step title="Get PostHog Credentials">
-
-    In your PostHog account:
-    1. Navigate to Project Settings
-    2. Find your Project API Key
-    3. Copy your PostHog instance URL
-    4. Paste both values into Mission Control
-
-  </Step>
-
-  <Step title="Verify Connection">
-
-    Click "Create Connection" and verify that Continue can access your PostHog data
-
-  </Step>
-
-</Steps>
+<CardGroup cols={2}>
+  <Card title="Update PostHog Dashboards" icon="chart-bar">
+    When a pull request is merged, this workflow updates PostHog dashboards and tracking to reflect newly shipped features or changes.
+  </Card>
+</CardGroup>
 
 <Tip>
-
-  **How to get these credentials:**
-  1. Log into your PostHog account
-  2. Go to **Settings** → **Project API Key**
-  3. Copy your API key
-  4. Note your instance URL (shown in the browser address bar)
-
+Official workflow templates may expand over time as new analytics patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → PostHog](https://hub.continue.dev/integrations/posthog)**.
 </Tip>
 
-## Use Cases
+## Advanced Use Cases
 
-### Analytics-Driven Development
+<Accordion title="Advanced: Custom PostHog Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
 
-Create agents that analyze user behavior and generate development tasks:
-
-<Card title="Feature Optimization Agent" icon="chart-mixed">
-
-  **Task Example**: "Analyze the checkout flow conversion rate and identify areas for improvement"
-
-  **What the Agent Does**:
-  - Retrieves funnel data from PostHog
-  - Identifies drop-off points in the user journey
-  - Analyzes user session recordings at problem areas
-  - Creates issues or PRs with optimization recommendations
-
-  **Run in Mission Control**: Schedule weekly or trigger after significant traffic changes
-
-</Card>
-
-### Feature Flag Management
-
-Automate feature rollout based on metrics:
-
-<Card title="Gradual Rollout Agent" icon="flag">
-
-  **Task Example**: "Monitor new checkout feature performance and increase rollout percentage if metrics are positive"
-
-  **What the Agent Does**:
-  - Tracks key metrics for the feature flag
-  - Compares performance against baseline
-  - Automatically adjusts rollout percentage
-  - Alerts team if anomalies are detected
-
-  **Run in Mission Control**: Set up as continuous monitoring workflow
-
-</Card>
-
-### Performance Monitoring
-
-Track and respond to performance issues:
-
-<Card title="Performance Analysis Agent" icon="gauge-high">
-
-  **Task Example**: "Analyze page load times and create issues for pages slower than 3 seconds"
-
-  **What the Agent Does**:
-  - Queries PostHog for performance metrics
-  - Identifies slow-loading pages
-  - Analyzes common characteristics of slow pages
-  - Creates prioritized issues with performance data
-
-  **Run in Mission Control**: Schedule daily performance audits
-
-</Card>
-
-### A/B Test Analysis
-
-Automate experiment analysis and reporting:
-
-<Card title="Experiment Analyzer Agent" icon="flask">
-
-  **Task Example**: "Analyze the results of the new homepage A/B test and determine statistical significance"
-
-  **What the Agent Does**:
-  - Retrieves experiment data from PostHog
-  - Performs statistical analysis
-  - Generates comprehensive report with visualizations
-  - Creates recommendations for next steps
-
-  **Run in Mission Control**: Trigger when experiment reaches sample size
-
-</Card>
-
-### User Feedback Loop
-
-Connect analytics insights to code improvements:
-
-<Card title="UX Enhancement Agent" icon="users">
-
-  **Task Example**: "Identify the top 5 most frustrating user experiences based on rage clicks and session replays"
-
-  **What the Agent Does**:
-  - Analyzes user session data for frustration signals
-  - Reviews session replays of problematic interactions
-  - Identifies common UX issues
-  - Creates detailed bug reports with user context
-
-  **Run in Mission Control**: Run weekly to catch emerging patterns
-
-</Card>
-
-## Running PostHog Agents in Mission Control
-
-You can run PostHog-connected agents in two ways as [one-off tasks](../tasks) or automated [workflows](../workflows):
-
-
-<Tip>
-
-  Start with manual tasks to refine your content queries, then automate repetitive content management and validation tasks.
-
-</Tip>
-
-
-## Troubleshooting
-
-<Accordion title="Agent can't access PostHog data">
-
-  **Problem**: Agent returns errors when trying to fetch analytics
-
-  **Solutions**:
-  - Verify API key is correct and hasn't expired
-  - Check that the project API key has read permissions
-  - Ensure host URL includes protocol (https://)
-  - Confirm your PostHog plan includes API access
-
+- Generate product insights from usage data and open follow-up issues
+- Detect tracking gaps when new features ship
+- Summarize weekly product metrics for stakeholders
+- Correlate feature flags with user adoption and retention
+- Trigger investigations when key metrics regress
 </Accordion>
 
-<Accordion title="Metrics seem incorrect or outdated">
+---
 
-  **Problem**: Data retrieved doesn't match PostHog dashboard
+## Access & Permissions
 
-  **Solutions**:
-  - Check that you're querying the correct time range
-  - Verify PostHog data is fully processed (may have slight delay)
-  - Ensure filters and breakdowns match your dashboard
-  - Review agent logs for query parameters
+When connecting PostHog, you’ll provide an API key that allows Continue to query analytics data and update dashboards.
 
-</Accordion>
+- **API key access**  
+  You’ll need a PostHog API key with permission to read analytics data and modify dashboards.
 
-<Accordion title="Feature flag updates not working">
+- **Project access**  
+  Agents can only access the PostHog project associated with the API key you provide.
 
-  **Problem**: Agent can't modify feature flags
+You can rotate or revoke the API key at any time from your PostHog settings.
 
-  **Solutions**:
-  - Verify API key has write permissions
-  - Check that you're using a Personal API Key (not Project API Key) for modifications
-  - Ensure feature flag exists before attempting updates
-  - Review PostHog API documentation for flag management
+<Info>
+  PostHog supports both cloud-hosted and self-hosted instances.  
+  You’ll need your project’s API key and PostHog host URL available when connecting.
+</Info>
 
-</Accordion>
-
-<Accordion title="Self-hosted PostHog connection issues">
-
-  **Problem**: Can't connect to self-hosted PostHog instance
-
-  **Solutions**:
-  - Verify host URL is accessible from Mission Control
-  - Check firewall rules allow Continue's IP addresses
-  - Ensure SSL certificate is valid if using HTTPS
-  - Test API access with curl or Postman first
-
-</Accordion>
+---
 
 ## Support & Resources
 
 <CardGroup cols={2}>
-
-  <Card title="PostHog GitHub Continuous AI" icon="book-open" href="/guides/posthog-github-continuous-ai">
-
-    Complete guide to building product-led development workflows with PostHog and Continue
-
+  <Card
+    title="PostHog GitHub Continuous AI"
+    icon="book-open"
+    href="/guides/posthog-github-continuous-ai"
+  >
+    Build product-led development workflows using PostHog and Continue.
   </Card>
 
-  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
-
-    Combine PostHog with GitHub for data-driven development automation
-
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="https://hub.continue.dev/settings/integrations/github"
+  >
+    Combine PostHog and GitHub to keep analytics aligned with code.
   </Card>
-
 </CardGroup>

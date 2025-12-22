@@ -1,0 +1,1 @@
+test: add comprehensive tests for hub error re-throwing

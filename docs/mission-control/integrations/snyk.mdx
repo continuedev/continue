@@ -1,130 +1,75 @@
 ---
 title: "Snyk Integration"
-description: "Automatically detect and fix vulnerabilities with Continue Agents connected to Snyk"
+description: "Connect Snyk to Continue Mission Control to automatically detect and fix vulnerabilities with Continue Agents"
 ---
 
-## Overview
-
-Connect Snyk to Continue Mission Control to enable agents to automatically detect, analyze, and resolve security vulnerabilities. When Snyk is enabled, Continue can generate PRs to fix vulnerabilities, analyze security patterns, and maintain application security posture.
-
-<Card title="What You Can Do with Snyk Integration" icon="shield-check">
-
-  - Automatically generate PRs to fix security vulnerabilities
-  - Analyze dependency risks and suggest updates
+<Card
+  title="Connect Snyk to enable agents to:"
+  icon="shield-check"
+  href="https://hub.continue.dev/integrations/snyk"
+>
+  - Detect and analyze security vulnerabilities
+  - Generate pull requests to remediate issues
+  - Analyze dependency and supply chain risks
   - Monitor security posture across projects
-  - Create detailed vulnerability reports with remediation steps
-  - Track vulnerability trends and compliance status
-
+  - Create reports and summaries for security trends
 </Card>
 
-## Setup
+## Official Workflow Templates
 
-<Steps>
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Snyk-based remediation.
 
-  <Step title="Navigate to Integrations">
+<CardGroup cols={2}>
+  <Card title="Auto-fix Snyk Vulnerabilities" icon="shield-check">
+    Automatically remediate high and critical security vulnerabilities detected by Snyk.
+  </Card>
+</CardGroup>
 
-    Go to the [Snyk Integration](https://hub.continue.dev/integrations/snyk).
+<Tip>
+Official workflow templates may expand over time as new security patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → Snyk](https://hub.continue.dev/integrations/snyk)**.
+</Tip>
 
-  </Step>
+### Advanced Use Cases
 
-  <Step title="Connect Snyk">
+<Accordion title="Advanced: Custom Snyk Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
 
-    Click "Connect" next to Snyk integration.
-
-  </Step>
-
-  <Step title="Authorize with Snyk">
-
-    Click the "Connect with Snyk" button to authorize Continue Mission Control:
-    
-    - You'll be redirected to Snyk's OAuth authorization page
-    - Review and approve the requested permissions
-    - You'll be automatically redirected back to the [Snyk inbox view](https://hub.continue.dev/inbox?view=snyk)
-
-  </Step>
-
-  <Step title="Verify Connection">
-
-    Once redirected back, you'll see:
-    - A confirmation that Snyk is connected
-    - Your Snyk projects available for monitoring
-    - Any active vulnerability alerts
-
-  </Step>
-
-</Steps>
-
-<Info>
-
-  **OAuth Authorization**: No manual token configuration needed! Simply click the authorization button and Continue will securely handle the authentication flow with Snyk.
-
-</Info>
-
-
-## Troubleshooting
-
-<Accordion title="OAuth authorization fails">
-
-  **Problem**: Can't complete the Snyk authorization flow
-
-  **Solutions**:
-  - Ensure you have appropriate permissions in your Snyk organization
-  - Check if your organization allows OAuth integrations
-  - Try logging out and back into Snyk before authorizing
-  - Clear browser cookies and try again
-
+- Prioritize vulnerabilities based on exploitability or business impact
+- Correlate Snyk findings with recent code changes
+- Generate security summaries for compliance or audit reviews
+- Trigger remediation only for production-critical projects
+- Combine Snyk findings with GitHub or CI signals
 </Accordion>
+---
+## Access & Permissions
 
-<Accordion title="Projects not appearing">
+When connecting Snyk, you’ll authorize Continue to access vulnerability and project data via OAuth.
 
-  **Problem**: Snyk projects aren't visible after connection
+- **Project access**  
+  Agents can only access Snyk projects you are permitted to view within your organization.
 
-  **Solutions**:
-  - Verify you have access to projects in Snyk
-  - Check that projects are properly imported in Snyk
-  - Refresh the integration connection
-  - Ensure the OAuth scope includes project access
+- **Permissions**  
+  Approved permissions allow Continue to read vulnerability findings and create remediation pull requests on your behalf.
 
-</Accordion>
-
-<Accordion title="Agent can't access vulnerability data">
-
-  **Problem**: Agent returns errors when trying to fetch Snyk data
-
-  **Solutions**:
-  - Verify the OAuth connection is still valid
-  - Re-authorize if the token has expired
-  - Check that the agent has the necessary Snyk context provider
-  - Review agent logs for specific error messages
-
-</Accordion>
-
-<Accordion title="Webhooks not triggering">
-
-  **Problem**: Agent isn't running when new vulnerabilities are found
-
-  **Solutions**:
-  - Verify webhook configuration in Snyk integration settings
-  - Check that webhook URL points to Continue Mission Control
-  - Ensure webhook events include vulnerability detection
-  - Review webhook delivery logs in Snyk
-
-</Accordion>
+You can revoke or reauthorize access at any time from Snyk or the Mission Control Hub.
+---
 
 ## Support & Resources
 
 <CardGroup cols={2}>
-
-  <Card title="Snyk MCP Cookbook" icon="book-open" href="/guides/snyk-mcp-continue-cookbook">
-
-    Complete guide with security scanning recipes, CI/CD integration, and automated remediation workflows
-
+  <Card
+    title="Snyk MCP Cookbook"
+    icon="book-open"
+    href="/guides/snyk-mcp-continue-cookbook"
+  >
+    Security automation recipes using Snyk and Continue agents.
   </Card>
 
-  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
-
-    Combine Snyk with GitHub for complete security automation
-
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="/mission-control/integrations/github"
+  >
+    Combine Snyk and GitHub to automate vulnerability remediation.
   </Card>
-
 </CardGroup>
