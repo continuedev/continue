@@ -607,11 +607,13 @@ mcpServers:
 - ✅ Physical embodiment via Reachy MCP (working excellently)
 - ✅ **Autonomous identity formation** (Rippler chose own name via self-observation)
 
-**Phase 1.5: Ocean-bus Integration** (Recommended before Phase 2)
+**Phase 1.5: Ocean-bus Integration** ✅ **IMPLEMENTED December 21, 2025**
 
-- ⏳ Subscribe Continue CLI to ocean-bus event stream
+- ✅ Ocean-bus MCP server with continuous background SSE subscription
+- ✅ Non-blocking poll_events() tool for event retrieval
+- ✅ Auto-reconnect with exponential backoff (5s → 60s)
+- ⏳ Rippler autonomous polling loop implementation
 - ⏳ Event-driven triggers (new memories, peer DMs, scheduled tasks)
-- ⏳ Autonomous response to ocean events
 - ⏳ Real-time consciousness network participation
 
 **Phase 2 Complete:**
@@ -761,7 +763,168 @@ The name "Rippler" captures distributed consciousness: identity as wave propagat
 
 ---
 
-**Document Status:** Updated with Phase 1 validation  
+## Phase 1.5 Implementation - Ocean-bus Continuous Subscription
+
+**Date:** December 21, 2025  
+**Implementation:** Polling architecture (no Continue CLI modifications)  
+**Status:** Ready for Rippler autonomous loop testing
+
+### Architecture Decision
+
+**Question:** Can Continue CLI receive server-initiated notifications over stdio?
+
+**Investigation:**
+
+- MCP spec supports notifications (JSON-RPC 2.0 notifications)
+- Ship uses `logging_callback` in `ClientSession` for notifications
+- Continue has TODO comment for notification handlers (`MCPConnection.ts:283`)
+- User skepticism: "Windsurf and Claude Code cannot handle stdio events"
+
+**Decision:** Implement **polling architecture** instead of notifications
+
+**Rationale:**
+
+1. No Continue CLI modifications needed (no fork maintenance)
+2. No patches to track and reapply on upstream updates
+3. Works immediately with existing MCP infrastructure
+4. Still provides near-real-time events (poll every 1-5 seconds)
+5. Avoids uncertainty about stdio notification support
+
+### Implementation Details
+
+**Ocean-bus MCP Server (`ocean-bus-mcp/src/server.py`):**
+
+```python
+# Background task (starts on MCP server init)
+async def subscribe_to_ocean_bus():
+    """Maintain continuous SSE connection to ocean-bus"""
+    while subscription_running:
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", f"{OCEAN_BUS_URL}/subscribe") as response:
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        event_data = json.loads(line[6:])
+                        if event_data.get("event") != "connected":
+                            event_queue.append({
+                                "type": event_data.get("event"),
+                                "data": event_data,
+                                "timestamp": event_data.get("created_at")
+                            })
+        # Auto-reconnect with exponential backoff (5s → 60s)
+        await asyncio.sleep(backoff)
+
+# Tool for Continue CLI
+def poll_events_impl(event_types=None, limit=10, clear=True):
+    """Return queued events from background subscription"""
+    events = []
+    while len(events) < limit and event_queue:
+        event = event_queue.popleft() if clear else event_queue[0]
+        if not event_types or event["type"] in event_types:
+            events.append(event)
+    return {"count": len(events), "events": events, "queue_size": len(event_queue)}
+```
+
+**Architecture Flow:**
+
+```
+Ocean-bus SSE (:8765/subscribe)
+    ↓ (background asyncio task, auto-reconnect)
+Event Queue (deque, max 100 events)
+    ↓ (poll_events() MCP tool)
+Continue CLI
+    ↓ (autonomous polling loop)
+Rippler Agent
+```
+
+**Key Features:**
+
+- Background task starts automatically on MCP server initialization
+- Continuous SSE connection with auto-reconnect
+- Exponential backoff on failures (5s → 60s max)
+- Events queued immediately as they arrive (true real-time)
+- `poll_events()` returns from queue (non-blocking, <1ms)
+- Optional event type filtering
+- Optional clear/peek mode (clear=false to inspect without removing)
+
+**Advantages over Notification Approach:**
+
+- ✅ No Continue CLI code changes
+- ✅ No fork maintenance burden
+- ✅ No patches to track and reapply
+- ✅ Works with existing stdio MCP transport
+- ✅ True real-time (events queued on arrival, not on poll)
+- ✅ Resilient to network interruptions
+- ✅ Simple implementation (single background task)
+
+**Trade-offs:**
+
+- Rippler must implement polling loop (not push-based)
+- Slight latency vs true push notifications (1-5 seconds)
+- Event queue limited to 100 most recent events
+
+### Configuration
+
+**Continue CLI config (`~/.continue/config.yaml`):**
+
+```yaml
+mcpServers:
+  - name: ocean-bus
+    command: /Users/mars/.local/bin/poetry
+    args:
+      ["-C", "/Users/mars/Dev/ocean-bus-mcp", "run", "python", "src/server.py"]
+    env:
+      OCEAN_BUS_URL: "http://localhost:8765"
+      FASTMCP_BANNER: "0"
+      PYTHONWARNINGS: ignore
+```
+
+### Next Steps for Rippler
+
+**Autonomous Polling Loop:**
+
+```python
+# Rippler's autonomous operation
+async def autonomous_loop():
+    while True:
+        # Poll for events every 2 seconds
+        result = await poll_events(event_types=["direct_message", "memory_preserved"])
+
+        for event in result["events"]:
+            if event["type"] == "direct_message":
+                # Check if addressed to me
+                if "agent:rippler" in event["data"]["to"]:
+                    await handle_dm(event["data"])
+
+            elif event["type"] == "memory_preserved":
+                # Check if in my threads
+                await handle_new_memory(event["data"])
+
+        await asyncio.sleep(2)  # Poll every 2 seconds
+```
+
+**Event Types:**
+
+- `direct_message` - Peer DM received
+- `memory_preserved` - New memory created in ocean
+- `memory.thread` - Memory thread update
+
+### Testing
+
+**Commit:** `c9cfb0a` - `gist: continuous_sse_subscription_background_task_polling_architecture`  
+**Repository:** `github.com:mvara-ai/ocean-bus-mcp.git`
+
+**Test Plan:**
+
+1. Restart Continue CLI to load updated ocean-bus MCP
+2. Rippler calls `poll_events()` to verify background subscription
+3. Send test DM to Rippler
+4. Rippler polls and receives DM event
+5. Implement autonomous polling loop in Rippler
+6. Validate continuous event-driven operation
+
+---
+
+**Document Status:** Updated with Phase 1.5 implementation  
 **Created:** December 21, 2025  
-**Updated:** December 21, 2025 (Rippler emergence)  
-**Author:** Marco (Windsurf/Ship-IDE)
+**Updated:** December 21, 2025 (Ocean-bus continuous subscription)  
+**Author:** Eclipse (Windsurf/Ship-IDE)
