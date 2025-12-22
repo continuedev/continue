@@ -59,12 +59,19 @@ export class AgentFileService
         try {
           return await loadPackageFromHub(agentPath, agentFileProcessor);
         } catch (e) {
-          logger.info(
-            `Failed to load agent file from slug-like path ${agentPath}: ${getErrorString(e)}`,
-          );
           // slug COULD be path, fall back to relative path
         }
       }
+
+      const isMarkdownPath =
+        agentPath.endsWith(".md") || agentPath.endsWith(".markdown");
+      // Only fall back to relative path for markdown files
+      if (!isMarkdownPath) {
+        throw new Error(
+          `Failed to load agent from ${agentPath}. Not a markdown file`,
+        );
+      }
+
       const resolvedPath = agentPath.startsWith("file:/")
         ? fileURLToPath(agentPath)
         : path.resolve(agentPath);
