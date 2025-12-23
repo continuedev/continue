@@ -8,7 +8,8 @@ description: "Comprehensive guide to resolving common issues with Continue, incl
 3. [Download an older version](#download-an-older-version)
 4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
 5. [MCP Server connection issues](#mcp-server-connection-issues)
-6. [Check FAQs for common issues](/faqs)
+6. [CLI error handling and exit codes](#cli-error-handling-and-exit-codes)
+7. [Check FAQs for common issues](/faqs)
 
 ## Check the logs
 
@@ -46,6 +47,23 @@ To view prompt logs/analytics, you can enable the Continue Console.
 Open `~/.continue/logs/core.log` to view the logs for the Continue plugin. The most recent logs are found at the bottom of the file.
 
 Some JetBrains-related logs may also be found by clicking "Help" > "Show Log in Explorer/Finder".
+
+### Continue CLI
+
+Continue CLI logs can be found in the following locations:
+
+- **Core logs**: `~/.continue/logs/core.log`
+- **Console output**: All CLI operations log to stdout/stderr
+
+When running CLI commands, errors will be logged to the console and the process will exit with a non-zero exit code (1) to indicate failure. This makes it easy to detect issues in CI/CD pipelines and automation scripts.
+
+```bash
+# Check exit code after running CLI command
+cn -p "Your prompt here"
+if [ $? -ne 0 ]; then
+  echo "Command failed - check logs for details"
+fi
+```
 
 ## Download the latest pre-release
 
@@ -104,6 +122,93 @@ To find the full path to a command on your system:
 
 This issue typically affects macOS users with large development environments and is being tracked in [#7870](https://github.com/continuedev/continue/issues/7870) and [#6699](https://github.com/continuedev/continue/issues/6699).
 
+## CLI error handling and exit codes
+
+<Tip>
+  Continue CLI properly handles errors by logging them and exiting with appropriate exit codes for reliable automation.
+</Tip>
+
+Continue CLI follows Unix conventions for exit codes to ensure compatibility with CI/CD pipelines, git hooks, and automation scripts:
+
+- **Exit code 0**: Command completed successfully
+- **Exit code 1**: Command failed (errors, exceptions, or issues occurred)
+
+### What happens when errors occur
+
+When Continue CLI encounters an error:
+
+1. **Error is logged** to both console and log files
+2. **Telemetry and error reports are flushed** to ensure diagnostics are captured
+3. **Process exits with code 1** to signal failure
+
+This ensures you never lose diagnostic information and automation scripts can reliably detect failures.
+
+### Common scenarios
+
+<AccordionGroup>
+  <Accordion title="CI/CD pipeline integration">
+    ```yaml GitHub Actions Example
+    - name: Run Continue CLI check
+      run: |
+        cn -p "Review code for issues"
+        if [ $? -ne 0 ]; then
+          echo "::error::Continue CLI check failed"
+          exit 1
+        fi
+    ```
+
+    The exit code ensures the CI pipeline step fails when Continue CLI encounters errors.
+  </Accordion>
+
+  <Accordion title="Git hooks">
+    ```bash Pre-commit hook
+    #!/bin/bash
+    # .git/hooks/pre-commit
+    
+    cn -p "Validate commit"
+    if [ $? -ne 0 ]; then
+      echo "Validation failed - commit blocked"
+      exit 1
+    fi
+    ```
+
+    The exit code determines whether the commit should proceed.
+  </Accordion>
+
+  <Accordion title="Automation scripts">
+    ```bash Shell script
+    #!/bin/bash
+    set -e  # Exit on any command failure
+    
+    # This will automatically stop script execution if cn fails
+    cn -p "Generate release notes"
+    cn -p "Update changelog"
+    cn -p "Create git tag"
+    ```
+
+    With `set -e`, the script stops immediately if Continue CLI exits with non-zero code.
+  </Accordion>
+</AccordionGroup>
+
+### Debugging failed commands
+
+If a CLI command fails:
+
+1. **Check the console output** for error messages
+2. **Review logs** in `~/.continue/logs/core.log`
+3. **Verify your prompt** works in TUI mode first: `cn`
+4. **Check exit code** to confirm failure: `echo $?` (Unix) or `echo %ERRORLEVEL%` (Windows)
+
+```bash
+# Example debugging workflow
+cn -p "Your prompt"
+EXIT_CODE=$?
+echo "Exit code: $EXIT_CODE"
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Checking logs..."
+  tail -n 50 ~/.continue/logs/core.log
+fi
+```
 
 ## Still having trouble?
 
