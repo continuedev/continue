@@ -52,8 +52,11 @@ describe("TUIChat - User Input Tests", () => {
     async (mode) => {
       const { lastFrame, stdin } = renderInMode(mode);
 
-      // Try typing various special characters
-      stdin.write("!@#$%^&*()");
+      // Try typing various special characters one by one to simulate real typing
+      const specialChars = "!@#$%^&*()";
+      for (const char of specialChars) {
+        stdin.write(char);
+      }
       await waitForNextRender();
 
       const frame = lastFrame();
