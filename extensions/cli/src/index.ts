@@ -21,6 +21,7 @@ import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { post } from "./util/apiClient.js";
+import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -35,9 +36,6 @@ let lastCtrlCTime: number;
 // Agent ID for serve mode - set when serve command is invoked with --id
 let agentId: string | undefined;
 
-// Track whether any unhandled errors occurred during execution
-let hasUnhandledError = false;
-
 // Initialize state immediately to avoid temporal dead zone issues with exported functions
 (function initializeTUIState() {
   tuiUnmount = null;
@@ -49,11 +47,6 @@ let hasUnhandledError = false;
 // Set the agent ID for error reporting (called by serve command)
 export function setAgentId(id: string | undefined) {
   agentId = id;
-}
-
-// Check if any unhandled errors occurred during execution
-export function hadUnhandledError(): boolean {
-  return hasUnhandledError;
 }
 
 // Register TUI cleanup function for graceful shutdown
@@ -130,7 +123,7 @@ async function reportUnhandledErrorToApi(error: Error): Promise<void> {
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
   // Mark that an unhandled error occurred - this will cause non-zero exit
-  hasUnhandledError = true;
+  markUnhandledError();
 
   // Extract useful information from the reason
   const errorDetails = {
@@ -165,7 +158,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on("uncaughtException", (error) => {
   // Mark that an unhandled error occurred - this will cause non-zero exit
-  hasUnhandledError = true;
+  markUnhandledError();
 
   logger.error("Uncaught Exception:", error);
   // Report to API if running in serve mode
