@@ -21,6 +21,7 @@ import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { post } from "./util/apiClient.js";
+import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -121,6 +122,9 @@ async function reportUnhandledErrorToApi(error: Error): Promise<void> {
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  markUnhandledError();
+
   // Extract useful information from the reason
   const errorDetails = {
     promiseString: String(promise),
@@ -149,17 +153,20 @@ process.on("unhandledRejection", (reason, promise) => {
   }
 
   // Note: Sentry capture is handled by logger.error() above
-  // Don't exit the process, just log the error
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 process.on("uncaughtException", (error) => {
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  markUnhandledError();
+
   logger.error("Uncaught Exception:", error);
   // Report to API if running in serve mode
   reportUnhandledErrorToApi(error).catch(() => {
     // Silently fail if API reporting errors - already logged in helper
   });
   // Note: Sentry capture is handled by logger.error() above
-  // Don't exit the process, just log the error
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 // keyboard interruption handler for non-TUI flows
