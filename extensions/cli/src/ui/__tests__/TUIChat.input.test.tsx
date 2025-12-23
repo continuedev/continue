@@ -1,5 +1,5 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
-import { waitForNextRender } from "./TUIChat.testHelper.js";
+import { waitForCondition, waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - User Input Tests", () => {
   testBothModes("shows typed text in input field", async (mode) => {
@@ -54,9 +54,13 @@ describe("TUIChat - User Input Tests", () => {
 
       // Try typing various special characters
       stdin.write("!@#$%^&*()");
-      await waitForNextRender();
 
-      const frame = lastFrame();
+      // Wait for the special characters to appear in the frame
+      let frame = "";
+      await waitForCondition(() => {
+        frame = lastFrame() ?? "";
+        return frame.includes("!@#$%^&*()");
+      });
 
       // Should handle special characters without crashing
       expect(frame).toBeDefined();
