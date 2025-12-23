@@ -1,0 +1,1 @@
+Handle unhandled errors by exiting with non-zero code
