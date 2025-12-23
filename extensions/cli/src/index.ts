@@ -35,6 +35,9 @@ let lastCtrlCTime: number;
 // Agent ID for serve mode - set when serve command is invoked with --id
 let agentId: string | undefined;
 
+// Track whether any unhandled errors occurred during execution
+let hasUnhandledError = false;
+
 // Initialize state immediately to avoid temporal dead zone issues with exported functions
 (function initializeTUIState() {
   tuiUnmount = null;
@@ -46,6 +49,11 @@ let agentId: string | undefined;
 // Set the agent ID for error reporting (called by serve command)
 export function setAgentId(id: string | undefined) {
   agentId = id;
+}
+
+// Check if any unhandled errors occurred during execution
+export function hadUnhandledError(): boolean {
+  return hasUnhandledError;
 }
 
 // Register TUI cleanup function for graceful shutdown
@@ -121,6 +129,9 @@ async function reportUnhandledErrorToApi(error: Error): Promise<void> {
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  hasUnhandledError = true;
+
   // Extract useful information from the reason
   const errorDetails = {
     promiseString: String(promise),
@@ -149,17 +160,20 @@ process.on("unhandledRejection", (reason, promise) => {
   }
 
   // Note: Sentry capture is handled by logger.error() above
-  // Don't exit the process, just log the error
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 process.on("uncaughtException", (error) => {
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  hasUnhandledError = true;
+
   logger.error("Uncaught Exception:", error);
   // Report to API if running in serve mode
   reportUnhandledErrorToApi(error).catch(() => {
     // Silently fail if API reporting errors - already logged in helper
   });
   // Note: Sentry capture is handled by logger.error() above
-  // Don't exit the process, just log the error
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 // keyboard interruption handler for non-TUI flows

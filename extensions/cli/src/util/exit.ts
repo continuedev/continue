@@ -1,5 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { hadUnhandledError } from "../index.js";
 import { sentryService } from "../sentry.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -140,6 +141,10 @@ function displaySessionUsage(): void {
 /**
  * Exit the process after flushing telemetry and error reporting.
  * Use this instead of process.exit() to avoid losing metrics/logs.
+ *
+ * If any unhandled errors occurred during execution and the requested
+ * exit code is 0 (success), this will exit with code 1 instead to
+ * signal that the process encountered errors.
  */
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
@@ -159,6 +164,10 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     logger.debug("Sentry flush error (ignored)", err as any);
   }
 
+  // If we're trying to exit with success (0) but had unhandled errors,
+  // exit with 1 instead to signal failure
+  const finalCode = code === 0 && hadUnhandledError() ? 1 : code;
+
   // Exit the process
-  process.exit(code);
+  process.exit(finalCode);
 }
