@@ -39,8 +39,8 @@ vi.mock("./metadata.js", () => ({
   postAgentMetadata: vi.fn(),
 }));
 
-// Mock the hadUnhandledError function from index.ts
-vi.mock("../index.js", () => ({
+// Mock the hadUnhandledError function from errorTracking.ts
+vi.mock("../errorTracking.js", () => ({
   hadUnhandledError: vi.fn(),
 }));
 
@@ -63,12 +63,12 @@ describe("exit", () => {
     const sentryModule = await import("../sentry.js");
     const telemetryModule = await import("../telemetry/telemetryService.js");
     const sessionModule = await import("../session.js");
-    const indexModule = await import("../index.js");
+    const errorTrackingModule = await import("../errorTracking.js");
 
     mockSentryService = vi.mocked(sentryModule.sentryService);
     mockTelemetryService = vi.mocked(telemetryModule.telemetryService);
     mockGetSessionUsage = vi.mocked(sessionModule.getSessionUsage);
-    mockHadUnhandledError = vi.mocked(indexModule.hadUnhandledError);
+    mockHadUnhandledError = vi.mocked(errorTrackingModule.hadUnhandledError);
 
     // Setup default mocks
     mockSentryService.flush.mockResolvedValue(undefined);
