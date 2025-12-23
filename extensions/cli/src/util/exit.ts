@@ -1,6 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
 
-import { hadUnhandledError } from "./errorTracking.js";
+import { hadUnhandledError } from "../errorTracking.js";
 import { sentryService } from "../sentry.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
