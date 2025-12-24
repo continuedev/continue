@@ -628,4 +628,438 @@ describe("updateAgentMetadata", () => {
       );
     });
   });
+
+  describe("edge cases and stress tests", () => {
+    it("should handle very large conversation histories", async () => {
+      const largeHistory = Array.from({ length: 1000 }, (_, i) =>
+        createMockChatHistoryItem(`Message ${i}`, "assistant"),
+      );
+
+      mockExtractSummary.mockReturnValue("Final summary");
+
+      await updateAgentMetadata({ history: largeHistory });
+
+      expect(mockExtractSummary).toHaveBeenCalledWith(largeHistory);
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          summary: "Final summary",
+        }),
+      );
+    });
+
+    it("should handle extremely large diff stats", async () => {
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "massive diff content",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({
+        additions: 999999,
+        deletions: 888888,
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          additions: 999999,
+          deletions: 888888,
+        }),
+      );
+    });
+
+    it("should handle very high usage costs", async () => {
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 9999.999999,
+        promptTokens: 10000000,
+        completionTokens: 5000000,
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            totalCost: 9999.999999,
+            promptTokens: 10000000,
+            completionTokens: 5000000,
+          }),
+        }),
+      );
+    });
+
+    it("should handle very small usage costs (precision)", async () => {
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.000001,
+        promptTokens: 10,
+        completionTokens: 5,
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            totalCost: 0.000001,
+          }),
+        }),
+      );
+    });
+
+    it("should handle negative token values gracefully", async () => {
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.5,
+        promptTokens: -100, // Should not happen but test resilience
+        completionTokens: -50,
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            promptTokens: -100,
+            completionTokens: -50,
+          }),
+        }),
+      );
+    });
+
+    it("should handle special characters in summary", async () => {
+      const history = [
+        createMockChatHistoryItem(
+          'Summary with "quotes", <tags>, & ampersands, and 🎉 emojis',
+          "assistant",
+        ),
+      ];
+
+      mockExtractSummary.mockReturnValue(
+        'Summary with "quotes", <tags>, & ampersands, and 🎉 emojis',
+      );
+
+      await updateAgentMetadata({ history });
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          summary: 'Summary with "quotes", <tags>, & ampersands, and 🎉 emojis',
+        }),
+      );
+    });
+
+    it("should handle multiline summaries", async () => {
+      const multilineSummary = `Line 1
+Line 2
+Line 3
+
+Line 5 with gap`;
+      const history = [
+        createMockChatHistoryItem(multilineSummary, "assistant"),
+      ];
+
+      mockExtractSummary.mockReturnValue(multilineSummary);
+
+      await updateAgentMetadata({ history });
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          summary: multilineSummary,
+        }),
+      );
+    });
+
+    it("should handle zero values for cache tokens", async () => {
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.5,
+        promptTokens: 100,
+        completionTokens: 50,
+        promptTokensDetails: {
+          cachedTokens: 0,
+          cacheWriteTokens: 0,
+        },
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          usage: expect.not.objectContaining({
+            cachedTokens: expect.anything(),
+            cacheWriteTokens: expect.anything(),
+          }),
+        }),
+      );
+    });
+
+    it("should handle mixed undefined and zero cache values", async () => {
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.5,
+        promptTokens: 100,
+        completionTokens: 50,
+        promptTokensDetails: {
+          cachedTokens: 0,
+          cacheWriteTokens: undefined,
+        },
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith(
+        "test-agent-id",
+        expect.objectContaining({
+          usage: expect.not.objectContaining({
+            cachedTokens: expect.anything(),
+            cacheWriteTokens: expect.anything(),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe("concurrent execution", () => {
+    it("should handle multiple concurrent calls", async () => {
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "diff",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 1, deletions: 1 });
+
+      // Call multiple times concurrently
+      await Promise.all([
+        updateAgentMetadata(),
+        updateAgentMetadata(),
+        updateAgentMetadata(),
+      ]);
+
+      // Should have been called 3 times
+      expect(mockPostAgentMetadata).toHaveBeenCalledTimes(3);
+    });
+
+    it("should handle concurrent calls with different data", async () => {
+      const history1 = [createMockChatHistoryItem("Message 1", "assistant")];
+      const history2 = [createMockChatHistoryItem("Message 2", "assistant")];
+
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "diff",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 1, deletions: 0 });
+      mockExtractSummary
+        .mockReturnValueOnce("Message 1")
+        .mockReturnValueOnce("Message 2");
+
+      await Promise.all([
+        updateAgentMetadata({ history: history1 }),
+        updateAgentMetadata({ history: history2 }),
+      ]);
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("integration-like scenarios", () => {
+    it("should simulate typical agent execution flow", async () => {
+      const history = [
+        createMockChatHistoryItem("Create a new feature", "user"),
+        createMockChatHistoryItem("I'll help you with that", "assistant"),
+      ];
+
+      // First update during execution (not complete)
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "some changes",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 5, deletions: 2 });
+      mockExtractSummary.mockReturnValue("I'll help you with that");
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.01,
+        promptTokens: 50,
+        completionTokens: 25,
+      });
+
+      await updateAgentMetadata({ history, isComplete: false });
+
+      expect(mockPostAgentMetadata).toHaveBeenNthCalledWith(
+        1,
+        "test-agent-id",
+        {
+          additions: 5,
+          deletions: 2,
+          summary: "I'll help you with that",
+          usage: {
+            totalCost: 0.01,
+            promptTokens: 50,
+            completionTokens: 25,
+          },
+        },
+      );
+
+      // Second update on completion
+      const finalHistory = [
+        ...history,
+        createMockChatHistoryItem("Task completed successfully", "assistant"),
+      ];
+
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "final changes",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 10, deletions: 5 });
+      mockExtractSummary.mockReturnValue("Task completed successfully");
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.05,
+        promptTokens: 200,
+        completionTokens: 100,
+      });
+
+      await updateAgentMetadata({ history: finalHistory, isComplete: true });
+
+      expect(mockPostAgentMetadata).toHaveBeenNthCalledWith(
+        2,
+        "test-agent-id",
+        {
+          additions: 10,
+          deletions: 5,
+          isComplete: true,
+          hasChanges: true,
+          summary: "Task completed successfully",
+          usage: {
+            totalCost: 0.05,
+            promptTokens: 200,
+            completionTokens: 100,
+          },
+        },
+      );
+    });
+
+    it("should simulate agent with no code changes but completion", async () => {
+      const history = [
+        createMockChatHistoryItem("Analyze the codebase", "user"),
+        createMockChatHistoryItem(
+          "I've analyzed the code. Here are my findings...",
+          "assistant",
+        ),
+      ];
+
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 0, deletions: 0 });
+      mockExtractSummary.mockReturnValue(
+        "I've analyzed the code. Here are my findings...",
+      );
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.02,
+        promptTokens: 100,
+        completionTokens: 50,
+      });
+
+      await updateAgentMetadata({ history, isComplete: true });
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith("test-agent-id", {
+        isComplete: true,
+        hasChanges: false,
+        summary: "I've analyzed the code. Here are my findings...",
+        usage: {
+          totalCost: 0.02,
+          promptTokens: 100,
+          completionTokens: 50,
+        },
+      });
+    });
+
+    it("should simulate agent failure scenario", async () => {
+      // Agent failed, but we still want to track metadata
+      mockGetGitDiffSnapshot.mockResolvedValue({
+        diff: "partial changes",
+        repoFound: true,
+      });
+      mockCalculateDiffStats.mockReturnValue({ additions: 2, deletions: 1 });
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.01,
+        promptTokens: 30,
+        completionTokens: 10,
+      });
+
+      await updateAgentMetadata({ history: [], isComplete: true });
+
+      expect(mockPostAgentMetadata).toHaveBeenCalledWith("test-agent-id", {
+        additions: 2,
+        deletions: 1,
+        isComplete: true,
+        hasChanges: true,
+        usage: {
+          totalCost: 0.01,
+          promptTokens: 30,
+          completionTokens: 10,
+        },
+      });
+    });
+  });
+
+  describe("logger verification", () => {
+    let mockLogger: any;
+
+    beforeEach(async () => {
+      const loggerModule = await import("./logger.js");
+      mockLogger = loggerModule.logger;
+    });
+
+    it("should log debug message when no agent ID found", async () => {
+      mockGetAgentIdFromArgs.mockReturnValue(undefined);
+
+      await updateAgentMetadata();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "No agent ID found, skipping metadata update",
+      );
+    });
+
+    it("should log debug message on git diff errors", async () => {
+      mockGetGitDiffSnapshot.mockRejectedValue(new Error("Git failed"));
+      mockGetSessionUsage.mockReturnValue({
+        totalCost: 0.1,
+        promptTokens: 50,
+        completionTokens: 25,
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Failed to calculate diff stats (non-critical)",
+        expect.any(Error),
+      );
+    });
+
+    it("should log debug message on summary extraction errors", async () => {
+      const history = [createMockChatHistoryItem("Test", "assistant")];
+      mockExtractSummary.mockImplementation(() => {
+        throw new Error("Summary extraction failed");
+      });
+
+      await updateAgentMetadata({ history });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Failed to extract conversation summary (non-critical)",
+        expect.any(Error),
+      );
+    });
+
+    it("should log debug message on usage collection errors", async () => {
+      mockGetSessionUsage.mockImplementation(() => {
+        throw new Error("Usage collection failed");
+      });
+
+      await updateAgentMetadata();
+
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+  });
 });
