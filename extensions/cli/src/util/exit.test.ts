@@ -624,4 +624,348 @@ describe("updateAgentMetadata", () => {
       expect(metadata.extractSummary).toHaveBeenCalledWith(undefined);
     });
   });
+
+  describe("concurrency and race conditions", () => {
+    it("should handle multiple simultaneous calls", async () => {
+      const history = [createMockChatHistoryItem("Test", "assistant")];
+      vi.spyOn(metadata, "extractSummary").mockReturnValue("Test");
+
+      // Simulate multiple concurrent updates
+      const promises = [
+        updateAgentMetadata({ history }),
+        updateAgentMetadata({ history }),
+        updateAgentMetadata({ history }),
+      ];
+
+      await expect(Promise.all(promises)).resolves.not.toThrow();
+      expect(metadata.postAgentMetadata).toHaveBeenCalledTimes(3);
+    });
+
+    it("should handle interleaved isComplete true/false calls", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockResolvedValue({
+        diff: "changes",
+        repoFound: true,
+      });
+      vi.spyOn(metadata, "calculateDiffStats").mockReturnValue({
+        additions: 5,
+        deletions: 2,
+      });
+
+      await updateAgentMetadata({ isComplete: false });
+      await updateAgentMetadata({ isComplete: true });
+      await updateAgentMetadata({ isComplete: false });
+
+      const calls = (metadata.postAgentMetadata as any).mock.calls;
+      expect(calls[0][1]).not.toHaveProperty("isComplete");
+      expect(calls[1][1]).toHaveProperty("isComplete", true);
+      expect(calls[2][1]).not.toHaveProperty("isComplete");
+    });
+
+    it("should handle slow git diff with fast metadata posting", async () => {
+      let resolveGitDiff: (value: any) => void;
+      const gitDiffPromise = new Promise((resolve) => {
+        resolveGitDiff = resolve;
+      });
+
+      vi.spyOn(git, "getGitDiffSnapshot").mockReturnValue(
+        gitDiffPromise as any,
+      );
+      vi.spyOn(metadata, "extractSummary").mockReturnValue("Fast summary");
+
+      const history = [createMockChatHistoryItem("Test", "assistant")];
+      const updatePromise = updateAgentMetadata({ history });
+
+      // Resolve git diff after a delay
+      setTimeout(() => {
+        resolveGitDiff!({ diff: "delayed diff", repoFound: true });
+      }, 10);
+
+      await updatePromise;
+      expect(metadata.postAgentMetadata).toHaveBeenCalled();
+    });
+  });
+
+  describe("boundary value testing", () => {
+    it("should handle very large history arrays", async () => {
+      const largeHistory = Array.from({ length: 10000 }, (_, i) =>
+        createMockChatHistoryItem(`Message ${i}`, "assistant"),
+      );
+      vi.spyOn(metadata, "extractSummary").mockReturnValue("Summary");
+
+      await expect(
+        updateAgentMetadata({ history: largeHistory }),
+      ).resolves.not.toThrow();
+      expect(metadata.extractSummary).toHaveBeenCalledWith(largeHistory);
+    });
+
+    it("should handle very large diff stats", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockResolvedValue({
+        diff: "large diff",
+        repoFound: true,
+      });
+      vi.spyOn(metadata, "calculateDiffStats").mockReturnValue({
+        additions: 999999,
+        deletions: 888888,
+      });
+
+      await updateAgentMetadata({ isComplete: true });
+
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({
+          additions: 999999,
+          deletions: 888888,
+          hasChanges: true,
+        }),
+      );
+    });
+
+    it("should handle very small token costs", async () => {
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0.000001,
+        promptTokens: 1,
+        completionTokens: 1,
+        promptTokensDetails: {},
+      });
+
+      await updateAgentMetadata({});
+
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            totalCost: 0.000001,
+          }),
+        }),
+      );
+    });
+
+    it("should handle maximum precision cost rounding", async () => {
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0.123456789012345,
+        promptTokens: 1000,
+        completionTokens: 500,
+        promptTokensDetails: {},
+      });
+
+      await updateAgentMetadata({});
+
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            totalCost: 0.123457, // Rounded to 6 decimals
+          }),
+        }),
+      );
+    });
+
+    it("should handle zero values in all fields", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockResolvedValue({
+        diff: "",
+        repoFound: true,
+      });
+      vi.spyOn(metadata, "calculateDiffStats").mockReturnValue({
+        additions: 0,
+        deletions: 0,
+      });
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        promptTokensDetails: {},
+      });
+
+      await updateAgentMetadata({ history: [] });
+
+      expect(metadata.postAgentMetadata).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("complex state transitions", () => {
+    it("should handle transition from no data to complete with data", async () => {
+      // First call: no data
+      await updateAgentMetadata({});
+      expect(metadata.postAgentMetadata).not.toHaveBeenCalled();
+
+      vi.clearAllMocks();
+
+      // Second call: complete with data
+      vi.spyOn(git, "getGitDiffSnapshot").mockResolvedValue({
+        diff: "new changes",
+        repoFound: true,
+      });
+      vi.spyOn(metadata, "calculateDiffStats").mockReturnValue({
+        additions: 10,
+        deletions: 5,
+      });
+
+      await updateAgentMetadata({ isComplete: true });
+
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({
+          isComplete: true,
+          hasChanges: true,
+        }),
+      );
+    });
+
+    it("should handle summary changing between calls", async () => {
+      const history1 = [createMockChatHistoryItem("First", "assistant")];
+      const history2 = [createMockChatHistoryItem("Second", "assistant")];
+
+      vi.spyOn(metadata, "extractSummary")
+        .mockReturnValueOnce("First")
+        .mockReturnValueOnce("Second");
+
+      await updateAgentMetadata({ history: history1 });
+      await updateAgentMetadata({ history: history2 });
+
+      const calls = (metadata.postAgentMetadata as any).mock.calls;
+      expect(calls[0][1].summary).toBe("First");
+      expect(calls[1][1].summary).toBe("Second");
+    });
+
+    it("should handle diff stats changing between calls", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockResolvedValue({
+        diff: "changes",
+        repoFound: true,
+      });
+      vi.spyOn(metadata, "calculateDiffStats")
+        .mockReturnValueOnce({ additions: 5, deletions: 2 })
+        .mockReturnValueOnce({ additions: 15, deletions: 8 });
+
+      await updateAgentMetadata({});
+      await updateAgentMetadata({});
+
+      const calls = (metadata.postAgentMetadata as any).mock.calls;
+      expect(calls[0][1]).toMatchObject({ additions: 5, deletions: 2 });
+      expect(calls[1][1]).toMatchObject({ additions: 15, deletions: 8 });
+    });
+  });
+
+  describe("error recovery scenarios", () => {
+    it("should recover from git diff timeout", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot")
+        .mockRejectedValueOnce(new Error("Timeout"))
+        .mockResolvedValueOnce({ diff: "success", repoFound: true });
+
+      vi.spyOn(metadata, "calculateDiffStats").mockReturnValue({
+        additions: 5,
+        deletions: 2,
+      });
+
+      // First call fails
+      await updateAgentMetadata({});
+      expect(metadata.postAgentMetadata).not.toHaveBeenCalled();
+
+      vi.clearAllMocks();
+
+      // Second call succeeds
+      await updateAgentMetadata({});
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({ additions: 5 }),
+      );
+    });
+
+    it("should handle all collectors failing", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockRejectedValue(
+        new Error("Git error"),
+      );
+      vi.spyOn(metadata, "extractSummary").mockImplementation(() => {
+        throw new Error("Summary error");
+      });
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockImplementation(() => {
+        throw new Error("Session error");
+      });
+
+      await expect(updateAgentMetadata({})).resolves.not.toThrow();
+      expect(metadata.postAgentMetadata).not.toHaveBeenCalled();
+    });
+
+    it("should handle partial collector failures", async () => {
+      vi.spyOn(git, "getGitDiffSnapshot").mockRejectedValue(
+        new Error("Git error"),
+      );
+      vi.spyOn(metadata, "extractSummary").mockReturnValue("Working summary");
+
+      const history = [createMockChatHistoryItem("Test", "assistant")];
+      await updateAgentMetadata({ history });
+
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.objectContaining({
+          summary: "Working summary",
+        }),
+      );
+      expect(metadata.postAgentMetadata).toHaveBeenCalledWith(
+        mockAgentId,
+        expect.not.objectContaining({
+          additions: expect.anything(),
+        }),
+      );
+    });
+  });
+
+  describe("cache token details handling", () => {
+    it("should include only cachedTokens when cacheWriteTokens is 0", async () => {
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0.01,
+        promptTokens: 100,
+        completionTokens: 50,
+        promptTokensDetails: {
+          cachedTokens: 50,
+          cacheWriteTokens: 0,
+        },
+      });
+
+      await updateAgentMetadata({});
+
+      const callArgs = (metadata.postAgentMetadata as any).mock.calls[0][1];
+      expect(callArgs.usage.cachedTokens).toBe(50);
+      expect(callArgs.usage).not.toHaveProperty("cacheWriteTokens");
+    });
+
+    it("should include only cacheWriteTokens when cachedTokens is 0", async () => {
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0.01,
+        promptTokens: 100,
+        completionTokens: 50,
+        promptTokensDetails: {
+          cachedTokens: 0,
+          cacheWriteTokens: 25,
+        },
+      });
+
+      await updateAgentMetadata({});
+
+      const callArgs = (metadata.postAgentMetadata as any).mock.calls[0][1];
+      expect(callArgs.usage).not.toHaveProperty("cachedTokens");
+      expect(callArgs.usage.cacheWriteTokens).toBe(25);
+    });
+
+    it("should handle undefined promptTokensDetails", async () => {
+      const { getSessionUsage } = await import("../session.js");
+      vi.mocked(getSessionUsage).mockReturnValue({
+        totalCost: 0.01,
+        promptTokens: 100,
+        completionTokens: 50,
+        promptTokensDetails: undefined as any,
+      });
+
+      await updateAgentMetadata({});
+
+      const callArgs = (metadata.postAgentMetadata as any).mock.calls[0][1];
+      expect(callArgs.usage).not.toHaveProperty("cachedTokens");
+      expect(callArgs.usage).not.toHaveProperty("cacheWriteTokens");
+    });
+  });
 });
