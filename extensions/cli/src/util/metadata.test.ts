@@ -1,5 +1,5 @@
 import type { ChatHistoryItem } from "core/index.js";
-import { describe, expect, it } from "vitest";
+import { beforeEach, afterEach, describe, expect, it } from "vitest";
 
 import {
   calculateDiffStats,
@@ -428,7 +428,7 @@ describe("getAgentIdFromArgs", () => {
   let originalArgv: string[];
 
   beforeEach(() => {
-    originalArgv = process.argv;
+    originalArgv = [...process.argv];
   });
 
   afterEach(() => {
@@ -534,5 +534,318 @@ describe("getAgentIdFromArgs", () => {
       process.argv = ["node", "script.js", "command", "--id", "last-id"];
       expect(getAgentIdFromArgs()).toBe("last-id");
     });
+  });
+
+  describe("flag variations", () => {
+    it("should not match --identity flag", () => {
+      process.argv = ["node", "script.js", "--identity", "not-an-id"];
+      expect(getAgentIdFromArgs()).toBeUndefined();
+    });
+
+    it("should not match --idempotent flag", () => {
+      process.argv = ["node", "script.js", "--idempotent"];
+      expect(getAgentIdFromArgs()).toBeUndefined();
+    });
+
+    it("should handle --id= format (not supported)", () => {
+      process.argv = ["node", "script.js", "--id=test-123"];
+      // Current implementation doesn't support --id=value format
+      expect(getAgentIdFromArgs()).toBeUndefined();
+    });
+
+    it("should handle negative numbers as ID", () => {
+      process.argv = ["node", "script.js", "--id", "-123"];
+      expect(getAgentIdFromArgs()).toBe("-123");
+    });
+
+    it("should handle numeric string IDs", () => {
+      process.argv = ["node", "script.js", "--id", "12345"];
+      expect(getAgentIdFromArgs()).toBe("12345");
+    });
+
+    it("should handle IDs with paths", () => {
+      process.argv = ["node", "script.js", "--id", "agent/session/123"];
+      expect(getAgentIdFromArgs()).toBe("agent/session/123");
+    });
+
+    it("should handle IDs with URL format", () => {
+      const urlId = "https://example.com/agent/123";
+      process.argv = ["node", "script.js", "--id", urlId];
+      expect(getAgentIdFromArgs()).toBe(urlId);
+    });
+
+    it("should handle IDs with JSON", () => {
+      const jsonId = '{"type":"agent","id":123}';
+      process.argv = ["node", "script.js", "--id", jsonId];
+      expect(getAgentIdFromArgs()).toBe(jsonId);
+    });
+  });
+});
+
+describe("calculateDiffStats - special patterns", () => {
+  it("should correctly handle C++ increment/decrement operators", () => {
+    const diff = `
++    counter++;
+-    counter--;
++    ++value;
+-    --value;
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 2 });
+  });
+
+  it("should handle arrow operator patterns", () => {
+    const diff = `
++    ptr->field;
+-    obj-->method();
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 1 });
+  });
+
+  it("should handle comment-only changes", () => {
+    const diff = `
++    // Added comment
+-    // Removed comment
++    /* Multi-line
++       comment */
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 3, deletions: 1 });
+  });
+
+  it("should handle empty line changes", () => {
+    const diff = `
++
+-
++    
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 1 });
+  });
+
+  it("should handle diff with only context lines", () => {
+    const diff = `
+@@ -1,3 +1,3 @@
+ const x = 1;
+ const y = 2;
+ const z = 3;
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle conflict markers", () => {
+    const diff = `
++<<<<<<< HEAD
++const x = 1;
++=======
++const x = 2;
++>>>>>>> branch
+`;
+    // Conflict markers are counted as additions if they appear in diff
+    expect(calculateDiffStats(diff)).toEqual({ additions: 5, deletions: 0 });
+  });
+
+  it("should handle permission changes without content changes", () => {
+    const diff = `
+diff --git a/script.sh b/script.sh
+old mode 100644
+new mode 100755
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle symlink changes", () => {
+    const diff = `
+diff --git a/link b/link
+new file mode 120000
+index 0000000..abc123
+--- /dev/null
++++ b/link
+@@ -0,0 +1 @@
++target/file
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle renamed files with no changes", () => {
+    const diff = `
+diff --git a/old.js b/new.js
+similarity index 100%
+rename from old.js
+rename to new.js
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle renamed files with changes", () => {
+    const diff = `
+diff --git a/old.js b/new.js
+similarity index 90%
+rename from old.js
+rename to new.js
+index abc123..def456 100644
+--- a/old.js
++++ b/new.js
+@@ -1,3 +1,4 @@
+ const x = 1;
++const y = 2;
+ const z = 3;
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle diff with many small hunks efficiently", () => {
+    const hunks = Array.from(
+      { length: 1000 },
+      (_, i) => `
+@@ -${i},1 +${i},2 @@
+ context line
++added line ${i}
+ context line
+`,
+    ).join("");
+
+    const start = Date.now();
+    const result = calculateDiffStats(hunks);
+    const duration = Date.now() - start;
+
+    expect(result.additions).toBe(1000);
+    expect(result.deletions).toBe(0);
+    expect(duration).toBeLessThan(1000); // Should complete in under 1 second
+  });
+
+  it("should handle diff with very long lines", () => {
+    const longLine = "a".repeat(100000);
+    const diff = `+${longLine}\n-${longLine}`;
+
+    const result = calculateDiffStats(diff);
+    expect(result).toEqual({ additions: 1, deletions: 1 });
+  });
+});
+
+describe("extractSummary - advanced content handling", () => {
+  const createHistoryItem = (
+    content: any,
+    role: "user" | "assistant" | "system" = "assistant",
+  ): ChatHistoryItem =>
+    ({
+      message: { role, content },
+    }) as ChatHistoryItem;
+
+  it("should handle messages with markdown formatting", () => {
+    const markdown = `
+# Header
+
+**Bold text** and *italic text*
+
+- List item 1
+- List item 2
+
+\`\`\`javascript
+code block
+\`\`\`
+`;
+    const history = [createHistoryItem(markdown)];
+    const result = extractSummary(history);
+    expect(result).toBe(markdown.trim());
+  });
+
+  it("should handle messages with special characters", () => {
+    const specialChars = "Test with <>&\"'\n\t special chars";
+    const history = [createHistoryItem(specialChars)];
+    expect(extractSummary(history)).toBe(specialChars.trim());
+  });
+
+  it("should handle messages with emoji", () => {
+    const emoji = "Test message 🎉 with emoji 🚀";
+    const history = [createHistoryItem(emoji)];
+    expect(extractSummary(history)).toBe(emoji);
+  });
+
+  it("should handle messages with code blocks", () => {
+    const codeMessage = "Here's the code:\n\`\`\`\nfunction test() {}\n\`\`\`";
+    const history = [createHistoryItem(codeMessage)];
+    expect(extractSummary(history)).toBe(codeMessage.trim());
+  });
+
+  it("should handle nested JSON objects", () => {
+    const nestedObj = {
+      level1: {
+        level2: {
+          level3: { data: "deep" },
+        },
+      },
+    };
+    const history = [createHistoryItem(nestedObj)];
+    expect(extractSummary(history)).toBe(JSON.stringify(nestedObj));
+  });
+
+  it("should handle null content gracefully", () => {
+    const history = [createHistoryItem(null)];
+    expect(extractSummary(history)).toBeUndefined();
+  });
+
+  it("should skip messages with only whitespace variations", () => {
+    const history = [
+      createHistoryItem("Valid message"),
+      createHistoryItem("   \n   "),
+      createHistoryItem("\t\t\t"),
+      createHistoryItem("\r\n\r\n"),
+    ];
+    expect(extractSummary(history)).toBe("Valid message");
+  });
+
+  it("should handle very long words without spaces", () => {
+    const longWord = "a".repeat(1000);
+    const history = [createHistoryItem(longWord)];
+    const result = extractSummary(history, 500);
+    expect(result?.length).toBe(500);
+    expect(result?.endsWith("...")).toBe(true);
+  });
+
+  it("should handle mixed content types in history", () => {
+    const history = [
+      createHistoryItem("String"),
+      createHistoryItem({ type: "object" }),
+      createHistoryItem(["array"]),
+      createHistoryItem("Last string"),
+    ];
+    expect(extractSummary(history)).toBe("Last string");
+  });
+
+  it("should handle maxLength of 1", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, 1);
+    expect(result?.length).toBe(1);
+    // Since maxLength is 1, substring(0, -2) returns empty string, then we add "..."
+    expect(result).toBe("...");
+  });
+
+  it("should handle maxLength of 3", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, 3);
+    expect(result?.length).toBe(3);
+    expect(result).toBe("...");
+  });
+
+  it("should handle maxLength of 4", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, 4);
+    // "Test" is exactly 4 chars, should not truncate
+    expect(result).toBe("Test");
+  });
+
+  it("should handle multiline content with custom maxLength", () => {
+    const multiline = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5";
+    const history = [createHistoryItem(multiline)];
+    const result = extractSummary(history, 20);
+    expect(result?.length).toBe(20);
+    expect(result).toBe("Line 1\nLine 2\nLi...");
+  });
+
+  it("should preserve unicode characters when truncating", () => {
+    const unicode = "🚀🚀🚀🚀🚀"; // 5 rocket emojis
+    const longText = unicode.repeat(100); // 500 emojis
+    const history = [createHistoryItem(longText)];
+    const result = extractSummary(history, 50);
+    expect(result?.length).toBe(50);
+    expect(result?.endsWith("...")).toBe(true);
   });
 });
