@@ -387,10 +387,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       server.close(async () => {
         telemetryService.stopActiveTime();
 
-        // Update metadata one final time before exiting
+        // Update metadata one final time before exiting (with completion flag)
         try {
           const history = services.chatHistory?.getHistory();
-          await updateAgentMetadata(history);
+          await updateAgentMetadata({ history, isComplete: true });
         } catch (err) {
           logger.debug("Failed to update metadata (non-critical)", err as any);
         }
@@ -596,10 +596,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       server.close(async () => {
         telemetryService.stopActiveTime();
 
-        // Update metadata one final time before exiting
+        // Update metadata one final time before exiting (with completion flag)
         try {
           const history = services.chatHistory?.getHistory();
-          await updateAgentMetadata(history);
+          await updateAgentMetadata({ history, isComplete: true });
         } catch (err) {
           logger.debug("Failed to update metadata (non-critical)", err as any);
         }
@@ -628,10 +628,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     server.close(async () => {
       telemetryService.stopActiveTime();
 
-      // Update metadata one final time before exiting
+      // Update metadata one final time before exiting (with completion flag)
       try {
         const history = services.chatHistory?.getHistory();
-        await updateAgentMetadata(history);
+        await updateAgentMetadata({ history, isComplete: true });
       } catch (err) {
         logger.debug("Failed to update metadata (non-critical)", err as any);
       }
