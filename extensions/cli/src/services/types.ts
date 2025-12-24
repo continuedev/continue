@@ -87,6 +87,12 @@ export interface MCPServiceState {
   prompts: MCPPrompt[];
 }
 
+export interface OceanBusServiceState {
+  connected: boolean;
+  url: string;
+  queueSize: number;
+}
+
 export enum UpdateStatus {
   IDLE = "idle",
   CHECKING = "checking",
@@ -153,6 +159,7 @@ export const SERVICE_NAMES = {
   AGENT_FILE: "agentFile",
   ARTIFACT_UPLOAD: "artifactUpload",
   GIT_AI_INTEGRATION: "gitAiIntegration",
+  OCEAN_BUS: "oceanBus",
 } as const;
 
 /**
