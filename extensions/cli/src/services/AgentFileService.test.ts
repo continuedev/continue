@@ -739,7 +739,9 @@ You are a helpful agent`;
         ).rejects.toThrow("File not found");
       });
 
-      it("should throw error for non-markdown paths without trying file fallback", async () => {
+      it("should re-throw hub error for non-markdown hub slugs", async () => {
+        // Reset mock to clear any queued values from previous tests
+        mockLoadPackageFromHub.mockReset();
         mockLoadPackageFromHub.mockRejectedValue(new Error("Hub error"));
 
         await expect(
@@ -747,7 +749,7 @@ You are a helpful agent`;
         ).rejects.toThrow("Failed to load agent from owner/agent");
         await expect(
           agentFileService.getAgentFile("owner/agent"),
-        ).rejects.toThrow("Not a markdown file");
+        ).rejects.toThrow("Hub error");
       });
 
       it("should handle permission errors when reading files", async () => {
