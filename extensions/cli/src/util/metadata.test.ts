@@ -849,3 +849,437 @@ code block
     expect(result?.endsWith("...")).toBe(true);
   });
 });
+
+describe("calculateDiffStats - additional edge cases", () => {
+  it("should handle diff with trailing newlines", () => {
+    const diff = "+line1\n+line2\n\n\n";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 0 });
+  });
+
+  it("should handle diff with no newline at end", () => {
+    const diff = "+line1\n+line2";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 0 });
+  });
+
+  it("should handle diff with tabs", () => {
+    const diff = "+\tindented line\n-\tanother indented line";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 1 });
+  });
+
+  it("should handle git submodule changes", () => {
+    const diff = `
+diff --git a/.gitmodules b/.gitmodules
+index abc123..def456 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -1,3 +1,3 @@
+ [submodule "lib"]
+   path = lib
+-  url = https://old-url.com/lib.git
++  url = https://new-url.com/lib.git
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 1 });
+  });
+
+  it("should handle merge conflicts resolved", () => {
+    const diff = `
+-<<<<<<< HEAD
+-const x = 1;
+-=======
+-const x = 2;
+->>>>>>> branch
++const x = 3;
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 5 });
+  });
+
+  it("should handle empty hunks", () => {
+    const diff = `
+diff --git a/file.ts b/file.ts
+index abc123..def456 100644
+--- a/file.ts
++++ b/file.ts
+@@ -0,0 +0,0 @@
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle diffs with Git attributes", () => {
+    const diff = `
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..abc123
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,2 @@
++*.js text eol=lf
++*.png binary
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 0 });
+  });
+
+  it("should handle diff with only +++ at line start", () => {
+    const diff = "+++";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle diff with only --- at line start", () => {
+    const diff = "---";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 0, deletions: 0 });
+  });
+
+  it("should handle multiple consecutive + or - lines", () => {
+    const diff = `
++++++line
+-----line
++++
+---
++normal
+-normal
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 2 });
+  });
+
+  it("should handle diff with Windows path separators", () => {
+    const diff = `
+diff --git a/path\\to\\file.ts b/path\\to\\file.ts
+--- a/path\\to\\file.ts
++++ b/path\\to\\file.ts
++added line
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle diff with quoted filenames", () => {
+    const diff = `
+diff --git "a/file with spaces.ts" "b/file with spaces.ts"
+--- "a/file with spaces.ts"
++++ "b/file with spaces.ts"
++added line
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle diff with unicode in filenames", () => {
+    const diff = `
+diff --git a/文件.ts b/文件.ts
+--- a/文件.ts
++++ b/文件.ts
++added line
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle diff starting with + or - without metadata", () => {
+    const diff = "+added\n-removed\n+another";
+    expect(calculateDiffStats(diff)).toEqual({ additions: 2, deletions: 1 });
+  });
+
+  it("should handle diff with extended header info", () => {
+    const diff = `
+diff --git a/file.ts b/file.ts
+index abc123..def456 100644
+--- a/file.ts
++++ b/file.ts
+@@ -1,3 +1,3 @@
+old mode 100644
+new mode 100755
++added line
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+
+  it("should handle diff with copy detection", () => {
+    const diff = `
+diff --git a/original.ts b/copy.ts
+similarity index 95%
+copy from original.ts
+copy to copy.ts
+index abc123..def456 100644
+--- a/original.ts
++++ b/copy.ts
+@@ -1,3 +1,4 @@
+ const x = 1;
++const y = 2;
+ const z = 3;
+`;
+    expect(calculateDiffStats(diff)).toEqual({ additions: 1, deletions: 0 });
+  });
+});
+
+describe("extractSummary - truncation edge cases", () => {
+  const createHistoryItem = (
+    content: any,
+    role: "user" | "assistant" | "system" = "assistant",
+  ): ChatHistoryItem =>
+    ({
+      message: { role, content },
+    }) as ChatHistoryItem;
+
+  it("should handle maxLength of 0", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, 0);
+    // When maxLength is 0, should return empty with ...
+    expect(result).toBe("...");
+  });
+
+  it("should handle maxLength of 2", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, 2);
+    expect(result?.length).toBe(2);
+    expect(result).toBe("...");
+  });
+
+  it("should handle message exactly maxLength - 3", () => {
+    const history = [createHistoryItem("ab")];
+    const result = extractSummary(history, 5);
+    // "ab" is 2 chars, maxLength is 5, so no truncation needed
+    expect(result).toBe("ab");
+  });
+
+  it("should handle truncation at word boundary", () => {
+    const message = "This is a very long message that needs truncation";
+    const history = [createHistoryItem(message)];
+    const result = extractSummary(history, 20);
+    expect(result?.length).toBe(20);
+    expect(result).toBe("This is a very lo...");
+  });
+
+  it("should handle message with URLs", () => {
+    const message =
+      "Check out https://example.com/very/long/path/to/resource for more info";
+    const history = [createHistoryItem(message)];
+    const result = extractSummary(history, 30);
+    expect(result?.length).toBe(30);
+    expect(result).toBe("Check out https://example....");
+  });
+
+  it("should handle message with control characters", () => {
+    const message = "Line1\r\nLine2\r\nLine3";
+    const history = [createHistoryItem(message)];
+    const result = extractSummary(history);
+    expect(result).toBe(message.trim());
+  });
+
+  it("should handle message with only spaces", () => {
+    const history = [createHistoryItem("     ")];
+    expect(extractSummary(history)).toBeUndefined();
+  });
+
+  it("should handle message with leading/trailing newlines", () => {
+    const message = "\n\n\nActual content\n\n\n";
+    const history = [createHistoryItem(message)];
+    expect(extractSummary(history)).toBe("Actual content");
+  });
+
+  it("should handle very large maxLength", () => {
+    const message = "Short message";
+    const history = [createHistoryItem(message)];
+    const result = extractSummary(history, 1000000);
+    expect(result).toBe(message);
+  });
+
+  it("should handle negative maxLength", () => {
+    const history = [createHistoryItem("Test")];
+    const result = extractSummary(history, -1);
+    // Negative maxLength should still work (substring behavior)
+    expect(result).toBe("...");
+  });
+});
+
+describe("getAgentIdFromArgs - additional cases", () => {
+  let originalArgv: string[];
+
+  beforeEach(() => {
+    originalArgv = [...process.argv];
+  });
+
+  afterEach(() => {
+    process.argv = originalArgv;
+  });
+
+  it("should handle --id with dashes and underscores", () => {
+    const id = "agent-id_with-both_separators-123";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should be case sensitive for flag", () => {
+    process.argv = ["node", "script.js", "--ID", "test"];
+    expect(getAgentIdFromArgs()).toBeUndefined();
+  });
+
+  it("should be case sensitive for flag (--Id)", () => {
+    process.argv = ["node", "script.js", "--Id", "test"];
+    expect(getAgentIdFromArgs()).toBeUndefined();
+  });
+
+  it("should handle ID with only special characters", () => {
+    const id = "!@#$%^&*()";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle ID with newlines (shell escaped)", () => {
+    const id = "id\\nwith\\nnewlines";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle ID with tabs", () => {
+    const id = "id\\twith\\ttabs";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle ID that looks like a flag", () => {
+    const id = "--not-a-flag";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle ID that is a number", () => {
+    process.argv = ["node", "script.js", "--id", "0"];
+    expect(getAgentIdFromArgs()).toBe("0");
+  });
+
+  it("should handle ID with base64 encoding", () => {
+    const id = "YWdlbnQtaWQtMTIzNDU2Nzg5MA==";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle ID with unicode characters", () => {
+    const id = "agent-🚀-id-🎉";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle very short ID", () => {
+    process.argv = ["node", "script.js", "--id", "a"];
+    expect(getAgentIdFromArgs()).toBe("a");
+  });
+
+  it("should handle ID with repeated characters", () => {
+    const id = "aaaaaaaaaa";
+    process.argv = ["node", "script.js", "--id", id];
+    expect(getAgentIdFromArgs()).toBe(id);
+  });
+
+  it("should handle --id in middle of command", () => {
+    process.argv = [
+      "node",
+      "script.js",
+      "command",
+      "--verbose",
+      "--id",
+      "mid-id",
+      "--debug",
+      "arg",
+    ];
+    expect(getAgentIdFromArgs()).toBe("mid-id");
+  });
+
+  it("should handle --id followed by another flag", () => {
+    process.argv = ["node", "script.js", "--id", "test-id", "--verbose"];
+    expect(getAgentIdFromArgs()).toBe("test-id");
+  });
+
+  it("should return first --id when multiple exist with same value", () => {
+    process.argv = ["node", "script.js", "--id", "same-id", "--id", "same-id"];
+    expect(getAgentIdFromArgs()).toBe("same-id");
+  });
+});
+
+describe("extractSummary - role precedence", () => {
+  const createHistoryItem = (
+    content: any,
+    role: "user" | "assistant" | "system" = "assistant",
+  ): ChatHistoryItem =>
+    ({
+      message: { role, content },
+    }) as ChatHistoryItem;
+
+  it("should prioritize most recent assistant over older ones", () => {
+    const history = [
+      createHistoryItem("First assistant"),
+      createHistoryItem("User message", "user"),
+      createHistoryItem("Second assistant"),
+      createHistoryItem("Third assistant"),
+    ];
+    expect(extractSummary(history)).toBe("Third assistant");
+  });
+
+  it("should skip all non-assistant messages", () => {
+    const history = [
+      createHistoryItem("System 1", "system"),
+      createHistoryItem("User 1", "user"),
+      createHistoryItem("System 2", "system"),
+      createHistoryItem("User 2", "user"),
+      createHistoryItem("Assistant message"),
+      createHistoryItem("System 3", "system"),
+      createHistoryItem("User 3", "user"),
+    ];
+    expect(extractSummary(history)).toBe("Assistant message");
+  });
+
+  it("should handle history with only system messages", () => {
+    const history = [
+      createHistoryItem("System 1", "system"),
+      createHistoryItem("System 2", "system"),
+    ];
+    expect(extractSummary(history)).toBeUndefined();
+  });
+
+  it("should handle alternating user and assistant", () => {
+    const history = [
+      createHistoryItem("User 1", "user"),
+      createHistoryItem("Assistant 1"),
+      createHistoryItem("User 2", "user"),
+      createHistoryItem("Assistant 2"),
+      createHistoryItem("User 3", "user"),
+      createHistoryItem("Assistant 3"),
+    ];
+    expect(extractSummary(history)).toBe("Assistant 3");
+  });
+});
+
+describe("calculateDiffStats - performance characteristics", () => {
+  it("should handle extremely large files efficiently", () => {
+    const lines = Array.from({ length: 50000 }, (_, i) => `+line ${i}`).join(
+      "\n",
+    );
+    const diff = `
+diff --git a/huge.txt b/huge.txt
+--- a/huge.txt
++++ b/huge.txt
+${lines}
+`;
+
+    const start = Date.now();
+    const result = calculateDiffStats(diff);
+    const duration = Date.now() - start;
+
+    expect(result.additions).toBe(50000);
+    expect(duration).toBeLessThan(2000); // Should be fast
+  });
+
+  it("should handle diffs with mixed metadata and content", () => {
+    const segments = Array.from(
+      { length: 100 },
+      (_, i) => `
+diff --git a/file${i}.ts b/file${i}.ts
+index abc${i}..def${i} 100644
+--- a/file${i}.ts
++++ b/file${i}.ts
+@@ -1,1 +1,2 @@
+ const x = ${i};
++const y = ${i};
+`,
+    ).join("");
+
+    const result = calculateDiffStats(segments);
+    expect(result.additions).toBe(100);
+    expect(result.deletions).toBe(0);
+  });
+});
