@@ -1,7 +1,46 @@
 import type { ChatHistoryItem } from "core/index.js";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { calculateDiffStats, extractSummary } from "./metadata.js";
+import {
+  calculateDiffStats,
+  extractSummary,
+  getAgentIdFromArgs,
+  postAgentMetadata,
+} from "./metadata.js";
+
+// Mock dependencies
+vi.mock("./apiClient.js", () => ({
+  post: vi.fn(),
+  ApiRequestError: class ApiRequestError extends Error {
+    status: number;
+    statusText: string;
+    response?: string;
+    constructor(status: number, statusText: string, response?: string) {
+      super(
+        `API Error: ${status} ${statusText}${response ? `: ${response}` : ""}`,
+      );
+      this.name = "ApiRequestError";
+      this.status = status;
+      this.statusText = statusText;
+      this.response = response;
+    }
+  },
+  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
+    constructor(message = "Not authenticated. Please run 'cn login' first.") {
+      super(message);
+      this.name = "AuthenticationRequiredError";
+    }
+  },
+}));
+
+vi.mock("./logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 // Helper to create a mock chat history item
 function createMockChatHistoryItem(
@@ -376,6 +415,237 @@ index abc123..def456 100644
 
       expect(summary).toBe("y".repeat(497) + "...");
       expect(summary?.length).toBe(500);
+    });
+  });
+
+  describe("getAgentIdFromArgs", () => {
+    let originalArgv: string[];
+
+    beforeEach(() => {
+      originalArgv = process.argv;
+    });
+
+    afterEach(() => {
+      process.argv = originalArgv;
+    });
+
+    it("should extract agent ID from --id flag", () => {
+      process.argv = ["node", "script.js", "--id", "test-agent-123"];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBe("test-agent-123");
+    });
+
+    it("should return undefined when --id flag not present", () => {
+      process.argv = ["node", "script.js", "--other-flag", "value"];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBeUndefined();
+    });
+
+    it("should return undefined when --id flag has no value", () => {
+      process.argv = ["node", "script.js", "--id"];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBeUndefined();
+    });
+
+    it("should extract agent ID when --id is in the middle of args", () => {
+      process.argv = [
+        "node",
+        "script.js",
+        "--verbose",
+        "--id",
+        "my-agent-id",
+        "--debug",
+      ];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBe("my-agent-id");
+    });
+
+    it("should handle UUID format agent IDs", () => {
+      const uuid = "550e8400-e29b-41d4-a716-446655440000";
+      process.argv = ["node", "script.js", "--id", uuid];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBe(uuid);
+    });
+
+    it("should handle agent IDs with special characters", () => {
+      process.argv = ["node", "script.js", "--id", "agent-123_test.prod"];
+
+      const agentId = getAgentIdFromArgs();
+
+      expect(agentId).toBe("agent-123_test.prod");
+    });
+  });
+
+  describe("postAgentMetadata", () => {
+    let mockPost: any;
+
+    beforeEach(async () => {
+      vi.clearAllMocks();
+
+      const apiClientModule = await import("./apiClient.js");
+      mockPost = vi.mocked(apiClientModule.post);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("should successfully post metadata", async () => {
+      mockPost.mockResolvedValue({ ok: true, status: 200 });
+
+      await postAgentMetadata("test-agent-id", {
+        additions: 5,
+        deletions: 2,
+        summary: "Test summary",
+      });
+
+      expect(mockPost).toHaveBeenCalledWith("agents/test-agent-id/metadata", {
+        metadata: {
+          additions: 5,
+          deletions: 2,
+          summary: "Test summary",
+        },
+      });
+    });
+
+    it("should handle empty metadata object", async () => {
+      await postAgentMetadata("test-agent-id", {});
+
+      expect(mockPost).not.toHaveBeenCalled();
+    });
+
+    it("should handle missing agent ID", async () => {
+      await postAgentMetadata("", { additions: 1 });
+
+      expect(mockPost).not.toHaveBeenCalled();
+    });
+
+    it("should handle API error gracefully", async () => {
+      const { ApiRequestError } = await import("./apiClient.js");
+      mockPost.mockRejectedValue(
+        new ApiRequestError(500, "Internal Server Error", "Error details"),
+      );
+
+      // Should not throw
+      await expect(
+        postAgentMetadata("test-agent-id", { additions: 1 }),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should handle authentication error gracefully", async () => {
+      const { AuthenticationRequiredError } = await import("./apiClient.js");
+      mockPost.mockRejectedValue(new AuthenticationRequiredError());
+
+      // Should not throw
+      await expect(
+        postAgentMetadata("test-agent-id", { additions: 1 }),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should handle network error gracefully", async () => {
+      mockPost.mockRejectedValue(new Error("Network error"));
+
+      // Should not throw
+      await expect(
+        postAgentMetadata("test-agent-id", { additions: 1 }),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should handle non-ok response", async () => {
+      mockPost.mockResolvedValue({ ok: false, status: 404 });
+
+      // Should not throw
+      await expect(
+        postAgentMetadata("test-agent-id", { additions: 1 }),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should post complex metadata", async () => {
+      mockPost.mockResolvedValue({ ok: true, status: 200 });
+
+      const complexMetadata = {
+        additions: 10,
+        deletions: 5,
+        summary: "Complex changes made",
+        isComplete: true,
+        hasChanges: true,
+        usage: {
+          totalCost: 1.234567,
+          promptTokens: 1000,
+          completionTokens: 500,
+          cachedTokens: 200,
+          cacheWriteTokens: 100,
+        },
+      };
+
+      await postAgentMetadata("test-agent-id", complexMetadata);
+
+      expect(mockPost).toHaveBeenCalledWith("agents/test-agent-id/metadata", {
+        metadata: complexMetadata,
+      });
+    });
+
+    it("should handle metadata with nested objects", async () => {
+      mockPost.mockResolvedValue({ ok: true, status: 200 });
+
+      const metadata = {
+        usage: {
+          totalCost: 0.5,
+          promptTokens: 100,
+          completionTokens: 50,
+        },
+        customField: {
+          nested: {
+            value: "test",
+          },
+        },
+      };
+
+      await postAgentMetadata("test-agent-id", metadata);
+
+      expect(mockPost).toHaveBeenCalledWith("agents/test-agent-id/metadata", {
+        metadata,
+      });
+    });
+
+    it("should handle metadata with null values", async () => {
+      mockPost.mockResolvedValue({ ok: true, status: 200 });
+
+      const metadata = {
+        summary: null,
+        additions: 0,
+      };
+
+      await postAgentMetadata("test-agent-id", metadata as any);
+
+      expect(mockPost).toHaveBeenCalledWith("agents/test-agent-id/metadata", {
+        metadata,
+      });
+    });
+
+    it("should handle metadata with array values", async () => {
+      mockPost.mockResolvedValue({ ok: true, status: 200 });
+
+      const metadata = {
+        files: ["file1.ts", "file2.ts", "file3.ts"],
+        additions: 5,
+      };
+
+      await postAgentMetadata("test-agent-id", metadata);
+
+      expect(mockPost).toHaveBeenCalledWith("agents/test-agent-id/metadata", {
+        metadata,
+      });
     });
   });
 });
