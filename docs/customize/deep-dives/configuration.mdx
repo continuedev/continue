@@ -44,7 +44,87 @@ See the full reference for `config.yaml` [here](/reference).
 
 The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
 
-Example
+#### Customizing Tool Prompts
+
+You can customize built-in tool prompts at the workspace level using the `tools` array in `.continuerc.json`. This is especially useful when working with local models that may struggle with Continue's default tool prompts.
+
+<AccordionGroup>
+  <Accordion title="Override tool descriptions">
+    Customize how tools are described to the LLM:
+
+    ```json title=".continuerc.json"
+    {
+      "mergeBehavior": "merge",
+      "tools": [
+        {
+          "name": "read_file",
+          "description": "Read file contents. Use relative paths from workspace root."
+        }
+      ]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Disable specific tools">
+    Prevent certain tools from being available:
+
+    ```json title=".continuerc.json"
+    {
+      "mergeBehavior": "merge",
+      "tools": [
+        {
+          "name": "view_diff",
+          "disabled": true
+        }
+      ]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Customize system message prompts">
+    Override the system message descriptions for non-native tool calling:
+
+    ```json title=".continuerc.json"
+    {
+      "mergeBehavior": "merge",
+      "tools": [
+        {
+          "name": "read_file",
+          "systemMessageDescription": {
+            "prefix": "To read a file, use read_file with a relative path:",
+            "exampleArgs": [["filepath", "./docs/README.md"]]
+          }
+        }
+      ]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Override display titles and action phrases">
+    Customize the UI display and action phrases:
+
+    ```json title=".continuerc.json"
+    {
+      "mergeBehavior": "merge",
+      "tools": [
+        {
+          "name": "read_file",
+          "displayTitle": "View File",
+          "wouldLikeTo": "view {{{ filepath }}}",
+          "isCurrently": "viewing {{{ filepath }}}",
+          "hasAlready": "viewed {{{ filepath }}}"
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Tool names match the built-in function names like `read_file`, `run_terminal_command`, `view_diff`, etc. Tools are merged by name during configuration loading.
+</Note>
+
+#### Basic Configuration Example
 
 ```json title=".continuerc.json"
 {
