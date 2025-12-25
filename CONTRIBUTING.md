@@ -113,7 +113,32 @@ process as welcoming and straightforward as possible.
 
 ### Environment Setup
 
-#### Pre-requisites
+#### Option 1: Development Container (Recommended for Quick Start)
+
+The easiest way to get started is using a development container, which provides a pre-configured environment:
+
+1. **Prerequisites**:
+
+   - [Docker Desktop](https://www.docker.com/products/docker-desktop) or compatible container runtime
+   - [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   - OR [GitHub Codespaces](https://github.com/features/codespaces) (no local installation required)
+
+2. **Using VS Code Dev Containers**:
+
+   - Clone the repository
+   - Open the project in VS Code
+   - When prompted, click "Reopen in Container" (or run `Dev Containers: Reopen in Container` from the command palette)
+   - VS Code will build the container and set up the environment automatically
+
+3. **Using GitHub Codespaces**:
+   - Navigate to the Continue repository on GitHub
+   - Click the green "Code" button and select "Codespaces"
+   - Click "Create codespace on main" (or your branch)
+   - Your development environment will be ready in minutes
+
+#### Option 2: Local Setup
+
+**Pre-requisites**
 
 You should have Node.js version 20.19.0 (LTS) or higher installed. You can get it
 on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct
