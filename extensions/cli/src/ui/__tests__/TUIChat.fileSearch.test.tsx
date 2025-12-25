@@ -36,10 +36,11 @@ describe("TUIChat - @ File Search Tests", () => {
 
       let frame = lastFrame();
 
+      // Use longer timeout for CI environments (macOS is slower)
       await waitForCondition(() => {
         frame = lastFrame();
         return frame?.includes("@READ") ?? false;
-      });
+      }, 5000);
 
       expect(frame).toBeDefined();
       // Should show the typed text
