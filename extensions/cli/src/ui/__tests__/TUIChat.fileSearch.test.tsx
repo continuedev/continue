@@ -31,6 +31,9 @@ describe("TUIChat - @ File Search Tests", () => {
     async () => {
       const { lastFrame, stdin } = renderInMode("local");
 
+      // Wait for initial render before writing to stdin
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Type @ followed by text to filter files
       stdin.write("@READ");
 
