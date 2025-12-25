@@ -109,6 +109,7 @@ const configMergeKeys = {
   },
   slashCommands: (a: any, b: any) => a.name === b.name,
   customCommands: (a: any, b: any) => a.name === b.name,
+  tools: (a: any, b: any) => a.name === b.name,
 };
 
 function loadSerializedConfig(
@@ -504,6 +505,7 @@ async function intermediateToFinalConfig({
     ...config,
     contextProviders,
     tools: getBaseToolDefinitions(),
+    toolOverrides: config.tools, // Pass through tool overrides from config
     mcpServerStatuses: [],
     slashCommands: [],
     modelsByRole: {

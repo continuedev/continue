@@ -30,6 +30,7 @@ import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
+import { applyToolOverrides } from "../../tools/applyToolOverrides";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -308,6 +309,18 @@ export default async function doLoadConfig(options: {
       modelName: newConfig.selectedModelByRole.chat?.model,
     }),
   );
+
+  // Apply tool overrides from config (e.g., .continuerc.json)
+  if (newConfig.toolOverrides?.length) {
+    const toolOverridesResult = applyToolOverrides(
+      newConfig.tools,
+      newConfig.toolOverrides,
+    );
+    newConfig.tools = toolOverridesResult.tools;
+    errors.push(...toolOverridesResult.errors);
+    // Clear toolOverrides after applying (not needed at runtime)
+    delete newConfig.toolOverrides;
+  }
 
   // Detect duplicate tool names
   const counts: Record<string, number> = {};
