@@ -18,7 +18,7 @@ export async function getWorkspaceRcConfigs(
               entry[0].endsWith(".continuerc.json"),
           )
           .map((entry) => joinPathsToUri(dir, entry[0]));
-        return await Promise.all(rcFiles.map(ide.readFile));
+        return await Promise.all(rcFiles.map((uri) => ide.readFile(uri)));
       }),
     );
     return rcFiles

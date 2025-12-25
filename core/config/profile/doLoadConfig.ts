@@ -30,6 +30,7 @@ import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
+import { applyToolOverrides } from "../../tools/applyToolOverrides";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -39,6 +40,7 @@ import { Telemetry } from "../../util/posthog";
 import { SentryLogger } from "../../util/sentry/SentryLogger";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
+import { getWorkspaceRcConfigs } from "../json/loadRcConfigs";
 import { loadContinueConfigFromJson } from "../load";
 import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
@@ -308,6 +310,32 @@ export default async function doLoadConfig(options: {
       modelName: newConfig.selectedModelByRole.chat?.model,
     }),
   );
+
+  // Load workspace .continuerc.json files for tool overrides
+  // (JSON path loads these earlier during config merge, YAML path doesn't)
+  if (!newConfig.toolOverrides?.length) {
+    const workspaceRcConfigs = await getWorkspaceRcConfigs(ide);
+    for (const rcConfig of workspaceRcConfigs) {
+      if (rcConfig.tools?.length) {
+        newConfig.toolOverrides = [
+          ...(newConfig.toolOverrides ?? []),
+          ...rcConfig.tools,
+        ];
+      }
+    }
+  }
+
+  // Apply tool overrides from config (e.g., .continuerc.json)
+  if (newConfig.toolOverrides?.length) {
+    const toolOverridesResult = applyToolOverrides(
+      newConfig.tools,
+      newConfig.toolOverrides,
+    );
+    newConfig.tools = toolOverridesResult.tools;
+    errors.push(...toolOverridesResult.errors);
+    // Clear toolOverrides after applying (not needed at runtime)
+    delete newConfig.toolOverrides;
+  }
 
   // Detect duplicate tool names
   const counts: Record<string, number> = {};
