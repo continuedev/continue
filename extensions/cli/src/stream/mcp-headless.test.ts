@@ -235,7 +235,8 @@ describe("MCP tool execution permission in headless mode", () => {
       parameters: { type: "object", properties: {} },
       run: async () => "result",
       isBuiltIn: false,
-      allowHeadless: allowHeadless ?? false,
+      // Preserve undefined to test actual undefined behavior
+      ...(allowHeadless !== undefined ? { allowHeadless } : {}),
     };
     return {
       id: "test-id",
@@ -307,5 +308,24 @@ describe("MCP tool execution permission in headless mode", () => {
     );
 
     expect(result.approved).toBe(true);
+  });
+
+  test("should deny explicitly excluded tools even with allowHeadless=true", async () => {
+    const toolCall = createMockToolCall("mcp__test__search", true);
+    // Explicit exclude policy for this tool
+    const permissions = {
+      policies: [{ tool: "mcp__test__search", permission: "exclude" as const }],
+    };
+
+    const result = await checkToolPermissionApproval(
+      permissions,
+      toolCall,
+      undefined, // no callbacks
+      true, // isHeadless
+    );
+
+    // allowHeadless should NOT bypass explicit exclusions
+    expect(result.approved).toBe(false);
+    expect(result.denialReason).toBe("policy");
   });
 });
