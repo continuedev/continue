@@ -48,6 +48,20 @@ import { getBooleanArg, getStringArg } from "../parseArgs";
  * Falls back to home directory or temp directory if no workspace is available.
  */
 function resolveWorkingDirectory(workspaceDirs: string[]): string {
+  // Handle vscode-remote://wsl+distro/path URIs (WSL2 remote workspaces)
+  const wslWorkspaceDir = workspaceDirs.find((dir) =>
+    dir.startsWith("vscode-remote://wsl"),
+  );
+  if (wslWorkspaceDir) {
+    try {
+      const url = new URL(wslWorkspaceDir);
+      return url.pathname; // e.g., "/home/user/project"
+    } catch {
+      // Fall through to other handlers
+    }
+  }
+
+  // Handle file:// URIs (local workspaces)
   const fileWorkspaceDir = workspaceDirs.find((dir) =>
     dir.startsWith("file:/"),
   );
@@ -59,6 +73,7 @@ function resolveWorkingDirectory(workspaceDirs: string[]): string {
       // Fall through to default handling
     }
   }
+
   // Default to user's home directory with fallbacks
   try {
     return process.env.HOME || process.env.USERPROFILE || process.cwd();
