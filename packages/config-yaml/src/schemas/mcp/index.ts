@@ -8,6 +8,7 @@ const baseMcpServerSchema = z.object({
   sourceFile: z.string().optional(), // Added during loading
   sourceSlug: z.string().optional(), // Added during loading
   connectionTimeout: z.number().gt(0).optional(),
+  allowHeadless: z.boolean().optional(), // Allow MCP tools in headless mode (default: false)
 });
 
 const stdioMcpServerSchema = baseMcpServerSchema.extend({
