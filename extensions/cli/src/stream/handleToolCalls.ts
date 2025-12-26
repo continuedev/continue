@@ -198,9 +198,21 @@ export async function getRequestTools(isHeadless: boolean) {
       permissionsState.permissions,
     );
 
+    // Allow tool if:
+    // 1. Explicitly allowed in permissions
+    // 2. Permission is "ask" and we're in interactive mode (can prompt user)
+    // 3. MCP tool with allowHeadless=true can upgrade "ask" permission in headless mode
+    //    (but should not override explicit "exclude" permissions)
+    const allowMcpInHeadless =
+      result.permission === "ask" &&
+      !tool.isBuiltIn &&
+      isHeadless &&
+      tool.allowHeadless;
+
     if (
       result.permission === "allow" ||
-      (result.permission === "ask" && !isHeadless)
+      (result.permission === "ask" && !isHeadless) ||
+      allowMcpInHeadless
     ) {
       allowedTools.push(tool);
     }

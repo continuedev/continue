@@ -316,6 +316,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 - `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 - `requestOptions`: Optional request options for `sse` and `streamable-http` servers. Same format as [model requestOptions](#models).
 - `connectionTimeout`: Optional timeout for _initial_ connection to MCP server
+- `allowHeadless`: Enable this MCP server's tools in [CLI headless mode](/cli/overview#headless-mode-production-automation). Defaults to `false`. When `true`, tools from this server can be used in automated workflows without user confirmation.
 
 **Example:**
 
@@ -333,6 +334,12 @@ mcpServers:
     cwd: /Users/NAME/project
     env:
       NODE_ENV: production
+  - name: Brave Search
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-brave-search"
+    allowHeadless: true  # Enable in CLI headless mode for automation
 ```
 
 ### `data`

@@ -151,6 +151,52 @@ These remote transport options allow you to connect to MCP servers hosted on rem
 
 For detailed information about transport mechanisms and their use cases, refer to the official MCP documentation on [transports](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse).
 
+### How to Use MCP Servers in CLI Headless Mode
+
+By default, MCP tools are not available in [CLI headless mode](/cli/overview#headless-mode-production-automation) for security reasons. This prevents untrusted tools from executing without user approval during automated workflows.
+
+<Note>
+  **What is headless mode?**
+  
+  Headless mode is used for automated, non-interactive workflows like CI/CD pipelines, git hooks, and scripting. In this mode, the CLI cannot prompt for user confirmation.
+</Note>
+
+To enable specific trusted MCP servers in headless mode, add `allowHeadless: true` to your server configuration:
+
+```yaml
+mcpServers:
+  - name: Brave Search
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-brave-search"
+    allowHeadless: true  # Enable in headless mode
+    env:
+      BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+```
+
+<Warning>
+  **Security consideration:** Only set `allowHeadless: true` for MCP servers you fully trust, as their tools will be able to execute without user confirmation in automated workflows.
+</Warning>
+
+**When to use `allowHeadless`:**
+
+<CardGroup cols={2}>
+  <Card title="✅ Good candidates" icon="check">
+    - Read-only search APIs
+    - Documentation retrieval services
+    - Trusted internal tools
+    - Well-scoped automation utilities
+  </Card>
+  
+  <Card title="⚠️ Use with caution" icon="triangle-exclamation">
+    - File system modification tools
+    - Database write operations
+    - External API calls that modify state
+    - Tools with broad permissions
+  </Card>
+</CardGroup>
+
 ### How to Work with Secrets in MCP Servers
 
 With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets

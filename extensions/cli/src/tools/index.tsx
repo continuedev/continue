@@ -122,7 +122,14 @@ export async function getAllAvailableTools(
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
   );
-  tools.push(...mcpState.tools.map(convertMcpToolToContinueTool));
+
+  // Add MCP tools with allowHeadless flag from server config
+  for (const connection of mcpState.connections) {
+    const mcpTools = connection.tools.map((tool) =>
+      convertMcpToolToContinueTool(tool, connection.config.allowHeadless),
+    );
+    tools.push(...mcpTools);
+  }
 
   return tools;
 }
@@ -174,7 +181,10 @@ export function convertToolToChatCompletionTool(
   };
 }
 
-export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
+export function convertMcpToolToContinueTool(
+  mcpTool: MCPTool,
+  allowHeadless?: boolean,
+): Tool {
   return {
     name: mcpTool.name,
     displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
@@ -189,6 +199,7 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
     },
     readonly: undefined, // MCP tools don't have readonly property
     isBuiltIn: false,
+    allowHeadless: allowHeadless ?? false, // Default to false for security
     run: async (args: any) => {
       const result = await services.mcp?.runTool(mcpTool.name, args);
       return JSON.stringify(result?.content) ?? "";
