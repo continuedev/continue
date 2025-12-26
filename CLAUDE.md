@@ -10,6 +10,7 @@ The VS Code extension VSIX built on Linux contains Linux-only native binaries (s
 - **WSL extension host** - Linux binaries work
 
 If both hosts try to load the extension, the Windows host fails with:
+
 ```
 Error: node_sqlite3.node is not a valid Win32 application
 ```

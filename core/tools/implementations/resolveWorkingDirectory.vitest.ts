@@ -86,9 +86,7 @@ describe("resolveWorkingDirectory", () => {
     });
 
     it("should handle root path", () => {
-      const result = resolveWorkingDirectory([
-        "vscode-remote://wsl+Ubuntu/",
-      ]);
+      const result = resolveWorkingDirectory(["vscode-remote://wsl+Ubuntu/"]);
       expect(result).toBe("/");
     });
 
@@ -103,9 +101,7 @@ describe("resolveWorkingDirectory", () => {
 
   describe("file:// URIs (local workspaces)", () => {
     it("should parse basic file:// URI on Unix", () => {
-      const result = resolveWorkingDirectory([
-        "file:///home/user/project",
-      ]);
+      const result = resolveWorkingDirectory(["file:///home/user/project"]);
       expect(result).toBe("/home/user/project");
     });
 
@@ -118,9 +114,7 @@ describe("resolveWorkingDirectory", () => {
 
     it("should handle Windows-style file:// URI", () => {
       // fileURLToPath handles Windows paths correctly
-      const result = resolveWorkingDirectory([
-        "file:///C:/Users/user/project",
-      ]);
+      const result = resolveWorkingDirectory(["file:///C:/Users/user/project"]);
       // On Unix, this will be /C:/Users/user/project
       // On Windows, this will be C:\Users\user\project
       expect(result).toMatch(/project$/);
