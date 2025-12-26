@@ -130,12 +130,13 @@ describe("resolveWorkingDirectory", () => {
   describe("fallback behavior", () => {
     it("should fall back to HOME when no valid URIs", () => {
       const originalHome = process.env.HOME;
-      process.env.HOME = "/test/home";
-
-      const result = resolveWorkingDirectory([]);
-      expect(result).toBe("/test/home");
-
-      process.env.HOME = originalHome;
+      try {
+        process.env.HOME = "/test/home";
+        const result = resolveWorkingDirectory([]);
+        expect(result).toBe("/test/home");
+      } finally {
+        process.env.HOME = originalHome;
+      }
     });
 
     it("should handle empty workspace dirs array", () => {
