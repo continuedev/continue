@@ -87,6 +87,8 @@ cn -p "Update documentation based on recent code changes"
 
   **In headless mode**, tools with "ask" permission are automatically excluded to prevent the AI from seeing tools it cannot call. This ensures reliable automation without user intervention.
 
+  **MCP tools** are excluded in headless mode by default. To enable specific trusted MCP servers in headless workflows, set `allowHeadless: true` in your [MCP server configuration](/customize/deep-dives/mcp#how-to-use-mcp-servers-in-cli-headless-mode).
+
   **In TUI mode**, tools with "ask" permission are available and will prompt for confirmation when the AI attempts to use them.
 
   💡 **Tip**: If your workflow requires tools that need confirmation (like file writes or terminal commands), use TUI mode. For fully automated workflows with read-only operations, use headless mode.
