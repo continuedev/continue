@@ -55,7 +55,7 @@ function resolveWorkingDirectory(workspaceDirs: string[]): string {
   if (wslWorkspaceDir) {
     try {
       const url = new URL(wslWorkspaceDir);
-      return url.pathname; // e.g., "/home/user/project"
+      return decodeURIComponent(url.pathname); // e.g., "/home/user/project"
     } catch {
       // Fall through to other handlers
     }
