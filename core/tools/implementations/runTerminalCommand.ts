@@ -52,7 +52,12 @@ function resolveWorkingDirectory(workspaceDirs: string[]): string {
     dir.startsWith("file:/"),
   );
   if (fileWorkspaceDir) {
-    return fileURLToPath(fileWorkspaceDir);
+    try {
+      return fileURLToPath(fileWorkspaceDir);
+    } catch {
+      // fileURLToPath can fail on malformed URIs or in some remote environments
+      // Fall through to default handling
+    }
   }
   // Default to user's home directory with fallbacks
   try {
