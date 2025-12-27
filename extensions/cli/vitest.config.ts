@@ -6,6 +6,10 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/*.e2e.*", "**/e2e/**"],
+    // Enable CommonJS interop for packages like find-up v5 that use module.exports
+    deps: {
+      interopDefault: true,
+    },
     coverage: {
       reporter: ["text", "json", "html"],
       exclude: [

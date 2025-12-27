@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as path from "path";
+
 import { vi } from "vitest";
 
 import { resetConsoleOverrides } from "./src/init.js";
@@ -5,6 +8,42 @@ import { resetConsoleOverrides } from "./src/init.js";
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
 process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
+
+// Mock core/util/paths to read CONTINUE_GLOBAL_DIR dynamically
+// This fixes test isolation issues where the module caches the env var at load time
+vi.mock("core/util/paths.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("core/util/paths.js")>();
+
+  // Create a dynamic version of getContinueGlobalPath that reads env var each time
+  const getContinueGlobalPath = () => {
+    const continuePath =
+      process.env.CONTINUE_GLOBAL_DIR ||
+      path.join(process.env.HOME || "", ".continue");
+    if (!fs.existsSync(continuePath)) {
+      fs.mkdirSync(continuePath, { recursive: true });
+    }
+    return continuePath;
+  };
+
+  const getIndexFolderPath = () => {
+    const indexPath = path.join(getContinueGlobalPath(), "index");
+    if (!fs.existsSync(indexPath)) {
+      fs.mkdirSync(indexPath, { recursive: true });
+    }
+    return indexPath;
+  };
+
+  const getGlobalContextFilePath = () => {
+    return path.join(getIndexFolderPath(), "globalContext.json");
+  };
+
+  return {
+    ...actual,
+    getContinueGlobalPath,
+    getIndexFolderPath,
+    getGlobalContextFilePath,
+  };
+});
 
 // Mock fetch to prevent actual API calls in tests
 const originalFetch = global.fetch;
