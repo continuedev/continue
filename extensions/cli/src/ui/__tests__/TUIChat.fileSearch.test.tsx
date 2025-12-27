@@ -31,15 +31,19 @@ describe("TUIChat - @ File Search Tests", () => {
     async () => {
       const { lastFrame, stdin } = renderInMode("local");
 
+      // Wait for initial render before writing to stdin
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Type @ followed by text to filter files
       stdin.write("@READ");
 
       let frame = lastFrame();
 
+      // Use longer timeout for CI environments (macOS is slower)
       await waitForCondition(() => {
         frame = lastFrame();
         return frame?.includes("@READ") ?? false;
-      });
+      }, 5000);
 
       expect(frame).toBeDefined();
       // Should show the typed text

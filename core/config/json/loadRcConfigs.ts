@@ -9,7 +9,8 @@ export async function getWorkspaceRcConfigs(
     const workspaces = await ide.getWorkspaceDirs();
     const rcFiles = await Promise.all(
       workspaces.map(async (dir) => {
-        const ls = await ide.listDir(dir);
+        // Handle missing directories gracefully (e.g., in test environments)
+        const ls = await ide.listDir(dir).catch(() => []);
         const rcFiles = ls
           .filter(
             (entry) =>
@@ -18,7 +19,7 @@ export async function getWorkspaceRcConfigs(
               entry[0].endsWith(".continuerc.json"),
           )
           .map((entry) => joinPathsToUri(dir, entry[0]));
-        return await Promise.all(rcFiles.map(ide.readFile));
+        return await Promise.all(rcFiles.map((uri) => ide.readFile(uri)));
       }),
     );
     return rcFiles
