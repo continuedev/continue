@@ -305,4 +305,26 @@ export class ModelService
       return nameMatches;
     });
   }
+
+  getSubagentModels() {
+    const state = this.getState();
+    if (!state.assistant) {
+      return [];
+    }
+    const subagentModels = state.assistant.models
+      ?.filter((model) => !!model)
+      .filter((model) => !!model.name) // filter out models without a name
+      .filter((model) => model.roles?.includes("subagent")) // filter with role subagent
+      .filter((model) => !!model.chatOptions?.baseSystemMessage); // filter those with a system message
+
+    if (!subagentModels) {
+      return [];
+    }
+    return subagentModels?.map((model) => ({
+      llmApi: createLlmApi(model, state.authConfig),
+      model,
+      assistant: state.assistant,
+      authConfig: state.authConfig,
+    }));
+  }
 }
