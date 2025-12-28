@@ -19,6 +19,7 @@ import {
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
+import { normalizeMessagesForModel } from "../util/messageNormalizer.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
@@ -257,6 +258,15 @@ export async function processStreamingResponse(
     chatHistory,
     systemMessage,
   ) as ChatCompletionMessageParam[];
+
+  // Normalize messages for model-specific compatibility (GitHub Issue #9249)
+  // Fixes: Mistral "Unexpected role 'system' after role 'tool'"
+  //        Gemma "Invalid 'tool_calls': unknown variant 'index'"
+  const normalizedMessages = normalizeMessagesForModel(
+    openaiChatHistory,
+    model.model,
+  );
+
   const requestStartTime = Date.now();
 
   const streamFactory = async (retryAbortSignal: AbortSignal) => {
@@ -269,7 +279,7 @@ export async function processStreamingResponse(
       llmApi,
       {
         model: model.model,
-        messages: openaiChatHistory,
+        messages: normalizedMessages,
         stream: true,
         tools,
         ...getDefaultCompletionOptions(model.defaultCompletionOptions),
