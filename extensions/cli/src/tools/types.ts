@@ -40,6 +40,7 @@ export interface Tool {
   run: (args: any) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly
   isBuiltIn: boolean;
+  allowHeadless?: boolean; // Allow this MCP tool in headless mode (default: false)
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,
     parsedArgs: Record<string, unknown>,

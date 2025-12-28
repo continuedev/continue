@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as util from "util";
 
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
-import { findUp } from "find-up";
+import findUp from "find-up";
 
 import { Tool } from "./types.js";
 

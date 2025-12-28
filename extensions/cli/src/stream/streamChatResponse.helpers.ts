@@ -123,7 +123,11 @@ export async function checkToolPermissionApproval(
     return { approved: true };
   } else if (permissionCheck.permission === "ask") {
     if (isHeadless) {
-      // "ask" tools are excluded in headless so can only get here by policy evaluation
+      // In headless mode, allow MCP tools with allowHeadless: true
+      if (toolCall.tool.allowHeadless) {
+        return { approved: true };
+      }
+      // Otherwise, "ask" tools are excluded in headless
       return { approved: false, denialReason: "policy" };
     }
     const userApproved = await requestUserPermission(toolCall, callbacks);
