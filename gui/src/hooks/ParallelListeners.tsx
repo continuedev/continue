@@ -92,7 +92,7 @@ function ParallelListeners() {
         setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
       );
     },
-    [dispatch, hasDoneInitialConfigLoad],
+    [dispatch, hasDoneInitialConfigLoad, selectedProfileId],
   );
 
   // Load config from the IDE
