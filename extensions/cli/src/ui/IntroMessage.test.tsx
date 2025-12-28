@@ -53,12 +53,12 @@ describe("IntroMessage", () => {
     expect(lastFrame()).not.toContain("Mocked TipsDisplay");
   });
 
-  it("renders agent name when config is provided", () => {
+  it("renders config name when config is provided", () => {
     const config = { name: "Test Agent", version: "1.0.0", rules: [] };
 
     const { lastFrame } = render(<IntroMessage config={config} />);
 
-    expect(lastFrame()).toContain("Agent:");
+    expect(lastFrame()).toContain("Config:");
     expect(lastFrame()).toContain("Test Agent");
   });
 
