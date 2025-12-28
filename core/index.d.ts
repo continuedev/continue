@@ -1139,6 +1139,30 @@ export interface Tool {
   ) => ToolPolicy;
 }
 
+/**
+ * Configuration for overriding built-in tool prompts.
+ * Allows customization of tool descriptions and behavior at the repo level.
+ */
+export interface ToolOverride {
+  /** Tool name to override (matches function.name, e.g., "read_file", "run_terminal_command") */
+  name: string;
+  /** Override the tool's description shown to the LLM */
+  description?: string;
+  /** Override the display title shown in UI */
+  displayTitle?: string;
+  /** Override the action phrases */
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
+  /** Override system message description for non-native tool calling */
+  systemMessageDescription?: {
+    prefix?: string;
+    exampleArgs?: Array<[string, string | number]>;
+  };
+  /** Set to true to disable this tool */
+  disabled?: boolean;
+}
+
 interface ToolChoice {
   type: "function";
   function: {
@@ -1721,6 +1745,8 @@ export interface SerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   data?: DataDestination[];
+  /** Tool overrides for customizing built-in tool prompts at the repo level */
+  tools?: ToolOverride[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1775,6 +1801,8 @@ export interface Config {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   data?: DataDestination[];
+  /** Tool overrides for customizing built-in tool prompts */
+  tools?: ToolOverride[];
 }
 
 // in the actual Continue source code
@@ -1794,6 +1822,8 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  /** Tool overrides from config, applied after all tools are loaded */
+  toolOverrides?: ToolOverride[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
   modelsByRole: Record<ModelRole, ILLM[]>;
