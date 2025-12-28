@@ -20,6 +20,14 @@ export default {
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
     "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",
     "^mssql$": "<rootDir>/node_modules/mssql",
+    "^@continuedev/config-yaml$":
+      "<rootDir>/../packages/config-yaml/dist/index.js",
+    "^@continuedev/fetch$": "<rootDir>/../packages/fetch/dist/index.js",
+    "^@continuedev/llm-info$": "<rootDir>/../packages/llm-info/dist/index.js",
+    "^@continuedev/openai-adapters$":
+      "<rootDir>/../packages/openai-adapters/dist/index.js",
+    "^@continuedev/terminal-security$":
+      "<rootDir>/../packages/terminal-security/dist/index.js",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
