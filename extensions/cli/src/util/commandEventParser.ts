@@ -131,3 +131,43 @@ export function parseReviewOutput(command: string): ParsedEventDetails | null {
   }
   return null;
 }
+
+/**
+ * Parse gh api comment reply command
+ * Pattern: gh api -X POST repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies -f body="..."
+ */
+export function parseCommentReplyOutput(
+  command: string,
+): ParsedEventDetails | null {
+  // Extract: repos/owner/repo/pulls/123/comments/456/replies
+  const match = command.match(
+    /repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments\/(\d+)\/replies/i,
+  );
+  if (match) {
+    const [, owner, repo, prNumber, commentId] = match;
+    return {
+      eventName: "comment_reply_posted",
+      title: `Replied to comment on PR #${prNumber}`,
+      metadata: {
+        owner,
+        repo,
+        prNumber: parseInt(prNumber),
+        commentId: parseInt(commentId),
+      },
+    };
+  }
+  return null;
+}
+
+/**
+ * Parse gh api graphql resolveReviewThread command
+ */
+export function parseResolveThreadOutput(): ParsedEventDetails | null {
+  // The threadId is in the graphql query, but we may not be able to extract PR number
+  // Just emit a generic event
+  return {
+    eventName: "review_thread_resolved",
+    title: "Resolved review thread",
+    metadata: {},
+  };
+}

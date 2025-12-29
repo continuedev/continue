@@ -8,18 +8,22 @@ import {
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isCommentCommand,
+  isCommentReplyCommand,
   isGitCommitCommand,
   isGitPushCommand,
   isIssueCloseCommand,
   isPullRequestCommand,
+  isResolveThreadCommand,
   isReviewCommand,
 } from "../telemetry/utils.js";
 import {
   ParsedEventDetails,
   parseCommentOutput,
+  parseCommentReplyOutput,
   parseGitPushOutput,
   parseIssueCloseOutput,
   parsePrCreatedOutput,
+  parseResolveThreadOutput,
   parseReviewOutput,
 } from "../util/commandEventParser.js";
 import { getAgentIdFromArgs, postAgentEvent } from "../util/events.js";
@@ -64,6 +68,12 @@ async function emitActionEvent(
       eventDetails = parseIssueCloseOutput(command);
     } else if (isReviewCommand(command)) {
       eventDetails = parseReviewOutput(command);
+    } else if (isCommentReplyCommand(command)) {
+      // gh api -X POST repos/.../pulls/.../comments/.../replies
+      eventDetails = parseCommentReplyOutput(command);
+    } else if (isResolveThreadCommand(command)) {
+      // gh api graphql ... resolveReviewThread
+      eventDetails = parseResolveThreadOutput();
     }
 
     if (eventDetails) {

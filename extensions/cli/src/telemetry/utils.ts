@@ -147,6 +147,24 @@ export function isReviewCommand(command: string): boolean {
 }
 
 /**
+ * Check if command is a gh api call to reply to a PR review comment
+ * Pattern: gh api -X POST repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies
+ */
+export function isCommentReplyCommand(command: string): boolean {
+  return /gh api\s+.*repos\/[^\/]+\/[^\/]+\/pulls\/\d+\/comments\/\d+\/replies/i.test(
+    command,
+  );
+}
+
+/**
+ * Check if command is a gh api graphql call to resolve a review thread
+ * Pattern: gh api graphql ... resolveReviewThread
+ */
+export function isResolveThreadCommand(command: string): boolean {
+  return /gh api graphql.*resolveReviewThread/i.test(command);
+}
+
+/**
  * Get file type from extension for metrics
  */
 export function getFileTypeFromPath(filePath: string): string {
