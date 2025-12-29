@@ -42,6 +42,7 @@ import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDot
 import { loadContinueConfigFromJson } from "../load";
 import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
+import { loadMarkdownSkills } from "../markdown/loadMarkdownSkills";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
@@ -69,6 +70,7 @@ async function loadRules(ide: IDE) {
 
   return { rules, errors };
 }
+
 export default async function doLoadConfig(options: {
   ide: IDE;
   controlPlaneClient: ControlPlaneClient;
@@ -156,6 +158,11 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
+
+  // load skills
+  const { skills, errors: skillsErrors } = await loadMarkdownSkills(ide);
+  errors.push(...skillsErrors);
+  newConfig.skills.unshift(...skills);
 
   // Convert invokable rules to slash commands
   for (const rule of newConfig.rules) {

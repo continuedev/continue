@@ -198,6 +198,7 @@ export async function configYamlToContinueConfig(options: {
       summarize: null,
     },
     rules: [],
+    skills: [],
     requestOptions: { ...config.requestOptions },
   };
 

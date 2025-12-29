@@ -1796,6 +1796,7 @@ export interface ContinueConfig {
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
+  skills: Skill[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1818,6 +1819,7 @@ export interface BrowserSerializedContinueConfig {
   tools: Omit<Tool, "preprocessArgs", "evaluateToolCallPolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
+  skills: Skill[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
@@ -1893,6 +1895,15 @@ export interface RuleMetadata {
 }
 export interface RuleWithSource extends RuleMetadata {
   rule: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  path: string;
+  toolName: string;
+  content: string;
+  license?: string;
 }
 
 export interface CompleteOnboardingPayload {
