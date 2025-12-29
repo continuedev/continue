@@ -1,5 +1,4 @@
 import { editTool } from "./edit.js";
-import { eventTool } from "./event.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
@@ -26,5 +25,4 @@ export const ALL_BUILT_IN_TOOLS = [
   exitTool,
   reportFailureTool,
   uploadArtifactTool,
-  eventTool,
 ];

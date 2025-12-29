@@ -113,6 +113,40 @@ export function isPullRequestCommand(command: string): boolean {
 }
 
 /**
+ * Check if a command is a comment command (PR or issue comment)
+ */
+export function isCommentCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return (
+    trimmed.includes("gh pr comment") || trimmed.includes("gh issue comment")
+  );
+}
+
+/**
+ * Check if a command is a git push command (but not PR creation)
+ */
+export function isGitPushCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.startsWith("git push") && !trimmed.includes("pull-request");
+}
+
+/**
+ * Check if a command is an issue close command
+ */
+export function isIssueCloseCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.includes("gh issue close");
+}
+
+/**
+ * Check if a command is a PR review command
+ */
+export function isReviewCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.includes("gh pr review");
+}
+
+/**
  * Get file type from extension for metrics
  */
 export function getFileTypeFromPath(filePath: string): string {

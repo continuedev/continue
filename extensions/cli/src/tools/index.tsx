@@ -20,7 +20,6 @@ import { logger } from "../util/logger.js";
 
 import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { editTool } from "./edit.js";
-import { eventTool } from "./event.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
@@ -83,7 +82,6 @@ export async function getAllAvailableTools(
   const agentId = getAgentIdFromArgs();
   if (agentId) {
     tools.push(reportFailureTool);
-    tools.push(eventTool);
 
     // UploadArtifact tool is gated behind beta flag
     if (isBetaUploadArtifactToolEnabled()) {

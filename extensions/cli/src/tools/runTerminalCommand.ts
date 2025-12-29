@@ -7,9 +7,23 @@ import {
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
+  isCommentCommand,
   isGitCommitCommand,
+  isGitPushCommand,
+  isIssueCloseCommand,
   isPullRequestCommand,
+  isReviewCommand,
 } from "../telemetry/utils.js";
+import {
+  ParsedEventDetails,
+  parseCommentOutput,
+  parseGitPushOutput,
+  parseIssueCloseOutput,
+  parsePrCreatedOutput,
+  parseReviewOutput,
+} from "../util/commandEventParser.js";
+import { getAgentIdFromArgs, postAgentEvent } from "../util/events.js";
+import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
 
@@ -25,6 +39,39 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
     const userShell = process.env.SHELL || "/bin/bash";
     return { shell: userShell, args: ["-l", "-c", command] };
+  }
+}
+
+/**
+ * Emit an action event to the control plane for Activity Timeline.
+ * Non-blocking - errors are logged but don't fail the command.
+ */
+async function emitActionEvent(
+  agentId: string,
+  command: string,
+  output: string,
+): Promise<void> {
+  try {
+    let eventDetails: ParsedEventDetails | null = null;
+
+    if (isPullRequestCommand(command)) {
+      eventDetails = parsePrCreatedOutput(output);
+    } else if (isCommentCommand(command)) {
+      eventDetails = parseCommentOutput(command, output);
+    } else if (isGitPushCommand(command)) {
+      eventDetails = parseGitPushOutput(output);
+    } else if (isIssueCloseCommand(command)) {
+      eventDetails = parseIssueCloseOutput(command);
+    } else if (isReviewCommand(command)) {
+      eventDetails = parseReviewOutput(command);
+    }
+
+    if (eventDetails) {
+      await postAgentEvent(agentId, eventDetails);
+    }
+  } catch (error) {
+    // Non-blocking - log but don't fail the command
+    logger.debug("Failed to emit action event", error);
   }
 }
 
@@ -168,6 +215,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
             telemetryService.recordCommitCreated();
           } else if (isPullRequestCommand(command)) {
             telemetryService.recordPullRequestCreated();
+          }
+
+          // Emit activity events for Timeline (non-blocking)
+          const agentId = getAgentIdFromArgs();
+          if (agentId) {
+            void emitActionEvent(agentId, command, stdout);
           }
         }
 
