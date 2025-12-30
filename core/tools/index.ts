@@ -18,10 +18,15 @@ export const getBaseToolDefinitions = () => [
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => {
-  const { modelName, isSignedIn, enableExperimentalTools, isRemote } = params;
+  const { modelName, isSignedIn, enableExperimentalTools, isRemote, skills } =
+    params;
   const tools: Tool[] = [];
 
   tools.push(toolDefinitions.requestRuleTool(params));
+
+  if (skills.length > 0) {
+    tools.push(toolDefinitions.readSkillTool);
+  }
 
   if (isSignedIn) {
     // Web search is only available for signed-in users

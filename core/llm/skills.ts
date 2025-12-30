@@ -13,7 +13,6 @@ export function getSystemMessageWithSkills(
     lines.push("    <skill>");
     lines.push(`        <name>${skill.name}</name>`);
     lines.push(`        <description>${skill.description}</description>`);
-    lines.push(`        <location>${skill.path}</location>`);
     lines.push("    </skill>");
   }
   lines.push("</available_skills>");

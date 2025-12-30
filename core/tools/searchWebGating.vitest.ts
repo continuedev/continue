@@ -6,6 +6,7 @@ test("searchWeb tool is only available when user is signed in", () => {
   // Test with signed-in user
   const signedInTools = getConfigDependentToolDefinitions({
     rules: [],
+    skills: [],
     enableExperimentalTools: false,
     isSignedIn: true,
     isRemote: false,
@@ -21,6 +22,7 @@ test("searchWeb tool is only available when user is signed in", () => {
   // Test with non-signed-in user
   const notSignedInTools = getConfigDependentToolDefinitions({
     rules: [],
+    skills: [],
     enableExperimentalTools: false,
     isSignedIn: false,
     isRemote: false,

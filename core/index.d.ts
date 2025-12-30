@@ -1148,6 +1148,7 @@ interface ToolChoice {
 
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
+  skills: Skill[];
   enableExperimentalTools: boolean;
   isSignedIn: boolean;
   isRemote: boolean;

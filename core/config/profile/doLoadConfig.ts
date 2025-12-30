@@ -308,6 +308,7 @@ export default async function doLoadConfig(options: {
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
+      skills: newConfig.skills,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
       isSignedIn,
