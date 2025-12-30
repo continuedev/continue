@@ -1,0 +1,480 @@
+---
+title: "How to Create and Manage Skills in Continue"
+description: "Skills provide task-specific instructions that agents can discover and load on-demand"
+keywords: [skills, agent, instructions, tools]
+sidebarTitle: "Skills"
+---
+
+Skills provide specialized instructions to the model for [Agent mode](../../ide-extensions/agent/quick-start), [Chat](../../ide-extensions/chat/quick-start), and [Edit](../../ide-extensions/edit/quick-start) requests. Unlike rules that are always included, skills are discovered by their description and loaded only when needed.
+
+<Info>
+Skills are inspired by [Claude's Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) and provide a way to give agents access to specialized knowledge without cluttering the system message.
+</Info>
+
+## How Skills Work in Continue
+
+When you define skills, they appear in the system message with their name and description. The agent can then use the `read_skill` tool to load the full instructions when a task matches a skill's description.
+
+### Two-Stage Discovery Process
+
+<Steps>
+<Step title="Discovery">
+The agent sees available skills in the `<available_skills>` section of the system message, listing each skill's name and description.
+</Step>
+
+<Step title="Loading">
+When a task matches a skill's description, the agent calls the `read_skill` tool with the skill name to get the full instructions.
+</Step>
+</Steps>
+
+This approach keeps the system message lean while ensuring detailed instructions are available when needed.
+
+## Quick Start: How to Create Your First Skill File
+
+Below is a quick example of setting up a new skill file:
+
+<Steps>
+<Step title="Create the directory structure">
+Create a folder structure like `.continue/deployment` at the top level of your workspace.
+</Step>
+
+<Step title="Create the SKILL.md file">
+Add a file called `SKILL.md` to this folder.
+</Step>
+
+<Step title="Write the skill content">
+Write the following contents to `SKILL.md` and save:
+
+```md title=".continue/deployment/SKILL.md"
+---
+name: Deploy to Staging
+description: Instructions for deploying the application to the staging environment
+license: MIT
+---
+
+# Deployment Process
+
+## Prerequisites
+- Ensure all tests pass
+- Get approval from tech lead
+- Check staging environment status
+
+## Steps
+1. Create a release branch from main
+2. Run `npm run build:staging`
+3. Deploy using `npm run deploy:staging`
+4. Verify deployment at https://staging.example.com
+5. Monitor logs for 10 minutes post-deployment
+
+## Rollback
+If issues arise, run `npm run rollback:staging`
+```
+</Step>
+
+<Step title="Test the skill">
+Ask the agent "How do I deploy to staging?" and it should discover and use your skill.
+</Step>
+</Steps>
+
+## Skill File Format
+
+Skills are defined using Markdown files with YAML frontmatter:
+
+```md
+---
+name: Skill Name (required)
+description: What this skill helps with (required)
+toolName: custom_tool_name (optional, auto-generated from name)
+license: License type (optional)
+---
+
+# Skill Instructions
+
+Detailed instructions go here...
+```
+
+### Required Fields
+
+<ParamField path="name" type="string" required>
+The display name for the skill. This appears in the available skills list.
+</ParamField>
+
+<ParamField path="description" type="string" required>
+A concise description that helps the agent determine when to use this skill. Be specific about when this skill applies.
+</ParamField>
+
+### Optional Fields
+
+<ParamField path="toolName" type="string">
+Custom name for the tool. If not provided, it's auto-generated from the skill name.
+</ParamField>
+
+<ParamField path="license" type="string">
+License information for the skill (e.g., MIT, Apache-2.0).
+</ParamField>
+
+## Organizing Skills
+
+### File Structure
+
+Skills can be organized in subdirectories within `.continue/`:
+
+```
+.continue/
+├── deployment/
+│   └── SKILL.md          # Deployment procedures
+├── testing/
+│   └── SKILL.md          # Testing guidelines
+├── onboarding/
+│   └── SKILL.md          # New developer setup
+└── architecture/
+    └── SKILL.md          # Architecture decisions
+```
+
+Each subdirectory can contain one `SKILL.md` file. The directory name helps organize related skills logically.
+
+### Global vs Workspace Skills
+
+<Columns cols={2}>
+<Card title="Workspace Skills" icon="folder">
+- **Location**: `.continue/*/SKILL.md` in your project
+- **Scope**: Project-specific instructions
+- **Version Control**: Committed with your code
+- **Use Case**: Deployment, testing, project architecture
+</Card>
+
+<Card title="Global Skills" icon="globe">
+- **Location**: `~/.continue/*/SKILL.md` in your home directory
+- **Scope**: Personal or organization-wide instructions
+- **Version Control**: Not in project repo
+- **Use Case**: General development workflows, company standards
+</Card>
+</Columns>
+
+## Best Practices
+
+### Writing Effective Skill Descriptions
+
+<CodeGroup>
+```md Good
+---
+name: Deploy to Production
+description: Instructions for deploying the application to production, including pre-deployment checks, deployment steps, and rollback procedures
+---
+```
+
+```md Bad
+---
+name: Deployment
+description: How to deploy
+---
+```
+</CodeGroup>
+
+**Good descriptions:**
+- Are specific about what the skill covers
+- Mention key actions or scenarios (e.g., "including rollback procedures")
+- Help the agent decide when to use the skill
+
+**Bad descriptions:**
+- Are too generic
+- Don't provide enough context
+- Make it hard for the agent to know when to apply
+
+### Writing Clear Instructions
+
+<Accordion title="Use step-by-step instructions">
+Break down complex processes into numbered steps:
+
+```md
+## Deployment Steps
+1. Verify all tests pass
+2. Create release branch
+3. Build the application
+4. Deploy to environment
+5. Verify deployment
+```
+</Accordion>
+
+<Accordion title="Include prerequisites">
+List what needs to be in place before following the skill:
+
+```md
+## Prerequisites
+- AWS credentials configured
+- Access to deployment pipeline
+- Approval from tech lead
+```
+</Accordion>
+
+<Accordion title="Add troubleshooting">
+Include common issues and solutions:
+
+```md
+## Troubleshooting
+- **Build fails**: Check Node.js version matches .nvmrc
+- **Deploy times out**: Verify VPN connection
+```
+</Accordion>
+
+<Accordion title="Link to resources">
+Reference relevant documentation or tools:
+
+```md
+For more details, see:
+- [Deployment Pipeline](https://wiki.example.com/deployment)
+- [Rollback Procedures](https://wiki.example.com/rollback)
+```
+</Accordion>
+
+## Example Skills
+
+### Code Review Skill
+
+```md title=".continue/code-review/SKILL.md"
+---
+name: Code Review Guidelines
+description: Guidelines for conducting thorough code reviews, including what to look for and how to provide constructive feedback
+---
+
+# Code Review Process
+
+## What to Review
+- **Functionality**: Does the code do what it's supposed to?
+- **Tests**: Are there adequate tests?
+- **Security**: Are there any security vulnerabilities?
+- **Performance**: Are there any performance concerns?
+- **Style**: Does it follow our coding standards?
+
+## Providing Feedback
+- Be specific and constructive
+- Suggest improvements, don't just point out problems
+- Link to relevant documentation
+- Use the "praise + improvement" format
+
+## Approval Criteria
+- All tests pass
+- No security issues
+- Follows coding standards
+- Has adequate documentation
+```
+
+### Testing Skill
+
+```md title=".continue/testing/SKILL.md"
+---
+name: Writing Tests
+description: Standards and procedures for writing unit tests, integration tests, and end-to-end tests in this project
+---
+
+# Testing Standards
+
+## Unit Tests
+- Use Jest for unit tests
+- Place tests in `__tests__` directories
+- Name files as `ComponentName.test.ts`
+- Aim for >80% code coverage
+
+## Test Structure
+```typescript
+describe('ComponentName', () => {
+  it('should handle expected behavior', () => {
+    // Arrange
+    const input = setupInput();
+    
+    // Act
+    const result = functionUnderTest(input);
+    
+    // Assert
+    expect(result).toBe(expectedValue);
+  });
+});
+```
+
+## Integration Tests
+- Use Playwright for integration tests
+- Place in `tests/integration/`
+- Test critical user flows
+- Mock external services
+
+## Running Tests
+- `npm test` - Run all tests
+- `npm test:watch` - Watch mode
+- `npm test:coverage` - Generate coverage report
+```
+
+### Onboarding Skill
+
+```md title=".continue/onboarding/SKILL.md"
+---
+name: Developer Onboarding
+description: Steps for setting up the development environment and getting started with this project
+---
+
+# Developer Onboarding
+
+## Initial Setup
+
+### Prerequisites
+- Node.js 18+ (use nvm: `nvm use`)
+- Docker Desktop
+- AWS CLI configured
+
+### Installation Steps
+1. Clone the repository
+2. Run `npm install`
+3. Copy `.env.example` to `.env`
+4. Run `docker-compose up -d` to start services
+5. Run `npm run db:migrate` to set up database
+6. Run `npm run dev` to start development server
+
+## Project Structure
+```
+src/
+├── components/     # React components
+├── services/       # Business logic
+├── utils/          # Helper functions
+└── types/          # TypeScript types
+```
+
+## Key Commands
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm test` - Run tests
+- `npm run lint` - Check code style
+
+## Getting Help
+- Check the [wiki](https://wiki.example.com)
+- Ask in #dev-help Slack channel
+- Pair with a team member
+```
+
+## Troubleshooting
+
+### Skills Not Appearing
+
+<AccordionGroup>
+<Accordion title="Check file location">
+Ensure your `SKILL.md` files are in subdirectories of `.continue/`:
+- ✅ `.continue/deployment/SKILL.md`
+- ❌ `.continue/SKILL.md` (no subdirectory)
+- ❌ `.continue/deployment/skill.md` (wrong case)
+</Accordion>
+
+<Accordion title="Verify YAML frontmatter">
+Ensure your frontmatter is valid:
+```md
+---
+name: My Skill
+description: What it does
+---
+```
+
+The `---` delimiters are required on separate lines.
+</Accordion>
+
+<Accordion title="Reload Continue">
+After creating or modifying skills, reload the Continue extension:
+- VS Code: Reload window (Cmd/Ctrl + Shift + P → "Reload Window")
+- JetBrains: Restart the IDE
+</Accordion>
+</AccordionGroup>
+
+### Agent Not Using Skills
+
+<AccordionGroup>
+<Accordion title="Check skill description">
+Make sure your description clearly indicates when to use the skill. The agent uses this to determine relevance.
+</Accordion>
+
+<Accordion title="Model compatibility">
+Ensure you're using a model with tool support. Skills use the `read_skill` tool, which requires models that support function calling.
+
+See [tool support documentation](/customize/deep-dives/model-capabilities#tool-support) for compatible models.
+</Accordion>
+
+<Accordion title="Explicitly reference the skill">
+Try mentioning the skill in your prompt:
+- "Use the Deploy to Staging skill to help me deploy"
+- "Following the code review guidelines skill, review this PR"
+</Accordion>
+</AccordionGroup>
+
+### Error: "Skill not found"
+
+If the agent tries to read a skill that doesn't exist:
+
+1. **Check the skill name**: Ensure the name in your frontmatter matches what the agent is requesting
+2. **Verify file location**: Confirm the `SKILL.md` file is in the correct location
+3. **Reload Continue**: The skill may not have been loaded yet
+
+## Skills vs Rules
+
+Understanding when to use skills vs rules:
+
+<CardGroup cols={2}>
+<Card title="Use Skills For" icon="book-open">
+- Task-specific instructions
+- Step-by-step procedures
+- Detailed workflows
+- Information loaded on-demand
+- Context that's only needed sometimes
+</Card>
+
+<Card title="Use Rules For" icon="shield-check">
+- Always-applicable guidelines
+- Code quality standards
+- Security requirements
+- Formatting preferences
+- Constraints that apply to all code
+</Card>
+</CardGroup>
+
+### Example Comparison
+
+<Tabs>
+<Tab title="Skill (On-Demand)">
+```md title=".continue/deployment/SKILL.md"
+---
+name: Deploy to Production
+description: Step-by-step instructions for deploying to production
+---
+
+1. Run tests
+2. Build application
+3. Deploy to production
+4. Monitor for issues
+```
+
+**When to use**: Only loaded when the agent needs deployment instructions.
+</Tab>
+
+<Tab title="Rule (Always Applied)">
+```md title=".continue/rules/code-quality.md"
+---
+name: Code Quality Standards
+alwaysApply: true
+---
+
+- Always write tests for new features
+- Use TypeScript strict mode
+- Follow ESLint rules
+```
+
+**When to use**: Applied to all agent interactions for consistent code quality.
+</Tab>
+</Tabs>
+
+## Advanced: Skill Licensing
+
+If you're sharing skills or using skills from others, you can specify licensing:
+
+```md
+---
+name: My Skill
+description: What it does
+license: MIT
+---
+```
+
+This helps track the provenance and usage rights of skills, especially when skills are shared across teams or published publicly.

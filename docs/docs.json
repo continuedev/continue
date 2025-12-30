@@ -175,6 +175,7 @@
               "customize/models",
               "customize/mcp-tools",
               "customize/rules",
+              "customize/skills",
               "customize/prompts",
               {
                 "group": "Model Providers",
@@ -235,6 +236,7 @@
                 "pages": [
                   "customize/deep-dives/configuration",
                   "customize/deep-dives/rules",
+                  "customize/deep-dives/skills",
                   "customize/deep-dives/prompts",
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",

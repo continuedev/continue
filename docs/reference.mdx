@@ -7,11 +7,11 @@ description: "Comprehensive guide to the config.yaml format used by Continue.dev
 
 Continue Agents are defined using the `config.yaml` specification.
 
-**Agents** are composed of models, rules, and tools (MCP servers).
+**Agents** are composed of models, rules, skills, and tools (MCP servers).
 
 <Columns cols={2}>
 <Card title="Configuring Models, Rules, and Tools" icon="cube" href="/guides/configuring-models-rules-tools">
-Learn how to work with Continue's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
+Learn how to work with Continue's configuration system, including using hub models, rules, skills, and tools, creating local configurations, and organizing your setup.
 </Card>
 
   <Card title="Understanding Configs" icon="robot" href="/guides/understanding-configs">
@@ -33,6 +33,7 @@ The top-level properties in the `config.yaml` configuration file are:
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
+- [`skills`](#skills)
 - [`prompts`](#prompts)
 - [`docs`](#docs)
 - [`mcpServers`](#mcpservers)
@@ -245,6 +246,61 @@ Talk like a pirate
 ```
 
 See the [rules deep dive](/customize/deep-dives/rules) for more details.
+
+---
+
+### `skills`
+
+Skills provide task-specific instructions that agents can discover and load on-demand. Unlike rules that are always included in the system message, skills are discovered by their description and loaded only when needed using the `read_skill` tool.
+
+Skills are defined as `SKILL.md` files in subdirectories of `.continue/` (workspace) or `~/.continue/` (global).
+
+Skill file structure:
+
+```
+.continue/
+├── deployment/
+│   └── SKILL.md          # Deployment procedures
+├── testing/
+│   └── SKILL.md          # Testing guidelines
+└── onboarding/
+    └── SKILL.md          # New developer setup
+```
+
+Skill file example:
+
+```md title=".continue/deployment/SKILL.md"
+---
+name: Deploy to Staging
+description: Instructions for deploying the application to the staging environment
+license: MIT
+---
+
+# Deployment Process
+
+## Prerequisites
+- Ensure all tests pass
+- Get approval from tech lead
+
+## Steps
+1. Create a release branch from main
+2. Run `npm run build:staging`
+3. Deploy using `npm run deploy:staging`
+4. Verify deployment at https://staging.example.com
+```
+
+**Properties:**
+
+- `name` (**required**): Display name for the skill that appears in the available skills list
+- `description` (**required**): Concise description that helps the agent determine when to use this skill
+- `toolName`: Custom name for the tool (auto-generated from skill name if not provided)
+- `license`: License information for the skill (e.g., MIT, Apache-2.0)
+
+Skills are automatically discovered from:
+- Workspace skills: `.continue/*/SKILL.md` in your project
+- Global skills: `~/.continue/*/SKILL.md` in your home directory
+
+See the [skills deep dive](/customize/deep-dives/skills) for more details.
 
 ---
 

@@ -1,0 +1,33 @@
+---
+title: "Skills"
+description: "Skills allow you to provide project-specific instructions for tasks that the AI agent can discover and use when relevant. Instead of including all instructions in the system message, skills are loaded on-demand when the agent needs them."
+---
+
+Think of skills as specialized knowledge that your AI agent can reference when needed:
+
+- **Define task-specific workflows** and procedures
+- **Document specialized processes** unique to your project
+- **Create reusable instructions** that agents can discover contextually
+- **Reduce system message clutter** by loading instructions on-demand
+
+By implementing skills, you help the agent understand when and how to perform specialized tasks in your codebase without overwhelming the system message with all possible instructions.
+
+## How Skills Work
+
+Skills are discovered by the agent through their name and description in the system message. When a task matches a skill's description, the agent can read the full skill instructions using the `read_skill` tool. This two-stage approach keeps the system message concise while making detailed instructions available when needed.
+
+## Where to Manage Skills
+
+<Card title="Local Skills (.continue/*/SKILL.md)" icon="folder">
+- Create `SKILL.md` files in any `.continue/` subdirectory
+- Automatically discovered and loaded
+- Edit directly in your file system
+- Version controlled alongside your code
+- Best for project-specific skills (e.g., "how to deploy to staging")
+</Card>
+
+<Info>
+**Quick Setup**: Start by creating a `.continue/deployment/SKILL.md` file to document your deployment process, or `.continue/testing/SKILL.md` for testing guidelines.
+</Info>
+
+Learn more in the [skills deep dive](/customize/deep-dives/skills), and view [`skills`](/reference#skills) in the YAML Reference for more details.
