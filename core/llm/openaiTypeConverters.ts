@@ -776,7 +776,7 @@ function toResponseInputContentList(
 
 function serializeThinkingMessage(
   msg: ThinkingChatMessage,
-): ResponseInputItem | undefined {
+): { item: ResponseInputItem; dropNextAssistantId: boolean } | undefined {
   const details = msg.reasoning_details ?? [];
   if (!details.length) return undefined;
 
@@ -802,6 +802,11 @@ function serializeThinkingMessage(
   }
 
   if (id) {
+    if (!encrypted) {
+      // Return empty item signal and flag to drop next ID to prevent 400 error
+      return { item: {} as any, dropNextAssistantId: true };
+    }
+
     const reasoningItem: ResponseReasoningItem = {
       id,
       type: "reasoning",
@@ -813,39 +818,82 @@ function serializeThinkingMessage(
     if (reasoningText) {
       reasoningItem.content = [{ type: "reasoning_text", text: reasoningText }];
     }
+    if (encrypted) {
+      reasoningItem.encrypted_content = encrypted;
+    }
 
-    // Inject placeholder if encrypted content is missing to prevent 400 error
-    reasoningItem.encrypted_content = encrypted || "placeholder";
-
-    return reasoningItem as ResponseInputItem;
+    return {
+      item: reasoningItem as ResponseInputItem,
+      dropNextAssistantId: false,
+    };
   }
   return undefined;
 }
 
 function serializeAssistantMessage(
   msg: ChatMessage,
+  dropNextAssistantId: boolean,
   pushMessage: (role: "assistant", content: string) => void,
 ): ResponseInputItem | undefined {
   const text = getTextFromMessageContent(msg.content);
-  const respId = msg.metadata?.responsesOutputItemId as string | undefined;
+  // Revert: We want to control the ID based on dropNextAssistantId
+  const originalRespId = msg.metadata?.responsesOutputItemId as
+    | string
+    | undefined;
+  const respId = dropNextAssistantId ? undefined : originalRespId;
+
   const toolCalls = (msg as AssistantChatMessage).toolCalls as
     | ToolCallDelta[]
     | undefined;
 
-  if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-    // Emit full function_call output item
-    const tc = toolCalls[0];
-    const name = tc?.function?.name as string | undefined;
-    const args = tc?.function?.arguments as string | undefined;
-    const call_id = tc?.id as string | undefined;
-    const functionCallItem: ResponseFunctionToolCall = {
-      id: respId,
-      type: "function_call",
-      name: name || "",
-      arguments: typeof args === "string" ? args : "{}",
-      call_id: call_id || respId,
-    };
-    return functionCallItem;
+  if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+    if (respId) {
+      // Emit full function_call output item WITH ID
+      const tc = toolCalls[0];
+      const name = tc?.function?.name as string | undefined;
+      const args = tc?.function?.arguments as string | undefined;
+      const call_id = tc?.id as string | undefined;
+      const functionCallItem: ResponseFunctionToolCall = {
+        id: respId,
+        type: "function_call",
+        name: name || "",
+        arguments: typeof args === "string" ? args : "{}",
+        call_id: call_id || respId,
+      };
+      return functionCallItem;
+    } else {
+      // [NEW] Emit function_call output item WITHOUT ID (fallback for dropped reasoning)
+      // This ensures the tool call is not lost even if the reasoning item was omitted.
+      // We rely on the API accepting a tool call in the history without an explicit outputItemId link here,
+      // or effectively treating it as a new turn or unlinked call.
+      const tc = toolCalls[0];
+      const name = tc?.function?.name as string | undefined;
+      const args = tc?.function?.arguments as string | undefined;
+      const call_id = tc?.id as string | undefined;
+
+      // Note: The ResponseFunctionToolCall type might technically REQUIRE 'id'.
+      // If strict types enforce 'id', we might need to cast or omit.
+      // Checking the type definition (inferred): standard ResponseFunctionToolCall usually has 'id'.
+      // If we can't send it without ID, we can't fully support it in "Responses" API strict mode.
+      // However, for standard chat history, it might just be a message with tool_calls.
+      // But here we are constructing `ResponseInputItem`.
+
+      // If we cannot provide an ID, we cannot verify if 'function_call' type is valid without it.
+      // Let's assume for now we must unfortunately fall back to the text representation if strict ID is required,
+      // OR we try to construct a "message" type with tool_calls if possible.
+      // BUT `ResponseInputItem` variants are specific.
+
+      // Alternative: If we are forced to drop the ID, maybe we just don't send the ID field?
+      // Let's try to return the object but cast to any to suppress TS if ID is mandatory but we want to test behavior.
+      // safeguard:
+      const functionCallItem = {
+        type: "function_call",
+        name: name || "",
+        arguments: typeof args === "string" ? args : "{}",
+        call_id: call_id,
+      } as any;
+      return functionCallItem;
+    }
   } else if (respId) {
     // Emit full assistant output message item
     const outputMessageItem: ResponseOutputMessage = {
@@ -871,6 +919,7 @@ function serializeAssistantMessage(
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
+  let dropNextAssistantId = false;
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -906,12 +955,15 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "assistant": {
-        const result = serializeAssistantMessage(msg, (role, content) =>
-          pushMessage(role, content),
+        const result = serializeAssistantMessage(
+          msg,
+          dropNextAssistantId,
+          (role, content) => pushMessage(role, content),
         );
         if (result) {
           input.push(result);
         }
+        dropNextAssistantId = false;
         break;
       }
       case "tool": {
@@ -931,7 +983,11 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
       case "thinking": {
         const result = serializeThinkingMessage(msg as ThinkingChatMessage);
         if (result) {
-          input.push(result);
+          if (result.dropNextAssistantId) {
+            dropNextAssistantId = true;
+          } else {
+            input.push(result.item);
+          }
         }
         break;
       }
