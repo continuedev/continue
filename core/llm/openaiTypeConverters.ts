@@ -835,13 +835,15 @@ function serializeAssistantMessage(
 ): ResponseInputItem | undefined {
   const text = getTextFromMessageContent(msg.content);
 
-  const respId = dropNextAssistantId
-    ? undefined
-    : (msg.metadata?.responsesOutputItemId as string | undefined);
-
   const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
+  const hasToolCalls = Array.isArray(toolCalls) && toolCalls.length > 0;
 
-  if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
+  const respId =
+    dropNextAssistantId && !hasToolCalls
+      ? undefined
+      : (msg.metadata?.responsesOutputItemId as string | undefined);
+
+  if (respId && hasToolCalls) {
     // Emit full function_call output item
     const tc = toolCalls[0];
     const name = tc?.function?.name as string | undefined;
