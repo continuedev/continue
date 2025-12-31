@@ -739,7 +739,7 @@
     "dbinfoz": "^0.14.0",
     "diff": "^7.0.0",
     "downshift": "^7.6.0",
-    "express": "^4.18.2",
+    "express": "^4.22.0",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
     "handlebars": "^4.7.8",
