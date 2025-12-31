@@ -776,7 +776,7 @@ function toResponseInputContentList(
 
 function serializeThinkingMessage(
   msg: ThinkingChatMessage,
-): { item: ResponseInputItem; dropNextAssistantId: boolean } | undefined {
+): ResponseInputItem | undefined {
   const details = msg.reasoning_details ?? [];
   if (!details.length) return undefined;
 
@@ -802,10 +802,6 @@ function serializeThinkingMessage(
   }
 
   if (id) {
-    if (!encrypted) {
-      return { item: {} as any, dropNextAssistantId: true };
-    }
-
     const reasoningItem: ResponseReasoningItem = {
       id,
       type: "reasoning",
@@ -817,33 +813,24 @@ function serializeThinkingMessage(
     if (reasoningText) {
       reasoningItem.content = [{ type: "reasoning_text", text: reasoningText }];
     }
-    if (encrypted) {
-      reasoningItem.encrypted_content = encrypted;
-    }
-    return {
-      item: reasoningItem as ResponseInputItem,
-      dropNextAssistantId: false,
-    };
+
+    // Inject placeholder if encrypted content is missing to prevent 400 error
+    reasoningItem.encrypted_content = encrypted || "placeholder";
+
+    return reasoningItem as ResponseInputItem;
   }
   return undefined;
 }
 
 function serializeAssistantMessage(
   msg: ChatMessage,
-  dropNextAssistantId: boolean,
   pushMessage: (role: "assistant", content: string) => void,
 ): ResponseInputItem | undefined {
   const text = getTextFromMessageContent(msg.content);
-
+  const respId = msg.metadata?.responsesOutputItemId as string | undefined;
   const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
-  const hasToolCalls = Array.isArray(toolCalls) && toolCalls.length > 0;
 
-  const respId =
-    dropNextAssistantId && !hasToolCalls
-      ? undefined
-      : (msg.metadata?.responsesOutputItemId as string | undefined);
-
-  if (respId && hasToolCalls) {
+  if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
     // Emit full function_call output item
     const tc = toolCalls[0];
     const name = tc?.function?.name as string | undefined;
@@ -882,7 +869,6 @@ function serializeAssistantMessage(
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
-  let dropNextAssistantId = false;
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -918,15 +904,12 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "assistant": {
-        const result = serializeAssistantMessage(
-          msg,
-          dropNextAssistantId,
-          (role, content) => pushMessage(role, content),
+        const result = serializeAssistantMessage(msg, (role, content) =>
+          pushMessage(role, content),
         );
         if (result) {
           input.push(result);
         }
-        dropNextAssistantId = false;
         break;
       }
       case "tool": {
@@ -946,11 +929,7 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
       case "thinking": {
         const result = serializeThinkingMessage(msg as ThinkingChatMessage);
         if (result) {
-          if (result.dropNextAssistantId) {
-            dropNextAssistantId = true;
-          } else {
-            input.push(result.item);
-          }
+          input.push(result);
         }
         break;
       }
