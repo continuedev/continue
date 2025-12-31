@@ -828,7 +828,9 @@ function serializeAssistantMessage(
 ): ResponseInputItem | undefined {
   const text = getTextFromMessageContent(msg.content);
   const respId = msg.metadata?.responsesOutputItemId as string | undefined;
-  const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
+  const toolCalls = (msg as AssistantChatMessage).toolCalls as
+    | ToolCallDelta[]
+    | undefined;
 
   if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
     // Emit full function_call output item
