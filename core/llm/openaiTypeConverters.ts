@@ -776,6 +776,7 @@ function toResponseInputContentList(
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
+  let dropNextAssistantId = false;
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -813,9 +814,11 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
       case "assistant": {
         const text = getTextFromMessageContent(msg.content);
 
-        const respId = msg.metadata?.responsesOutputItemId as
-          | string
-          | undefined;
+        const respId = dropNextAssistantId
+          ? undefined
+          : (msg.metadata?.responsesOutputItemId as string | undefined);
+        dropNextAssistantId = false;
+
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
 
         if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
@@ -891,6 +894,11 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
               reasoningText += d.text;
           }
           if (id) {
+            if (!encrypted) {
+              dropNextAssistantId = true;
+              break;
+            }
+
             const reasoningItem: ResponseReasoningItem = {
               id,
               type: "reasoning",
