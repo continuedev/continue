@@ -56,6 +56,12 @@ describe("TUIChat - User Input Tests", () => {
       stdin.write("!@#$%^&*()");
       await waitForNextRender();
 
+      // Remote mode may need extra time for the input to be rendered
+      // especially on slower CI environments (macOS Node 18)
+      if (mode === "remote") {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
       const frame = lastFrame();
 
       // Should handle special characters without crashing
