@@ -67,4 +67,4 @@ join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
 
 ## License
 
-[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
+[Apache 2.0 © 2023-2026 Continue Dev, Inc.](./LICENSE)
