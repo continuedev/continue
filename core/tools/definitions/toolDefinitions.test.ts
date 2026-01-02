@@ -6,6 +6,7 @@ describe("Tool Definitions", () => {
   // Mock params for tools that need them
   const mockParams: ConfigDependentToolParams = {
     rules: [],
+    skills: [],
     enableExperimentalTools: false,
     isSignedIn: false,
     isRemote: false,

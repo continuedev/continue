@@ -144,6 +144,7 @@ export const streamNormalInput = createAsyncThunk<
       systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
+      state.config.config.skills,
       systemToolsFramework,
     );
 
