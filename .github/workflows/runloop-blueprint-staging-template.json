@@ -23,9 +23,7 @@
       "export DISPLAY=:99",
       "export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
       "nohup Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &",
-      "sleep 2",
-      "sudo mkdir -p /home/user",
-      "for dir in /root/*; do [ -d \"$dir\" ] && [ -d \"$dir/.git\" ] && sudo ln -sf \"$dir\" \"/home/user/$(basename \"$dir\")\"; done"
+      "sleep 2"
     ]
   }
 }
