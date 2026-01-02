@@ -1,0 +1,1 @@
+Add Event tool for reporting agent activity to task timeline with automatic detection of GitHub CLI commands
