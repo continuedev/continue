@@ -113,6 +113,58 @@ export function isPullRequestCommand(command: string): boolean {
 }
 
 /**
+ * Check if a command is a comment command (PR or issue comment)
+ */
+export function isCommentCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return (
+    trimmed.includes("gh pr comment") || trimmed.includes("gh issue comment")
+  );
+}
+
+/**
+ * Check if a command is a git push command (but not PR creation)
+ */
+export function isGitPushCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.startsWith("git push") && !trimmed.includes("pull-request");
+}
+
+/**
+ * Check if a command is an issue close command
+ */
+export function isIssueCloseCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.includes("gh issue close");
+}
+
+/**
+ * Check if a command is a PR review command
+ */
+export function isReviewCommand(command: string): boolean {
+  const trimmed = command.trim().toLowerCase();
+  return trimmed.includes("gh pr review");
+}
+
+/**
+ * Check if command is a gh api call to reply to a PR review comment
+ * Pattern: gh api -X POST repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies
+ */
+export function isCommentReplyCommand(command: string): boolean {
+  return /gh api\s+.*repos\/[^\/]+\/[^\/]+\/pulls\/\d+\/comments\/\d+\/replies/i.test(
+    command,
+  );
+}
+
+/**
+ * Check if command is a gh api graphql call to resolve a review thread
+ * Pattern: gh api graphql ... resolveReviewThread
+ */
+export function isResolveThreadCommand(command: string): boolean {
+  return /gh api graphql.*resolveReviewThread/i.test(command);
+}
+
+/**
  * Get file type from extension for metrics
  */
 export function getFileTypeFromPath(filePath: string): string {
