@@ -1,0 +1,1 @@
+Upgrade tailwindcss from 3.4.14 to 3.4.18 to fix security vulnerabilities and improve Node 22+ compatibility
