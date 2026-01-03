@@ -28,6 +28,16 @@ describe("CLI utility functions", () => {
       process.argv = ["node", "script.js", "other", "args"];
       expect(isHeadlessMode()).toBe(false);
     });
+
+    it("should return true when acp command is present", () => {
+      process.argv = ["node", "script.js", "acp"];
+      expect(isHeadlessMode()).toBe(true);
+    });
+
+    it("should return false when acp help is requested", () => {
+      process.argv = ["node", "script.js", "acp", "--help"];
+      expect(isHeadlessMode()).toBe(false);
+    });
   });
 
   describe("isServe", () => {
