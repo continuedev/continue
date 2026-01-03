@@ -89,6 +89,7 @@ export const LLMClasses = [
   Lemonade,
   LMStudio,
   Mistral,
+  Mimo,
   Bedrock,
   BedrockImport,
   SageMaker,
