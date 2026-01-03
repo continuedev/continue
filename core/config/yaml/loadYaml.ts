@@ -187,6 +187,7 @@ export async function configYamlToContinueConfig(options: {
       autocomplete: [],
       rerank: [],
       summarize: [],
+      subagent: [],
     },
     selectedModelByRole: {
       chat: null,
@@ -196,6 +197,7 @@ export async function configYamlToContinueConfig(options: {
       autocomplete: null,
       rerank: null,
       summarize: null,
+      subagent: null,
     },
     rules: [],
     requestOptions: { ...config.requestOptions },
