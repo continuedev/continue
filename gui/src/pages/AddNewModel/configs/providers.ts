@@ -368,6 +368,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.mistral.ai/codestral",
   },
+   mimo: {
+    title: "Xiaomi Mimo",
+    provider: "mimo",
+    description: "Use Xiaomi's Mimo models for fast and efficient AI responses",
+    longDescription:
+      "Xiaomi Mimo provides OpenAI-compatible API access to their language models. Get your API key from the [Xiaomi Mimo Platform](https://platform.xiaomimimo.com/).",
+    icon: "mimo.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [models.mimoV2Flash],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Xiaomi Mimo API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://platform.xiaomimimo.com/",
+  },
   ollama: {
     title: "Ollama",
     provider: "ollama",

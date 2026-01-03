@@ -37,6 +37,7 @@ import LlamaStack from "./LlamaStack";
 import Lemonade from "./Lemonade";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
+import Mimo from "./Mimo";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";

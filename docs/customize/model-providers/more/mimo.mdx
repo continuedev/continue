@@ -1,0 +1,40 @@
+---
+title: "How to Configure Xiaomi Mimo with Continue"
+sidebarTitle: "Xiaomi Mimo"
+---
+
+<Info>
+  Get your API key from the [Xiaomi Mimo Platform](https://platform.xiaomimimo.com/)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: mimo
+      model: mimo-v2-flash
+      apiKey: <YOUR_MIMO_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "mimo",
+        "model": "mimo-v2-flash",
+        "apiKey": "<YOUR_MIMO_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
