@@ -1,5 +1,7 @@
 # Vercel AI SDK Integration
 
+> **Note:** This package uses AI SDK v5, which introduced breaking API changes from v4. See the [AI SDK v5 Migration](#ai-sdk-v5-migration) section below.
+
 ## Why
 
 ### The Problem
@@ -135,6 +137,24 @@ Vercel AI SDK uses different formats than OpenAI. We handle conversion transpare
 }
 ```
 
+**AI SDK v5 API Changes:**
+
+```typescript
+// streamText/generateText configuration
+{
+  maxOutputTokens: 1000,  // v5: renamed from maxTokens
+  // ... other parameters
+}
+
+// Tool call access
+toolCall.input  // v5: renamed from toolCall.args
+
+// Usage properties
+result.usage.inputTokens      // v5: renamed from promptTokens
+result.usage.outputTokens     // v5: renamed from completionTokens
+result.usage.totalTokens      // unchanged
+```
+
 **Stream Events:**
 
 ```typescript
@@ -260,6 +280,7 @@ export class OpenAIApi implements BaseLlmApi {
         model,
         messages: body.messages,
         tools: vercelTools,
+        maxOutputTokens: body.max_tokens, // v5: renamed from maxTokens
         // ... other parameters
       });
 
@@ -313,6 +334,7 @@ export class AnthropicApi implements BaseLlmApi {
         model,
         messages: vercelMessages,
         tools: vercelTools,
+        maxOutputTokens: body.max_tokens, // v5: renamed from maxTokens
         // ... other parameters
       });
 
@@ -480,6 +502,54 @@ All scenarios should work identically with flags enabled/disabled.
 8. Add inline documentation
 9. Create usage examples
 
+## AI SDK v5 Migration
+
+### Breaking Changes
+
+AI SDK v5 introduced the following breaking API changes:
+
+1. **Request Parameters**
+
+   - `maxTokens` → `maxOutputTokens` in `generateText()` and `streamText()` calls
+
+2. **Tool Call Access**
+
+   - `toolCall.args` → `toolCall.input` for accessing tool call arguments
+
+3. **Usage Properties**
+   - `result.usage.promptTokens` → `result.usage.inputTokens`
+   - `result.usage.completionTokens` → `result.usage.outputTokens`
+   - `result.usage.totalTokens` remains unchanged
+
+### Migration in openai-adapters
+
+The following files were updated to support AI SDK v5:
+
+- `packages/openai-adapters/src/apis/OpenAI.ts`
+
+  - Updated `maxTokens` → `maxOutputTokens` in streamText/generateText calls
+  - Updated `tc.args` → `tc.input` for tool call input access
+  - Updated usage mapping: `promptTokens` → `inputTokens`, `completionTokens` → `outputTokens`
+
+- `packages/openai-adapters/src/apis/Anthropic.ts`
+  - Updated `maxTokens` → `maxOutputTokens` in streamText/generateText calls
+  - Updated `tc.args` → `tc.input` for tool call input access
+  - Updated usage mapping with safe defaults: `inputTokens ?? 0`, `outputTokens ?? 0`, `totalTokens ?? 0`
+
+### Compatibility
+
+All changes are internal to the openai-adapters package. The external `BaseLlmApi` interface remains unchanged, ensuring:
+
+- ✅ Zero consumer code changes required
+- ✅ Backward compatibility maintained
+- ✅ All existing tests pass
+
+### Version Requirements
+
+- **AI SDK:** v5.0.52 or higher
+- **Dependencies:** `@ai-sdk/openai` ^1.0.10, `@ai-sdk/anthropic` ^1.0.10
+- **Peer Dependencies:** Node.js 18+ and zod ^3.25.76 or ^4
+
 ## Summary
 
 The Vercel AI SDK integration:
@@ -490,5 +560,6 @@ The Vercel AI SDK integration:
 - **Improves code quality and test coverage**
 - **Benefits both CLI and Core IDE**
 - **No consumer code changes required**
+- **Updated for AI SDK v5 compatibility**
 
 The implementation is production-ready and awaiting Phase 3 validation testing.

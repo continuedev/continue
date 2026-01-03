@@ -436,7 +436,7 @@ export class AnthropicApi implements BaseLlmApi {
       system: systemText,
       messages: nonSystemMessages as any,
       temperature: body.temperature ?? undefined,
-      maxTokens: body.max_tokens ?? undefined,
+      maxOutputTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
       stopSequences: body.stop
         ? Array.isArray(body.stop)
@@ -454,7 +454,7 @@ export class AnthropicApi implements BaseLlmApi {
       type: "function" as const,
       function: {
         name: tc.toolName,
-        arguments: JSON.stringify(tc.args),
+        arguments: JSON.stringify(tc.input),
       },
     }));
 
@@ -478,9 +478,9 @@ export class AnthropicApi implements BaseLlmApi {
         },
       ],
       usage: {
-        prompt_tokens: result.usage.promptTokens,
-        completion_tokens: result.usage.completionTokens,
-        total_tokens: result.usage.totalTokens,
+        prompt_tokens: result.usage.inputTokens ?? 0,
+        completion_tokens: result.usage.outputTokens ?? 0,
+        total_tokens: result.usage.totalTokens ?? 0,
         prompt_tokens_details: {
           cached_tokens:
             (result.usage as any).promptTokensDetails?.cachedTokens ?? 0,
@@ -652,7 +652,7 @@ export class AnthropicApi implements BaseLlmApi {
       system: systemText,
       messages: nonSystemMessages as any,
       temperature: body.temperature ?? undefined,
-      maxTokens: body.max_tokens ?? undefined,
+      maxOutputTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
       stopSequences: body.stop
         ? Array.isArray(body.stop)
