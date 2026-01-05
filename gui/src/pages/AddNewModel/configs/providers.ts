@@ -368,7 +368,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.mistral.ai/codestral",
   },
-   mimo: {
+  mimo: {
     title: "Xiaomi Mimo",
     provider: "mimo",
     description: "Use Xiaomi's Mimo models for fast and efficient AI responses",

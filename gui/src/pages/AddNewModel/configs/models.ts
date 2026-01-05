@@ -2661,7 +2661,7 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cometapi.png",
     isOpenSource: false,
   },
-   
+
   // Xiaomi Mimo models
   mimoV2Flash: {
     title: "mimo-v2-flash",
