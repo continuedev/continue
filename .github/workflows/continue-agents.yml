@@ -25,7 +25,7 @@ jobs:
       matrix: ${{ steps.discover.outputs.matrix }}
       has-agents: ${{ steps.discover.outputs.has_agents }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Discover agents
         id: discover
@@ -55,7 +55,7 @@ jobs:
       matrix:
         agent: ${{ fromJson(needs.discover.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
