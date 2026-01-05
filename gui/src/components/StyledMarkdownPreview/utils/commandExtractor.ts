@@ -23,29 +23,27 @@ export function extractCommand(cmd: string): string {
   // Process lines - remove single-line comments only at beginning of lines
   const lines = cmd
     .split("\n")
-    .map((line) => line.replace(/^\s*#.*$/, "").replace(/^\s*\/\/.*$/, ""))
+    .map((line) => line.replace(/^\s*#.*$/, "").replace(/^\s*\/\/.*$/, "")) // Remove comments
     .map((line) => line.trim())
     .filter((line) => line);
 
-  // Join lines with proper handling of continuations
+  // Join lines, respecting backslash continuations logic
   let result = "";
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
 
-    // Remove trailing continuation characters and join with next line
-    while (
-      (line.endsWith("&&") || line.endsWith("|") || line.endsWith("\\")) &&
-      i < lines.length - 1
-    ) {
-      // Remove the continuation character(s) and any trailing spaces
-      line = line.replace(/(&&|\||\\)\s*$/, "").trim();
-      // Join with the next line
-      i++;
-      line += " " + lines[i];
+    // Handle line continuation with backslash
+    if (line.endsWith("\\") && i < lines.length - 1) {
+      // Remove the backslash and join with next line using a space
+      result += line.slice(0, -1).trim() + " ";
+    } else {
+      // Otherwise keep the line and add a newline
+      result += line;
+      if (i < lines.length - 1) {
+        result += "\n";
+      }
     }
-
-    result += line + " ";
   }
 
-  return result.trim().replace(/\s+/g, " ");
+  return result.trim();
 }

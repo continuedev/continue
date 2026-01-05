@@ -17,6 +17,7 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize } from "../../util";
+import { SearchMatch } from "../find/findWidgetSearch";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
@@ -155,6 +156,12 @@ interface StyledMarkdownPreviewProps {
   toolCallId?: string;
   expandCodeblocks?: boolean;
   collapsible?: boolean;
+  searchState?: {
+    searchTerm: string;
+    caseSensitive: boolean;
+    useRegex: boolean;
+    currentMatch?: SearchMatch;
+  };
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -221,6 +228,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
   const itemIndexRef = useUpdatingRef(props.itemIndex);
+  const searchStateRef = useUpdatingRef(props.searchState);
 
   const codeblockStreamIds = useRef<string[]>([]);
 
@@ -268,11 +276,94 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
       () => {
         let codeBlockIndex = 0;
+        let localMatchIndex = 0;
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
             node.properties = { "data-codeblockindex": codeBlockIndex };
             codeBlockIndex++;
+          });
+
+          // Highlight search terms
+          if (!searchStateRef.current?.searchTerm) return;
+          const { searchTerm, caseSensitive, currentMatch } =
+            searchStateRef.current;
+          const query = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+
+          visit(tree, "text", (node: any, index: any, parent: any) => {
+            if (!node.value || !parent) return;
+
+            // Skip if already inside a mark (to avoid recursion if we had multiple passes, though here it's one pass)
+            // Also might want to skip script/style tags if they exist (unlikely in this markdown)
+
+            const textValue = node.value;
+            const textToCheck = caseSensitive
+              ? textValue
+              : textValue.toLowerCase();
+
+            if (!textToCheck.includes(query)) return;
+
+            const newChildren: any[] = [];
+            let lastIndex = 0;
+            let matchIndex;
+
+            // Find all matches in this text node
+            while (
+              (matchIndex = textToCheck.indexOf(query, lastIndex)) !== -1
+            ) {
+              // Text before match
+              if (matchIndex > lastIndex) {
+                newChildren.push({
+                  type: "text",
+                  value: textValue.slice(lastIndex, matchIndex),
+                });
+              }
+
+              // Determine if this is the active match
+              // We check if the messageIndex matches AND if this matches the matchIndexInMessage
+              // calculated by FindWidget. BUT FindWidget calculates it based on RAW text.
+              // To be "more reliable", we'll just check if this is the active match if messageIndex matches
+              // and the match count matches. This is still brittle but better than nothing.
+              const isActive =
+                currentMatch &&
+                currentMatch.messageIndex === itemIndexRef.current &&
+                currentMatch.matchIndexInMessage === localMatchIndex;
+
+              // The match itself wrapped in mark
+              newChildren.push({
+                type: "element",
+                tagName: "mark",
+                properties: {
+                  className: isActive ? "find-match active" : "find-match",
+                },
+                children: [
+                  {
+                    type: "text",
+                    value: textValue.slice(
+                      matchIndex,
+                      matchIndex + query.length,
+                    ),
+                  },
+                ],
+              });
+
+              localMatchIndex++;
+              lastIndex = matchIndex + query.length;
+            }
+
+            // Remaining text
+            if (lastIndex < textValue.length) {
+              newChildren.push({
+                type: "text",
+                value: textValue.slice(lastIndex),
+              });
+            }
+
+            // Replace the original text node with new children
+            parent.children.splice(index, 1, ...newChildren);
+
+            // Return index + newChildren.length to skip over what we just inserted
+            return index + newChildren.length;
           });
         };
       },
@@ -376,7 +467,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // some patches to source markdown are applied here:
       fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
     );
-  }, [props.source, allSymbols]);
+  }, [props.source, allSymbols, props.searchState]);
 
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";

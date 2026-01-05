@@ -154,6 +154,8 @@ export function History() {
     >
       <div className="relative my-2 mt-4 flex justify-center space-x-2">
         <input
+          id="history-search-input"
+          name="history-search-input"
           className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"

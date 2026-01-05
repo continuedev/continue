@@ -7,7 +7,7 @@ class LoggerClass {
 
   private constructor() {
     this.winston = winston.createLogger({
-      level: "info",
+      level: "debug",
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.timestamp(),

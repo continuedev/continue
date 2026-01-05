@@ -7,7 +7,12 @@ import {
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../redux/slices/uiSlice";
 import { AppDispatch } from "../../../../redux/store";
+import ConfirmationDialog from "../../../dialogs/ConfirmationDialog";
 import AtMentionDropdown from "../../AtMentionDropdown";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
 import { TIPPY_DIV_ID } from "../TipTapEditor";
@@ -96,14 +101,64 @@ function getSuggestion(
 function getSubActionsForSubmenuItem(
   item: ContextSubmenuItem & { providerTitle: string },
   ideMessenger: IIdeMessenger,
+  dispatch: AppDispatch,
 ): ComboBoxSubAction[] | undefined {
   if (item.providerTitle === "docs") {
     return [
       {
-        label: "Open in new tab",
+        label: "Delete Doc",
         icon: "trash",
         action: () => {
           ideMessenger.post("context/removeDocs", { startUrl: item.id });
+        },
+      },
+    ];
+  }
+
+  if (item.providerTitle === "prompts") {
+    return [
+      {
+        label: "Delete Prompt",
+        icon: "trash",
+        action: () => {
+          dispatch(setShowDialog(true));
+          dispatch(
+            setDialogMessage(
+              <ConfirmationDialog
+                text={`Are you sure you want to delete the prompt "${item.title}"?`}
+                onConfirm={() => {
+                  ideMessenger.post("config/deletePromptFile", {
+                    baseFilename: item.description,
+                  });
+                }}
+              />,
+            ),
+          );
+        },
+      },
+    ];
+  }
+
+  if (item.providerTitle === "rules") {
+    return [
+      {
+        label: "Delete Rule",
+        icon: "trash",
+        action: () => {
+          dispatch(setShowDialog(true));
+          dispatch(
+            setDialogMessage(
+              <ConfirmationDialog
+                text={`Are you sure you want to delete the rule "${item.title}"?`}
+                onConfirm={() => {
+                  ideMessenger.post("config/deleteLocalWorkspaceBlock", {
+                    blockType: "rules",
+                    baseFilename: item.description,
+                  });
+                }}
+              />,
+            ),
+          );
         },
       },
     ];
@@ -125,6 +180,7 @@ export function getContextProviderDropdownOptions(
   onOpen: () => void,
   inSubmenu: MutableRefObject<string | undefined>,
   ideMessenger: IIdeMessenger,
+  dispatch: AppDispatch,
 ) {
   const items = async ({ query }: { query: string }) => {
     if (inSubmenu.current) {
@@ -138,7 +194,11 @@ export function getContextProviderDropdownOptions(
           label: result.title,
           type: inSubmenu.current as ComboBoxItemType,
           query: result.id,
-          subActions: getSubActionsForSubmenuItem(result, ideMessenger),
+          subActions: getSubActionsForSubmenuItem(
+            result,
+            ideMessenger,
+            dispatch,
+          ),
         };
       });
     }
@@ -222,6 +282,7 @@ export function getSlashCommandDropdownOptions(
       type: (provider.type ?? SlashCommand.name) as ComboBoxItemType,
       content: provider.content,
       action: provider.action,
+      subActions: undefined,
     }));
 
     if (query.length === 0 && commandItems.length === 0) {
@@ -238,6 +299,7 @@ export function getSlashCommandDropdownOptions(
         id: "",
         label: "",
         content: "",
+        subActions: undefined,
       });
     }
 

@@ -41,6 +41,7 @@ const saveSubsetFilters = [
 
     // Persist edit mode in case closes in middle
     "mode",
+    "hasReasoningEnabled",
 
     // higher risk to persist
     // codeBlockApplyStates
@@ -125,9 +126,7 @@ export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
             ideMessenger,
           },
         },
-      }),
-    // This can be uncommented to get detailed Redux logs
-    // .concat(logger),
+      }).concat(logger),
   });
 }
 

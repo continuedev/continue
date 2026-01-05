@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { getPlatform } from "../util";
 
 interface Position {
@@ -19,6 +19,10 @@ const OSRContextMenu = () => {
   const [canCopy, setCanCopy] = useState(false);
   const [canCut, setCanCut] = useState(false);
   const [canPaste, setCanPaste] = useState(false);
+  const [ruleContext, setRuleContext] = useState<{
+    baseFilename: string;
+    isGlobal: boolean;
+  } | null>(null);
 
   const menuRef = React.useRef<HTMLDivElement>(null);
   const selectedTextRef = useRef<string | null>(null);
@@ -38,6 +42,34 @@ const OSRContextMenu = () => {
 
     // Hide menu
     setPosition(null);
+    setRuleContext(null);
+  }
+
+  function handleEditRule() {
+    if (!ruleContext) return;
+    if (ruleContext.isGlobal) {
+      ideMessenger.post("config/openProfile", { profileId: undefined });
+    } else {
+      ideMessenger.post("config/openProfile", { profileId: undefined });
+    }
+    setPosition(null);
+    setRuleContext(null);
+  }
+
+  function handleDeleteRule() {
+    if (!ruleContext) return;
+    if (ruleContext.isGlobal) {
+      ideMessenger.post("config/deleteGlobalRule", {
+        baseFilename: ruleContext.baseFilename,
+      });
+    } else {
+      ideMessenger.post("config/deleteLocalWorkspaceBlock", {
+        blockType: "rules",
+        baseFilename: ruleContext.baseFilename,
+      });
+    }
+    setPosition(null);
+    setRuleContext(null);
   }
 
   useEffect(() => {
@@ -45,6 +77,7 @@ const OSRContextMenu = () => {
       setPosition(null);
     }
     function contextMenuHandler(event: MouseEvent) {
+      if (event.shiftKey) return;
       event.preventDefault();
     }
     function clickHandler(event: MouseEvent) {
@@ -54,6 +87,8 @@ const OSRContextMenu = () => {
       }
 
       if (event.button === 2) {
+        if (event.shiftKey) return;
+
         // Prevent default context menu
         event.preventDefault();
 
@@ -91,10 +126,19 @@ const OSRContextMenu = () => {
         let isEditable = false;
         if (
           event.target &&
-          "isContentEditable" in event.target &&
-          typeof event.target.isContentEditable === "boolean"
+          (event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            (event.target instanceof HTMLElement &&
+              event.target.isContentEditable))
         ) {
-          isEditable = event.target.isContentEditable;
+          isEditable =
+            "isContentEditable" in event.target &&
+            event.target.isContentEditable
+              ? true
+              : !(
+                  (event.target as any).readOnly ||
+                  (event.target as any).disabled
+                );
         }
 
         setCanCopy(!!selectedTextRef.current && isClickWithinSelection);
@@ -102,11 +146,8 @@ const OSRContextMenu = () => {
           !!(isEditable && selectedTextRef.current && isClickWithinSelection),
         );
 
-        // TODO only can paste if there is text in clipboard?
+        // only can paste if editable
         setCanPaste(isEditable);
-        //   navigator.clipboard.readText().then((text) => {
-        //     setCanPaste(text || null);
-        //   });
 
         // Open towards inside of window from click
         const toRight = event.clientX > window.innerWidth / 2;
@@ -137,14 +178,54 @@ const OSRContextMenu = () => {
           }
         }
       }
+
+      // Check for rule context menu
+      let target = event.target as HTMLElement;
+      while (target && target !== document.body) {
+        if (target.getAttribute("data-context-menu-type") === "rule") {
+          const baseFilename = target.getAttribute("data-rule-filename");
+          const isGlobal = target.getAttribute("data-rule-global") === "true";
+          if (baseFilename) {
+            setRuleContext({ baseFilename, isGlobal });
+            // Set position similar to above
+            const toRight = event.clientX > window.innerWidth / 2;
+            const toBottom = event.clientY > window.innerHeight / 2;
+            if (toRight) {
+              if (toBottom) {
+                setPosition({
+                  bottom: window.innerHeight - event.clientY,
+                  right: window.innerWidth - event.clientX,
+                });
+              } else {
+                setPosition({
+                  top: event.clientY,
+                  right: window.innerWidth - event.clientX,
+                });
+              }
+            } else {
+              if (toBottom) {
+                setPosition({
+                  bottom: window.innerHeight - event.clientY,
+                  left: event.clientX,
+                });
+              } else {
+                setPosition({
+                  top: event.clientY,
+                  left: event.clientX,
+                });
+              }
+            }
+          }
+          break;
+        }
+        target = target.parentElement as HTMLElement;
+      }
     }
 
     setPosition(null);
-    if (isOSREnabled && platform.current !== "mac") {
-      document.addEventListener("mousedown", clickHandler);
-      document.addEventListener("mouseleave", leaveWindowHandler);
-      document.addEventListener("contextmenu", contextMenuHandler);
-    }
+    document.addEventListener("mousedown", clickHandler);
+    document.addEventListener("mouseleave", leaveWindowHandler);
+    document.addEventListener("contextmenu", contextMenuHandler);
 
     return () => {
       document.removeEventListener("mousedown", clickHandler);
@@ -153,7 +234,7 @@ const OSRContextMenu = () => {
     };
   }, [isOSREnabled]);
 
-  if (platform.current === "mac" || !isOSREnabled || !position) {
+  if (!position) {
     return null;
   }
   return (
@@ -187,25 +268,58 @@ const OSRContextMenu = () => {
           Cut
         </div>
       )}
-      {/* PASTING is currently broken, can't get the clipboard text */}
-      {/* {canPaste && (
-        <div
-          className="cursor-pointer hover:opacity-90"
-          onClick={async (e) => {
-            onMenuItemClick(e);
-            const clipboardText = await navigator.clipboard.readText();
-            // const out = await navigator.clipboard.read();
-            if (clipboardText) {
-              selectedRangeRef.current?.deleteContents();
-              selectedRangeRef.current?.insertNode(
-                document.createTextNode(clipboardText),
-              );
+      <div
+        className="cursor-pointer hover:opacity-90"
+        onClick={(e) => {
+          onMenuItemClick(e);
+          // Check if we are inside a code block
+          let target = selectedRangeRef.current?.startContainer?.parentElement;
+          let codeBlock: HTMLElement | null = null;
+          while (target && target !== document.body) {
+            if (target.tagName === "PRE" || target.tagName === "CODE") {
+              codeBlock = target;
+              break;
             }
-          }}
-        >
-          Paste
-        </div>
-      )} */}
+            target = target.parentElement;
+          }
+
+          if (codeBlock) {
+            const range = document.createRange();
+            range.selectNodeContents(codeBlock);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          } else {
+            document.execCommand("selectAll");
+          }
+        }}
+      >
+        Select All
+      </div>
+      {(canPaste || canCut) && (
+        <>
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              onMenuItemClick(e);
+              document.execCommand("undo");
+            }}
+          >
+            Undo
+          </div>
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              onMenuItemClick(e);
+              document.execCommand("redo");
+            }}
+          >
+            Redo
+          </div>
+        </>
+      )}
+
+      <hr className="my-1 border-gray-500" />
       <div
         className="cursor-pointer hover:opacity-90"
         onClick={(e) => {
@@ -215,6 +329,30 @@ const OSRContextMenu = () => {
       >
         Open Dev Tools
       </div>
+
+      {ruleContext && (
+        <>
+          <hr className="my-1 border-gray-500" />
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              e.preventDefault();
+              handleEditRule();
+            }}
+          >
+            Edit Rule
+          </div>
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              e.preventDefault();
+              handleDeleteRule();
+            }}
+          >
+            Delete Rule
+          </div>
+        </>
+      )}
     </div>
   );
 };

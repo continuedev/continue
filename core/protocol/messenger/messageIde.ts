@@ -168,6 +168,10 @@ export class MessageIde implements IDE {
     await this.request("writeFile", { path: fileUri, contents });
   }
 
+  async deleteFile(fileUri: string): Promise<void> {
+    await this.request("deleteFile", { path: fileUri });
+  }
+
   async showVirtualFile(title: string, contents: string): Promise<void> {
     await this.request("showVirtualFile", { name: title, content: contents });
   }

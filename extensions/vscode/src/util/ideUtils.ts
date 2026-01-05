@@ -95,13 +95,18 @@ export class VsCodeIdeUtils {
     );
   }
 
-  async openFile(uri: vscode.Uri, range?: vscode.Range) {
+  async openFile(
+    uri: vscode.Uri,
+    range?: vscode.Range,
+    preserveFocus?: boolean,
+  ) {
     // vscode has a builtin open/get open files
     return await openEditorAndRevealRange(
       uri,
       range,
       vscode.ViewColumn.One,
       false,
+      preserveFocus,
     );
   }
 

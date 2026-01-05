@@ -243,8 +243,27 @@ body[data-color-mode*="light"] {
   border-bottom: 1px solid var(--color-border-muted);
 }
 .wmde-markdown mark {
-  background-color: var(--color-attention-subtle);
-  color: var(--color-text-primary);
+  background-color: var(
+    --vscode-editor-findMatchHighlightBackground,
+    #ea5c0055
+  );
+  color: inherit;
+}
+
+.find-match {
+  background-color: var(
+    --vscode-editor-findMatchHighlightBackground,
+    #ea5c0055
+  );
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.find-match.active {
+  background-color: var(--vscode-editor-findMatchBackground, #ea5c00aa);
+  outline: 1px solid var(--vscode-editor-findMatchBorder, #ea5c00);
+  color: inherit;
 }
 .wmde-markdown small {
   font-size: 90%;

@@ -839,7 +839,11 @@ export interface IDE {
 
   fileExists(fileUri: string): Promise<boolean>;
 
+  readFile(path: string): Promise<string>;
+
   writeFile(path: string, contents: string): Promise<void>;
+
+  deleteFile(path: string): Promise<void>;
 
   showVirtualFile(title: string, contents: string): Promise<void>;
 

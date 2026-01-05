@@ -4,13 +4,13 @@ on:
   workflow_call:
     inputs:
       agents-path:
-        description: 'Path to agents folder'
+        description: "Path to agents folder"
         required: false
-        default: '.continue/agents'
+        default: ".continue/agents"
         type: string
     secrets:
       ANTHROPIC_API_KEY:
-        description: 'Anthropic API key for Claude'
+        description: "Anthropic API key for Claude"
         required: true
 
 permissions:
@@ -60,7 +60,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Continue CLI
         run: npm i -g @continuedev/cli

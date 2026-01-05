@@ -70,3 +70,36 @@ Object.defineProperty(Element.prototype, "getBoundingClientRect", {
     height: 20,
   })),
 });
+
+vi.mock("react-virtuoso", () => {
+  const React = require("react");
+  return {
+    Virtuoso: React.forwardRef(
+      (
+        {
+          data,
+          itemContent,
+          initialTopMostItemIndex,
+          followOutput,
+          atBottomStateChange,
+          atTopStateChange,
+          endReached,
+          startReached,
+          rangeChanged,
+          totalCount,
+          ...props
+        }: any,
+        ref: any,
+      ) => {
+        React.useImperativeHandle(ref, () => ({
+          scrollToIndex: vi.fn(),
+        }));
+        return React.createElement(
+          "div",
+          { ...props, "data-testid": "virtuoso-mock" },
+          data?.map((item: any, index: number) => itemContent(index, item)),
+        );
+      },
+    ),
+  };
+});

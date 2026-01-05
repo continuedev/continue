@@ -24,6 +24,11 @@ export async function compactConversation({
 }: CompactionParams): Promise<void> {
   // Get the current session
   const session = historyManager.load(sessionId);
+  if (index >= session.history.length) {
+    throw new Error(
+      `Compaction index ${index} out of bounds (history length: ${session.history.length})`,
+    );
+  }
   const historyUpToIndex = session.history.slice(0, index + 1);
 
   // Apply the same filtering logic as in constructMessages, but exclude the target message
@@ -48,8 +53,20 @@ export async function compactConversation({
     }
   }
 
-  // Create messages from filtered history
-  const messages = filteredHistory.map((item: any) => item.message);
+  // Create messages from filtered history, sanitizing to avoid validation errors
+  const messages = filteredHistory.map((item: any) => {
+    const msg = { ...item.message };
+    // Remove toolCalls to avoid "followed by tool messages" validation error
+    if (msg.toolCalls) {
+      delete msg.toolCalls;
+    }
+    // Convert tool role to user to avoid "tool message must follow assistant" error
+    if (msg.role === "tool") {
+      msg.role = "user";
+      msg.content = `Tool Output: ${msg.content}`;
+    }
+    return msg;
+  });
 
   // If there's a previous summary, include it as a user message at the beginning
   if (summaryContent) {
@@ -71,6 +88,12 @@ export async function compactConversation({
     new AbortController().signal,
     {},
   );
+
+  if (!response.content || stripImages(response.content).trim().length === 0) {
+    throw new Error(
+      "Failed to generate conversation summary: Model returned empty response",
+    );
+  }
 
   // Update the target message with the conversation summary
   const updatedHistory = [...session.history];

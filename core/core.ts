@@ -66,6 +66,8 @@ import {
 import {
   createNewGlobalRuleFile,
   createNewWorkspaceBlockFile,
+  deleteBlockFile,
+  deleteGlobalRuleFile,
 } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
@@ -359,8 +361,15 @@ export class Core {
       );
     });
 
-    on("history/save", (msg) => {
-      historyManager.save(msg.data);
+    on("history/save", async (msg) => {
+      const session = msg.data;
+      if (!session.workspaceDirectory) {
+        const dirs = await this.ide.getWorkspaceDirs();
+        if (dirs.length > 0) {
+          session.workspaceDirectory = dirs[0];
+        }
+      }
+      historyManager.save(session);
     });
 
     on("history/share", async (msg) => {
@@ -401,6 +410,13 @@ export class Core {
       );
     });
 
+    on("config/deletePromptFile", async (msg) => {
+      await this.ide.deleteFile(msg.data.baseFilename);
+      await this.configHandler.reloadConfig(
+        "Prompt file deleted (config/deletePromptFile message)",
+      );
+    });
+
     on("config/newAssistantFile", async (msg) => {
       await createNewAssistantFile(this.ide, undefined);
       await this.configHandler.reloadConfig(
@@ -419,11 +435,33 @@ export class Core {
       );
     });
 
+    on("config/deleteLocalWorkspaceBlock", async (msg) => {
+      await deleteBlockFile(
+        this.ide,
+        msg.data.blockType,
+        msg.data.baseFilename,
+      );
+      await this.configHandler.reloadConfig(
+        "Local block deleted (config/deleteLocalWorkspaceBlock message)",
+      );
+    });
+
     on("config/addGlobalRule", async (msg) => {
       try {
         await createNewGlobalRuleFile(this.ide, msg.data?.baseFilename);
         await this.configHandler.reloadConfig(
           "Global rule created (config/addGlobalRule message)",
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
+    on("config/deleteGlobalRule", async (msg) => {
+      try {
+        await deleteGlobalRuleFile(this.ide, msg.data.baseFilename);
+        await this.configHandler.reloadConfig(
+          "Global rule deleted (config/deleteGlobalRule message)",
         );
       } catch (error) {
         throw error;
@@ -667,7 +705,7 @@ export class Core {
         return undefined;
       } catch (error) {
         Logger.error(`Error compacting conversation: ${error}`);
-        return undefined;
+        throw new Error(`Error compacting conversation: ${error}`);
       }
     });
 

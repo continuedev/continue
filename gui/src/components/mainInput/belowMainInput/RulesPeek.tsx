@@ -22,6 +22,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
     <div
       className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
+      data-context-menu-type="rule"
+      data-rule-filename={rule.sourceFile || rule.name}
+      data-rule-global={isGlobal.toString()}
       onClick={() => openRule(rule)}
     >
       <div className="flex w-full items-center">

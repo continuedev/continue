@@ -27,3 +27,11 @@ globalThis.TextDecoder = TextDecoder;
 
 // globalThis.beforeAll(clearTestDirectory);
 // globalThis.afterAll(clearTestDirectory);
+
+jest.mock("posthog-node", () => ({
+  PostHog: jest.fn().mockImplementation(() => ({
+    capture: jest.fn(),
+    shutdown: jest.fn(),
+    getFeatureFlag: jest.fn(),
+  })),
+}));

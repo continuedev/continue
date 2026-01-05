@@ -97,6 +97,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/addGlobalRule": [undefined | { baseFilename?: string }, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
+  "config/deleteLocalWorkspaceBlock": [
+    { blockType: BlockType; baseFilename: string },
+    void,
+  ];
+  "config/deleteGlobalRule": [{ baseFilename: string }, void];
+  "config/deletePromptFile": [{ baseFilename: string }, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,

@@ -49,16 +49,18 @@ import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundMo
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
+import { SearchMatch } from "../../components/find/findWidgetSearch";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { useChatScroll } from "../../hooks/useChatScroll";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
-import { useAutoScroll } from "./useAutoScroll";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -113,18 +115,19 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
-  const history = useAppSelector((state) => state.session.history);
+  const sessionHistory = useAppSelector((state) => state.session.history);
+
+  const history = sessionHistory;
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isInEdit = useAppSelector((state) => state.session.isInEdit);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const allSessionMetadata = useAppSelector(
@@ -139,7 +142,15 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
-  useAutoScroll(stepsDivRef, history);
+  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
+
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+
+  const { handleFollowOutput, handleAtBottomStateChange } = useChatScroll(
+    history.length,
+    isStreaming,
+    virtuosoRef,
+  );
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -159,9 +170,11 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains, isInEdit]);
 
-  const { widget, highlights } = useFindWidget(
+  const { widget, searchState } = useFindWidget(
+    virtuosoRef,
     stepsDivRef,
     tabsRef,
+    history,
     isStreaming,
   );
 
@@ -322,7 +335,16 @@ export function Chat() {
   );
 
   const renderChatHistoryItem = useCallback(
-    (item: ChatHistoryItemWithMessageId, index: number) => {
+    (
+      item: ChatHistoryItemWithMessageId,
+      index: number,
+      searchState?: {
+        searchTerm: string;
+        caseSensitive: boolean;
+        useRegex: boolean;
+        currentMatch?: SearchMatch;
+      },
+    ) => {
       const {
         message,
         editorState,
@@ -378,6 +400,7 @@ export function Chat() {
                   isLast={index === history.length - 1}
                   item={item}
                   latestSummaryIndex={latestSummaryIndex}
+                  searchState={searchState}
                 />
               </TimelineItem>
             </div>
@@ -423,6 +446,7 @@ export function Chat() {
               isLast={index === history.length - 1}
               item={item}
               latestSummaryIndex={latestSummaryIndex}
+              searchState={searchState}
             />
           </TimelineItem>
         </div>
@@ -431,7 +455,18 @@ export function Chat() {
     [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
-  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? true;
+
+  const filteredHistory = useMemo(
+    () =>
+      history.filter(
+        (item) =>
+          item.message.role !== "system" && item.message.role !== "tool",
+      ),
+    [history],
+  );
+
+  // const shouldAutoScroll = useRef(true); // Moved to hook
 
   return (
     <>
@@ -440,16 +475,21 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`min-h-0 overflow-hidden pt-[8px] ${
+          history.length > 0 ? "flex-1" : ""
+        }`}
       >
-        {highlights}
-        {history
-          .filter((item) => item.message.role !== "system")
-          .map((item, index: number) => (
+        <Virtuoso
+          ref={virtuosoRef}
+          data={filteredHistory}
+          computeItemKey={(index, item) => item.message.id}
+          defaultItemHeight={50}
+          overscan={200}
+          itemContent={(index, item) => (
             <div
               key={item.message.id}
               style={{
-                minHeight: index === history.length - 1 ? "200px" : 0,
+                minHeight: 0,
               }}
             >
               <ErrorBoundary
@@ -458,11 +498,20 @@ export function Chat() {
                   dispatch(newSession());
                 }}
               >
-                {renderChatHistoryItem(item, index)}
+                {renderChatHistoryItem(item, index, searchState)}
               </ErrorBoundary>
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>
-          ))}
+          )}
+          atBottomThreshold={50}
+          followOutput={handleFollowOutput}
+          atBottomStateChange={handleAtBottomStateChange}
+          className={
+            showScrollbar
+              ? "thin-scrollbar overflow-y-scroll"
+              : "no-scrollbar overflow-y-scroll"
+          }
+        />
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox

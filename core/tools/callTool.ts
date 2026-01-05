@@ -15,6 +15,7 @@ import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 
+import { multiEditImpl } from "./implementations/multiEdit";
 import { readFileRangeImpl } from "./implementations/readFileRange";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
@@ -183,6 +184,8 @@ export async function callBuiltInTool(
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.MultiEdit:
+      return await multiEditImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

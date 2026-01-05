@@ -65,6 +65,7 @@
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
+    "react-virtuoso": "^4.18.1",
     "redux-logger": "^3.0.6",
     "redux-persist": "^6.0.0",
     "redux-persist-transform-filter": "^0.0.22",
@@ -75,13 +76,15 @@
     "remark-math": "^6.0.0",
     "reselect": "^5.1.1",
     "seti-file-icons": "^0.0.8",
+    "shell-quote": "^1.8.3",
     "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",
     "table": "^6.8.1",
     "tailwind-merge": "^3.0.2",
     "tippy.js": "^6.3.7",
     "unist-util-visit": "^5.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@swc/cli": "^0.3.14",

@@ -166,8 +166,21 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const smallFont = fontSize(-2);
   const tinyFont = fontSize(-3);
+
+  const filename = rule.sourceFile
+    ?.split(/[/\\]/)
+    .pop()
+    ?.replace(/\.(md|yaml|yml)$/, "");
+
   return (
     <div
+      data-context-menu-type={rule.sourceFile ? "rule" : undefined}
+      data-rule-filename={filename}
+      data-rule-global={
+        rule.sourceFile?.includes("/.continue/rules/") === false
+          ? "true"
+          : "false"
+      }
       className={`border-border flex flex-col rounded-sm px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
     >
       <div className="flex flex-col">

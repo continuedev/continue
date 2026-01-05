@@ -211,3 +211,34 @@ export async function createNewGlobalRuleFile(
     throw error;
   }
 }
+
+export async function deleteBlockFile(
+  ide: IDE,
+  blockType: BlockType,
+  baseFilename: string,
+): Promise<void> {
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  if (workspaceDirs.length === 0) {
+    throw new Error("No workspace directories found");
+  }
+
+  const baseDirUri = joinPathsToUri(workspaceDirs[0], `.continue/${blockType}`);
+  const fileExtension = getFileExtension(blockType);
+  const fileUri = joinPathsToUri(
+    baseDirUri,
+    `${baseFilename}.${fileExtension}`,
+  );
+
+  await ide.deleteFile(fileUri);
+}
+
+export async function deleteGlobalRuleFile(
+  ide: IDE,
+  baseFilename: string,
+): Promise<void> {
+  const globalDir = localPathToUri(getContinueGlobalPath());
+  const rulesDir = joinPathsToUri(globalDir, "rules");
+  const fileUri = joinPathsToUri(rulesDir, `${baseFilename}.md`);
+
+  await ide.deleteFile(fileUri);
+}

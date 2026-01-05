@@ -102,3 +102,25 @@ export function getBooleanArg(args: any, argName: string, required = false) {
   }
   return args[argName];
 }
+
+export function getArrayArg(
+  args: any,
+  argName: string,
+  required = false,
+): any[] | undefined {
+  if (!args || !(argName in args)) {
+    if (required) {
+      throw new Error(`Argument \`${argName}\` is required (type array)`);
+    } else {
+      return undefined;
+    }
+  }
+
+  const value = args[argName];
+
+  if (!Array.isArray(value)) {
+    throw new Error(`Argument \`${argName}\` must be an array`);
+  }
+
+  return value;
+}

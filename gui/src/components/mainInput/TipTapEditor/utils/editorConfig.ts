@@ -355,6 +355,7 @@ export function createEditorConfig(options: {
           onOpen,
           inSubmenuRef,
           ideMessenger,
+          dispatch,
         ),
       }),
       SlashCommand.configure({

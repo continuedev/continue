@@ -75,11 +75,17 @@ export async function killTerminalProcess(toolCallId: string): Promise<void> {
     process.kill("SIGTERM");
 
     // Force kill after 5 seconds if still running
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (!process.killed) {
         process.kill("SIGKILL");
       }
     }, 5000);
+
+    // Unref the timeout so it doesn't prevent the process from exiting
+    // if the terminal process is still being killed in the background
+    if (timeout.unref) {
+      timeout.unref();
+    }
 
     processTerminalForegroundStates.delete(toolCallId);
   }

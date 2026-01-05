@@ -27,4 +27,6 @@ export interface ComboBoxItem {
   action?: () => void;
   subActions?: ComboBoxSubAction[];
   slashCommandSource?: SlashCommandSource;
+  sourceFile?: string;
+  source?: string;
 }

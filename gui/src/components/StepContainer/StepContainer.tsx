@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import { SearchMatch } from "../find/findWidgetSearch";
 import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
@@ -16,10 +17,18 @@ interface StepContainerProps {
   index: number;
   isLast: boolean;
   latestSummaryIndex?: number;
+  searchState?: {
+    searchTerm: string;
+    caseSensitive: boolean;
+    useRegex: boolean;
+    currentMatch?: SearchMatch;
+  };
 }
 
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
+  // ... (omitted unchanged lines, waiting for context matching)
+
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const uiConfig = useAppSelector(selectUIConfig);
@@ -98,6 +107,7 @@ export default function StepContainer(props: StepContainerProps) {
               isRenderingInStepContainer
               source={stripImages(props.item.message.content)}
               itemIndex={props.index}
+              searchState={props.searchState}
             />
           </>
         )}

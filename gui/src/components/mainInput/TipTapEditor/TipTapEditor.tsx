@@ -91,13 +91,17 @@ function TipTapEditorInner(props: TipTapEditorProps) {
     ) as any;
     if (placeholderExt) {
       placeholderExt.options["placeholder"] = placeholder;
-      editor.view.dispatch(editor.state.tr);
+      // Force a re-render of the decoration
+      editor.view.dispatch(
+        editor.state.tr.setMeta(placeholderExt, { placeholder }),
+      );
     }
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
     if (props.isMainInput) {
-      editor?.commands.clearContent(true);
+      // Clear content without triggering an update/history push
+      editor?.commands.clearContent(false);
     }
   }, [editor, props.isMainInput]);
 

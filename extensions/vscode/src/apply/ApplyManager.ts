@@ -86,9 +86,15 @@ export class ApplyManager {
     const fileExists = await this.ide.fileExists(filepath);
     if (!fileExists) {
       await this.ide.writeFile(filepath, "");
-      await this.ide.openFile(filepath);
     }
-    await this.ide.openFile(filepath);
+    // Use vscode API directly to preserve focus
+    const doc = await vscode.workspace.openTextDocument(
+      vscode.Uri.parse(filepath),
+    );
+    await vscode.window.showTextDocument(doc, {
+      preserveFocus: true,
+      preview: false,
+    });
   }
 
   private modelIsTooFastForStreaming(model: string): boolean {

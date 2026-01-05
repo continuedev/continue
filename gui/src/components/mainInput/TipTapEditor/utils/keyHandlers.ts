@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent, useRef } from "react";
-import { isJetBrains, isMetaEquivalentKeyPressed } from "../../../../util";
+import { isMetaEquivalentKeyPressed } from "../../../../util";
 import {
   handleJetBrainsOSRMetaKeyIssues,
   handleVSCMetaKeyIssues,
@@ -42,9 +42,9 @@ export function useEditorEventHandlers(options: {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()) {
-      await handleVSCMetaKeyIssues(e, editor);
     }
+
+    await handleVSCMetaKeyIssues(e, editor);
   };
 
   const handleKeyUp = () => {

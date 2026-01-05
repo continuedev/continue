@@ -20,6 +20,20 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+beforeAll(() => {
+  // block network calls
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({}),
+    } as any),
+  );
+});
+
+afterAll(() => {
+  jest.restoreAllMocks();
+});
+
 test("createRuleBlockImpl should create a rule with glob pattern", async () => {
   const args = {
     name: "TypeScript Rule",
