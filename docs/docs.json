@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "changelog"]
           },
           {
             "group": "Mission Control",
@@ -37,7 +37,11 @@
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
-                  "mission-control/integrations/slack-agent"
+                  "mission-control/integrations/slack-agent",
+                  "mission-control/integrations/posthog",
+                  "mission-control/integrations/atlassian",
+                  "mission-control/integrations/netlify",
+                  "mission-control/integrations/supabase"
                 ]
               },
               "mission-control/metrics",
@@ -696,10 +700,6 @@
     {
       "source": "/customize/deep-dives/vscode-actions",
       "destination": "/customize/overview"
-    },
-    {
-      "source": "/changelog",
-      "destination": "/reference"
     },
     {
       "source": "/customization/code-config",
