@@ -75,12 +75,14 @@ jobs:
       - name: Create Check Run
         id: check
         uses: actions/github-script@v8
+        env:
+          AGENT_NAME: ${{ steps.agent-name.outputs.name }}
         with:
           script: |
             const { data: check } = await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: `Continue: ${{ steps.agent-name.outputs.name }}`,
+              name: `Continue: ${process.env.AGENT_NAME}`,
               head_sha: context.sha,
               status: 'in_progress',
               started_at: new Date().toISOString(),
