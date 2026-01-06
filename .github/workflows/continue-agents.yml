@@ -1,0 +1,165 @@
+name: Continue Agents
+
+on:
+  workflow_call:
+    inputs:
+      agents-path:
+        description: 'Path to agents folder'
+        required: false
+        default: '.continue/agents'
+        type: string
+    secrets:
+      ANTHROPIC_API_KEY:
+        description: 'Anthropic API key for Claude'
+        required: true
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.discover.outputs.matrix }}
+      has-agents: ${{ steps.discover.outputs.has_agents }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Discover agents
+        id: discover
+        run: |
+          AGENTS_DIR="${{ inputs.agents-path }}"
+          if [ -d "$AGENTS_DIR" ]; then
+            # Use -sc for compact single-line JSON (required for GitHub Actions output)
+            FILES=$(find "$AGENTS_DIR" -name "*.md" -type f 2>/dev/null | jq -R . | jq -sc .)
+            COUNT=$(echo "$FILES" | jq 'length')
+            HAS_AGENTS=$([[ $COUNT -gt 0 ]] && echo "true" || echo "false")
+          else
+            FILES="[]"
+            COUNT=0
+            HAS_AGENTS="false"
+          fi
+
+          echo "matrix=$FILES" >> $GITHUB_OUTPUT
+          echo "has_agents=$HAS_AGENTS" >> $GITHUB_OUTPUT
+          echo "Found $COUNT agent(s)"
+
+  run-agent:
+    needs: discover
+    if: needs.discover.outputs.has-agents == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install Continue CLI
+        run: npm i -g @continuedev/cli
+
+      - name: Extract agent name
+        id: agent-name
+        run: |
+          AGENT_FILE="${{ matrix.agent }}"
+          AGENT_NAME=$(basename "$AGENT_FILE" .md)
+          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Check Run
+        id: check
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: `Continue: ${{ steps.agent-name.outputs.name }}`,
+              head_sha: context.sha,
+              status: 'in_progress',
+              started_at: new Date().toISOString(),
+            });
+            core.setOutput('id', check.id);
+
+      - name: Run agent
+        id: run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          AGENT_FILE="${{ matrix.agent }}"
+
+          # Run agent in non-interactive mode (-p flag)
+          if OUTPUT=$(cn -p --agent "$AGENT_FILE" 2>&1); then
+            echo "success=true" >> $GITHUB_OUTPUT
+            echo "output<<EOF" >> $GITHUB_OUTPUT
+            echo "$OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "✅ Agent completed successfully"
+            echo ""
+            echo "--- Agent Output ---"
+            echo "$OUTPUT"
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "error<<EOF" >> $GITHUB_OUTPUT
+            echo "$OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "❌ Agent failed"
+            echo ""
+            echo "--- Agent Output ---"
+            echo "$OUTPUT"
+          fi
+
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "## 🤖 Agent: ${{ steps.agent-name.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.run.outputs.success }}" == "true" ]; then
+            echo "✅ **Status:** Completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Output" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.run.outputs.output }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.run.outputs.error }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Fail if agent failed
+        if: steps.run.outputs.success != 'true'
+        run: exit 1
+
+      - name: Update Check Run
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const success = '${{ steps.run.outputs.success }}' === 'true';
+            const output = `${{ steps.run.outputs.output }}`;
+            const error = `${{ steps.run.outputs.error }}`;
+
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: ${{ steps.check.outputs.id }},
+              status: 'completed',
+              conclusion: success ? 'success' : 'failure',
+              completed_at: new Date().toISOString(),
+              output: {
+                title: success ? 'Agent completed' : 'Agent failed',
+                summary: success
+                  ? `Agent completed successfully.\n\n<details><summary>Output</summary>\n\n\`\`\`\n${output.slice(0, 60000)}\n\`\`\`\n</details>`
+                  : `Agent failed.\n\n\`\`\`\n${error.slice(0, 60000)}\n\`\`\``,
+              },
+            });

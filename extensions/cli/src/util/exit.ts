@@ -4,6 +4,7 @@ import { sentryService } from "../sentry.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
+import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";
 import { logger } from "./logger.js";
 import {
@@ -14,15 +15,100 @@ import {
 } from "./metadata.js";
 
 /**
+ * Options for updating agent metadata
+ */
+export interface UpdateAgentMetadataOptions {
+  /** Chat history to extract summary from */
+  history?: ChatHistoryItem[];
+  /** Set to true when the agent is exiting/completing */
+  isComplete?: boolean;
+}
+
+/**
+ * Collect diff stats and add to metadata
+ * @returns Whether there were any changes
+ */
+async function collectDiffStats(
+  metadata: Record<string, any>,
+): Promise<boolean> {
+  try {
+    const { diff, repoFound } = await getGitDiffSnapshot();
+    if (repoFound && diff) {
+      const { additions, deletions } = calculateDiffStats(diff);
+      if (additions > 0 || deletions > 0) {
+        metadata.additions = additions;
+        metadata.deletions = deletions;
+        return true;
+      }
+    }
+  } catch (err) {
+    logger.debug("Failed to calculate diff stats (non-critical)", err as any);
+  }
+  return false;
+}
+
+/**
+ * Extract summary from conversation history and add to metadata
+ */
+function collectSummary(
+  metadata: Record<string, any>,
+  history: ChatHistoryItem[] | undefined,
+): void {
+  if (!history || history.length === 0) {
+    return;
+  }
+  try {
+    const summary = extractSummary(history);
+    if (summary) {
+      metadata.summary = summary;
+    }
+  } catch (err) {
+    logger.debug(
+      "Failed to extract conversation summary (non-critical)",
+      err as any,
+    );
+  }
+}
+
+/**
+ * Extract session usage and add to metadata
+ */
+function collectSessionUsage(metadata: Record<string, any>): void {
+  try {
+    const usage = getSessionUsage();
+    if (usage.totalCost > 0) {
+      metadata.usage = {
+        totalCost: parseFloat(usage.totalCost.toFixed(6)),
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        ...(usage.promptTokensDetails?.cachedTokens && {
+          cachedTokens: usage.promptTokensDetails.cachedTokens,
+        }),
+        ...(usage.promptTokensDetails?.cacheWriteTokens && {
+          cacheWriteTokens: usage.promptTokensDetails.cacheWriteTokens,
+        }),
+      };
+    }
+  } catch (err) {
+    logger.debug("Failed to get session usage (non-critical)", err as any);
+  }
+}
+
+/**
  * Update agent session metadata in control plane
  * Collects diff stats and conversation summary, posts to control plane
  * This is called both during execution (after each turn) and before exit
  *
- * @param history - Chat history to extract summary from (optional, will fetch if not provided)
+ * @param options - Options including history and completion state
  */
 export async function updateAgentMetadata(
-  history?: ChatHistoryItem[],
+  options?: ChatHistoryItem[] | UpdateAgentMetadataOptions,
 ): Promise<void> {
+  // Support both old signature (history array) and new signature (options object)
+  const { history, isComplete } = Array.isArray(options)
+    ? { history: options, isComplete: false }
+    : { history: options?.history, isComplete: options?.isComplete ?? false };
+
   try {
     const agentId = getAgentIdFromArgs();
     if (!agentId) {
@@ -31,57 +117,16 @@ export async function updateAgentMetadata(
     }
 
     const metadata: Record<string, any> = {};
+    const hasChanges = await collectDiffStats(metadata);
 
-    // Calculate diff stats
-    try {
-      const { diff, repoFound } = await getGitDiffSnapshot();
-      if (repoFound && diff) {
-        const { additions, deletions } = calculateDiffStats(diff);
-        if (additions > 0 || deletions > 0) {
-          metadata.additions = additions;
-          metadata.deletions = deletions;
-        }
-      }
-    } catch (err) {
-      logger.debug("Failed to calculate diff stats (non-critical)", err as any);
+    if (isComplete) {
+      metadata.isComplete = true;
+      metadata.hasChanges = hasChanges;
     }
 
-    // Extract summary from conversation
-    if (history && history.length > 0) {
-      try {
-        const summary = extractSummary(history);
-        if (summary) {
-          metadata.summary = summary;
-        }
-      } catch (err) {
-        logger.debug(
-          "Failed to extract conversation summary (non-critical)",
-          err as any,
-        );
-      }
-    }
+    collectSummary(metadata, history);
+    collectSessionUsage(metadata);
 
-    // Extract session usage (cost and token counts)
-    try {
-      const usage = getSessionUsage();
-      if (usage.totalCost > 0) {
-        metadata.usage = {
-          totalCost: parseFloat(usage.totalCost.toFixed(6)),
-          promptTokens: usage.promptTokens,
-          completionTokens: usage.completionTokens,
-          ...(usage.promptTokensDetails?.cachedTokens && {
-            cachedTokens: usage.promptTokensDetails.cachedTokens,
-          }),
-          ...(usage.promptTokensDetails?.cacheWriteTokens && {
-            cacheWriteTokens: usage.promptTokensDetails.cacheWriteTokens,
-          }),
-        };
-      }
-    } catch (err) {
-      logger.debug("Failed to get session usage (non-critical)", err as any);
-    }
-
-    // Post metadata if we have any
     if (Object.keys(metadata).length > 0) {
       await postAgentMetadata(agentId, metadata);
     }
@@ -140,6 +185,10 @@ function displaySessionUsage(): void {
 /**
  * Exit the process after flushing telemetry and error reporting.
  * Use this instead of process.exit() to avoid losing metrics/logs.
+ *
+ * If any unhandled errors occurred during execution and the requested
+ * exit code is 0 (success), this will exit with code 1 instead to
+ * signal that the process encountered errors.
  */
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
@@ -159,6 +208,10 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     logger.debug("Sentry flush error (ignored)", err as any);
   }
 
+  // If we're trying to exit with success (0) but had unhandled errors,
+  // exit with 1 instead to signal failure
+  const finalCode = code === 0 && hadUnhandledError() ? 1 : code;
+
   // Exit the process
-  process.exit(code);
+  process.exit(finalCode);
 }
