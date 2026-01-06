@@ -54,17 +54,33 @@ export class AgentFileService
 
   async getAgentFile(agentPath: string): Promise<AgentFile> {
     try {
+      const isMarkdownPath =
+        agentPath.endsWith(".md") || agentPath.endsWith(".markdown");
+
       const parts = agentPath.split("/");
-      if (parts.length === 2 && parts[0] && parts[1] && !parts.includes(".")) {
+      const looksLikeHubSlug =
+        parts.length === 2 && parts[0] && parts[1] && !parts.includes(".");
+
+      if (looksLikeHubSlug) {
         try {
           return await loadPackageFromHub(agentPath, agentFileProcessor);
-        } catch (e) {
-          logger.info(
-            `Failed to load agent file from slug-like path ${agentPath}: ${getErrorString(e)}`,
-          );
-          // slug COULD be path, fall back to relative path
+        } catch (hubError) {
+          // Hub loading failed - only fall back to file if it's a markdown path
+          if (!isMarkdownPath) {
+            // Not a markdown path, so re-throw the hub error
+            throw hubError;
+          }
+          // It's a markdown path, fall through to try loading as file
         }
       }
+
+      // Only load from file path for markdown files
+      if (!isMarkdownPath) {
+        throw new Error(
+          `Failed to load agent from ${agentPath}. Not a markdown file`,
+        );
+      }
+
       const resolvedPath = agentPath.startsWith("file:/")
         ? fileURLToPath(agentPath)
         : path.resolve(agentPath);
