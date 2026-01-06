@@ -1900,7 +1900,6 @@ export interface Skill {
   name: string;
   description: string;
   path: string;
-  toolName: string;
   content: string;
   license?: string;
 }

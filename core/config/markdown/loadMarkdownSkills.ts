@@ -1,28 +1,15 @@
-import { ConfigValidationError } from "@continuedev/config-yaml";
-import * as YAML from "yaml";
+import {
+  ConfigValidationError,
+  parseMarkdownRule,
+} from "@continuedev/config-yaml";
+import z from "zod";
 import { IDE, Skill } from "../..";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
-// todo: refactor this to packages/config-yaml (like parseMarkdownRule)
-function parseSkillMarkdown(content: string): Skill {
-  const normalizedContent = content.replace(/\r\n/g, "\n");
-
-  const parts = normalizedContent.split(/^---\s*$/m);
-
-  if (parts.length < 3) {
-    throw new Error("Invalid skill markdown file");
-  }
-  const frontmatterStr = parts[1];
-  const markdownContent = parts.slice(2).join("---");
-
-  const frontmatter = YAML.parse(frontmatterStr) || {}; // Handle empty frontmatter
-  // todo: validate frontmatter with zod
-
-  return {
-    ...frontmatter,
-    content: markdownContent,
-  };
-}
+const skillFrontmatterSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+});
 
 export async function loadMarkdownSkills(ide: IDE) {
   const errors: ConfigValidationError[] = [];
@@ -44,8 +31,17 @@ export async function loadMarkdownSkills(ide: IDE) {
     );
     for (const file of skillFiles) {
       try {
-        const skill = parseSkillMarkdown(file.content);
-        skills.push({ ...skill, path: file.path.slice(7) });
+        const { frontmatter, markdown } = parseMarkdownRule(
+          file.content,
+        ) as unknown as { frontmatter: Skill; markdown: string };
+
+        const validatedFrontmatter = skillFrontmatterSchema.parse(frontmatter);
+
+        skills.push({
+          ...validatedFrontmatter,
+          content: markdown,
+          path: file.path.slice(7),
+        });
       } catch (error) {
         errors.push({
           fatal: false,
