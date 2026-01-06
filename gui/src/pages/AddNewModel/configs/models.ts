@@ -2661,4 +2661,20 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cometapi.png",
     isOpenSource: false,
   },
+
+  // Xiaomi Mimo models
+  mimoV2Flash: {
+    title: "mimo-v2-flash",
+    description: "Xiaomi's fast and efficient language model",
+    refUrl: "https://platform.xiaomimimo.com/",
+    params: {
+      title: "mimo-v2-flash",
+      model: "mimo-v2-flash",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["mimo"],
+    icon: "mimo.png",
+    isOpenSource: false,
+  },
 };
