@@ -49,7 +49,7 @@ pytest==6.2.5
 loguru==0.5.3
 
 # Asynchronous Programming
-aiohttp==3.7.4
+aiohttp==3.13.3
 
 # Others
 jupyter==1.0.0
