@@ -525,7 +525,6 @@ async function intermediateToFinalConfig({
       summarize: null, // Not implemented
     },
     rules: [],
-    skills: [],
   };
 
   for (const cmd of config.slashCommands ?? []) {
@@ -671,7 +670,6 @@ async function finalToBrowserConfig(
     ui: final.ui,
     experimental: final.experimental,
     rules: final.rules,
-    skills: final.skills,
     docs: final.docs,
     tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,

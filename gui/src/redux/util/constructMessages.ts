@@ -4,7 +4,6 @@ import {
   ContextItemWithId,
   RuleMetadata,
   RuleWithSource,
-  Skill,
   TextMessagePart,
   ToolResultChatMessage,
   UserChatMessage,
@@ -12,7 +11,6 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
-import { getSystemMessageWithSkills } from "core/llm/skills";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
@@ -41,7 +39,6 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
-  skills: Skill[],
   useSystemToolsFramework?: SystemMessageToolsFramework,
 ): {
   messages: ChatMessage[];
@@ -198,27 +195,19 @@ export function constructMessages(
     .map((item) => item.ctxItems)
     .flat();
 
-  const { systemMessage: systemMessageWithRules, appliedRules } =
-    getSystemMessageWithRules({
-      baseSystemMessage,
-      availableRules,
-      userMessage: lastUserOrToolMsg,
-      contextItems: rulesContextItems,
-      rulePolicies,
-    });
-
-  const systemMessageWithSkills = getSystemMessageWithSkills(
-    systemMessageWithRules,
-    skills,
-  );
-
-  console.log("debug1 with skills", systemMessageWithSkills);
+  const { systemMessage, appliedRules } = getSystemMessageWithRules({
+    baseSystemMessage,
+    availableRules,
+    userMessage: lastUserOrToolMsg,
+    contextItems: rulesContextItems,
+    rulePolicies,
+  });
 
   // Append conversation summary to system message if it exists
-  let finalSystemMessage = systemMessageWithRules;
+  let finalSystemMessage = systemMessage;
   if (summaryContent) {
-    finalSystemMessage = systemMessageWithRules
-      ? `${systemMessageWithRules}\n\nPrevious conversation summary:\n\n ${summaryContent}`
+    finalSystemMessage = systemMessage
+      ? `${systemMessage}\n\nPrevious conversation summary:\n\n ${summaryContent}`
       : `Previous conversation summary:\n\n ${summaryContent}`;
   }
 
