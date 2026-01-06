@@ -42,7 +42,6 @@ import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDot
 import { loadContinueConfigFromJson } from "../load";
 import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
-import { loadMarkdownSkills } from "../markdown/loadMarkdownSkills";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
@@ -158,11 +157,6 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-
-  // load skills
-  const { skills, errors: skillsErrors } = await loadMarkdownSkills(ide);
-  errors.push(...skillsErrors);
-  newConfig.skills.unshift(...skills);
 
   // Convert invokable rules to slash commands
   for (const rule of newConfig.rules) {
@@ -306,15 +300,15 @@ export default async function doLoadConfig(options: {
   }
 
   newConfig.tools.push(
-    ...getConfigDependentToolDefinitions({
+    ...(await getConfigDependentToolDefinitions({
       rules: newConfig.rules,
-      skills: newConfig.skills,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
       isSignedIn,
       isRemote: await ide.isWorkspaceRemote(),
       modelName: newConfig.selectedModelByRole.chat?.model,
-    }),
+      ide,
+    })),
   );
 
   // Detect duplicate tool names
