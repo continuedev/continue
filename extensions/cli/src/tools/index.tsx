@@ -29,7 +29,10 @@ import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { subagentTool } from "./subagent.js";
-import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
+import {
+  isBetaSubagentToolEnabled,
+  isBetaUploadArtifactToolEnabled,
+} from "./toolsConfig.js";
 import {
   type Tool,
   type ToolCall,
@@ -120,7 +123,9 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
-  tools.push(subagentTool({ modelServiceState: modelState }));
+  if (isBetaSubagentToolEnabled()) {
+    tools.push(subagentTool({ modelServiceState: modelState }));
+  }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
