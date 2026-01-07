@@ -19,25 +19,9 @@ Unlike local assistants, Cloud Agents provide a centralized "Mission Control" wh
   They live in the Continue Mission Control and can be executed from Mission Control (web interface), TUI mode, or headless automation.
 </Card>
 
-## What Are Agents?
 
-Agents let your team standardize common workflows like opening GitHub PRs, summarizing analytics, or auditing security. Each agent includes:
 
-### Agent Components
-
-| **Component** | **Description** | **Example** |
-|----------------|-----------------|--------------|
-| **Prompt** | The agent’s main instruction that defines what it does and how it should behave. Additional user input is appended when invoked. | Example prompt: “Summarize ongoing work with status, blockers, and next steps. Use markdown formatting and a concise, professional tone.” |
-| **Rules** | Define consistent standards or behaviors that guide how the agent responds. Rules help ensure reliability across team usage. | “Always include related issue or PR links when summarizing work.” |
-| **Tools / MCPs** | External systems or integrations the agent can call to complete tasks. MCPs (Model Context Protocols) extend functionality through APIs. | GitHub, PostHog, Supabase |
-| **Model** | The large language model that powers the agent’s reasoning and output generation. | Claude Sonnet 4.5 |
-| **Visibility** | Determines who can view or use the agent. Controls access at creation time. | Public, Organization, or Private |
-
-<Info>
-  Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
-</Info>
-
-## Ways to Run Agents
+## Ways to Run Cloud Agents
 
 You can run Agents in three main ways:
 
@@ -84,7 +68,17 @@ You can run Agents in three main ways:
   </Tab>
 </Tabs>
 
-## Pre-configured Agents
+## Local vs. Cloud Agents
+
+| Feature | Local Agents (IDE / TUI) | Cloud Agents (Mission Control) |
+|---------|--------------------------|--------------------------------|
+| Compute Location | Your Local Machine | Remote Cloud Infrastructure |
+| Primary Use Case | fast, private iteration and "single-player" coding | Collaborative tasks, heavy processing, and reliable automation |
+| Context Access | Limited to open files and local git state | Full repository access + integrated tools (Sentry, Snyk, etc.) |
+| Triggers | Manual Tasks / CLI | Hybrid: Manual Chat, Cron Schedules, or Event Webhooks |
+| Availability | Stops when you close your laptop | Always On: Runs asynchronously in the background |
+
+## Pre-configured Cloud Agents
 
 Skip the setup and use battle-tested agents from our cookbook collection:
 
