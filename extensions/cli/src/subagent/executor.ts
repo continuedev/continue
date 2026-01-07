@@ -57,6 +57,7 @@ async function buildAgentSystemMessage(
 /**
  * Execute a subagent in a child session
  */
+// eslint-disable-next-line complexity
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
@@ -123,19 +124,21 @@ export async function executeSubAgent(
       },
     ] as ChatHistoryItem[];
 
+    const escapeHandler = () => {
+      abortController.abort();
+      chatHistory.push({
+        message: {
+          role: "user",
+          content: "Subagent execution was cancelled by the user.",
+        },
+        contextItems: [],
+      });
+    };
+
+    escapeEvents.on("user-escape", escapeHandler);
+
     try {
       let accumulatedOutput = "";
-
-      escapeEvents.on("user-escape", () => {
-        abortController.abort();
-        chatHistory.push({
-          message: {
-            role: "user",
-            content: "Subagent execution was cancelled by the user.",
-          },
-          contextItems: [],
-        });
-      });
 
       // Execute the chat stream with child session
       await streamChatResponse(
@@ -178,6 +181,10 @@ export async function executeSubAgent(
         response,
       };
     } finally {
+      if (escapeHandler) {
+        escapeEvents.removeListener("user-escape", escapeHandler);
+      }
+
       // Restore original system message function
       if (services.systemMessage && originalGetSystemMessage) {
         services.systemMessage.getSystemMessage = originalGetSystemMessage;
