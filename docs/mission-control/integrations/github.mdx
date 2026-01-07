@@ -85,6 +85,19 @@ When connecting GitHub, you’ll be asked to configure repository access and app
 You can revisit or revoke access at any time from GitHub or the Mission Control Hub.
 ---
 
+## FAQs
+### Can Continue turn GitHub issues into ready-to-merge pull requests automatically?
+Yes! You can set up workflows where Cloud Agents monitor issues (or specific labels) and create pull requests with code changes, tests, and summaries.
+
+### How do I trigger an agent from a GitHub issue label?
+You can configure a Cloud Agent that is triggered whenever an issue is labeled with a specific tag (e.g., `agent:fix`). The agent will then gather context and create a pull request based on the issue.
+
+### Can the agent run tests and include results in the PR?
+Continue's Cloud Agents can be configured to run your tests and include the results in the pull request summary.
+
+### How do I restrict which repos/issues agents can act on?
+You can configure repository and issue filters within your workflows to control where agents operate.
+
 ## Support & Resources
 
 <CardGroup cols={2}>
