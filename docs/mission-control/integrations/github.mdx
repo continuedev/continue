@@ -44,6 +44,24 @@ The following **official workflow templates** are maintained by the Continue tea
 
 <Tip>Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → GitHub](https://hub.continue.dev/integrations/github)**.</Tip>
 
+## Workflow: GitHub issue → pull request (Cloud Agent)
+
+**Problem**: GitHub issues pile up because turning an issue into a tested PR takes time and context switching.
+
+**Solution**: Continue Mission Control Cloud Agents can watch issues (or be triggered by labels) and automatically open pull requests with code changes, tests, and a clear summary.
+
+**Outcome**: Faster issue throughput, consistent PR quality, and an auditable trail from issue → commits → PR → CI results.
+
+1. Trigger: issue opened or labeled (for example, `agent:fix`)
+2. Agent gathers context: repo code + issue thread + relevant files
+3. Agent implements the fix on a branch
+4. Agent runs checks: tests/lint/security (your CI)
+5. Agent opens a PR with:
+   - summary of changes
+   - test results / CI link
+   - references the original issue (closes #123)
+   - or whatever you specify in the agent instructions
+
 ## Advanced Use Cases
 <Accordion title="Advanced: Custom GitHub Cloud Agent Workflow Ideas">
 You can create custom workflows using Continue Cloud Agents to automate a variety of GitHub-related tasks. Here are some ideas to get you started:
