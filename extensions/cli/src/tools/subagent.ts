@@ -42,7 +42,9 @@ export const subagentTool: GetTool = (params) => ({
     const agent = getSubagent(params.modelServiceState, subagent_name);
     if (!agent) {
       throw new Error(
-        `Unknown agent type: ${subagent_name}. Available agents: general`,
+        `Unknown agent type: ${subagent_name}. Available agents: ${getSubagentNames(
+          params.modelServiceState,
+        ).join(", ")}`,
       );
     }
 
