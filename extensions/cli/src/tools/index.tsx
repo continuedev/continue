@@ -120,7 +120,7 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
-  tools.push(subagentTool);
+  tools.push(subagentTool({ modelServiceState: modelState }));
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
@@ -132,6 +132,9 @@ export async function getAllAvailableTools(
 
 export function getToolDisplayName(toolName: string): string {
   const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
+  if (typeof tool === "function") {
+    return toolName;
+  }
   return tool?.displayName || toolName;
 }
 

@@ -306,12 +306,11 @@ export class ModelService
     });
   }
 
-  getSubagentModels() {
-    const state = this.getState();
-    if (!state.assistant) {
+  static getSubagentModels(modelState: ModelServiceState) {
+    if (!modelState.assistant) {
       return [];
     }
-    const subagentModels = state.assistant.models
+    const subagentModels = modelState.assistant.models
       ?.filter((model) => !!model)
       .filter((model) => !!model.name) // filter out models without a name
       .filter((model) => model.roles?.includes("subagent")) // filter with role subagent
@@ -321,10 +320,10 @@ export class ModelService
       return [];
     }
     return subagentModels?.map((model) => ({
-      llmApi: createLlmApi(model, state.authConfig),
+      llmApi: createLlmApi(model, modelState.authConfig),
       model,
-      assistant: state.assistant,
-      authConfig: state.authConfig,
+      assistant: modelState.assistant,
+      authConfig: modelState.authConfig,
     }));
   }
 }

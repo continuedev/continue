@@ -1,22 +1,24 @@
-import { services } from "../services/index.js";
+import { ModelServiceState } from "../services/index.js";
+import { ModelService } from "../services/ModelService.js";
 
 /**
  * Get an agent by name
  */
-export function getSubagent(name: string) {
+export function getSubagent(modelState: ModelServiceState, name: string) {
   return (
-    services.model
-      .getSubagentModels()
-      .find((model) => model.model.name === name) ?? null
+    ModelService.getSubagentModels(modelState).find(
+      (model) => model.model.name === name,
+    ) ?? null
   );
 }
 
 /**
  * Generate dynamic tool description listing available agents
  */
-export function generateSubagentToolDescription(): string {
-  const agentList = services.model
-    .getSubagentModels()
+export function generateSubagentToolDescription(
+  modelState: ModelServiceState,
+): string {
+  const agentList = ModelService.getSubagentModels(modelState)
     .map(
       (subagentModel) =>
         `  - ${subagentModel.model.name}: ${subagentModel.model.chatOptions?.baseSystemMessage}`,
@@ -31,6 +33,8 @@ ${agentList}
 `;
 }
 
-export function getAgentNames(): string[] {
-  return services.model.getSubagentModels().map((model) => model.model.name);
+export function getAgentNames(modelState: ModelServiceState): string[] {
+  return ModelService.getSubagentModels(modelState).map(
+    (model) => model.model.name,
+  );
 }

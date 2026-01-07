@@ -6,12 +6,12 @@ import {
 } from "../subagent/get-agents.js";
 import { logger } from "../util/logger.js";
 
-import { Tool } from "./types.js";
+import { GetTool } from "./types.js";
 
-export const subagentTool: Tool = {
+export const subagentTool: GetTool = (params) => ({
   name: "Subagent",
   displayName: "Subagent",
-  description: generateSubagentToolDescription(),
+  description: generateSubagentToolDescription(params.modelServiceState),
   readonly: false,
   isBuiltIn: true,
 
@@ -29,17 +29,17 @@ export const subagentTool: Tool = {
       },
       subagent_name: {
         type: "string",
-        description: `The type of specialized agent to use for this task. Available agents: ${getSubagentNames().join(
-          ", ",
-        )}`,
+        description: `The type of specialized agent to use for this task. Available agents: ${getSubagentNames(
+          params.modelServiceState,
+        ).join(", ")}`,
       },
     },
   },
 
-  preprocess: async (args) => {
+  preprocess: async (args: any) => {
     const { description, subagent_name } = args;
 
-    const agent = getSubagent(subagent_name);
+    const agent = getSubagent(params.modelServiceState, subagent_name);
     if (!agent) {
       throw new Error(
         `Unknown agent type: ${subagent_name}. Available agents: general`,
@@ -57,13 +57,13 @@ export const subagentTool: Tool = {
     };
   },
 
-  run: async (args, context?: { toolCallId: string }) => {
+  run: async (args: any, context?: { toolCallId: string }) => {
     const { prompt, subagent_name } = args;
 
     logger.debug("subagent args", { args, context });
 
     // Get agent configuration
-    const agent = getSubagent(subagent_name);
+    const agent = getSubagent(params.modelServiceState, subagent_name);
     if (!agent) {
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
@@ -116,4 +116,4 @@ export const subagentTool: Tool = {
 
     return output;
   },
-};
+});
