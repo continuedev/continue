@@ -48,7 +48,7 @@ export interface Tool {
   ) => ToolPolicy;
 }
 
-export type GetTool = (params: {
+export type GetTool = (params?: {
   modelServiceState: ModelServiceState;
 }) => Tool;
 

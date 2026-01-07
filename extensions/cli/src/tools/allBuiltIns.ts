@@ -23,7 +23,7 @@ export const ALL_BUILT_IN_TOOLS = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
-  subagentTool,
+  subagentTool(),
   exitTool,
   reportFailureTool,
   uploadArtifactTool,

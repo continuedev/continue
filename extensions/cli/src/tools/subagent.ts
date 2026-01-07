@@ -1,3 +1,4 @@
+import { services } from "../services/index.js";
 import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
@@ -11,7 +12,9 @@ import { GetTool } from "./types.js";
 export const subagentTool: GetTool = (params) => ({
   name: "Subagent",
   displayName: "Subagent",
-  description: generateSubagentToolDescription(params.modelServiceState),
+  description: params
+    ? generateSubagentToolDescription(params.modelServiceState)
+    : "Use a subagent to handle a specialized task.",
   readonly: false,
   isBuiltIn: true,
 
@@ -29,14 +32,26 @@ export const subagentTool: GetTool = (params) => ({
       },
       subagent_name: {
         type: "string",
-        description: `The type of specialized agent to use for this task. Available agents: ${getSubagentNames(
-          params.modelServiceState,
-        ).join(", ")}`,
+        description: `The type of specialized agent to use for this task. Available agents: ${
+          params ? getSubagentNames(params.modelServiceState).join(", ") : ""
+        }`,
       },
     },
   },
 
   preprocess: async (args: any) => {
+    if (!params) {
+      return {
+        args,
+        preview: [
+          {
+            type: "text",
+            content: "Subagent not found",
+          },
+        ],
+      };
+    }
+
     const { description, subagent_name } = args;
 
     const agent = getSubagent(params.modelServiceState, subagent_name);
@@ -60,23 +75,19 @@ export const subagentTool: GetTool = (params) => ({
   },
 
   run: async (args: any, context?: { toolCallId: string }) => {
+    if (!params) return "";
+
     const { prompt, subagent_name } = args;
 
     logger.debug("subagent args", { args, context });
 
-    // Get agent configuration
+    // get agent configuration
     const agent = getSubagent(params.modelServiceState, subagent_name);
     if (!agent) {
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
 
-    // Lazy import services to avoid circular dependency
-    const { services } = await import("../services/index.js");
-
-    // Get parent session ID from chat history service
-    const chatHistoryService = services.chatHistory;
-    const parentSessionId = chatHistoryService.getSessionId();
-
+    const parentSessionId = services.chatHistory.getSessionId();
     if (!parentSessionId) {
       throw new Error("No active session found");
     }

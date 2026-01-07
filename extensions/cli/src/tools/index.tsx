@@ -132,9 +132,6 @@ export async function getAllAvailableTools(
 
 export function getToolDisplayName(toolName: string): string {
   const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);
-  if (typeof tool === "function") {
-    return toolName;
-  }
   return tool?.displayName || toolName;
 }
 
