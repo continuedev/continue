@@ -774,9 +774,21 @@ function toResponseInputContentList(
   return list;
 }
 
+/** Result type for serializeThinkingMessage */
+type SerializeThinkingResult =
+  | { type: "item"; item: ResponseInputItem }
+  | { type: "skip" };
+
+/**
+ * Serialize a thinking message to a ResponseInputItem.
+ * @param msg - The thinking message to serialize
+ * @param nextMsgHasReference - Whether the next assistant message references this reasoning
+ * @returns The serialized item, a skip signal, or undefined if no details
+ */
 function serializeThinkingMessage(
   msg: ThinkingChatMessage,
-): { item: ResponseInputItem; dropNextAssistantId: boolean } | undefined {
+  nextMsgHasReference: boolean,
+): SerializeThinkingResult | undefined {
   const details = msg.reasoning_details ?? [];
   if (!details.length) return undefined;
 
@@ -802,9 +814,11 @@ function serializeThinkingMessage(
   }
 
   if (id) {
-    if (!encrypted) {
-      // Return empty item signal and flag to drop next ID to prevent 400 error
-      return { item: {} as any, dropNextAssistantId: true };
+    // Only skip if: no encrypted_content AND next assistant message has a responsesOutputItemId.
+    // The responsesOutputItemId indicates the assistant expects its paired reasoning to be present,
+    // so omitting reasoning without encrypted_content would cause a 400 error.
+    if (!encrypted && nextMsgHasReference) {
+      return { type: "skip" };
     }
 
     const reasoningItem: ResponseReasoningItem = {
@@ -822,80 +836,54 @@ function serializeThinkingMessage(
       reasoningItem.encrypted_content = encrypted;
     }
 
-    return {
-      item: reasoningItem as ResponseInputItem,
-      dropNextAssistantId: false,
-    };
+    return { type: "item", item: reasoningItem as ResponseInputItem };
   }
   return undefined;
 }
 
+/** Result type for serializeAssistantMessage */
+type SerializeAssistantResult =
+  | { type: "item"; item: ResponseInputItem }
+  | { type: "fallback"; role: "assistant"; content: string };
+
+/**
+ * Serialize an assistant message to a ResponseInputItem.
+ * @param msg - The assistant message to serialize
+ * @param stripId - Whether to strip the responsesOutputItemId (when paired reasoning was skipped)
+ */
 function serializeAssistantMessage(
   msg: ChatMessage,
-  dropNextAssistantId: boolean,
-  pushMessage: (role: "assistant", content: string) => void,
-): ResponseInputItem | undefined {
+  stripId: boolean,
+): SerializeAssistantResult {
   const text = getTextFromMessageContent(msg.content);
-  // Revert: We want to control the ID based on dropNextAssistantId
   const originalRespId = msg.metadata?.responsesOutputItemId as
     | string
     | undefined;
-  const respId = dropNextAssistantId ? undefined : originalRespId;
+  const respId = stripId ? undefined : originalRespId;
 
   const toolCalls = (msg as AssistantChatMessage).toolCalls as
     | ToolCallDelta[]
     | undefined;
 
   if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+    const tc = toolCalls[0];
+    const name = tc?.function?.name as string | undefined;
+    const args = tc?.function?.arguments as string | undefined;
+    const call_id = tc?.id as string | undefined;
+
+    // ResponseFunctionToolCall has optional 'id' field
+    const functionCallItem: ResponseFunctionToolCall = {
+      type: "function_call",
+      name: name || "",
+      arguments: typeof args === "string" ? args : "{}",
+      call_id: call_id || respId || "",
+    };
     if (respId) {
-      // Emit full function_call output item WITH ID
-      const tc = toolCalls[0];
-      const name = tc?.function?.name as string | undefined;
-      const args = tc?.function?.arguments as string | undefined;
-      const call_id = tc?.id as string | undefined;
-      const functionCallItem: ResponseFunctionToolCall = {
-        id: respId,
-        type: "function_call",
-        name: name || "",
-        arguments: typeof args === "string" ? args : "{}",
-        call_id: call_id || respId,
-      };
-      return functionCallItem;
-    } else {
-      // [NEW] Emit function_call output item WITHOUT ID (fallback for dropped reasoning)
-      // This ensures the tool call is not lost even if the reasoning item was omitted.
-      // We rely on the API accepting a tool call in the history without an explicit outputItemId link here,
-      // or effectively treating it as a new turn or unlinked call.
-      const tc = toolCalls[0];
-      const name = tc?.function?.name as string | undefined;
-      const args = tc?.function?.arguments as string | undefined;
-      const call_id = tc?.id as string | undefined;
-
-      // Note: The ResponseFunctionToolCall type might technically REQUIRE 'id'.
-      // If strict types enforce 'id', we might need to cast or omit.
-      // Checking the type definition (inferred): standard ResponseFunctionToolCall usually has 'id'.
-      // If we can't send it without ID, we can't fully support it in "Responses" API strict mode.
-      // However, for standard chat history, it might just be a message with tool_calls.
-      // But here we are constructing `ResponseInputItem`.
-
-      // If we cannot provide an ID, we cannot verify if 'function_call' type is valid without it.
-      // Let's assume for now we must unfortunately fall back to the text representation if strict ID is required,
-      // OR we try to construct a "message" type with tool_calls if possible.
-      // BUT `ResponseInputItem` variants are specific.
-
-      // Alternative: If we are forced to drop the ID, maybe we just don't send the ID field?
-      // Let's try to return the object but cast to any to suppress TS if ID is mandatory but we want to test behavior.
-      // safeguard:
-      const functionCallItem = {
-        type: "function_call",
-        name: name || "",
-        arguments: typeof args === "string" ? args : "{}",
-        call_id: call_id,
-      } as any;
-      return functionCallItem;
+      functionCallItem.id = respId;
     }
+    return { type: "item", item: functionCallItem };
   } else if (respId) {
-    // Emit full assistant output message item
+    // Emit full assistant output message item with ID
     const outputMessageItem: ResponseOutputMessage = {
       id: respId,
       role: "assistant",
@@ -909,17 +897,16 @@ function serializeAssistantMessage(
         } satisfies ResponseOutputText,
       ],
     };
-    return outputMessageItem;
+    return { type: "item", item: outputMessageItem };
   } else {
     // Fallback to EasyInput assistant message
-    pushMessage("assistant", text || "");
-    return undefined;
+    return { type: "fallback", role: "assistant", content: text || "" };
   }
 }
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
-  let dropNextAssistantId = false;
+  let stripNextAssistantId = false;
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -955,15 +942,13 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "assistant": {
-        const result = serializeAssistantMessage(
-          msg,
-          dropNextAssistantId,
-          (role, content) => pushMessage(role, content),
-        );
-        if (result) {
-          input.push(result);
+        const result = serializeAssistantMessage(msg, stripNextAssistantId);
+        if (result.type === "item") {
+          input.push(result.item);
+        } else {
+          pushMessage(result.role, result.content);
         }
-        dropNextAssistantId = false;
+        stripNextAssistantId = false;
         break;
       }
       case "tool": {
@@ -981,10 +966,20 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "thinking": {
-        const result = serializeThinkingMessage(msg as ThinkingChatMessage);
+        // Look ahead: check if next assistant message has a responsesOutputItemId reference
+        const nextMsg = messages[i + 1];
+        const nextMsgHasReference =
+          nextMsg?.role === "assistant" &&
+          nextMsg?.metadata?.responsesOutputItemId !== undefined;
+
+        const result = serializeThinkingMessage(
+          msg as ThinkingChatMessage,
+          nextMsgHasReference,
+        );
         if (result) {
-          if (result.dropNextAssistantId) {
-            dropNextAssistantId = true;
+          if (result.type === "skip") {
+            // Reasoning skipped; strip the ID from the next assistant message
+            stripNextAssistantId = true;
           } else {
             input.push(result.item);
           }
