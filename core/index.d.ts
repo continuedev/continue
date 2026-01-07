@@ -694,6 +694,9 @@ export interface LLMOptions {
 
   sourceFile?: string;
   isFromAutoDetect?: boolean;
+
+  /** Tool prompt overrides for this model */
+  toolPromptOverrides?: ToolOverride[];
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1139,6 +1142,30 @@ export interface Tool {
     parsedArgs: Record<string, unknown>,
     processedArgs?: Record<string, unknown>,
   ) => ToolPolicy;
+}
+
+/**
+ * Configuration for overriding built-in tool prompts.
+ * Allows customization of tool descriptions and behavior per model.
+ */
+export interface ToolOverride {
+  /** Tool name to override (matches function.name, e.g., "read_file", "run_terminal_command") */
+  name: string;
+  /** Override the tool's description shown to the LLM */
+  description?: string;
+  /** Override the display title shown in UI */
+  displayTitle?: string;
+  /** Override the action phrases */
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
+  /** Override system message description for non-native tool calling */
+  systemMessageDescription?: {
+    prefix?: string;
+    exampleArgs?: Array<[string, string | number]>;
+  };
+  /** Set to true to disable this tool */
+  disabled?: boolean;
 }
 
 interface ToolChoice {
