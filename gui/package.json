@@ -21,7 +21,7 @@
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@panzoom/panzoom": "^4.6.0",
-    "@reduxjs/toolkit": "^2.3.0",
+    "@reduxjs/toolkit": "^2.11.2",
     "@sentry/react": "^9.43.0",
     "@sentry/vite-plugin": "^4.0.2",
     "@tiptap/core": "^2.27.0",
