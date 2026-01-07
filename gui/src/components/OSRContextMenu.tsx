@@ -268,6 +268,51 @@ const OSRContextMenu = () => {
           Cut
         </div>
       )}
+      {canPaste && (
+        <div
+          className="cursor-pointer hover:opacity-90"
+          onClick={async (e) => {
+            onMenuItemClick(e);
+            try {
+              const text = await navigator.clipboard.readText();
+              const activeElement = document.activeElement as HTMLElement;
+
+              if (
+                activeElement instanceof HTMLInputElement ||
+                activeElement instanceof HTMLTextAreaElement
+              ) {
+                const start = activeElement.selectionStart || 0;
+                const end = activeElement.selectionEnd || 0;
+                activeElement.setRangeText(text, start, end, "end");
+                activeElement.dispatchEvent(
+                  new Event("input", { bubbles: true }),
+                );
+              } else if (activeElement.isContentEditable) {
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0);
+                  range.deleteContents();
+                  const textNode = document.createTextNode(text);
+                  range.insertNode(textNode);
+                  // Move cursor to end of inserted text
+                  range.setStartAfter(textNode);
+                  range.setEndAfter(textNode);
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+
+                  activeElement.dispatchEvent(
+                    new Event("input", { bubbles: true }),
+                  );
+                }
+              }
+            } catch (error) {
+              console.error("Paste failed", error);
+            }
+          }}
+        >
+          Paste
+        </div>
+      )}
       <div
         className="cursor-pointer hover:opacity-90"
         onClick={(e) => {
