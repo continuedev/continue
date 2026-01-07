@@ -8,6 +8,7 @@ import {
 } from "../services/index.js";
 import { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
+import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
 /**
@@ -124,6 +125,17 @@ export async function executeSubAgent(
 
     try {
       let accumulatedOutput = "";
+
+      escapeEvents.on("user-escape", () => {
+        abortController.abort();
+        chatHistory.push({
+          message: {
+            role: "user",
+            content: "Subagent execution was cancelled by the user.",
+          },
+          contextItems: [],
+        });
+      });
 
       // Execute the chat stream with child session
       await streamChatResponse(
