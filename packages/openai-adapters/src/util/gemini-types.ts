@@ -66,22 +66,40 @@ const jsonSchemaTypeToGeminiType = (
 };
 
 function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
-  const jsonSchemaType = jsonSchema["type"];
-  if (!jsonSchemaType || typeof jsonSchema.type !== "string") {
-    throw new Error(
-      `Invalid type property in function declaration\n${JSON.stringify(jsonSchema, null, 2)}`,
-    );
+  if (!jsonSchema || typeof jsonSchema !== "object" || Array.isArray(jsonSchema)) {
+    return { type: "TYPE_UNSPECIFIED" };
+  }
+
+  const jsonSchemaType =
+    typeof jsonSchema.type === "string"
+      ? jsonSchema.type
+      : Array.isArray(jsonSchema.type)
+        ? jsonSchema.type.find((t: unknown) => typeof t === "string" && t !== "null") ??
+          jsonSchema.type.find((t: unknown) => typeof t === "string")
+        : jsonSchema.properties &&
+            typeof jsonSchema.properties === "object" &&
+            !Array.isArray(jsonSchema.properties)
+          ? "object"
+          : jsonSchema.items
+            ? "array"
+            : undefined;
+
+  if (!jsonSchemaType) {
+    return { type: "TYPE_UNSPECIFIED" };
   }
   const geminiSchema: GeminiObjectSchema = {
     type: jsonSchemaTypeToGeminiType(jsonSchemaType),
   };
 
   // if (jsonSchema.format) geminiSchema.format = jsonSchema.format;
-  if (jsonSchema.title) geminiSchema.title = jsonSchema.title;
   if (jsonSchema.description) geminiSchema.description = jsonSchema.description;
 
   // Handle nullable
-  if (jsonSchemaType === "null" || jsonSchema.nullable) {
+  if (
+    jsonSchemaType === "null" ||
+    jsonSchema.nullable ||
+    (Array.isArray(jsonSchema.type) && jsonSchema.type.includes("null"))
+  ) {
     geminiSchema.nullable = true;
   }
 
@@ -99,7 +117,7 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
       geminiSchema.minItems = String(jsonSchema.minItems);
     }
     // Handle array items
-    if (jsonSchema.items) {
+    if (jsonSchema.items && typeof jsonSchema.items === "object") {
       geminiSchema.items = convertJsonSchemaToGeminiSchema(jsonSchema.items);
     }
   }
@@ -114,9 +132,13 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
 
   // Handle properties for objects
   if (jsonSchema.properties) {
-    geminiSchema.properties = {};
-    for (const [key, value] of Object.entries(jsonSchema.properties)) {
-      geminiSchema.properties[key] = convertJsonSchemaToGeminiSchema(value);
+    if (typeof jsonSchema.properties === "object" && !Array.isArray(jsonSchema.properties)) {
+      geminiSchema.properties = {};
+      for (const [key, value] of Object.entries(jsonSchema.properties)) {
+        if (value && typeof value === "object") {
+          geminiSchema.properties[key] = convertJsonSchemaToGeminiSchema(value);
+        }
+      }
     }
   }
 
@@ -127,7 +149,12 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
 
   // Handle anyOf
   if (Array.isArray(jsonSchema.anyOf)) {
-    geminiSchema.anyOf = jsonSchema.anyOf.map(convertJsonSchemaToGeminiSchema);
+    const anyOf = jsonSchema.anyOf
+      .filter((s: unknown) => s && typeof s === "object" && !Array.isArray(s))
+      .map(convertJsonSchemaToGeminiSchema);
+    if (anyOf.length) {
+      geminiSchema.anyOf = anyOf;
+    }
   }
 
   // TODO/UNSUPPORTED:
@@ -161,20 +188,27 @@ export function convertOpenAIToolToGeminiFunction(
     name,
   };
 
+  const params = tool.function.parameters;
   if (
-    tool.function.parameters &&
-    "type" in tool.function.parameters &&
-    typeof tool.function.parameters.type === "string"
+    params &&
+    typeof params === "object" &&
+    !Array.isArray(params) &&
+    "type" in params &&
+    typeof (params as any).type === "string"
   ) {
     // Gemini can't take an empty object
     // So if empty object param is present just don't add parameters
-    if (tool.function.parameters.type === "object") {
-      if (JSON.stringify(tool.function.parameters.properties) === "{}") {
+    if ((params as any).type === "object") {
+      const props = (params as any).properties;
+      const isEmptyProps =
+        !props ||
+        (typeof props === "object" && !Array.isArray(props) && Object.keys(props).length === 0);
+      if (isEmptyProps) {
         return fn;
       }
     }
 
-    fn.parameters = convertJsonSchemaToGeminiSchema(tool.function.parameters);
+    fn.parameters = convertJsonSchemaToGeminiSchema(params);
   }
 
   return fn;
