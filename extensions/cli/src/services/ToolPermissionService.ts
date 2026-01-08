@@ -1,3 +1,5 @@
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
+
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
 import {
@@ -5,7 +7,6 @@ import {
   ToolPermissionPolicy,
   ToolPermissions,
 } from "../permissions/types.js";
-import { ALL_BUILT_IN_TOOLS } from "../tools/allBuiltIns.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
