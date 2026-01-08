@@ -91,9 +91,6 @@ export const subagentTool: GetTool = (params) => ({
       throw new Error("No active session found");
     }
 
-    // Create abort controller for child execution
-    const abortController = new AbortController();
-
     const { executeSubAgent } = await import("../subagent/executor.js"); // prevent cyclical import
 
     // Execute subagent with output streaming
@@ -101,7 +98,7 @@ export const subagentTool: GetTool = (params) => ({
       agent,
       prompt,
       parentSessionId,
-      abortController,
+      abortController: new AbortController(),
       onOutputUpdate: context?.toolCallId
         ? (output: string) => {
             try {

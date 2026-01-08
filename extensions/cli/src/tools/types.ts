@@ -31,6 +31,7 @@ export interface ToolCallPreview {
 export interface PreprocessToolCallResult {
   preview?: ToolCallPreview[];
   args: Record<string, any>;
+  context?: { toolCallId: string };
 }
 
 export interface Tool {
