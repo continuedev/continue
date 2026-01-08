@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { services } from "../services/index.js";
 import { executeSubAgent } from "../subagent/executor.js";
 import { getAgentNames, getSubagent } from "../subagent/get-agents.js";
 
@@ -7,6 +8,14 @@ import { subagentTool } from "./subagent.js";
 
 vi.mock("../subagent/get-agents.js");
 vi.mock("../subagent/executor.js");
+vi.mock("../services/index.js", () => ({
+  services: {
+    chatHistory: {
+      getSessionId: vi.fn().mockReturnValue("parent-session-id"),
+      addToolResult: vi.fn(),
+    },
+  },
+}));
 
 describe("subagentTool", () => {
   const modelServiceState = {} as any;
@@ -74,18 +83,10 @@ describe("subagentTool", () => {
       response: "subagent-output",
     } as any);
 
-    const services = {
-      chatHistory: {
-        getSessionId: vi.fn().mockReturnValue("parent-session-id"),
-        addToolResult: vi.fn(),
-      },
-    } as any;
-
     const serviceContainer = {} as any;
 
     const tool = subagentTool({
       modelServiceState,
-      services,
       serviceContainer,
     } as any);
 
@@ -105,7 +106,7 @@ describe("subagentTool", () => {
     expect(typeof options.onOutputUpdate).toBe("function");
 
     options.onOutputUpdate?.("partial-output");
-    expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+    expect(vi.mocked(services.chatHistory.addToolResult)).toHaveBeenCalledWith(
       "tool-call-id",
       "partial-output",
       "calling",
