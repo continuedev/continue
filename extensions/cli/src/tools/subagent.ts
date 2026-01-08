@@ -1,4 +1,3 @@
-import { services } from "../services/index.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -23,7 +22,7 @@ export const subagentTool: GetTool = (params) => ({
     properties: {
       description: {
         type: "string",
-        description: "A short (3-5 words) description of the task",
+        description: "A short description of the task",
       },
       prompt: {
         type: "string",
@@ -86,12 +85,13 @@ export const subagentTool: GetTool = (params) => ({
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
 
+    const { executeSubAgent } = await import("../subagent/executor.js");
+    const { services } = await import("../services/index.js");
+
     const parentSessionId = services.chatHistory.getSessionId();
     if (!parentSessionId) {
       throw new Error("No active session found");
     }
-
-    const { executeSubAgent } = await import("../subagent/executor.js"); // prevent cyclical import
 
     // Execute subagent with output streaming
     const result = await executeSubAgent({
