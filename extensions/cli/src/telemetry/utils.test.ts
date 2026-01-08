@@ -227,11 +227,9 @@ describe("isResolveThreadCommand", () => {
 
   it("should not match unresolveReviewThread", () => {
     // This tests that we're matching resolveReviewThread specifically
-    // unresolveReviewThread also contains resolveReviewThread as a substring
+    // unresolveReviewThread should not match due to word boundary matching
     const cmd = "gh api graphql -f query='mutation { unresolveReviewThread }'";
-    // Note: This will actually match because "unresolveReviewThread" contains "resolveReviewThread"
-    // If we want to exclude this, we'd need a more specific regex
-    expect(isResolveThreadCommand(cmd)).toBe(true);
+    expect(isResolveThreadCommand(cmd)).toBe(false);
   });
 
   it("should not match regular gh api calls", () => {
