@@ -161,7 +161,7 @@ export function isCommentReplyCommand(command: string): boolean {
  * Pattern: gh api graphql ... resolveReviewThread
  */
 export function isResolveThreadCommand(command: string): boolean {
-  return /gh api graphql.*resolveReviewThread/i.test(command);
+  return /gh api graphql.*\bresolveReviewThread\b/i.test(command);
 }
 
 /**
