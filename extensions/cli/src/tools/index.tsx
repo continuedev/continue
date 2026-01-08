@@ -127,6 +127,8 @@ export async function getAllAvailableTools(
     tools.push(
       subagentTool({
         modelServiceState: modelState,
+        services,
+        serviceContainer,
       }),
     );
   }

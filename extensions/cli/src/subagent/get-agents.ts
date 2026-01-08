@@ -1,5 +1,5 @@
-import { ModelServiceState } from "../services/index.js";
 import { ModelService } from "../services/ModelService.js";
+import type { ModelServiceState } from "../services/types.js";
 
 /**
  * Get an agent by name

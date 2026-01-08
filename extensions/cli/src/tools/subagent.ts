@@ -1,3 +1,4 @@
+import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -5,17 +6,14 @@ import {
 } from "../subagent/get-agents.js";
 import { logger } from "../util/logger.js";
 
-import { GetTool } from "./types.js";
+import { GetTool, Tool } from "./types.js";
 
-export const subagentTool: GetTool = (params) => ({
+export const SUBAGENT_TOOL_META: Tool = {
   name: "Subagent",
   displayName: "Subagent",
-  description: params
-    ? generateSubagentToolDescription(params.modelServiceState)
-    : "Use a subagent to handle a specialized task.",
+  description: "Use a subagent to handle a specialized task.",
   readonly: false,
   isBuiltIn: true,
-
   parameters: {
     type: "object",
     required: ["description", "prompt", "subagent_name"],
@@ -30,6 +28,24 @@ export const subagentTool: GetTool = (params) => ({
       },
       subagent_name: {
         type: "string",
+        description: "The type of specialized agent to use for this task.",
+      },
+    },
+  },
+  run: async () => "",
+};
+
+export const subagentTool: GetTool = (params) => ({
+  ...SUBAGENT_TOOL_META,
+
+  description: generateSubagentToolDescription(params.modelServiceState),
+
+  parameters: {
+    ...SUBAGENT_TOOL_META.parameters,
+    properties: {
+      ...SUBAGENT_TOOL_META.parameters.properties,
+      subagent_name: {
+        type: "string",
         description: `The type of specialized agent to use for this task. Available agents: ${
           params ? getSubagentNames(params.modelServiceState).join(", ") : ""
         }`,
@@ -38,18 +54,6 @@ export const subagentTool: GetTool = (params) => ({
   },
 
   preprocess: async (args: any) => {
-    if (!params) {
-      return {
-        args,
-        preview: [
-          {
-            type: "text",
-            content: "Subagent not found",
-          },
-        ],
-      };
-    }
-
     const { description, subagent_name } = args;
 
     const agent = getSubagent(params.modelServiceState, subagent_name);
@@ -73,8 +77,6 @@ export const subagentTool: GetTool = (params) => ({
   },
 
   run: async (args: any, context?: { toolCallId: string }) => {
-    if (!params) return "";
-
     const { prompt, subagent_name } = args;
 
     logger.debug("subagent args", { args, context });
@@ -85,10 +87,8 @@ export const subagentTool: GetTool = (params) => ({
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
 
-    const { executeSubAgent } = await import("../subagent/executor.js");
-    const { services } = await import("../services/index.js");
-
-    const parentSessionId = services.chatHistory.getSessionId();
+    const chatHistoryService = params.services.chatHistory;
+    const parentSessionId = chatHistoryService.getSessionId();
     if (!parentSessionId) {
       throw new Error("No active session found");
     }
@@ -99,10 +99,12 @@ export const subagentTool: GetTool = (params) => ({
       prompt,
       parentSessionId,
       abortController: new AbortController(),
+      services: params.services,
+      serviceContainer: params.serviceContainer,
       onOutputUpdate: context?.toolCallId
         ? (output: string) => {
             try {
-              services.chatHistory.addToolResult(
+              chatHistoryService.addToolResult(
                 context.toolCallId,
                 output,
                 "calling",

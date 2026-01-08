@@ -389,6 +389,8 @@ export const services = {
   gitAiIntegration: gitAiIntegrationService,
 } as const;
 
+export type ServicesType = typeof services;
+
 // Export the service container for advanced usage
 export { serviceContainer };
 
