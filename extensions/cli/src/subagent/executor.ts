@@ -1,7 +1,7 @@
 import type { ChatHistoryItem } from "core";
 
-import type { ServicesType } from "../services/index.js";
-import type { ServiceContainer } from "../services/ServiceContainer.js";
+import { services } from "../services/index.js";
+import { serviceContainer } from "../services/ServiceContainer.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
@@ -17,8 +17,6 @@ export interface SubAgentExecutionOptions {
   parentSessionId: string;
   abortController: AbortController;
   onOutputUpdate?: (output: string) => void;
-  services: ServicesType;
-  serviceContainer: ServiceContainer;
 }
 
 /**
@@ -60,14 +58,7 @@ async function buildAgentSystemMessage(
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
-  const {
-    agent: subAgent,
-    prompt,
-    abortController,
-    onOutputUpdate,
-    services,
-    serviceContainer,
-  } = options;
+  const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
 
   const mainAgentPermissionsState =
     await serviceContainer.get<ToolPermissionServiceState>(

@@ -1,7 +1,5 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 
-import type { ServicesType } from "src/services/index.js";
-import type { ServiceContainer } from "src/services/ServiceContainer.js";
 import type { ModelServiceState } from "src/services/types.js";
 
 // JSON Schema compatible parameter definition
@@ -53,8 +51,6 @@ export interface Tool {
 
 export type GetTool = (params: {
   modelServiceState: ModelServiceState;
-  services: ServicesType;
-  serviceContainer: ServiceContainer;
 }) => Tool;
 
 export interface ToolCall {

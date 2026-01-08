@@ -1,4 +1,3 @@
-import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -87,7 +86,11 @@ export const subagentTool: GetTool = (params) => ({
       throw new Error(`Unknown agent type: ${subagent_name}`);
     }
 
-    const chatHistoryService = params.services.chatHistory;
+    // Dynamically import to avoid circular dependency and passing repeated params
+    const { executeSubAgent } = await import("../subagent/executor.js");
+    const { services } = await import("../services/index.js");
+
+    const chatHistoryService = services.chatHistory;
     const parentSessionId = chatHistoryService.getSessionId();
     if (!parentSessionId) {
       throw new Error("No active session found");
@@ -99,8 +102,6 @@ export const subagentTool: GetTool = (params) => ({
       prompt,
       parentSessionId,
       abortController: new AbortController(),
-      services: params.services,
-      serviceContainer: params.serviceContainer,
       onOutputUpdate: context?.toolCallId
         ? (output: string) => {
             try {
