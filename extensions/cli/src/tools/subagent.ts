@@ -1,5 +1,4 @@
 import { services } from "../services/index.js";
-import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -94,6 +93,8 @@ export const subagentTool: GetTool = (params) => ({
 
     // Create abort controller for child execution
     const abortController = new AbortController();
+
+    const { executeSubAgent } = await import("../subagent/executor.js"); // prevent cyclical import
 
     // Execute subagent with output streaming
     const result = await executeSubAgent({
