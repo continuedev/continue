@@ -232,7 +232,7 @@ describe("tokenizer", () => {
       // Threshold: 800 * 0.8 = 640
       const chatHistory = createChatHistory(650); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should not compact when input tokens are below threshold with maxTokens", () => {
@@ -241,7 +241,7 @@ describe("tokenizer", () => {
       // Threshold: 800 * 0.8 = 640
       const chatHistory = createChatHistory(600); // Below threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(false);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
     });
 
     it("should use 35% default reservation when maxTokens is not set", () => {
@@ -251,7 +251,7 @@ describe("tokenizer", () => {
       // Threshold: 650 * 0.8 = 520
       const chatHistory = createChatHistory(530); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should not compact when below default threshold without maxTokens", () => {
@@ -260,14 +260,14 @@ describe("tokenizer", () => {
       // Threshold: 650 * 0.8 = 520
       const chatHistory = createChatHistory(500); // Below threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(false);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
     });
 
     it("should throw error when maxTokens >= contextLength", () => {
       const model = createModel(1000, 1000); // maxTokens equals contextLength
       const chatHistory = createChatHistory(1); // Minimal input
 
-      expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
+      expect(() => shouldAutoCompact({ chatHistory, model })).toThrow(
         "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
@@ -276,7 +276,7 @@ describe("tokenizer", () => {
       const model = createModel(1000, 1200); // maxTokens exceeds contextLength
       const chatHistory = createChatHistory(1); // Minimal input
 
-      expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
+      expect(() => shouldAutoCompact({ chatHistory, model })).toThrow(
         "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
@@ -287,17 +287,20 @@ describe("tokenizer", () => {
       // Threshold: 50 * 0.8 = 40
       const chatHistory = createChatHistory(45); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should log debug information correctly", () => {
       const model = createModel(1000, 200);
       const chatHistory = createChatHistory(600);
 
-      shouldAutoCompact(chatHistory, model);
+      shouldAutoCompact({ chatHistory, model });
 
       expect(logger.debug).toHaveBeenCalledWith("Context usage check", {
         inputTokens: expect.any(Number),
+        historyTokens: expect.any(Number),
+        systemTokens: expect.any(Number),
+        toolTokens: expect.any(Number),
         contextLimit: 1000,
         maxTokens: 200,
         reservedForOutput: 200,
@@ -313,7 +316,7 @@ describe("tokenizer", () => {
       // Should use default 35% reservation: 1000 * 0.35 = 350
       const chatHistory = createChatHistory(530); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     describe("real-world scenarios", () => {
@@ -324,7 +327,7 @@ describe("tokenizer", () => {
         // Threshold: 196k * 0.8 = 156.8k
         const chatHistory = createChatHistory(160_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
 
       it("should prevent GPT-4 context overflow", () => {
@@ -334,7 +337,7 @@ describe("tokenizer", () => {
         // Threshold: 124k * 0.8 = 99.2k
         const chatHistory = createChatHistory(100_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
 
       it("should handle models with very high max_tokens", () => {
@@ -344,7 +347,7 @@ describe("tokenizer", () => {
         // Threshold: 136k * 0.8 = 108.8k
         const chatHistory = createChatHistory(110_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
     });
   });

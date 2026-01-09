@@ -1,6 +1,31 @@
-export const TRUNCATION_MAX_CHARACTERS = 50000;
-export const TRUNCATION_MAX_LINES = 1000;
+export const DEFAULT_MAX_CHARACTERS = 50000;
+export const DEFAULT_MAX_LINES = 1000;
 export const TRUNCATION_LINE_SNAP_THRESHOLD = 1000;
+
+function parseEnvNumber(
+  envVar: string | undefined,
+  defaultValue: number,
+): number {
+  if (!envVar) {
+    return defaultValue;
+  }
+  const parsed = parseInt(envVar, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return defaultValue;
+  }
+  return parsed;
+}
+
+export function getMaxCharacters(): number {
+  return parseEnvNumber(
+    process.env.BASH_MAX_OUTPUT_LENGTH,
+    DEFAULT_MAX_CHARACTERS,
+  );
+}
+
+export function getMaxLines(): number {
+  return parseEnvNumber(process.env.BASH_MAX_OUTPUT_LINES, DEFAULT_MAX_LINES);
+}
 
 interface TruncationResult {
   output: string;
@@ -18,19 +43,22 @@ export function truncateOutputFromStart(output: string): TruncationResult {
     return { output, wasTruncated: false };
   }
 
+  const maxLines = getMaxLines();
+  const maxCharacters = getMaxCharacters();
   const lines = output.split("\n");
 
   // Check if we need to truncate by lines first
-  if (lines.length > TRUNCATION_MAX_LINES) {
-    const linesTruncated = lines.length - TRUNCATION_MAX_LINES;
-    const preservedLines = lines.slice(-TRUNCATION_MAX_LINES);
+  if (lines.length > maxLines) {
+    const linesTruncated = lines.length - maxLines;
+    const preservedLines = lines.slice(-maxLines);
     const contentAfterLineTruncation = preservedLines.join("\n");
 
     // After line truncation, check character limit
-    if (contentAfterLineTruncation.length > TRUNCATION_MAX_CHARACTERS) {
+    if (contentAfterLineTruncation.length > maxCharacters) {
       return truncateCharactersFromStart(
         contentAfterLineTruncation,
         linesTruncated,
+        maxCharacters,
       );
     }
 
@@ -41,8 +69,8 @@ export function truncateOutputFromStart(output: string): TruncationResult {
   }
 
   // Check character limit
-  if (output.length > TRUNCATION_MAX_CHARACTERS) {
-    return truncateCharactersFromStart(output, 0);
+  if (output.length > maxCharacters) {
+    return truncateCharactersFromStart(output, 0, maxCharacters);
   }
 
   return { output, wasTruncated: false };
@@ -51,9 +79,10 @@ export function truncateOutputFromStart(output: string): TruncationResult {
 function truncateCharactersFromStart(
   text: string,
   linesTruncated: number,
+  maxCharacters: number,
 ): TruncationResult {
   // Remove characters from the beginning, keeping the end
-  const truncationPoint = text.length - TRUNCATION_MAX_CHARACTERS;
+  const truncationPoint = text.length - maxCharacters;
   const textToKeep = text.slice(truncationPoint);
 
   // Try to start at a clean line boundary, but only if there's a newline

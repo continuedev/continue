@@ -1,10 +1,24 @@
 import {
+  DEFAULT_MAX_CHARACTERS,
+  DEFAULT_MAX_LINES,
+  getMaxCharacters,
+  getMaxLines,
   truncateOutputFromStart,
-  TRUNCATION_MAX_CHARACTERS,
-  TRUNCATION_MAX_LINES,
 } from "./truncateOutput.js";
 
 describe("truncateOutputFromStart", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.BASH_MAX_OUTPUT_LENGTH;
+    delete process.env.BASH_MAX_OUTPUT_LINES;
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
   describe("no truncation needed", () => {
     it("should return empty string unchanged", () => {
       const result = truncateOutputFromStart("");
@@ -21,7 +35,7 @@ describe("truncateOutputFromStart", () => {
 
     it("should return output at exactly max lines unchanged", () => {
       const lines = Array.from(
-        { length: TRUNCATION_MAX_LINES },
+        { length: DEFAULT_MAX_LINES },
         (_, i) => `line ${i + 1}`,
       );
       const input = lines.join("\n");
@@ -31,7 +45,7 @@ describe("truncateOutputFromStart", () => {
     });
 
     it("should return output at exactly max characters unchanged", () => {
-      const input = "a".repeat(TRUNCATION_MAX_CHARACTERS);
+      const input = "a".repeat(DEFAULT_MAX_CHARACTERS);
       const result = truncateOutputFromStart(input);
       expect(result.output).toBe(input);
       expect(result.wasTruncated).toBe(false);
@@ -40,7 +54,7 @@ describe("truncateOutputFromStart", () => {
 
   describe("truncation by line count", () => {
     it("should truncate when exceeding max lines", () => {
-      const totalLines = TRUNCATION_MAX_LINES + 500;
+      const totalLines = DEFAULT_MAX_LINES + 500;
       const lines = Array.from(
         { length: totalLines },
         (_, i) => `line ${i + 1}`,
@@ -56,7 +70,7 @@ describe("truncateOutputFromStart", () => {
     });
 
     it("should preserve the last max lines when truncating", () => {
-      const totalLines = TRUNCATION_MAX_LINES * 2;
+      const totalLines = DEFAULT_MAX_LINES * 2;
       const lines = Array.from(
         { length: totalLines },
         (_, i) => `line ${i + 1}`,
@@ -66,18 +80,18 @@ describe("truncateOutputFromStart", () => {
 
       expect(result.wasTruncated).toBe(true);
       expect(result.output).toContain(
-        `(previous ${TRUNCATION_MAX_LINES} lines truncated)`,
+        `(previous ${DEFAULT_MAX_LINES} lines truncated)`,
       );
 
       // Check that we have lines (MAX_LINES+1) to (MAX_LINES*2)
       const outputLines = result.output.split("\n");
       // First line is the truncation message, second is empty, then content
-      expect(outputLines[2]).toBe(`line ${TRUNCATION_MAX_LINES + 1}`);
+      expect(outputLines[2]).toBe(`line ${DEFAULT_MAX_LINES + 1}`);
       expect(outputLines[outputLines.length - 1]).toBe(`line ${totalLines}`);
     });
 
     it("should handle exactly max lines + 1", () => {
-      const totalLines = TRUNCATION_MAX_LINES + 1;
+      const totalLines = DEFAULT_MAX_LINES + 1;
       const lines = Array.from(
         { length: totalLines },
         (_, i) => `line ${i + 1}`,
@@ -96,12 +110,12 @@ describe("truncateOutputFromStart", () => {
   describe("truncation by character count", () => {
     it("should truncate when exceeding max characters", () => {
       // Create output that exceeds character limit but not line limit
-      const input = "a".repeat(TRUNCATION_MAX_CHARACTERS + 10000);
+      const input = "a".repeat(DEFAULT_MAX_CHARACTERS + 10000);
       const result = truncateOutputFromStart(input);
 
       expect(result.wasTruncated).toBe(true);
       expect(result.output.length).toBeLessThanOrEqual(
-        TRUNCATION_MAX_CHARACTERS + 100 /* header allowance */,
+        DEFAULT_MAX_CHARACTERS + 100 /* header allowance */,
       );
       expect(result.output).toContain("characters truncated");
     });
@@ -126,10 +140,7 @@ describe("truncateOutputFromStart", () => {
       // Create lines that exceed both limits
       // 2x max lines, each 100 chars = way more than max characters
       const line = "y".repeat(100);
-      const lines = Array.from(
-        { length: TRUNCATION_MAX_LINES * 2 },
-        () => line,
-      );
+      const lines = Array.from({ length: DEFAULT_MAX_LINES * 2 }, () => line);
       const input = lines.join("\n");
 
       const result = truncateOutputFromStart(input);
@@ -137,12 +148,12 @@ describe("truncateOutputFromStart", () => {
       expect(result.wasTruncated).toBe(true);
       // Should be truncated by lines first, then by characters
       expect(result.output.length).toBeLessThanOrEqual(
-        TRUNCATION_MAX_CHARACTERS + 100 /* header allowance */,
+        DEFAULT_MAX_CHARACTERS + 100 /* header allowance */,
       );
 
       // Should have a single combined message, not duplicate notes
       expect(result.output).toContain("previous output truncated:");
-      expect(result.output).toContain(`${TRUNCATION_MAX_LINES} lines`);
+      expect(result.output).toContain(`${DEFAULT_MAX_LINES} lines`);
       expect(result.output).toContain("characters removed");
 
       // Should NOT have separate line truncation message
@@ -154,21 +165,21 @@ describe("truncateOutputFromStart", () => {
 
   describe("edge cases", () => {
     it("should handle single very long line without newlines", () => {
-      const input = "z".repeat(TRUNCATION_MAX_CHARACTERS + 10000);
+      const input = "z".repeat(DEFAULT_MAX_CHARACTERS + 10000);
       const result = truncateOutputFromStart(input);
 
       expect(result.wasTruncated).toBe(true);
       expect(result.output).toContain("characters truncated");
       // Should keep approximately max chars (plus header)
       expect(result.output.length).toBeLessThanOrEqual(
-        TRUNCATION_MAX_CHARACTERS + 100,
+        DEFAULT_MAX_CHARACTERS + 100,
       );
-      expect(result.output.length).toBeGreaterThan(TRUNCATION_MAX_CHARACTERS);
+      expect(result.output.length).toBeGreaterThan(DEFAULT_MAX_CHARACTERS);
     });
 
     it("should not snap to line boundary if newline is too far into the text", () => {
       // Create a massive line followed by a newline far from the truncation point
-      const leadingChars = TRUNCATION_MAX_CHARACTERS + 5000;
+      const leadingChars = DEFAULT_MAX_CHARACTERS + 5000;
       const input = "a".repeat(leadingChars) + "\n" + "b".repeat(10);
       const result = truncateOutputFromStart(input);
 
@@ -182,11 +193,11 @@ describe("truncateOutputFromStart", () => {
 
     it("should snap to line boundary if newline is within snap threshold", () => {
       // Create text where truncation point lands within snap threshold of a newline
-      const charsBeforeNewline = TRUNCATION_MAX_CHARACTERS / 5; // Well under max
+      const charsBeforeNewline = DEFAULT_MAX_CHARACTERS / 5; // Well under max
       const input =
         "a".repeat(charsBeforeNewline) +
         "\n" +
-        "b".repeat(TRUNCATION_MAX_CHARACTERS);
+        "b".repeat(DEFAULT_MAX_CHARACTERS);
       const result = truncateOutputFromStart(input);
 
       expect(result.wasTruncated).toBe(true);
@@ -197,7 +208,7 @@ describe("truncateOutputFromStart", () => {
     });
 
     it("should handle output with only newlines", () => {
-      const input = "\n".repeat(TRUNCATION_MAX_LINES + 500);
+      const input = "\n".repeat(DEFAULT_MAX_LINES + 500);
       const result = truncateOutputFromStart(input);
 
       expect(result.wasTruncated).toBe(true);
@@ -205,7 +216,7 @@ describe("truncateOutputFromStart", () => {
     });
 
     it("should handle mixed content with empty lines", () => {
-      const totalLines = TRUNCATION_MAX_LINES + 200;
+      const totalLines = DEFAULT_MAX_LINES + 200;
       const lines = Array.from({ length: totalLines }, (_, i) =>
         i % 2 === 0 ? `content line ${i}` : "",
       );
@@ -214,6 +225,130 @@ describe("truncateOutputFromStart", () => {
 
       expect(result.wasTruncated).toBe(true);
       expect(result.output).toContain("(previous 200 lines truncated)");
+    });
+  });
+
+  describe("environment variable configuration", () => {
+    describe("getMaxCharacters", () => {
+      it("should return default when env var is not set", () => {
+        expect(getMaxCharacters()).toBe(DEFAULT_MAX_CHARACTERS);
+      });
+
+      it("should return env var value when set to valid number", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "100000";
+        expect(getMaxCharacters()).toBe(100000);
+      });
+
+      it("should return default when env var is empty string", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "";
+        expect(getMaxCharacters()).toBe(DEFAULT_MAX_CHARACTERS);
+      });
+
+      it("should return default when env var is not a number", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "not-a-number";
+        expect(getMaxCharacters()).toBe(DEFAULT_MAX_CHARACTERS);
+      });
+
+      it("should return default when env var is zero", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "0";
+        expect(getMaxCharacters()).toBe(DEFAULT_MAX_CHARACTERS);
+      });
+
+      it("should return default when env var is negative", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "-100";
+        expect(getMaxCharacters()).toBe(DEFAULT_MAX_CHARACTERS);
+      });
+
+      it("should parse integer from float string", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "12345.67";
+        expect(getMaxCharacters()).toBe(12345);
+      });
+    });
+
+    describe("getMaxLines", () => {
+      it("should return default when env var is not set", () => {
+        expect(getMaxLines()).toBe(DEFAULT_MAX_LINES);
+      });
+
+      it("should return env var value when set to valid number", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "5000";
+        expect(getMaxLines()).toBe(5000);
+      });
+
+      it("should return default when env var is empty string", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "";
+        expect(getMaxLines()).toBe(DEFAULT_MAX_LINES);
+      });
+
+      it("should return default when env var is not a number", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "invalid";
+        expect(getMaxLines()).toBe(DEFAULT_MAX_LINES);
+      });
+
+      it("should return default when env var is zero", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "0";
+        expect(getMaxLines()).toBe(DEFAULT_MAX_LINES);
+      });
+
+      it("should return default when env var is negative", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "-500";
+        expect(getMaxLines()).toBe(DEFAULT_MAX_LINES);
+      });
+    });
+
+    describe("truncateOutputFromStart with custom limits", () => {
+      it("should use custom character limit from env var", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "1000";
+        const input = "a".repeat(1500);
+        const result = truncateOutputFromStart(input);
+
+        expect(result.wasTruncated).toBe(true);
+        expect(result.output).toContain("characters truncated");
+        // Output should be around 1000 chars plus header
+        expect(result.output.length).toBeLessThanOrEqual(1100);
+      });
+
+      it("should use custom line limit from env var", () => {
+        process.env.BASH_MAX_OUTPUT_LINES = "50";
+        const lines = Array.from({ length: 100 }, (_, i) => `line ${i + 1}`);
+        const input = lines.join("\n");
+        const result = truncateOutputFromStart(input);
+
+        expect(result.wasTruncated).toBe(true);
+        expect(result.output).toContain("(previous 50 lines truncated)");
+        expect(result.output).toContain("line 51");
+        expect(result.output).toContain("line 100");
+      });
+
+      it("should use both custom limits together", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "500";
+        process.env.BASH_MAX_OUTPUT_LINES = "100";
+
+        // Create 200 lines of 10 chars each = 2000+ chars, exceeding both limits
+        const lines = Array.from({ length: 200 }, () => "x".repeat(10));
+        const input = lines.join("\n");
+        const result = truncateOutputFromStart(input);
+
+        expect(result.wasTruncated).toBe(true);
+        // Should be truncated by lines first (to 100), then by characters (to ~500)
+        expect(result.output.length).toBeLessThanOrEqual(600);
+      });
+
+      it("should not truncate when output is under custom limits", () => {
+        process.env.BASH_MAX_OUTPUT_LENGTH = "100000";
+        process.env.BASH_MAX_OUTPUT_LINES = "10000";
+
+        // Create output that would exceed default limits but not custom ones
+        const lines = Array.from(
+          { length: DEFAULT_MAX_LINES + 500 },
+          (_, i) => `line ${i}`,
+        );
+        const input = lines.join("\n");
+        const result = truncateOutputFromStart(input);
+
+        expect(result.wasTruncated).toBe(false);
+        expect(result.output).toBe(input);
+      });
     });
   });
 });

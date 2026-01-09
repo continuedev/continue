@@ -1,6 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
+import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
 import { logger } from "./logger.js";
 
@@ -196,16 +197,158 @@ export function calculateContextUsagePercentage(
 }
 
 /**
- * Check if the chat history exceeds the auto-compact threshold
- * @param chatHistory The chat history to check
- * @param model The model configuration
+ * Count tokens for a single parameter field in a tool definition.
+ * @param fields The field definition object
+ * @returns Token count for this field
+ */
+function countParameterFieldTokens(
+  fields: Record<string, unknown> | undefined,
+): number {
+  if (!fields) {
+    return 0;
+  }
+
+  let tokens = 0;
+  const fieldType = fields["type"];
+  const fieldDesc = fields["description"];
+  const fieldEnum = fields["enum"];
+
+  if (fieldType && typeof fieldType === "string") {
+    tokens += 2; // Structure overhead for type
+    tokens += encode(fieldType).length;
+  }
+
+  if (fieldDesc && typeof fieldDesc === "string") {
+    tokens += 2; // Structure overhead for description
+    tokens += encode(fieldDesc).length;
+  }
+
+  if (fieldEnum && Array.isArray(fieldEnum)) {
+    tokens -= 3;
+    for (const e of fieldEnum) {
+      tokens += 3;
+      tokens += typeof e === "string" ? encode(e).length : 5;
+    }
+  }
+
+  return tokens;
+}
+
+/**
+ * Count tokens for a single tool's function definition.
+ * @param tool The ChatCompletionTool to count
+ * @returns Token count for this tool
+ */
+function countSingleToolTokens(tool: ChatCompletionTool): number {
+  let tokens = encode(tool.function.name).length;
+
+  if (tool.function.description) {
+    tokens += encode(tool.function.description).length;
+  }
+
+  const params = tool.function.parameters as
+    | { properties?: Record<string, unknown> }
+    | undefined;
+  const props = params?.properties;
+
+  if (props) {
+    for (const key in props) {
+      tokens += encode(key).length;
+      tokens += countParameterFieldTokens(
+        props[key] as Record<string, unknown> | undefined,
+      );
+    }
+  }
+
+  return tokens;
+}
+
+/**
+ * Count tokens for tool definitions sent to the API.
+ * Based on OpenAI's token counting for function calling.
+ * @see https://community.openai.com/t/how-to-calculate-the-tokens-when-using-function-call/266573/10
+ * @param tools Array of ChatCompletionTool objects
+ * @returns Estimated token count for all tool definitions
+ */
+export function countToolDefinitionTokens(tools: ChatCompletionTool[]): number {
+  if (!tools || tools.length === 0) {
+    return 0;
+  }
+
+  // Base overhead for the tools array structure
+  let numTokens = 12;
+
+  for (const tool of tools) {
+    numTokens += countSingleToolTokens(tool);
+  }
+
+  // Additional overhead for the tools wrapper
+  return numTokens + 12;
+}
+
+/**
+ * Parameters for calculating total input tokens including all components
+ */
+export interface TotalInputTokenParams {
+  chatHistory: ChatHistoryItem[];
+  systemMessage?: string;
+  tools?: ChatCompletionTool[];
+}
+
+/**
+ * Calculate total input tokens including chat history, system message, and tool definitions.
+ * This provides a complete picture of tokens that will be sent to the API.
+ * @param params Object containing chatHistory, optional systemMessage, optional tools, and optional modelName
+ * @returns Total estimated input token count
+ */
+export function countTotalInputTokens(params: TotalInputTokenParams): number {
+  const { chatHistory, systemMessage, tools } = params;
+
+  let totalTokens = countChatHistoryTokens(chatHistory);
+
+  // Add system message tokens if provided and not already in history
+  if (systemMessage) {
+    const hasSystemInHistory = chatHistory.some(
+      (item) => item.message.role === "system",
+    );
+    if (!hasSystemInHistory) {
+      totalTokens += encode(systemMessage).length;
+      totalTokens += 4; // Message structure overhead (role + formatting)
+    }
+  }
+
+  // Add tool definition tokens
+  if (tools && tools.length > 0) {
+    totalTokens += countToolDefinitionTokens(tools);
+  }
+
+  return totalTokens;
+}
+
+/**
+ * Parameters for auto-compaction check
+ */
+export interface AutoCompactParams {
+  chatHistory: ChatHistoryItem[];
+  model: ModelConfig;
+  systemMessage?: string;
+  tools?: ChatCompletionTool[];
+}
+
+/**
+ * Check if the chat history exceeds the auto-compact threshold.
+ * Accounts for system message and tool definitions in the calculation.
+ * @param params Object containing chatHistory, model, optional systemMessage, and optional tools
  * @returns Whether auto-compacting should be triggered
  */
-export function shouldAutoCompact(
-  chatHistory: ChatHistoryItem[],
-  model: ModelConfig,
-): boolean {
-  const inputTokens = countChatHistoryTokens(chatHistory);
+export function shouldAutoCompact(params: AutoCompactParams): boolean {
+  const { chatHistory, model, systemMessage, tools } = params;
+
+  const inputTokens = countTotalInputTokens({
+    chatHistory,
+    systemMessage,
+    tools,
+  });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
 
@@ -225,8 +368,14 @@ export function shouldAutoCompact(
 
   const usage = inputTokens / availableForInput;
 
+  const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
+  const systemTokens = systemMessage ? encode(systemMessage).length : 0;
+
   logger.debug("Context usage check", {
     inputTokens,
+    historyTokens: countChatHistoryTokens(chatHistory),
+    systemTokens,
+    toolTokens,
     contextLimit,
     maxTokens,
     reservedForOutput,
@@ -250,24 +399,36 @@ export function getAutoCompactMessage(model: ModelConfig): string {
 }
 
 /**
- * Validates that the input tokens + max_tokens don't exceed context limit
- * @param chatHistory The chat history to validate
- * @param model The model configuration
- * @param safetyBuffer Additional token buffer to account for estimation errors (default: 0)
+ * Parameters for context length validation
+ */
+export interface ValidateContextLengthParams {
+  chatHistory: ChatHistoryItem[];
+  model: ModelConfig;
+  safetyBuffer?: number;
+  systemMessage?: string;
+  tools?: ChatCompletionTool[];
+}
+
+/**
+ * Validates that the input tokens + max_tokens don't exceed context limit.
+ * Accounts for system message and tool definitions in the calculation.
+ * @param params Object containing chatHistory, model, optional safetyBuffer, systemMessage, and tools
  * @returns Validation result with error details if invalid
  */
-export function validateContextLength(
-  chatHistory: ChatHistoryItem[],
-  model: ModelConfig,
-  safetyBuffer: number = 0,
-): {
+export function validateContextLength(params: ValidateContextLengthParams): {
   isValid: boolean;
   error?: string;
   inputTokens?: number;
   contextLimit?: number;
   maxTokens?: number;
 } {
-  const inputTokens = countChatHistoryTokens(chatHistory);
+  const { chatHistory, model, safetyBuffer = 0, systemMessage, tools } = params;
+
+  const inputTokens = countTotalInputTokens({
+    chatHistory,
+    systemMessage,
+    tools,
+  });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
 
