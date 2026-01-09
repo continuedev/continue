@@ -1,67 +1,43 @@
 ---
-title: "Getting Started with Agents"
-description: "Quick start guide for running AI workflows in Mission Control"
-sidebarTitle: "Getting Started"
+title: "Starting with Cloud Agents"
+description: "Quick start guide for running AI Agent workflows in Mission Control"
 ---
 
 <Card title="🚀 Quick Start with Mission Control" icon="rocket">
-  Mission Control is your web interface for running and managing AI agents. Get started in minutes with pre-built workflows for security scanning, GitHub management, analytics insights, and more.
+  Mission Control is your web interface for running and managing Cloud Agents. Get started in minutes with pre-built workflows for security scanning, GitHub management, analytics insights, and more.
 </Card>
 
 <Info>
   Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
 </Info>
 
-Use Mission Control to kick off agents for:
+Use Mission Control to kick off Cloud Agents for:
 - **Bug fixes & code quality** - Address nitpicks and technical debt
 - **Feature development** - Build boilerplate-heavy features  
-- **Security & compliance** - [Automated vulnerability scanning](../guides/snyk-mcp-continue-cookbook)
+- **Security & compliance** - [Automated vulnerability scanning](../mission-control/integrations/snyk)
 - **Investigation & analysis** - Research issues to kickstart your work
 - **Custom workflows** - Run repeatable tasks with your own rules and prompts
 
 ## Quick Start
 
+<Tip>
+  If you haven't already, create an account and connect your GitHub repositories in [Mission Control](https://hub.continue.dev/).
+</Tip>
+
 <Steps>
-  <Step title="Access Mission Control">
-    Go to [Mission Control Agents](https://hub.continue.dev/hub?type=agents) and connect with your GitHub account.
-    
-    ![Mission Control Setup](/images/hub/workflows/images/workflows-setup.png)
+  <Step title="Navigate to Your Agents Page">
+    Go to [Mission Control Agents page](https://hub.continue.dev/agents) and select an existing workflow with a pre-configured Cloud Agent.
   </Step>
   
-  <Step title="Choose an Agent">
-    Select from pre-configured agents or create your own:
-    
-    <CardGroup cols={2}>
-      <Card title="Security Scanner" icon="shield-check">
-        `continuedev/snyk-continuous-ai-agent`
-        Finds vulnerabilities and creates fix PRs
-      </Card>
-      
-      <Card title="GitHub Manager" icon="github">
-        `continuedev/github-project-manager-agent`  
-        Triages issues and manages workflows
-      </Card>
-    </CardGroup>
-  </Step>
-  
-  <Step title="Run Your First Agent">
-    Enter additional instructions and watch your agent work:
-    
-    ```
-    "Fix the TypeError in api/users.ts and open a PR with tests"
-    ```
+  <Step title="Run Your First Cloud Agent">
+    Your agents page lists all available Cloud Agents. Click on the agent and then **Test Run** to start it.
   </Step>
 </Steps>
 
-<Info>
-  **New to agents?** Check out our [pre-configured agents](/hub/agents/overview#pre-configured-agents) to test out a workflow immediately.
-</Info>
 
-## Try an Agent First: Your 60-Second Challenge
+## Try a Cloud Agent First: Your 60-Second Challenge
 
 Before creating your own agent, let's see one in action! The fastest way to experience the power of Continue agents is with our demo repository.
-
-![Agent Mission Control](/images/hub/assets/images/agent-mission-control.gif)
 
 ### See an Agent Create a Pull Request in Under 60 Seconds
 
@@ -79,13 +55,13 @@ Before creating your own agent, let's see one in action! The fastest way to expe
   </Step>
 
   <Step title="🎯 Access Mission Control">
-    Go to [Mission Control Agents](https://hub.continue.dev/hub?type=agents) and:
+    Go to [Mission Control](https://hub.continue.dev/) and:
     - **Connect GitHub** and authorize Continue when prompted
     - This gives agents access to create PRs in your repositories
   </Step>
 
   <Step title="🚀 Run Your First Agent">
-    **Target your forked demo repo** and try one of these commands:
+    **Target your forked demo repo** and try one of these commands as a [task](../mission-control/tasks):
     
     <Tabs>
       <Tab title="Add New Feature">
@@ -131,7 +107,7 @@ Before creating your own agent, let's see one in action! The fastest way to expe
 
 ## Example Workflow Tasks
 
-Here are some example tasks you can try with your agents:
+Here are some example tasks you can try with your Cloud Agents:
 
 <AccordionGroup>
   <Accordion title="Bug Fixes & Code Quality">
@@ -189,7 +165,7 @@ Here are some example tasks you can try with your agents:
   </Accordion>
 </AccordionGroup>
 
-## Ways to Run Agents
+## Ways to Run Cloud Agents
 
 Choose the method that fits your workflow:
 
@@ -198,12 +174,13 @@ Choose the method that fits your workflow:
     **Web interface for interactive use**
     
     Perfect for:
-    - Exploring agent capabilities
+    - Exploring AI agent capabilities
     - Reviewing outputs before action
+    - Monitoring ongoing workflows
     - Team collaboration
     - One-time tasks
     
-    Access at [hub.continue.dev/agents](https://hub.continue.dev/hub?type=agents)
+    Access at [hub.continue.dev/agents](https://hub.continue.dev/agents)
   </Tab>
   
   <Tab title="💻 CLI (TUI Mode)">
@@ -235,9 +212,9 @@ Choose the method that fits your workflow:
   </Tab>
 </Tabs>
 
-## Best Practices for Success
+## Best Practices for Cloud Agent Success
 
-The practice of using agents (Continuous AI) requires thoughtful setup of guardrails and habits:
+The practice of using Cloud Agents (Continuous AI) requires thoughtful setup of guardrails and habits:
 
 <CardGroup cols={2}>
   <Card title="Start Small" icon="seedling">

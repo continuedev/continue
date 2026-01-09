@@ -1,13 +1,13 @@
 ---
 title: "GitHub Integration"
-description: "Connect your GitHub account to Continue Mission Control to enable agents to interact with your repositories. Once connected, agents can read code, create pull requests, manage issues, and automate your development workflow."
+description: "Connect your GitHub account to Continue Mission Control to enable Cloud Agents to interact with your repositories. Once connected, Cloud Agents can read code, create pull requests, manage issues, and automate your development workflow."
 ---
 
 
 <Card title="Connect the GitHub Integration to:" icon="github"  href="https://hub.continue.dev/integrations/github"
 >
 
-  - Automatically create pull requests from agent tasks
+  - Automatically create pull requests from AI agent tasks
   - Read and analyze repository code and issues
   - Manage project workflows and milestones
   - Automate code reviews and quality checks
@@ -16,7 +16,7 @@ description: "Connect your GitHub account to Continue Mission Control to enable 
 </Card>
 
 
-## Official Workflow Templates
+## Official Workflow Templates for GitHub Cloud Agents in Continue
 
 The following **official workflow templates** are maintained by the Continue team and are available directly in the Mission Control Hub. These workflows are designed to work out of the box and represent the recommended ways to automate GitHub-based tasks.
 
@@ -42,11 +42,29 @@ The following **official workflow templates** are maintained by the Continue tea
   </Card>
 </CardGroup>
 
-<Tip>Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure these workflows in **Mission Control → Integrations → GitHub**.</Tip>
+<Tip>Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → GitHub](https://hub.continue.dev/integrations/github)**.</Tip>
+
+## Workflow: GitHub issue → pull request (Cloud Agent)
+
+**Problem**: GitHub issues pile up because turning an issue into a tested PR takes time and context switching.
+
+**Solution**: Continue Mission Control Cloud Agents can watch issues (or be triggered by labels) and automatically open pull requests with code changes, tests, and a clear summary.
+
+**Outcome**: Faster issue throughput, consistent PR quality, and an auditable trail from issue → commits → PR → CI results.
+
+1. Trigger: issue opened or labeled (for example, `agent:fix`)
+2. Agent gathers context: repo code + issue thread + relevant files
+3. Agent implements the fix on a branch
+4. Agent runs checks: tests/lint/security (your CI)
+5. Agent opens a PR with:
+   - summary of changes
+   - test results / CI link
+   - references the original issue (closes #123)
+   - or whatever you specify in the agent instructions
 
 ## Advanced Use Cases
-<Accordion title="Advanced: Custom GitHub Workflow Ideas">
-You can create custom workflows using Continue agents to automate a variety of GitHub-related tasks. Here are some ideas to get you started:
+<Accordion title="Advanced: Custom GitHub Cloud Agent Workflow Ideas">
+You can create custom workflows using Continue Cloud Agents to automate a variety of GitHub-related tasks. Here are some ideas to get you started:
   - Automatically triage new issues with labels and suggested assignees
   - Review pull requests for security or performance concerns
   - Draft documentation updates based on code changes
@@ -66,6 +84,19 @@ When connecting GitHub, you’ll be asked to configure repository access and app
 
 You can revisit or revoke access at any time from GitHub or the Mission Control Hub.
 ---
+
+## FAQs
+### Can Continue turn GitHub issues into ready-to-merge pull requests automatically?
+Yes! You can set up workflows where Cloud Agents monitor issues (or specific labels) and create pull requests with code changes, tests, and summaries.
+
+### How do I trigger an agent from a GitHub issue label?
+You can configure a Cloud Agent that is triggered whenever an issue is labeled with a specific tag (e.g., `agent:fix`). The agent will then gather context and create a pull request based on the issue.
+
+### Can the agent run tests and include results in the PR?
+Continue's Cloud Agents can be configured to run your tests and include the results in the pull request summary.
+
+### How do I restrict which repos/issues agents can act on?
+You can configure repository and issue filters within your workflows to control where agents operate.
 
 ## Support & Resources
 
