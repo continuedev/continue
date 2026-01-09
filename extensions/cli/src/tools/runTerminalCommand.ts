@@ -10,6 +10,7 @@ import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+import { truncateOutputFromStart } from "../util/truncateOutput.js";
 
 import { Tool } from "./types.js";
 
@@ -120,18 +121,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          // Truncate output if it has too many lines
-          const lines = output.split("\n");
-          if (lines.length > 5000) {
-            const truncatedOutput = lines.slice(0, 5000).join("\n");
-            resolve(
-              truncatedOutput +
-                `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-            );
-            return;
-          }
-
-          resolve(output);
+          resolve(truncateOutputFromStart(output).output);
         }, TIMEOUT_MS);
       };
 
@@ -176,18 +166,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        // Truncate output if it has too many lines
-        const lines = output.split("\n");
-        if (lines.length > 5000) {
-          const truncatedOutput = lines.slice(0, 5000).join("\n");
-          resolve(
-            truncatedOutput +
-              `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-          );
-          return;
-        }
-
-        resolve(output);
+        resolve(truncateOutputFromStart(output).output);
       });
 
       child.on("error", (error) => {
