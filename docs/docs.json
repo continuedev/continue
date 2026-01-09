@@ -254,7 +254,10 @@
         "groups": [
           {
             "group": "Cloud Agents",
-            "pages": ["guides/guide-to-cloud-agents"]
+            "pages": [
+              "guides/cloud-agents/guide-to-cloud-agents",
+              "guides/cloud-agents/cloud-agents-taxonomy"
+            ]
           },
           {
             "group": "Guides",
