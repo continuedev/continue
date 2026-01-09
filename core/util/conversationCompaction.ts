@@ -48,8 +48,24 @@ export async function compactConversation({
     }
   }
 
-  // Create messages from filtered history
-  const messages = filteredHistory.map((item: any) => item.message);
+  // remove tool calls without toolcall or orphan tool calls (waiting for approval) with tool call ids but no tool results
+  const historyWithoutDanglingToolCalls = filteredHistory.filter((item) => {
+    if (item.message.role !== "assistant") return true;
+
+    const toolCalls = item.message.toolCalls;
+    if (!toolCalls || toolCalls.length === 0) return true;
+
+    const toolCallStates = item.toolCallStates;
+    if (!toolCallStates || toolCallStates.length === 0) return false;
+
+    const hasAllValidToolCalls = toolCalls.every((tc) => {
+      const state = toolCallStates.find((s) => s.toolCallId === tc.id);
+      return state && state.output && state.output.length > 0; // every tool call id should have tool result
+    });
+    return hasAllValidToolCalls;
+  });
+
+  const messages = historyWithoutDanglingToolCalls.map((item) => item.message);
 
   // If there's a previous summary, include it as a user message at the beginning
   if (summaryContent) {
