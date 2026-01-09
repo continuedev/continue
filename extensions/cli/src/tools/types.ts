@@ -1,7 +1,5 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 
-import type { ModelServiceState } from "src/services/types.js";
-
 // JSON Schema compatible parameter definition
 export interface ParameterSchema {
   type: string;
@@ -48,10 +46,6 @@ export interface Tool {
     parsedArgs: Record<string, unknown>,
   ) => ToolPolicy;
 }
-
-export type GetTool = (params: {
-  modelServiceState: ModelServiceState;
-}) => Tool;
 
 export interface ToolCall {
   id: string;

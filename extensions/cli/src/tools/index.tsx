@@ -124,11 +124,7 @@ export async function getAllAvailableTools(
   }
 
   if (isBetaSubagentToolEnabled()) {
-    tools.push(
-      subagentTool({
-        modelServiceState: modelState,
-      }),
-    );
+    tools.push(await subagentTool());
   }
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
