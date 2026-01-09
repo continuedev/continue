@@ -10,9 +10,30 @@ import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
-import { truncateOutputFromStart } from "../util/truncateOutput.js";
+import {
+  parseEnvNumber,
+  truncateOutputFromStart,
+} from "../util/truncateOutput.js";
 
 import { Tool } from "./types.js";
+
+// Output truncation defaults
+const DEFAULT_BASH_MAX_CHARS = 50000;
+const DEFAULT_BASH_MAX_LINES = 1000;
+
+function getBashMaxChars(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
+    DEFAULT_BASH_MAX_CHARS,
+  );
+}
+
+function getBashMaxLines(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_LINES,
+    DEFAULT_BASH_MAX_LINES,
+  );
+}
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
@@ -121,7 +142,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          resolve(truncateOutputFromStart(output).output);
+          resolve(
+            truncateOutputFromStart(output, {
+              maxChars: getBashMaxChars(),
+              maxLines: getBashMaxLines(),
+            }).output,
+          );
         }, TIMEOUT_MS);
       };
 
@@ -166,7 +192,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        resolve(truncateOutputFromStart(output).output);
+        resolve(
+          truncateOutputFromStart(output, {
+            maxChars: getBashMaxChars(),
+            maxLines: getBashMaxLines(),
+          }).output,
+        );
       });
 
       child.on("error", (error) => {

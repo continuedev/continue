@@ -3,8 +3,31 @@ import * as fs from "fs";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+import {
+  parseEnvNumber,
+  truncateByLinesAndChars,
+} from "../util/truncateOutput.js";
+
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
+
+// Output truncation defaults
+const DEFAULT_READ_FILE_MAX_CHARS = 500000; // ~500KB
+const DEFAULT_READ_FILE_MAX_LINES = 5000;
+
+function getReadFileMaxChars(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_CHARS,
+    DEFAULT_READ_FILE_MAX_CHARS,
+  );
+}
+
+function getReadFileMaxLines(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_LINES,
+    DEFAULT_READ_FILE_MAX_LINES,
+  );
+}
 
 // Track files that have been read in the current session
 export const readFilesSet = new Set<string>();
@@ -62,13 +85,17 @@ export const readFileTool: Tool = {
       // Mark this file as read for the edit tool
       markFileAsRead(realPath);
 
-      const lines = content.split("\n");
-      if (lines.length > 5000) {
-        const truncatedContent = lines.slice(0, 5000).join("\n");
-        return `Content of ${filepath} (truncated to first 5000 lines of ${lines.length} total):\n${truncatedContent}`;
+      const maxLines = getReadFileMaxLines();
+      const maxChars = getReadFileMaxChars();
+
+      const { output: truncatedContent, wasTruncated } =
+        truncateByLinesAndChars(content, maxLines, maxChars, "file content");
+
+      if (wasTruncated) {
+        return `Content of ${filepath} (truncated):\n${truncatedContent}`;
       }
 
-      return `Content of ${filepath}:\n${content}`;
+      return `Content of ${filepath}:\n${truncatedContent}`;
     } catch (error) {
       if (error instanceof ContinueError) {
         throw error;
