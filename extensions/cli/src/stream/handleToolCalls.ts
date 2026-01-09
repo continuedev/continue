@@ -76,6 +76,10 @@ export async function handleToolCalls(
     parsedArgs: tc.arguments,
   }));
 
+  toolCalls.forEach((toolCall) => {
+    callbacks?.onToolCall?.(toolCall);
+  });
+
   // Create assistant message with tool calls
   const assistantMessage = {
     role: "assistant" as const,
