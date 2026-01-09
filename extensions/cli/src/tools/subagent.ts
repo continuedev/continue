@@ -1,5 +1,7 @@
+import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
+import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -68,10 +70,6 @@ export const subagentTool = async (): Promise<Tool> => {
       if (!agent) {
         throw new Error(`Unknown agent type: ${subagent_name}`);
       }
-
-      // Dynamically import to avoid circular dependency and passing repeated params
-      const { executeSubAgent } = await import("../subagent/executor.js");
-      const { services } = await import("../services/index.js");
 
       const chatHistoryService = services.chatHistory;
       const parentSessionId = chatHistoryService.getSessionId();
