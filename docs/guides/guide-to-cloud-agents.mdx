@@ -1,8 +1,10 @@
 ---
 title: "The Developer’s Guide to Cloud Agents"
-description: "Learn how Cloud Agents can automate your development workflows by connecting to your codebase and tools."
-sidebarTitle: "Guide to Cloud Agents"
+description: "Learn how Cloud Agents are implemented and used in practice, from on-demand tasks to automated workflows in Mission Control."
 ---
+
+> **Note:** This guide assumes you already understand what Cloud Agents are and when to use them.
+> If you’re looking for a clear definition, categories, and mental models, start with the **Cloud Agents Taxonomy**.
 
 ## Introduction: Moving Beyond "Chat"
 
@@ -14,9 +16,11 @@ For the last few years, AI coding has been defined by the Local Copilot: a chat 
 
 </Card>
 
-## What is a Cloud Agent?
+## How Cloud Agents Are Implemented in Practice
 
-Cloud agents are AI agents that run continuously in the cloud, connected directly to your development and production systems. Unlike local or IDE-only AI agents, cloud agents respond to real events, alerts, pull requests, deployments and take action automatically or can be enabled manually.
+Cloud agents are AI-driven processes that run on remote infrastructure and are triggered by tasks, schedules, or events across a team’s engineering systems.
+
+In Continue, cloud agents run on **Mission Control**, where teams configure execution, connect tools, review outcomes, and decide which workflows become automated over time.
 
 <Info>
 
@@ -24,9 +28,9 @@ Cloud agents are AI agents that run continuously in the cloud, connected directl
 
 </Info>
 
-### The Four Components of a Cloud Agent
+### Common Components in a Production Cloud Agent
 
-Unlike a simple script, a Cloud Agent combines four distinct components to reason through problems:
+Most production cloud agents share a common structure that balances reasoning, action, and guardrails.
 
 <CardGroup cols={2}>
   <Card title="Prompt" icon="message">
@@ -55,6 +59,8 @@ Unlike a simple script, a Cloud Agent combines four distinct components to reaso
 </CardGroup>
 
 ## The Two Modes: Interactive vs. Automated
+
+This section focuses on *how* cloud agents are executed day to day, not *whether* they should be used.
 
 The defining feature of a Cloud Agent isn't just *automation*; it is **availability**. Because the compute is remote, you can interact with Cloud Agents in two distinct ways depending on the complexity of the task:
 
@@ -156,6 +162,8 @@ The distinction between running an agent locally (TUI/IDE) and in the cloud (Mis
   By moving agents to the cloud, you transform AI from a passive assistant into an active member of your engineering team.
 
 </Tip>
+
+> If you’re evaluating whether cloud agents are the right abstraction for your problem space, refer back to the **Cloud Agents Taxonomy** before building automation.
 
 ## Getting Started
 
