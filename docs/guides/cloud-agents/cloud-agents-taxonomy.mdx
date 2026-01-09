@@ -73,6 +73,26 @@ Cloud agents are best understood along **two dimensions**:
 
 Everything else is implementation detail.
 
+```mermaid
+quadrantChart
+  title Cloud Agents Taxonomy
+  x-axis One-Off --> Event-Driven
+  y-axis Manual --> Automated
+
+  quadrant-1 Automated & Event-Driven
+  quadrant-2 Manual & Event-Driven
+  quadrant-3 Manual & One-Off
+  quadrant-4 Automated & Scheduled
+
+  "Weekly dependency updates" : [0.65, 0.85]
+  "Security scan with PR review" : [0.75, 0.60]
+  "One-off repo audit" : [0.25, 0.25]
+  "Nightly analytics summary" : [0.45, 0.75]
+  "Incident response triage" : [0.85, 0.40]
+```
+
+*Most teams start bottom-left and move diagonally as trust increases to create their [Continuous AI Workflow](../continuous-ai).*
+
 ---
 
 ## Axis 1: Trigger Type
