@@ -37,7 +37,7 @@
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
-                  "mission-control/integrations/slack-agent",
+                  "mission-control/integrations/slack",
                   "mission-control/integrations/posthog",
                   "mission-control/integrations/atlassian",
                   "mission-control/integrations/netlify",
@@ -1482,11 +1482,15 @@
     },
     {
       "source": "/hub/agents/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
+    },
+    {
+      "source": "/mission-control/integrations/slack-agent",
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/github",
