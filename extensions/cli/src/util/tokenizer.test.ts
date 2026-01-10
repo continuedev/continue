@@ -488,6 +488,53 @@ describe("tokenizer", () => {
       expect(tokensWithEnum).toBeGreaterThan(tokensWithoutEnum);
     });
 
+    it("should handle empty enum array without negative token count", () => {
+      const toolsWithEmptyEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                  enum: [],
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const toolsWithoutEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const tokensWithEmptyEnum = countToolDefinitionTokens(toolsWithEmptyEnum);
+      const tokensWithoutEnum = countToolDefinitionTokens(toolsWithoutEnum);
+
+      // Empty enum should not subtract tokens - should be equal to no enum
+      expect(tokensWithEmptyEnum).toBe(tokensWithoutEnum);
+      // Token count should always be positive
+      expect(tokensWithEmptyEnum).toBeGreaterThan(0);
+    });
+
     it("should count tokens for multiple parameters", () => {
       const toolWithOneParam = [
         {

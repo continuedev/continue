@@ -223,7 +223,7 @@ function countParameterFieldTokens(
     tokens += encode(fieldDesc).length;
   }
 
-  if (fieldEnum && Array.isArray(fieldEnum)) {
+  if (fieldEnum && Array.isArray(fieldEnum) && fieldEnum.length > 0) {
     tokens -= 3;
     for (const e of fieldEnum) {
       tokens += 3;
