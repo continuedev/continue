@@ -61,7 +61,7 @@
     "react-markdown": "^9.0.1",
     "react-redux": "^8.0.5",
     "react-remark": "^2.1.0",
-    "react-router-dom": "^6.14.2",
+    "react-router-dom": "^7.0.0",
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
