@@ -12,7 +12,7 @@ import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
 
 // Output truncation defaults
-const DEFAULT_READ_FILE_MAX_CHARS = 500000; // ~500KB
+const DEFAULT_READ_FILE_MAX_CHARS = 100000; // ~25k tokens
 const DEFAULT_READ_FILE_MAX_LINES = 5000;
 
 function getReadFileMaxChars(): number {
