@@ -9,6 +9,7 @@ import {
   countChatHistoryItemTokens,
   countChatHistoryTokens,
   countMessageTokens,
+  countToolDefinitionTokens,
   getModelContextLimit,
   shouldAutoCompact,
 } from "./tokenizer.js";
@@ -232,7 +233,7 @@ describe("tokenizer", () => {
       // Threshold: 800 * 0.8 = 640
       const chatHistory = createChatHistory(650); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should not compact when input tokens are below threshold with maxTokens", () => {
@@ -241,7 +242,7 @@ describe("tokenizer", () => {
       // Threshold: 800 * 0.8 = 640
       const chatHistory = createChatHistory(600); // Below threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(false);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
     });
 
     it("should use 35% default reservation when maxTokens is not set", () => {
@@ -251,7 +252,7 @@ describe("tokenizer", () => {
       // Threshold: 650 * 0.8 = 520
       const chatHistory = createChatHistory(530); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should not compact when below default threshold without maxTokens", () => {
@@ -260,14 +261,14 @@ describe("tokenizer", () => {
       // Threshold: 650 * 0.8 = 520
       const chatHistory = createChatHistory(500); // Below threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(false);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
     });
 
     it("should throw error when maxTokens >= contextLength", () => {
       const model = createModel(1000, 1000); // maxTokens equals contextLength
       const chatHistory = createChatHistory(1); // Minimal input
 
-      expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
+      expect(() => shouldAutoCompact({ chatHistory, model })).toThrow(
         "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
@@ -276,7 +277,7 @@ describe("tokenizer", () => {
       const model = createModel(1000, 1200); // maxTokens exceeds contextLength
       const chatHistory = createChatHistory(1); // Minimal input
 
-      expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
+      expect(() => shouldAutoCompact({ chatHistory, model })).toThrow(
         "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
@@ -287,17 +288,20 @@ describe("tokenizer", () => {
       // Threshold: 50 * 0.8 = 40
       const chatHistory = createChatHistory(45); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     it("should log debug information correctly", () => {
       const model = createModel(1000, 200);
       const chatHistory = createChatHistory(600);
 
-      shouldAutoCompact(chatHistory, model);
+      shouldAutoCompact({ chatHistory, model });
 
       expect(logger.debug).toHaveBeenCalledWith("Context usage check", {
         inputTokens: expect.any(Number),
+        historyTokens: expect.any(Number),
+        systemTokens: expect.any(Number),
+        toolTokens: expect.any(Number),
         contextLimit: 1000,
         maxTokens: 200,
         reservedForOutput: 200,
@@ -313,7 +317,7 @@ describe("tokenizer", () => {
       // Should use default 35% reservation: 1000 * 0.35 = 350
       const chatHistory = createChatHistory(530); // Above threshold
 
-      expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+      expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
     });
 
     describe("real-world scenarios", () => {
@@ -324,7 +328,7 @@ describe("tokenizer", () => {
         // Threshold: 196k * 0.8 = 156.8k
         const chatHistory = createChatHistory(160_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
 
       it("should prevent GPT-4 context overflow", () => {
@@ -334,7 +338,7 @@ describe("tokenizer", () => {
         // Threshold: 124k * 0.8 = 99.2k
         const chatHistory = createChatHistory(100_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
 
       it("should handle models with very high max_tokens", () => {
@@ -344,7 +348,351 @@ describe("tokenizer", () => {
         // Threshold: 136k * 0.8 = 108.8k
         const chatHistory = createChatHistory(110_000); // Above threshold
 
-        expect(shouldAutoCompact(chatHistory, model)).toBe(true);
+        expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
+      });
+    });
+  });
+
+  describe("countToolDefinitionTokens", () => {
+    it("should return 0 for empty tools array", () => {
+      expect(countToolDefinitionTokens([])).toBe(0);
+    });
+
+    it("should return 0 for undefined-like input", () => {
+      // TypeScript types prevent undefined, but test defensive behavior
+      expect(countToolDefinitionTokens([] as never)).toBe(0);
+    });
+
+    it("should count tokens for a simple tool with name only", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "get_weather",
+          },
+        },
+      ];
+
+      const tokenCount = countToolDefinitionTokens(tools);
+      // Base overhead (12) + tool tokens + wrapper overhead (12)
+      expect(tokenCount).toBeGreaterThan(24); // At least base overheads
+      expect(tokenCount).toBe(27); // 12 + 3 (name) + 12 = 27
+    });
+
+    it("should count tokens for a tool with name and description", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "get_weather",
+            description: "Get the current weather for a location",
+          },
+        },
+      ];
+
+      const tokenCount = countToolDefinitionTokens(tools);
+      // 12 (base) + 3 (name) + 10 (description ~40 chars / 4) + 12 (wrapper) = 37
+      expect(tokenCount).toBeGreaterThan(27);
+    });
+
+    it("should count tokens for a tool with parameters", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "get_weather",
+            description: "Get weather",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city name",
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+      ];
+
+      const tokenCount = countToolDefinitionTokens(tools);
+      expect(tokenCount).toBeGreaterThan(30); // Should include parameter tokens
+    });
+
+    it("should count tokens for multiple tools", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "tool_one",
+          },
+        },
+        {
+          type: "function" as const,
+          function: {
+            name: "tool_two",
+          },
+        },
+      ];
+
+      const singleToolTokens = countToolDefinitionTokens([tools[0]]);
+      const doubleToolTokens = countToolDefinitionTokens(tools);
+
+      // Two tools should have more tokens than one
+      expect(doubleToolTokens).toBeGreaterThan(singleToolTokens);
+    });
+
+    it("should count tokens for parameters with enum values", () => {
+      const toolsWithoutEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const toolsWithEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                  enum: ["fast", "slow", "medium"],
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const tokensWithoutEnum = countToolDefinitionTokens(toolsWithoutEnum);
+      const tokensWithEnum = countToolDefinitionTokens(toolsWithEnum);
+
+      // Enum values should add tokens
+      expect(tokensWithEnum).toBeGreaterThan(tokensWithoutEnum);
+    });
+
+    it("should handle empty enum array without negative token count", () => {
+      const toolsWithEmptyEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                  enum: [],
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const toolsWithoutEnum = [
+        {
+          type: "function" as const,
+          function: {
+            name: "set_mode",
+            parameters: {
+              type: "object",
+              properties: {
+                mode: {
+                  type: "string",
+                  description: "The mode to set",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const tokensWithEmptyEnum = countToolDefinitionTokens(toolsWithEmptyEnum);
+      const tokensWithoutEnum = countToolDefinitionTokens(toolsWithoutEnum);
+
+      // Empty enum should not subtract tokens - should be equal to no enum
+      expect(tokensWithEmptyEnum).toBe(tokensWithoutEnum);
+      // Token count should always be positive
+      expect(tokensWithEmptyEnum).toBeGreaterThan(0);
+    });
+
+    it("should count tokens for multiple parameters", () => {
+      const toolWithOneParam = [
+        {
+          type: "function" as const,
+          function: {
+            name: "search",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const toolWithMultipleParams = [
+        {
+          type: "function" as const,
+          function: {
+            name: "search",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                },
+                limit: {
+                  type: "number",
+                },
+                offset: {
+                  type: "number",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      const oneParamTokens = countToolDefinitionTokens(toolWithOneParam);
+      const multiParamTokens = countToolDefinitionTokens(
+        toolWithMultipleParams,
+      );
+
+      expect(multiParamTokens).toBeGreaterThan(oneParamTokens);
+    });
+
+    it("should handle tool with empty parameters object", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "no_params",
+            parameters: {
+              type: "object",
+              properties: {},
+            },
+          },
+        },
+      ];
+
+      const tokenCount = countToolDefinitionTokens(tools);
+      // Should still return a valid count (base overhead + name)
+      expect(tokenCount).toBeGreaterThan(0);
+    });
+
+    it("should handle tool without parameters field", () => {
+      const tools = [
+        {
+          type: "function" as const,
+          function: {
+            name: "simple_tool",
+            description: "A simple tool without parameters",
+          },
+        },
+      ];
+
+      const tokenCount = countToolDefinitionTokens(tools);
+      expect(tokenCount).toBeGreaterThan(0);
+    });
+
+    describe("real-world tool definitions", () => {
+      it("should count tokens for a complex tool like read_file", () => {
+        const tools = [
+          {
+            type: "function" as const,
+            function: {
+              name: "read_file",
+              description:
+                "Use this tool if you need to view the contents of an existing file.",
+              parameters: {
+                type: "object",
+                properties: {
+                  filepath: {
+                    type: "string",
+                    description:
+                      "The path of the file to read. Can be a relative path, absolute path, tilde path, or file:// URI",
+                  },
+                },
+                required: ["filepath"],
+              },
+            },
+          },
+        ];
+
+        const tokenCount = countToolDefinitionTokens(tools);
+        expect(tokenCount).toBeGreaterThan(40); // Complex tool should have many tokens
+      });
+
+      it("should count tokens for a multi-tool set", () => {
+        const tools = [
+          {
+            type: "function" as const,
+            function: {
+              name: "read_file",
+              description: "Read a file",
+              parameters: {
+                type: "object",
+                properties: {
+                  filepath: { type: "string", description: "File path" },
+                },
+              },
+            },
+          },
+          {
+            type: "function" as const,
+            function: {
+              name: "write_file",
+              description: "Write to a file",
+              parameters: {
+                type: "object",
+                properties: {
+                  filepath: { type: "string", description: "File path" },
+                  content: { type: "string", description: "Content to write" },
+                },
+              },
+            },
+          },
+          {
+            type: "function" as const,
+            function: {
+              name: "search",
+              description: "Search for files",
+              parameters: {
+                type: "object",
+                properties: {
+                  query: { type: "string", description: "Search query" },
+                },
+              },
+            },
+          },
+        ];
+
+        const tokenCount = countToolDefinitionTokens(tools);
+        // Multiple tools should have significant token count
+        expect(tokenCount).toBeGreaterThan(80);
       });
     });
   });
