@@ -24,7 +24,7 @@ export async function compactConversation({
 }: CompactionParams): Promise<void> {
   // Get the current session
   const session = historyManager.load(sessionId);
-  if (index >= session.history.length) {
+  if (index >= session.history.length || index < 0) {
     throw new Error(
       `Compaction index ${index} out of bounds (history length: ${session.history.length})`,
     );

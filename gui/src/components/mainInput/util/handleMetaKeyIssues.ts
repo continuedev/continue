@@ -55,7 +55,26 @@ export const handleVSCMetaKeyIssues = async (
     editor.state.selection.to,
   );
 
-  const handlers: Record<string, () => Promise<void>> = {};
+  const handlers: Record<string, () => Promise<void>> = {
+    x: async () => {
+      await navigator.clipboard.writeText(text);
+      editor.commands.deleteSelection();
+    },
+    c: async () => {
+      await navigator.clipboard.writeText(text);
+    },
+    v: async () => {
+      const text = await navigator.clipboard.readText();
+      editor.commands.insertContent(text);
+    },
+    z: async () => {
+      if (e.shiftKey) {
+        editor.commands.redo();
+      } else {
+        editor.commands.undo();
+      }
+    },
+  };
 
   if (e.key in handlers) {
     e.stopPropagation();

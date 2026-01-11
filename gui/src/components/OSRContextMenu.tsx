@@ -75,6 +75,7 @@ const OSRContextMenu = () => {
   useEffect(() => {
     function leaveWindowHandler() {
       setPosition(null);
+      setRuleContext(null);
     }
     function contextMenuHandler(event: MouseEvent) {
       if (event.shiftKey) return;
@@ -84,6 +85,7 @@ const OSRContextMenu = () => {
       // If clicked outside of menu, close menu
       if (!menuRef.current?.contains(event.target as Node)) {
         setPosition(null);
+        setRuleContext(null);
       }
 
       if (event.button === 2) {
@@ -92,6 +94,7 @@ const OSRContextMenu = () => {
         // Prevent default context menu
         event.preventDefault();
 
+        setRuleContext(null);
         selectedRangeRef.current = null;
         selectedTextRef.current = null;
 
