@@ -27,6 +27,8 @@ const OSRContextMenu = () => {
   const menuRef = React.useRef<HTMLDivElement>(null);
   const selectedTextRef = useRef<string | null>(null);
   const selectedRangeRef = useRef<Range | null>(null);
+  const isMenuOpenRef = useRef(false);
+  const targetElementRef = useRef<HTMLElement | null>(null);
 
   function onMenuItemClick(
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -43,6 +45,7 @@ const OSRContextMenu = () => {
     // Hide menu
     setPosition(null);
     setRuleContext(null);
+    isMenuOpenRef.current = false;
   }
 
   function handleEditRule() {
@@ -76,27 +79,33 @@ const OSRContextMenu = () => {
     function leaveWindowHandler() {
       setPosition(null);
       setRuleContext(null);
+      isMenuOpenRef.current = false;
     }
     function contextMenuHandler(event: MouseEvent) {
       if (event.shiftKey) return;
-      event.preventDefault();
+      if (isMenuOpenRef.current) {
+        event.preventDefault();
+      }
     }
     function clickHandler(event: MouseEvent) {
       // If clicked outside of menu, close menu
       if (!menuRef.current?.contains(event.target as Node)) {
         setPosition(null);
         setRuleContext(null);
+        isMenuOpenRef.current = false;
       }
 
       if (event.button === 2) {
         if (event.shiftKey) return;
 
         // Prevent default context menu
-        event.preventDefault();
+        // event.preventDefault();
 
         setRuleContext(null);
         selectedRangeRef.current = null;
         selectedTextRef.current = null;
+        targetElementRef.current = event.target as HTMLElement;
+        isMenuOpenRef.current = false;
 
         const selection = window.getSelection();
         let isClickWithinSelection = false;
@@ -161,11 +170,13 @@ const OSRContextMenu = () => {
               bottom: window.innerHeight - event.clientY,
               right: window.innerWidth - event.clientX,
             });
+            isMenuOpenRef.current = true;
           } else {
             setPosition({
               top: event.clientY,
               right: window.innerWidth - event.clientX,
             });
+            isMenuOpenRef.current = true;
           }
         } else {
           if (toBottom) {
@@ -173,11 +184,13 @@ const OSRContextMenu = () => {
               bottom: window.innerHeight - event.clientY,
               left: event.clientX,
             });
+            isMenuOpenRef.current = true;
           } else {
             setPosition({
               top: event.clientY,
               left: event.clientX,
             });
+            isMenuOpenRef.current = true;
           }
         }
       }
@@ -199,11 +212,13 @@ const OSRContextMenu = () => {
                   bottom: window.innerHeight - event.clientY,
                   right: window.innerWidth - event.clientX,
                 });
+                isMenuOpenRef.current = true;
               } else {
                 setPosition({
                   top: event.clientY,
                   right: window.innerWidth - event.clientX,
                 });
+                isMenuOpenRef.current = true;
               }
             } else {
               if (toBottom) {
@@ -211,11 +226,13 @@ const OSRContextMenu = () => {
                   bottom: window.innerHeight - event.clientY,
                   left: event.clientX,
                 });
+                isMenuOpenRef.current = true;
               } else {
                 setPosition({
                   top: event.clientY,
                   left: event.clientX,
                 });
+                isMenuOpenRef.current = true;
               }
             }
           }
@@ -278,7 +295,7 @@ const OSRContextMenu = () => {
             onMenuItemClick(e);
             try {
               const text = await navigator.clipboard.readText();
-              const activeElement = document.activeElement as HTMLElement;
+              const activeElement = targetElementRef.current as HTMLElement;
 
               if (
                 activeElement instanceof HTMLInputElement ||

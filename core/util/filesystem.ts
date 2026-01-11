@@ -198,6 +198,7 @@ class FileSystemIde implements IDE {
       fs.writeFile(filepath, contents, (err) => {
         if (err) {
           reject(err);
+          return;
         }
         resolve();
       });
@@ -210,6 +211,7 @@ class FileSystemIde implements IDE {
       fs.unlink(filepath, (err) => {
         if (err) {
           reject(err);
+          return;
         }
         resolve();
       });
@@ -242,6 +244,7 @@ class FileSystemIde implements IDE {
       fs.readFile(filepath, "utf8", (err, contents) => {
         if (err) {
           reject(err);
+          return;
         }
         resolve(contents);
       });

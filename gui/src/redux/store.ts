@@ -126,7 +126,7 @@ export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
             ideMessenger,
           },
         },
-      }).concat(logger),
+      }).concat(import.meta.env.DEV ? [logger] : []),
   });
 }
 

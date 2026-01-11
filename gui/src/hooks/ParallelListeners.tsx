@@ -93,15 +93,14 @@ function ParallelListeners() {
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
 
-      const currentModelTitle = chatModel?.title;
+      const shouldEnableReasoning = supportsReasoning && !isReasoningDisabled;
+
       if (
         currentModelTitle !== lastModelTitleRef.current ||
-        hasReasoningEnabled === undefined
+        hasReasoningEnabled !== shouldEnableReasoning
       ) {
         lastModelTitleRef.current = currentModelTitle;
-        dispatch(
-          setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
-        );
+        dispatch(setHasReasoningEnabled(shouldEnableReasoning));
       }
     },
     [

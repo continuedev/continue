@@ -67,7 +67,7 @@ echo "Plugin artifact located at: $ARTIFACT_PATH"
 
 # Link to build/ directory
 mkdir -p "$REPO_ROOT/build"
-GIT_DESCRIBE=$(git describe --tags --dirty --always)
+GIT_DESCRIBE=$(git describe --tags --dirty --always | tr '/' '-')
 BASE_NAME=$(basename "$ARTIFACT_PATH" .zip)
 NEW_NAME="${BASE_NAME}-${GIT_DESCRIBE}.zip"
 mv "$ARTIFACT_PATH" "$REPO_ROOT/build/$NEW_NAME"

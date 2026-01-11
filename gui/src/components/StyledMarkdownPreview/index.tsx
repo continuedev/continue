@@ -275,9 +275,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // to use the `common` language set in addition to unsupported languages.
       // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
       () => {
-        let codeBlockIndex = 0;
-        let localMatchIndex = 0;
         return (tree) => {
+          let codeBlockIndex = 0;
+          let localMatchIndex = 0;
+
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
             node.properties = { "data-codeblockindex": codeBlockIndex };
@@ -292,6 +293,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           visit(tree, "text", (node: any, index: any, parent: any) => {
             if (!node.value || !parent) return;
+            if (parent.tagName === "code") return;
 
             // Skip if already inside a mark (to avoid recursion if we had multiple passes, though here it's one pass)
             // Also might want to skip script/style tags if they exist (unlikely in this markdown)

@@ -498,9 +498,15 @@ export function Chat() {
                   dispatch(newSession());
                 }}
               >
-                {renderChatHistoryItem(item, index, searchState)}
+                {renderChatHistoryItem(
+                  item,
+                  history.indexOf(item),
+                  searchState,
+                )}
               </ErrorBoundary>
-              {index === history.length - 1 && <InlineErrorMessage />}
+              {history.indexOf(item) === history.length - 1 && (
+                <InlineErrorMessage />
+              )}
             </div>
           )}
           atBottomThreshold={50}

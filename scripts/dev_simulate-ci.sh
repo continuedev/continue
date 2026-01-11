@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # Exit on error
+set -o pipefail # Fail if any command in a pipe fails
 
 # Ensure we are in the root of the repo
 cd "$(dirname "$0")/.."
