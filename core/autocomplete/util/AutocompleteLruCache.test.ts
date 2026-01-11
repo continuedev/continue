@@ -1,22 +1,32 @@
-import { open } from "sqlite";
-import AutocompleteLruCache from "./AutocompleteLruCache";
+import type AutocompleteLruCacheType from "./AutocompleteLruCache";
 
-jest.mock("async-mutex", () => {
+(jest as any).unstable_mockModule("async-mutex", () => {
   const acquire = jest.fn().mockResolvedValue(jest.fn());
   return {
     Mutex: jest.fn().mockImplementation(() => ({ acquire })),
   };
 });
-jest.mock("sqlite", () => ({
+
+(jest as any).unstable_mockModule("sqlite", () => ({
   open: jest.fn(),
 }));
-jest.mock("sqlite3");
+
+(jest as any).unstable_mockModule("sqlite3", () => ({
+  default: {
+    Database: jest.fn(),
+  },
+}));
+
+const { open } = await import("sqlite");
+const { default: AutocompleteLruCache } = await import(
+  "./AutocompleteLruCache"
+);
 
 jest.useFakeTimers();
 
 describe("AutocompleteLruCache", () => {
   let mockDb: any;
-  let cache: AutocompleteLruCache;
+  let cache: AutocompleteLruCacheType;
   let currentTime: number;
 
   const createMockDb = () => ({
