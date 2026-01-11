@@ -25,4 +25,15 @@ cd binary
 npm install
 cd ..
 
+# Packages
+echo "📦 Syncing packages..."
+for dir in packages/*; do
+	if [ -d "$dir" ]; then
+		echo "  Syncing $dir..."
+		cd "$dir"
+		npm install
+		cd ../..
+	fi
+done
+
 echo "✅ All lockfiles synced!"
