@@ -8,8 +8,8 @@ export function extractCommand(cmd: string): string {
     return "";
   }
 
-  // Remove multi-line comments (/* ... */) and replace with a single space
-  cmd = cmd.replace(/\/\*[\s\S]*?\*\//g, " ");
+  // Remove multi-line comments (/* ... */) and replace with a single space, handling surrounding usage
+  cmd = cmd.replace(/[ \t]*\/\*[\s\S]*?\*\/[ \t]*/g, " ");
 
   // Handle the $ prompt case first
   if (cmd.includes("$")) {
