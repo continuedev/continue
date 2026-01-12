@@ -38,6 +38,22 @@ Full-stack teams without a dedicated AppSec or DevOps function who still need to
 The risk isn’t that vulnerabilities exist.  The risk is that known high-severity issues remain unfixed.
 </Warning>
 
+## Why use an Agent? (vs. Snyk's Native Auto-PRs)
+
+Snyk has an excellent "Automatic Fix" feature that opens PRs to upgrade vulnerable dependencies. However, because Snyk cannot run your application's build or test suite, these PRs often break the build and require human cleanup.
+
+Continue's Cloud Agent sits *on top* of Snyk to complete the engineering work:
+
+| Feature | Snyk Native Auto-PR | Continue Cloud Agent |
+| :--- | :--- | :--- |
+| **The Fix** | "Bump `lodash` to v4.17.21" | "Analyze security issue and create PR with fix" |
+| **Context** | Vulnerability Database | Vuln DB + Security Impact Analysis |
+| **Intelligence** |Deterministic (Always bumps version) | Reasoning: "Analyzes dependency risks" and suggests updates |
+| **Result** | A PR that might break the build | A PR that is green and ready to merge |
+
+<Tip>
+Snyk tells you *what* to upgrade. The Cloud Agent does the *engineering work* to make that upgrade safe.
+</Tip>
 
 ## What Does the Cloud Agent Do?
 
@@ -93,6 +109,50 @@ The agent doesn’t silently change production code. It produces **reviewable se
     A developer reviews and merges (or adjusts) the fix.
   </Step>
 </Steps>
+
+## The Agent Configuration
+
+Continue's Snyk Cloud Agent is built from these core components:
+
+<CardGroup cols={3}>
+  <Card title="Triggers" icon="bolt">
+    **Webhook:** Snyk new vulnerability event
+  </Card>
+  <Card title="Tools (MCPs)" icon="toolbox">
+    **Snyk MCP:** Fetch vulnerability details
+  </Card>
+   <Card title="Rules" icon="list">
+    **GitHub CLI:** Tells the agent how to create PRs
+  </Card>
+</CardGroup>
+
+
+```markdown Remediation Prompt expandable
+A new Snyk vulnerability has been detected. Please investigate and resolve the issue. This should include the following steps:
+
+**Step 1: Investigate the Issue**
+Make sure you understand the vulnerability, the options for resolution, and what their consequences are.
+
+**Step 2: Implement Fix**
+- Focus on fixing the immediate issue identified
+- Avoid overdoing it with error handling, cleaning up other problems, etc.
+- Avoid making breaking changes
+- Ensure the solution is robust and follows best practices.
+
+**Step 3: Create Draft Pull Request**
+Create a draft pull request with the following structure:
+
+--
+**PR Title:** [Snyk] <brief description of issue solved>
+
+## Issue
+
+**Snyk Link:** [<shortId>](<permalink>)
+**Issue Type:** `<issue type>`
+**Priority:** <priority>
+**Summary:** <Two sentence summary of what caused the issue and how it was fixed>
+
+```
 
 ## Governance: How This Stays Safe
 
