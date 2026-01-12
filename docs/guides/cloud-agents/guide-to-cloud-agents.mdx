@@ -3,12 +3,13 @@ title: "The Developer’s Guide to Cloud Agents"
 description: "Learn how Cloud Agents are implemented and used in practice, from on-demand tasks to automated workflows in Mission Control."
 ---
 
-> **Note:** This guide assumes you already understand what Cloud Agents are and when to use them.
-> If you’re looking for a clear definition, categories, and mental models, start with the **[Cloud Agents Taxonomy](../cloud-agents/cloud-agents-taxonomy)**.
+<Note>
+This guide assumes you already understand what Cloud Agents are and when to use them. If you’re looking for a clear definition, categories, and mental models, start with the **[Cloud Agents Taxonomy](../cloud-agents/cloud-agents-taxonomy)**.
+</Note>
 
 ## Introduction: Moving Beyond "Chat"
 
-For the last few years, AI coding has been defined by the Local Copilot: a chat window in your IDE that helps you write a function or explain a snippet. It is a powerful tool, but it has a hard limit because it requires *you* to be the driver. If you close your laptop, the AI stops working. If you switch contexts, the AI loses focus.
+For the last few years, AI coding has been defined by the Local Copilot: a chat window in your IDE that helps you write a function or explain a snippet. It is a powerful tool, but it has a hard limit because it requires *you* to be the driver. If you close your laptop, it stops working. If you switch contexts, it loses focus.
 
 <Card title="The Shift to Cloud Agents" icon="cloud">
 
@@ -20,7 +21,7 @@ For the last few years, AI coding has been defined by the Local Copilot: a chat 
 
 Cloud Agents are AI-driven processes that run on remote infrastructure and are triggered by tasks, schedules, or events across a team’s engineering systems.
 
-In Continue, Cloud Agents run on **Mission Control**, where teams configure execution, connect tools, review outcomes, and decide which workflows become automated over time.
+With Continue, Cloud Agents run in [Mission Control](../../mission-control), where teams configure execution, connect tools, review outcomes, and decide which workflows become automated over time.
 
 <Info>
 
@@ -69,17 +70,17 @@ The defining feature of a Cloud Agent isn't just *automation*; it is **availabil
 
     ### Human-in-the-Loop Approach
 
-    You trigger these agents manually—via the Continue CLI or Mission Control interface—when you need an AI to perform a complex, heavy task that you want to review.
+    You can trigger these agents manually (with Continue, you can use the [Continue CLI](../../cli/overview) or [Mission Control](../../mission-control))—when you need an AI agents to perform one-off task that you want to review.
 
     <Card title="Example: Refactor Task" icon="code">
 
-      You send a "Refactor" task to a Cloud Agent. It clones the repo, runs the refactor in the cloud, and presents a Diff for you to approve. **You can close your laptop while it works.**
+      You send a "Refactor" task to a Cloud Agent. It clones the repo, runs the refactor in the cloud, and creates a PR for you to approve. **You can close your laptop while it works.**
 
     </Card>
 
     **Best for:**
-    - Complex refactoring tasks
-    - Large-scale code migrations
+    - Exploring agent capabilities
+    - Fixes you don't want to break your focus for
     - Tasks requiring human review before deployment
 
   </Tab>
@@ -92,14 +93,13 @@ The defining feature of a Cloud Agent isn't just *automation*; it is **availabil
 
     <Card title="Example: Security Agent" icon="lock">
 
-      A "Security Agent" wakes up every Monday morning (Cron), scans your repo for new vulnerabilities via Snyk, and automatically opens PRs for the fixes.
+      A "[Security Agent](https://hub.continue.dev/integrations/snyk)" automatically opens PRs for Snyk issues with high and critical security vulnerabilities and implements the fixes.
 
     </Card>
 
     **Best for:**
-    - Scheduled maintenance tasks
     - Continuous security monitoring
-    - Automated dependency updates
+    - Automated dependency updates without breaking things
     - Event-driven workflows
 
   </Tab>
@@ -132,7 +132,7 @@ The distinction between running an agent locally (TUI/IDE) and in the cloud (Mis
   <Accordion title="Context Access" icon="folder-open">
 
     - **Local Agents:** Limited to open files and local git state
-    - **Cloud Agents:** Full repository access + integrated tools (Sentry, Snyk, Linear, etc.)
+    - **Cloud Agents:** Full repository access + [integrated tools](https://hub.continue.dev/integrations) (Sentry, Snyk, Linear, etc.)
 
     Cloud Agents can access your entire engineering ecosystem, not just what's visible in your IDE.
 
@@ -156,14 +156,6 @@ The distinction between running an agent locally (TUI/IDE) and in the cloud (Mis
 
   </Accordion>
 </AccordionGroup>
-
-<Tip>
-
-  By moving agents to the cloud, you transform AI from a passive assistant into an active member of your engineering team.
-
-</Tip>
-
-> If you’re evaluating whether Cloud Agents are the right abstraction for your problem space, refer back to the **Cloud Agents Taxonomy** before building automation.
 
 ## Getting Started
 
