@@ -1278,6 +1278,7 @@ export interface TabAutocompleteOptions {
   experimental_includeRecentlyEditedRanges: boolean | number;
   experimental_includeDiff: boolean | number;
   experimental_enableStaticContextualization: boolean;
+  maxOpenFiles?: number;
 }
 
 export interface StdioOptions {

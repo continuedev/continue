@@ -12,16 +12,28 @@ export const useCompactConversation = () => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentSessionId = useAppSelector((state) => state.session.id);
+  const history = useAppSelector((state) => state.session.history);
 
   return async (index: number) => {
     if (!currentSessionId) {
       return;
     }
 
+    // Rough estimate: 0.5 seconds per message, minimum 5 seconds
+    const estSeconds = Math.max(5, Math.ceil(history.length * 0.5));
+    const timeText =
+      estSeconds > 60
+        ? `${Math.ceil(estSeconds / 60)} minutes`
+        : `${estSeconds} seconds`;
+
     try {
       // Set loading state
       dispatch(setCompactionLoading({ index, loading: true }));
-      ideMessenger.post("showToast", ["info", "Compacting conversation..."]);
+      ideMessenger.post("showToast", [
+        "info",
+        `Compacting conversation... (Estimated time: ${timeText})`,
+        "Dismiss", // Adding a button should keep the notification persistent
+      ]);
 
       // Save the session first to ensure the core has the latest history
       await dispatch(

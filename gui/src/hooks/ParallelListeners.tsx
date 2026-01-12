@@ -89,6 +89,8 @@ function ParallelListeners() {
       }
 
       const chatModel = configResult.config?.selectedModelByRole.chat;
+      const currentModelTitle = chatModel?.title;
+
       const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
