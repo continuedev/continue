@@ -717,7 +717,8 @@ export class VsCodeMessenger {
       return ide.showVirtualFile(msg.data.name, msg.data.content);
     });
     this.onWebviewOrCore("openFile", async (msg) => {
-      return ide.openFile(msg.data.path);
+      const { path, preserveFocus } = msg.data;
+      return ide.openFile(path, { preserveFocus });
     });
     this.onWebviewOrCore("runCommand", async (msg) => {
       await ide.runCommand(msg.data.command);

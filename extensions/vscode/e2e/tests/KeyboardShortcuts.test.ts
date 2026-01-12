@@ -156,6 +156,32 @@ describe("Keyboard Shortcuts", () => {
     expect(await textInput.isDisplayed()).to.equal(false);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
+  it("Open a file → should not steal focus from sidebar", async () => {
+    // 1. Focus sidebar
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+    ({ view } = await GUIActions.switchToReactIframe());
+    const textInput = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getMessageInputFieldAtIndex(view, 0),
+    );
+
+    // 2. Open a new file (this triggers vscode.window.showTextDocument)
+    await new Workbench().executeCommand("Create: New File...");
+    await (
+      await InputBox.create(DEFAULT_TIMEOUT.MD)
+    ).selectQuickPick("Text File");
+
+    // 3. Assert focus is still in sidebar input
+    const activeElement: WebElement = await driver.switchTo().activeElement();
+    const textInputHtml = await textInput.getAttribute("outerHTML");
+    const activeElementHtml = await activeElement.getAttribute("outerHTML");
+
+    // Note: If this fails, it means opening the file stole focus!
+    expect(textInputHtml).to.equal(activeElementHtml);
+
+    // Cleanup: close the new file
+    await new EditorView().closeAllEditors();
+  }).timeout(DEFAULT_TIMEOUT.XL);
+
   it("Send a message → focus code editor (not sidebar) → cmd+L → should focus sidebar and start a new session", async () => {
     await GUIActions.executeFocusContinueInputShortcut(driver);
     ({ view } = await GUIActions.switchToReactIframe());

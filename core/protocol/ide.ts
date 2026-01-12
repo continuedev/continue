@@ -27,7 +27,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   writeFile: [{ path: string; contents: string }, void];
   showVirtualFile: [{ name: string; content: string }, void];
   deleteFile: [{ path: string }, void];
-  openFile: [{ path: string }, void];
+  openFile: [{ path: string; preserveFocus?: boolean }, void];
   openUrl: [string, void];
   runCommand: [{ command: string; options?: TerminalOptions }, void];
   getSearchResults: [{ query: string; maxResults?: number }, string];

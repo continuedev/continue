@@ -176,10 +176,14 @@ describe("BaseLLM", () => {
       }
       const testContextLength = (llmInfo: LlmInfo) => () => {
         const llm = new LLMClass({ model: llmInfo.model });
-        if (llmInfo.contextLength) {
-          expect(llm.contextLength).toEqual(llmInfo.contextLength);
-        } else {
-          expect(llm.contextLength).toEqual(DEFAULT_CONTEXT_LENGTH);
+        try {
+          if (llmInfo.contextLength) {
+            expect(llm.contextLength).toEqual(llmInfo.contextLength);
+          } else {
+            expect(llm.contextLength).toEqual(DEFAULT_CONTEXT_LENGTH);
+          }
+        } finally {
+          llm.dispose?.();
         }
       };
       describe(`${modelProvider.id}`, () => {

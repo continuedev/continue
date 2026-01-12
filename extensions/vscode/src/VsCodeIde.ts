@@ -309,8 +309,15 @@ class VsCodeIde implements IDE {
     this.ideUtils.showVirtualFile(title, contents);
   }
 
-  async openFile(fileUri: string): Promise<void> {
-    await this.ideUtils.openFile(vscode.Uri.parse(fileUri));
+  async openFile(
+    fileUri: string,
+    options?: { preserveFocus?: boolean },
+  ): Promise<void> {
+    await this.ideUtils.openFile(
+      vscode.Uri.parse(fileUri),
+      undefined,
+      options?.preserveFocus,
+    );
   }
 
   async showLines(

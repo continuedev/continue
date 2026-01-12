@@ -161,6 +161,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
+  private _abortController = new AbortController();
+
   constructor(options: LLMOptions) {
     super(options);
 
@@ -179,13 +181,14 @@ class Ollama extends BaseLLM implements ModelInstaller {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
+      signal: this._abortController.signal,
     })
       .then(async (response) => {
         if (response?.status !== 200) {
-          // console.warn(
-          //   "Error calling Ollama /api/show endpoint: ",
-          //   await response.text(),
-          // );
+          console.debug(
+            "Error calling Ollama /api/show endpoint: ",
+            await response.text(),
+          );
           return;
         }
         const body = await response.json();
@@ -229,8 +232,15 @@ class Ollama extends BaseLLM implements ModelInstaller {
         this.fimSupported = !!body?.template?.includes(".Suffix");
       })
       .catch((e) => {
-        // console.warn("Error calling the Ollama /api/show endpoint: ", e);
+        if (e.name === "AbortError") {
+          return;
+        }
+        console.debug("Error calling the Ollama /api/show endpoint: ", e);
       });
+  }
+
+  dispose() {
+    this._abortController.abort();
   }
 
   // Map of "continue model name" to Ollama actual model name

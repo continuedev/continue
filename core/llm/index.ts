@@ -327,6 +327,8 @@ export abstract class BaseLLM implements ILLM {
     return Promise.resolve([]);
   }
 
+  dispose(): void {}
+
   private _templatePromptLikeMessages(prompt: string): string {
     if (!this.templateMessages) {
       return prompt;

@@ -18,7 +18,10 @@ import {
 } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
+import {
+  convertJsonToYamlConfig,
+  stringifyConfigYaml,
+} from "../../../packages/config-yaml/dist";
 
 import {
   getAutocompleteStatusBarDescription,

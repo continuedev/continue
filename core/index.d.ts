@@ -162,6 +162,8 @@ export interface ILLM
   ): string | ChatMessage[];
 
   getConfigurationStatus(): LLMConfigurationStatuses;
+
+  dispose?: () => void;
 }
 
 export interface ModelInstaller {
@@ -847,7 +849,7 @@ export interface IDE {
 
   showVirtualFile(title: string, contents: string): Promise<void>;
 
-  openFile(path: string): Promise<void>;
+  openFile(path: string, options?: { preserveFocus?: boolean }): Promise<void>;
 
   openUrl(url: string): Promise<void>;
 

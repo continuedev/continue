@@ -97,14 +97,15 @@ export default async function fetch(url, options_) {
       const error = new AbortError("The operation was aborted.");
       reject(error);
       if (request.body && request.body instanceof Stream.Readable) {
-        request.body.destroy(error);
+        request.body.destroy();
       }
 
       if (!response || !response.body) {
         return;
       }
 
-      response.body.emit("error", error);
+      // response.body.emit("error", error);
+      response.body.destroy();
     };
 
     if (signal && signal.aborted) {
