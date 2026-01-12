@@ -1,0 +1,132 @@
+---
+title: "When to Use Cloud Agents (and When Not To)"
+description: "A decision guide for choosing cloud agents vs scripts, CI jobs, or local agents—plus a checklist for safe adoption."
+sidebarTitle: "When to Use"
+---
+
+## Start Here
+
+This guide helps you decide whether **cloud agents** are the right abstraction for your problem.
+
+If you want the canonical definition and taxonomy first, read:
+<Card title="Cloud Agents Taxonomy" href="/guides/cloud-agents/cloud-agents-taxonomy">
+  Definitions, trigger types, and governance levels.
+</Card>
+
+## When Cloud Agents Make Sense
+<Tip>
+Use cloud agents when the work is **recurring**, spans **multiple systems**, and needs **team-owned outcomes**.
+</Tip>
+
+Use cloud agents when:
+
+- The same class of issue returns weekly (or daily)
+- The work is mostly *handling* (triage, patching, cleanup), not discovery
+- Inputs come from tools like GitHub, error monitoring, security scanners, analytics
+- You need a reviewable outcome (PR, report, ticket update)
+- You want to reduce interruptions, not just respond faster
+
+<CardGroup cols={2}>
+  <Card title="Great fits">
+
+    - security remediation  
+    - recurring error triage  
+    - dependency hygiene  
+    - analytics-driven fixes  
+
+  </Card>
+  <Card title="Common triggers">
+    - task dispatch  
+    - schedules  
+    - event webhooks  
+  </Card>
+</CardGroup>
+
+## When Cloud Agents Are a Bad Idea
+
+Avoid cloud agents when:
+
+- The problem is novel and poorly understood
+- The blast radius is unclear
+- Ownership is ambiguous (“someone should handle this”)
+- You can’t define review criteria
+- The work is better solved by eliminating the root cause directly
+
+<Warning>
+Cloud agents amplify whatever system you already have.  
+If ownership is unclear, automation will make it worse.
+</Warning>
+
+
+## Cloud Agents vs Alternatives
+
+### Cloud Agents vs Scripts
+<AccordionGroup>
+  <Accordion title="Choose scripts when..." icon="terminal">
+    - the logic is deterministic  
+    - inputs are stable  
+    - you don’t need reasoning  
+    - you want maximum predictability  
+  </Accordion>
+
+  <Accordion title="Choose cloud agents when..." icon="cloud">
+    - inputs change and need interpretation  
+    - work spans tools and context  
+    - you need a human-reviewable outcome  
+    - you want to reduce recurring toil  
+  </Accordion>
+</AccordionGroup>
+
+### Cloud Agents vs CI Jobs
+CI jobs are excellent at:
+- running tests and builds deterministically
+- enforcing policy checks
+- executing repeatable scripts
+
+Cloud agents are better for:
+- interpreting signals and context
+- producing patches or summaries
+- coordinating actions across systems
+
+<Card title="Next: Cloud Agents vs CI/CD" href="/guides/cloud-agents/cloud-agents-vs-ci">
+  A deeper comparison and common integration patterns.
+</Card>
+
+### Cloud Agents vs Local / IDE Agents
+Local agents are best for:
+- fast iteration
+- individual workflows
+- exploratory work
+
+Cloud agents are best for:
+- shared team context
+- reliability-oriented work
+- recurring tasks and triggers
+
+---
+
+## The Decision Checklist
+
+Use cloud agents if you can say “yes” to most of these:
+
+- [ ] We’ve seen this problem at least twice  
+- [ ] Inputs come from shared systems (alerts, issues, analytics)  
+- [ ] We can define what “good output” looks like  
+- [ ] A PR/report is an acceptable artifact  
+- [ ] Someone owns reviewing the result  
+- [ ] We can start in a manual or assisted mode  
+
+<Info>
+If you’re unsure, start with a one-off [task](../../mission-control/tasks) and treat it like an experiment.
+</Info>
+
+## Where to Go Next
+
+<CardGroup cols={2}>
+  <Card title="From Task → Automation" href="/guides/cloud-agents/from-task-to-automation">
+    How teams earn the right to automate over time.
+  </Card>
+  <Card title="Operating Safely" href="/guides/cloud-agents/operating-cloud-agents-safely">
+    Guardrails, permissions, review, and blast radius.
+  </Card>
+</CardGroup>
