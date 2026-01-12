@@ -63,7 +63,12 @@ vi.mock("./utils", () => ({
 }));
 
 // Helper to render component
-const renderComponent = (md: string, syms: any = {}, searchT = "") => {
+const renderComponent = (
+  md: string,
+  syms: any = {},
+  searchT = "",
+  currentMatch?: any,
+) => {
   const store = createMockStore({
     session: {
       history: [{ message: { role: "user", content: "" }, contextItems: [] }],
@@ -87,6 +92,7 @@ const renderComponent = (md: string, syms: any = {}, searchT = "") => {
             searchTerm: searchT,
             caseSensitive: true,
             useRegex: false,
+            currentMatch,
           }}
         />
       </IdeMessengerContext.Provider>
@@ -166,5 +172,22 @@ file.ts
     const mark = mockLink.querySelector("mark");
     expect(mark).toBeInTheDocument();
     expect(mark).toHaveTextContent("file");
+  });
+});
+
+it("should scroll to active search match", async () => {
+  const scrollIntoViewMock = vi.fn();
+  window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+
+  renderComponent("text match", {}, "match", {
+    messageIndex: 0,
+    matchIndexInMessage: 0,
+  });
+
+  await waitFor(() => {
+    const mark = document.querySelector("mark");
+    expect(mark).toBeInTheDocument();
+    expect(mark).toHaveClass("active");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
   });
 });

@@ -19,10 +19,6 @@ const OSRContextMenu = () => {
   const [canCopy, setCanCopy] = useState(false);
   const [canCut, setCanCut] = useState(false);
   const [canPaste, setCanPaste] = useState(false);
-  const [ruleContext, setRuleContext] = useState<{
-    baseFilename: string;
-    isGlobal: boolean;
-  } | null>(null);
 
   const menuRef = React.useRef<HTMLDivElement>(null);
   const selectedTextRef = useRef<string | null>(null);
@@ -44,41 +40,13 @@ const OSRContextMenu = () => {
 
     // Hide menu
     setPosition(null);
-    setRuleContext(null);
     isMenuOpenRef.current = false;
-  }
-
-  function handleEditRule() {
-    if (!ruleContext) return;
-    if (ruleContext.isGlobal) {
-      ideMessenger.post("config/openProfile", { profileId: undefined });
-    } else {
-      ideMessenger.post("config/openProfile", { profileId: undefined });
-    }
-    setPosition(null);
-    setRuleContext(null);
-  }
-
-  function handleDeleteRule() {
-    if (!ruleContext) return;
-    if (ruleContext.isGlobal) {
-      ideMessenger.post("config/deleteGlobalRule", {
-        baseFilename: ruleContext.baseFilename,
-      });
-    } else {
-      ideMessenger.post("config/deleteLocalWorkspaceBlock", {
-        blockType: "rules",
-        baseFilename: ruleContext.baseFilename,
-      });
-    }
-    setPosition(null);
-    setRuleContext(null);
   }
 
   useEffect(() => {
     function leaveWindowHandler() {
       setPosition(null);
-      setRuleContext(null);
+      isMenuOpenRef.current = false;
       isMenuOpenRef.current = false;
     }
     function contextMenuHandler(event: MouseEvent) {
@@ -91,7 +59,6 @@ const OSRContextMenu = () => {
       // If clicked outside of menu, close menu
       if (!menuRef.current?.contains(event.target as Node)) {
         setPosition(null);
-        setRuleContext(null);
         isMenuOpenRef.current = false;
       }
 
@@ -101,7 +68,6 @@ const OSRContextMenu = () => {
         // Prevent default context menu
         // event.preventDefault();
 
-        setRuleContext(null);
         selectedRangeRef.current = null;
         selectedTextRef.current = null;
         targetElementRef.current = event.target as HTMLElement;
@@ -192,52 +158,6 @@ const OSRContextMenu = () => {
             });
             isMenuOpenRef.current = true;
           }
-        }
-
-        // Check for rule context menu
-        let target = event.target as HTMLElement;
-        while (target && target !== document.body) {
-          if (target.getAttribute("data-context-menu-type") === "rule") {
-            const baseFilename = target.getAttribute("data-rule-filename");
-            const isGlobal = target.getAttribute("data-rule-global") === "true";
-            if (baseFilename) {
-              setRuleContext({ baseFilename, isGlobal });
-              // Set position similar to above
-              const toRight = event.clientX > window.innerWidth / 2;
-              const toBottom = event.clientY > window.innerHeight / 2;
-              if (toRight) {
-                if (toBottom) {
-                  setPosition({
-                    bottom: window.innerHeight - event.clientY,
-                    right: window.innerWidth - event.clientX,
-                  });
-                  isMenuOpenRef.current = true;
-                } else {
-                  setPosition({
-                    top: event.clientY,
-                    right: window.innerWidth - event.clientX,
-                  });
-                  isMenuOpenRef.current = true;
-                }
-              } else {
-                if (toBottom) {
-                  setPosition({
-                    bottom: window.innerHeight - event.clientY,
-                    left: event.clientX,
-                  });
-                  isMenuOpenRef.current = true;
-                } else {
-                  setPosition({
-                    top: event.clientY,
-                    left: event.clientX,
-                  });
-                  isMenuOpenRef.current = true;
-                }
-              }
-            }
-            break;
-          }
-          target = target.parentElement as HTMLElement;
         }
       }
     }
@@ -394,30 +314,6 @@ const OSRContextMenu = () => {
       >
         Open Dev Tools
       </div>
-
-      {ruleContext && (
-        <>
-          <hr className="my-1 border-gray-500" />
-          <div
-            className="cursor-pointer hover:opacity-90"
-            onClick={(e) => {
-              e.preventDefault();
-              handleEditRule();
-            }}
-          >
-            Edit Rule
-          </div>
-          <div
-            className="cursor-pointer hover:opacity-90"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDeleteRule();
-            }}
-          >
-            Delete Rule
-          </div>
-        </>
-      )}
     </div>
   );
 };

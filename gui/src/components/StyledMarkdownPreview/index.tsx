@@ -478,8 +478,20 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!props.searchState?.currentMatch) return;
+    const activeMatch =
+      containerRef.current?.querySelector(".find-match.active");
+    if (activeMatch) {
+      activeMatch.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }, [props.searchState, reactContent]);
+
   return (
     <StyledMarkdown
+      ref={containerRef}
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}
