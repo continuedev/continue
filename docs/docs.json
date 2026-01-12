@@ -255,8 +255,13 @@
           {
             "group": "Cloud Agents",
             "pages": [
+              "guides/cloud-agents/cloud-agents-taxonomy",
               "guides/cloud-agents/guide-to-cloud-agents",
-              "guides/cloud-agents/cloud-agents-taxonomy"
+              "guides/cloud-agents/when-to-use-cloud-agents",
+              "guides/cloud-agents/from-task-to-automation",
+              "guides/cloud-agents/cloud-agents-vs-ci",
+              "guides/cloud-agents/operating-cloud-agents-safely",
+              "guides/cloud-agents/automated-security-remediation-with-snyk"
             ]
           },
           {
