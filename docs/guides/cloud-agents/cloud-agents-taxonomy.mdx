@@ -17,13 +17,11 @@ This guide exists to do one thing clearly:
 
 > **Define what cloud agents actually are, how they differ from other agents, and when they make sense for real software teams.**
 
----
+## A Clear Definition of Cloud Agents
 
-## A Clear Definition
-
-<Callout type="info" title="Definition">
-A **cloud agent** is an AI-driven process that runs on remote infrastructure and is triggered by tasks, schedules, or external events across a team’s engineering systems.  
-</Callout>
+<Info>
+A **cloud agent** is an AI-driven process that runs on remote infrastructure, is triggered by tasks, schedules, or external events, and uses reasoning over changing inputs to produce reviewable outcomes across shared engineering systems.
+</Info>
 
 Key characteristics:
 - runs outside a developer’s local environment
@@ -31,37 +29,31 @@ Key characteristics:
 - produces reviewable outcomes (PRs, reports, actions)
 - can run asynchronously and repeatedly
 
-Cloud agents are not about writing code faster.  
-They exist to **own work that keeps coming back**.
+Cloud agents exist to **handle work that benefits from reasoning, shared context, and reviewability** — whether it runs once or repeatedly.
 
----
-
-## What Cloud Agents Are Not
+## What Cloud Agents Are Often Confused With
 
 Cloud agents are often confused with other tools.
 
 <CardGroup cols={2}>
   <Card title="Not IDE Agents">
-    IDE agents focus on individual productivity and local context.  
-    Cloud agents operate on shared systems and team-owned work.
+    IDE agents focus on individual productivity and local context. Cloud agents operate on shared systems and team-owned work.
   </Card>
 
-  <Card title="Not Cron Jobs">
-    Cron jobs execute fixed scripts.  
-    Cloud agents reason, adapt, and act based on changing inputs.
+  <Card title="Not Just Cron Jobs">
+    Cron is a trigger.  
+    Cloud agents reason over changing inputs and produce reviewable outcomes.
   </Card>
 
   <Card title="Not One-Off Scripts">
-    Scripts solve a moment.  
-    Cloud agents manage recurring classes of work.
+    Scripts execute fixed logic.  
+    Cloud agents apply reasoning and shared context — even for a single run.
   </Card>
 
   <Card title="Not Magic Automation">
     Cloud agents still require review, ownership, and guardrails.
   </Card>
 </CardGroup>
-
----
 
 ## The Two Axes That Matter
 
@@ -91,12 +83,13 @@ quadrantChart
 
 *Most teams start bottom-left and move diagonally as trust increases to create their [Continuous AI Workflow](../continuous-ai).*
 
----
-
 ## Axis 1: Trigger Type
 
 ### 1. One-Off Cloud Agents  
 **Manually triggered**
+
+One-off cloud agents are first-class agents.  
+They differ by trigger, not by capability.
 
 <Card>
 Used when a human explicitly dispatches work to an agent.
@@ -111,8 +104,6 @@ Used when a human explicitly dispatches work to an agent.
 - unknown scope
 - exploratory work
 - building confidence before automation
-
----
 
 ### 2. Scheduled Cloud Agents  
 **Time-based triggers**
@@ -130,8 +121,6 @@ Run on a fixed cadence (daily, weekly, hourly).
 - predictable recurring work
 - backlog prevention
 - drift detection
-
----
 
 ### 3. Event-Driven Cloud Agents  
 **Signal-based triggers**
@@ -158,31 +147,30 @@ This is where most teams get into trouble.
 
 <Tabs>
   <Tab title="Manual">
-    Human decides when the agent runs  
-    Human reviews everything  
+    - Human decides when the agent runs  
+    - Human reviews everything  
 
-    Safest starting point.
+    *Safest starting point.*
   </Tab>
 
   <Tab title="Assisted">
-    Agent runs automatically  
-    Human approves outcomes  
+    - Agent runs automatically  
+    - Human approves outcomes  
 
-    Where most teams should live first.
+    *Where most teams should live first.*
   </Tab>
 
   <Tab title="Automated">
-    Agent runs unattended  
-    Outcomes merge or act directly  
+    - Agent runs unattended  
+    - Outcomes merge or act directly  
 
-    Earned over time — not assumed.
+    *Earned over time — not assumed.*
   </Tab>
 </Tabs>
 
-<Callout type="warning">
-Cloud agents don’t fail because they’re autonomous.  
-They fail because teams skip the control phase.
-</Callout>
+<Warning>
+Cloud agents don’t fail because they’re autonomous. They fail because teams skip the control phase.
+</Warning>
 
 ---
 
@@ -195,16 +183,11 @@ They fail because teams skip the control phase.
 | Developer-initiated | System-initiated |
 | Productivity focus | Reliability & ownership focus |
 
-Both are useful.  
-They solve **different problems**.
-
----
+Both are useful.  They solve different problems.
 
 ## Why Cloud Agents Exist at All
 
-Most engineering pain is not complexity.
-
-It’s **recurrence**.
+Most engineering pain is recurrence.
 
 - alerts repeat
 - security issues resurface
@@ -215,10 +198,7 @@ Cloud agents exist to:
 - respond consistently
 - reduce future interruptions
 
-The goal is not more automation.  
-The goal is **less work over time**.
-
----
+The goal is not more automation.  The goal is less work over time.
 
 ## When Cloud Agents Make Sense
 
@@ -233,14 +213,11 @@ Avoid them when:
 - ownership is unclear
 - blast radius isn’t understood yet
 
----
-
 ## The Architectural Reality
 
-As teams adopt cloud agents, they discover a final truth:
+As teams adopt cloud agents, they discover:
 
-> **Agents alone don’t scale.  
-Control and visibility do.**
+> **Agents alone don’t scale without control and visibility do.**
 
 Production cloud agents eventually require:
 - a shared place to review runs
