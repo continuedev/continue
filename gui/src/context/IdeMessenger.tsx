@@ -83,7 +83,11 @@ export class IdeMessenger implements IIdeMessenger {
     if (typeof vscode === "undefined") {
       if (isJetBrains()) {
         if (window.postIntellijMessage === undefined) {
-          throw new Error("postIntellijMessage is undefined");
+          throw new Error(
+            `postIntellijMessage is undefined. Failed to send message of type "${messageType}". Data: ${JSON.stringify(
+              data,
+            )}`,
+          );
         }
         window.postIntellijMessage?.(messageType, data, messageId);
         return;

@@ -1,4 +1,5 @@
 import { ConfigJson } from "@continuedev/config-types";
+import * as YAML from "yaml";
 import { ConfigYaml } from "./schemas/index.js";
 import { ModelRole } from "./schemas/models.js";
 
@@ -197,4 +198,8 @@ export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
   };
 
   return configYaml;
+}
+
+export function stringifyConfigYaml(config: ConfigYaml): string {
+  return YAML.stringify(config);
 }

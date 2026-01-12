@@ -193,52 +193,52 @@ const OSRContextMenu = () => {
             isMenuOpenRef.current = true;
           }
         }
-      }
 
-      // Check for rule context menu
-      let target = event.target as HTMLElement;
-      while (target && target !== document.body) {
-        if (target.getAttribute("data-context-menu-type") === "rule") {
-          const baseFilename = target.getAttribute("data-rule-filename");
-          const isGlobal = target.getAttribute("data-rule-global") === "true";
-          if (baseFilename) {
-            setRuleContext({ baseFilename, isGlobal });
-            // Set position similar to above
-            const toRight = event.clientX > window.innerWidth / 2;
-            const toBottom = event.clientY > window.innerHeight / 2;
-            if (toRight) {
-              if (toBottom) {
-                setPosition({
-                  bottom: window.innerHeight - event.clientY,
-                  right: window.innerWidth - event.clientX,
-                });
-                isMenuOpenRef.current = true;
+        // Check for rule context menu
+        let target = event.target as HTMLElement;
+        while (target && target !== document.body) {
+          if (target.getAttribute("data-context-menu-type") === "rule") {
+            const baseFilename = target.getAttribute("data-rule-filename");
+            const isGlobal = target.getAttribute("data-rule-global") === "true";
+            if (baseFilename) {
+              setRuleContext({ baseFilename, isGlobal });
+              // Set position similar to above
+              const toRight = event.clientX > window.innerWidth / 2;
+              const toBottom = event.clientY > window.innerHeight / 2;
+              if (toRight) {
+                if (toBottom) {
+                  setPosition({
+                    bottom: window.innerHeight - event.clientY,
+                    right: window.innerWidth - event.clientX,
+                  });
+                  isMenuOpenRef.current = true;
+                } else {
+                  setPosition({
+                    top: event.clientY,
+                    right: window.innerWidth - event.clientX,
+                  });
+                  isMenuOpenRef.current = true;
+                }
               } else {
-                setPosition({
-                  top: event.clientY,
-                  right: window.innerWidth - event.clientX,
-                });
-                isMenuOpenRef.current = true;
-              }
-            } else {
-              if (toBottom) {
-                setPosition({
-                  bottom: window.innerHeight - event.clientY,
-                  left: event.clientX,
-                });
-                isMenuOpenRef.current = true;
-              } else {
-                setPosition({
-                  top: event.clientY,
-                  left: event.clientX,
-                });
-                isMenuOpenRef.current = true;
+                if (toBottom) {
+                  setPosition({
+                    bottom: window.innerHeight - event.clientY,
+                    left: event.clientX,
+                  });
+                  isMenuOpenRef.current = true;
+                } else {
+                  setPosition({
+                    top: event.clientY,
+                    left: event.clientX,
+                  });
+                  isMenuOpenRef.current = true;
+                }
               }
             }
+            break;
           }
-          break;
+          target = target.parentElement as HTMLElement;
         }
-        target = target.parentElement as HTMLElement;
       }
     }
 

@@ -4,7 +4,7 @@ import {
   ThunkDispatch,
   UnknownAction,
 } from "@reduxjs/toolkit";
-import { createLogger } from "redux-logger";
+
 import {
   createMigrate,
   MigrationManifest,
@@ -107,26 +107,38 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
 export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
   const ideMessenger = options.ideMessenger ?? new IdeMessenger();
 
-  const logger = createLogger({
-    // Customize logger options if needed
-    collapsed: true, // Collapse console groups by default
-    timestamp: false, // Remove timestamps from log
-    diff: true, // Show diff between states
-  });
-
   return configureStore({
     // persistedReducer causes type errors with async thunks
     reducer: persistedReducer as unknown as typeof rootReducer,
     // reducer: rootReducer,
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({
+    middleware: (getDefaultMiddleware) => {
+      const middleware = getDefaultMiddleware({
         serializableCheck: false,
         thunk: {
           extraArgument: {
             ideMessenger,
           },
         },
-      }).concat(import.meta.env.DEV ? [logger] : []),
+      });
+
+      if (import.meta.env.DEV) {
+        try {
+          const { createLogger } = require("redux-logger");
+          const logger = createLogger({
+            // Customize logger options if needed
+            collapsed: true, // Collapse console groups by default
+            timestamp: false, // Remove timestamps from log
+            diff: true, // Show diff between states
+          });
+          return middleware.concat(logger);
+        } catch (e) {
+          console.error("Redux logger could not be loaded", e);
+          return middleware;
+        }
+      }
+
+      return middleware;
+    },
   });
 }
 

@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useMemo, useRef } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
@@ -179,17 +179,15 @@ function getLanguageFromClassName(className: any): string | null {
   return language ?? null;
 }
 
-function getCodeChildrenContent(children: any) {
-  if (typeof children === "string") {
-    return children;
-  } else if (
-    Array.isArray(children) &&
-    children.length > 0 &&
-    typeof children[0] === "string"
-  ) {
-    return children[0];
+function getReactNodeTextContent(node: React.ReactNode): string {
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (!node) return "";
+  if (Array.isArray(node)) return node.map(getReactNodeTextContent).join("");
+  if (React.isValidElement(node)) {
+    return getReactNodeTextContent((node.props as any).children);
   }
-  return undefined;
+  return "";
 }
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
@@ -293,7 +291,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           visit(tree, "text", (node: any, index: any, parent: any) => {
             if (!node.value || !parent) return;
-            if (parent.tagName === "code") return;
 
             // Skip if already inside a mark (to avoid recursion if we had multiple passes, though here it's one pass)
             // Also might want to skip script/style tags if they exist (unlikely in this markdown)
@@ -424,7 +421,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         code: ({ ...codeProps }) => {
-          const content = getCodeChildrenContent(codeProps.children);
+          const content = getReactNodeTextContent(codeProps.children);
 
           if (content) {
             const { symbols, rifs } = pastFileInfoRef.current;
@@ -437,10 +434,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             if (matchedSymbolOrFile) {
               if (isSymbolNotRif(matchedSymbolOrFile)) {
                 return (
-                  <SymbolLink content={content} symbol={matchedSymbolOrFile} />
+                  <SymbolLink
+                    content={codeProps.children}
+                    symbol={matchedSymbolOrFile}
+                  />
                 );
               } else {
-                return <FilenameLink rif={matchedSymbolOrFile} />;
+                return (
+                  <FilenameLink rif={matchedSymbolOrFile}>
+                    {codeProps.children}
+                  </FilenameLink>
+                );
               }
             }
           }

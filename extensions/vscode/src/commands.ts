@@ -18,8 +18,6 @@ import {
 } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import * as YAML from "yaml";
-
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
 import {
@@ -719,7 +717,7 @@ const getCommandsMap: (
       const configYaml = convertJsonToYamlConfig(parsed);
 
       const configYamlPath = getConfigYamlPath();
-      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+      fs.writeFileSync(configYamlPath, stringifyConfigYaml(configYaml));
       setConfigFilePermissions(configYamlPath);
 
       // Open config.yaml

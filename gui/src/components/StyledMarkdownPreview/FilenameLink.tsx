@@ -7,9 +7,10 @@ import { ToolTip } from "../gui/Tooltip";
 
 interface FilenameLinkProps {
   rif: RangeInFile;
+  children?: React.ReactNode;
 }
 
-function FilenameLink({ rif }: FilenameLinkProps) {
+function FilenameLink({ rif, children }: FilenameLinkProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   function onClick() {
@@ -40,7 +41,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
       >
         <FileIcon filename={rif.filepath} height="20px" width="20px" />
         <span className="mb-0.5 align-baseline underline underline-offset-2">
-          {getUriPathBasename(rif.filepath)}
+          {children || getUriPathBasename(rif.filepath)}
         </span>
       </span>
     </ToolTip>

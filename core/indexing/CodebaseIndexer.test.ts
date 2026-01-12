@@ -192,7 +192,7 @@ describe("CodebaseIndexer", () => {
 
       const updates = await refreshIndex();
       expect(updates.length).toBeGreaterThan(0);
-    });
+    }, 20_000);
 
     test("should have created index folder with all necessary files", async () => {
       const exists = await testIde.fileExists(

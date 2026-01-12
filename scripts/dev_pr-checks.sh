@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e # Exit on error
+set -e          # Exit on error
 set -o pipefail # Fail if any command in a pipe fails
 
 # Ensure we are in the root of the repo
@@ -25,11 +25,25 @@ echo "-----------------------------------"
 echo "📝 Checking Formatting (Prettier)..."
 npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
 
+# Helper to check command
+run_install() {
+	local dir=$1
+	echo "📦 Installing in $dir..."
+	pushd "$dir" >/dev/null
+	if ! npm ci; then
+		echo "❌ 'npm ci' failed in $dir."
+		echo "💡 Try running './scripts/dev_lockfile-sync.sh' to update package-lock.json."
+		popd >/dev/null
+		exit 1
+	fi
+	popd >/dev/null
+}
+
 # 2. Core Checks
 echo "-----------------------------------"
 echo "🧠 Checking Core (Lint, Types, Test)..."
+run_install core
 cd core
-npm ci
 npx tsc --noEmit
 npm run lint
 # Skip API tests locally since we don't have secrets
@@ -41,8 +55,8 @@ cd ..
 # 3. GUI Checks
 echo "-----------------------------------"
 echo "🖥️ Checking GUI (Lint, Types, Test)..."
+run_install gui
 cd gui
-npm ci
 npx tsc --noEmit
 npm run lint
 npm test
@@ -51,8 +65,8 @@ cd ..
 # 4. VS Code Extension Checks
 echo "-----------------------------------"
 echo "🆚 Checking VS Code Extension (Lint, Types, Test)..."
+run_install extensions/vscode
 cd extensions/vscode
-npm ci
 npm run write-build-timestamp
 npx tsc --noEmit
 npm run lint

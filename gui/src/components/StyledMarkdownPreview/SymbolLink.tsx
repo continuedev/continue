@@ -5,7 +5,7 @@ import { ToolTip } from "../gui/Tooltip";
 
 interface SymbolLinkProps {
   symbol: SymbolWithRange;
-  content: string;
+  content: React.ReactNode;
 }
 
 function SymbolLink({ symbol, content }: SymbolLinkProps) {
