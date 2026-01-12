@@ -13,9 +13,9 @@ That ambiguity causes teams to:
 - automate too early
 - or avoid cloud agents entirely because they feel risky
 
-This guide exists to do one thing clearly:
+This guide exists to:
 
-> **Define what cloud agents actually are, how they differ from other agents, and when they make sense for real software teams.**
+> **Define what cloud agents actually are, how they differ from other agents, and when they make sense for software teams.**
 
 ## A Clear Definition of Cloud Agents
 
@@ -29,7 +29,7 @@ Key characteristics:
 - produces reviewable outcomes (PRs, reports, actions)
 - can run asynchronously and repeatedly
 
-Cloud agents exist to **handle work that benefits from reasoning, shared context, and reviewability** — whether it runs once or repeatedly.
+Cloud agents exist to **handle work that benefits from reasoning, shared context, and reviewability.** 
 
 ## What Cloud Agents Are Often Confused With
 
@@ -41,13 +41,11 @@ Cloud agents are often confused with other tools.
   </Card>
 
   <Card title="Not Just Cron Jobs">
-    Cron is a trigger.  
-    Cloud agents reason over changing inputs and produce reviewable outcomes.
+    Cron is a trigger. Cloud agents reason over changing inputs and produce reviewable outcomes.
   </Card>
 
   <Card title="Not One-Off Scripts">
-    Scripts execute fixed logic.  
-    Cloud agents apply reasoning and shared context — even for a single run.
+    Scripts execute fixed logic. Cloud agents apply reasoning and shared context even for a single run.
   </Card>
 
   <Card title="Not Magic Automation">
@@ -83,65 +81,57 @@ quadrantChart
 
 *Most teams start bottom-left and move diagonally as trust increases to create their [Continuous AI Workflow](../continuous-ai).*
 
-## Axis 1: Trigger Type
+## Axis 1: Cloud Agent Trigger Type
 
 ### 1. One-Off Cloud Agents  
-**Manually triggered**
+*Manually triggered when a human explicitly dispatches work to an agent.One-off cloud agents are first-class agents that differ by trigger, not by capability.*
 
-One-off cloud agents are first-class agents.  
-They differ by trigger, not by capability.
-
-<Card>
-Used when a human explicitly dispatches work to an agent.
-</Card>
-
-**Examples**
-- Analyze the top recurring Sentry errors
-- Audit a repo for security issues
-- Summarize system behavior
-
-**Best for**
-- unknown scope
-- exploratory work
-- building confidence before automation
+<Columns cols={2}>
+  <Card title="Examples">
+  - Analyze the top recurring Sentry errors
+  - Audit a repo for security issues
+  - Summarize system behavior
+  </Card>
+  <Card title="Best for">
+  - Unknown scope
+  - Exploratory work
+  - Building confidence before automation
+  </Card>
+</Columns>
 
 ### 2. Scheduled Cloud Agents  
-**Time-based triggers**
+*Time-based triggers that run on a fixed cadence (daily, weekly, hourly).*
 
-<Card>
-Run on a fixed cadence (daily, weekly, hourly).
+<Columns cols={2}>
+  <Card title="Examples">
+  - Weekly vulnerability scans
+  - Nightly analytics summaries
+  - Regular dependency updates
+  </Card>
+  <Card title="Best for">
+  - Predictable recurring work
+  - Backlog prevention
+  - Drift detection
 </Card>
-
-**Examples**
-- Weekly vulnerability scans
-- Nightly analytics summaries
-- Regular dependency updates
-
-**Best for**
-- predictable recurring work
-- backlog prevention
-- drift detection
+</Columns>
 
 ### 3. Event-Driven Cloud Agents  
-**Signal-based triggers**
+*Signal-based triggers that react to real-time events from external systems.*
 
-<Card>
-React to real-time events from external systems.
+<Columns cols={2}>
+  <Card title="Examples">
+  - New high-severity alert
+  - Failed deployment
+  - Critical security finding
+ </Card>
+  <Card title="Best for">
+  - Operational workflows
+  - Incident response
+  - Rime-sensitive fixes
 </Card>
+</Columns>
 
-**Examples**
-- New high-severity alert
-- Failed deployment
-- Critical security finding
-
-**Best for**
-- operational workflows
-- incident response
-- time-sensitive fixes
-
----
-
-## Axis 2: Governance Level
+## Axis 2: Cloud Agent Governance Level
 
 This is where most teams get into trouble.
 
@@ -172,8 +162,6 @@ This is where most teams get into trouble.
 Cloud agents don’t fail because they’re autonomous. They fail because teams skip the control phase.
 </Warning>
 
----
-
 ## Cloud Agents vs Local / IDE Agents
 
 | Local / IDE Agents | Cloud Agents |
@@ -183,7 +171,7 @@ Cloud agents don’t fail because they’re autonomous. They fail because teams 
 | Developer-initiated | System-initiated |
 | Productivity focus | Reliability & ownership focus |
 
-Both are useful.  They solve different problems.
+Both are useful. They solve different problems.
 
 ## Why Cloud Agents Exist at All
 
@@ -193,7 +181,7 @@ Most engineering pain is recurrence.
 - security issues resurface
 - operational work interrupts feature work
 
-Cloud agents exist to:
+Cloud agent workflows exist to:
 - notice repetition
 - respond consistently
 - reduce future interruptions
@@ -227,13 +215,11 @@ Production cloud agents eventually require:
 
 Without this, cloud agents become brittle fast.
 
----
-
-## Where to Go Next
+## Where to Explore Cloud Agents
 
 <CardGroup cols={2}>
-  <Card title="Developer’s Guide to Cloud Agents" href="/guides/guide-to-cloud-agents">
-    Learn how cloud agents are implemented and used in practice.
+  <Card title="Cloud Agent Integrations" href="https://mission.continue.dev/integrations">
+    Explore how to connect your DevTools to cloud agents to implement and use in practice.
   </Card>
 
   <Card title="Mission Control" href="https://mission.continue.dev">
@@ -241,10 +227,6 @@ Without this, cloud agents become brittle fast.
   </Card>
 </CardGroup>
 
----
-
-## One Sentence to Remember
-
-<Callout type="success">
+<Tip>
 Cloud agents are how teams take ownership of work that happens after code ships.
-</Callout>
+</Tip>
