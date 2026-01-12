@@ -18,3 +18,15 @@ export const openedFilesLruCache = new QuickLRU<
 export const prevFilepaths = {
   filepaths: [] as string[],
 };
+
+export const updateCacheSize = (size: number) => {
+  openedFilesLruCache.resize(size);
+
+  while (openedFilesLruCache.size > size) {
+    const keys = [...openedFilesLruCache.keys()];
+    const lastKey = keys[keys.length - 1];
+    if (lastKey) {
+      openedFilesLruCache.delete(lastKey);
+    }
+  }
+};

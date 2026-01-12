@@ -28,9 +28,7 @@ vi.mock("./MermaidBlock", () => ({
 
 vi.mock("./FilenameLink", () => ({
   default: (props: any) => (
-    <div data-testid="mock-filename-link">
-      <mark>{props.children || "Fallback"}</mark>
-    </div>
+    <div data-testid="mock-filename-link">{props.children || "Fallback"}</div>
   ),
 }));
 

@@ -449,7 +449,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             }
           }
           if (codeProps.className?.includes("language-mermaid")) {
-            const codeText = String(codeProps.children || "");
+            const codeText = getReactNodeTextContent(codeProps.children);
             return <MermaidBlock code={codeText} />;
           }
           return <code {...codeProps}>{codeProps.children}</code>;

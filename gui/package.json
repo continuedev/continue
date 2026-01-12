@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "lint": "eslint --ext ts"
+    "lint": "eslint --ext ts",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",

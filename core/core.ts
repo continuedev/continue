@@ -6,6 +6,7 @@ import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import {
   openedFilesLruCache,
   prevFilepaths,
+  updateCacheSize,
 } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
@@ -184,6 +185,11 @@ export class Core {
 
       this.configHandler.onConfigUpdate((result) => {
         void (async () => {
+          const { config } = await this.configHandler.loadConfig();
+          if (config?.tabAutocompleteOptions?.maxOpenFiles) {
+            updateCacheSize(config.tabAutocompleteOptions.maxOpenFiles);
+          }
+
           const serializedResult =
             await this.configHandler.getSerializedConfig();
           this.messenger.send("configUpdate", {

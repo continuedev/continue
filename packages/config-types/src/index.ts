@@ -161,6 +161,7 @@ export const tabAutocompleteOptionsSchema = z.object({
     .optional(),
   experimental_includeDiff: z.union([z.boolean(), z.number()]).optional(),
   experimental_enableStaticContextualization: z.boolean().optional(),
+  maxOpenFiles: z.number().optional(),
 });
 export type TabAutocompleteOptions = z.infer<
   typeof tabAutocompleteOptionsSchema
