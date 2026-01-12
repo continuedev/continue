@@ -258,7 +258,9 @@ const OSRContextMenu = () => {
         onClick={(e) => {
           onMenuItemClick(e);
           // Check if we are inside a code block
-          let target = selectedRangeRef.current?.startContainer?.parentElement;
+          let target =
+            selectedRangeRef.current?.startContainer?.parentElement ||
+            targetElementRef.current;
           let codeBlock: HTMLElement | null = null;
           while (target && target !== document.body) {
             if (target.tagName === "PRE" || target.tagName === "CODE") {

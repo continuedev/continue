@@ -46,8 +46,18 @@ describe("useChatScroll", () => {
     const { result } = renderHook(() => useChatScroll(10, true, virtuosoRef));
 
     // Default shouldAutoScroll is true
+    // Pass true for isAtBottom
     const output = result.current.handleFollowOutput(true);
     expect(output).toBe("auto");
+  });
+
+  it("should return false for followOutput when streaming but NOT at bottom", () => {
+    const virtuosoRef = { current: null } as any;
+    const { result } = renderHook(() => useChatScroll(10, true, virtuosoRef));
+
+    // Pass false for isAtBottom
+    const output = result.current.handleFollowOutput(false);
+    expect(output).toBe(false);
   });
 
   it("should return false for followOutput when not streaming", () => {
@@ -56,29 +66,5 @@ describe("useChatScroll", () => {
 
     const output = result.current.handleFollowOutput(true);
     expect(output).toBe(false);
-  });
-
-  it("should update shouldAutoScroll ref on atBottomStateChange", () => {
-    const virtuosoRef = { current: null } as any;
-    const { result } = renderHook(() => useChatScroll(10, true, virtuosoRef));
-
-    // Initially true, so followOutput(true) -> "auto"
-    expect(result.current.handleFollowOutput(true)).toBe("auto");
-
-    // Scroll up (not at bottom)
-    result.current.handleAtBottomStateChange(false);
-
-    // Even if isAtBottom passed to followOutput is true (e.g. temporary check),
-    // the internal ref should prevent auto-scroll if we manually scrolled up?
-    // Wait, handleAtBottomStateChange updates the ref.
-    // handleFollowOutput checks the ref.
-
-    // If we call handleFollowOutput(true) now:
-    // ref is false. So it returns false.
-    expect(result.current.handleFollowOutput(true)).toBe(false);
-
-    // Scroll back down
-    result.current.handleAtBottomStateChange(true);
-    expect(result.current.handleFollowOutput(true)).toBe("auto");
   });
 });

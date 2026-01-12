@@ -6,8 +6,6 @@ export const useChatScroll = (
   isStreaming: boolean,
   virtuosoRef: RefObject<VirtuosoHandle>,
 ) => {
-  const shouldAutoScroll = useRef(true);
-
   const hasInitiallyScrolled = useRef(false);
 
   // Force scroll to bottom on initial load
@@ -29,18 +27,13 @@ export const useChatScroll = (
   }, [historyLength, virtuosoRef.current]);
 
   const handleAtBottomStateChange = (isAtBottom: boolean) => {
-    shouldAutoScroll.current = isAtBottom;
+    // No-op: we rely on isAtBottom passthrough in handleFollowOutput
   };
 
   const handleFollowOutput = (isAtBottom: boolean) => {
-    const should = isStreaming && shouldAutoScroll.current;
-
-    // Simplified logic: If we intend to autoscroll (shouldAutoScroll) and are streaming, do it.
-    // relying on Virtuoso's state tracking for shouldAutoScroll.
-    if (should) {
-      return "auto";
-    }
-    return false;
+    // If we are streaming and currently at the bottom, stick to the bottom.
+    // Otherwise, do not force scroll.
+    return isStreaming && isAtBottom ? "auto" : false;
   };
 
   return {

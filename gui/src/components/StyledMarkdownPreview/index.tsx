@@ -480,14 +480,32 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const lastScrolledMatch = useRef<string | null>(null);
+
+  // Scroll to active match
   useEffect(() => {
     if (!props.searchState?.currentMatch) return;
+
+    const { messageIndex, matchIndexInMessage } =
+      props.searchState.currentMatch;
+    const matchId = `${messageIndex}-${matchIndexInMessage}`;
+
+    // If we already scrolled to this match, don't force it again
+    // unless the user moved? No, standard find behavior is usually "scroll once per match selection"
+    if (lastScrolledMatch.current === matchId) return;
+
     const activeMatch =
       containerRef.current?.querySelector(".find-match.active");
     if (activeMatch) {
       activeMatch.scrollIntoView({ block: "center", behavior: "smooth" });
+      lastScrolledMatch.current = matchId;
     }
-  }, [props.searchState, reactContent]);
+  }, [
+    props.searchState?.currentMatch?.matchIndexInMessage,
+    props.searchState?.currentMatch?.messageIndex,
+    // We strictly need reactContent so the DOM is ready
+    reactContent,
+  ]);
 
   return (
     <StyledMarkdown
