@@ -10,8 +10,30 @@ import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+import {
+  parseEnvNumber,
+  truncateOutputFromStart,
+} from "../util/truncateOutput.js";
 
 import { Tool } from "./types.js";
+
+// Output truncation defaults
+const DEFAULT_BASH_MAX_CHARS = 50000;
+const DEFAULT_BASH_MAX_LINES = 1000;
+
+function getBashMaxChars(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
+    DEFAULT_BASH_MAX_CHARS,
+  );
+}
+
+function getBashMaxLines(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_LINES,
+    DEFAULT_BASH_MAX_LINES,
+  );
+}
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
@@ -45,6 +67,11 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         type: "string",
         description: "The command to execute in the terminal.",
       },
+      timeout: {
+        type: "number",
+        description:
+          "Optional timeout in seconds (max 600). Use this parameter for commands that take longer than the default 180 second timeout.",
+      },
     },
   },
   readonly: false,
@@ -75,7 +102,13 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       ],
     };
   },
-  run: async ({ command }: { command: string }): Promise<string> => {
+  run: async ({
+    command,
+    timeout,
+  }: {
+    command: string;
+    timeout?: number;
+  }): Promise<string> => {
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
@@ -85,10 +118,18 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
-      const TIMEOUT_MS =
-        process.env.NODE_ENV === "test" && process.env.TEST_TERMINAL_TIMEOUT
-          ? parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10)
-          : 120000; // 120 seconds default, configurable for tests
+      // Determine timeout: use provided timeout (capped at 600s), test env variable, or default 120s
+      let TIMEOUT_MS = 180000; // 180 seconds default
+      if (timeout !== undefined) {
+        // Cap at 600 seconds (10 minutes)
+        const cappedTimeout = Math.min(timeout, 600);
+        TIMEOUT_MS = cappedTimeout * 1000;
+      } else if (
+        process.env.NODE_ENV === "test" &&
+        process.env.TEST_TERMINAL_TIMEOUT
+      ) {
+        TIMEOUT_MS = parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10);
+      }
 
       const resetTimeout = () => {
         if (timeoutId) {
@@ -101,18 +142,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          // Truncate output if it has too many lines
-          const lines = output.split("\n");
-          if (lines.length > 5000) {
-            const truncatedOutput = lines.slice(0, 5000).join("\n");
-            resolve(
-              truncatedOutput +
-                `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-            );
-            return;
-          }
-
-          resolve(output);
+          resolve(
+            truncateOutputFromStart(output, {
+              maxChars: getBashMaxChars(),
+              maxLines: getBashMaxLines(),
+            }).output,
+          );
         }, TIMEOUT_MS);
       };
 
@@ -157,18 +192,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        // Truncate output if it has too many lines
-        const lines = output.split("\n");
-        if (lines.length > 5000) {
-          const truncatedOutput = lines.slice(0, 5000).join("\n");
-          resolve(
-            truncatedOutput +
-              `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
-          );
-          return;
-        }
-
-        resolve(output);
+        resolve(
+          truncateOutputFromStart(output, {
+            maxChars: getBashMaxChars(),
+            maxLines: getBashMaxLines(),
+          }).output,
+        );
       });
 
       child.on("error", (error) => {

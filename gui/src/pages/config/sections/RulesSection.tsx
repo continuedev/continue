@@ -132,8 +132,6 @@ interface RuleCardProps {
 
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-  const mode = useAppSelector((store) => store.session.mode);
   const policy = useAppSelector((state) =>
     rule.name
       ? state.ui.ruleSettings[rule.name] || DEFAULT_RULE_SETTING
@@ -397,6 +395,7 @@ function RulesSubSection() {
   const dispatch = useAppDispatch();
   const isLocal = selectedProfile?.profileType === "local";
   const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
+  const configLoading = useAppSelector((store) => store.config.loading);
 
   const handleAddRule = (mode?: string) => {
     const currentMode = mode || globalRulesMode;
@@ -487,6 +486,11 @@ function RulesSubSection() {
             {sortedRules.map((rule, index) => (
               <RuleCard key={index} rule={rule} />
             ))}
+            {configLoading && (
+              <div className="px-2 py-1.5 text-xs opacity-65">
+                Reloading rules from your config...
+              </div>
+            )}
           </div>
         ) : (
           <EmptyState message="No rules configured. Click the + button to add your first rule." />

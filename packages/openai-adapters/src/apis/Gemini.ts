@@ -1,3 +1,5 @@
+// IMPORTANT: Import nativeFetch FIRST to preserve native fetch before any pollution
+import { withNativeFetch } from "../util/nativeFetch.js";
 import { GoogleGenAI } from "@google/genai";
 import { OpenAI } from "openai/index";
 import {
@@ -70,9 +72,14 @@ export class GeminiApi implements BaseLlmApi {
 
   constructor(protected config: GeminiConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    this.genAI = new GoogleGenAI({
-      apiKey: this.config.apiKey,
-    });
+    // Create GoogleGenAI with native fetch to avoid pollution
+    // from Vercel AI SDK packages that can break stream handling
+    this.genAI = withNativeFetch(
+      () =>
+        new GoogleGenAI({
+          apiKey: this.config.apiKey,
+        }),
+    );
   }
 
   private _oaiPartToGeminiPart(
@@ -393,15 +400,19 @@ export class GeminiApi implements BaseLlmApi {
     model: string,
     convertedBody: ReturnType<typeof this._convertBody>,
   ) {
-    return genAI.models.generateContentStream({
-      model,
-      contents: convertedBody.contents,
-      config: {
-        systemInstruction: convertedBody.systemInstruction,
-        tools: convertedBody.tools,
-        ...convertedBody.generationConfig,
-      },
-    });
+    // Use native fetch temporarily for stream operation to get proper ReadableStream
+    // The withNativeFetch wrapper restores native fetch, makes the call, then reverts
+    return withNativeFetch(() =>
+      genAI.models.generateContentStream({
+        model,
+        contents: convertedBody.contents,
+        config: {
+          systemInstruction: convertedBody.systemInstruction,
+          tools: convertedBody.tools,
+          ...convertedBody.generationConfig,
+        },
+      }),
+    );
   }
 
   async *chatCompletionStream(

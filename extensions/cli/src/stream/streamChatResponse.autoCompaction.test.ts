@@ -18,6 +18,7 @@ vi.mock("../session.js", () => ({
   })),
   saveSession: vi.fn(),
   updateSessionHistory: vi.fn(),
+  trackSessionUsage: vi.fn(),
 }));
 
 vi.mock("../util/tokenizer.js", () => ({
@@ -98,7 +99,12 @@ describe("handleAutoCompaction", () => {
       wasCompacted: false,
     });
 
-    expect(shouldAutoCompact).toHaveBeenCalledWith(mockChatHistory, mockModel);
+    expect(shouldAutoCompact).toHaveBeenCalledWith({
+      chatHistory: mockChatHistory,
+      model: mockModel,
+      systemMessage: undefined,
+      tools: undefined,
+    });
   });
 
   it("should perform auto-compaction when context limit is approaching", async () => {
@@ -143,7 +149,12 @@ describe("handleAutoCompaction", () => {
       },
     );
 
-    expect(shouldAutoCompact).toHaveBeenCalledWith(mockChatHistory, mockModel);
+    expect(shouldAutoCompact).toHaveBeenCalledWith({
+      chatHistory: mockChatHistory,
+      model: mockModel,
+      systemMessage: undefined,
+      tools: undefined,
+    });
     expect(getAutoCompactMessage).toHaveBeenCalledWith(mockModel);
     expect(compactChatHistory).toHaveBeenCalledWith(
       mockChatHistory,

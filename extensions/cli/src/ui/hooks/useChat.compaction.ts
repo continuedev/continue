@@ -137,9 +137,10 @@ export async function handleAutoCompaction({
   currentCompactionIndex: number | null;
 }> {
   try {
-    // Check if auto-compaction is needed
     // Check if auto-compaction is needed using ChatHistoryItem directly
-    if (!model || !shouldAutoCompact(chatHistory, model)) {
+    // Note: TUI mode doesn't have access to tools/systemMessage at this point,
+    // so we use a simplified check. The streaming path has full context.
+    if (!model || !shouldAutoCompact({ chatHistory, model })) {
       return {
         currentChatHistory: chatHistory,
         currentCompactionIndex: _compactionIndex,

@@ -28,6 +28,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
+import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
 import {
   type Tool,
   type ToolCall,
@@ -35,6 +36,7 @@ import {
   ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
+import { uploadArtifactTool } from "./uploadArtifact.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
@@ -75,11 +77,16 @@ export async function getAllAvailableTools(
     tools.push(...BUILTIN_SEARCH_TOOLS);
   }
 
-  // Add ReportFailure tool if no agent ID is present
-  // (it requires --id to function and will confuse the agent if unavailable)
+  // Add agent-specific tools if agent ID is present
+  // (these require --id to function and will confuse the agent if unavailable)
   const agentId = getAgentIdFromArgs();
   if (agentId) {
     tools.push(reportFailureTool);
+
+    // UploadArtifact tool is gated behind beta flag
+    if (isBetaUploadArtifactToolEnabled()) {
+      tools.push(uploadArtifactTool);
+    }
   }
 
   // If model is capable, exclude editTool in favor of multiEditTool
@@ -200,12 +207,18 @@ export async function executeToolCall(
       arguments: toolCall.arguments,
     });
 
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PreToolUse");
+
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
     );
     const duration = Date.now() - startTime;
+
+    // Track edits if Git AI is enabled (no-op if not enabled)
+    await services.gitAiIntegration.trackToolUse(toolCall, "PostToolUse");
 
     telemetryService.logToolResult({
       toolName: toolCall.name,
