@@ -2,12 +2,12 @@ import ignore from "ignore";
 
 import { ToolImpl } from ".";
 import { walkDir } from "../../indexing/walkDir";
-import { resolveInputPath } from "../../util/pathResolver";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { resolveInputPath } from "../../util/pathResolver";
 
 export function resolveLsToolDirPath(dirPath: string | undefined) {
   if (!dirPath || dirPath === ".") {
-    return "/";
+    return ".";
   }
   // Don't strip leading slash from absolute paths - let the resolver handle it
   if (dirPath.startsWith(".") && !dirPath.startsWith("./")) {
