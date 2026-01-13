@@ -76,7 +76,8 @@ describe("CLIPlatformClient", () => {
         secretName: "ANTHROPIC_API_KEY",
       };
 
-      // No local env secret
+      // Ensure no local env secret exists
+      vi.stubEnv("ANTHROPIC_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       // API returns a user secret with value
@@ -114,7 +115,8 @@ describe("CLIPlatformClient", () => {
         secretName: "ANTHROPIC_API_KEY",
       };
 
-      // No local env secret
+      // Ensure no local env secret exists
+      vi.stubEnv("ANTHROPIC_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       // API returns a models_add_on result (has secretLocation but no value)
@@ -147,7 +149,8 @@ describe("CLIPlatformClient", () => {
         secretName: "OPENAI_API_KEY",
       };
 
-      // No local env secret
+      // Ensure no local env secret exists
+      vi.stubEnv("OPENAI_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       // API returns a free_trial result
@@ -186,7 +189,8 @@ describe("CLIPlatformClient", () => {
 
       // First secret is in local env
       vi.stubEnv("ANTHROPIC_API_KEY", "local-anthropic-key");
-      // Second secret is not in local env
+      // Ensure second secret is not in local env
+      vi.stubEnv("OPENAI_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       // API returns models_add_on for the second secret
@@ -340,7 +344,8 @@ describe("CLIPlatformClient", () => {
         secretName: "OPENAI_API_KEY",
       };
 
-      // No local env secret
+      // Ensure no local env secret exists
+      vi.stubEnv("OPENAI_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       // API returns models_add_on (the server can still resolve this)
