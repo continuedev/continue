@@ -1,35 +1,29 @@
 ---
-title: "Agents Overview"
-description: "Standardized AI workflows that combine prompts, rules, and tools to complete specific, repeatable tasks"
+title: "Cloud Agents & Continuous AI"
+description: "Standardized Cloud Agent workflows that combine prompts, rules, and tools to complete specific, repeatable tasks"
 sidebarTitle: "Overview"
 ---
+
+## What are Cloud Agents?
+Cloud Agents are AI workflows that execute on remote infrastructure (Continue Mission Control) rather than your local machine. Because they live in the cloud, they maintain persistent, secure connections to your development tools and can be triggered in two ways:
+
+- On-Demand: Manually triggered via Chat, Tasks, or the CLI for complex, human-guided work.
+
+- Automated: Automatically triggered by schedules (Cron) or events (Webhooks) for background maintenance.
+
+Unlike local assistants, Cloud Agents provide a centralized "Mission Control" where teams can collaborate on tasks, review shared logs, and standardize automation across repositories.
+
 
 <Card title="Agents in Continue" icon="robot">
   Agents are custom AI workflows that combine a prompt, rules, and tools (MCPs and more) to complete specific, repeatable tasks.
   They live in the Continue Mission Control and can be executed from Mission Control (web interface), TUI mode, or headless automation.
 </Card>
 
-## What Are Agents?
 
-Agents let your team standardize common workflows like opening GitHub PRs, summarizing analytics, or auditing security. Each agent includes:
 
-### Agent Components
+## Ways to Run Cloud Agents
 
-| **Component** | **Description** | **Example** |
-|----------------|-----------------|--------------|
-| **Prompt** | The agent’s main instruction that defines what it does and how it should behave. Additional user input is appended when invoked. | Example prompt: “Summarize ongoing work with status, blockers, and next steps. Use markdown formatting and a concise, professional tone.” |
-| **Rules** | Define consistent standards or behaviors that guide how the agent responds. Rules help ensure reliability across team usage. | “Always include related issue or PR links when summarizing work.” |
-| **Tools / MCPs** | External systems or integrations the agent can call to complete tasks. MCPs (Model Context Protocols) extend functionality through APIs. | GitHub, PostHog, Supabase |
-| **Model** | The large language model that powers the agent’s reasoning and output generation. | Claude Sonnet 4.5 |
-| **Visibility** | Determines who can view or use the agent. Controls access at creation time. | Public, Organization, or Private |
-
-<Info>
-  Mission Control is in beta. Please share any feedback with us in [GitHub discussions](https://github.com/continuedev/continue/discussions/8051).
-</Info>
-
-## Ways to Run Agents
-
-You can run Agents in three main ways:
+These execution modes allow Continue agents to function as cloud agents, running continuously, headlessly, or on schedules without requiring a developer in the loop:
 
 <Tabs>
   <Tab title="🌐 Mission Control">
@@ -67,51 +61,78 @@ You can run Agents in three main ways:
     Run one-off or scheduled tasks automatically without interaction.
     
     ```bash
-    cn -p --agent my-org/snyk-agent "Run weekly security scan" --auto
+    cn -p --agent my-org/snyk-agent "Run weekly security scan"
     ```
     
     Perfect for: CI/CD pipelines, scheduled tasks, webhook integrations
   </Tab>
 </Tabs>
 
-## Pre-configured Agents
+## Local vs. Cloud Agents
+
+| Feature | Local Agents (IDE / TUI) | Cloud Agents (Mission Control) |
+|---------|--------------------------|--------------------------------|
+| Compute Location | Your Local Machine | Remote Cloud Infrastructure |
+| Primary Use Case | fast, private iteration and "single-player" coding | Collaborative tasks, heavy processing, and reliable automation |
+| Context Access | Limited to open files and local git state | Full repository access + integrated tools (Sentry, Snyk, etc.) |
+| Triggers | Manual Tasks / CLI | Hybrid: Manual Chat, Cron Schedules, or Event Webhooks |
+| Availability | Stops when you close your laptop | Always On: Runs asynchronously in the background |
+
+## Pre-configured Cloud Agents
 
 Skip the setup and use battle-tested agents from our cookbook collection:
 
 <CardGroup cols={2}>
-  <Card title="🔒 Security Scanning" icon="shield-check" href="/guides/snyk-mcp-continue-cookbook">
+  <Card title="🔒 Security Scanning" icon="shield-check" href="https://hub.continue.dev/continuedev/snyk-continuous-ai-agent">
+    
     `continuedev/snyk-continuous-ai-agent`
-    Finds vulnerabilities and opens PRs with fixes
+    
+A cloud agent that monitors vulnerabilities and automatically opens PRs with fixes.    
   </Card>
   
-  <Card title="🐛 GitHub Management" icon="github" href="/guides/github-mcp-continue-cookbook">
+  <Card title="🐛 GitHub Management" icon="github" href="https://hub.continue.dev/continuedev/github-project-manager-agent">
+    
     `continuedev/github-project-manager-agent`
-    Triages issues and manages project workflows
+    
+  A cloud agent that triages issues and manages project workflows
+    
   </Card>
   
-  <Card title="📊 Analytics Insights" icon="chart-bar" href="/guides/posthog-github-continuous-ai">
+  <Card title="📊 Analytics Insights" icon="chart-bar" href="https://hub.continue.dev/continuedev/posthog-continuous-ai-agent">
+    
     `continuedev/posthog-continuous-ai-agent`
-    Analyzes user data and creates actionable tasks
+    
+   A cloud agent that analyzes user data and creates actionable tasks
+    
   </Card>
   
-  <Card title="⚡ Performance Optimization" icon="gauge-high" href="/guides/netlify-mcp-continuous-deployment">
+  <Card title="⚡ Performance Optimization" icon="gauge-high" href="https://hub.continue.dev/continuedev/netlify-continuous-ai-agent">
+    
     `continuedev/netlify-continuous-ai-agent`
-    Monitors Core Web Vitals and optimizes deployments
+    
+    A cloud agent that monitors Core Web Vitals and optimizes deployments
+    
   </Card>
   
-  <Card title="🗄️ Database Auditing" icon="database" href="/guides/supabase-mcp-database-workflow">
+  <Card title="🗄️ Database Auditing" icon="database" href="https://hub.continue.dev/continuedev/supabase-agent">
+    
     `continuedev/supabase-agent`
-    Audits RLS security and generates migrations
+    
+  A cloud agent that audits RLS security and generates migrations
+    
   </Card>
   
-  <Card title="🔄 Data Pipelines" icon="arrows-rotate" href="/guides/dlt-mcp-continue-cookbook">
+  <Card title="🔄 Data Pipelines" icon="arrows-rotate" href="https://hub.continue.dev/continuedev/dlt-agent">
+    
     `continuedev/dlt-agent`
-    Inspects pipelines and debugs load errors
+    
+   A cloud agent that inspects pipelines and debugs load errors
+    
   </Card>
 </CardGroup>
 
 <Info>
-  **Explore More Agents**: Browse the complete collection of pre-configured agents and MCP integration cookbooks in our [Guides Overview](/guides/overview#mcp-integration-cookbooks).
+  **Explore More Cloud Agents**: Browse the complete collection of pre-configured agents and MCP integration cookbooks in our [Guides Overview](/guides/overview#mcp-integration-cookbooks).
 </Info>
 
 {/* ## Webhook Integrations
@@ -222,7 +243,7 @@ The practice of using cloud agents, which we call Continuous AI, requires foreth
     Learn to run agents from the command line
   </Card>
   
-  <Card title="Mission Control" icon="desktop" href="https://hub.continue.dev/agents">
+  <Card title="Mission Control" icon="desktop" href="https://hub.continue.dev/hub?type=agents">
     Access the web interface to manage agents
   </Card>
 </CardGroup>

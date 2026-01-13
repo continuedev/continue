@@ -267,6 +267,11 @@ export interface IContextProvider {
   get deprecationMessage(): string | null;
 }
 
+export interface SessionUsage extends Usage {
+  /** Total cumulative cost in USD for all LLM API calls in this session */
+  totalCost: number;
+}
+
 export interface Session {
   sessionId: string;
   title: string;
@@ -276,6 +281,8 @@ export interface Session {
   mode?: MessageModes;
   /** Optional: title of the selected chat model for this session */
   chatModelTitle?: string | null;
+  /** Optional: cumulative usage and cost for all LLM API calls in this session */
+  usage?: SessionUsage;
 }
 
 export interface BaseSessionMetadata {
@@ -1510,6 +1517,7 @@ export interface RangeInFileWithNextEditInfo {
   filepath: string;
   range: Range;
   fileContents: string;
+  fileContentsBefore: string;
   editText: string;
   afterCursorPos: Position;
   beforeCursorPos: Position;

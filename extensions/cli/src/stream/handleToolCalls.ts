@@ -24,13 +24,20 @@ import {
 } from "./streamChatResponse.helpers.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
+interface HandleToolCallsOptions {
+  toolCalls: ToolCall[];
+  chatHistory: ChatHistoryItem[];
+  content: string;
+  callbacks: StreamCallbacks | undefined;
+  isHeadless: boolean;
+  usage?: any;
+}
+
 export async function handleToolCalls(
-  toolCalls: ToolCall[],
-  chatHistory: ChatHistoryItem[],
-  content: string,
-  callbacks: StreamCallbacks | undefined,
-  isHeadless: boolean,
+  options: HandleToolCallsOptions,
 ): Promise<boolean> {
+  const { toolCalls, chatHistory, content, callbacks, isHeadless, usage } =
+    options;
   const chatHistorySvc = services.chatHistory;
   const useService =
     typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
@@ -38,15 +45,17 @@ export async function handleToolCalls(
     if (content) {
       if (useService) {
         // Service-driven: write assistant message via service
-        chatHistorySvc.addAssistantMessage(content);
+        chatHistorySvc.addAssistantMessage(content, undefined, usage);
       } else {
         // Fallback only when service is unavailable
-        chatHistory.push(
-          createHistoryItem({
-            role: "assistant",
-            content,
-          }),
-        );
+        const message: any = {
+          role: "assistant",
+          content,
+        };
+        if (usage) {
+          message.usage = usage;
+        }
+        chatHistory.push(createHistoryItem(message));
       }
     }
     return false;
@@ -86,10 +95,14 @@ export async function handleToolCalls(
     chatHistorySvc.addAssistantMessage(
       assistantMessage.content || "",
       assistantMessage.toolCalls,
+      usage,
     );
   } else {
     // Fallback only when service is unavailable
-    chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
+    const messageWithUsage = usage
+      ? { ...assistantMessage, usage }
+      : assistantMessage;
+    chatHistory.push(createHistoryItem(messageWithUsage, [], toolCallStates));
   }
 
   // First preprocess the tool calls

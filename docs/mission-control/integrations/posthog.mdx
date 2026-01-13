@@ -1,0 +1,84 @@
+---
+title: "PostHog Integration"
+description: "Connect PostHog to Mission Control so Cloud Agents can keep analytics and tracking in sync with code changes, ensuring dashboards reflect what actually shipped."
+---
+
+<Card
+  title="Connect PostHog to enable Cloud Agents to:"
+  icon="chart-line"
+  href="https://hub.continue.dev/integrations/posthog"
+>
+  - Update analytics dashboards automatically after PRs merge
+  - Keep tracking and feature usage aligned with shipped code
+  - Analyze user behavior and product adoption trends
+  - Reduce manual analytics maintenance for engineering teams
+</Card>
+
+---
+
+## Official Workflow Templates
+
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate PostHog updates.
+
+<CardGroup cols={2}>
+  <Card title="Update PostHog Dashboards" icon="chart-bar">
+    When a pull request is merged, this workflow updates PostHog dashboards and tracking to reflect newly shipped features or changes.
+  </Card>
+</CardGroup>
+
+<Tip>
+Official workflow templates may expand over time as new analytics patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → PostHog](https://hub.continue.dev/integrations/posthog)**.
+</Tip>
+
+## Advanced Use Cases
+
+<Accordion title="Advanced: Custom PostHog Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+
+- Generate product insights from usage data and open follow-up issues
+- Detect tracking gaps when new features ship
+- Summarize weekly product metrics for stakeholders
+- Correlate feature flags with user adoption and retention
+- Trigger investigations when key metrics regress
+</Accordion>
+
+---
+
+## Access & Permissions
+
+When connecting PostHog, you’ll provide an API key that allows Continue to query analytics data and update dashboards.
+
+- **API key access**  
+  You’ll need a PostHog API key with permission to read analytics data and modify dashboards.
+
+- **Project access**  
+  Cloud Agents can only access the PostHog project associated with the API key you provide.
+
+You can rotate or revoke the API key at any time from your PostHog settings.
+
+<Info>
+  PostHog supports both cloud-hosted and self-hosted instances.  
+  You’ll need your project’s API key and PostHog host URL available when connecting.
+</Info>
+
+---
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="PostHog GitHub Continuous AI"
+    icon="book-open"
+    href="/guides/posthog-github-continuous-ai"
+  >
+    Build product-led development workflows using PostHog and Continue.
+  </Card>
+
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="https://hub.continue.dev/settings/integrations/github"
+  >
+    Combine PostHog and GitHub to keep analytics aligned with code.
+  </Card>
+</CardGroup>

@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "Continue",
   "banner": {
-    "content": "Check out our new look in Mission Control. It's now easier than ever to create [Workflows](https://hub.continue.dev/workflows), [Integrate with the tools you use](https://hub.continue.dev/integrations), and to create a one-off Task.",
+    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
     "dismissable": true
   },
   "colors": {
@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "changelog"]
           },
           {
             "group": "Mission Control",
@@ -37,7 +37,11 @@
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
-                  "mission-control/integrations/slack-agent"
+                  "mission-control/integrations/slack",
+                  "mission-control/integrations/posthog",
+                  "mission-control/integrations/atlassian",
+                  "mission-control/integrations/netlify",
+                  "mission-control/integrations/supabase"
                 ]
               },
               "mission-control/metrics",
@@ -87,7 +91,8 @@
               "cli/overview",
               "cli/install",
               "cli/quick-start",
-              "cli/guides"
+              "cli/guides",
+              "cli/configuration"
             ]
           },
           {
@@ -203,6 +208,7 @@
                       "customize/model-providers/more/groq",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
+                      "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/together",
@@ -696,10 +702,6 @@
     {
       "source": "/customize/deep-dives/vscode-actions",
       "destination": "/customize/overview"
-    },
-    {
-      "source": "/changelog",
-      "destination": "/reference"
     },
     {
       "source": "/customization/code-config",
@@ -1481,11 +1483,15 @@
     },
     {
       "source": "/hub/agents/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
+    },
+    {
+      "source": "/mission-control/integrations/slack-agent",
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/github",

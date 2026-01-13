@@ -1,6 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
+import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
 import { services } from "../services/index.js";
 import { ToolCall } from "../tools/index.js";
@@ -17,6 +18,7 @@ export interface CompactionHelperOptions {
   isHeadless: boolean;
   callbacks?: StreamCallbacks;
   systemMessage: string;
+  tools?: ChatCompletionTool[];
 }
 
 /**
@@ -26,8 +28,15 @@ export async function handlePreApiCompaction(
   chatHistory: ChatHistoryItem[],
   options: CompactionHelperOptions,
 ): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
-  const { model, llmApi, isCompacting, isHeadless, callbacks, systemMessage } =
-    options;
+  const {
+    model,
+    llmApi,
+    isCompacting,
+    isHeadless,
+    callbacks,
+    systemMessage,
+    tools,
+  } = options;
 
   if (isCompacting) {
     return { chatHistory, wasCompacted: false };
@@ -41,6 +50,7 @@ export async function handlePreApiCompaction(
         onContent: callbacks?.onContent,
       },
       systemMessage,
+      tools,
     });
 
   if (wasCompacted) {
@@ -67,7 +77,8 @@ export async function handlePostToolValidation(
   chatHistory: ChatHistoryItem[],
   options: CompactionHelperOptions,
 ): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
-  const { model, llmApi, isHeadless, callbacks, systemMessage } = options;
+  const { model, llmApi, isHeadless, callbacks, systemMessage, tools } =
+    options;
 
   if (toolCalls.length === 0) {
     return { chatHistory, wasCompacted: false };
@@ -82,21 +93,14 @@ export async function handlePostToolValidation(
     chatHistory = chatHistorySvc.getHistory();
   }
 
-  // Validate with system message to catch tool result overflow
-  const postToolSystemItem: ChatHistoryItem = {
-    message: {
-      role: "system",
-      content: systemMessage,
-    },
-    contextItems: [],
-  };
-
   const SAFETY_BUFFER = 100;
-  const postToolValidation = validateContextLength(
-    [postToolSystemItem, ...chatHistory],
+  const postToolValidation = validateContextLength({
+    chatHistory,
     model,
-    SAFETY_BUFFER,
-  );
+    safetyBuffer: SAFETY_BUFFER,
+    systemMessage,
+    tools,
+  });
 
   // If tool results pushed us over limit, force compaction regardless of threshold
   if (!postToolValidation.isValid) {
@@ -114,6 +118,7 @@ export async function handlePostToolValidation(
           onContent: callbacks?.onContent,
         },
         systemMessage,
+        tools,
       });
 
     if (wasCompacted) {
@@ -127,11 +132,13 @@ export async function handlePostToolValidation(
       }
 
       // Verify compaction brought us under the limit
-      const postCompactionValidation = validateContextLength(
-        [postToolSystemItem, ...chatHistory],
+      const postCompactionValidation = validateContextLength({
+        chatHistory,
         model,
-        SAFETY_BUFFER,
-      );
+        safetyBuffer: SAFETY_BUFFER,
+        systemMessage,
+        tools,
+      });
 
       if (!postCompactionValidation.isValid) {
         logger.error(
@@ -171,7 +178,8 @@ export async function handleNormalAutoCompaction(
   shouldContinue: boolean,
   options: CompactionHelperOptions,
 ): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
-  const { model, llmApi, isHeadless, callbacks, systemMessage } = options;
+  const { model, llmApi, isHeadless, callbacks, systemMessage, tools } =
+    options;
 
   if (!shouldContinue) {
     return { chatHistory, wasCompacted: false };
@@ -193,6 +201,7 @@ export async function handleNormalAutoCompaction(
         onContent: callbacks?.onContent,
       },
       systemMessage,
+      tools,
     });
 
   if (wasCompacted) {

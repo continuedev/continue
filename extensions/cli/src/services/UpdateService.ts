@@ -170,17 +170,15 @@ export class UpdateService extends BaseService<UpdateServiceState> {
 
       this.setState({
         status: UpdateStatus.UPDATED,
-        message: `${isAutoUpdate ? "Auto-updated to" : "Restart for"} v${this.currentState.latestVersion}`,
+        message: `Updated to v${this.currentState.latestVersion}`,
         isUpdateAvailable: false,
       });
-      if (isAutoUpdate) {
-        this.restartCLI();
-      }
+      this.restartCLI();
     } catch (error: any) {
       logger.error("Error updating CLI:", error);
       this.setState({
         status: UpdateStatus.ERROR,
-        message: isAutoUpdate ? "Auto-update failed" : "Update failed",
+        message: "Update failed",
         error,
       });
       setTimeout(() => {

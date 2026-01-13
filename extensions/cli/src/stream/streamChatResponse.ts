@@ -193,7 +193,7 @@ interface ProcessStreamingResponseOptions {
 }
 
 // Process a single streaming response and return whether we need to continue
-// eslint-disable-next-line max-statements
+// eslint-disable-next-line max-statements, complexity
 export async function processStreamingResponse(
   options: ProcessStreamingResponseOptions,
 ): Promise<{
@@ -201,6 +201,7 @@ export async function processStreamingResponse(
   finalContent: string; // Added field for final content only
   toolCalls: ToolCall[];
   shouldContinue: boolean;
+  usage?: any;
 }> {
   const {
     model,
@@ -214,25 +215,17 @@ export async function processStreamingResponse(
 
   let chatHistory = options.chatHistory;
 
-  // Create temporary system message item for validation
-  const systemMessageItem: ChatHistoryItem = {
-    message: {
-      role: "system",
-      content: systemMessage,
-    },
-    contextItems: [],
-  };
-
   // Safety buffer to account for tokenization estimation errors
   const SAFETY_BUFFER = 100;
 
-  // Validate context length INCLUDING system message
-  let historyWithSystem = [systemMessageItem, ...chatHistory];
-  let validation = validateContextLength(
-    historyWithSystem,
+  // Validate context length INCLUDING system message and tools
+  let validation = validateContextLength({
+    chatHistory,
     model,
-    SAFETY_BUFFER,
-  );
+    safetyBuffer: SAFETY_BUFFER,
+    systemMessage,
+    tools,
+  });
 
   // Prune last messages until valid (excluding system message)
   while (chatHistory.length > 1 && !validation.isValid) {
@@ -242,9 +235,14 @@ export async function processStreamingResponse(
     }
     chatHistory = prunedChatHistory;
 
-    // Re-validate with system message
-    historyWithSystem = [systemMessageItem, ...chatHistory];
-    validation = validateContextLength(historyWithSystem, model, SAFETY_BUFFER);
+    // Re-validate with system message and tools
+    validation = validateContextLength({
+      chatHistory,
+      model,
+      safetyBuffer: SAFETY_BUFFER,
+      systemMessage,
+      tools,
+    });
   }
 
   if (!validation.isValid) {
@@ -284,6 +282,7 @@ export async function processStreamingResponse(
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
+  let fullUsage: any = null;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -301,6 +300,7 @@ export async function processStreamingResponse(
       if (chunk.usage) {
         inputTokens = chunk.usage.prompt_tokens || 0;
         outputTokens = chunk.usage.completion_tokens || 0;
+        fullUsage = chunk.usage; // Capture full usage including cache details
       }
 
       // Check if we should abort
@@ -338,8 +338,15 @@ export async function processStreamingResponse(
       outputTokens,
       model,
       tools,
+      fullUsage,
     });
     const totalDuration = responseEndTime - requestStartTime;
+
+    // Enhance fullUsage with model and cost for saving to session
+    if (fullUsage) {
+      fullUsage.model = model.model;
+      fullUsage.cost_cents = Math.round(cost * 100); // Convert dollars to cents
+    }
 
     logger.debug("Stream complete", {
       chunkCount,
@@ -347,6 +354,8 @@ export async function processStreamingResponse(
       toolCallsCount: toolCallsMap.size,
       inputTokens,
       outputTokens,
+      cacheReadTokens: fullUsage?.prompt_tokens_details?.cache_read_tokens,
+      cacheWriteTokens: fullUsage?.prompt_tokens_details?.cache_write_tokens,
       cost,
       duration: totalDuration,
     });
@@ -377,6 +386,7 @@ export async function processStreamingResponse(
         finalContent: aiResponse,
         toolCalls: [],
         shouldContinue: false,
+        usage: fullUsage,
       };
     }
 
@@ -413,6 +423,7 @@ export async function processStreamingResponse(
     finalContent: finalContent,
     toolCalls: validToolCalls,
     shouldContinue: validToolCalls.length > 0,
+    usage: fullUsage,
   };
 }
 
@@ -450,7 +461,10 @@ export async function streamChatResponse(
       services.toolPermissions.getState().currentMode,
     );
 
-    // Pre-API auto-compaction checkpoint
+    // Recompute tools on each iteration to handle mode changes during streaming
+    const tools = await getRequestTools(isHeadless);
+
+    // Pre-API auto-compaction checkpoint (now includes tools)
     const preCompactionResult = await handlePreApiCompaction(chatHistory, {
       model,
       llmApi,
@@ -458,14 +472,12 @@ export async function streamChatResponse(
       isHeadless,
       callbacks,
       systemMessage,
+      tools,
     });
     chatHistory = preCompactionResult.chatHistory;
     if (preCompactionResult.wasCompacted) {
       compactionOccurredThisTurn = true;
     }
-
-    // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getRequestTools(isHeadless);
 
     logger.debug("Tools prepared", {
       toolCount: tools.length,
@@ -473,7 +485,7 @@ export async function streamChatResponse(
     });
 
     // Get response from LLM
-    const { content, toolCalls, shouldContinue } =
+    const { content, toolCalls, shouldContinue, usage } =
       await processStreamingResponse({
         isHeadless,
         chatHistory,
@@ -503,13 +515,14 @@ export async function streamChatResponse(
     handleContentDisplay(content, callbacks, isHeadless);
 
     // Handle tool calls and check for early return. This updates history via ChatHistoryService.
-    const shouldReturn = await handleToolCalls(
+    const shouldReturn = await handleToolCalls({
       toolCalls,
       chatHistory,
       content,
       callbacks,
       isHeadless,
-    );
+      usage,
+    });
 
     if (shouldReturn) {
       return finalResponse || content || fullResponse;
@@ -526,6 +539,7 @@ export async function streamChatResponse(
         isHeadless,
         callbacks,
         systemMessage,
+        tools,
       },
     );
     chatHistory = postToolResult.chatHistory;
@@ -544,6 +558,7 @@ export async function streamChatResponse(
         isHeadless,
         callbacks,
         systemMessage,
+        tools,
       },
     );
     chatHistory = compactionResult.chatHistory;

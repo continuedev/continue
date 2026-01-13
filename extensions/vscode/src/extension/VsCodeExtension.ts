@@ -58,7 +58,11 @@ import {
 } from "../activation/SelectionChangeManager";
 import { GhostTextAcceptanceTracker } from "../autocomplete/GhostTextAcceptanceTracker";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
-import { handleTextDocumentChange } from "../util/editLoggingUtils";
+import {
+  clearDocumentContentCache,
+  handleTextDocumentChange,
+  initDocumentContentCache,
+} from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -476,6 +480,16 @@ export class VsCodeExtension {
       });
     }
 
+    // Initialize document content cache for tracking pre-edit content
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      initDocumentContentCache(document);
+    });
+
+    // Initialize cache for all currently open documents
+    for (const document of vscode.workspace.textDocuments) {
+      initDocumentContentCache(document);
+    }
+
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (event.contentChanges.length > 0) {
         selectionManager.documentChanged();
@@ -505,6 +519,7 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidCloseTextDocument(async (event) => {
+      clearDocumentContentCache(event.uri.toString());
       this.core.invoke("files/closed", {
         uris: [event.uri.toString()],
       });

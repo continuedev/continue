@@ -1,9 +1,6 @@
 name: Stable Release
 
 on:
-  schedule:
-    # Run every Monday at 10am UTC (1 hour after beta release)
-    - cron: "0 10 * * 1"
   workflow_dispatch:
     inputs:
       release_type:
