@@ -34,43 +34,58 @@ You can run Agents in three main ways:
 <Tabs>
   <Tab title="🌐 Mission Control">
     **Interactive web interface**
-    
+
     Trigger from the Continue Mission Control and review results in real-time.
-    
+
     ```bash
     # Navigate to hub.continue.dev/agents
     # Click "Run Agent" on any agent
     # Monitor progress and review outputs
     ```
-    
+
     Perfect for: Interactive debugging, reviewing agent outputs, team collaboration
   </Tab>
 
   <Tab title="💻 TUI Mode">
     **Interactive terminal mode**
-    
+
     Launch from terminal for live interaction and testing.
-    
+
     ```bash
     cn --agent my-org/github-pr-agent
     # Interactive chat interface opens
     # Type your specific request
     # Review and approve actions
     ```
-    
+
     Perfect for: Local development, testing prompts, quick one-off tasks
   </Tab>
 
   <Tab title="🤖 Headless Mode">
     **Automated execution**
-    
+
     Run one-off or scheduled tasks automatically without interaction.
-    
+
     ```bash
     cn -p --agent my-org/snyk-agent "Run weekly security scan" --auto
     ```
-    
+
     Perfect for: CI/CD pipelines, scheduled tasks, webhook integrations
+  </Tab>
+
+  <Tab title="📁 Local Agents">
+    **Version-controlled agents in your repository**
+
+    Define agents in `.continue/agents/` and run them with the CLI or GitHub Actions.
+
+    ```bash
+    # Run a local agent file
+    cn --agent .continue/agents/my-agent.md
+    ```
+
+    Perfect for: Team-shared workflows, CI/CD automation, version-controlled agent definitions
+
+    [Learn more about local agents →](/guides/run-agents-locally)
   </Tab>
 </Tabs>
 
@@ -213,15 +228,19 @@ The practice of using cloud agents, which we call Continuous AI, requires foreth
   <Card title="Create an Agent" icon="plus" href="/hub/agents/create-and-edit">
     Build your first custom agent with prompts, rules, and tools
   </Card>
-  
+
+  <Card title="Run Agents Locally" icon="folder-open" href="/guides/run-agents-locally">
+    Set up version-controlled agents in your repository
+  </Card>
+
   <Card title="Explore Cookbooks" icon="book-open" href="/guides/overview#mcp-integration-cookbooks">
     Browse pre-built agents for security, analytics, and more
   </Card>
-  
+
   <Card title="CLI Guide" icon="terminal" href="/cli/overview">
     Learn to run agents from the command line
   </Card>
-  
+
   <Card title="Mission Control" icon="desktop" href="https://hub.continue.dev/agents">
     Access the web interface to manage agents
   </Card>
