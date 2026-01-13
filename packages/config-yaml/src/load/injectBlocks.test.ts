@@ -75,10 +75,11 @@ models:
     expect(result.config!.models).toBeDefined();
     expect(result.config!.models!.length).toBe(1);
 
-    // Check that inputs were converted to secrets in the model
+    // Check that inputs were converted to secrets and then to FQSNs
+    // For file-type blocks, the FQSN format is: ${{ secrets.//secretName }}
     const model = result.config!.models![0]!;
-    expect(model.apiKey).toBe("${{ secrets.openaiKey }}");
-    expect(model.apiBase).toBe("${{ secrets.customEndpoint }}");
+    expect(model.apiKey).toBe("${{ secrets.//openaiKey }}");
+    expect(model.apiBase).toBe("${{ secrets.//customEndpoint }}");
     expect(model.name).toBe("gpt-4");
     expect(model.provider).toBe("openai");
     expect(model.model).toBe("gpt-4");
@@ -126,14 +127,16 @@ rules:
     expect(result.config!.rules).toBeDefined();
     expect(result.config!.rules!.length).toBe(1);
 
-    // Check that input was converted to secret in the rule
+    // Check that input was converted to secret and then to FQSN
     // Note: string rules get wrapped in objects with sourceFile when injected
     const rule = result.config!.rules![0]!;
     if (typeof rule === "string") {
-      expect(rule).toBe("Use ${{ secrets.codeStyle }} formatting consistently");
+      expect(rule).toBe(
+        "Use ${{ secrets.//codeStyle }} formatting consistently",
+      );
     } else {
       expect(rule.rule).toBe(
-        "Use ${{ secrets.codeStyle }} formatting consistently",
+        "Use ${{ secrets.//codeStyle }} formatting consistently",
       );
     }
 
@@ -182,11 +185,11 @@ docs:
     expect(result.config!.docs).toBeDefined();
     expect(result.config!.docs!.length).toBe(1);
 
-    // Check that inputs were converted to secrets in the doc config
+    // Check that inputs were converted to secrets and then to FQSNs
     const doc = result.config!.docs![0]!;
-    expect(doc.startUrl).toBe("${{ secrets.docsBaseUrl }}/api");
-    expect(doc.rootUrl).toBe("${{ secrets.docsBaseUrl }}");
-    expect(doc.faviconUrl).toBe("${{ secrets.docsBaseUrl }}/favicon.ico");
+    expect(doc.startUrl).toBe("${{ secrets.//docsBaseUrl }}/api");
+    expect(doc.rootUrl).toBe("${{ secrets.//docsBaseUrl }}");
+    expect(doc.faviconUrl).toBe("${{ secrets.//docsBaseUrl }}/favicon.ico");
     expect(doc.name).toBe("project-docs");
 
     // Check that no input variables remain
@@ -233,10 +236,10 @@ prompts:
     expect(result.config!.prompts).toBeDefined();
     expect(result.config!.prompts!.length).toBe(1);
 
-    // Check that inputs were converted to secrets in the prompt
+    // Check that inputs were converted to secrets and then to FQSNs
     const prompt = result.config!.prompts![0]!;
     expect(prompt.prompt).toBe(
-      "You are a ${{ secrets.roleType }} assistant. Use ${{ secrets.responseStyle }} responses.",
+      "You are a ${{ secrets.//roleType }} assistant. Use ${{ secrets.//responseStyle }} responses.",
     );
     expect(prompt.name).toBe("custom-prompt");
     expect(prompt.description).toBe("A customizable prompt");
@@ -298,22 +301,22 @@ rules:
 
     expect(result.config).toBeDefined();
 
-    // Check model block conversion
+    // Check model block conversion (file-type blocks use // as FQSN prefix)
     expect(result.config!.models).toBeDefined();
     expect(result.config!.models!.length).toBe(1);
     const model = result.config!.models![0]!;
-    expect(model.model).toBe("${{ secrets.modelName }}");
-    expect(model.apiKey).toBe("${{ secrets.apiKey }}");
+    expect(model.model).toBe("${{ secrets.//modelName }}");
+    expect(model.apiKey).toBe("${{ secrets.//apiKey }}");
 
     // Check rules block conversion
     expect(result.config!.rules).toBeDefined();
     expect(result.config!.rules!.length).toBe(1);
     const rule = result.config!.rules![0]!;
     if (typeof rule === "string") {
-      expect(rule).toBe("Follow ${{ secrets.codingStandard }} conventions");
+      expect(rule).toBe("Follow ${{ secrets.//codingStandard }} conventions");
     } else {
       expect(rule.rule).toBe(
-        "Follow ${{ secrets.codingStandard }} conventions",
+        "Follow ${{ secrets.//codingStandard }} conventions",
       );
     }
 
@@ -417,15 +420,15 @@ rules:
       ruleText = rule.rule;
     }
 
-    // Input should be converted to secret, others should remain unchanged
+    // Input should be converted to secret and then to FQSN, others should also get FQSN treatment
     expect(ruleText).toBe(
-      "Input: ${{ secrets.userSetting }} | Secret: ${{ secrets.apiKey }} | Continue: ${{ continue.workspaceRoot }}",
+      "Input: ${{ secrets.//userSetting }} | Secret: ${{ secrets.//apiKey }} | Continue: ${{ continue.workspaceRoot }}",
     );
 
     // Verify only inputs were converted
     const configStr = JSON.stringify(result.config);
     expect(configStr).not.toContain("inputs.userSetting");
-    expect(configStr).toContain("secrets.apiKey");
+    expect(configStr).toContain("secrets.//apiKey");
     expect(configStr).toContain("continue.workspaceRoot");
   });
 
@@ -469,7 +472,7 @@ rules:
     const rule = result.config!.rules![0];
     expect(rule).toMatchObject({
       name: "custom-rule",
-      rule: "Always add type hints with ${{ secrets.typeStyle }}",
+      rule: "Always add type hints with ${{ secrets.//typeStyle }}",
       description: "Enforce type hints for better code clarity",
       sourceFile: "file:///test/source-block.yaml",
     });
@@ -524,9 +527,9 @@ rules:
       ruleText = rule.rule;
     }
 
-    // All nested inputs should be converted to secrets
+    // All nested inputs should be converted to secrets and then to FQSNs
     expect(ruleText).toBe(
-      "Database config: host=${{ secrets.db.host }};port=${{ secrets.db.port }};user=${{ secrets.db.user }}",
+      "Database config: host=${{ secrets.//db.host }};port=${{ secrets.//db.port }};user=${{ secrets.//db.user }}",
     );
 
     // Verify all nested inputs were converted

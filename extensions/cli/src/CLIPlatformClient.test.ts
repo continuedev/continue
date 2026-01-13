@@ -299,5 +299,74 @@ describe("CLIPlatformClient", () => {
       // Not found results should not be kept (found: false)
       expect(results[0]).toBeUndefined();
     });
+
+    it("resolves secrets from process.env with file-based FQSN format (empty package slugs)", async () => {
+      // This tests the FQSN format used for slug injected blocks
+      // e.g., ${{ secrets.//ANTHROPIC_API_KEY }} which decodes to:
+      // { packageSlugs: [{ ownerSlug: "", packageSlug: "" }], secretName: "ANTHROPIC_API_KEY" }
+      const fqsn: FQSN = {
+        packageSlugs: [{ ownerSlug: "", packageSlug: "" }],
+        secretName: "ANTHROPIC_API_KEY",
+      };
+
+      // Secret is in process.env
+      vi.stubEnv("ANTHROPIC_API_KEY", "my-local-api-key");
+
+      const client = new CLIPlatformClient(null, mockApiClient as any);
+      const results = await client.resolveFQSNs([fqsn]);
+
+      // Should not call API since local env has the secret
+      expect(mockApiClient.syncSecrets).not.toHaveBeenCalled();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        found: true,
+        value: "my-local-api-key",
+        fqsn: {
+          packageSlugs: [{ ownerSlug: "", packageSlug: "" }],
+          secretName: "ANTHROPIC_API_KEY",
+        },
+        secretLocation: {
+          secretType: SecretType.LocalEnv,
+          secretName: "ANTHROPIC_API_KEY",
+        },
+      });
+    });
+
+    it("falls back to API for file-based FQSN when not in local env", async () => {
+      // File-based FQSN with empty package slugs
+      const fqsn: FQSN = {
+        packageSlugs: [{ ownerSlug: "", packageSlug: "" }],
+        secretName: "OPENAI_API_KEY",
+      };
+
+      // No local env secret
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+
+      // API returns models_add_on (the server can still resolve this)
+      const apiResult: SecretResult = {
+        found: true,
+        fqsn,
+        secretLocation: {
+          secretType: SecretType.ModelsAddOn,
+          blockSlug: { ownerSlug: "", packageSlug: "" },
+          secretName: "OPENAI_API_KEY",
+        },
+      };
+      mockApiClient.syncSecrets.mockResolvedValue([apiResult]);
+
+      const client = new CLIPlatformClient("org-123", mockApiClient as any);
+      const results = await client.resolveFQSNs([fqsn]);
+
+      expect(mockApiClient.syncSecrets).toHaveBeenCalledWith({
+        syncSecretsRequest: {
+          fqsns: [fqsn],
+          orgScopeId: "org-123",
+        },
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual(apiResult);
+    });
   });
 });
