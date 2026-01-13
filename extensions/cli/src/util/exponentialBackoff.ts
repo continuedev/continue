@@ -80,7 +80,10 @@ function isConnectionError(errorMessage: string): boolean {
 /**
  * Checks if the error indicates a context length issue (non-retryable)
  */
-export function isContextLengthError(error: any): boolean {
+export function isContextLengthError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
   const errorMessage = error.message?.toLowerCase() || "";
 
   if (errorMessage.includes("invalid_request_error")) {
