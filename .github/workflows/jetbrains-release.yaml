@@ -157,19 +157,19 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
       - name: Cache gui node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
@@ -294,44 +294,44 @@ jobs:
 
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./extensions/intellij/build/distributions/content/*/*
 
       # Upload binaries as artifacts
       - name: Upload artifact (darwin-arm64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-darwin-arm64
           path: ./binary/bin/darwin-arm64/
 
       - name: Upload artifact (darwin-x64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-darwin-x64
           path: ./binary/bin/darwin-x64/
 
       - name: Upload artifact (win32-x64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-win32-x64
           path: ./binary/bin/win32-x64/
 
       - name: Upload artifact (win32-arm64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-win32-arm64
           path: ./binary/bin/win32-arm64/
 
       - name: Upload artifact (linux-arm64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-linux-arm64
           path: ./binary/bin/linux-arm64/
 
       - name: Upload artifact (linux-x64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: continue-binary-linux-x64
           path: ./binary/bin/linux-x64/
@@ -375,13 +375,13 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
@@ -398,7 +398,7 @@ jobs:
 
       # Download the binary artifact
       - name: Download binary artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
           path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
@@ -420,7 +420,7 @@ jobs:
 
       - name: Upload logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
           path: ~/.continue/logs/core.log
@@ -455,7 +455,7 @@ jobs:
       # Collect Tests Result of failed tests
       - name: Collect Tests Result
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: tests-result
           path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
@@ -491,7 +491,7 @@ jobs:
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
-        uses: JetBrains/qodana-action@v2025.2.3
+        uses: JetBrains/qodana-action@v2025.3.1
         with:
           cache-default-branch-only: true
 
@@ -528,7 +528,7 @@ jobs:
 
       # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
           key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}
@@ -540,7 +540,7 @@ jobs:
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/build/reports/pluginVerifier
@@ -563,7 +563,7 @@ jobs:
       #     ./gradlew patchChangelog --release-note="$CHANGELOG"
 
       - name: Download the plugin
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/

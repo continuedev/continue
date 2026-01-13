@@ -96,38 +96,44 @@ export class CLIPlatformClient implements PlatformClient {
       undefined,
     );
 
-    // Try to resolve secrets through the API client first
-    try {
-      const apiResults: any = await this.apiClient.syncSecrets({
-        syncSecretsRequest: {
-          fqsns,
-          orgScopeId: this.orgScopeId,
-        },
-      });
-
-      // Merge API results into our results array - but only if they have an actual value
-      // API can return found=true for secrets that exist but aren't accessible locally
-      for (let i = 0; i < apiResults.length; i++) {
-        if (apiResults[i]?.found && "value" in apiResults[i]) {
-          results[i] = apiResults[i];
-        }
+    // First, check local env files for secrets (highest priority for CLI)
+    // This allows users to override any secret with a local environment variable
+    for (let i = 0; i < fqsns.length; i++) {
+      const secretFromEnv = this.findSecretInLocalEnvFiles(fqsns[i]);
+      if (secretFromEnv?.found) {
+        results[i] = secretFromEnv;
       }
-    } catch (error) {
-      console.warn(
-        `Error resolving FQSNs through API: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
     }
 
-    // For any secret without a value (not just "not found"), look in local .env files
-    // This allows environment variables to override org/package secrets that aren't accessible
-    for (let i = 0; i < fqsns.length; i++) {
-      if (!results[i] || !("value" in results[i]!)) {
-        const secretFromEnv = this.findSecretInLocalEnvFiles(fqsns[i]);
-        if (secretFromEnv?.found) {
-          results[i] = secretFromEnv;
+    // For secrets not found locally, try to resolve through the API
+    const unresolvedIndices = results
+      .map((r, i) => (r === undefined ? i : -1))
+      .filter((i) => i !== -1);
+
+    if (unresolvedIndices.length > 0) {
+      try {
+        const unresolvedFqsns = unresolvedIndices.map((i) => fqsns[i]);
+        const apiResults: any = await this.apiClient.syncSecrets({
+          syncSecretsRequest: {
+            fqsns: unresolvedFqsns,
+            orgScopeId: this.orgScopeId,
+          },
+        });
+
+        // Merge API results - keep all found results (with or without value)
+        // Results with value = user secrets (rendered directly)
+        // Results with secretLocation but no value = org/package/models_add_on/free_trial (will be proxied)
+        for (let j = 0; j < apiResults.length; j++) {
+          if (apiResults[j]?.found) {
+            results[unresolvedIndices[j]] = apiResults[j];
+          }
         }
+      } catch (error) {
+        console.warn(
+          `Error resolving FQSNs through API: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
 

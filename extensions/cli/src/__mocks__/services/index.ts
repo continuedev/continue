@@ -1,4 +1,3 @@
-import { ToolPermissionService } from "src/services/ToolPermissionService.js";
 import { vi } from "vitest";
 
 export const services = {
@@ -8,7 +7,18 @@ export const services = {
     switchOrganization: vi.fn(() => Promise.resolve({})),
     getAvailableOrganizations: vi.fn(() => Promise.resolve([])),
   },
-  toolPermissions: vi.mocked(new ToolPermissionService()),
+  toolPermissions: {
+    isAllowed: vi.fn(() => Promise.resolve(true)),
+    shouldAsk: vi.fn(() => Promise.resolve(false)),
+    handleToolCall: vi.fn(() => Promise.resolve({ allowed: true })),
+  },
+  artifactUpload: {
+    uploadArtifact: vi.fn(() =>
+      Promise.resolve({ success: true, filename: "test.png" }),
+    ),
+    uploadArtifacts: vi.fn(() => Promise.resolve([])),
+    getState: vi.fn(() => ({ uploadsInProgress: 0, lastError: null })),
+  },
 };
 
 export const reloadService = vi.fn(() => Promise.resolve(undefined));
@@ -27,4 +37,5 @@ export const SERVICE_NAMES = {
   UPDATE: "update",
   STORAGE_SYNC: "storageSync",
   AGENT_FILE: "agentFile",
+  ARTIFACT_UPLOAD: "artifactUpload",
 } as const;

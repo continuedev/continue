@@ -1,0 +1,80 @@
+---
+title: "Sanity Integration"
+description: "Connect **Sanity** to Mission Control so Cloud Agents can keep your content documentation in sync with schema and code changes — automatically generating updates when pull requests are opened."
+---
+
+
+<Card
+  title="Connect Sanity to enable Cloud Agents to:"
+  icon="file-text"
+  href="https://hub.continue.dev/integrations/sanity"
+>
+  - Generate and update Sanity schema documentation from PR changes
+  - Explore schemas and content models with natural-language queries
+  - Run GROQ queries to validate content and discover issues
+  - Create and update documents with consistent structure
+</Card>
+
+---
+
+## Official Workflow Templates for Sanity Cloud Agents in Continue
+
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Sanity documentation updates.
+
+<CardGroup cols={2}>
+  <Card title="Update Sanity schema docs" icon="book-open">
+    When a pull request is opened, automatically update your Sanity content documentation to stay in sync with schema and code changes.
+  </Card>
+</CardGroup>
+
+<Tip>
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → Sanity](https://hub.continue.dev/integrations/sanity)**.
+</Tip>
+
+---
+
+## Advanced Use Cases for Sanity Cloud Agents in Continue
+
+<Accordion title="Advanced: Custom Sanity Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+
+- Validate schema changes against content standards before merging
+- Generate migration suggestions when schema changes are detected
+- Audit content for missing fields, broken references, or invalid values
+- Generate content-model summaries for designers and stakeholders
+- Create tickets or PR comments when content risks are detected
+</Accordion>
+
+---
+
+## Access & Permissions
+
+When connecting Sanity, you’ll authorize Continue to access your workspace and interact with content based on your project permissions.
+
+- **Workspace access**  
+  Cloud Agents can only access Sanity projects and datasets you are permitted to view.
+
+- **Permissions**  
+  Approved permissions allow Continue to read schemas, run GROQ queries, and create or update documents when workflows require it.
+
+---
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="Sanity Cookbook"
+    icon="book-open"
+    href="/guides/sanity-mcp-continue-cookbook"
+  >
+    Practical examples for working with Sanity schemas and content using Continue Cloud Agents.
+  </Card>
+
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="https://hub.continue.dev/settings/integrations/github"
+  >
+    Combine Sanity and GitHub to keep schema docs aligned with code changes.
+  </Card>
+</CardGroup>

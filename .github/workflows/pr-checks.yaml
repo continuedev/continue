@@ -27,7 +27,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: root-cache
         with:
           path: node_modules
@@ -234,26 +234,26 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Cache npm
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-cache-matrix-${{ hashFiles('core/package-lock.json', 'extensions/vscode/package-lock.json') }}
 
       - name: Cache packages node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             packages/*/node_modules
           key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
 
       - name: Cache core node modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache vscode extension node modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: vscode-cache
         with:
           path: extensions/vscode/node_modules
@@ -303,7 +303,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: vscode-extension-build-Linux
           path: extensions/vscode/build

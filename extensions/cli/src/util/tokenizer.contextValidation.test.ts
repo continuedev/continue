@@ -31,7 +31,7 @@ describe("validateContextLength", () => {
     const model = createMockModel(1000, 200);
     const chatHistory = createMockHistory(5, 40); // ~50 tokens total
 
-    const result = validateContextLength(chatHistory, model);
+    const result = validateContextLength({ chatHistory, model });
 
     expect(result.isValid).toBe(true);
     expect(result.error).toBeUndefined();
@@ -41,7 +41,7 @@ describe("validateContextLength", () => {
     const model = createMockModel(1000, 800);
     const chatHistory = createMockHistory(20, 100); // ~500+ tokens
 
-    const result = validateContextLength(chatHistory, model);
+    const result = validateContextLength({ chatHistory, model });
 
     expect(result.isValid).toBe(false);
     expect(result.error).toContain("Context length exceeded");
@@ -54,7 +54,7 @@ describe("validateContextLength", () => {
     const model = createMockModel(200_000, 64_000); // Claude-like model
     const chatHistory = createMockHistory(100, 1000); // Large conversation
 
-    const result = validateContextLength(chatHistory, model);
+    const result = validateContextLength({ chatHistory, model });
 
     expect(result.contextLimit).toBe(200_000);
     expect(result.maxTokens).toBe(64_000);

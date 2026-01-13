@@ -88,9 +88,11 @@ private fun getTutorialFileName(): String {
 class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
     override fun runActivity(project: Project) {
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))
+        ApplicationManager.getApplication().invokeLater {
+            removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
+            removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
+            removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))
+        }
         initializePlugin(project)
     }
 

@@ -125,15 +125,19 @@ describe("TUIChat - Slash Commands Tests", () => {
       stdin.write("/title");
 
       let frameAfterCommand = lastFrame();
-      await waitForCondition(() => {
-        frameAfterCommand = lastFrame();
+      await waitForCondition(
+        () => {
+          frameAfterCommand = lastFrame();
 
-        return (
-          frameAfterCommand?.includes(
-            mode === "remote" ? "Remote Mode" : "/title",
-          ) ?? false
-        );
-      });
+          return (
+            frameAfterCommand?.includes(
+              mode === "remote" ? "Remote Mode" : "/title",
+            ) ?? false
+          );
+        },
+        5000,
+        100,
+      );
 
       if (mode === "remote") {
         // In remote mode, /title might not be a valid command, so just check we're in remote mode

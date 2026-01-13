@@ -1,61 +1,42 @@
 ---
-title: "Create and Edit Agents"
-description: "Build custom AI workflows with prompts, rules, and tools through the Continue Mission Control interface"
+title: "Create and Edit Cloud Agents"
+description: "Build custom AI workflows for your Cloud Agents with prompts, rules, and tools through the Continue Mission Control interface"
 sidebarTitle: "Create & Edit"
 ---
 
-<Card title="Creating Custom Agents" icon="wrench">
-  You can only create and edit Agents through Mission Control in the Continue Mission Control web interface. 
-  This ensures proper validation, versioning, and team collaboration features.
+<Card title="Creating Custom Cloud Agents" icon="wrench">
+  You can only create and edit AI Agents in the Continue Mission Control web interface. This ensures proper validation, versioning, and team collaboration features.
 </Card>
 
-## Creating an Agent
-
-  ![Create an agent gif](/images/hub/create-an-agent.gif)
-
+## Creating a Cloud Agent
 
 <Steps>
   <Step title="🧭 Navigate to Create Agent">
-    From the Continue Mission Control top navigation bar, select **"+"** → **"New Agent"**.
+    Navigate to the [New Agent page](https://hub.continue.dev/agents/new).
     
-    This opens the **Create an Agent (beta)** form with all required fields.
 
   </Step>
 
   <Step title="🧩 Fill Out the Agent Form">
-    Configure your agent with the following fields:
+    Configure your Cloud Agent with the following fields:
 
     | Field | What to Enter | Example |
     |-------|---------------|---------|
     | **Name** | Display name shown in Mission Control | `GitHub PR Agent` |
     | **Prompt** | First instruction the agent receives | `Open a GitHub PR to fix the specified issue.` |
-    | **Description** | What the agent does | `Creates a pull request and includes AI-generated summaries.` |
-    | **Tools (MCPs)** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase` |
-    | **Rules** | Add any organizational rules | `continuedev/gh-pr-commit-workflow, continuedev/summarization` |
-    | **Model** | Choose a default LLM | `Claude Sonnet 4.5` |
-    | **Owner + Slug** | Determines namespace | `my-org/github-pr-agent` |
-    | **Visibility** | Access level | `Public, Organization, or Private` |
+    | **Tools ([MCPs](https://hub.continue.dev/hub?type=mcpServers))** | Select built-in or custom MCPs | `GitHub, PostHog, Supabase, etc.` |
+    | **[Rules](https://hub.continue.dev/hub?type=rules)** | Add any organizational rules | `continuedev/gh-pr-commit-workflow` |
+    | **[Model](https://hub.continue.dev/hub?type=models)** | Choose a default LLM | `Claude Sonnet 4.5` |
+    | **Trigger** | Determines when the cloud agent will be invoked | `GitHub, cron, webhook` |
+   
 
     <Info>
-      **Tip**: Start with a simple prompt and add complexity through rules and tools. The prompt should be a clear, single instruction that defines the agent's primary goal.
+      **Tip**: Start with a simple prompt and add complexity through rules and tools. The prompt should be a clear, single instruction that defines the AI Agent's primary goal.
     </Info>
   </Step>
 
-  <Step title="💡 Preview the Configuration">
-    As you fill in the fields, the right-hand panel shows a live preview of your agent's YAML configuration:
-
-    ```yaml
-    name: Open PR with Fix
-    description: Open a GitHub PR to fix the specified issue
-    tools: built_in, anthropic/github-mcp
-    rules:
-      - continuedev/gh-pr-commit-workflow
-      - continuedev/summarization
-    model: Claude Sonnet 4.5
-    visibility: public
-    ```
-
-    This preview helps you verify the configuration before creating the agent.
+  <Step title="💡 Choose Repository & Automation">
+   In the right panel, you can select the repository where the agent will run, and decide if the agent should automatically kick off on creation.
   </Step>
 
   <Step title="✅ Create and Test">
@@ -68,91 +49,27 @@ sidebarTitle: "Create & Edit"
   </Step>
 </Steps>
 
-## Editing an Agent
+## Editing a Cloud Agent
 
-You can edit any agent you own or that belongs to your organization.
+You can edit any AI Agent you own or that has Organization-level access.
 
-<Steps>
-  <Step title="🧭 Access the Agent">
-    From the **Agents** page or Mission Control view, click your agent's name, then select **"Edit Agent"**.
-  </Step>
-
-  <Step title="🔧 Update Configuration">
-    You can modify any of these components:
-
-    <Tabs>
-      <Tab title="Prompt">
-        **Refine task behavior**
-        
-        ```
-        # Before
-        Fix the bug in the authentication system
-        
-        # After  
-        Fix the authentication bug by:
-        1. Identifying the root cause
-        2. Implementing a secure solution
-        3. Adding appropriate tests
-        4. Opening a PR with detailed explanation
-        ```
-      </Tab>
-
-      <Tab title="Rules">
-        **Enforce team standards**
-        
-        Add or remove organizational rules:
-        - `continuedev/security-first` - Always scan for vulnerabilities
-        - `continuedev/test-coverage` - Require tests for new code
-        - `my-org/style-guide` - Follow company coding standards
-      </Tab>
-
-      <Tab title="Tools (MCPs)">
-        **Connect additional systems**
-        
-        - Add GitHub MCP for repository operations
-        - Include Sentry MCP for error monitoring  
-        - Connect Supabase MCP for database operations
-        - Use custom MCPs for internal tools
-      </Tab>
-
-      <Tab title="Model & Visibility">
-        **Adjust behavior and access**
-        
-        - **Model**: Switch between Claude, GPT-4, or other supported LLMs
-        - **Visibility**: Control who can see and use the agent
-          - Public: Anyone can discover and use
-          - Organization: Only your team members
-          - Private: Only you can access
-      </Tab>
-    </Tabs>
-  </Step>
-
-  <Step title="💾 Save Changes">
-    Click **"Update Agent"** when finished.
-    
-    The updated version is instantly available to your team with automatic versioning for change tracking.
-  </Step>
-</Steps>
-
-<Warning>
-  Test your agent thoroughly to ensure they interact as expected.
-</Warning>
-
+From the **[Agents](https://hub.continue.dev/agents)** page, click your agent's name. Change any of the fields in the edit form, then click **"Save Changes"**.
+  
 ## Example Agent Configurations
 
 Here are proven agent configurations you can create or use as inspiration:
 
 <CardGroup cols={2}>
-  <Card title="Security Scanner Agent" icon="shield" href="https://hub.continue.dev/continuedev/snyk-continuous-ai-agent">
+  <Card title="Security Scanner Cloud Agent" icon="shield" href="https://hub.continue.dev/continuedev/snyk-continuous-ai-agent">
     **Snyk Continuous AI Agent** - Comprehensive security scanning with Snyk MCP integration.
     
-    Automates dependency analysis, vulnerability scanning, and creates remediation PRs with AI-powered fix suggestions.
+    Automates dependency analysis, vulnerability scanning, and creates remediation PRs with Cloud Agent powered fix suggestions.
   </Card>
 
-  <Card title="Performance Monitor" icon="gauge" href="https://hub.continue.dev/continuedev/netlify-continuous-ai-agent">
+  <Card title="Performance Monitoring Cloud Agent" icon="gauge" href="https://hub.continue.dev/continuedev/netlify-continuous-ai-agent">
     **Netlify Continuous AI Agent** - Performance optimization with A/B testing and monitoring.
     
-    Tracks Core Web Vitals, identifies regressions, and provides optimization recommendations.
+    Cloud Agent tracks Core Web Vitals, identifies regressions, and provides optimization recommendations.
   </Card>
 
   <Card title="Error Monitoring Agent" icon="bug" href="https://hub.continue.dev/continuedev/sentry-continuous-ai-agent">
@@ -161,13 +78,13 @@ Here are proven agent configurations you can create or use as inspiration:
     Monitors production errors, provides root cause analysis, and creates actionable GitHub issues.
   </Card>
 
-  <Card title="GitHub Management" icon="github" href="https://hub.continue.dev/continuedev/github-manager-ai-agent">
+  <Card title="GitHub Management Cloud Agent" icon="github" href="https://hub.continue.dev/continuedev/github-manager-ai-agent">
     **GitHub Manager AI Agent** - Comprehensive GitHub workflow automation.
     
     Handles issue triage, PR reviews, and release note generation with natural language prompts.
   </Card>
 
-  <Card title="Database Management" icon="database" href=" https://hub.continue.dev/continuedev/supabase-agent">
+  <Card title="Database Management Cloud Agent" icon="database" href=" https://hub.continue.dev/continuedev/supabase-agent">
     **Supabase Continuous AI Agent** - Database security and management workflows.
     
     Audits Row Level Security, identifies vulnerabilities, and generates fixes automatically.
@@ -181,7 +98,7 @@ Common issues and solutions:
 
 | Problem | Solution |
 |---------|----------|
-| **Agent doesn't complete tasks** | Simplify the prompt, add more specific instructions, verify tool permissions |
+| **Cloud Agent doesn't complete tasks** | Simplify the prompt, add more specific instructions, verify tool permissions |
 | **Tools aren't working** | Check MCP configuration, verify API keys and permissions in Hub settings |
 | **Inconsistent behavior** | Add rules to enforce consistent patterns, test with various input scenarios |
 | **Performance issues** | Consider model choice, simplify complex multi-step workflows, optimize tool usage |

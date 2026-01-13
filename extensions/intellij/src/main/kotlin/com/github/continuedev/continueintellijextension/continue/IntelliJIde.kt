@@ -60,8 +60,8 @@ class IntelliJIDE(
         "*.db", "*.sqlite", "*.sqlite3", "*.mdb", "*.accdb",
         
         // Credential and secret files
-        "*.secret", "*.secrets", "credentials", "credentials.*", "auth.json",
-        "token", "token.*", "*.token",
+        "*.secret", "*.secrets", "credentials", "auth.json",
+        "token", "*.token",
         
         // Backup files that might contain sensitive data
         "*.bak", "*.backup", "*.old", "*.orig",

@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "Continue",
   "banner": {
-    "content": "Check out our new look in Mission Control. It's now easier than ever to create [Workflows](https://hub.continue.dev/workflows), [Integrate with the tools you use](https://hub.continue.dev/integrations), and to create a one-off Task.",
+    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
     "dismissable": true
   },
   "colors": {
@@ -20,7 +20,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "changelog"]
           },
           {
             "group": "Mission Control",
@@ -37,7 +37,11 @@
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
-                  "mission-control/integrations/slack-agent"
+                  "mission-control/integrations/slack",
+                  "mission-control/integrations/posthog",
+                  "mission-control/integrations/atlassian",
+                  "mission-control/integrations/netlify",
+                  "mission-control/integrations/supabase"
                 ]
               },
               "mission-control/metrics",
@@ -87,7 +91,8 @@
               "cli/overview",
               "cli/install",
               "cli/quick-start",
-              "cli/guides"
+              "cli/guides",
+              "cli/configuration"
             ]
           },
           {
@@ -203,6 +208,7 @@
                       "customize/model-providers/more/groq",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
+                      "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/together",
@@ -655,39 +661,39 @@
     },
     {
       "source": "/actions/how-to-use-it",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/how-to-customize",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/model-setup",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/context-selection",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/how-it-works",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/customize/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/customization/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/advanced/deep-dives/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/walkthroughs/quick-actions",
@@ -700,10 +706,6 @@
     {
       "source": "/customize/deep-dives/vscode-actions",
       "destination": "/customize/overview"
-    },
-    {
-      "source": "/changelog",
-      "destination": "/reference"
     },
     {
       "source": "/customization/code-config",
@@ -1099,7 +1101,7 @@
     },
     {
       "source": "/about",
-      "destination": "/about-us"
+      "destination": "https://continue.dev/about-us"
     },
     {
       "source": "/autocomplete/model-setup",
@@ -1175,7 +1177,7 @@
     },
     {
       "source": "/guides/set-up-codestral",
-      "destination": "/customize/model-providers/top-level/mistral"
+      "destination": "/customize/model-providers/more/mistral"
     },
     {
       "source": "/guides/build-your-own-context-provider",
@@ -1485,11 +1487,15 @@
     },
     {
       "source": "/hub/agents/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
+    },
+    {
+      "source": "/mission-control/integrations/slack-agent",
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/github",

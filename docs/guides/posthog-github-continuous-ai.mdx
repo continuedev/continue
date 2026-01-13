@@ -9,6 +9,12 @@ sidebarTitle: "PostHog Analytics with Continue CLI"
   issues with the GitHub CLI.
 </Card>
 
+<Info>
+  The new [PostHog Mission Control Integration](/mission-control/integrations/posthog) enables **[Continuous AI](/guides/continuous-ai)** for product analytics - where AI agents autonomously analyze user behavior, identify optimization opportunities, and create data-driven development tasks. This cookbook focuses on CLI-based workflows, but you can also deploy autonomous agents through Mission Control.
+
+  **Get Started:** Use this cookbook to understand PostHog analytics fundamentals, then [enable Mission Control](/mission-control/integrations/posthog) to deploy autonomous analytics-driven agents across your organization.
+</Info>
+
 ## What You'll Learn
 
 This cookbook teaches you to:
@@ -95,7 +101,7 @@ First, you'll need to gather your PostHog and GitHub API credentials and add the
 <Tab title= "Configure API Access in Continue CLI">
  
 <Tip>
-See https://docs.continue.dev/hub/secrets/secret-types#secret-types for adding secrets
+See the [secret types documentation](/mission-control/secrets/secret-types) for adding secrets
 </Tip>
 
 You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Mission Control account:
@@ -165,13 +171,16 @@ You only need to configure the PostHog MCP credential - it automatically handles
   <Tab title="🛠️ Manual Setup">
   <Steps>
     <Step title="Add PostHog MCP to Continue CLI">
-      First, install the [PostHog MCP](https://hub.continue.dev/posthog/posthog-mcp) or run:
-      ```bash
-      npx -y mcp-remote@latest https://mcp.posthog.com/sse --header Authorization:${{ secrets.continuedev/awesome-models-posthog-gh/posthog/posthog-mcp/POSTHOG_AUTH_HEADER }}
-      ```
+      First, install the [PostHog MCP](https://hub.continue.dev/posthog/http-mcp) to the Continue CLI by
+      1. Adding it to a Hub Config by clicking "Use MCP Server" and selecting a Config
+      2. Adding it to your [Local Config](/reference#mcpservers)
     </Step>
     <Step title="Add PostHog + GitHub Analysis Rules">
-    In the Continue Mission Control, add the [PostHog GitHub Continuous AI Rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) to your account for better formatting and error handling.
+      Visit [PostHog GitHub Continuous AI Rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) and click "Use Rule" to add it to your Config.
+      
+      You could also
+      1. Pass `--rule bekah-hawrot-weigel/posthog-github-continuous-ai-rules` to `cn` OR
+      2. Copy the rules to your local `.continue/rules` folder. See the [Rules Guide](/customize/deep-dives/rules#how-to-create-and-manage-rules-in-continue).
     </Step>
     <Step title="Create Your Custom Prompts">
       Use this prompt with Continue CLI to analyze PostHog data and create GitHub issues:

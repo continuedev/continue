@@ -1,0 +1,77 @@
+---
+title: "Atlassian Integration"
+description: "Connect Jira, Confluence, and Compass to automate project management with Continue Cloud Agents"
+---
+<Card
+  title="Connect Atlassian to enable Cloud Agents to:"
+  icon="diagram-project"
+  href="https://hub.continue.dev/integrations/atlassian"
+>
+  - Update Jira tickets automatically on PR merge
+  - Translate code changes into business-friendly summaries
+  - Search issues and create tickets using natural language
+  - Summarize Confluence pages and documentation
+  - Reduce manual project-management overhead for developers
+</Card>
+
+--- 
+
+## Official Workflow Templates
+
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Atlassian-based updates.
+
+<CardGroup cols={2}>
+  <Card title="Update Jira Tickets with Cloud Agents" icon="ticket">
+    Automatically translate merged pull requests into clear, business-friendly Jira updates that explain what changed, why it matters, and who benefits.
+  </Card>
+</CardGroup>
+
+<Tip>
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → Atlassian](https://hub.continue.dev/integrations/atlassian)**.
+</Tip>
+
+
+## Advanced Use Cases for Atlassian Cloud Agents
+
+<Accordion title="Advanced: Custom Atlassian Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+
+- Generate stakeholder-ready release notes from Jira activity
+- Summarize sprint progress and risks in Confluence
+- Automatically triage incoming Jira issues
+- Create tickets from TODOs or code comments
+- Maintain audit trails linking code changes to business outcomes
+</Accordion>
+
+---
+## Access & Permissions
+
+When connecting Atlassian, you’ll authorize Continue to access Jira, Confluence, and Compass data based on your account permissions.
+
+- **Project and space access**  
+  Cloud Agents can only access Jira projects and Confluence spaces you are permitted to view or edit.
+
+- **Permissions**  
+  Approved permissions allow Continue to read and update Jira tickets, summarize Confluence pages, and create links back to related pull requests.
+  
+---
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="Atlassian MCP Cookbook"
+    icon="book-open"
+    href="/guides/atlassian-mcp-continue-cookbook"
+  >
+    Practical examples for automating Jira and Confluence with Continue agents.
+  </Card>
+
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="https://hub.continue.dev/settings/integrations/github"
+  >
+    Combine Atlassian and GitHub to keep code and tickets in sync.
+  </Card>
+</CardGroup>

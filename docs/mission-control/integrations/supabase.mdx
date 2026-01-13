@@ -1,0 +1,136 @@
+---
+title: "Supabase Integration"
+description: "Connect **Supabase** to Mission Control so Cloud Agents can automatically review **Row Level Security (RLS)** when pull requests touch database-related code."
+---
+
+<Card
+  title="Connect Supabase to enable Cloud Agents to:"
+  icon="database"
+  href="https://hub.continue.dev/integrations/supabase"
+>
+  - Audit RLS policies for tables referenced in PR changes
+  - Generate SQL migrations to remediate missing or unsafe policies
+  - Commit fixes for **Critical / High / Medium** issues to the PR branch
+  - Post (or update) a single PR comment with scope, findings, and changes
+</Card>
+
+
+## Official Workflow Templates for Supabase Cloud Agents in Continue
+
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Supabase security reviews.
+
+<CardGroup cols={2}>
+  <Card title="Supabase security review" icon="shield-check">
+    When a pull request is opened, automatically audits RLS for tables referenced in that PR, commits fixes for Critical/High/Medium issues, and posts (or updates) a single PR comment with results.
+  </Card>
+</CardGroup>
+
+### Risk Levels Explained
+<AccordionGroup>
+  <Accordion title="🔴 Critical — Immediate fix required">
+    Tables with sensitive data that have **no RLS enabled**.
+
+    **Examples**
+    - User profiles or authentication-related tables
+    - Financial or billing data
+    - Private messages or personal content
+
+    **What happens**
+    - RLS is enabled automatically
+    - Baseline access policies are generated
+    - Fixes are committed directly to the PR branch
+  </Accordion>
+
+  <Accordion title="🟠 High — Serious security gap">
+    Policies exist but are **overly permissive** or unsafe.
+
+    **Examples**
+    - Policies using `USING (true)`
+    - Write access without proper ownership checks
+    - Admin policies without role validation
+
+    **What happens**
+    - Restrictive policies are generated
+    - Unsafe rules are replaced
+    - Fixes are committed to the PR branch
+  </Accordion>
+
+  <Accordion title="🟡 Medium — Missing best practices">
+    Partial or incomplete RLS coverage.
+
+    **Examples**
+    - SELECT policy exists but UPDATE or DELETE is missing
+    - Missing user-scoped access patterns
+    - Incomplete CRUD coverage
+
+    **What happens**
+    - Missing policies are added
+    - Fixes are committed to the PR branch
+  </Accordion>
+
+  <Accordion title="🟢 Low — Optimization opportunity">
+    Policies work, but could be improved.
+
+    **Examples**
+    - Poor policy naming
+    - Redundant or inefficient rules
+    - Missing documentation
+
+    **What happens**
+    - No automatic fixes
+    - Suggestions are included in the PR comment only
+  </Accordion>
+</AccordionGroup>
+
+
+<Tip>
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → Supabase](https://hub.continue.dev/integrations/supabase)**.
+</Tip>
+
+### Advanced Use Cases
+
+<Accordion title="Advanced: Custom Supabase Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+
+- Run scheduled audits across high-risk tables (beyond PR scope)
+- Generate migration suggestions for schema changes even when no issues are Critical/High/Medium
+- Review SQL performance risks (missing indexes, expensive queries) before merge
+- Enforce schema conventions (naming, constraints, standard columns)
+- Generate “security notes” summaries for release PRs or weekly reports
+</Accordion>
+
+---
+
+## Access & Permissions
+
+When connecting Supabase, you’ll authorize Continue to access your Supabase project(s) through the integration.
+
+- **Project selection**  
+  Choose the Supabase organization and project you want Mission Control to connect to.
+
+- **Permissions**  
+  Approved permissions allow Continue to inspect RLS and policies, generate recommended migrations, and support workflows that comment on PRs and commit fixes.
+
+You can update or revoke access at any time from Supabase or the Mission Control Hub.
+
+---
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="/mission-control/integrations/github"
+  >
+    Combine Supabase with GitHub for PR-triggered security workflows.
+  </Card>
+
+  <Card
+    title="Supabase RLS Documentation"
+    icon="book"
+    href="https://supabase.com/docs/guides/auth/row-level-security"
+  >
+    Learn more about Row Level Security and recommended policy patterns.
+  </Card>
+</CardGroup>

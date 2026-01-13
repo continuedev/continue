@@ -1,0 +1,113 @@
+---
+title: "Netlify Integration"
+description: "Connect **Netlify** to Mission Control so Cloud Agents can automatically catch performance regressions by comparing preview and production deploys when code ships."
+---
+
+<Card
+  title="Connect Netlify to enable Cloud Agents to:"
+  icon="bolt"
+  href="https://hub.continue.dev/integrations/netlify"
+>
+  - Run Lighthouse audits on preview and production deploys
+  - Compare bundle sizes and detect performance regressions
+  - Surface configuration issues like disabled minification or caching
+  - Post clear performance summaries directly to pull requests
+</Card>
+
+## Official Workflow Templates for Netlify Cloud Agents in Continue
+
+The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Netlify performance checks.
+
+<CardGroup cols={2}>
+  <Card title="Optimize Website Performance" icon="gauge-high">
+    When a pull request is merged, runs Lighthouse audits comparing preview and production deploys to catch performance regressions before they reach users.
+  </Card>
+</CardGroup>
+
+### Performance Issue Classification
+
+The Netlify performance workflow classifies issues so you can quickly understand impact and urgency.
+<AccordionGroup>
+<Accordion title="🔴 Critical — Block merge">
+Issues that indicate severe regressions or broken production configuration.
+
+- Minification disabled
+- Tree-shaking disabled
+- Missing or unsafe cache headers
+- Production source maps enabled
+- Bundle size increase greater than 50%
+
+</Accordion>
+
+<Accordion title="⚠️ Warning — Review required">
+Issues that may negatively impact performance and should be reviewed before release.
+
+- No code splitting (single large bundle)
+- Large individual chunks (>500KB)
+- Bundle size increase between 20–50%
+- Suboptimal cache headers
+
+</Accordion>
+
+<Accordion title="ℹ️ Info — Optimization opportunity">
+Non-blocking improvements and suggestions.
+
+- Better code splitting opportunities
+- Redundant dependencies
+- Unoptimized images
+- Bundle size increase under 20%
+
+</Accordion>
+</AccordionGroup>
+
+<Tip>
+Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **[Mission Control → Integrations → Netlify](https://hub.continue.dev/integrations/netlify)**.
+</Tip>
+
+## Advanced Use Cases
+
+<Accordion title="Advanced: Custom Netlify Workflow Ideas">
+These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+
+- Generate weekly performance trend reports across deploys
+- Audit build configuration consistency across multiple sites
+- Track bundle size growth over time
+- Identify redundant or oversized dependencies
+- Run performance checks on demand for specific deploys
+</Accordion>
+
+---
+
+## Access & Permissions
+
+When connecting Netlify, you’ll provide a **personal access token** so Continue can query deploys and site configuration.
+
+- **Access token**  
+  Generate a personal access token from your Netlify user settings. Tokens grant account-level access, so we recommend creating one specifically for Continue.
+
+- **Permissions**  
+  Approved access allows Continue to read deploy metadata, fetch build artifacts, and run performance analyses tied to workflows.
+
+You can revoke or rotate the token at any time from your Netlify account settings.
+
+---
+
+## Support & Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="GitHub Integration"
+    icon="github"
+    href="/mission-control/integrations/github"
+  >
+    Combine Netlify and GitHub to run performance checks on PR merges.
+  </Card>
+
+  <Card
+    title="Netlify MCP Cookbook"
+    icon="book-open"
+    href="/guides/netlify-mcp-continuous-deployment"
+  >
+    Advanced examples for working with Netlify deployments using Continue Cloud Agents.
+  </Card>
+</CardGroup>
