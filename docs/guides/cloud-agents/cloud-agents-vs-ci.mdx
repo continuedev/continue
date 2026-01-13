@@ -53,7 +53,38 @@ CI is the best executor of deterministic checks. Cloud agents are best at interp
 
 ## Practical Pairings for CI + Cloud Agents
 
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Repo as Code Repository
+    participant CI as CI Pipeline (GitHub Actions)
+    participant MC as Mission Control
+    participant Agent as Cloud Agent (Continue)
+
+    Dev->>Repo: git push (feature-branch)
+    Repo->>CI: Trigger Build & Test
+
+    rect rgb(255, 240, 240)
+        Note over CI: ❌ Build Fails (Lint/Test Error)
+        CI->>MC: Emit failure + logs
+        MC->>Agent: Dispatch "Fix Build" task (attach logs + repo context)
+    end
+
+    Note over Agent: 1. Analyzes error logs<br/>2. Proposes minimal fix
+    Agent->>Repo: Push fix to agent branch
+    Agent->>Repo: Open **draft PR** ("[Fix Build] <summary>")
+
+    Repo->>CI: Trigger Build & Test (PR checks)
+
+    rect rgb(240, 255, 240)
+        Note over CI: ✅ Build Passes (PR checks)
+    end
+
+    CI->>MC: Report status on PR
+    MC->>Dev: Notify "Draft PR ready for review"
+    ```
 ### Pattern 1: CI detects, Agent responds
+
 - CI detects failure or policy issue
 - Cloud agent proposes fix and opens PR
 - Human reviews
