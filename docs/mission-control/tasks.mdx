@@ -61,11 +61,27 @@ description: "A Task is a unit of work shared between you and an agent. You trig
 
   <Step title="Run the Task">
 
-    Click the Submit button.
+    Click the Submit button to run the task immediately.
+
+    Alternatively, use the **dropdown arrow** next to the button to select **Run with Instructions**. This allows you to add additional context or guidance for the agent before it starts working.
+
+    **Example instructions:**
+
+    ```text
+    Focus on the src/components directory only
+    ```
+
+    ```text
+    Preserve existing code comments
+    ```
+
+    ```text
+    Follow our team's naming conventions for new files
+    ```
 
     The Agent will:
     - Analyze your repository and branch
-    - Execute the task based on your input
+    - Execute the task based on your input and any additional instructions
     - Generate changes based on your task request
     - Create a detailed session log
 
