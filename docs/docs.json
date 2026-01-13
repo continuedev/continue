@@ -253,6 +253,11 @@
         "tab": "Guides",
         "groups": [
           {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": ["guides/overview"]
+          },
+          {
             "group": "Cloud Agents",
             "pages": [
               "guides/cloud-agents/cloud-agents-taxonomy",
@@ -267,7 +272,6 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/overview",
               {
                 "group": "Understanding Continue",
                 "pages": [
