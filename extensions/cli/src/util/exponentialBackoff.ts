@@ -82,6 +82,13 @@ function isConnectionError(errorMessage: string): boolean {
  */
 export function isContextLengthError(error: any): boolean {
   const errorMessage = error.message?.toLowerCase() || "";
+
+  if (errorMessage.includes("invalid_request_error")) {
+    if (errorMessage.includes("context")) {
+      return true;
+    }
+  }
+
   const contextLengthPatterns = [
     // Anthropic Claude
     "input length and max_tokens exceed context limit",
@@ -94,7 +101,6 @@ export function isContextLengthError(error: any): boolean {
     "use a shorter prompt",
     // Generic patterns
     "context_length_exceeded",
-    "invalid_request_error",
   ];
 
   return contextLengthPatterns.some((pattern) =>
