@@ -61,3 +61,22 @@ export const FILE_PATTERNS = [
   "**/.gitignore",
   "**/.env*",
 ];
+
+/**
+ * Determines if a config path is a file path vs assistant slug
+ */
+export function isFilePath(configPath: string): boolean {
+  return (
+    configPath.startsWith(".") ||
+    configPath.startsWith("/") ||
+    configPath.startsWith("~") ||
+    // Windows absolute paths (C:\, D:\, etc.)
+    /^[A-Za-z]:[/\\]/.test(configPath) ||
+    // UNC paths (\\server\share)
+    configPath.startsWith("\\\\") ||
+    // Contains file extension
+    configPath.includes(".yaml") ||
+    configPath.includes(".yml") ||
+    configPath.includes(".json")
+  );
+}

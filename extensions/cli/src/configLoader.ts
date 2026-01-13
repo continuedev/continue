@@ -25,6 +25,7 @@ import {
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
+import { isFilePath } from "./util/filePatterns.js";
 import { logger } from "./util/logger.js";
 
 export interface ConfigLoadResult {
@@ -37,7 +38,7 @@ export type ConfigSource =
   | { type: "saved-uri"; uri: string }
   | { type: "user-assistant"; slug: string }
   | { type: "local-config-yaml" }
-  | { type: "remote-default-config" }
+  | { type: "default-config" }
   | { type: "no-config" };
 
 /**
@@ -129,11 +130,11 @@ function determineConfigSource(
     if (fs.existsSync(defaultConfigPath)) {
       return { type: "local-config-yaml" };
     }
-    return { type: "remote-default-config" };
+    return { type: "default-config" };
   } else {
     // In headless, user assistant fallback behavior isn't supported
     if (isHeadless) {
-      return { type: "remote-default-config" };
+      return { type: "default-config" };
     }
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
@@ -186,7 +187,7 @@ async function loadFromSource(
           injectBlocks,
         );
 
-      case "remote-default-config":
+      case "default-config":
         return await loadDefaultConfig(
           organizationId,
           apiClient,
@@ -361,8 +362,18 @@ async function loadLocalConfigYaml(
   );
 }
 
+const DEFAULT_CLI_CONFIG_YAML = `
+name: Default CLI Config
+version: 1.0.0
+schema: v1
+models:
+  - uses: anthropic/claude-opus-4-5
+    with:
+      ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}
+`.trim();
+
 /**
- * Loads the default continuedev/default-config
+ * Loads the default CLI config from hardcoded YAML content
  */
 async function loadDefaultConfig(
   organizationId: string | null,
@@ -370,27 +381,39 @@ async function loadDefaultConfig(
   accessToken: string | null,
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
-  const resp = await apiClient.getAssistant({
-    ownerSlug: "continuedev",
-    packageSlug: "default-cli-config",
-    organizationId: organizationId ?? undefined,
-  });
-
-  if (!resp.configResult.config) {
-    throw new Error("Failed to load default agent.");
-  }
-  let apiConfig = resp.configResult.config as AssistantUnrolled;
-  if (injectBlocks.length > 0) {
-    const injectedConfig = await unrollPackageIdentifiersAsConfigYaml(
+  const unrollResult = await unrollAssistantFromContent(
+    {
+      uriType: "file",
+      fileUri: "",
+    },
+    DEFAULT_CLI_CONFIG_YAML,
+    new RegistryClient({
+      accessToken: accessToken ?? undefined,
+      apiBase: env.apiBase,
+      rootPath: undefined,
+    }),
+    {
+      currentUserSlug: "",
+      onPremProxyUrl: null,
+      orgScopeId: organizationId,
+      platformClient: new CLIPlatformClient(organizationId, apiClient),
+      renderSecrets: true,
       injectBlocks,
-      accessToken,
-      organizationId,
-      apiClient,
-    );
-    apiConfig = mergeUnrolledAssistants(apiConfig, injectedConfig);
+    },
+  );
+
+  if (unrollResult.errors) {
+    const fatalError = unrollResult.errors.find((e) => e.fatal);
+    if (fatalError) {
+      throw new Error(`Failed to load default config: ${fatalError.message}`);
+    }
   }
 
-  return apiConfig;
+  if (!unrollResult.config) {
+    throw new Error("Failed to load default config.");
+  }
+
+  return unrollResult.config;
 }
 
 export async function unrollPackageIdentifiersAsConfigYaml(
@@ -550,25 +573,6 @@ async function loadAssistantSlug(
   }
 
   return apiConfig;
-}
-
-/**
- * Determines if a config path is a file path vs assistant slug
- */
-function isFilePath(configPath: string): boolean {
-  return (
-    configPath.startsWith(".") ||
-    configPath.startsWith("/") ||
-    configPath.startsWith("~") ||
-    // Windows absolute paths (C:\, D:\, etc.)
-    /^[A-Za-z]:[/\\]/.test(configPath) ||
-    // UNC paths (\\server\share)
-    configPath.startsWith("\\\\") ||
-    // Contains file extension
-    configPath.includes(".yaml") ||
-    configPath.includes(".yml") ||
-    configPath.includes(".json")
-  );
 }
 
 /**
