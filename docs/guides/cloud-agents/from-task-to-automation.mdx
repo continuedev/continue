@@ -8,10 +8,9 @@ sidebarTitle: "Task → Automation"
 
 Cloud agents are powerful, but the real skill is **governance**: knowing what should be manual, assisted, or automated.
 
-If you want the taxonomy first:
-<Card title="Cloud Agents Taxonomy" href="/guides/cloud-agents/cloud-agents-taxonomy">
-  Trigger types + governance levels.
-</Card>
+<Info>
+  If you want the taxonomy first, including more information on trigger types + governance levels, check out the [Cloud Agents Taxonomy guide](/guides/cloud-agents/cloud-agents-taxonomy).
+</Info>
 
 ## The Cloud Agent Trust Ladder
 
@@ -23,7 +22,19 @@ flowchart TD
   B --> E[Stop / Re-scope]
   C --> E
   D --> E
+   %% Styling
+    classDef stage fill:#F4F1FF,stroke:#7B61FF,stroke-width:2px,rx:12,ry:12,color:#1F2937;
+    classDef exit fill:#FFFFFF,stroke:#7B61FF,stroke-width:2px,rx:12,ry:12,color:#1F2937;
+
+    class A,B,C,D stage
+    class E exit
+
+    %% Layout hints
+    linkStyle 0,1,2 stroke:#7B61FF,stroke-width:2px;
+    linkStyle 3,4,5 stroke:#9CA3AF,stroke-width:2px,stroke-dasharray:4 4;
 ```
+
+
 <Info>
     Most teams should spend the most time in **Assisted** mode. That’s where trust compounds.
 </Info>
