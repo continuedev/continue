@@ -254,9 +254,25 @@
         "tab": "Guides",
         "groups": [
           {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": ["guides/overview"]
+          },
+          {
+            "group": "Cloud Agents",
+            "pages": [
+              "guides/cloud-agents/cloud-agents-taxonomy",
+              "guides/cloud-agents/guide-to-cloud-agents",
+              "guides/cloud-agents/when-to-use-cloud-agents",
+              "guides/cloud-agents/from-task-to-automation",
+              "guides/cloud-agents/cloud-agents-vs-ci",
+              "guides/cloud-agents/operating-cloud-agents-safely",
+              "guides/cloud-agents/automated-security-remediation-with-snyk"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
-              "guides/overview",
               {
                 "group": "Understanding Continue",
                 "pages": [
@@ -288,25 +304,25 @@
                   "guides/notion-continue-guide",
                   "guides/github-pr-review-bot"
                 ]
+              },
+              {
+                "group": "Cookbooks",
+                "icon": "book-open-cover",
+                "pages": [
+                  "guides/posthog-github-continuous-ai",
+                  "guides/continue-docs-mcp-cookbook",
+                  "guides/github-mcp-continue-cookbook",
+                  "guides/atlassian-mcp-continue-cookbook",
+                  "guides/sanity-mcp-continue-cookbook",
+                  "guides/sentry-mcp-error-monitoring",
+                  "guides/snyk-mcp-continue-cookbook",
+                  "guides/supabase-mcp-database-workflow",
+                  "guides/dlt-mcp-continue-cookbook",
+                  "guides/netlify-mcp-continuous-deployment",
+                  "guides/chrome-devtools-mcp-performance",
+                  "guides/klavis-mcp-continue-cookbook"
+                ]
               }
-            ]
-          },
-          {
-            "group": "Cookbooks",
-            "icon": "book-open-cover",
-            "pages": [
-              "guides/posthog-github-continuous-ai",
-              "guides/continue-docs-mcp-cookbook",
-              "guides/github-mcp-continue-cookbook",
-              "guides/atlassian-mcp-continue-cookbook",
-              "guides/sanity-mcp-continue-cookbook",
-              "guides/sentry-mcp-error-monitoring",
-              "guides/snyk-mcp-continue-cookbook",
-              "guides/supabase-mcp-database-workflow",
-              "guides/dlt-mcp-continue-cookbook",
-              "guides/netlify-mcp-continuous-deployment",
-              "guides/chrome-devtools-mcp-performance",
-              "guides/klavis-mcp-continue-cookbook"
             ]
           }
         ]
