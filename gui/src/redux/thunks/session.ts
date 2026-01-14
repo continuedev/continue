@@ -105,25 +105,25 @@ export const loadSession = createAsyncThunk<
   ThunkApiType
 >(
   "session/load",
-  async (
-    { sessionId, saveCurrentSession: save },
-    { extra, dispatch, getState },
-  ) => {
+  async ({ sessionId, saveCurrentSession: save }, { extra, dispatch }) => {
     if (save) {
-      const result = await dispatch(
-        saveCurrentSession({
-          openNewSession: false,
-          generateTitle: true,
-        }),
-      );
-      unwrapResult(result);
+      // save the session in the background
+      void (async () => {
+        const result = await dispatch(
+          saveCurrentSession({
+            openNewSession: false,
+            generateTitle: true,
+          }),
+        );
+        unwrapResult(result);
+      })();
     }
     const session = await getSession(extra.ideMessenger, sessionId);
     dispatch(newSession(session));
 
     // Restore selected chat model from session, if present
     if (session.chatModelTitle) {
-      dispatch(selectChatModelForProfile(session.chatModelTitle));
+      void dispatch(selectChatModelForProfile(session.chatModelTitle));
     }
   },
 );
