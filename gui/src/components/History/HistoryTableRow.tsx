@@ -1,8 +1,8 @@
 import {
   ArrowDownOnSquareIcon,
+  CloudIcon,
   PencilSquareIcon,
   TrashIcon,
-  CloudIcon,
 } from "@heroicons/react/24/outline";
 import { BaseSessionMetadata } from "core";
 import type { RemoteSessionMetadata } from "core/control-plane/client";
@@ -22,6 +22,7 @@ import {
 } from "../../redux/thunks/session";
 import { isShareSessionSupported } from "../../util";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { ToolTip } from "../gui/Tooltip";
 
 const shareSessionSupported = isShareSessionSupported();
 
@@ -143,6 +144,18 @@ export function HistoryTableRow({
               <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                 Remote
               </span>
+            )}
+
+            {sessionMetadata.messageCount !== undefined && (
+              <ToolTip
+                content={`${sessionMetadata.messageCount} message${
+                  sessionMetadata.messageCount === 1 ? " is" : "s are"
+                } present in this session`}
+              >
+                <span className="bg-vsc-background text-secondary-foreground ml-auto inline-flex items-center rounded-full px-2 py-1 text-xs font-medium">
+                  {sessionMetadata.messageCount}
+                </span>
+              </ToolTip>
             )}
           </div>
         )}

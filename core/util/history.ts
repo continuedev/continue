@@ -141,10 +141,14 @@ export class HistoryManager {
       }
 
       let found = false;
+      const messageCount = session.history.filter(
+        (item) => item.message.role === "user",
+      ).length;
       for (const sessionMetadata of sessionsList) {
         if (sessionMetadata.sessionId === session.sessionId) {
           sessionMetadata.title = session.title;
           sessionMetadata.workspaceDirectory = session.workspaceDirectory;
+          sessionMetadata.messageCount = messageCount;
           found = true;
           break;
         }
@@ -156,6 +160,7 @@ export class HistoryManager {
           title: session.title,
           dateCreated: String(Date.now()),
           workspaceDirectory: session.workspaceDirectory,
+          messageCount,
         };
         sessionsList.push(sessionMetadata);
       }
