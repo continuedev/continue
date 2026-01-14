@@ -361,6 +361,80 @@ describe("ToolPermissionService", () => {
     });
   });
 
+  describe("Headless Mode Behavior", () => {
+    test("should allow MCP tools in headless mode", () => {
+      const state = service.initializeSync({ isHeadless: true });
+
+      // Should have MCP allow policy
+      expect(state.permissions.policies).toContainEqual({
+        tool: "mcp__*",
+        permission: "allow",
+      });
+      expect(state.isHeadless).toBe(true);
+    });
+
+    test("should not add MCP policy in non-headless mode", () => {
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(
+        [{ tool: "*", permission: "ask" }],
+      );
+
+      const state = service.initializeSync({ isHeadless: false });
+
+      // Should not have explicit MCP allow policy
+      const mcpPolicy = state.permissions.policies.find(
+        (p) => p.tool === "mcp__*",
+      );
+      expect(mcpPolicy).toBeUndefined();
+      expect(state.isHeadless).toBe(false);
+    });
+
+    test("should apply headless policies before mode policies", () => {
+      const state = service.initializeSync({
+        isHeadless: true,
+        mode: "plan",
+      });
+
+      // Find the indices
+      const mcpIndex = state.permissions.policies.findIndex(
+        (p) => p.tool === "mcp__*",
+      );
+      const writeExcludeIndex = state.permissions.policies.findIndex(
+        (p) => p.tool === "Write" && p.permission === "exclude",
+      );
+
+      // MCP policy should come before plan mode policies
+      expect(mcpIndex).toBeGreaterThanOrEqual(0);
+      expect(writeExcludeIndex).toBeGreaterThan(mcpIndex);
+    });
+
+    test("should apply headless policies in auto mode", () => {
+      const state = service.initializeSync({
+        isHeadless: true,
+        mode: "auto",
+      });
+
+      // Should have both headless policy and auto mode wildcard
+      expect(state.permissions.policies).toContainEqual({
+        tool: "mcp__*",
+        permission: "allow",
+      });
+      expect(state.permissions.policies).toContainEqual({
+        tool: "*",
+        permission: "allow",
+      });
+    });
+
+    test("should include headless policy count in modePolicyCount", () => {
+      const headlessState = service.initializeSync({ isHeadless: true });
+      const nonHeadlessState = service.initializeSync({ isHeadless: false });
+
+      // Headless should have one more policy in the count (the mcp__* policy)
+      expect(headlessState.modePolicyCount).toBe(
+        nonHeadlessState.modePolicyCount + 1,
+      );
+    });
+  });
+
   describe("reloadPermissions", () => {
     test("should reload permissions from files in normal mode", async () => {
       const mockPolicies = [

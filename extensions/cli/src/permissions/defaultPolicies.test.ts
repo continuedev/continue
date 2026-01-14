@@ -21,6 +21,11 @@ describe("defaultPolicies", () => {
     }
   });
 
+  it("should not have MCP-specific policy in defaults", () => {
+    const mcpPolicy = DEFAULT_TOOL_POLICIES.find((p) => p.tool === "mcp__*");
+    expect(mcpPolicy).toBeUndefined();
+  });
+
   it("should have correct permissions for write tools", () => {
     const writeTools = ["Write", "Edit", "MultiEdit", "Bash"];
 

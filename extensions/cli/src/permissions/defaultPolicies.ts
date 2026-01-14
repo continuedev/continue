@@ -28,6 +28,6 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   // View diff is read-only
   { tool: "Diff", permission: "allow" },
 
-  // Default fallback - ask for any unmatched tools
+  // Default fallback - ask for any unmatched tools (including MCP tools)
   { tool: "*", permission: "ask" },
 ];

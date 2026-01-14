@@ -163,6 +163,21 @@ export class ToolPermissionService
   }
 
   /**
+   * Generate headless-specific policies
+   * In headless mode, MCP tools are allowed by default since there's no user to ask
+   */
+  private generateHeadlessPolicies(): ToolPermissionPolicy[] {
+    if (!this.currentState.isHeadless) {
+      return [];
+    }
+
+    return [
+      // Allow MCP tools in headless mode
+      { tool: "mcp__*", permission: "allow" },
+    ];
+  }
+
+  /**
    * Generate mode-specific policies based on the current mode
    */
   private generateModePolicies(): ToolPermissionPolicy[] {
@@ -228,6 +243,7 @@ export class ToolPermissionService
     }
 
     const modePolicies = this.generateModePolicies();
+    const headlessPolicies = this.generateHeadlessPolicies();
 
     let allPolicies: ToolPermissionPolicy[];
     if (agentFileServiceState?.agentFile) {
@@ -241,22 +257,23 @@ export class ToolPermissionService
       this.currentState.currentMode === "auto"
     ) {
       // For plan and auto modes, use ONLY mode policies (absolute override)
-      allPolicies = modePolicies;
+      // But still apply headless policies if in headless mode
+      allPolicies = [...headlessPolicies, ...modePolicies];
     } else {
-      // Normal mode: combine mode policies with user configuration
+      // Normal mode: combine headless + mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
         useDefaults: true,
       });
-      allPolicies = [...modePolicies, ...compiledPolicies];
+      allPolicies = [...headlessPolicies, ...modePolicies, ...compiledPolicies];
     }
 
     this.setState({
       permissions: { policies: allPolicies },
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
-      modePolicyCount: modePolicies.length,
+      modePolicyCount: headlessPolicies.length + modePolicies.length,
     });
 
     (this as any).isInitialized = true;
