@@ -774,6 +774,90 @@ function toResponseInputContentList(
   return list;
 }
 
+/**
+ * Emits function_call items for each tool call that has a corresponding fc_ ID.
+ * Extracted to reduce cyclomatic complexity in toResponsesInput.
+ */
+function emitFunctionCallsFromToolCalls(
+  toolCalls: ToolCallDelta[],
+  respIds: string[],
+  input: ResponseInput,
+): void {
+  for (let i = 0; i < toolCalls.length; i++) {
+    const tc = toolCalls[i];
+    const fcId = respIds[i];
+
+    if (!fcId) continue; // Skip if no fc_ ID for this tool call
+
+    const name = tc?.function?.name as string | undefined;
+    const args = tc?.function?.arguments as string | undefined;
+    const call_id = tc?.id as string | undefined;
+
+    if (name && call_id) {
+      const functionCallItem: ResponseFunctionToolCall = {
+        id: fcId,
+        type: "function_call",
+        name,
+        arguments: typeof args === "string" ? args : "{}",
+        call_id,
+      };
+      input.push(functionCallItem);
+    }
+  }
+}
+
+/**
+ * Converts a thinking message's reasoning_details into a ResponseReasoningItem.
+ * Extracted to reduce cyclomatic complexity in toResponsesInput.
+ */
+function convertThinkingMessageToReasoningItem(
+  msg: ThinkingChatMessage,
+): ResponseReasoningItem | undefined {
+  const details = msg.reasoning_details ?? [];
+  if (!details.length) return undefined;
+
+  let id: string | undefined;
+  let summaryText = "";
+  let encrypted: string | undefined;
+  let reasoningText = "";
+
+  for (const raw of details as Array<Record<string, unknown>>) {
+    const d = raw as {
+      type?: string;
+      id?: string;
+      text?: string;
+      encrypted_content?: string;
+    };
+    if (d.type === "reasoning_id" && d.id) id = d.id;
+    else if (d.type === "encrypted_content" && d.encrypted_content)
+      encrypted = d.encrypted_content;
+    else if (d.type === "summary_text" && typeof d.text === "string")
+      summaryText += d.text;
+    else if (d.type === "reasoning_text" && typeof d.text === "string")
+      reasoningText += d.text;
+  }
+
+  if (!id) return undefined;
+
+  const reasoningItem: ResponseReasoningItem = {
+    id,
+    type: "reasoning",
+    summary: [],
+  } as ResponseReasoningItem;
+
+  if (summaryText) {
+    reasoningItem.summary = [{ type: "summary_text", text: summaryText }];
+  }
+  if (reasoningText) {
+    reasoningItem.content = [{ type: "reasoning_text", text: reasoningText }];
+  }
+  if (encrypted) {
+    reasoningItem.encrypted_content = encrypted;
+  }
+
+  return reasoningItem;
+}
+
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
 
@@ -817,21 +901,25 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           | string
           | undefined;
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
+        // Get array of fc_ IDs for parallel tool calls, fallback to single respId
+        // NOTE: responsesOutputItemIds is accumulated in sessionSlice.ts during streaming.
+        // We rely on OpenAI streaming events arriving in order, so respIds[i] corresponds
+        // to toolCalls[i] by position. See: https://platform.openai.com/docs/guides/function-calling
+        const respIds =
+          (msg.metadata?.responsesOutputItemIds as string[] | undefined) ||
+          (respId ? [respId] : []);
 
-        if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-          // Emit full function_call output item
-          const tc = toolCalls[0];
-          const name = tc?.function?.name as string | undefined;
-          const args = tc?.function?.arguments as string | undefined;
-          const call_id = tc?.id as string | undefined;
-          const functionCallItem: ResponseFunctionToolCall = {
-            id: respId,
-            type: "function_call",
-            name: name || "",
-            arguments: typeof args === "string" ? args : "{}",
-            call_id: call_id || respId,
-          };
-          input.push(functionCallItem);
+        if (
+          Array.isArray(toolCalls) &&
+          toolCalls.length > 0 &&
+          respIds.length > 0
+        ) {
+          // Emit function_call for EACH tool call (supports parallel tool calls)
+          emitFunctionCallsFromToolCalls(toolCalls, respIds, input);
+          // Also emit text content if present alongside tool calls
+          if (text && text.trim()) {
+            pushMessage("assistant", text);
+          }
         } else if (respId) {
           // Emit full assistant output message item
           const outputMessageItem: ResponseOutputMessage = {
@@ -869,48 +957,11 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "thinking": {
-        const details = (msg as ThinkingChatMessage).reasoning_details ?? [];
-        if (details.length) {
-          let id: string | undefined;
-          let summaryText = "";
-          let encrypted: string | undefined;
-          let reasoningText = "";
-          for (const raw of details as Array<Record<string, unknown>>) {
-            const d = raw as {
-              type?: string;
-              id?: string;
-              text?: string;
-              encrypted_content?: string;
-            };
-            if (d.type === "reasoning_id" && d.id) id = d.id;
-            else if (d.type === "encrypted_content" && d.encrypted_content)
-              encrypted = d.encrypted_content;
-            else if (d.type === "summary_text" && typeof d.text === "string")
-              summaryText += d.text;
-            else if (d.type === "reasoning_text" && typeof d.text === "string")
-              reasoningText += d.text;
-          }
-          if (id) {
-            const reasoningItem: ResponseReasoningItem = {
-              id,
-              type: "reasoning",
-              summary: [],
-            } as ResponseReasoningItem;
-            if (summaryText) {
-              reasoningItem.summary = [
-                { type: "summary_text", text: summaryText },
-              ];
-            }
-            if (reasoningText) {
-              reasoningItem.content = [
-                { type: "reasoning_text", text: reasoningText },
-              ];
-            }
-            if (encrypted) {
-              reasoningItem.encrypted_content = encrypted;
-            }
-            input.push(reasoningItem as ResponseInputItem);
-          }
+        const reasoningItem = convertThinkingMessageToReasoningItem(
+          msg as ThinkingChatMessage,
+        );
+        if (reasoningItem) {
+          input.push(reasoningItem as ResponseInputItem);
         }
         break;
       }
