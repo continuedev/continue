@@ -817,21 +817,45 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           | string
           | undefined;
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
+        // Get array of fc_ IDs for parallel tool calls, fallback to single respId
+        // NOTE: responsesOutputItemIds is accumulated in sessionSlice.ts during streaming.
+        // We rely on OpenAI streaming events arriving in order, so respIds[i] corresponds
+        // to toolCalls[i] by position. See: https://platform.openai.com/docs/guides/function-calling
+        const respIds =
+          (msg.metadata?.responsesOutputItemIds as string[] | undefined) ||
+          (respId ? [respId] : []);
 
-        if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-          // Emit full function_call output item
-          const tc = toolCalls[0];
-          const name = tc?.function?.name as string | undefined;
-          const args = tc?.function?.arguments as string | undefined;
-          const call_id = tc?.id as string | undefined;
-          const functionCallItem: ResponseFunctionToolCall = {
-            id: respId,
-            type: "function_call",
-            name: name || "",
-            arguments: typeof args === "string" ? args : "{}",
-            call_id: call_id || respId,
-          };
-          input.push(functionCallItem);
+        if (
+          Array.isArray(toolCalls) &&
+          toolCalls.length > 0 &&
+          respIds.length > 0
+        ) {
+          // Emit function_call for EACH tool call (supports parallel tool calls)
+          for (let i = 0; i < toolCalls.length; i++) {
+            const tc = toolCalls[i];
+            const fcId = respIds[i];
+
+            if (!fcId) continue; // Skip if no fc_ ID for this tool call
+
+            const name = tc?.function?.name as string | undefined;
+            const args = tc?.function?.arguments as string | undefined;
+            const call_id = tc?.id as string | undefined;
+
+            if (name && call_id) {
+              const functionCallItem: ResponseFunctionToolCall = {
+                id: fcId,
+                type: "function_call",
+                name: name,
+                arguments: typeof args === "string" ? args : "{}",
+                call_id: call_id,
+              };
+              input.push(functionCallItem);
+            }
+          }
+          // Also emit text content if present alongside tool calls
+          if (text && text.trim()) {
+            pushMessage("assistant", text);
+          }
         } else if (respId) {
           // Emit full assistant output message item
           const outputMessageItem: ResponseOutputMessage = {
