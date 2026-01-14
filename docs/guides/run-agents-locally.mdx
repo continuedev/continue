@@ -109,7 +109,7 @@ Agent files are markdown documents with YAML frontmatter. The frontmatter config
 
 This agent updates pull request titles to follow conventional commit format:
 
-```markdown
+````markdown
 ---
 name: Conventional Title
 description: Updates PR title to follow conventional commit format
@@ -139,7 +139,7 @@ You are reviewing a pull request to format its title according to conventional c
 
 4. **Update the PR title:**
    ```bash
-   gh pr edit <PR_NUMBER> --title "type: description"
+   gh pr edit PR_NUMBER --title "type: description"
    ```
 
 ## Rules
@@ -147,7 +147,7 @@ You are reviewing a pull request to format its title according to conventional c
 - If title already follows format, do NOT modify
 - Keep description under 72 characters
 - Use lowercase, no period at end
-```
+````
 
 ## Security Considerations
 
