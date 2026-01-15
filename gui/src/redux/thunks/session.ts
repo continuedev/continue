@@ -108,15 +108,12 @@ export const loadSession = createAsyncThunk<
   async ({ sessionId, saveCurrentSession: save }, { extra, dispatch }) => {
     if (save) {
       // save the session in the background
-      void (async () => {
-        const result = await dispatch(
-          saveCurrentSession({
-            openNewSession: false,
-            generateTitle: true,
-          }),
-        );
-        unwrapResult(result);
-      })();
+      void dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+          generateTitle: true,
+        }),
+      );
     }
     const session = await getSession(extra.ideMessenger, sessionId);
     dispatch(newSession(session));
@@ -237,8 +234,8 @@ export const saveCurrentSession = createAsyncThunk<
 >(
   "session/saveCurrent",
   async ({ openNewSession, generateTitle }, { dispatch, extra, getState }) => {
-    const state = getState();
-    if (state.session.history.length === 0) {
+    const session = getState().session; // assign to a variable so that even when current session changes, we have the reference to the old session
+    if (session.history.length === 0) {
       return;
     }
 
@@ -246,14 +243,17 @@ export const saveCurrentSession = createAsyncThunk<
       dispatch(newSession());
     }
 
+    const selectedChatModel = selectSelectedChatModel(getState());
+
     // New session has already been dispatched
     // Now save previous session and update chat title if relevant
-    let title = state.session.title;
+    let title = session.title;
     if (title === NEW_SESSION_TITLE) {
-      const selectedChatModel = selectSelectedChatModel(state);
-
-      if (!state.config.config?.disableSessionTitles && selectedChatModel) {
-        let assistantResponse = state.session.history
+      if (
+        !getState().config.config?.disableSessionTitles &&
+        selectedChatModel
+      ) {
+        let assistantResponse = session.history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
 
@@ -275,13 +275,13 @@ export const saveCurrentSession = createAsyncThunk<
       }
       // Fallbacks if above doesn't work out or session titles disabled
       if (title === NEW_SESSION_TITLE) {
-        title = getChatTitleFromMessage(state.session.history[0].message);
+        title = getChatTitleFromMessage(session.history[0].message);
       }
     }
     // More fallbacks in case of no title
     if (!title.length) {
-      const metadata = getState().session.allSessionMetadata.find(
-        (m) => m.sessionId === state.session.id,
+      const metadata = session.allSessionMetadata.find(
+        (m) => m.sessionId === session.id,
       );
       if (metadata?.title) {
         title = metadata.title;
@@ -291,18 +291,16 @@ export const saveCurrentSession = createAsyncThunk<
       title = NEW_SESSION_TITLE;
     }
 
-    const selectedChatModel = selectSelectedChatModel(state);
-
-    const session: Session = {
-      sessionId: state.session.id,
+    const updatedSession: Session = {
+      sessionId: session.id,
       title,
       workspaceDirectory: window.workspacePaths?.[0] || "",
-      history: state.session.history,
-      mode: state.session.mode,
+      history: session.history,
+      mode: session.mode,
       chatModelTitle: selectedChatModel?.title ?? null,
     };
 
-    const result = await dispatch(updateSession(session));
+    const result = await dispatch(updateSession(updatedSession));
     unwrapResult(result);
   },
 );
