@@ -1,10 +1,11 @@
+import { Agent as HttpsAgent } from "https";
+
 import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Agent as HttpsAgent } from "https";
 import {
   HttpMcpServer,
   SseMcpServer,
