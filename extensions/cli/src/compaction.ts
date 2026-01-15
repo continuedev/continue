@@ -28,6 +28,11 @@ export interface CompactionOptions {
   systemMessageTokens?: number;
 }
 
+const COMPACTION_PROMPT =
+  "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.";
+
+const COMPACTION_PROMPT_TOKENS = 150; // rough generous token count of ^
+
 /**
  * Compacts a chat history into a summarized form
  * @param chatHistory The current chat history to compact
@@ -47,8 +52,7 @@ export async function compactChatHistory(
   const compactionPrompt: ChatHistoryItem = {
     message: {
       role: "user" as const,
-      content:
-        "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.",
+      content: COMPACTION_PROMPT,
     },
     contextItems: [],
   };
@@ -67,13 +71,15 @@ export async function compactChatHistory(
     (item) => item.message.role === "system",
   );
 
-  // Account for system message (if not already in history) AND safety buffer
-  const SAFETY_BUFFER = 100;
+  // Account for system message (if not already in history) AND compaction prompt
   const systemMessageReservation = hasSystemMessageInHistory
     ? 0
     : systemMessageTokens;
   const availableForInput =
-    contextLimit - reservedForOutput - systemMessageReservation - SAFETY_BUFFER;
+    contextLimit -
+    reservedForOutput -
+    systemMessageReservation -
+    COMPACTION_PROMPT_TOKENS;
 
   // Check if we need to prune to fit within context
   while (
