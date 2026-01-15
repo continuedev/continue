@@ -4,6 +4,7 @@ import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { logAgentModeEditOutcome } from "../../util/editOutcomeLogger";
 import {
   selectApplyStateByToolCallId,
+  selectApplyStatesInProgress,
   selectToolCallById,
 } from "../selectors/selectToolCalls";
 import { updateEditStateApplyState } from "../slices/editState";
@@ -165,6 +166,16 @@ export const applyForEditTool = createAsyncThunk<
       status: "not-started",
     }),
   );
+
+  let isWaitingForPreviousApplyToFinish = true;
+  while (isWaitingForPreviousApplyToFinish) {
+    if (selectApplyStatesInProgress(getState()).length > 1) {
+      // wait for the previous apply state to finish because showing diffs on parallel in the ide has race conditions
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } else {
+      isWaitingForPreviousApplyToFinish = false;
+    }
+  }
 
   let didError = false;
   try {

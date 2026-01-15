@@ -56,6 +56,14 @@ export const selectApplyStateByToolCallId = createSelector(
   },
 );
 
+export const selectApplyStatesInProgress = createSelector(
+  (store: RootState) => store.session.codeBlockApplyStates.states,
+  (states) =>
+    states.filter(
+      (state) => state.status === "not-started" || state.status === "streaming",
+    ),
+);
+
 // Status-specific convenience selectors
 export const selectPendingToolCalls = createSelector(
   (store: RootState) => store.session.history,
