@@ -289,7 +289,11 @@
               },
               {
                 "group": "CLI Guides",
-                "pages": ["guides/cli", "guides/doc-writing-agent-cli"]
+                "pages": [
+                  "guides/cli",
+                  "guides/run-agents-locally",
+                  "guides/doc-writing-agent-cli"
+                ]
               },
               {
                 "group": "Continuous AI Guides",

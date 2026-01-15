@@ -1,3 +1,5 @@
+import { SUBAGENT_TOOL_META } from "../subagent/index.js";
+
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -25,6 +27,7 @@ export const ALL_BUILT_IN_TOOLS = [
   runTerminalCommandTool,
   searchCodeTool,
   statusTool,
+  SUBAGENT_TOOL_META,
   uploadArtifactTool,
   viewDiffTool,
   writeChecklistTool,

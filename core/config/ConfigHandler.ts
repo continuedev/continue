@@ -360,12 +360,12 @@ export class ConfigHandler {
     if (options.includeWorkspace) {
       const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
-        options,
+        { ...options, fileExtType: "yaml" },
         "assistants",
       );
       const agentFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
-        options,
+        { ...options, fileExtType: "yaml" },
         "agents",
       );
       const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
