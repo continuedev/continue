@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useCallback, useRef, useState } from "react";
@@ -13,6 +14,7 @@ import {
   services,
 } from "../services/index.js";
 import { messageQueue } from "../stream/messageQueue.js";
+import { escapeEvents } from "../util/cli.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
@@ -615,6 +617,8 @@ const UserInput: React.FC<UserInputProps> = ({
 
   const handleEscapeKey = (key: any): boolean => {
     if (!key.escape) return false;
+
+    escapeEvents.emit("user-escape");
 
     // If only "!" is present, clear shell mode
     if (inputMode && showBashMode && inputText.trim() === "!") {
