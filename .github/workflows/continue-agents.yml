@@ -75,12 +75,14 @@ jobs:
       - name: Create Check Run
         id: check
         uses: actions/github-script@v8
+        env:
+          AGENT_NAME: ${{ steps.agent-name.outputs.name }}
         with:
           script: |
             const { data: check } = await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: `Continue: ${{ steps.agent-name.outputs.name }}`,
+              name: `Continue: ${process.env.AGENT_NAME}`,
               head_sha: context.sha,
               status: 'in_progress',
               started_at: new Date().toISOString(),
@@ -91,6 +93,7 @@ jobs:
         id: run
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           AGENT_FILE="${{ matrix.agent }}"
 
@@ -117,22 +120,27 @@ jobs:
 
       - name: Write job summary
         if: always()
+        env:
+          AGENT_OUTPUT: ${{ steps.run.outputs.output }}
+          AGENT_ERROR: ${{ steps.run.outputs.error }}
+          AGENT_SUCCESS: ${{ steps.run.outputs.success }}
+          AGENT_NAME: ${{ steps.agent-name.outputs.name }}
         run: |
-          echo "## 🤖 Agent: ${{ steps.agent-name.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "## 🤖 Agent: $AGENT_NAME" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.run.outputs.success }}" == "true" ]; then
+          if [ "$AGENT_SUCCESS" == "true" ]; then
             echo "✅ **Status:** Completed successfully" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Output" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.run.outputs.output }}" >> $GITHUB_STEP_SUMMARY
+            printf '%s\n' "$AGENT_OUTPUT" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status:** Failed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Error" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.run.outputs.error }}" >> $GITHUB_STEP_SUMMARY
+            printf '%s\n' "$AGENT_ERROR" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -143,16 +151,21 @@ jobs:
       - name: Update Check Run
         if: always()
         uses: actions/github-script@v8
+        env:
+          AGENT_OUTPUT: ${{ steps.run.outputs.output }}
+          AGENT_ERROR: ${{ steps.run.outputs.error }}
+          AGENT_SUCCESS: ${{ steps.run.outputs.success }}
+          CHECK_RUN_ID: ${{ steps.check.outputs.id }}
         with:
           script: |
-            const success = '${{ steps.run.outputs.success }}' === 'true';
-            const output = `${{ steps.run.outputs.output }}`;
-            const error = `${{ steps.run.outputs.error }}`;
+            const success = process.env.AGENT_SUCCESS === 'true';
+            const output = process.env.AGENT_OUTPUT || '';
+            const error = process.env.AGENT_ERROR || '';
 
             await github.rest.checks.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              check_run_id: ${{ steps.check.outputs.id }},
+              check_run_id: parseInt(process.env.CHECK_RUN_ID, 10),
               status: 'completed',
               conclusion: success ? 'success' : 'failure',
               completed_at: new Date().toISOString(),

@@ -39,3 +39,7 @@
 .tiptap img.ProseMirror-selectednode {
   border: 1px solid var(--vscode-badge-background, #bfe2b6);
 }
+
+.tiptap img.selected-image {
+  outline: 3px solid var(--vscode-badge-background, #bfe2b6);
+}

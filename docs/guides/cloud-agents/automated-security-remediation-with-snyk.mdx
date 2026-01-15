@@ -1,0 +1,279 @@
+---
+title: "Automatically Remediate High & Critical Vulnerabilities with Cloud Agents"
+description: "How teams use cloud agents to automatically investigate and remediate high and critical Snyk vulnerabilities safely, reviewably, and without a dedicated security team."
+sidebarTitle: "Snyk Remediation"
+---
+
+## Why This Workflow Exists
+
+Most teams don’t struggle to *detect* security vulnerabilities. They struggle to *keep up with fixing them*.
+
+- alerts pile up
+- critical issues linger
+- fixes get deferred behind feature work
+- security becomes reactive instead of routine
+
+This guide shows how teams use cloud agents to automatically remediate high and critical Snyk vulnerabilities without introducing risk or losing control.
+
+<Info>
+**Who this is for?**
+Full-stack teams without a dedicated AppSec or DevOps function who still need to ship securely.
+</Info>
+
+## The Core Problem
+
+<CardGroup cols={3}>
+  <Card title="Signal Overload">
+    Snyk finds real issues, but teams can’t keep up with triage and fixes.
+  </Card>
+  <Card title="Context Switching">
+    Security work interrupts feature delivery and breaks focus.
+  </Card>
+  <Card title="Manual Toil">
+    Many fixes are repetitive, low-risk, and still handled manually.
+  </Card>
+</CardGroup>
+
+<Warning>
+The risk isn’t that vulnerabilities exist.  The risk is that known high-severity issues remain unfixed.
+</Warning>
+
+## Why use an Agent? (vs. Snyk's Native Auto-PRs)
+
+Snyk has an excellent "Automatic Fix" feature that opens PRs to upgrade vulnerable dependencies. However, because Snyk cannot run your application's build or test suite, these PRs often break the build and require human cleanup.
+
+Continue's Cloud Agent sits *on top* of Snyk to complete the engineering work:
+
+| Feature | Snyk Native Auto-PR | Continue Cloud Agent |
+| :--- | :--- | :--- |
+| **The Fix** | "Bump `lodash` to v4.17.21" | "Analyze security issue and create PR with fix" |
+| **Context** | Vulnerability Database | Vuln DB + Security Impact Analysis |
+| **Intelligence** |Deterministic (Always bumps version) | Reasoning: "Analyzes dependency risks" and suggests updates |
+| **Result** | A PR that might break the build | A PR that is green and ready to merge |
+
+<Tip>
+Snyk tells you *what* to upgrade. The Cloud Agent does the *engineering work* to make that upgrade safe.
+</Tip>
+
+## What Does the Cloud Agent Do?
+
+A [Snyk remediation cloud agent](https://hub.continue.dev/integrations/snyk) owns the *handling* of security issues, but not the final decision.
+
+<CardGroup cols={2}>
+    <Card title="Inputs">
+        - High & critical Snyk vulnerability events  
+        - Repository context  
+        - Dependency graph and version constraints  
+    </Card>
+
+  <Card title="Outputs">
+    - Draft or ready PR with remediation  
+    - Clear summary of risk and fix  
+  </Card>
+</CardGroup>
+
+<Tip>
+The agent doesn’t silently change production code. It produces **reviewable security PRs**.
+</Tip>
+
+## How the Workflow Runs
+
+<Steps>
+  <Step title="Trigger">
+    A new **high or critical** vulnerability is detected by Snyk  
+    (event-driven) or during a scheduled scan.
+  </Step>
+
+  <Step title="Investigate">
+    The agent investigates:
+    - the vulnerable dependency
+    - available remediation paths
+    - breaking-change risk
+  </Step>
+
+  <Step title="Propose a Fix">
+    The agent:
+    - applies the minimal safe update
+    - avoids unnecessary refactors
+    - preserves existing behavior
+  </Step>
+
+  <Step title="Open a PR">
+    A PR is created with:
+    - a clear title
+    - summary of the vulnerability
+    - explanation of the fix
+  </Step>
+
+  <Step title="Human Review">
+    A developer reviews and merges (or adjusts) the fix.
+  </Step>
+</Steps>
+
+## The Agent Configuration
+
+Continue's Snyk Cloud Agent is built from these core components:
+
+<CardGroup cols={3}>
+  <Card title="Triggers" icon="bolt">
+    **Webhook:** Snyk new vulnerability event
+  </Card>
+  <Card title="Tools (MCPs)" icon="toolbox">
+    **Snyk MCP:** Fetch vulnerability details
+  </Card>
+   <Card title="Rules" icon="list">
+    **GitHub CLI:** Tells the agent how to create PRs
+  </Card>
+</CardGroup>
+
+
+```markdown Remediation Prompt expandable
+A new Snyk vulnerability has been detected. Please investigate and resolve the issue. This should include the following steps:
+
+**Step 1: Investigate the Issue**
+Make sure you understand the vulnerability, the options for resolution, and what their consequences are.
+
+**Step 2: Implement Fix**
+- Focus on fixing the immediate issue identified
+- Avoid overdoing it with error handling, cleaning up other problems, etc.
+- Avoid making breaking changes
+- Ensure the solution is robust and follows best practices.
+
+**Step 3: Create Draft Pull Request**
+Create a draft pull request with the following structure:
+
+--
+**PR Title:** [Snyk] <brief description of issue solved>
+
+## Issue
+
+**Snyk Link:** [<shortId>](<permalink>)
+**Issue Type:** `<issue type>`
+**Priority:** <priority>
+**Summary:** <Two sentence summary of what caused the issue and how it was fixed>
+
+```
+
+## Governance: How This Stays Safe
+
+<Tabs>
+  <Tab title="Default Mode (Recommended)">
+    **Assisted automation**
+
+    - Agent runs automatically  
+    - PRs require human approval  
+    - CI must pass before merge  
+
+    *This is where most teams should live.*
+  </Tab>
+
+  <Tab title="Early Adoption">
+    **Manual / On-Demand**
+
+    - Agent is triggered manually  
+    - Used to validate behavior and build trust  
+  </Tab>
+
+  <Tab title="Advanced">
+    **Selective Automation**
+
+    - Narrow classes of fixes only  
+    - Patch-level updates  
+    - Strict constraints and rollback paths  
+  </Tab>
+</Tabs>
+
+## What This Replaces (and What It Doesn’t)
+
+<AccordionGroup>
+  <Accordion title="This replaces…">
+    - manual dependency bump PRs  
+    - repetitive vulnerability triage  
+    - security work that constantly interrupts feature delivery  
+  </Accordion>
+
+  <Accordion title="This does NOT replace…">
+    - security design reviews  
+    - architectural threat modeling  
+    - decisions about major upgrades or breaking changes  
+  </Accordion>
+</AccordionGroup>
+
+
+## Why Cloud Agents (Not Just CI or Scripts) for Automatic Security Remediation 
+
+<CardGroup cols={2}>
+  <Card title="Why Not Just CI?">
+    CI can *detect* vulnerabilities,  
+    but it can’t reason about fixes or propose patches.
+  </Card>
+
+  <Card title="Why Cloud Agents Work">
+    Cloud agents:
+    - interpret Snyk findings  
+    - choose appropriate fixes  
+    - produce PRs developers can review  
+  </Card>
+</CardGroup>
+
+<Tip>
+CI enforces. Cloud agents **respond**.
+</Tip>
+
+## Security Benefits Teams See
+
+<CardGroup cols={3}>
+  <Card title="Faster Remediation">
+    High-severity issues are fixed days or weeks sooner.
+  </Card>
+  <Card title="Less Interruptions">
+    Developers review PRs instead of context-switching to triage.
+  </Card>
+  <Card title="Security as Hygiene">
+    Vulnerabilities stop piling up and become routine maintenance.
+  </Card>
+</CardGroup>
+
+
+## A Good First Setup
+
+<Info title="Recommended starting constraints">
+- Only **high & critical** vulnerabilities  
+- One repo or service  
+- PRs only (no direct merges)  
+- CI required before merge  
+- Named owner for review  
+</Info>
+
+## Where This Fits in the Bigger Picture
+
+This workflow is often a team’s **first successful cloud agent** because:
+
+- the ROI is immediate
+- the risk is bounded
+- the output is reviewable
+- leadership already cares about the problem
+
+Once this is working, teams often expand into:
+- error remediation
+- dependency hygiene
+- operational cleanup
+
+## Where to Go Next
+
+<CardGroup cols={2}>
+  <Card title="Snyk Integration Docs" href="/guides/cloud-agents/operating-cloud-agents-safely">
+    More information on the Continue Snyk Integration and how you can get started today.  
+</Card>
+
+  <Card title="Add the Snyk Integration" href="https://hub.continue.dev/integrations/snyk">
+    Get started by adding the Snyk integration to your projects
+   </Card>
+</CardGroup>
+
+
+## One Sentence to Remember
+
+<Tip>
+Cloud agents turn security remediation from an interruption into routine maintenance.
+</Tip>

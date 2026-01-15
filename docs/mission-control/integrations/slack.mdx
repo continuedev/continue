@@ -1,15 +1,19 @@
 ---
-title: "Slack Agent"
-description: "Kick off background Agents from Slack by mentioning @Continue"
+title: "Agent for Slack"
+description: "Kick off Cloud Agents from Slack by mentioning @Continue"
 ---
 
 <Warning>
 
-  The Continue Slack app is currently in beta development and undergoing Slack's approval process.
+  Continue uses AI to generate code, issues, and pull requests. AI-generated content may contain inaccuracies, errors, or unexpected results. Always review AI-generated code and changes before merging. Human oversight is recommended for all automated development tasks.
+
+  Please review our Privacy policy here https://www.continue.dev/privacy
+  
+  The Continue App for Slack is currently in beta development and undergoing Slack's approval process.
 
 </Warning>
 
-<Card title="Connect the Slack Integration to Help You Complete:" icon="slack" href="https://hub.continue.dev/integrations/slack">
+<Card title="Connect Continue to Slack to Help You Complete:" icon="slack" href="https://hub.continue.dev/integrations/slack">
 
   - Quick bug fixes and feature implementations
   - Code reviews and refactoring
@@ -20,13 +24,14 @@ description: "Kick off background Agents from Slack by mentioning @Continue"
 
 ## Usage
 
-To kick off an agent, mention `@Continue` with a short task description.
+To kick off a Cloud Agent, mention `@Continue` with a short task description.
 
 ### Thread Context
 
-When you mention `@Continue` in a **Slack thread**, Continue automatically uses the entire conversation as context. This means your agent starts with full situational awareness.
+When you mention `@Continue` in a **Slack thread**, Continue automatically uses the entire conversation as context. This means your Cloud Agent starts with full situational awareness.
 
 If you start a **new message** (not a reply), Continue only sees that single message for context.  
+
 Use this for quick standalone requests.
 
 <Tip>
@@ -79,29 +84,31 @@ You can also click the Slack icon in the agents page to return to the Slack mess
 
 ## Disconnecting
 
-To remove the Slack integration:
+To remove your Slack connection:
 
 1. Go to [hub.continue.dev/settings/integrations](https://hub.continue.dev/settings/integrations)
-2. Find your Slack integration
+2. Find your Slack connection
 3. Click "Disconnect"
 
 ## Support
 
 <Warning>
 
-  The Slack integration is in active development. We'd love to hear your feedback:
+  Our integration with Slack is in active development. We'd love to hear your feedback:
   - Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
   - Feature requests: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
 
 </Warning>
 
+See our support page for more details: https://continue.dev/support
+
 ## Related Resources
 
 <CardGroup cols={2}>
 
-  <Card title="Agents Introduction" icon="robot" href="../../agents/intro">
+  <Card title="Cloud Agents Introduction" icon="robot" href="../../agents/intro">
 
-    Learn about Continue agents.
+    Learn about Continue Cloud Agents.
 
   </Card>
 

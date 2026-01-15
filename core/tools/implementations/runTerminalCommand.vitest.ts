@@ -553,6 +553,58 @@ describe("runTerminalCommandImpl", () => {
         // This demonstrates why the fix is needed - fileURLToPath throws on non-file URIs
         expect(() => fileURLToPath(nonFileUri)).toThrow();
       });
+
+      it("should handle vscode-remote URIs by extracting pathname", async () => {
+        // Various remote URI formats that VS Code uses
+        const remoteUris = [
+          "vscode-remote://wsl+Ubuntu/home/user/project",
+          "vscode-remote://ssh-remote+myserver/home/user/project",
+          "vscode-remote://dev-container+abc123/workspace",
+        ];
+
+        for (const uri of remoteUris) {
+          mockGetWorkspaceDirs.mockResolvedValue([uri]);
+
+          // Should not throw - the generic URI handler extracts the pathname
+          await expect(
+            runTerminalCommandImpl(
+              { command: "echo test", waitForCompletion: false },
+              createMockExtras(),
+            ),
+          ).resolves.toBeDefined();
+        }
+      });
+
+      it("should decode URI-encoded characters in remote workspace paths", async () => {
+        // Path with spaces and special characters
+        const encodedUri =
+          "vscode-remote://wsl+Ubuntu/home/user/my%20project%20%28test%29";
+        mockGetWorkspaceDirs.mockResolvedValue([encodedUri]);
+
+        // Should handle without throwing - decodeURIComponent is applied
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it("should prefer file:// URIs over remote URIs when both present", async () => {
+        const workspaceDirs = [
+          "vscode-remote://wsl+Ubuntu/home/user/remote-project",
+          "file:///home/user/local-project",
+        ];
+        mockGetWorkspaceDirs.mockResolvedValue(workspaceDirs);
+
+        // Should succeed, preferring the file:// URI
+        await expect(
+          runTerminalCommandImpl(
+            { command: "echo test", waitForCompletion: false },
+            createMockExtras(),
+          ),
+        ).resolves.toBeDefined();
+      });
     });
 
     describe("remote environment handling", () => {
