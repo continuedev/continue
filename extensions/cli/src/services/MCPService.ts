@@ -4,6 +4,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Agent as HttpsAgent } from "https";
 import {
   HttpMcpServer,
   SseMcpServer,
@@ -547,7 +548,11 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
     const apiKey = this.apiKeyCache.get(serverConfig.name);
-    // Merge apiKey into headers if provided
+    const sseAgent =
+      serverConfig.requestOptions?.verifySsl === false
+        ? new HttpsAgent({ rejectUnauthorized: false })
+        : undefined;
+
     const headers = {
       ...serverConfig.requestOptions?.headers,
       ...(apiKey && {
@@ -564,16 +569,23 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
               ...init?.headers,
               ...headers,
             },
+            ...(sseAgent && { agent: sseAgent }),
           }),
       },
-      requestInit: { headers },
+      requestInit: {
+        headers,
+        ...(sseAgent && { agent: sseAgent }),
+      },
     });
   }
   private constructHttpTransport(
     serverConfig: HttpMcpServer,
   ): StreamableHTTPClientTransport {
-    // Merge apiKey into headers if provided
     const apiKey = this.apiKeyCache.get(serverConfig.name);
+    const streamableAgent =
+      serverConfig.requestOptions?.verifySsl === false
+        ? new HttpsAgent({ rejectUnauthorized: false })
+        : undefined;
 
     const headers = {
       ...serverConfig.requestOptions?.headers,
@@ -583,7 +595,10 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     };
 
     return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
-      requestInit: { headers },
+      requestInit: {
+        headers,
+        ...(streamableAgent && { agent: streamableAgent }),
+      },
     });
   }
   private constructStdioTransport(
