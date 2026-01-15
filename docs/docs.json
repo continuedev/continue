@@ -96,69 +96,6 @@
             ]
           },
           {
-            "group": "IDE Extensions",
-            "icon": "star",
-            "expanded": false,
-            "pages": [
-              "ide-extensions/install",
-              "ide-extensions/quick-start",
-              "ide-extensions/settings",
-              {
-                "group": "Agent",
-                "expanded": false,
-                "icon": "robot",
-                "pages": [
-                  "ide-extensions/agent/quick-start",
-                  "ide-extensions/agent/how-it-works",
-                  "ide-extensions/agent/plan-mode",
-                  "ide-extensions/agent/model-setup",
-                  "ide-extensions/agent/how-to-customize",
-                  "ide-extensions/agent/context-selection"
-                ]
-              },
-              {
-                "group": "Chat",
-                "expanded": false,
-                "icon": "messages",
-                "pages": [
-                  "ide-extensions/chat/quick-start",
-                  "ide-extensions/chat/how-it-works",
-                  "ide-extensions/chat/model-setup",
-                  "ide-extensions/chat/how-to-customize",
-                  "ide-extensions/chat/context-selection"
-                ]
-              },
-              {
-                "group": "Autocomplete",
-                "expanded": false,
-
-                "icon": "sparkles",
-                "pages": [
-                  "ide-extensions/autocomplete/quick-start",
-                  "ide-extensions/autocomplete/how-it-works",
-                  "ide-extensions/autocomplete/model-setup",
-                  "ide-extensions/autocomplete/how-to-customize",
-                  "ide-extensions/autocomplete/context-selection",
-                  "ide-extensions/autocomplete/next-edit"
-                ]
-              },
-              {
-                "group": "Edit",
-                "expanded": false,
-
-                "icon": "pen-to-square",
-                "pages": [
-                  "ide-extensions/edit/quick-start",
-                  "ide-extensions/edit/how-it-works",
-                  "ide-extensions/edit/model-setup",
-                  "ide-extensions/edit/how-to-customize",
-                  "ide-extensions/edit/context-selection"
-                ]
-              }
-            ]
-          },
-
-          {
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
@@ -167,10 +104,71 @@
         ]
       },
       {
-        "tab": "Customize",
+        "tab": "IDE Extensions",
         "groups": [
           {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": [
+              "ide-extensions/install",
+              "ide-extensions/quick-start",
+              "ide-extensions/settings"
+            ]
+          },
+          {
+            "group": "Agent",
+            "expanded": false,
+            "icon": "robot",
+            "pages": [
+              "ide-extensions/agent/quick-start",
+              "ide-extensions/agent/how-it-works",
+              "ide-extensions/agent/plan-mode",
+              "ide-extensions/agent/model-setup",
+              "ide-extensions/agent/how-to-customize",
+              "ide-extensions/agent/context-selection"
+            ]
+          },
+          {
+            "group": "Chat",
+            "expanded": false,
+            "icon": "messages",
+            "pages": [
+              "ide-extensions/chat/quick-start",
+              "ide-extensions/chat/how-it-works",
+              "ide-extensions/chat/model-setup",
+              "ide-extensions/chat/how-to-customize",
+              "ide-extensions/chat/context-selection"
+            ]
+          },
+          {
+            "group": "Autocomplete",
+            "expanded": false,
+            "icon": "sparkles",
+            "pages": [
+              "ide-extensions/autocomplete/quick-start",
+              "ide-extensions/autocomplete/how-it-works",
+              "ide-extensions/autocomplete/model-setup",
+              "ide-extensions/autocomplete/how-to-customize",
+              "ide-extensions/autocomplete/context-selection",
+              "ide-extensions/autocomplete/next-edit"
+            ]
+          },
+          {
+            "group": "Edit",
+            "expanded": false,
+            "icon": "pen-to-square",
+            "pages": [
+              "ide-extensions/edit/quick-start",
+              "ide-extensions/edit/how-it-works",
+              "ide-extensions/edit/model-setup",
+              "ide-extensions/edit/how-to-customize",
+              "ide-extensions/edit/context-selection"
+            ]
+          },
+          {
             "group": "Customize",
+            "expanded": false,
+            "icon": "sliders",
             "pages": [
               "customize/overview",
               "customize/models",
@@ -230,7 +228,6 @@
                   "customize/model-roles/reranking"
                 ]
               },
-
               {
                 "group": "Deep Dives",
                 "icon": "microscope",
@@ -246,6 +243,20 @@
                 ]
               },
               "customize/telemetry"
+            ]
+          },
+          {
+            "group": "Reference",
+            "expanded": false,
+            "icon": "code",
+            "pages": [
+              "reference",
+              "reference/yaml-migration",
+              "reference/continue-mcp",
+              "reference/json-reference",
+              "reference/deprecated-context-providers",
+              "reference/deprecated-codebase",
+              "reference/deprecated-docs"
             ]
           }
         ]
@@ -323,24 +334,6 @@
                   "guides/klavis-mcp-continue-cookbook"
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Reference",
-        "groups": [
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "reference",
-              "reference/yaml-migration",
-              "reference/continue-mcp",
-              "reference/json-reference",
-              "reference/deprecated-context-providers",
-              "reference/deprecated-codebase",
-              "reference/deprecated-docs"
             ]
           }
         ]
