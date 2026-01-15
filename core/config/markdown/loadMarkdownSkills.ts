@@ -7,7 +7,7 @@ import { IDE, Skill } from "../..";
 import { walkDir } from "../../indexing/walkDir";
 import { localPathToUri } from "../../util/pathToUri";
 import { getGlobalFolderWithName } from "../../util/paths";
-import { joinPathsToUri } from "../../util/uri";
+import { findUriInDirs, joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 const skillFrontmatterSchema = z.object({
@@ -65,6 +65,8 @@ export async function loadMarkdownSkills(ide: IDE) {
     const skillFiles = yamlAndMarkdownFileUris.filter((path) =>
       path.endsWith("SKILL.md"),
     );
+
+    const workspaceDirs = await ide.getWorkspaceDirs();
     for (const fileUri of skillFiles) {
       try {
         const content = await ide.readFile(fileUri);
@@ -74,18 +76,22 @@ export async function loadMarkdownSkills(ide: IDE) {
 
         const validatedFrontmatter = skillFrontmatterSchema.parse(frontmatter);
 
-        const filesInSkillsDirectory = await walkDir(
-          fileUri.substring(0, fileUri.lastIndexOf("/")),
-          ide,
-          {
+        const filesInSkillsDirectory = (
+          await walkDir(fileUri.substring(0, fileUri.lastIndexOf("/")), ide, {
             source: "get skill files",
-          },
-        );
+          })
+        )
+          // do not include SKILL.md as it is already in content
+          .filter((file) => !file.endsWith("SKILL.md"));
+
+        const foundRelativeUri = findUriInDirs(fileUri, workspaceDirs);
 
         skills.push({
           ...validatedFrontmatter,
           content: markdown,
-          path: fileUri,
+          path: foundRelativeUri.foundInDir
+            ? foundRelativeUri.relativePathOrBasename
+            : fileUri,
           files: filesInSkillsDirectory,
         });
       } catch (error) {
