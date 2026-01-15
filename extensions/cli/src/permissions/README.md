@@ -13,7 +13,7 @@ The system comes with sensible default policies:
 - Read-only tools (`readFile`, `listFiles`, `searchCode`, `fetch`) are **allowed** by default
 - Write operations (`writeFile`) require **confirmation** (ask)
 - Terminal commands (`runTerminalCommand`) require **confirmation** (ask)
-- MCP tools (those with `mcp__` prefix) require **confirmation** (ask) in TUI mode, but are **allowed** automatically in headless mode
+- MCP tools and Bash require **confirmation** (ask) in TUI mode, but are **allowed** automatically in headless mode
 - Any unmatched tools default to **ask**
 
 ## How It Works

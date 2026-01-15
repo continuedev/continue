@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { getDefaultToolPolicies } from "./defaultPolicies.js";
+const DEFAULT_TOOL_POLICIES = getDefaultToolPolicies();
 
 describe("defaultPolicies", () => {
   it("should have correct permissions for read-only tools", () => {
@@ -21,9 +22,11 @@ describe("defaultPolicies", () => {
     }
   });
 
-  it("should not have MCP-specific policy in defaults", () => {
-    const mcpPolicy = DEFAULT_TOOL_POLICIES.find((p) => p.tool === "mcp__*");
-    expect(mcpPolicy).toBeUndefined();
+  it("should not have prefix wildcard policies in defaults", () => {
+    const prefixWildcardPolicy = DEFAULT_TOOL_POLICIES.find(
+      (p) => p.tool.endsWith("*") && p.tool !== "*",
+    );
+    expect(prefixWildcardPolicy).toBeUndefined();
   });
 
   it("should have correct permissions for write tools", () => {

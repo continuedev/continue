@@ -9,6 +9,10 @@ import {
 } from "../permissions/types.js";
 import { logger } from "../util/logger.js";
 
+import {
+  AUTO_MODE_POLICIES,
+  PLAN_MODE_POLICIES,
+} from "src/permissions/defaultPolicies.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -163,60 +167,17 @@ export class ToolPermissionService
   }
 
   /**
-   * Generate headless-specific policies
-   * In headless mode, MCP tools are allowed by default since there's no user to ask
-   */
-  private generateHeadlessPolicies(): ToolPermissionPolicy[] {
-    if (!this.currentState.isHeadless) {
-      return [];
-    }
-
-    return [
-      // Allow MCP tools in headless mode
-      { tool: "mcp__*", permission: "allow" },
-    ];
-  }
-
-  /**
    * Generate mode-specific policies based on the current mode
    */
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
-        return [
-          // Exclude all write tools with absolute priority
-          { tool: "Write", permission: "exclude" },
-          { tool: "Edit", permission: "exclude" },
-          { tool: "MultiEdit", permission: "exclude" },
-          { tool: "NotebookEdit", permission: "exclude" },
-          // Allow all read tools and bash
-          { tool: "Bash", permission: "allow" },
-          { tool: "Read", permission: "allow" },
-          { tool: "List", permission: "allow" },
-          { tool: "Search", permission: "allow" },
-          { tool: "Fetch", permission: "allow" },
-          { tool: "Diff", permission: "allow" },
-          { tool: "Checklist", permission: "allow" },
-          { tool: "NotebookRead", permission: "allow" },
-          { tool: "LS", permission: "allow" },
-          { tool: "Glob", permission: "allow" },
-          { tool: "Grep", permission: "allow" },
-          { tool: "WebFetch", permission: "allow" },
-          { tool: "WebSearch", permission: "allow" },
-          // Allow MCP tools (no way to know if they're read only but shouldn't disable mcp usage in plan)
-          { tool: "mcp:*", permission: "allow" },
-          // Default: exclude everything else to ensure no writes
-          { tool: "*", permission: "exclude" },
-        ];
-
+        return [...PLAN_MODE_POLICIES];
       case "auto":
-        // Auto mode: Complete override - allow everything without asking
-        return [{ tool: "*", permission: "allow" }];
-
+        return [...AUTO_MODE_POLICIES];
       case "normal":
       default:
-        // Normal mode: No mode policies, use existing configuration
+        // Normal mode uses the more nuanced policy loading
         return [];
     }
   }
@@ -243,7 +204,6 @@ export class ToolPermissionService
     }
 
     const modePolicies = this.generateModePolicies();
-    const headlessPolicies = this.generateHeadlessPolicies();
 
     let allPolicies: ToolPermissionPolicy[];
     if (agentFileServiceState?.agentFile) {
@@ -257,23 +217,23 @@ export class ToolPermissionService
       this.currentState.currentMode === "auto"
     ) {
       // For plan and auto modes, use ONLY mode policies (absolute override)
-      // But still apply headless policies if in headless mode
-      allPolicies = [...headlessPolicies, ...modePolicies];
+      allPolicies = [...modePolicies];
     } else {
       // Normal mode: combine headless + mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
         useDefaults: true,
+        isHeadless: this.currentState.isHeadless,
       });
-      allPolicies = [...headlessPolicies, ...modePolicies, ...compiledPolicies];
+      allPolicies = [...compiledPolicies];
     }
 
     this.setState({
       permissions: { policies: allPolicies },
       currentMode: this.currentState.currentMode,
       isHeadless: this.currentState.isHeadless,
-      modePolicyCount: headlessPolicies.length + modePolicies.length,
+      modePolicyCount: modePolicies.length,
     });
 
     (this as any).isInitialized = true;
@@ -348,7 +308,6 @@ export class ToolPermissionService
     });
     this.emit("modeChanged", newMode, currentMode);
 
-    // Regenerate policies with the new mode
     const modePolicies = this.generateModePolicies();
 
     // For plan and auto modes, use ONLY mode policies (absolute override)
@@ -356,7 +315,7 @@ export class ToolPermissionService
     let allPolicies: ToolPermissionPolicy[];
     if (newMode === "plan" || newMode === "auto") {
       // Absolute override: ignore all user configuration
-      allPolicies = modePolicies;
+      allPolicies = [...modePolicies];
     } else {
       // Normal mode: restore original policies if we have them
       if (this.currentState.originalPolicies) {
@@ -368,7 +327,7 @@ export class ToolPermissionService
           this.currentState.originalPolicies.policies.slice(
             originalModePolicyCount,
           );
-        allPolicies = [...modePolicies, ...originalNonModePolicies];
+        allPolicies = [...originalNonModePolicies];
         logger.debug(
           `Restored ${originalNonModePolicies.length} original user policies`,
         );
@@ -380,7 +339,7 @@ export class ToolPermissionService
           existingPolicies.length > previousModePolicyCount
             ? existingPolicies.slice(previousModePolicyCount)
             : [];
-        allPolicies = [...modePolicies, ...nonModePolicies];
+        allPolicies = [...nonModePolicies];
       }
     }
 
@@ -429,20 +388,15 @@ export class ToolPermissionService
       useDefaults: true,
     });
 
-    // Generate mode-specific policies (should be empty for normal mode)
-    const modePolicies = this.generateModePolicies();
-
     // Combine mode policies with freshly loaded user policies
-    const allPolicies = [...modePolicies, ...freshPolicies];
+    const allPolicies = [...freshPolicies];
 
     this.setState({
       permissions: { policies: allPolicies },
-      modePolicyCount: modePolicies.length,
+      modePolicyCount: 0,
     });
 
-    logger.debug(
-      `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
-    );
+    logger.debug(`Reloaded permissions: ${freshPolicies.length} user policies`);
   }
 
   /**
@@ -450,25 +404,5 @@ export class ToolPermissionService
    */
   override isReady(): boolean {
     return true;
-  }
-
-  public getAvailableModes(): Array<{
-    mode: PermissionMode;
-    description: string;
-  }> {
-    return [
-      {
-        mode: "normal",
-        description: "Default mode - follows configured permission policies",
-      },
-      {
-        mode: "plan",
-        description: "Planning mode - only allow read-only tools for analysis",
-      },
-      {
-        mode: "auto",
-        description: "Automatically allow all tools without asking",
-      },
-    ];
   }
 }

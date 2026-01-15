@@ -177,7 +177,7 @@ export function convertToolToChatCompletionTool(
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
     name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
+    displayName: mcpTool.name,
     description: mcpTool.description ?? "",
     parameters: {
       type: "object",
