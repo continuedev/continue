@@ -1901,6 +1901,7 @@ export interface Skill {
   description: string;
   path: string;
   content: string;
+  files: string[];
   license?: string;
 }
 

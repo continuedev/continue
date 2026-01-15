@@ -33,7 +33,7 @@ async function getClaudeSkillsDir(ide: IDE) {
         const exists = await ide.fileExists(dir);
         if (!exists) return [];
         const uris = await walkDir(dir, ide, {
-          source: "get claude skills files",
+          source: "get .claude skills files",
         });
         // filter markdown files only
         return uris.filter((uri) => uri.endsWith(".md"));
@@ -74,10 +74,19 @@ export async function loadMarkdownSkills(ide: IDE) {
 
         const validatedFrontmatter = skillFrontmatterSchema.parse(frontmatter);
 
+        const filesInSkillsDirectory = await walkDir(
+          fileUri.substring(0, fileUri.lastIndexOf("/")),
+          ide,
+          {
+            source: "get skill files",
+          },
+        );
+
         skills.push({
           ...validatedFrontmatter,
           content: markdown,
           path: fileUri,
+          files: filesInSkillsDirectory,
         });
       } catch (error) {
         errors.push({

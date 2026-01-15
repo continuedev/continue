@@ -22,7 +22,16 @@ export const readSkillImpl: ToolImpl = async (args, extras) => {
     {
       name: `Skill: ${skill.name}`,
       description: skill.description,
-      content: `# ${skill.name}\n\n${skill.description}\n\n## Instructions\n\n${skill.content}`,
+      content: `# ${skill.name}\n
+${skill.description}\n
+## Instructions\n
+${skill.content}\n
+## Supporting files
+Skill directory:
+${skill.files.join("\n")}
+
+Use the read file tool to access these files as needed.
+`,
       uri: {
         type: "file",
         value: skill.path,
