@@ -1,3 +1,7 @@
+import {
+  AUTO_MODE_POLICIES,
+  PLAN_MODE_POLICIES,
+} from "src/permissions/defaultPolicies.js";
 import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
@@ -9,10 +13,6 @@ import {
 } from "../permissions/types.js";
 import { logger } from "../util/logger.js";
 
-import {
-  AUTO_MODE_POLICIES,
-  PLAN_MODE_POLICIES,
-} from "src/permissions/defaultPolicies.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
