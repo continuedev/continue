@@ -4,6 +4,10 @@ import {
 } from "@continuedev/config-yaml";
 import z from "zod";
 import { IDE, Skill } from "../..";
+import { walkDir } from "../../indexing/walkDir";
+import { localPathToUri } from "../../util/pathToUri";
+import { getGlobalFolderWithName } from "../../util/paths";
+import { joinPathsToUri } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 const skillFrontmatterSchema = z.object({
@@ -11,28 +15,61 @@ const skillFrontmatterSchema = z.object({
   description: z.string().min(1),
 });
 
+const SKILLS_DIR = "skills";
+
+/**
+ * Get skills from .claude/skills directory
+ */
+async function getClaudeSkillsDir(ide: IDE) {
+  const fullDirs = (await ide.getWorkspaceDirs()).map((dir) =>
+    joinPathsToUri(dir, ".claude", SKILLS_DIR),
+  );
+
+  fullDirs.push(localPathToUri(getGlobalFolderWithName(SKILLS_DIR)));
+
+  return (
+    await Promise.all(
+      fullDirs.map(async (dir) => {
+        const exists = await ide.fileExists(dir);
+        if (!exists) return [];
+        const uris = await walkDir(dir, ide, {
+          source: "get claude skills files",
+        });
+        // filter markdown files only
+        return uris.filter((uri) => uri.endsWith(".md"));
+      }),
+    )
+  ).flat();
+}
+
 export async function loadMarkdownSkills(ide: IDE) {
   const errors: ConfigValidationError[] = [];
   const skills: Skill[] = [];
 
   try {
-    const yamlAndMarkdownFiles = await getAllDotContinueDefinitionFiles(
-      ide,
-      {
-        includeGlobal: true,
-        includeWorkspace: true,
-        fileExtType: "markdown",
-      },
-      "", // SKILL.md can exist in any .continue subdirectory
-    );
+    const yamlAndMarkdownFileUris = [
+      ...(
+        await getAllDotContinueDefinitionFiles(
+          ide,
+          {
+            includeGlobal: true,
+            includeWorkspace: true,
+            fileExtType: "markdown",
+          },
+          SKILLS_DIR,
+        )
+      ).map((file) => file.path),
+      ...(await getClaudeSkillsDir(ide)),
+    ];
 
-    const skillFiles = yamlAndMarkdownFiles.filter((file) =>
-      file.path.endsWith("SKILL.md"),
+    const skillFiles = yamlAndMarkdownFileUris.filter((path) =>
+      path.endsWith("SKILL.md"),
     );
-    for (const file of skillFiles) {
+    for (const fileUri of skillFiles) {
       try {
+        const content = await ide.readFile(fileUri);
         const { frontmatter, markdown } = parseMarkdownRule(
-          file.content,
+          content,
         ) as unknown as { frontmatter: Skill; markdown: string };
 
         const validatedFrontmatter = skillFrontmatterSchema.parse(frontmatter);
@@ -40,7 +77,7 @@ export async function loadMarkdownSkills(ide: IDE) {
         skills.push({
           ...validatedFrontmatter,
           content: markdown,
-          path: file.path.slice(7),
+          path: fileUri,
         });
       } catch (error) {
         errors.push({
