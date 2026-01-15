@@ -37,7 +37,7 @@ function getRequestRuleSystemMessageDescription(
   return prefix + availableRules + suffix;
 }
 
-export const requestRuleTool: GetTool = ({ rules }) => ({
+export const requestRuleTool: GetTool = async ({ rules }) => ({
   type: "function",
   displayTitle: "Request Rules",
   wouldLikeTo: "request rule {{{ name }}}",
