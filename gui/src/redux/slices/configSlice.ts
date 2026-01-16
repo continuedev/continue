@@ -23,6 +23,7 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
     autocomplete: [],
     rerank: [],
     embed: [],
+    subagent: [],
   },
   selectedModelByRole: {
     chat: null,
@@ -32,6 +33,7 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
     autocomplete: null,
     rerank: null,
     embed: null,
+    subagent: null,
   },
   rules: [],
 };

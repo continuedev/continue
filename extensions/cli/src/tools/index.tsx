@@ -28,7 +28,11 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
-import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
+import { subagentTool } from "./subagent.js";
+import {
+  isBetaSubagentToolEnabled,
+  isBetaUploadArtifactToolEnabled,
+} from "./toolsConfig.js";
 import {
   type Tool,
   type ToolCall,
@@ -119,6 +123,10 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
+  if (isBetaSubagentToolEnabled()) {
+    tools.push(await subagentTool());
+  }
+
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
   );
@@ -177,7 +185,7 @@ export function convertToolToChatCompletionTool(
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
     name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
+    displayName: mcpTool.name,
     description: mcpTool.description ?? "",
     parameters: {
       type: "object",
@@ -214,6 +222,7 @@ export async function executeToolCall(
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
+      { toolCallId: toolCall.id },
     );
     const duration = Date.now() - startTime;
 

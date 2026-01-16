@@ -18,7 +18,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.931.0",
     "@aws-sdk/credential-providers": "^3.931.0",
     "@continuedev/config-types": "^1.0.14",
-    "@continuedev/config-yaml": "^1.36.0",
+    "@continuedev/config-yaml": "^1.38.0",
     "@continuedev/fetch": "^1.6.0",
     "@google/genai": "^1.30.0",
     "ai": "^4.0.33",

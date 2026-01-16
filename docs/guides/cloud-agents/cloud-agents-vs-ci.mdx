@@ -1,0 +1,127 @@
+---
+title: "Cloud Agents vs CI/CD"
+description: "Understand when cloud agents complement CI/CD jobs and when CI is the better tool."
+sidebarTitle: "Vs CI/CD"
+---
+
+<Card title="Why Cloud Agents vs CI/CD?">
+Many teams see cloud agents and think: “Isn’t this just CI?” Sometimes the answer is yes and that’s good. CI is excellent. This guide explains the boundary so you choose the right tool.
+</Card>
+
+
+## What CI/CD Is Great At
+
+<CardGroup cols={2}>
+  <Card title="CI/CD Excels When">
+    - **Deterministic** — the same inputs produce the same results  
+    - **Repeatable** — runs consistently on every commit  
+    - **Policy-enforced** — clear pass/fail rules  
+    - **Strongly testable** — success can be verified automatically  
+  </Card>
+
+  <Card title="Common CI/CD Tasks">
+    - Run tests  
+    - Build artifacts  
+    - Enforce lint rules  
+    - Run static analysis  
+    - Execute fixed scripts  
+  </Card>
+</CardGroup>
+
+## Where CI/CD Breaks Down
+
+CI/CD is weaker when the work requires:
+- interpretation of changing signals
+- multi-system context (errors + analytics + issues)
+- generating patches with reasoning
+- summarizing incidents across tools
+- deciding next steps based on incomplete information
+
+
+## What Cloud Agents Add
+
+Cloud agents are useful when the job is:
+- triage + propose
+- interpret + summarize
+- patch + open a PR
+- coordinate across systems
+
+<Info>
+CI is the best executor of deterministic checks. Cloud agents are best at interpreting signals and producing reviewable outcomes.
+</Info>
+
+
+## Practical Pairings for CI + Cloud Agents
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Repo as Code Repository
+    participant CI as CI Pipeline (GitHub Actions)
+    participant MC as Mission Control
+    participant Agent as Cloud Agent (Continue)
+
+    Dev->>Repo: git push (feature-branch)
+    Repo->>CI: Trigger Build & Test
+
+    rect rgb(255, 240, 240)
+        Note over CI: ❌ Build Fails (Lint/Test Error)
+        CI->>MC: Emit failure + logs
+        MC->>Agent: Dispatch "Fix Build" task (attach logs + repo context)
+    end
+
+    Note over Agent: 1. Analyzes error logs<br/>2. Proposes minimal fix
+    Agent->>Repo: Push fix to agent branch
+    Agent->>Repo: Open **draft PR** ("[Fix Build] <summary>")
+
+    Repo->>CI: Trigger Build & Test (PR checks)
+
+    rect rgb(240, 255, 240)
+        Note over CI: ✅ Build Passes (PR checks)
+    end
+
+    CI->>MC: Report status on PR
+    MC->>Dev: Notify "Draft PR ready for review"
+    ```
+### Pattern 1: CI detects, Agent responds
+
+- CI detects failure or policy issue
+- Cloud agent proposes fix and opens PR
+- Human reviews
+
+### Pattern 2: Agent prepares, CI verifies
+- Cloud agent proposes changes
+- CI runs tests and checks
+- PR is only mergeable if CI passes
+
+### Pattern 3: Agent maintains, CI enforces
+- Agent keeps dependencies tidy weekly
+- CI ensures nothing breaks on merge
+
+
+## A Simple Decision Table
+
+| If your work is... | Prefer... |
+|---|---|
+| deterministic & testable | CI/CD |
+| interpretive & contextual | Cloud agent |
+| needs a patch proposal | Cloud agent + CI validation |
+| needs strict policy enforcement | CI/CD |
+
+---
+
+## Where to Go Next
+
+<CardGroup cols={2}>
+  <Card title="Explore Cloud Agent Integrations" icon="rocket" href="https://hub.continue.dev/integrations">
+
+    Browse ready-to-use AI agents in Continue Mission Control.
+
+  </Card>
+
+  <Card title="Mission Control Setup" icon="terminal" href="https://hub.continue.dev">
+
+    Get started with Continue Mission Control.
+
+  </Card>
+</CardGroup>

@@ -403,7 +403,7 @@ USE_VERCEL_AI_SDK_OPENAI=false cn
 **Short-term (< 1 hour):**
 
 ```json
-"@continuedev/openai-adapters": "1.31.0"
+"@continuedev/openai-adapters": "1.36.0"
 ```
 
 **Long-term:**
