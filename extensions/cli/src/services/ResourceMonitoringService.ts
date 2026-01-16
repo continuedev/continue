@@ -45,7 +45,7 @@ class ResourceMonitoringService {
   private maxHistorySize = 300; // Keep 5 minutes at 1s intervals
   private lastCpuUsage = process.cpuUsage();
   private lastTimestamp = Date.now();
-  private lastFdCheckTime = 0;
+  private lastFdCheckTime = Date.now();
   private fdCheckIntervalMs = 5000; // Check file descriptors every 5 seconds
   private cacheFileCount: number | null = null;
 
@@ -72,6 +72,12 @@ class ResourceMonitoringService {
     this.isMonitoring = true;
     this.lastCpuUsage = process.cpuUsage();
     this.lastTimestamp = Date.now();
+
+    // Initialize file descriptor count on start
+    this.updateFileDescriptorCount().catch(() => {
+      // Ignore errors during initialization
+    });
+    this.lastFdCheckTime = Date.now();
 
     this.monitoringInterval = setInterval(() => {
       this.collectResourceUsage();
@@ -130,11 +136,7 @@ class ResourceMonitoringService {
       },
     };
 
-    // Initialize file descriptor count on start
-    this.updateFileDescriptorCount().catch(() => {
-      // Ignore errors during initialization
-    });
-
+    // Use cached file descriptor count to avoid lsof command leak
     if (this.cacheFileCount !== null) {
       usage.fileDescriptors = this.cacheFileCount;
     }
