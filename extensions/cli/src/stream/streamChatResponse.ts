@@ -461,7 +461,11 @@ export async function streamChatResponse(
     );
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getRequestTools(isHeadless);
+    const rawTools = await getRequestTools(isHeadless);
+    const tools = applyChatCompletionToolOverrides(
+      rawTools,
+      model.chatOptions?.toolPromptOverrides,
+    );
 
     // Pre-API auto-compaction checkpoint (now includes tools)
     const preCompactionResult = await handlePreApiCompaction(chatHistory, {
