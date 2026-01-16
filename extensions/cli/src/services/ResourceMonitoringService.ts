@@ -45,6 +45,9 @@ class ResourceMonitoringService {
   private maxHistorySize = 300; // Keep 5 minutes at 1s intervals
   private lastCpuUsage = process.cpuUsage();
   private lastTimestamp = Date.now();
+  private lastFdCheckTime = 0;
+  private fdCheckIntervalMs = 5000; // Check file descriptors every 5 seconds
+  private cacheFileCount: number | null = null;
 
   async initialize(): Promise<void> {
     // Start monitoring if verbose mode is enabled
@@ -127,16 +130,14 @@ class ResourceMonitoringService {
       },
     };
 
-    // Try to get file descriptor count (Unix only)
-    this.getFileDescriptorCount()
-      .then((count) => {
-        if (count !== null) {
-          usage.fileDescriptors = count;
-        }
-      })
-      .catch(() => {
-        // Ignore errors for file descriptor counting
-      });
+    // Initialize file descriptor count on start
+    this.updateFileDescriptorCount().catch(() => {
+      // Ignore errors during initialization
+    });
+
+    if (this.cacheFileCount !== null) {
+      usage.fileDescriptors = this.cacheFileCount;
+    }
 
     return usage;
   }
@@ -215,6 +216,14 @@ class ResourceMonitoringService {
         this.resourceHistory = this.resourceHistory.slice(-this.maxHistorySize);
       }
 
+      // Periodically update file descriptor count to prevent lsof command leak
+      // Issue: https://github.com/continuedev/continue/issues/9422
+      const now = Date.now();
+      if (now - this.lastFdCheckTime >= this.fdCheckIntervalMs) {
+        this.updateFileDescriptorCount();
+        this.lastFdCheckTime = now;
+      }
+
       // Check for potential issues and log warnings
       this.checkResourceThresholds(usage);
     } catch (error) {
@@ -248,6 +257,13 @@ class ResourceMonitoringService {
         lagMs: Math.round(usage.eventLoop.lag),
         threshold: 100,
       });
+    }
+  }
+
+  private async updateFileDescriptorCount(): Promise<void> {
+    const count = await this.getFileDescriptorCount();
+    if (count !== null) {
+      this.cacheFileCount = count;
     }
   }
 
