@@ -514,6 +514,7 @@ async function intermediateToFinalConfig({
       autocomplete: [...tabAutocompleteModels],
       embed: newEmbedder ? [newEmbedder] : [],
       rerank: newReranker ? [newReranker] : [],
+      subagent: [],
     },
     selectedModelByRole: {
       chat: null, // Not implemented (uses GUI defaultModel)
@@ -523,6 +524,7 @@ async function intermediateToFinalConfig({
       autocomplete: null,
       rerank: newReranker ?? null,
       summarize: null, // Not implemented
+      subagent: null,
     },
     rules: [],
   };

@@ -67,6 +67,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
         embed: null,
         rerank: null,
         summarize: null,
+        subagent: null,
       },
       modelsByRole: {
         apply: [],
@@ -76,6 +77,7 @@ describe("llmsFromModelConfig requestOptions merging", () => {
         embed: [],
         rerank: [],
         summarize: [],
+        subagent: [],
       },
       slashCommands: [],
       tools: [],

@@ -16,6 +16,7 @@ import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFi
 import { readFileImpl } from "./implementations/readFile";
 
 import { readFileRangeImpl } from "./implementations/readFileRange";
+import { readSkillImpl } from "./implementations/readSkill";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
@@ -179,6 +180,8 @@ export async function callBuiltInTool(
       return await requestRuleImpl(args, extras);
     case BuiltInToolNames.CodebaseTool:
       return await codebaseToolImpl(args, extras);
+    case BuiltInToolNames.ReadSkill:
+      return await readSkillImpl(args, extras);
     case BuiltInToolNames.ViewRepoMap:
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
