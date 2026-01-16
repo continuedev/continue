@@ -1,12 +1,12 @@
 ---
 title: "Sentry Integration"
-description: "Connect Sentry to Mission Control so agents can automatically respond to production errors, analyzing issues as they occur and proposing fixes before they escalate."
+description: "Connect Sentry to Mission Control so Cloud Agents can automatically respond to production errors, analyzing issues as they occur and proposing fixes before they escalate."
 ---
 
 
 
 <Card
-  title="Connect Sentry to enable agents to:"
+  title="Connect Sentry to enable Cloud Agents to:"
   icon="shield-exclamation"
   href="https://hub.continue.dev/integrations/sentry"
 >
@@ -18,7 +18,7 @@ description: "Connect Sentry to Mission Control so agents can automatically resp
 </Card>
 
 
-## Official Workflow Templates
+## Official Workflow Templates for Sentry Cloud Agents in Continue
 
 The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Sentry-based remediation.
 
@@ -32,13 +32,13 @@ The following **official workflow template** is maintained by the Continue team 
 Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **Mission Control → Integrations → Sentry**.
 </Tip>
 
-### Advanced Use Cases
+### Advanced Use Cases for Sentry Cloud Agents in Continue
 
 <Accordion title="Advanced: Custom Sentry Workflow Ideas">
 These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
 
 - Trigger investigations only for high-impact or high-frequency errors
-- Route specific error types to specialized agents
+- Route specific error types to specialized Cloud Agents
 - Correlate Sentry issues with recent deploys or feature flags
 - Generate weekly error trend summaries for engineering teams
 - Combine Sentry signals with GitHub or analytics data
@@ -49,7 +49,7 @@ These examples are not officially maintained by the Continue team, but illustrat
 When connecting Sentry, you’ll authorize Continue to receive error events and access issue data.
 
 - **Project and issue access**  
-  Agents can access Sentry projects and issues you have permission to view within your organization.
+  Cloud Agents can access Sentry projects and issues you have permission to view within your organization.
 
 - **Permissions**  
   Approved permissions allow Continue to analyze error events, read issue details, and create pull requests or GitHub issues on your behalf.

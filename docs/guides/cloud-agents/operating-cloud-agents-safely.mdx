@@ -1,0 +1,233 @@
+---
+title: "Operating Cloud Agents Safely"
+description: "Guardrails for running cloud agents in production: ownership, permissions, review, auditability, and blast radius."
+sidebarTitle: "Operate Safely"
+---
+
+<Card title="The Goal">
+
+Cloud agents should reduce risk and interruptions not introduce new ones. This guide covers practical guardrails that make cloud agents safe for real teams.
+</Card>
+
+## The Safety Baseline for Cloud Agents
+
+<CardGroup cols={3}>
+  <Card title="Ownership">
+    Every workflow has a named owner and an escalation path.
+  </Card>
+  <Card title="Reviewability">
+    Outputs are diffable, explainable, and revertible.
+  </Card>
+  <Card title="Bounded Scope">
+    One repo → 
+    one workflow → 
+    one trigger. 
+    *Expand only after success.*
+  </Card>
+</CardGroup>
+
+
+## A Safe Adoption Path
+
+<Steps>
+  <Step title="Start Manual">
+    Run as a one-off task. Validate cloud agent outputs and define acceptance criteria.
+  </Step>
+
+  <Step title="Move to Assisted">
+    Allow automated triggering, but keep human approval before merge/action.
+  </Step>
+
+  <Step title="Automate Selectively">
+    Only automate workflows with predictable blast radius, clear rollback, and stable output quality.
+  </Step>
+</Steps>
+
+<Warning title="The most common failure">
+Cloud agents don’t fail because they’re autonomous.  
+They fail because teams automate before they’ve defined review criteria and ownership.
+</Warning>
+
+## 1) Ownership Comes First
+
+Before you automate anything, make these true:
+
+<CardGroup cols={2}>
+  <Card title="Name an Owner">
+    One person is responsible for:  
+    - reviewing outcomes  
+    - tuning prompts/rules  
+    - responding to failures  
+  </Card>
+
+  <Card title="Define Escalation">
+    Decide what happens when:  
+    - the cloud agent can’t complete work  
+    - output confidence is low  
+    - a run fails repeatedly  
+  </Card>
+</CardGroup>
+
+<AccordionGroup>
+  <Accordion title="What good ownership looks like">
+    - The workflow has a dedicated Slack channel or notification route  
+    - There is a “stop the line” decision owner  
+    - Ownership does not rotate implicitly (it’s explicit)
+  </Accordion>
+
+  <Accordion title="Red flags">
+    - “Whoever sees it first” is the owner  
+    - Alerts route to a general channel with no responder  
+    - No one feels safe turning it off
+  </Accordion>
+</AccordionGroup>
+
+## 2) Constrain Blast Radius
+
+The fastest path to trust is a smaller blast radius.
+
+<CardGroup cols={3}>
+  <Card title="Start with One Repo">
+    Pick a low-risk repo or a single service to prove value.
+  </Card>
+
+  <Card title="One Class of Issues">
+    Narrow the scope: one recurring error type, one vuln class, one cleanup task.
+  </Card>
+
+  <Card title="Cap Output Size">
+    Set expectations like “no more than N files” or “single dependency PRs.”
+  </Card>
+</CardGroup>
+
+<Callout type="info" title="A good first constraint">
+Prefer PRs and reports over direct writes or production actions.
+</Callout>
+
+## 3) Review Is the Safety Rail
+
+Treat every cloud agent run like you’d treat a teammate’s PR.
+
+<Tabs>
+  <Tab title="Review checklist">
+    Use a lightweight checklist:
+
+    - [ ] Does the change match the prompt intent?
+    - [ ] Is the blast radius clear?
+    - [ ] Are tests updated or unaffected?
+    - [ ] Are failure cases acceptable?
+    - [ ] Is rollback straightforward?
+  </Tab>
+
+  <Tab title="What “reviewable” means">
+    Reviewable outputs are:
+
+    - **Diffable** (PRs, patches, file changes)
+    - **Explainable** (short rationale, linked inputs)
+    - **Revertible** (easy rollback path)
+  </Tab>
+
+  <Tab title="When to block merge">
+    Block merge when:
+
+    - scope is unexpectedly broad
+    - behavior changes are unclear
+    - it introduces new dependencies without justification
+    - it “fixes” by deleting or disabling core functionality
+  </Tab>
+</Tabs>
+
+## 4) Permissions: Least Privilege by Default
+
+Give agents the smallest set of permissions required for the job.
+
+<AccordionGroup>
+  <Accordion title="Permission guidelines">
+    - Prefer **read-only** until the workflow proves reliable  
+    - Prefer **PR creation** over direct push  
+    - Scope external tools (Sentry/Snyk/etc.) to the minimum endpoints  
+  </Accordion>
+
+  <Accordion title="Practical permission levels">
+    - Level 1: Read repo + create report  
+    - Level 2: Create PRs (drafts first)  
+    - Level 3: Update PRs based on review comments  
+    - Level 4: Automate merges only for narrow, proven workflows  
+  </Accordion>
+</AccordionGroup>
+
+<Callout type="warning" title="Avoid early">
+Do not start with permissions that allow silent writes to main or production mutations.
+</Callout>
+
+## 5) Observability & Auditability
+
+If you can’t answer these questions, you don’t have a safe system yet:
+
+<CardGroup cols={2}>
+  <Card title="Run provenance">
+    - What ran?  
+    - Why did it run?  
+    - What inputs did it use?
+  </Card>
+
+  <Card title="Outcome tracking">
+    - What did it change?  
+    - Who reviewed/approved it?  
+    - Did it succeed or require intervention?
+  </Card>
+</CardGroup>
+
+<Callout type="info" title="Why this matters">
+Auditability turns “AI did something” into “we can explain what happened.”
+That’s the difference between experimentation and production.
+</Callout>
+
+## 6) Failure Handling & Safe Defaults
+
+Set defaults that fail safely.
+
+<AccordionGroup>
+  <Accordion title="Recommended default behaviors">
+    - **Fail closed** (no silent actions)  
+    - If uncertain, produce a **report** instead of a change  
+  </Accordion>
+
+  <Accordion title="Common failure modes">
+    - External tool API is unavailable  
+    - Repo state changed mid-run  
+    - Cloud agent proposes a fix that doesn’t pass CI  
+    - Output becomes noisy (too many PRs/reports)
+  </Accordion>
+
+  <Accordion title="Recovery playbook">
+    - Pause the workflow  
+    - Reduce scope / increase constraints  
+    - Move back a governance level (Automated → Assisted → Manual)  
+    - Update acceptance criteria and rerun
+  </Accordion>
+</AccordionGroup>
+
+## Pre-Flight Checklist
+
+<Card icon="cloud-check" title="Ready to run safely?">
+- [ ] Workflow owner is named  
+- [ ] Trigger is defined and bounded  
+- [ ] Outputs are reviewable (PR/report)  
+- [ ] Permissions follow least-privilege  
+- [ ] Blast radius is constrained  
+- [ ] Failure handling is defined  
+- [ ] There is a way to pause/disable quickly  
+</Card>
+
+## Where to Go Next
+
+<CardGroup cols={2}>
+  <Card title="From Task → Automation" href="/guides/cloud-agents/from-task-to-automation">
+    The trust ladder for moving from manual to automated safely.
+  </Card>
+
+  <Card title="Automated Security Remediation" href="/guides/cloud-agents/automated-security-remediation-with-snyk">
+    Proven starter workflow with clear triggers and review points.
+  </Card>
+</CardGroup>

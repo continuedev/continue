@@ -13,31 +13,37 @@ description: "Create, run, and automate AI agents across Mission Control, termin
   Central dashboard for managing Agents, Tasks, Workflows, and Integrations.
 </Note>
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Create a Task" icon="plus" href="/mission-control/tasks">
-    Trigger your Agent with a prompt, tools, and rules to complete a specific job.
+    Prompt an agent to complete a one-off task.
 
-    <sub>• Run manually or from your Inbox</sub><br />
-    <sub>• Reuse and share with teammates</sub>
+    <sub>• Run a one-time task or test for automation</sub><br />
+    <sub>• Monitor progress in the tasks tab</sub>
   </Card>
-  <Card title="Set up a Workflow" icon="clock" href="/mission-control/workflows">
-    Schedule recurring Tasks or connect webhooks to trigger Agents automatically.
+  <Card title="Create an Agent Workflow" icon="clock" href="/mission-control/workflows">
+    Schedule or trigger your agents automatically.
 
-    <sub>• Cron or webhook-based triggers</sub><br />
+    <sub>• Cron, Webhook, or GitHub-based triggers</sub><br />
     <sub>• Ideal for daily audits or status checks</sub>
+  </Card>
+  <Card title="Clear Your Inbox Queue" icon="inbox" href="https://hub.continue.dev/inbox">
+    Trigger your inbox agents to resolve opened PRs.
+
+    <sub>• Address review comments</sub><br />
+    <sub>• Fix CI test failures and resolve merge conflicts</sub>
   </Card>
 </CardGroup>
 
 ## Integrations
 <Note>
-  Connect Continue to your existing developer tools to power Tasks and Workflows.
+  Connect Continue to your existing developer tools to automate the repetitive work you don't have time for.
 </Note>
 
 <CardGroup cols={2}>
   <Card title="GitHub" icon="github" href="/mission-control/integrations/github">
     Enable repository access for Agents to read and create PRs.
   </Card>
-  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack-agent">
+  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack">
     Mention <code>@Continue</code> in Slack to trigger Agents and receive updates.
   </Card>
   <Card title="Sentry" icon="alert-triangle" href="/mission-control/integrations/sentry">
@@ -77,7 +83,7 @@ You can go to [Mission Control Integrations](https://hub.continue.dev/integratio
     icon="terminal"
     href="/cli/overview#tui-mode%3A-interactive-development"
   >
-    Interactive terminal interface for development workflows
+    Interactive Terminal User Interface for development workflows
 
     <sub>• Automate builds & refactoring</sub>
     <br />

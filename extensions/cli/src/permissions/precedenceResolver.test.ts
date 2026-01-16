@@ -1,6 +1,7 @@
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { getDefaultToolPolicies } from "./defaultPolicies.js";
 import { resolvePermissionPrecedence } from "./precedenceResolver.js";
-import { ToolPermissionPolicy } from "./types.js";
+
+const DEFAULT_TOOL_POLICIES = getDefaultToolPolicies();
 
 describe("precedenceResolver", () => {
   describe("resolvePermissionPrecedence", () => {
@@ -31,7 +32,7 @@ describe("precedenceResolver", () => {
     it("should handle wildcard patterns", () => {
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
-          allow: ["mcp__*"],
+          allow: ["external_*"],
           exclude: ["*"],
         },
         useDefaults: false,
@@ -40,7 +41,7 @@ describe("precedenceResolver", () => {
 
       expect(policies).toEqual([
         { tool: "*", permission: "exclude" },
-        { tool: "mcp__*", permission: "allow" },
+        { tool: "external_*", permission: "allow" },
       ]);
     });
 
@@ -92,37 +93,11 @@ describe("precedenceResolver", () => {
       ]);
     });
 
-    it("should apply config permissions with proper precedence", () => {
-      const configPolicies: ToolPermissionPolicy[] = [
-        { tool: "Write", permission: "allow" },
-        { tool: "Read", permission: "ask" },
-      ];
-
-      const policies = resolvePermissionPrecedence({
-        commandLineFlags: {
-          exclude: ["Read"], // Should override config
-        },
-        configPermissions: configPolicies,
-        personalSettings: false,
-        useDefaults: false,
-      });
-
-      // CLI flag should override config
-      expect(policies[0]).toEqual({ tool: "Read", permission: "exclude" });
-      // Config policy should be present
-      expect(policies[1]).toEqual({ tool: "Write", permission: "allow" });
-    });
-
     it("should handle all layers with proper precedence", () => {
-      const configPolicies: ToolPermissionPolicy[] = [
-        { tool: "Search", permission: "ask" },
-      ];
-
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
           allow: ["Write"],
         },
-        configPermissions: configPolicies,
         personalSettings: false,
         useDefaults: true,
       });
@@ -130,10 +105,6 @@ describe("precedenceResolver", () => {
       // Find the Write policy - should be from CLI (allow)
       const writePolicy = policies.find((p) => p.tool === "Write");
       expect(writePolicy?.permission).toBe("allow");
-
-      // Find the Search policy - should be from config
-      const searchPolicy = policies.find((p) => p.tool === "Search");
-      expect(searchPolicy?.permission).toBe("ask");
 
       // Should still have default policies
       const readPolicy = policies.find((p) => p.tool === "Read");
@@ -161,23 +132,6 @@ describe("precedenceResolver", () => {
 
         // CLI exclusion should come first
         expect(policies[0]).toEqual({ tool: "Write", permission: "exclude" });
-        // Default policies should follow
-        expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
-      });
-
-      it("should allow config policies to override defaults", () => {
-        const configPolicies: ToolPermissionPolicy[] = [
-          { tool: "Bash", permission: "allow" },
-        ];
-
-        const policies = resolvePermissionPrecedence({
-          configPermissions: configPolicies,
-          useDefaults: true,
-          personalSettings: false,
-        });
-
-        // Config policy should override default
-        expect(policies[0]).toEqual({ tool: "Bash", permission: "allow" });
         // Default policies should follow
         expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
       });

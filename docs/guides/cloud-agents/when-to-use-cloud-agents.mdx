@@ -1,0 +1,89 @@
+---
+title: "When to Use Cloud Agents (and When Not To)"
+description: "A decision guide for choosing cloud agents vs scripts, CI jobs, or local agents—plus a checklist for safe adoption."
+sidebarTitle: "When to Use"
+---
+
+## When Cloud Agents Make Sense
+This guide helps you decide whether **cloud agents** are the right abstraction for your problem.
+
+<Tip>
+Use cloud agents when the work is **recurring**, spans **multiple systems**, and needs **team-owned outcomes**. If you want the canonical definition and taxonomy first, read: [Cloud Agents Taxonomy](/guides/cloud-agents/cloud-agents-taxonomy).
+</Tip>
+
+Use cloud agents when:
+
+- The same class of issue returns weekly (or daily)
+- The work is mostly handling (triage, patching, cleanup), not discovery
+- Inputs come from tools like GitHub, error monitoring, security scanners, analytics
+- You need a reviewable outcome (PR, report, ticket update)
+- You want to reduce interruptions, not just respond faster
+
+<Columns cols={2}>
+  <Card title="Great fits">
+
+    - security remediation  
+    - recurring error triage  
+    - dependency hygiene  
+    - analytics-driven fixes  
+
+  </Card>
+  <Card title="Common triggers">
+    - task dispatch  
+    - schedules  
+    - event webhooks  
+  </Card>
+</Columns>
+
+## When Cloud Agents Are a Bad Idea
+
+Avoid cloud agents when:
+
+- The problem is novel and poorly understood
+- The blast radius is unclear
+- Ownership is ambiguous (“someone should handle this”)
+- You can’t define review criteria
+- The work is better solved by eliminating the root cause directly
+
+<Warning>
+Cloud agents amplify whatever system you already have. If ownership is unclear, automation will make it worse.
+</Warning>
+
+
+## Cloud Agents vs Alternatives
+
+## Comparison Matrix
+
+| Feature | Scripts / CI Jobs | Local Agents (TUI) | Cloud Agents (Headless) |
+| :--- | :--- | :--- | :--- |
+| **Logic** | Deterministic (If/Then) | AI / Probabilistic | AI / Probabilistic |
+| **Context** | Inputs only | Full Repo + User Chat | Repo + Integrations (Snyk/GitHub/etc.) |
+| **Interaction** | None (Logs only) | Interactive (Conversations) | Autonomous (Fire & Forget)  |
+| **Tool Access** | Unlimited | All (Ask permission supported)  | Safe (No "Ask" tools)  |
+| **Best For** | Testing, Building, Linting | Debugging, Refactoring, Exploration | Triage, Remediation, Reporting |
+
+## The Decision Checklist
+
+Use cloud agents if you can say “yes” to most of these:
+
+- [ ] We’ve seen this problem at least twice  
+- [ ] Inputs come from shared systems (alerts, issues, analytics)  
+- [ ] We can define what “good output” looks like  
+- [ ] A PR/report is an acceptable artifact  
+- [ ] Someone owns reviewing the result  
+- [ ] We can start in a manual or assisted mode  
+
+<Info>
+If you’re unsure, start with a one-off [task](../../mission-control/tasks) and treat it like an experiment.
+</Info>
+
+## Where to Go Next
+
+<CardGroup cols={2}>
+  <Card title="Build Your Own Agent" href="https://hub.continue.dev/agents/new">
+    Customize an agent for your team in minutes.
+  </Card>
+  <Card title="Cloud Agent Integrations" href="https://hub.continue.dev/agents/integrations">
+Explore pre-built integrations for common tools and workflows.
+  </Card>
+</CardGroup>

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 
@@ -76,16 +76,17 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       expect(result.permission).toBe("allow");
     });
 
-    it("should deny unknown tools in plan mode (wildcard exclude)", () => {
+    it("should allow unknown tools in plan mode (for MCP tools via wildcard)", () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: "unknown_write_tool",
+        name: "some_mcp_tool",
         arguments: {},
       };
       const result = checkToolPermission(toolCall, permissions);
 
-      console.log(`unknown_write_tool permission check result:`, result);
-      expect(result.permission).toBe("exclude");
+      console.log(`some_mcp_tool permission check result:`, result);
+      // Plan mode allows MCP and other non-write tools via wildcard
+      expect(result.permission).toBe("allow");
     });
   });
 

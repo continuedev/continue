@@ -10,21 +10,24 @@ describe("Tool Definitions", () => {
     isSignedIn: false,
     isRemote: false,
     modelName: "a model",
+    ide: {} as any,
   };
 
   // Helper function to get the actual tool object
-  const getToolObject = (toolDefinition: Tool | GetTool): Tool => {
+  const getToolObject = async (
+    toolDefinition: Tool | GetTool,
+  ): Promise<Tool> => {
     if (typeof toolDefinition === "function") {
       return toolDefinition(mockParams);
     }
     return toolDefinition;
   };
 
-  it("should have all required parameters defined in properties for each tool", () => {
+  it("should have all required parameters defined in properties for each tool", async () => {
     const exportedTools = Object.values(toolDefinitions);
 
-    exportedTools.forEach((toolDefinition) => {
-      const tool = getToolObject(toolDefinition);
+    for (const toolDefinition of exportedTools) {
+      const tool = await getToolObject(toolDefinition);
 
       // Each tool should have the required structure
       expect(tool).toHaveProperty("type", "function");
@@ -52,6 +55,6 @@ describe("Tool Definitions", () => {
           expect(typeof property.type).toBe("string");
         });
       }
-    });
+    }
   });
 });

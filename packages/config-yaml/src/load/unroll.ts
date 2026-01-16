@@ -550,10 +550,20 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
+            // Convert inputs to secrets, then convert secrets to FQSNs using the injected block's identifier
+            // This ensures secrets are properly namespaced for proxy resolution (e.g., models add-on)
             const blockConfigYamlWithSecrets =
               replaceInputsWithSecrets(blockConfigYaml);
-            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+            const blockConfigYamlWithFQSNs = renderTemplateData(
               blockConfigYamlWithSecrets,
+              {
+                secrets: extractFQSNMap(blockConfigYamlWithSecrets, [
+                  injectBlock,
+                ]),
+              },
+            );
+            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+              blockConfigYamlWithFQSNs,
               injectBlock,
             );
             const blockType = getBlockType(resolvedBlock);

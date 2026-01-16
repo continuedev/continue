@@ -62,6 +62,9 @@ export enum ContinueErrorReason {
   // Rules
   RuleNotFound = "rule_not_found",
 
+  // Skills
+  SkillNotFound = "skill_not_found",
+
   // Other
   Unspecified = "unspecified", // I.e. a known error but no specific code for it
   Unknown = "unknown", // I.e. an unexpected error

@@ -48,7 +48,7 @@ describe("fetchTool", () => {
     );
   });
 
-  it("should handle truncation warnings from core implementation", async () => {
+  it("should filter out truncation warnings from core implementation", async () => {
     const mockContextItems: ContextItem[] = [
       {
         name: "Long Page",
@@ -68,9 +68,8 @@ describe("fetchTool", () => {
 
     const result = await fetchTool.run({ url: "https://example.com" });
 
-    expect(result).toBe(
-      "This is the main content that was truncated.\n\nThe content from https://example.com was truncated because it exceeded the 20000 character limit.",
-    );
+    // Truncation warnings are filtered out - only the main content is returned
+    expect(result).toBe("This is the main content that was truncated.");
   });
 
   it("should handle multiple content items", async () => {

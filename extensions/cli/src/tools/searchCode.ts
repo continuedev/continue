@@ -5,6 +5,8 @@ import * as util from "util";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { findUp } from "find-up";
 
+import { parseEnvNumber } from "../util/truncateOutput.js";
+
 import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
@@ -80,9 +82,23 @@ async function searchWithGrepOrFindstr(
   return await execPromise(command, { cwd: searchPath });
 }
 
-// Default maximum number of results to display
-const DEFAULT_MAX_RESULTS = 100;
-const MAX_LINE_LENGTH = 1000;
+// Output truncation defaults
+const DEFAULT_SEARCH_MAX_RESULTS = 100;
+const DEFAULT_SEARCH_MAX_RESULT_CHARS = 1000; // Max chars per result line
+
+function getSearchMaxResults(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_SEARCH_CODE_MAX_RESULTS,
+    DEFAULT_SEARCH_MAX_RESULTS,
+  );
+}
+
+function getSearchMaxResultChars(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_SEARCH_CODE_MAX_RESULT_CHARS,
+    DEFAULT_SEARCH_MAX_RESULT_CHARS,
+  );
+}
 
 export const searchCodeTool: Tool = {
   name: "Search",
@@ -168,19 +184,22 @@ export const searchCodeTool: Tool = {
       }
 
       // Split the results into lines and limit the number of results
+      const maxResults = getSearchMaxResults();
+      const maxResultChars = getSearchMaxResultChars();
+
       const splitLines = stdout.split("\n");
-      const lines = splitLines.filter((line) => line.length <= MAX_LINE_LENGTH);
+      const lines = splitLines.filter((line) => line.length <= maxResultChars);
       if (lines.length === 0) {
         return `No matches found for pattern "${args.pattern}"${
           args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
         }.`;
       }
-      const truncated = lines.length > DEFAULT_MAX_RESULTS;
-      const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
+      const truncated = lines.length > maxResults;
+      const limitedLines = lines.slice(0, maxResults);
       const resultText = limitedLines.join("\n");
 
       const truncationMessage = truncated
-        ? `\n\n[Results truncated: showing ${DEFAULT_MAX_RESULTS} of ${lines.length} matches]`
+        ? `\n\n[Results truncated: showing ${maxResults} of ${lines.length} matches]`
         : "";
 
       return `Search results for pattern "${args.pattern}"${

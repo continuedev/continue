@@ -47,7 +47,7 @@ export function matchesToolPattern(
     return false;
   }
 
-  // Handle regular wildcard patterns like "mcp__*"
+  // Handle regular wildcard patterns like "external_*"
   if (pattern.includes("*") || pattern.includes("?")) {
     // Escape all regex metacharacters except * and ?
     const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");

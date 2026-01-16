@@ -8,6 +8,8 @@ on:
 
 jobs:
   run-cn-task:
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     uses: ./.github/workflows/run-continue-agent.yml
     with:
       agent: continuedev/tidy-up-markdown-agent

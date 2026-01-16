@@ -3,11 +3,11 @@ title: "How Plan Works"
 description: "Plan mode provides a restricted environment with read-only tools, enabling safe exploration and planning without making changes to your codebase."
 ---
 
-## Understanding Plan mode
+## Understanding Plan Mode
 
 Plan mode is designed to help you understand code and construct plans before making changes. It sits between Chat mode (no tools) and Agent mode (all tools), providing a middle ground where you can explore and analyze without risk.
 
-### The key difference: Read-only tools
+### The Key Difference: Read-Only Tools
 
 While Agent mode has access to all tools including those that modify files, Plan mode restricts access to only read-only tools. This ensures that:
 
@@ -16,7 +16,7 @@ While Agent mode has access to all tools including those that modify files, Plan
 - All exploration is safe and non-destructive
 - You can confidently investigate without unintended consequences
 
-## How Plan mode works
+## How Plan Mode Works
 
 When you select Plan mode:
 
@@ -25,7 +25,7 @@ When you select Plan mode:
 3. The model can use these tools to explore and analyze your codebase
 4. When you're ready to implement changes, you switch to Agent mode
 
-### Available tools in Plan mode
+### Available Tools in Plan Mode
 
 Plan mode includes these read-only built-in tools:
 
@@ -41,7 +41,7 @@ Plan mode includes these read-only built-in tools:
 - **View subdirectory** (`view_subdirectory`): Get a detailed view of a specific directory
 - **Codebase tool** (`codebase_tool`): Advanced codebase analysis capabilities
 
-### MCP tools support
+### MCP Tools Support
 
 In addition to built-in read-only tools, Plan mode also supports all MCP (Model Context Protocol) tools. This allows integration with external services that provide additional context or analysis capabilities without modifying your local environment.
 
@@ -52,7 +52,7 @@ In addition to built-in read-only tools, Plan mode also supports all MCP (Model 
   MCP tools can perform before using them in Plan mode.
 </Info>
 
-## The planning workflow
+## The Planning Workflow
 
 A typical Plan mode workflow follows these steps:
 
@@ -62,7 +62,7 @@ A typical Plan mode workflow follows these steps:
 4. **Verification**: Review the plan and ensure it addresses all requirements
 5. **Execution**: Switch to Agent mode to implement the plan
 
-### Example: Planning a refactor
+### Example: Planning a Refactor
 
 ```
 User: Help me plan a refactor to extract the authentication logic into a separate module
@@ -75,7 +75,7 @@ Plan mode:
 5. Suggests: "Switch to Agent mode to implement this plan"
 ```
 
-## System message and behavior
+## System Message and Behavior
 
 Plan mode uses a dedicated system message that:
 
@@ -90,9 +90,9 @@ Plan mode uses a dedicated system message that:
   code](https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts).
 </Info>
 
-## When to use Plan mode vs other modes
+## When to Use Plan Mode vs Other Modes
 
-### Use Plan mode when:
+### Use Plan Mode When:
 
 - Exploring unfamiliar codebases
 - Planning complex refactors or features
@@ -100,13 +100,13 @@ Plan mode uses a dedicated system message that:
 - Reviewing code architecture
 - Creating implementation strategies
 
-### Use Chat mode when:
+### Use Chat Mode When:
 
 - Having discussions without needing file access
 - Asking general programming questions
 - Getting explanations without exploring code
 
-### Use Agent mode when:
+### Use Agent Mode When:
 
 - Ready to implement changes
 - Need to create or modify files

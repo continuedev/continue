@@ -1,0 +1,188 @@
+---
+title: "The Developer’s Guide to Cloud Agents"
+description: "Learn how Cloud Agents are implemented and used in practice, from on-demand tasks to automated workflows in Mission Control."
+---
+
+<Note>
+This guide assumes you already understand what Cloud Agents are and when to use them. If you’re looking for a clear definition, categories, and mental models, start with the **[Cloud Agents Taxonomy](../cloud-agents/cloud-agents-taxonomy)**.
+</Note>
+
+## Introduction: Moving Beyond "Chat"
+
+For the last few years, AI coding has been defined by the Local Copilot: a chat window in your IDE that helps you write a function or explain a snippet. It is a powerful tool, but it has a hard limit because it requires *you* to be the driver. If you close your laptop, it stops working. If you switch contexts, it loses focus.
+
+<Card title="The Shift to Cloud Agents" icon="cloud">
+
+  Cloud Agents move AI execution from your local machine to remote infrastructure. Instead of just "chatting" with a model, you **dispatch work** to it. Whether you trigger it manually from a task list or set it to run automatically on a schedule, the heavy lifting happens in the cloud, unblocking your local environment and enabling true automation.
+
+</Card>
+
+## How Cloud Agents Are Implemented in Practice
+
+Cloud Agents are AI-driven processes that run on remote infrastructure and are triggered by tasks, schedules, or events across a team’s engineering systems.
+
+With Continue, Cloud Agents run in [Mission Control](../../mission-control), where teams configure execution, connect tools, review outcomes, and decide which workflows become automated over time.
+
+<Info>
+
+  Because they run on persistent cloud infrastructure, these agents are not limited to the files currently open in your text editor. They maintain secure connections to your broader engineering ecosystem—GitHub, Linear, Sentry, Snyk, and more—allowing them to read code, open Pull Requests, and triage alerts without human supervision.
+
+</Info>
+
+### Common Components in a Production Cloud Agent
+
+Most production Cloud Agents share a common structure that balances reasoning, action, and guardrails.
+
+<CardGroup cols={2}>
+  <Card title="Prompt" icon="message">
+
+    The core instruction defining the task.
+
+  </Card>
+
+  <Card title="Model" icon="brain">
+
+    The LLM powering the reasoning.
+
+  </Card>
+
+  <Card title="Tools (MCPs)" icon="wrench">
+
+    The capabilities to fetch data or take action.
+
+  </Card>
+
+  <Card title="Rules" icon="shield">
+
+    The guardrails ensuring the output matches your team's coding standards.
+
+  </Card>
+</CardGroup>
+
+## The Two Modes: Interactive vs. Automated
+
+This section focuses on *how* Cloud Agents are executed day to day, not *whether* they should be used.
+
+The defining feature of a Cloud Agent isn't just *automation*; it is **availability**. Because the compute is remote, you can interact with Cloud Agents in two distinct ways depending on the complexity of the task:
+
+<Tabs>
+  <Tab title="On-Demand Tasks">
+
+    ### Human-in-the-Loop Approach
+
+    You can trigger agents manually (with Continue, use the [Continue CLI](../../cli/overview) or [Mission Control](../../mission-control)) when you need a one-off task that you want to review.
+
+    <Card title="Example: Refactor Task" icon="code">
+
+      You send a "Refactor" task to a Cloud Agent. It clones the repo, runs the refactor in the cloud, and creates a PR for you to approve. **You can close your laptop while it works.**
+
+    </Card>
+
+    **Best for:**
+    - Exploring agent capabilities
+    - Fixes you don't want to break your focus for
+    - Tasks requiring human review before deployment
+
+  </Tab>
+
+  <Tab title="Automated Workflows">
+
+    ### Headless Approach
+
+    You configure these agents to run in the background based on triggers, with no human intervention required until the final PR review.
+
+    <Card title="Example: Security Agent" icon="lock">
+
+      A "[Security Agent](https://hub.continue.dev/integrations/snyk)" automatically opens PRs for Snyk issues with high and critical security vulnerabilities and implements the fixes.
+
+    </Card>
+
+    **Best for:**
+    - Continuous security monitoring
+    - Automated dependency updates without breaking things
+    - Event-driven workflows
+
+  </Tab>
+</Tabs>
+
+
+## Why "Cloud" Matters
+
+The distinction between running an agent locally (TUI/IDE) and in the cloud (Mission Control) comes down to **scope** and **reliability**.
+
+<AccordionGroup>
+  <Accordion title="Compute Location" icon="server">
+
+    - **Local Agents:** Run on your local machine
+    - **Cloud Agents:** Run on remote cloud infrastructure
+
+    Cloud Agents free up your local resources for development work while heavy AI tasks run in the background.
+
+  </Accordion>
+
+  <Accordion title="Primary Use Case" icon="bullseye">
+
+    - **Local Agents:** Fast, private iteration and "single-player" coding
+    - **Cloud Agents:** Collaborative tasks, heavy processing, and reliable automation
+
+    Choose local for quick iterations, cloud for team-wide workflows.
+
+  </Accordion>
+
+  <Accordion title="Context Access" icon="folder-open">
+
+    - **Local Agents:** Limited to open files and local git state
+    - **Cloud Agents:** Full repository access + [integrated tools](https://hub.continue.dev/integrations) (Sentry, Snyk, Linear, etc.)
+
+    Cloud Agents can access your entire engineering ecosystem, not just what's visible in your IDE.
+
+  </Accordion>
+
+  <Accordion title="Triggers" icon="bolt">
+
+    - **Local Agents:** Manual Chat / CLI
+    - **Cloud Agents:** Hybrid approach—Manual Chat, Cron Schedules, or Event Webhooks
+
+    Cloud Agents support both manual execution and automated scheduling.
+
+  </Accordion>
+
+  <Accordion title="Availability" icon="clock">
+
+    - **Local Agents:** Stop when you close your laptop
+    - **Cloud Agents:** **Always On**—Runs asynchronously in the background
+
+    This is the key differentiator: Cloud Agents work 24/7, even when you're offline.
+
+  </Accordion>
+</AccordionGroup>
+
+## Getting Started
+
+Ready to build your first Cloud Agent? Check out these resources:
+
+<CardGroup cols={2}>
+  <Card title="Explore Cloud Agent Integrations" icon="rocket" href="https://hub.continue.dev/integrations">
+
+    Browse ready-to-use AI agents in Continue Mission Control.
+
+  </Card>
+
+  <Card title="Create Your Own Agent" icon="hammer" href="/agents/create-and-edit">
+
+    Learn how to build custom Cloud Agents.
+
+  </Card>
+
+  <Card title="MCP Tools Guide" icon="plug" href="/customize/mcp-tools">
+
+    Connect your agents to external services.
+
+  </Card>
+
+  <Card title="Mission Control Setup" icon="terminal" href="https://hub.continue.dev">
+
+    Get started with Continue Mission Control.
+
+  </Card>
+</CardGroup>

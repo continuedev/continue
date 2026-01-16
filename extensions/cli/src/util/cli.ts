@@ -2,6 +2,8 @@
  * Utility functions for CLI operations
  */
 
+import EventEmitter from "events";
+
 /**
  * Check if running in headless mode (-p/--print flags)
  */
@@ -90,3 +92,5 @@ export function hasSuppliedPrompt(): boolean {
 
   return false;
 }
+
+export const escapeEvents = new EventEmitter();

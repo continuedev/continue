@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PreprocessedToolCall } from "./types.js";
 
@@ -69,6 +69,7 @@ describe("Git AI Integration - executeToolCall", () => {
             oldContent: "old",
             newContent: "new",
           },
+          context: { toolCallId: "test-edit-id" },
         },
       };
 
@@ -94,11 +95,16 @@ describe("Git AI Integration - executeToolCall", () => {
       );
 
       // Verify tool.run was called
-      expect(mockTool.run).toHaveBeenCalledWith({
-        resolvedPath: "/test/file.ts",
-        oldContent: "old",
-        newContent: "new",
-      });
+      expect(mockTool.run).toHaveBeenCalledWith(
+        {
+          resolvedPath: "/test/file.ts",
+          oldContent: "old",
+          newContent: "new",
+        },
+        {
+          toolCallId: "test-edit-id",
+        },
+      );
     });
 
     it("should call git-ai before and after MultiEdit tool execution", async () => {

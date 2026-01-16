@@ -44,11 +44,13 @@ describe("Permission Checker", () => {
     });
 
     it("should match prefix wildcards", () => {
-      expect(matchesToolPattern("mcp__ide__getDiagnostics", "mcp__*")).toBe(
+      expect(
+        matchesToolPattern("external_ide_getDiagnostics", "external_*"),
+      ).toBe(true);
+      expect(matchesToolPattern("external_filesystem_read", "external_*")).toBe(
         true,
       );
-      expect(matchesToolPattern("mcp__filesystem__read", "mcp__*")).toBe(true);
-      expect(matchesToolPattern("builtin__readFile", "mcp__*")).toBe(false);
+      expect(matchesToolPattern("builtin_readFile", "external_*")).toBe(false);
     });
 
     it("should match suffix wildcards", () => {
@@ -89,7 +91,7 @@ describe("Permission Checker", () => {
     it("should handle wildcard patterns with special regex characters", () => {
       expect(matchesToolPattern("test[abc].txt", "test[abc].*")).toBe(true);
       expect(matchesToolPattern("test[abc]_file", "test[abc].*")).toBe(false);
-      expect(matchesToolPattern("mcp__tool[1]", "mcp__*")).toBe(true);
+      expect(matchesToolPattern("external_tool[1]", "external_*")).toBe(true);
       expect(matchesToolPattern("file.test.txt", "*.test.*")).toBe(true);
       expect(matchesToolPattern("(tool)_name", "(tool)*")).toBe(true);
       expect(matchesToolPattern("tool+plus_extra", "tool+plus*")).toBe(true);
@@ -417,17 +419,17 @@ describe("Permission Checker", () => {
     it("should match wildcard patterns", () => {
       const permissions: ToolPermissions = {
         policies: [
-          { tool: "mcp__*", permission: "ask" },
+          { tool: "external_*", permission: "ask" },
           { tool: "*", permission: "allow" },
         ],
       };
 
-      const mcpResult = checkToolPermission(
-        { name: "mcp__ide__getDiagnostics", arguments: {} },
+      const externalResult = checkToolPermission(
+        { name: "external_ide_getDiagnostics", arguments: {} },
         permissions,
       );
-      expect(mcpResult.permission).toBe("ask");
-      expect(mcpResult.matchedPolicy?.tool).toBe("mcp__*");
+      expect(externalResult.permission).toBe("ask");
+      expect(externalResult.matchedPolicy?.tool).toBe("external_*");
 
       const builtinResult = checkToolPermission(
         { name: "readFile", arguments: { path: "/test.txt" } },

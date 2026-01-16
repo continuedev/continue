@@ -414,6 +414,7 @@ export class Core {
         msg.data.blockType,
         msg.data.baseFilename,
       );
+      walkDirCache.invalidate();
       await this.configHandler.reloadConfig(
         "Local block created (config/addLocalWorkspaceBlock message)",
       );
@@ -422,6 +423,7 @@ export class Core {
     on("config/addGlobalRule", async (msg) => {
       try {
         await createNewGlobalRuleFile(this.ide, msg.data?.baseFilename);
+        walkDirCache.invalidate();
         await this.configHandler.reloadConfig(
           "Global rule created (config/addGlobalRule message)",
         );

@@ -1,0 +1,373 @@
+---
+title: "Run Agents Locally"
+sidebarTitle: "Run Agents Locally"
+description: "Set up version-controlled agents in your repository and run them with Continue CLI or GitHub Actions"
+---
+
+<Note>
+  Looking for the easiest way to create and manage agents? [Cloud Agents in Mission Control](/agents/overview#pre-configured-agents) are recommended for most teams. This guide covers **local agents**—agent files stored in your repository—for open source users or teams needing version-controlled definitions.
+</Note>
+
+<Card title="What You'll Build" icon="folder-open">
+  A local agent system that:
+  - Keeps agent definitions version-controlled alongside your code
+  - Runs agents with Continue CLI for local development
+  - Automates agent execution on pull requests via GitHub Actions
+  - Applies consistent workflows across your team
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- [Continue CLI installed](/cli/install) (`npm i -g @continuedev/cli`)
+- `ANTHROPIC_API_KEY` environment variable set
+- [GitHub CLI](https://cli.github.com/) installed locally if your agents interact with GitHub (pre-installed on GitHub-hosted runners)
+
+## Quick Setup
+
+<Steps>
+  <Step title="Create the agents directory">
+    ```bash
+    mkdir -p .continue/agents
+    ```
+  </Step>
+
+  <Step title="Create your first agent">
+    Create a markdown file with YAML frontmatter defining the agent's behavior:
+
+    ```bash
+    touch .continue/agents/my-agent.md
+    ```
+
+    Add content like:
+
+    ```markdown
+    ---
+    name: My First Agent
+    description: Describes what this agent does
+    ---
+
+    You are an agent that helps with [specific task].
+
+    ## Your Task
+
+    1. First, do this
+    2. Then, do that
+    3. Finally, complete this
+
+    ## Guidelines
+
+    - Follow this pattern
+    - Avoid this anti-pattern
+    ```
+  </Step>
+
+  <Step title="Run the agent">
+    ```bash
+    cn -p --agent .continue/agents/my-agent.md
+    ```
+
+    For interactive development (TUI mode):
+
+    ```bash
+    cn --agent .continue/agents/my-agent.md
+    ```
+  </Step>
+</Steps>
+
+## Agent File Format
+
+Agent files are markdown documents with YAML frontmatter. The frontmatter configures the agent, and the markdown body contains the prompt instructions.
+
+### Frontmatter Options
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Display name for the agent |
+| `description` | Yes | Brief description of what the agent does |
+
+<Info>
+  The markdown body is the agent's system prompt. Write clear, specific instructions with examples for best results.
+</Info>
+
+For additional options like `rules`, `model`, and MCP tool configuration, see the [Agent Configuration Reference](/agents/agent-file-reference).
+
+## Example: Conventional PR Title Agent
+
+This agent updates pull request titles to follow conventional commit format:
+
+````markdown
+---
+name: Conventional Title
+description: Updates PR title to follow conventional commit format
+---
+
+You are reviewing a pull request to format its title according to conventional commit standards.
+
+## Your Task
+
+1. **Get the current PR title and number:**
+   ```bash
+   gh pr view --json number,title -q '{number: .number, title: .title}'
+   ```
+
+2. **Get the PR diff to understand changes:**
+   ```bash
+   git diff origin/main...HEAD --name-only
+   ```
+
+3. **Analyze the changes to determine type:**
+   - `feat`: New feature
+   - `fix`: Bug fix
+   - `docs`: Documentation only
+   - `refactor`: Code refactoring
+   - `chore`: Build, tooling, configs
+
+4. **Update the PR title:**
+   ```bash
+   gh pr edit PR_NUMBER --title "type: description"
+   ```
+
+## Rules
+
+- If title already follows format, do NOT modify
+- Keep description under 72 characters
+- Use lowercase, no period at end
+````
+
+## GitHub Actions Integration
+
+Continue provides a [reusable workflow](https://github.com/continuedev/continue/blob/main/.github/workflows/continue-agents.yml) that handles agent discovery, parallel execution, and GitHub Check reporting.
+
+### Using the Reusable Workflow
+
+Create `.github/workflows/run-agents.yml`:
+
+```yaml
+name: Run Agents
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+jobs:
+  agents:
+    uses: continuedev/continue/.github/workflows/continue-agents.yml@main
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+The reusable workflow automatically:
+- Discovers all `.md` files in `.continue/agents/`
+- Runs each agent in parallel
+- Creates GitHub Check runs for each agent
+- Provides `GH_TOKEN` for agents using the `gh` CLI
+- Writes job summaries with agent output
+
+### Configuration Options
+
+```yaml
+jobs:
+  agents:
+    uses: continuedev/continue/.github/workflows/continue-agents.yml@main
+    with:
+      agents-path: '.continue/agents'  # Custom agents directory (optional)
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+### Required Secrets
+
+Add this secret to your repository under **Settings > Secrets and variables > Actions**:
+
+| Secret | Description |
+|--------|-------------|
+| `ANTHROPIC_API_KEY` | Your Anthropic API key for Claude |
+
+<Info>
+  The reusable workflow automatically provides `GH_TOKEN` via `${{ github.token }}`, so agents using the `gh` CLI work out of the box.
+</Info>
+
+## Security Considerations
+
+<Warning>
+  Agents can execute commands and modify files. Review these security practices before deploying to CI/CD.
+</Warning>
+
+### Limit Agent Permissions
+
+When running agents in CI/CD, follow the principle of least privilege:
+
+<Tabs>
+  <Tab title="GitHub Actions Permissions">
+    Only grant the permissions your agent needs:
+
+    ```yaml
+    permissions:
+      contents: read      # Read repository files
+      pull-requests: write # Comment on PRs
+      # Avoid: contents: write unless agent needs to push commits
+    ```
+
+    <Warning>
+      Avoid granting `contents: write` unless your agent specifically needs to push commits. This prevents accidental or malicious code modifications.
+    </Warning>
+  </Tab>
+
+  <Tab title="CLI Tool Permissions">
+    Use `cn` permission flags to restrict what agents can do:
+
+    ```bash
+    # Only allow specific tools
+    cn --allow "Read()" --allow "Grep()" --exclude "Bash()" \
+       --agent .continue/agents/analysis-only.md
+    ```
+
+    Learn more in the [CLI documentation](/cli/overview#how-to-set-tool-permissions).
+  </Tab>
+
+  <Tab title="Environment Variables">
+    Never commit secrets. Use GitHub Actions secrets or environment variables:
+
+    ```yaml
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GH_TOKEN: ${{ github.token }}  # Scoped to the repo
+    ```
+
+    <Warning>
+      Never hardcode API keys in agent files or workflows. Always use secrets management.
+    </Warning>
+  </Tab>
+</Tabs>
+
+### Review Agent Outputs
+
+Before enabling fully automated agents:
+
+1. **Test locally first** - Run agents with `cn` to verify behavior
+2. **Review CI logs** - Check what commands agents execute in your workflows
+3. **Start with read-only agents** - Begin with agents that analyze rather than modify
+
+<Tip>
+  For high-risk operations (like pushing commits or modifying infrastructure), consider requiring manual approval steps in your workflow.
+</Tip>
+
+## Environment Variables
+
+When running agents locally, set these environment variables:
+
+```bash
+# Required: Your Anthropic API key
+export ANTHROPIC_API_KEY=your-api-key
+
+# Optional: GitHub token if your agents use the gh CLI
+export GH_TOKEN=$(gh auth token)
+
+cn --agent .continue/agents/my-agent.md
+```
+
+## Directory Structure
+
+A typical setup looks like:
+
+```
+your-repo/
+├── .continue/
+│   └── agents/
+│       ├── conventional-title.md
+│       ├── deploy-checklist.md
+│       └── security-scan.md
+├── .github/
+│   └── workflows/
+│       └── continue-agents.yml
+└── ...
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Agent not found">
+    Ensure the path is correct and the file exists:
+
+    ```bash
+    ls -la .continue/agents/
+    ```
+
+    The path must be relative to your repository root.
+  </Accordion>
+
+  <Accordion title="GitHub CLI authentication errors">
+    If agents using `gh` fail, verify authentication:
+
+    ```bash
+    # Check auth status
+    gh auth status
+
+    # Set token for local testing
+    export GH_TOKEN=$(gh auth token)
+    ```
+
+    In GitHub Actions, ensure `GH_TOKEN: ${{ github.token }}` is set in the environment.
+  </Accordion>
+
+  <Accordion title="Agent runs but doesn't complete the task">
+    - Simplify the prompt and add more specific instructions
+    - Check if the agent has access to required tools
+    - Enable verbose logging: `cn --verbose --agent .continue/agents/my-agent.md`
+    - Review logs with `cn --verbose` or check the Continue logs directory
+  </Accordion>
+
+  <Accordion title="Workflow doesn't discover agents">
+    Verify your agents are in the correct directory:
+
+    ```bash
+    find .continue/agents -name "*.md" -type f
+    ```
+
+    The workflow looks for `.md` files in `.continue/agents/`.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Simple" icon="seedling">
+    Begin with read-only agents that analyze code before adding agents that make changes.
+  </Card>
+
+  <Card title="Test Locally" icon="terminal">
+    Always run `cn --agent` locally before enabling CI automation.
+  </Card>
+
+  <Card title="Use Descriptive Names" icon="tag">
+    The `name` field in frontmatter is displayed to users. Use descriptive filenames for organization: `conventional-title.md`, `security-scan.md`.
+  </Card>
+
+  <Card title="Keep Agents Focused" icon="bullseye">
+    Each agent should do one thing well. Combine multiple agents for complex workflows.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Overview" icon="robot" href="/agents/overview">
+    Learn about agent components and capabilities
+  </Card>
+
+  <Card title="CLI Reference" icon="terminal" href="/cli/overview">
+    Full Continue CLI documentation
+  </Card>
+
+  <Card title="MCP Tools" icon="plug" href="/customize/mcp-tools">
+    Add external tools to your agents
+  </Card>
+
+  <Card title="Rules" icon="list-check" href="/customize/rules">
+    Configure agent behavior with rules
+  </Card>
+</CardGroup>

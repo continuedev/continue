@@ -69,6 +69,7 @@ async function loadRules(ide: IDE) {
 
   return { rules, errors };
 }
+
 export default async function doLoadConfig(options: {
   ide: IDE;
   controlPlaneClient: ControlPlaneClient;
@@ -299,14 +300,15 @@ export default async function doLoadConfig(options: {
   }
 
   newConfig.tools.push(
-    ...getConfigDependentToolDefinitions({
+    ...(await getConfigDependentToolDefinitions({
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
       isSignedIn,
       isRemote: await ide.isWorkspaceRemote(),
       modelName: newConfig.selectedModelByRole.chat?.model,
-    }),
+      ide,
+    })),
   );
 
   // Detect duplicate tool names
