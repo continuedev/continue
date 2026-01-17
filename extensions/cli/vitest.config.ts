@@ -23,5 +23,10 @@ export default defineConfig({
   },
   resolve: {
     extensions: [".js", ".ts", ".tsx", ".json"],
+    alias: {
+      // Map core imports to the core source file since index.ts doesn't exist
+      "../../../../../core/index.js": new URL("../../core/core.ts", import.meta.url).pathname,
+      "core/index.js": new URL("../../core/core.ts", import.meta.url).pathname,
+    },
   },
 });

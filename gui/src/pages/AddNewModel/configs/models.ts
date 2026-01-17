@@ -1223,7 +1223,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 4.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "replicate"],
+    providerOptions: ["anthropic", "together", "replicate", "n1n"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -2769,6 +2769,33 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["mimo"],
     icon: "mimo.png",
+    isOpenSource: false,
+  },
+  // n1n series models
+  n1nGpt4o: {
+    title: "N1N GPT-4o",
+    description: "GPT-4o via n1n.ai - fast and reliable.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      title: "N1N GPT-4o",
+      apiKey: "",
+    },
+    providerOptions: ["n1n"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  n1nClaude35Sonnet: {
+    title: "N1N Claude 3.5 Sonnet",
+    description: "Claude 3.5 Sonnet via n1n.ai.",
+    params: {
+      model: "claude-3-5-sonnet-20240620",
+      contextLength: 200_000,
+      title: "N1N Claude 3.5 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["n1n"],
+    icon: "anthropic.png",
     isOpenSource: false,
   },
 };
