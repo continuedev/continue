@@ -4,6 +4,7 @@ import {
   BookmarkIcon as BookmarkOutline,
   EyeIcon,
   PencilIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import {
@@ -21,6 +22,7 @@ import { getRuleDisplayName } from "core/llm/rules/rules-utils";
 import { useContext, useMemo, useState } from "react";
 import { DropdownButton } from "../../../components/DropdownButton";
 import AddRuleDialog from "../../../components/dialogs/AddRuleDialog";
+import ConfirmationDialog from "../../../components/dialogs/ConfirmationDialog";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
 import {
@@ -132,6 +134,7 @@ interface RuleCardProps {
 
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const policy = useAppSelector((state) =>
     rule.name
       ? state.ui.ruleSettings[rule.name] || DEFAULT_RULE_SETTING
@@ -161,6 +164,36 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       ),
     );
   }
+
+  const handleDelete = () => {
+    if (!rule.sourceFile) {
+      return;
+    }
+
+    dispatch(
+      setDialogMessage(
+        <ConfirmationDialog
+          title="Delete Rule"
+          text="Are you sure you want to delete this rule file?"
+          confirmText="Delete"
+          onConfirm={async () => {
+            try {
+              await ideMessenger.request("config/deleteRule", {
+                filepath: rule.sourceFile!,
+              });
+            } catch (error) {
+              console.error("Failed to delete rule file:", error);
+            }
+          }}
+        />,
+      ),
+    );
+    dispatch(setShowDialog(true));
+  };
+
+  const canDeleteRule =
+    rule.sourceFile &&
+    !["default-chat", "default-agent", "default-plan"].includes(rule.source);
 
   const smallFont = fontSize(-2);
   const tinyFont = fontSize(-3);
@@ -207,6 +240,11 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
                   text="Edit"
                 >
                   <PencilIcon className="h-3 w-3 text-gray-400" />
+                </HeaderButtonWithToolTip>
+              )}
+              {canDeleteRule && (
+                <HeaderButtonWithToolTip onClick={handleDelete} text="Delete">
+                  <TrashIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               )}
             </div>

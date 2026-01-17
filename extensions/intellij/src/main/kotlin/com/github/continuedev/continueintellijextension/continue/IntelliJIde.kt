@@ -253,6 +253,11 @@ class IntelliJIDE(
             fileUtils.writeFile(path, contents)
         }
 
+    override suspend fun removeFile(path: String) =
+        withContext(Dispatchers.EDT) {
+            fileUtils.removeFile(path)
+        }
+
     override suspend fun showVirtualFile(title: String, contents: String) {
         val virtualFile = LightVirtualFile(title, contents)
         ApplicationManager.getApplication().invokeLater {

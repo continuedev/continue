@@ -187,6 +187,8 @@ interface IDE {
 
     suspend fun writeFile(path: String, contents: String)
 
+    suspend fun removeFile(path: String)
+
     suspend fun showVirtualFile(title: String, contents: String)
 
     suspend fun getContinueDir(): String

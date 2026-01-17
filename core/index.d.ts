@@ -841,6 +841,8 @@ export interface IDE {
 
   writeFile(path: string, contents: string): Promise<void>;
 
+  removeFile(path: string): Promise<void>;
+
   showVirtualFile(title: string, contents: string): Promise<void>;
 
   openFile(path: string): Promise<void>;

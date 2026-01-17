@@ -84,6 +84,8 @@ class MessageTypes {
             "config/newAssistantFile",
             "config/ideSettingsUpdate",
             "config/addLocalWorkspaceBlock",
+            "config/addGlobalRule",
+            "config/deleteRule",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/refreshProfiles",
