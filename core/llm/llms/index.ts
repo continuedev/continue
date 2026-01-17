@@ -44,6 +44,7 @@ import Msty from "./Msty";
 import NCompass from "./NCompass";
 import Nebius from "./Nebius";
 import Novita from "./Novita";
+import N1N from "./N1N";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -101,6 +102,7 @@ export const LLMClasses = [
   ContinueProxy,
   Cloudflare,
   Deepseek,
+  N1N,
   Docker,
   Msty,
   Azure,

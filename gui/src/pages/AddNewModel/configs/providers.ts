@@ -507,6 +507,37 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
+  n1n: {
+    title: "N1N",
+    provider: "n1n",
+    icon: "openai.png", // Using openai icon as a placeholder if n1n.png doesn't exist
+    description: "Use n1n.ai for fast and reliable OpenAI-compatible and Anthropic-compatible models.",
+    longDescription:
+      "To get started with N1N, obtain an API key from [n1n.ai](https://n1n.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your N1N API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "N1N",
+        },
+      },
+      models.n1nGpt4o,
+      models.n1nClaude35Sonnet,
+    ],
+    apiKeyUrl: "https://api.n1n.ai/",
+  },
   together: {
     title: "TogetherAI",
     provider: "together",
