@@ -100,6 +100,16 @@
             "icon": "book-open",
             "expanded": false,
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+          },
+          {
+            "group": "IDE Extensions",
+            "icon": "puzzle-piece",
+            "pages": [
+              {
+                "page": "ide-extensions/install",
+                "href": "/ide-extensions/install"
+              }
+            ]
           }
         ]
       },
@@ -112,57 +122,63 @@
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
-              "ide-extensions/settings"
+              {
+                "page": "Customization",
+                "href": "/customize/overview"
+              }
             ]
           },
           {
-            "group": "Agent",
+            "group": "Features",
             "expanded": false,
-            "icon": "robot",
+            "icon": "star",
             "pages": [
-              "ide-extensions/agent/quick-start",
-              "ide-extensions/agent/how-it-works",
-              "ide-extensions/agent/plan-mode",
-              "ide-extensions/agent/model-setup",
-              "ide-extensions/agent/how-to-customize",
-              "ide-extensions/agent/context-selection"
-            ]
-          },
-          {
-            "group": "Chat",
-            "expanded": false,
-            "icon": "messages",
-            "pages": [
-              "ide-extensions/chat/quick-start",
-              "ide-extensions/chat/how-it-works",
-              "ide-extensions/chat/model-setup",
-              "ide-extensions/chat/how-to-customize",
-              "ide-extensions/chat/context-selection"
-            ]
-          },
-          {
-            "group": "Autocomplete",
-            "expanded": false,
-            "icon": "sparkles",
-            "pages": [
-              "ide-extensions/autocomplete/quick-start",
-              "ide-extensions/autocomplete/how-it-works",
-              "ide-extensions/autocomplete/model-setup",
-              "ide-extensions/autocomplete/how-to-customize",
-              "ide-extensions/autocomplete/context-selection",
-              "ide-extensions/autocomplete/next-edit"
-            ]
-          },
-          {
-            "group": "Edit",
-            "expanded": false,
-            "icon": "pen-to-square",
-            "pages": [
-              "ide-extensions/edit/quick-start",
-              "ide-extensions/edit/how-it-works",
-              "ide-extensions/edit/model-setup",
-              "ide-extensions/edit/how-to-customize",
-              "ide-extensions/edit/context-selection"
+              {
+                "group": "Agent",
+                "icon": "robot",
+                "pages": [
+                  "ide-extensions/agent/quick-start",
+                  "ide-extensions/agent/how-it-works",
+                  "ide-extensions/agent/plan-mode",
+                  "ide-extensions/agent/model-setup",
+                  "ide-extensions/agent/how-to-customize",
+                  "ide-extensions/agent/context-selection"
+                ]
+              },
+              {
+                "group": "Chat",
+                "icon": "messages",
+                "pages": [
+                  "ide-extensions/chat/quick-start",
+                  "ide-extensions/chat/how-it-works",
+                  "ide-extensions/chat/model-setup",
+                  "ide-extensions/chat/how-to-customize",
+                  "ide-extensions/chat/context-selection"
+                ]
+              },
+              {
+                "group": "Autocomplete",
+                "icon": "sparkles",
+                "pages": [
+                  "ide-extensions/autocomplete/quick-start",
+                  "ide-extensions/autocomplete/how-it-works",
+                  "ide-extensions/autocomplete/model-setup",
+                  "ide-extensions/autocomplete/how-to-customize",
+                  "ide-extensions/autocomplete/context-selection",
+                  "ide-extensions/autocomplete/next-edit"
+                ]
+              },
+              {
+                "group": "Edit",
+                "icon": "pen-to-square",
+                "pages": [
+                  "ide-extensions/edit/quick-start",
+                  "ide-extensions/edit/how-it-works",
+                  "ide-extensions/edit/model-setup",
+                  "ide-extensions/edit/how-to-customize",
+                  "ide-extensions/edit/context-selection"
+                ]
+              }
             ]
           },
           {
@@ -530,7 +546,11 @@
     },
     {
       "source": "/customization/settings",
-      "destination": "/ide-extensions/settings"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/ide-extensions/settings",
+      "destination": "/customize/overview"
     },
     {
       "source": "/customize/tools",
