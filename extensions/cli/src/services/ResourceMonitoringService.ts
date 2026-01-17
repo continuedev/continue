@@ -45,6 +45,9 @@ class ResourceMonitoringService {
   private maxHistorySize = 300; // Keep 5 minutes at 1s intervals
   private lastCpuUsage = process.cpuUsage();
   private lastTimestamp = Date.now();
+  private lastFdCheckTime = Date.now();
+  private fdCheckIntervalMs = 5000; // Check file descriptors every 5 seconds
+  private cacheFileCount: number | null = null;
 
   async initialize(): Promise<void> {
     // Start monitoring if verbose mode is enabled
@@ -69,6 +72,12 @@ class ResourceMonitoringService {
     this.isMonitoring = true;
     this.lastCpuUsage = process.cpuUsage();
     this.lastTimestamp = Date.now();
+
+    // Initialize file descriptor count on start
+    this.updateFileDescriptorCount().catch(() => {
+      // Ignore errors during initialization
+    });
+    this.lastFdCheckTime = Date.now();
 
     this.monitoringInterval = setInterval(() => {
       this.collectResourceUsage();
@@ -127,16 +136,10 @@ class ResourceMonitoringService {
       },
     };
 
-    // Try to get file descriptor count (Unix only)
-    this.getFileDescriptorCount()
-      .then((count) => {
-        if (count !== null) {
-          usage.fileDescriptors = count;
-        }
-      })
-      .catch(() => {
-        // Ignore errors for file descriptor counting
-      });
+    // Use cached file descriptor count to avoid lsof command leak
+    if (this.cacheFileCount !== null) {
+      usage.fileDescriptors = this.cacheFileCount;
+    }
 
     return usage;
   }
@@ -215,6 +218,14 @@ class ResourceMonitoringService {
         this.resourceHistory = this.resourceHistory.slice(-this.maxHistorySize);
       }
 
+      // Periodically update file descriptor count to prevent lsof command leak
+      // Issue: https://github.com/continuedev/continue/issues/9422
+      const now = Date.now();
+      if (now - this.lastFdCheckTime >= this.fdCheckIntervalMs) {
+        this.updateFileDescriptorCount();
+        this.lastFdCheckTime = now;
+      }
+
       // Check for potential issues and log warnings
       this.checkResourceThresholds(usage);
     } catch (error) {
@@ -251,6 +262,13 @@ class ResourceMonitoringService {
     }
   }
 
+  private async updateFileDescriptorCount(): Promise<void> {
+    const count = await this.getFileDescriptorCount();
+    if (count !== null) {
+      this.cacheFileCount = count;
+    }
+  }
+
   private async getFileDescriptorCount(): Promise<number | null> {
     if (process.platform === "win32") {
       return null; // Not supported on Windows
@@ -258,7 +276,11 @@ class ResourceMonitoringService {
 
     try {
       const { stdout } = await execAsync(`lsof -p ${process.pid} | wc -l`);
-      return parseInt(stdout.trim(), 10) - 1; // Subtract 1 for header line
+      const count = parseInt(stdout.trim(), 10) - 1; // Subtract 1 for header line
+
+      // Ensure we don't return negative values
+      // This can happen if lsof finds no file descriptors
+      return Math.max(0, count);
     } catch {
       return null;
     }
