@@ -511,7 +511,8 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     title: "N1N",
     provider: "n1n",
     icon: "openai.png", // Using openai icon as a placeholder if n1n.png doesn't exist
-    description: "Use n1n.ai for fast and reliable OpenAI-compatible and Anthropic-compatible models.",
+    description:
+      "Use n1n.ai for fast and reliable OpenAI-compatible and Anthropic-compatible models.",
     longDescription:
       "To get started with N1N, obtain an API key from [n1n.ai](https://n1n.ai/).",
     tags: [ModelProviderTags.RequiresApiKey],
