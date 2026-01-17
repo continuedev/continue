@@ -34,7 +34,6 @@ import { prependPrompt } from "../util/promptProcessor.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
-  shouldAutoCompact,
 } from "../util/tokenizer.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
@@ -363,25 +362,17 @@ async function processMessage(
   telemetryService.logUserPrompt(userInput.length, userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
-  // Note: This is a preliminary check without tools/systemMessage context.
-  // The streaming path performs a more accurate check with full context.
-  if (
-    shouldAutoCompact({
-      chatHistory: services.chatHistory.getHistory(),
-      model,
-    })
-  ) {
-    const newIndex = await handleAutoCompaction(
-      chatHistory,
-      model,
-      llmApi,
-      isHeadless,
-      format,
-    );
-    if (newIndex !== null) {
-      compactionIndex = newIndex;
-      // Service already updated in handleAutoCompaction via setHistory
-    }
+  // The handleAutoCompaction function decides whether compaction is actually needed
+  const autoCompactionResult = await handleAutoCompaction(
+    chatHistory,
+    model,
+    llmApi,
+    isHeadless,
+    format,
+  );
+  if (autoCompactionResult !== null) {
+    compactionIndex = autoCompactionResult;
+    // Service already updated in handleAutoCompaction via setHistory
   }
 
   // Add user message to history AFTER potential compaction

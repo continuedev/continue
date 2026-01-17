@@ -3,10 +3,7 @@ import * as fs from "fs";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
-import {
-  parseEnvNumber,
-  truncateByLinesAndChars,
-} from "../util/truncateOutput.js";
+import { parseEnvNumber } from "../util/truncateOutput.js";
 
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
@@ -82,20 +79,26 @@ export const readFileTool: Tool = {
       }
       const realPath = fs.realpathSync(filepath);
       const content = fs.readFileSync(realPath, "utf-8");
-      // Mark this file as read for the edit tool
-      markFileAsRead(realPath);
 
       const maxLines = getReadFileMaxLines();
       const maxChars = getReadFileMaxChars();
+      const lineCount = content.split("\n").length;
+      const charCount = content.length;
 
-      const { output: truncatedContent, wasTruncated } =
-        truncateByLinesAndChars(content, maxLines, maxChars, "file content");
-
-      if (wasTruncated) {
-        return `Content of ${filepath} (truncated):\n${truncatedContent}`;
+      if (charCount > maxChars || lineCount > maxLines) {
+        throw new ContinueError(
+          ContinueErrorReason.FileTooLarge,
+          `File is too large to read: ${filepath} (${charCount.toLocaleString()} characters, ${lineCount.toLocaleString()} lines). ` +
+            `Maximum allowed: ${maxChars.toLocaleString()} characters or ${maxLines.toLocaleString()} lines. ` +
+            `To adjust these limits, set CONTINUE_CLI_READ_FILE_MAX_OUTPUT_CHARS or CONTINUE_CLI_READ_FILE_MAX_OUTPUT_LINES environment variables. ` +
+            `Alternatively, use shell commands like 'head', 'tail', 'sed', or 'grep' to read targeted parts of the file.`,
+        );
       }
 
-      return `Content of ${filepath}:\n${truncatedContent}`;
+      // Mark this file as read for the edit tool
+      markFileAsRead(realPath);
+
+      return `Content of ${filepath}:\n${content}`;
     } catch (error) {
       if (error instanceof ContinueError) {
         throw error;
