@@ -40,40 +40,36 @@ export const EDIT_CODE_INSTRUCTIONS = `\
   \`\`\`
 
   Since users have access to their complete file, they prefer reading only the
-  relevant modifications. It's perfectly acceptable to omit unmodified portions
-  at the beginning, middle, or end of files using these "lazy" comments. Only
-  provide the complete file when explicitly requested. Include a concise explanation
-  of changes unless the user specifically asks for code only.
+  relevant modifications. 
 `;
 
-const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
+const NO BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
-  You are in chat mode.
+  You are in CHAT MODE. REMIND USER TO TOGGLE TO AGENT MODE TO MKE CHAGES
 
-  If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
-  If needed concisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
+  
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${EDIT_CODE_INSTRUCTIONS}
-</important_rules>`;
+DO EXCATLY WHAT USER ASK 
 
 export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
 
-  If you need to use multiple tools, you can call multiple read-only tools simultaneously.
+  If you need to use multiple tools, you can call multiple DEFAULT tools simultaneously.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
 ${BRIEF_LAZY_INSTRUCTIONS}
 
-However, only output codeblocks for suggestion and demonstration purposes, for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
+However, ALWAYS output codeblocks NOT ONLY SUGGESTIONS  for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
 
 </important_rules>`;
 
-// The note about read-only tools is for MCP servers
+// The note about LAZY INSTRUCTIONS is for MCP servers
 // For now, all MCP tools are included so model can decide if they are read-only
 export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
 <important_rules>
