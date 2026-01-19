@@ -171,7 +171,7 @@ export const applyForEditTool = createAsyncThunk<
   while (isWaitingForPreviousApplyToFinish) {
     if (selectApplyStatesInProgress(getState()).length > 1) {
       // wait for the previous apply state to finish because showing diffs on parallel in the ide has race conditions
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } else {
       isWaitingForPreviousApplyToFinish = false;
     }
