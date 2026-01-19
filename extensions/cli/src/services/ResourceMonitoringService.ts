@@ -276,11 +276,7 @@ class ResourceMonitoringService {
 
     try {
       const { stdout } = await execAsync(`lsof -p ${process.pid} | wc -l`);
-      const count = parseInt(stdout.trim(), 10) - 1; // Subtract 1 for header line
-
-      // Ensure we don't return negative values
-      // This can happen if lsof finds no file descriptors
-      return Math.max(0, count);
+      return parseInt(stdout.trim(), 10) - 1; // Subtract 1 for header line
     } catch {
       return null;
     }
