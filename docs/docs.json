@@ -26,7 +26,7 @@
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control",
+              "mission-control/index",
               "mission-control/tasks",
               "mission-control/workflows",
               {
