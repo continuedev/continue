@@ -526,10 +526,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
         state.lastActivity = Date.now();
 
-        // Update metadata after successful agent turn
+        // Update metadata after successful agent turn (mark as complete for this turn)
         try {
           const history = services.chatHistory?.getHistory();
-          await updateAgentMetadata(history);
+          await updateAgentMetadata({ history, isComplete: true });
         } catch (metadataErr) {
           // Non-critical: log but don't fail the agent execution
           logger.debug(
