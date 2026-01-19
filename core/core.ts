@@ -435,6 +435,12 @@ export class Core {
     on("config/deleteRule", async (msg) => {
       try {
         const filepath = msg.data.filepath;
+        if (
+          !isColocatedRulesFile(filepath) &&
+          !isContinueConfigRelatedUri(filepath)
+        ) {
+          throw new Error("Only rule files can be deleted");
+        }
         const fileExists = await this.ide.fileExists(filepath);
         if (fileExists) {
           await this.ide.removeFile(filepath);
