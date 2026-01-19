@@ -26,7 +26,7 @@
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control",
+              "mission-control/index",
               "mission-control/tasks",
               "mission-control/workflows",
               {
@@ -100,16 +100,6 @@
             "icon": "book-open",
             "expanded": false,
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
-          },
-          {
-            "group": "IDE Extensions",
-            "icon": "puzzle-piece",
-            "pages": [
-              {
-                "page": "ide-extensions/install",
-                "href": "/ide-extensions/install"
-              }
-            ]
           }
         ]
       },
@@ -122,10 +112,7 @@
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
-              {
-                "page": "Customization",
-                "href": "/customize/overview"
-              }
+              "customize/overview"
             ]
           },
           {
