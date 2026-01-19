@@ -55,15 +55,14 @@ export async function compactConversation({
     messages.push(item.message);
     // toolcalls only exist in an assistant message
     if (item.message.role === "assistant" && item.message.toolCalls) {
-      // for every toolcall, if there is no toolcallstate or its output, add a chat message saying that it is empty
+      // for every toolcall, if there is no tool message with a tool call id already, add a chat message saying that it is empty
       item.message.toolCalls.forEach((toolCall) => {
-        const foundToolCallState = item.toolCallStates?.find(
-          (toolCallState) => toolCallState.toolCallId === toolCall.id,
-        );
         if (
-          !foundToolCallState ||
-          !foundToolCallState.output ||
-          !foundToolCallState.output.length
+          !filteredHistory.find(
+            (item) =>
+              item.message.role === "tool" &&
+              item.message.toolCallId === toolCall.id,
+          )
         ) {
           messages.push({
             role: "tool",
