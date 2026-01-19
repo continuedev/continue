@@ -140,7 +140,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
       <div className="w-full max-w-md">
         <div className="mt-3 flex flex-col gap-1 px-2">
           <div className="flex flex-col">
-            <p className="mb-0 text-base font-bold leading-tight">
+            <p className="mb-0 text-base font-bold leading-tight text-gray-200">
               Install Ollama
             </p>
             <OllamaStatus isOllamaConnected={isOllamaConnected} />
@@ -167,7 +167,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
           <div className="mt-4 w-full">
             <Button
               onClick={onClickSubmitOnboarding}
-              className="w-full"
+              className="w-full cursor-pointer hover:opacity-90"
               disabled={!allDownloaded}
             >
               Connect

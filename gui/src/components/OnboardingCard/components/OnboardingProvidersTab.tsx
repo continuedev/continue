@@ -66,7 +66,7 @@ export function OnboardingProvidersTab({
             <div className="space-y-4">
               {providerConfigs.map((config) => (
                 <div key={config?.provider}>
-                  <label className="mb-1 flex items-center gap-3 text-sm font-medium">
+                  <label className="mb-1 flex items-center gap-3 text-sm font-medium text-gray-200">
                     {window.vscMediaUrl && (
                       <img
                         src={`${window.vscMediaUrl}/logos/${config?.icon}`}
@@ -83,7 +83,7 @@ export function OnboardingProvidersTab({
                     className="w-full"
                     {...formMethods.register(`${config?.provider}_apiKey`)}
                   />
-                  <span className="text-description-muted mt-1 block text-xs">
+                  <span className="text-description-muted mt-1 block text-xs text-gray-400">
                     <a
                       href={config?.apiKeyUrl}
                       target="_blank"
@@ -103,13 +103,13 @@ export function OnboardingProvidersTab({
                 type="button"
                 onClick={handleFormSubmit}
                 disabled={!hasAnyApiKey}
-                className="w-full"
+                className="w-full cursor-pointer hover:opacity-90"
               >
                 Connect
               </Button>
 
               <div className="w-full text-center">
-                <span className="text-description">
+                <span className="text-description text-gray-400">
                   <span
                     className="cursor-pointer underline hover:brightness-125"
                     onClick={handleClickMoreProviders}
