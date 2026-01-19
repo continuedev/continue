@@ -248,9 +248,8 @@ export function useChat({
       isChatHistoryInitialized
     ) {
       const processPrompts = async () => {
-        const { processAndCombinePrompts } = await import(
-          "../../util/promptProcessor.js"
-        );
+        const { processAndCombinePrompts } =
+          await import("../../util/promptProcessor.js");
         const finalMessage = await processAndCombinePrompts(
           additionalPrompts,
           initialPrompt,
@@ -776,9 +775,8 @@ export function useChat({
     // Handle policy creation if requested
     if (approved && createPolicy && currentRequest) {
       try {
-        const { generatePolicyRule, addPolicyToYaml } = await import(
-          "../../permissions/policyWriter.js"
-        );
+        const { generatePolicyRule, addPolicyToYaml } =
+          await import("../../permissions/policyWriter.js");
 
         const policyRule = generatePolicyRule(
           currentRequest.toolName,

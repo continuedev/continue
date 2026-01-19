@@ -31,8 +31,7 @@ const MAX_LENGTH = 70;
 
 // Enhanced search result interface for intelligent sorting
 interface EnhancedSearchResult
-  extends SearchResult,
-    Omit<ContextSubmenuItemWithProvider, "id"> {
+  extends SearchResult, Omit<ContextSubmenuItemWithProvider, "id"> {
   sortPriority: number;
   matchQuality: number;
 }

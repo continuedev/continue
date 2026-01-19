@@ -30,9 +30,8 @@ describe("compaction infinite loop prevention", () => {
   const mockLlmApi = {} as BaseLlmApi;
 
   it("should not loop infinitely when pruning doesn't reduce history size", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import(
-      "./util/tokenizer.js"
-    );
+    const { countChatHistoryTokens, getModelContextLimit } =
+      await import("./util/tokenizer.js");
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);
@@ -62,9 +61,8 @@ describe("compaction infinite loop prevention", () => {
   });
 
   it("should not loop infinitely with history ending in assistant message", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import(
-      "./util/tokenizer.js"
-    );
+    const { countChatHistoryTokens, getModelContextLimit } =
+      await import("./util/tokenizer.js");
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);
@@ -94,9 +92,8 @@ describe("compaction infinite loop prevention", () => {
   });
 
   it("should successfully prune when pruning actually reduces size", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import(
-      "./util/tokenizer.js"
-    );
+    const { countChatHistoryTokens, getModelContextLimit } =
+      await import("./util/tokenizer.js");
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);

@@ -6,8 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 export class TcpMessenger<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
-> implements IMessenger<ToProtocol, FromProtocol>
-{
+> implements IMessenger<ToProtocol, FromProtocol> {
   private port: number = 3000;
   private host: string = "127.0.0.1";
   private socket: net.Socket | null = null;

@@ -401,15 +401,12 @@ export class AnthropicApi implements BaseLlmApi {
     }
 
     const { generateText } = await import("ai");
-    const { convertOpenAIMessagesToVercel } = await import(
-      "../openaiToVercelMessages.js"
-    );
-    const { convertToolsToVercelFormat } = await import(
-      "../convertToolsToVercel.js"
-    );
-    const { convertToolChoiceToVercel } = await import(
-      "../convertToolChoiceToVercel.js"
-    );
+    const { convertOpenAIMessagesToVercel } =
+      await import("../openaiToVercelMessages.js");
+    const { convertToolsToVercelFormat } =
+      await import("../convertToolsToVercel.js");
+    const { convertToolChoiceToVercel } =
+      await import("../convertToolChoiceToVercel.js");
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);
@@ -616,16 +613,13 @@ export class AnthropicApi implements BaseLlmApi {
     }
 
     const { streamText } = await import("ai");
-    const { convertOpenAIMessagesToVercel } = await import(
-      "../openaiToVercelMessages.js"
-    );
-    const { convertToolsToVercelFormat } = await import(
-      "../convertToolsToVercel.js"
-    );
+    const { convertOpenAIMessagesToVercel } =
+      await import("../openaiToVercelMessages.js");
+    const { convertToolsToVercelFormat } =
+      await import("../convertToolsToVercel.js");
     const { convertVercelStream } = await import("../vercelStreamConverter.js");
-    const { convertToolChoiceToVercel } = await import(
-      "../convertToolChoiceToVercel.js"
-    );
+    const { convertToolChoiceToVercel } =
+      await import("../convertToolChoiceToVercel.js");
 
     // Convert OpenAI messages to Vercel AI SDK CoreMessage format
     const vercelMessages = convertOpenAIMessagesToVercel(body.messages);

@@ -179,12 +179,10 @@ export class OpenAIApi implements BaseLlmApi {
     }
 
     const { generateText } = await import("ai");
-    const { convertToolsToVercelFormat } = await import(
-      "../convertToolsToVercel.js"
-    );
-    const { convertToolChoiceToVercel } = await import(
-      "../convertToolChoiceToVercel.js"
-    );
+    const { convertToolsToVercelFormat } =
+      await import("../convertToolsToVercel.js");
+    const { convertToolChoiceToVercel } =
+      await import("../convertToolChoiceToVercel.js");
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);
@@ -298,13 +296,11 @@ export class OpenAIApi implements BaseLlmApi {
     }
 
     const { streamText } = await import("ai");
-    const { convertToolsToVercelFormat } = await import(
-      "../convertToolsToVercel.js"
-    );
+    const { convertToolsToVercelFormat } =
+      await import("../convertToolsToVercel.js");
     const { convertVercelStream } = await import("../vercelStreamConverter.js");
-    const { convertToolChoiceToVercel } = await import(
-      "../convertToolChoiceToVercel.js"
-    );
+    const { convertToolChoiceToVercel } =
+      await import("../convertToolChoiceToVercel.js");
 
     const modifiedBody = this.modifyChatBody({ ...body });
     const model = this.openaiProvider(modifiedBody.model);

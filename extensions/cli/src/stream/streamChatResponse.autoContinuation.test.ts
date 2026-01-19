@@ -140,9 +140,8 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
 
   it("should automatically continue after compaction when no tool calls remain", async () => {
     const { services } = await import("../services/index.js");
-    const { handleNormalAutoCompaction } = await import(
-      "./streamChatResponse.compactionHelpers.js"
-    );
+    const { handleNormalAutoCompaction } =
+      await import("./streamChatResponse.compactionHelpers.js");
     const { logger } = await import("../util/logger.js");
 
     // Track history modifications
@@ -205,9 +204,8 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
 
   it("should not auto-continue if compaction occurs with tool calls pending", async () => {
     const { services } = await import("../services/index.js");
-    const { handleNormalAutoCompaction } = await import(
-      "./streamChatResponse.compactionHelpers.js"
-    );
+    const { handleNormalAutoCompaction } =
+      await import("./streamChatResponse.compactionHelpers.js");
     const { handleToolCalls } = await import("./handleToolCalls.js");
 
     const historyUpdates: string[] = [];
@@ -273,9 +271,8 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
 
   it("should not create infinite loops - flag is reset after continuation", async () => {
     const { services } = await import("../services/index.js");
-    const { handleNormalAutoCompaction } = await import(
-      "./streamChatResponse.compactionHelpers.js"
-    );
+    const { handleNormalAutoCompaction } =
+      await import("./streamChatResponse.compactionHelpers.js");
 
     const historyUpdates: string[] = [];
     vi.mocked(services.chatHistory.addUserMessage).mockImplementation((msg) => {

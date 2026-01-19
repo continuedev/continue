@@ -12,8 +12,7 @@ import {
 } from "openai/resources/index";
 import type { Response } from "openai/resources/responses/responses.js";
 
-export interface FimCreateParamsStreaming
-  extends CompletionCreateParamsStreaming {
+export interface FimCreateParamsStreaming extends CompletionCreateParamsStreaming {
   suffix: string;
 }
 

@@ -14,9 +14,8 @@ describe("Config Switching Implementation Test", () => {
   });
 
   test("ServiceContainer has required reactive methods", async () => {
-    const { serviceContainer } = await import(
-      "../services/ServiceContainer.js"
-    );
+    const { serviceContainer } =
+      await import("../services/ServiceContainer.js");
 
     // Verify service container has all methods needed for reactive updates
     expect(typeof serviceContainer.set).toBe("function");

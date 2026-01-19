@@ -122,9 +122,8 @@ describe("Local Config Switching Investigation", () => {
     // When switching to a local config, we call updateAssistantSlug(null)
     // When switching to a remote config, we call updateAssistantSlug(configPath)
 
-    const { updateAssistantSlug, getAssistantSlug } = await import(
-      "../auth/workos.js"
-    );
+    const { updateAssistantSlug, getAssistantSlug } =
+      await import("../auth/workos.js");
 
     expect(typeof updateAssistantSlug).toBe("function");
     expect(typeof getAssistantSlug).toBe("function");

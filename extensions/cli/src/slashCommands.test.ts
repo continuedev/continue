@@ -249,9 +249,8 @@ describe("slashCommands", () => {
     it("should use test session directory when in test mode", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      const { getSessionFilePath, getCurrentSession } = await import(
-        "./session.js"
-      );
+      const { getSessionFilePath, getCurrentSession } =
+        await import("./session.js");
 
       // Mock the session functions for this specific test
       (getSessionFilePath as any).mockReturnValue(
