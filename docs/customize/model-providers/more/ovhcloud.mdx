@@ -15,7 +15,50 @@ OVHcloud AI Endpoints is a serverless inference API that provides access to a cu
 ## Chat model
 
 We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
-Check our [catalog](https://endpoints.ai.cloud.ovh.net/catalog) to see all of our models hsoted on AI Endpoints.
+Check our [catalog](https://endpoints.ai.cloud.ovh.net/catalog) to see all of our models hosted on AI Endpoints.
+
+### Available Models
+
+OVHcloud AI Endpoints provides access to the following models:
+
+**Llama Models:**
+- `llama3.1-8b` - Llama 3.1 8B Instruct (supports function calling)
+- `llama3.1-70b` - Llama 3.1 70B Instruct
+- `llama3.3-70b` - Llama 3.3 70B Instruct (supports function calling)
+
+**Qwen Models:**
+- `qwen2.5-coder-32b` - Qwen 2.5 Coder 32B Instruct (supports function calling)
+- `qwen3-32b` - Qwen 3 32B (supports function calling)
+- `qwen3-coder-30b-a3b` - Qwen 3 Coder 30B A3B Instruct (supports function calling)
+- `qwen2.5-vl-72b` - Qwen 2.5 VL 72B Instruct (vision-language model)
+
+**Mistral Models:**
+- `mistral-7b` - Mistral 7B Instruct v0.3
+- `mistral-8x7b` - Mixtral 8x7B Instruct v0.1
+- `mistral-nemo` - Mistral Nemo Instruct 2407 (supports function calling)
+- `mistral-small-3.2-24b` - Mistral Small 3.2 24B Instruct (supports function calling)
+
+**OpenAI Models:**
+- `gpt-oss-20b` - GPT-OSS 20B (supports function calling)
+- `gpt-oss-120b` - GPT-OSS 120B (supports function calling)
+
+**DeepSeek Models:**
+- `DeepSeek-R1-Distill-Llama-70B` - DeepSeek R1 Distill Llama 70B (supports function calling)
+
+**Other Models:**
+- `codestral-mamba-latest` - Codestral Mamba 7B v0.1
+
+### Function Calling Support
+
+Many OVHcloud models support function calling (tool use), which enables the model to interact with external tools and APIs. Models with function calling support include:
+
+- Llama 3.1 8B, Llama 3.3 70B
+- All Qwen 3 models and Qwen 2.5 Coder
+- GPT-OSS 20B and 120B
+- DeepSeek R1 Distill Llama 70B
+- Mistral Small 3.2 24B, Mistral Nemo
+
+Function calling is automatically enabled for supported models when using Continue.
 
 <Tabs>
     <Tab title="YAML">
@@ -40,6 +83,43 @@ Check our [catalog](https://endpoints.ai.cloud.ovh.net/catalog) to see all of ou
           "provider": "ovhcloud",
           "model": "qwen2.5-coder-32b",
           "apiKey": "<YOUR_AIENDPOINTS_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+### Example: Model with Function Calling
+
+Here's an example configuration for a model that supports function calling:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: GPT-OSS-120B
+        provider: ovhcloud
+        model: gpt-oss-120b
+        apiKey: <YOUR_AIENDPOINTS_API_KEY>
+        capabilities:
+          - tool_use
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "GPT-OSS-120B",
+          "provider": "ovhcloud",
+          "model": "gpt-oss-120b",
+          "apiKey": "<YOUR_AIENDPOINTS_API_KEY>",
+          "capabilities": ["tool_use"]
         }
       ]
     }
