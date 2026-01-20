@@ -47,7 +47,7 @@ const ServiceDebugger: React.FC<ServiceDebuggerProps> = ({
           ? `User: ${service.authConfig.email || "unknown"}`
           : "No auth config";
       case "config":
-        return service?.config ? `Agent: ${service.config.name}` : "No config";
+        return service?.config ? `Config: ${service.config.name}` : "No config";
       case "model":
         return service?.model ? `Model: ${service.model.name}` : "No model";
       case "mcp":

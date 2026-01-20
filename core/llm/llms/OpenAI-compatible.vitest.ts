@@ -9,6 +9,7 @@ import Deepseek from "./Deepseek.js";
 import OpenRouter from "./OpenRouter.js";
 import xAI from "./xAI.js";
 import Mistral from "./Mistral.js";
+import Mimo from "./Mimo.js";
 import LMStudio from "./LMStudio.js";
 import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
@@ -298,6 +299,11 @@ createOpenAISubclassTests(Mistral, {
     "mistral-8x7b": "open-mixtral-8x7b",
   },
   modelConversionContent: "hello",
+});
+
+createOpenAISubclassTests(Mimo, {
+  providerName: "mimo",
+  defaultApiBase: "https://api.xiaomimimo.com/v1/",
 });
 
 createOpenAISubclassTests(LMStudio, {

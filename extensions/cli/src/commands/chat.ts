@@ -363,7 +363,14 @@ async function processMessage(
   telemetryService.logUserPrompt(userInput.length, userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
-  if (shouldAutoCompact(services.chatHistory.getHistory(), model)) {
+  // Note: This is a preliminary check without tools/systemMessage context.
+  // The streaming path performs a more accurate check with full context.
+  if (
+    shouldAutoCompact({
+      chatHistory: services.chatHistory.getHistory(),
+      model,
+    })
+  ) {
     const newIndex = await handleAutoCompaction(
       chatHistory,
       model,

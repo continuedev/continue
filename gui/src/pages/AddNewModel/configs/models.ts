@@ -2473,6 +2473,100 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+  asksageclaude45sonnetgov: {
+    title: "Claude 4.5 Sonnet gov*",
+    description: "Anthropic's 4.5 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-45-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 4.5 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45opus: {
+    title: "Claude 4.5 Opus*",
+    description: "Claude 4.5 Opus",
+    params: {
+      model: "google-claude-45-opus",
+      contextLength: 200_000,
+      title: "Claude 4.5 Opus*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45haiku: {
+    title: "Claude 4.5 Haiku*",
+    description: "Claude 4.5 Haiku",
+    params: {
+      model: "google-claude-45-haiku",
+      contextLength: 200_000,
+      title: "Claude 4.5 Haiku*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksagegpt51: {
+    title: "GPT-5.1*",
+    description: "OpenAI's GPT-5.1 model",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      maxTokens: 200_000,
+      title: "GPT-5.1*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt52: {
+    title: "GPT-5.2*",
+    description: "OpenAI's GPT-5.2 model",
+    params: {
+      model: "gpt-5.2",
+      contextLength: 400_000,
+      maxTokens: 200_000,
+      title: "GPT-5.2*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt03mini: {
+    title: "GPT-o3-mini",
+    description: "Azure OpenAI GPT o3-mini model.",
+    params: {
+      model: "gpt-o3-mini",
+      contextLength: 200_000,
+      maxTokens: 100_000,
+      title: "GPT-o3-mini",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegroqllama4scout: {
+    title: "Llama 4 Scout",
+    description: "Llama-4 Scout is a large language model customized by Groq.",
+    params: {
+      title: "Llama 4 Scout",
+      model: "groq-llama4-scout",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "groq.png",
+    isOpenSource: true,
+  },
 
   // Gemini series models via CometAPI
   cometapiGemini25Pro: {
@@ -2659,6 +2753,22 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["cometapi"],
     icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Xiaomi Mimo models
+  mimoV2Flash: {
+    title: "mimo-v2-flash",
+    description: "Xiaomi's fast and efficient language model",
+    refUrl: "https://platform.xiaomimimo.com/",
+    params: {
+      title: "mimo-v2-flash",
+      model: "mimo-v2-flash",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["mimo"],
+    icon: "mimo.png",
     isOpenSource: false,
   },
 };

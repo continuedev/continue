@@ -110,7 +110,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {/* Agent name */}
       {config && (
         <Text color="blue">
-          <Text bold>Agent:</Text> <Text color="white">{config.name}</Text>
+          <Text bold>Config:</Text> <Text color="white">{config.name}</Text>
         </Text>
       )}
 
