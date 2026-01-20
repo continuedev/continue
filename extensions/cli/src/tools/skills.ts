@@ -71,10 +71,8 @@ ${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description
 
       if (skill.files.length > 0) {
         content.push(
-          ...[
-            `<skill_files>${skill.files.join(",")}</skill_files>`,
-            `<other_instructions>Use the read file tool to access skill files as needed.</other_instructions>`,
-          ],
+          `<skill_files>${skill.files.join(",")}</skill_files>`,
+          `<other_instructions>Use the read file tool to access skill files as needed.</other_instructions>`,
         );
       }
 
