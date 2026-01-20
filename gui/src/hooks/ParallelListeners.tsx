@@ -31,7 +31,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
-import { setLocalStorage } from "../util/localStorage";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -88,8 +88,14 @@ function ParallelListeners() {
       const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
+      const wasReasoningPreviouslyEnabled =
+        getLocalStorage("hasReasoningEnabled") !== false;
       dispatch(
-        setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
+        setHasReasoningEnabled(
+          supportsReasoning &&
+            !isReasoningDisabled &&
+            wasReasoningPreviouslyEnabled,
+        ),
       );
     },
     [dispatch, hasDoneInitialConfigLoad, selectedProfileId],

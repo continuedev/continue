@@ -17,6 +17,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { exitEdit } from "../../redux/thunks/edit";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { setLocalStorage } from "../../util/localStorage";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
@@ -136,9 +137,10 @@ function InputToolbar(props: InputToolbarProps) {
             )}
             {supportsReasoning && (
               <HoverItem
-                onClick={() =>
-                  dispatch(setHasReasoningEnabled(!hasReasoningEnabled))
-                }
+                onClick={() => {
+                  dispatch(setHasReasoningEnabled(!hasReasoningEnabled));
+                  setLocalStorage("hasReasoningEnabled", !hasReasoningEnabled);
+                }}
               >
                 <ToolTip
                   place="top"
