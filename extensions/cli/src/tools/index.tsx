@@ -28,6 +28,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
+import { skillsTool } from "./skills.js";
 import { subagentTool } from "./subagent.js";
 import {
   isBetaSubagentToolEnabled,
@@ -126,6 +127,8 @@ export async function getAllAvailableTools(
   if (isBetaSubagentToolEnabled()) {
     tools.push(await subagentTool());
   }
+
+  tools.push(await skillsTool());
 
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
