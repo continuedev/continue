@@ -1,0 +1,159 @@
+---
+title: "Customize Continue"
+description: "Tailor Continue to fit your specific development workflow and preferences"
+---
+
+Continue can be deeply customized to enhance your coding experience. From selecting model providers to creating custom prompts and implementing rules, you have complete control over how Continue works for you.
+
+## Core Customization Options
+
+<CardGroup cols={2}>
+  <Card title="Models" icon="microchip" href="/customize/models">
+    Choose and configure models for different tasks like chat, autocomplete, and editing
+    
+    <sub>• Select from popular providers like OpenAI, Anthropic, Gemini</sub><br />
+    <sub>• Use different models for specific roles</sub><br />
+    <sub>• Run local models with Ollama</sub>
+  </Card>
+
+  <Card title="Model Providers" icon="server" href="/customize/model-providers/overview">
+    Connect Continue to your favorite AI providers
+    
+    <sub>• Support for 40+ providers</sub><br />
+    <sub>• Self-host your own models</sub><br />
+    <sub>• Switch between providers easily</sub>
+  </Card>
+
+  <Card title="Rules" icon="gavel" href="/customize/rules">
+    Define guidelines that shape AI behavior and ensure consistency
+    
+    <sub>• Enforce coding standards</sub><br />
+    <sub>• Implement quality checks</sub><br />
+    <sub>• Create project-specific best practices</sub>
+  </Card>
+
+  <Card title="Prompts" icon="message" href="/customize/prompts">
+    Create specialized instructions for specific tasks
+    
+    <sub>• Define interaction patterns</sub><br />
+    <sub>• Encode domain expertise</sub><br />
+    <sub>• Share and reuse across teams</sub>
+  </Card>
+
+  <Card title="MCP Tools" icon="wrench" href="/customize/mcp-tools">
+    Extend your agents with external tools and functions
+    
+    <sub>• Connect to external APIs</sub><br />
+    <sub>• Add custom capabilities</sub><br />
+    <sub>• Use Model Context Protocol servers</sub>
+  </Card>
+
+  <Card title="Model Roles" icon="robot" href="/customize/model-roles/00-intro">
+    Assign different models to specific tasks
+    
+    <sub>• Chat, Edit, Apply, Autocomplete</sub><br />
+    <sub>• Embeddings and Reranking</sub><br />
+    <sub>• Optimize for performance and cost</sub>
+  </Card>
+</CardGroup>
+
+## Advanced Configuration
+
+<CardGroup cols={2}>
+  <Card title="Deep Dives" icon="microscope" href="/customize/deep-dives/configuration">
+    Detailed technical explanations of Continue's internals
+    
+    <sub>• Configuration system</sub><br />
+    <sub>• Autocomplete mechanics</sub><br />
+    <sub>• Custom context providers</sub>
+  </Card>
+
+  <Card title="Reference" icon="code" href="/reference">
+    Complete configuration reference and API documentation
+    
+    <sub>• YAML configuration guide</sub><br />
+    <sub>• JSON reference</sub><br />
+    <sub>• Migration guides</sub>
+  </Card>
+
+  <Card title="Telemetry" icon="chart-line" href="/customize/telemetry">
+    Understand what data Continue collects
+    
+    <sub>• Anonymous usage statistics</sub><br />
+    <sub>• Opt-out instructions</sub><br />
+    <sub>• Privacy-first approach</sub>
+  </Card>
+</CardGroup>
+
+## Getting Started with Customization
+
+### Edit Your Configuration
+
+Access your configuration directly from the Continue sidebar:
+
+1. Open the sidebar with `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains)
+2. Click the Agent selector above the main chat input
+3. Hover over an agent and click the gear icon (local agents) or new window icon (hub agents)
+
+![configure](/images/customize/images/configure-continue-a5c8c79f3304c08353f3fc727aa5da7e.png)
+
+### Configuration Management
+
+- **Hub Configurations**: See [Editing Hub Configurations](/mission-control/configs/edit-a-config) for managing cloud-based configs
+- **Local Configurations**: See the [Config Deep Dive](/customize/deep-dives/configuration) for detailed local configuration options
+
+## Popular Customization Paths
+
+<AccordionGroup>
+  <Accordion title="Using a Different Model Provider">
+    Continue supports many model providers beyond the default. To switch:
+    
+    1. Choose your [model provider](/customize/model-providers/overview)
+    2. Get an API key from the provider
+    3. Add the [model](/customize/models) to your configuration
+    4. Configure the API key in your [secrets](/mission-control/secrets/secret-types)
+  </Accordion>
+
+  <Accordion title="Running Models Locally">
+    Run AI models on your own hardware:
+    
+    1. Install [Ollama](https://ollama.com)
+    2. Pull a model (e.g., `ollama pull qwen3-coder`)
+    3. Configure [Ollama provider](/customize/model-providers/top-level/ollama)
+    4. See our [Ollama guide](/guides/ollama-guide) for details
+  </Accordion>
+
+  <Accordion title="Setting Up Project-Specific Rules">
+    Create rules that guide AI behavior for your project:
+    
+    1. Create a `.continue/rules` folder in your project
+    2. Add markdown files with your guidelines
+    3. Rules automatically apply with Hub configs
+    4. Learn more in the [rules documentation](/customize/rules)
+  </Accordion>
+
+  <Accordion title="Creating Custom Slash Commands">
+    Build reusable prompts as slash commands:
+    
+    1. Define prompts in your configuration
+    2. Use them with `/` in the chat
+    3. Share across your team via Hub
+    4. See the [prompts guide](/customize/prompts) for examples
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Model Setup" icon="rocket" href="/customize/models">
+    Get started by configuring your first model
+  </Card>
+  
+  <Card title="Browse the Hub" icon="globe" href="https://hub.continue.dev/hub">
+    Explore community configs, prompts, and rules
+  </Card>
+  
+  <Card title="Read the Guides" icon="book" href="/guides/overview">
+    Learn best practices and advanced techniques
+  </Card>
+</CardGroup>

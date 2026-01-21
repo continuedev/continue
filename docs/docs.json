@@ -96,6 +96,11 @@
             ]
           },
           {
+            "group": "IDE Extension",
+            "icon": "plug",
+            "pages": ["ide-extensions/install"]
+          },
+          {
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
@@ -109,11 +114,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": [
-              "ide-extensions/install",
-              "ide-extensions/quick-start",
-              "customize/overview"
-            ]
+            "pages": ["ide-extensions/install", "ide-extensions/quick-start"]
           },
           {
             "group": "Features",
@@ -261,6 +262,16 @@
               "reference/deprecated-codebase",
               "reference/deprecated-docs"
             ]
+          }
+        ]
+      },
+      {
+        "tab": "Customize",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "sliders",
+            "pages": ["customize/index"]
           }
         ]
       },
