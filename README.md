@@ -35,10 +35,15 @@ Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI
 
 ### Quick Install
 
+<div align="left">
+
 ```bash
-npm i -g @continuedev/cli
-cn
+$ npm i -g @continuedev/cli
+
+$ cn --help
 ```
+
+</div>
 
 ## Cloud Agents
 
