@@ -154,6 +154,10 @@ export class AskSageApi implements BaseLlmApi {
     ) {
       this.sessionTokenPromise = this.getSessionToken();
       this.tokenTimestamp = Date.now();
+      // Clear cache on failure so transient errors don't prevent retries
+      this.sessionTokenPromise.catch(() => {
+        this.clearTokenCache();
+      });
     }
     return this.sessionTokenPromise;
   }
@@ -471,13 +475,14 @@ export class AskSageApi implements BaseLlmApi {
 
       // Yield tool calls if present
       if (rawToolCalls && rawToolCalls.length > 0) {
-        for (const tc of rawToolCalls) {
+        for (let i = 0; i < rawToolCalls.length; i++) {
+          const tc = rawToolCalls[i];
           yield chatChunkFromDelta({
             model: body.model,
             delta: {
               tool_calls: [
                 {
-                  index: 0,
+                  index: i,
                   id: tc.id,
                   type: "function",
                   function: {
