@@ -38,9 +38,9 @@ Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI
 <div align="left">
 
 ```bash
-$ npm i -g @continuedev/cli
+npm i -g @continuedev/cli
 
-$ cn --help
+cn --help
 ```
 
 </div>
