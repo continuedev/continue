@@ -16,6 +16,7 @@ import { FileIndexService } from "./FileIndexService.js";
 import { GitAiIntegrationService } from "./GitAiIntegrationService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
+import { OceanBusService } from "./OceanBusService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { StorageSyncService } from "./StorageSyncService.js";
@@ -51,6 +52,7 @@ const toolPermissionService = new ToolPermissionService();
 const systemMessageService = new SystemMessageService();
 const artifactUploadService = new ArtifactUploadService();
 const gitAiIntegrationService = new GitAiIntegrationService();
+const oceanBusService = new OceanBusService();
 
 /**
  * Initialize all services and register them with the service container
@@ -324,6 +326,23 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.OCEAN_BUS,
+    async () => {
+      const oceanBusUrl = process.env.OCEAN_BUS_URL || "http://localhost:8765";
+      // Start connection in background - don't block initialization
+      oceanBusService.start().catch((err) => {
+        logger.warn(`Ocean-bus connection failed: ${err.message}`);
+      });
+      return {
+        connected: oceanBusService.isConnected(),
+        url: oceanBusUrl,
+        queueSize: oceanBusService.getQueueSize(),
+      };
+    },
+    [], // No dependencies - connects directly to ocean-bus
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -387,6 +406,7 @@ export const services = {
   toolPermissions: toolPermissionService,
   artifactUpload: artifactUploadService,
   gitAiIntegration: gitAiIntegrationService,
+  oceanBus: oceanBusService,
 } as const;
 
 export type ServicesType = typeof services;

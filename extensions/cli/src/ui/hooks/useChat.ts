@@ -70,6 +70,9 @@ export function useChat({
   // Track service subscription
   const serviceListenerCleanupRef = useRef<null | (() => void)>(null);
 
+  // Track ocean-bus event listener
+  const oceanBusListenerRef = useRef<null | (() => void)>(null);
+
   // Store the current session
   const [currentSession, setCurrentSession] = useState<Session>(() => {
     // In remote mode, start with empty session (will be populated by polling)
@@ -193,6 +196,54 @@ export function useChat({
       messageQueue.off("messageQueued", onMessageQueued);
     };
   }, []);
+
+  // Set up ocean-bus event listener
+  useEffect(() => {
+    const oceanBus = services.oceanBus;
+    if (!oceanBus) return;
+
+    const handleOceanBusEvent = async (event: any) => {
+      // Import formatter functions
+      const { formatOceanBusEvent, shouldRespondToEvent } = await import(
+        "../../services/oceanBusEventFormatter.js"
+      );
+
+      // Get agent ID - hardcoded for now
+      const agentId = "agent:rippler";
+
+      // Check if we should respond to this event
+      if (!shouldRespondToEvent(event, agentId)) {
+        return;
+      }
+
+      // Format event as prompt
+      const formattedMessage = formatOceanBusEvent(event);
+      if (!formattedMessage) {
+        return;
+      }
+
+      // Queue the message instead of processing immediately
+      // This prevents interrupting active work
+      await messageQueue.enqueueMessage(formattedMessage);
+      logger.info("Ocean-bus event queued for processing");
+
+      // If LLM is idle, trigger queue processing
+      if (!isWaitingForResponse && !isCompacting) {
+        const queuedMessageData = messageQueue.getNextMessage();
+        if (queuedMessageData) {
+          const { message: queuedMessage, imageMap } = queuedMessageData;
+          setQueuedMessages([]);
+          await handleUserMessage(queuedMessage, imageMap);
+        }
+      }
+    };
+
+    oceanBus.on("event", handleOceanBusEvent);
+
+    return () => {
+      oceanBus.off("event", handleOceanBusEvent);
+    };
+  }, [assistant]);
 
   // Clean up abort controller on unmount
   useEffect(() => {
