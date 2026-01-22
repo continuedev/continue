@@ -10,6 +10,13 @@ import {
   getModelContextLimit,
 } from "./util/tokenizer.js";
 
+// Buffer cap for auto-compaction threshold calculation
+// Threshold formula: contextLength - maxTokens - Min(maxTokens, AUTO_COMPACT_BUFFER_CAP)
+export const AUTO_COMPACT_BUFFER_CAP = 15_000;
+
+// Default context length when model config doesn't specify one
+export const DEFAULT_CONTEXT_LENGTH = 200_000;
+
 export interface CompactionResult {
   compactedHistory: ChatHistoryItem[];
   compactionIndex: number;
@@ -65,6 +72,9 @@ export async function compactChatHistory(
   const maxTokens = model.defaultCompletionOptions?.maxTokens;
   const reservedForOutput =
     maxTokens === undefined ? Math.ceil(contextLimit * 0.35) : maxTokens;
+  // Additional buffer matching the auto-compaction threshold formula:
+  // contextLength - maxTokens - Min(maxTokens, 20k)
+  const compactionBuffer = Math.min(reservedForOutput, AUTO_COMPACT_BUFFER_CAP);
 
   // Check if system message is already in the history to avoid double-counting
   const hasSystemMessageInHistory = chatHistory.some(
@@ -78,6 +88,7 @@ export async function compactChatHistory(
   const availableForInput =
     contextLimit -
     reservedForOutput -
+    compactionBuffer -
     systemMessageReservation -
     COMPACTION_PROMPT_TOKENS;
 

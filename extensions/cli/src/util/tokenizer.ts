@@ -3,14 +3,12 @@ import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
+import {
+  AUTO_COMPACT_BUFFER_CAP,
+  DEFAULT_CONTEXT_LENGTH,
+} from "../compaction.js";
+
 import { logger } from "./logger.js";
-
-// Global auto-compact threshold (80% of context limit)
-// This is intentionally not configurable to ensure consistent behavior
-// across all usage scenarios. Change this value only for testing purposes.
-export const AUTO_COMPACT_THRESHOLD = 0.8;
-
-const DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION = 200_000;
 /**
  * Get the context length limit for a model
  * @param modelName The model name
@@ -18,8 +16,7 @@ const DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION = 200_000;
  */
 export function getModelContextLimit(model: ModelConfig): number {
   return (
-    model.defaultCompletionOptions?.contextLength ??
-    DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION
+    model.defaultCompletionOptions?.contextLength ?? DEFAULT_CONTEXT_LENGTH
   );
 }
 
@@ -384,19 +381,22 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
   // (64k/200k with claude = 32%, round up to give a buffer)
   const reservedForOutput =
     maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
-  const availableForInput = contextLimit - reservedForOutput;
+  // Additional buffer to trigger compaction before hitting context limit
+  // Threshold formula: contextLength - maxTokens - Min(maxTokens, 20k)
+  const compactionBuffer = Math.min(reservedForOutput, AUTO_COMPACT_BUFFER_CAP);
+  const compactionThreshold =
+    contextLimit - reservedForOutput - compactionBuffer;
 
   // Ensure we have positive space available for input
-  if (availableForInput <= 0) {
+  if (compactionThreshold <= 0) {
     throw new Error(
       `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
     );
   }
 
-  const usage = inputTokens / availableForInput;
-
   const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
   const systemTokens = systemMessage ? encode(systemMessage).length : 0;
+  const shouldCompact = inputTokens >= compactionThreshold;
 
   logger.debug("Context usage check", {
     inputTokens,
@@ -406,13 +406,12 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
     contextLimit,
     maxTokens,
     reservedForOutput,
-    availableForInput,
-    usage: `${Math.round(usage * 100)}%`,
-    threshold: `${Math.round(AUTO_COMPACT_THRESHOLD * 100)}%`,
-    shouldCompact: usage >= AUTO_COMPACT_THRESHOLD,
+    compactionBuffer,
+    compactionThreshold,
+    shouldCompact,
   });
 
-  return usage >= AUTO_COMPACT_THRESHOLD;
+  return shouldCompact;
 }
 
 /**
