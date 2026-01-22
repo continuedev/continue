@@ -103,6 +103,7 @@ describe("Git AI Integration - executeToolCall", () => {
         },
         {
           toolCallId: "test-edit-id",
+          parallelToolCallCount: 1,
         },
       );
     });
