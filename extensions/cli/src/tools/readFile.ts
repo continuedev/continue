@@ -103,8 +103,7 @@ export const readFileTool: Tool = {
           ContinueErrorReason.FileTooLarge,
           `File is too large to read: ${filepath} (${charCount.toLocaleString()} characters, ${lineCount.toLocaleString()} lines). ` +
             `Maximum allowed: ${maxChars.toLocaleString()} characters or ${maxLines.toLocaleString()} lines.${parallelNote} ` +
-            `To adjust these limits, set CONTINUE_CLI_READ_FILE_MAX_OUTPUT_CHARS or CONTINUE_CLI_READ_FILE_MAX_OUTPUT_LINES environment variables. ` +
-            `Alternatively, use shell commands like 'head', 'tail', 'sed', or 'grep' to read targeted parts of the file.`,
+            `Consider using terminal commands like 'head', 'tail', 'sed', or 'grep' to read targeted parts of the file.`,
         );
       }
 
