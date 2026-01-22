@@ -3,12 +3,13 @@ import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
-import {
-  AUTO_COMPACT_BUFFER_CAP,
-  DEFAULT_CONTEXT_LENGTH,
-} from "../compaction.js";
-
 import { logger } from "./logger.js";
+
+const DEFAULT_MAX_TOKENS_RATIO = 0.35;
+const MAX_MAX_TOKENS = 64_000;
+// Default context length when model config doesn't specify one
+export const DEFAULT_CONTEXT_LENGTH = 200_000;
+
 /**
  * Get the context length limit for a model
  * @param modelName The model name
@@ -18,6 +19,17 @@ export function getModelContextLimit(model: ModelConfig): number {
   return (
     model.defaultCompletionOptions?.contextLength ?? DEFAULT_CONTEXT_LENGTH
   );
+}
+
+export function getModelMaxTokens(model: ModelConfig): number {
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = model.defaultCompletionOptions?.maxTokens;
+
+  return maxTokens === undefined
+    ? Math.ceil(
+        Math.min(contextLimit * DEFAULT_MAX_TOKENS_RATIO, MAX_MAX_TOKENS),
+      )
+    : maxTokens;
 }
 
 // Importing a bunch of tokenizers can be very resource intensive (MB-scale per tokenizer)
@@ -346,82 +358,6 @@ export function countTotalInputTokens(params: TotalInputTokenParams): number {
   }
 
   return totalTokens;
-}
-
-/**
- * Parameters for auto-compaction check
- */
-export interface AutoCompactParams {
-  chatHistory: ChatHistoryItem[];
-  model: ModelConfig;
-  systemMessage?: string;
-  tools?: ChatCompletionTool[];
-}
-
-/**
- * Check if the chat history exceeds the auto-compact threshold.
- * Accounts for system message and tool definitions in the calculation.
- * @param params Object containing chatHistory, model, optional systemMessage, and optional tools
- * @returns Whether auto-compacting should be triggered
- */
-export function shouldAutoCompact(params: AutoCompactParams): boolean {
-  const { chatHistory, model, systemMessage, tools } = params;
-
-  const inputTokens = countTotalInputTokens({
-    chatHistory,
-    systemMessage,
-    tools,
-    model,
-  });
-  const contextLimit = getModelContextLimit(model);
-  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
-
-  // Calculate available space considering max_tokens reservation
-  // If maxTokens is not set, reserve 35% of context for output as a safe default
-  // (64k/200k with claude = 32%, round up to give a buffer)
-  const reservedForOutput =
-    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
-  // Additional buffer to trigger compaction before hitting context limit
-  // Threshold formula: contextLength - maxTokens - Min(maxTokens, 20k)
-  const compactionBuffer = Math.min(reservedForOutput, AUTO_COMPACT_BUFFER_CAP);
-  const compactionThreshold =
-    contextLimit - reservedForOutput - compactionBuffer;
-
-  // Ensure we have positive space available for input
-  if (compactionThreshold <= 0) {
-    throw new Error(
-      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
-    );
-  }
-
-  const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
-  const systemTokens = systemMessage ? encode(systemMessage).length : 0;
-  const shouldCompact = inputTokens >= compactionThreshold;
-
-  logger.debug("Context usage check", {
-    inputTokens,
-    historyTokens: countChatHistoryTokens(chatHistory, model),
-    systemTokens,
-    toolTokens,
-    contextLimit,
-    maxTokens,
-    reservedForOutput,
-    compactionBuffer,
-    compactionThreshold,
-    shouldCompact,
-  });
-
-  return shouldCompact;
-}
-
-/**
- * Get a descriptive message for auto-compaction that shows the context limit
- * @param model The model configuration
- * @returns A descriptive message explaining why compaction is needed
- */
-export function getAutoCompactMessage(model: ModelConfig): string {
-  const limit = getModelContextLimit(model);
-  return `Approaching context limit (${(limit / 1000).toFixed(0)}K tokens). Auto-compacting chat history...`;
 }
 
 /**

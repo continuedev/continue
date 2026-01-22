@@ -1,21 +1,23 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
+import { encode } from "gpt-tokenizer";
+import { ChatCompletionTool } from "openai/resources.mjs";
 
 import { streamChatResponse } from "./stream/streamChatResponse.js";
 import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 import {
   countChatHistoryTokens,
+  countToolDefinitionTokens,
+  countTotalInputTokens,
   getModelContextLimit,
+  getModelMaxTokens,
 } from "./util/tokenizer.js";
 
-// Buffer cap for auto-compaction threshold calculation
-// Threshold formula: contextLength - maxTokens - Min(maxTokens, AUTO_COMPACT_BUFFER_CAP)
+// Buffer cap/ratio for auto-compaction threshold calculation
 export const AUTO_COMPACT_BUFFER_CAP = 15_000;
-
-// Default context length when model config doesn't specify one
-export const DEFAULT_CONTEXT_LENGTH = 200_000;
+export const AUTO_COMPACT_BUFFER_RATIO = 0.8;
 
 export interface CompactionResult {
   compactedHistory: ChatHistoryItem[];
@@ -69,12 +71,7 @@ export async function compactChatHistory(
   let historyForCompaction = [...historyToUse, compactionPrompt];
 
   const contextLimit = getModelContextLimit(model);
-  const maxTokens = model.defaultCompletionOptions?.maxTokens;
-  const reservedForOutput =
-    maxTokens === undefined ? Math.ceil(contextLimit * 0.35) : maxTokens;
-  // Additional buffer matching the auto-compaction threshold formula:
-  // contextLength - maxTokens - Min(maxTokens, 20k)
-  const compactionBuffer = Math.min(reservedForOutput, AUTO_COMPACT_BUFFER_CAP);
+  const maxTokens = getModelMaxTokens(model);
 
   // Check if system message is already in the history to avoid double-counting
   const hasSystemMessageInHistory = chatHistory.some(
@@ -85,10 +82,10 @@ export async function compactChatHistory(
   const systemMessageReservation = hasSystemMessageInHistory
     ? 0
     : systemMessageTokens;
+
   const availableForInput =
     contextLimit -
-    reservedForOutput -
-    compactionBuffer -
+    maxTokens -
     systemMessageReservation -
     COMPACTION_PROMPT_TOKENS;
 
@@ -238,4 +235,81 @@ export function getHistoryForLLM(
   return systemMessage && compactionIndex > 0
     ? [systemMessage, ...messagesFromCompaction]
     : messagesFromCompaction;
+}
+
+/**
+ * Parameters for auto-compaction check
+ */
+export interface AutoCompactParams {
+  chatHistory: ChatHistoryItem[];
+  model: ModelConfig;
+  systemMessage?: string;
+  tools?: ChatCompletionTool[];
+}
+
+/**
+ * Get a descriptive message for auto-compaction that shows the context limit
+ * @param model The model configuration
+ * @returns A descriptive message explaining why compaction is needed
+ */
+export function getAutoCompactMessage(model: ModelConfig): string {
+  const limit = getModelContextLimit(model);
+  return `Approaching context limit (${(limit / 1000).toFixed(0)}K tokens). Auto-compacting chat history...`;
+}
+
+/**
+ * Check if the chat history exceeds the auto-compact threshold.
+ * Accounts for system message and tool definitions in the calculation.
+ * @param params Object containing chatHistory, model, optional systemMessage, and optional tools
+ * @returns Whether auto-compacting should be triggered
+ */
+export function shouldAutoCompact(params: AutoCompactParams): boolean {
+  const { chatHistory, model, systemMessage, tools } = params;
+
+  const inputTokens = countTotalInputTokens({
+    chatHistory,
+    systemMessage,
+    tools,
+    model,
+  });
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = getModelMaxTokens(model);
+
+  // Additional buffer matching the auto-compaction threshold formula
+  const ratioCompactionBuffer = Math.ceil(
+    (1 - AUTO_COMPACT_BUFFER_RATIO) * (contextLimit - maxTokens),
+  );
+  const safeCompactionBuffer = Math.max(maxTokens, ratioCompactionBuffer);
+  const compactionBuffer = Math.min(
+    safeCompactionBuffer,
+    AUTO_COMPACT_BUFFER_CAP,
+  );
+
+  const compactionThreshold = contextLimit - maxTokens - compactionBuffer;
+
+  // Ensure we have positive space available for input
+  if (compactionThreshold <= 0) {
+    throw new Error(
+      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
+    );
+  }
+
+  const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
+  const systemTokens = systemMessage ? encode(systemMessage).length : 0;
+  const shouldCompact = inputTokens >= compactionThreshold;
+
+  logger.debug("Context usage check", {
+    inputTokens,
+    historyTokens: countChatHistoryTokens(chatHistory, model),
+    systemTokens,
+    toolTokens,
+    contextLimit,
+    maxTokens,
+    reservedForOutput: maxTokens,
+    compactionBuffer,
+    compactionThreshold,
+    shouldCompact,
+  });
+
+  return shouldCompact;
 }

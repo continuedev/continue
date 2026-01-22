@@ -4,11 +4,14 @@ import type { ChatHistoryItem } from "core/index.js";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 import React from "react";
 
-import { compactChatHistory } from "../compaction.js";
+import {
+  compactChatHistory,
+  getAutoCompactMessage,
+  shouldAutoCompact,
+} from "../compaction.js";
 import { updateSessionHistory } from "../session.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
-import { getAutoCompactMessage, shouldAutoCompact } from "../util/tokenizer.js";
 
 interface AutoCompactionCallbacks {
   // For streaming mode
