@@ -248,7 +248,10 @@ async function handleAutoCompaction(
               message: "Auto-compacting triggered",
               contextUsage:
                 calculateContextUsagePercentage(
-                  countChatHistoryTokens(services.chatHistory.getHistory()),
+                  countChatHistoryTokens(
+                    services.chatHistory.getHistory(),
+                    model,
+                  ),
                   model,
                 ) + "%",
             }) + "\n",

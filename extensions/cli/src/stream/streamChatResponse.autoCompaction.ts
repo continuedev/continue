@@ -172,13 +172,16 @@ export async function handleAutoCompaction(
       typeof systemMessage === "string" ? systemMessage : await systemMessage;
 
     const { countChatHistoryItemTokens } = await import("../util/tokenizer.js");
-    const systemMessageTokens = countChatHistoryItemTokens({
-      message: {
-        role: "system",
-        content: resolvedSystemMessage,
+    const systemMessageTokens = countChatHistoryItemTokens(
+      {
+        message: {
+          role: "system",
+          content: resolvedSystemMessage,
+        },
+        contextItems: [],
       },
-      contextItems: [],
-    });
+      model,
+    );
 
     // Compact the history
     const result = await compactChatHistory(chatHistory, model, llmApi, {

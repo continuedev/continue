@@ -8,7 +8,6 @@ import {
   calculateContextUsagePercentage,
   countChatHistoryItemTokens,
   countChatHistoryTokens,
-  countMessageTokens,
   countToolDefinitionTokens,
   getModelContextLimit,
   shouldAutoCompact,
@@ -69,7 +68,13 @@ describe("tokenizer", () => {
         contextItems: [],
       };
 
-      const tokenCount = countChatHistoryItemTokens(historyItem);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryItemTokens(historyItem, model);
       expect(tokenCount).toBeGreaterThan(0);
       expect(tokenCount).toBe(5); // 3 content tokens + 2 role tokens
     });
@@ -86,7 +91,13 @@ describe("tokenizer", () => {
         contextItems: [],
       };
 
-      const tokenCount = countChatHistoryItemTokens(historyItem);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryItemTokens(historyItem, model);
       expect(tokenCount).toBe(1028); // 2 + 1024 + 2 role tokens
     });
 
@@ -109,7 +120,13 @@ describe("tokenizer", () => {
         contextItems: [],
       };
 
-      const tokenCount = countChatHistoryItemTokens(historyItem);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryItemTokens(historyItem, model);
       expect(tokenCount).toBeGreaterThan(20);
     });
 
@@ -129,7 +146,13 @@ describe("tokenizer", () => {
         ],
       };
 
-      const tokenCount = countChatHistoryItemTokens(historyItem);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryItemTokens(historyItem, model);
       // 2 (content) + 2 (role) + 4 (context content) + 3 (context name) + 5 (context overhead) = 16
       expect(tokenCount).toBe(16);
     });
@@ -138,21 +161,6 @@ describe("tokenizer", () => {
       // We'll skip this test for now since mocking gpt-tokenizer is complex
       // The error handling is tested implicitly by the fallback behavior
       expect(true).toBe(true);
-    });
-  });
-
-  describe("countMessageTokens (legacy)", () => {
-    it("should call countChatHistoryItemTokens", () => {
-      const historyItem: ChatHistoryItem = {
-        message: {
-          role: "user",
-          content: "Hello world",
-        },
-        contextItems: [],
-      };
-
-      const tokenCount = countMessageTokens(historyItem);
-      expect(tokenCount).toBe(5); // Same as countChatHistoryItemTokens
     });
   });
 
@@ -173,14 +181,26 @@ describe("tokenizer", () => {
         },
       ];
 
-      const tokenCount = countChatHistoryTokens(chatHistory);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryTokens(chatHistory, model);
       expect(tokenCount).toBeGreaterThan(0);
       // Should include message overhead (3 * 3 = 9 tokens)
       expect(tokenCount).toBeGreaterThan(9);
     });
 
     it("should handle empty chat history", () => {
-      const tokenCount = countChatHistoryTokens([]);
+      const model: ModelConfig = {
+        name: "test-model",
+        model: "test",
+        provider: "openai",
+      };
+
+      const tokenCount = countChatHistoryTokens([], model);
       expect(tokenCount).toBe(0);
     });
   });

@@ -23,12 +23,43 @@ export function getModelContextLimit(model: ModelConfig): number {
   );
 }
 
+// Importing a bunch of tokenizers can be very resource intensive (MB-scale per tokenizer)
+// Using token counting APIs (e.g. for anthropic) can be complicated and unreliable in many environments
+// So for now we will just use super fast gpt-tokenizer and apply safety buffers
+// I'm using rough estimates from this article to apply safety buffers to common tokenizers
+// which will have HIGHER token counts than gpt. Roughly using token ratio from article + 10%
+// https://medium.com/@disparate-ai/not-all-tokens-are-created-equal-7347d549af4d
+const ANTHROPIC_TOKEN_MULTIPLIER = 1.23;
+const GEMINI_TOKEN_MULTIPLIER = 1.18;
+const MISTRAL_TOKEN_MULTIPLIER = 1.26;
+
+function getAdjustedTokenCountFromModel(
+  baseTokens: number,
+  model: ModelConfig,
+) {
+  let multiplier = 1;
+  const modelName = model.model?.toLowerCase() ?? "";
+  if (modelName.includes("claude")) {
+    multiplier = ANTHROPIC_TOKEN_MULTIPLIER;
+  } else if (modelName.includes("gemini")) {
+    multiplier = GEMINI_TOKEN_MULTIPLIER;
+  } else if (modelName.includes("stral")) {
+    // devstral, mixtral, mistral, etc
+    multiplier = MISTRAL_TOKEN_MULTIPLIER;
+  }
+  return Math.ceil(baseTokens * multiplier);
+}
+
 /**
  * Count tokens in message content (string or multimodal array)
  */
-function countContentTokens(content: string | any[]): number {
+function countContentTokens(
+  content: string | any[],
+  model: ModelConfig,
+): number {
   if (typeof content === "string") {
-    return encode(content).length;
+    const count = encode(content).length;
+    return getAdjustedTokenCountFromModel(count, model);
   }
 
   if (Array.isArray(content)) {
@@ -41,7 +72,7 @@ function countContentTokens(content: string | any[]): number {
         tokenCount += 1024; // Rough estimate for image tokens
       }
     }
-    return tokenCount;
+    return getAdjustedTokenCountFromModel(tokenCount, model);
   }
 
   return 0;
@@ -91,6 +122,7 @@ function countToolOutputTokens(
  */
 export function countChatHistoryItemTokens(
   historyItem: ChatHistoryItem,
+  model: ModelConfig,
 ): number {
   try {
     let tokenCount = 0;
@@ -98,7 +130,7 @@ export function countChatHistoryItemTokens(
     const message = historyItem.message;
 
     // Count tokens in content
-    tokenCount += countContentTokens(message.content);
+    tokenCount += countContentTokens(message.content, model);
 
     // Add tokens for role (roughly 1-2 tokens)
     tokenCount += 2;
@@ -155,25 +187,18 @@ export function countChatHistoryItemTokens(
 }
 
 /**
- * Estimate the token count for a single message (legacy compatibility)
- * @param message The message to count tokens for
- * @returns The estimated token count
- * @deprecated Use countChatHistoryItemTokens instead
- */
-export function countMessageTokens(message: ChatHistoryItem): number {
-  return countChatHistoryItemTokens(message);
-}
-
-/**
  * Estimate the total token count for a chat history
  * @param chatHistory The chat history to count tokens for
  * @returns The estimated total token count
  */
-export function countChatHistoryTokens(chatHistory: ChatHistoryItem[]): number {
+export function countChatHistoryTokens(
+  chatHistory: ChatHistoryItem[],
+  model: ModelConfig,
+): number {
   let totalTokens = 0;
 
   for (const historyItem of chatHistory) {
-    totalTokens += countChatHistoryItemTokens(historyItem);
+    totalTokens += countChatHistoryItemTokens(historyItem, model);
   }
 
   // Add some overhead for message structure (roughly 3 tokens per message)
@@ -291,6 +316,7 @@ export function countToolDefinitionTokens(tools: ChatCompletionTool[]): number {
  */
 export interface TotalInputTokenParams {
   chatHistory: ChatHistoryItem[];
+  model: ModelConfig;
   systemMessage?: string;
   tools?: ChatCompletionTool[];
 }
@@ -304,7 +330,7 @@ export interface TotalInputTokenParams {
 export function countTotalInputTokens(params: TotalInputTokenParams): number {
   const { chatHistory, systemMessage, tools } = params;
 
-  let totalTokens = countChatHistoryTokens(chatHistory);
+  let totalTokens = countChatHistoryTokens(chatHistory, params.model);
 
   // Add system message tokens if provided and not already in history
   if (systemMessage) {
@@ -348,6 +374,7 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
     chatHistory,
     systemMessage,
     tools,
+    model,
   });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
@@ -373,7 +400,7 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
 
   logger.debug("Context usage check", {
     inputTokens,
-    historyTokens: countChatHistoryTokens(chatHistory),
+    historyTokens: countChatHistoryTokens(chatHistory, model),
     systemTokens,
     toolTokens,
     contextLimit,
@@ -428,6 +455,7 @@ export function validateContextLength(params: ValidateContextLengthParams): {
     chatHistory,
     systemMessage,
     tools,
+    model,
   });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;

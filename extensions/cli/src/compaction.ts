@@ -83,11 +83,11 @@ export async function compactChatHistory(
 
   // Check if we need to prune to fit within context
   while (
-    countChatHistoryTokens(historyForCompaction) > availableForInput &&
+    countChatHistoryTokens(historyForCompaction, model) > availableForInput &&
     historyToUse.length > 0
   ) {
     logger.debug("Compaction history too long, pruning last message", {
-      tokenCount: countChatHistoryTokens(historyForCompaction),
+      tokenCount: countChatHistoryTokens(historyForCompaction, model),
       availableForInput,
       historyLength: historyToUse.length,
     });
