@@ -48,12 +48,32 @@ import { getBooleanArg, getStringArg } from "../parseArgs";
  * Falls back to home directory or temp directory if no workspace is available.
  */
 function resolveWorkingDirectory(workspaceDirs: string[]): string {
+  // Handle file:// URIs (local workspaces)
   const fileWorkspaceDir = workspaceDirs.find((dir) =>
     dir.startsWith("file:/"),
   );
   if (fileWorkspaceDir) {
-    return fileURLToPath(fileWorkspaceDir);
+    try {
+      return fileURLToPath(fileWorkspaceDir);
+    } catch {
+      // fileURLToPath can fail on malformed URIs or in some remote environments
+      // Fall through to default handling
+    }
   }
+
+  // Handle other URI schemes (vscode-remote://wsl, vscode-remote://ssh-remote, etc.)
+  const remoteWorkspaceDir = workspaceDirs.find(
+    (dir) => dir.includes("://") && !dir.startsWith("file:/"),
+  );
+  if (remoteWorkspaceDir) {
+    try {
+      const url = new URL(remoteWorkspaceDir);
+      return decodeURIComponent(url.pathname);
+    } catch {
+      // Fall through to other handlers
+    }
+  }
+
   // Default to user's home directory with fallbacks
   try {
     return process.env.HOME || process.env.USERPROFILE || process.cwd();
@@ -94,7 +114,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
+  // When extension host runs on Windows but connects to WSL, we can't spawn
+  // shells directly - the platform is "win32" but commands should run in Linux.
+  // Use ide.runCommand() instead to let VS Code handle the remote execution.
+  const isWindowsHostWithWslRemote =
+    process.platform === "win32" && ideInfo.remoteName === "wsl";
+
+  if (
+    ENABLED_FOR_REMOTES.includes(ideInfo.remoteName) &&
+    !isWindowsHostWithWslRemote
+  ) {
     // For streaming output
     if (extras.onPartialOutput) {
       try {

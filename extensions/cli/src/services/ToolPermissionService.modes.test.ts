@@ -40,20 +40,15 @@ describe("ToolPermissionService - Mode Functionality", () => {
         policies.some((p) => p.tool === "Read" && p.permission === "allow"),
       ).toBe(true);
       expect(
-        policies.some((p) => p.tool === "Grep" && p.permission === "allow"),
+        policies.some((p) => p.tool === "Search" && p.permission === "allow"),
       ).toBe(true);
       expect(
-        policies.some((p) => p.tool === "LS" && p.permission === "allow"),
-      ).toBe(true);
-
-      // Should allow MCP tools
-      expect(
-        policies.some((p) => p.tool === "mcp:*" && p.permission === "allow"),
+        policies.some((p) => p.tool === "List" && p.permission === "allow"),
       ).toBe(true);
 
-      // Should have an exclusion policy for all other tools as fallback
+      // Plan mode allows all other tools (including MCP) with wildcard
       expect(
-        policies.some((p) => p.tool === "*" && p.permission === "exclude"),
+        policies.some((p) => p.tool === "*" && p.permission === "allow"),
       ).toBe(true);
     });
 
@@ -271,10 +266,9 @@ describe("ToolPermissionService - Mode Functionality", () => {
       // Mode policies should come first, and there should be policies
       expect(policies.length).toBeGreaterThan(0);
 
-      // Should have MCP and wildcard exclusion policies
-      expect(policies.some((p) => p.tool === "mcp:*")).toBe(true);
+      // Plan mode has wildcard allow policy for MCP and other tools
       expect(
-        policies.some((p) => p.tool === "*" && p.permission === "exclude"),
+        policies.some((p) => p.tool === "*" && p.permission === "allow"),
       ).toBe(true);
     });
   });

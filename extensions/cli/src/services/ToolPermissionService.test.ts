@@ -59,6 +59,7 @@ describe("ToolPermissionService", () => {
         commandLineFlags: overrides,
         personalSettings: true,
         useDefaults: true,
+        isHeadless: false,
       });
     });
 
@@ -123,13 +124,13 @@ describe("ToolPermissionService", () => {
       // Should allow read tools and bash
       expect(policies).toContainEqual({ tool: "Bash", permission: "allow" });
       expect(policies).toContainEqual({ tool: "Read", permission: "allow" });
-      expect(policies).toContainEqual({ tool: "Grep", permission: "allow" });
-      expect(policies).toContainEqual({ tool: "LS", permission: "allow" });
+      expect(policies).toContainEqual({ tool: "Search", permission: "allow" });
+      expect(policies).toContainEqual({ tool: "List", permission: "allow" });
 
-      // Should have wildcard exclusion at the end
+      // Plan mode has wildcard allow at the end for MCP and other tools
       expect(policies[policies.length - 1]).toEqual({
         tool: "*",
-        permission: "exclude",
+        permission: "allow",
       });
     });
 
@@ -358,6 +359,83 @@ describe("ToolPermissionService", () => {
       expect(state.permissions.policies).toEqual([
         { tool: "*", permission: "allow" },
       ]);
+    });
+  });
+
+  describe("Headless Mode Behavior", () => {
+    test("should pass isHeadless=true to precedence resolver", () => {
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(
+        [],
+      );
+
+      const state = service.initializeSync({ isHeadless: true });
+
+      expect(
+        precedenceResolver.resolvePermissionPrecedence,
+      ).toHaveBeenCalledWith(expect.objectContaining({ isHeadless: true }));
+      expect(state.isHeadless).toBe(true);
+    });
+
+    test("should pass isHeadless=false to precedence resolver", () => {
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(
+        [],
+      );
+
+      const state = service.initializeSync({ isHeadless: false });
+
+      expect(
+        precedenceResolver.resolvePermissionPrecedence,
+      ).toHaveBeenCalledWith(expect.objectContaining({ isHeadless: false }));
+      expect(state.isHeadless).toBe(false);
+    });
+
+    test("should apply plan mode policies in headless plan mode", () => {
+      const state = service.initializeSync({
+        isHeadless: true,
+        mode: "plan",
+      });
+
+      // Plan mode should exclude write tools
+      const writeExcludeIndex = state.permissions.policies.findIndex(
+        (p) => p.tool === "Write" && p.permission === "exclude",
+      );
+      expect(writeExcludeIndex).toBeGreaterThanOrEqual(0);
+
+      // Plan mode allows all other tools via wildcard
+      expect(state.permissions.policies).toContainEqual({
+        tool: "*",
+        permission: "allow",
+      });
+      expect(state.isHeadless).toBe(true);
+    });
+
+    test("should apply auto mode policies in headless auto mode", () => {
+      const state = service.initializeSync({
+        isHeadless: true,
+        mode: "auto",
+      });
+
+      // Auto mode has wildcard allow
+      expect(state.permissions.policies).toContainEqual({
+        tool: "*",
+        permission: "allow",
+      });
+      expect(state.isHeadless).toBe(true);
+    });
+
+    test("should have modePolicyCount of 0 in normal mode regardless of headless", () => {
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(
+        [],
+      );
+
+      const headlessState = service.initializeSync({ isHeadless: true });
+      expect(headlessState.modePolicyCount).toBe(0);
+
+      const nonHeadlessService = new ToolPermissionService();
+      const nonHeadlessState = nonHeadlessService.initializeSync({
+        isHeadless: false,
+      });
+      expect(nonHeadlessState.modePolicyCount).toBe(0);
     });
   });
 

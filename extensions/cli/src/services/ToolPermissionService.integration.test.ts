@@ -1,6 +1,8 @@
-import { DEFAULT_TOOL_POLICIES } from "../permissions/defaultPolicies.js";
+import { getDefaultToolPolicies } from "../permissions/defaultPolicies.js";
 
 import { ToolPermissionService } from "./ToolPermissionService.js";
+
+const DEFAULT_TOOL_POLICIES = getDefaultToolPolicies();
 
 describe("ToolPermissionService E2E", () => {
   let service: ToolPermissionService;
