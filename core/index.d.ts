@@ -1499,7 +1499,7 @@ export interface ShowFilePayload {
 
 export interface ApplyToFilePayload {
   streamId: string;
-  filepath?: string;
+  filepath: string;
   text: string;
   toolCallId?: string;
   isSearchAndReplace?: boolean;
