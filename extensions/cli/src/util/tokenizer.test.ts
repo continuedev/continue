@@ -253,7 +253,7 @@ describe("tokenizer", () => {
 
     it("should compact when input tokens exceed threshold with maxTokens", () => {
       const model = createModel(1000, 200); // 1000 context, 200 max output
-      // Threshold: 1000 - 200 - min(200, 20k) = 1000 - 200 - 200 = 600
+      // Threshold: 1000 - 200 - min(200, 15k) = 1000 - 200 - 200 = 600
       const chatHistory = createChatHistory(650); // Above threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -261,7 +261,7 @@ describe("tokenizer", () => {
 
     it("should not compact when input tokens are below threshold with maxTokens", () => {
       const model = createModel(1000, 200); // 1000 context, 200 max output
-      // Threshold: 1000 - 200 - min(200, 20k) = 600
+      // Threshold: 1000 - 200 - min(200, 15k) = 600
       const chatHistory = createChatHistory(550); // Below threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
@@ -270,7 +270,7 @@ describe("tokenizer", () => {
     it("should use 35% default reservation when maxTokens is not set", () => {
       const model = createModel(1000); // No maxTokens
       // Reserved: 1000 * 0.35 = 350
-      // Threshold: 1000 - 350 - min(350, 20k) = 1000 - 350 - 350 = 300
+      // Threshold: 1000 - 350 - min(350, 15k) = 1000 - 350 - 350 = 300
       const chatHistory = createChatHistory(350); // Above threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -279,7 +279,7 @@ describe("tokenizer", () => {
     it("should not compact when below default threshold without maxTokens", () => {
       const model = createModel(1000); // No maxTokens
       // Reserved: 1000 * 0.35 = 350
-      // Threshold: 1000 - 350 - min(350, 20k) = 300
+      // Threshold: 1000 - 350 - min(350, 15k) = 300
       const chatHistory = createChatHistory(250); // Below threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(false);
@@ -305,7 +305,7 @@ describe("tokenizer", () => {
 
     it("should handle edge case with very small context limit", () => {
       const model = createModel(200, 50); // Small context
-      // Threshold: 200 - 50 - min(50, 20k) = 200 - 50 - 50 = 100
+      // Threshold: 200 - 50 - min(50, 15k) = 200 - 50 - 50 = 100
       const chatHistory = createChatHistory(110); // Above threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -334,7 +334,7 @@ describe("tokenizer", () => {
     it("should handle model with zero maxTokens correctly", () => {
       const model = createModel(1000, 0); // Explicit zero
       // Should use default 35% reservation: 1000 * 0.35 = 350
-      // Threshold: 1000 - 350 - min(350, 20k) = 300
+      // Threshold: 1000 - 350 - min(350, 15k) = 300
       const chatHistory = createChatHistory(350); // Above threshold
 
       expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -344,7 +344,7 @@ describe("tokenizer", () => {
       it("should prevent Claude 3.5 Sonnet context overflow", () => {
         // Claude 3.5 Sonnet: 200k context, often uses 4k max_tokens
         const model = createModel(200_000, 4_000);
-        // Threshold: 200k - 4k - min(4k, 20k) = 200k - 4k - 4k = 192k
+        // Threshold: 200k - 4k - min(4k, 15k) = 200k - 4k - 4k = 192k
         const chatHistory = createChatHistory(193_000); // Above threshold
 
         expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -353,7 +353,7 @@ describe("tokenizer", () => {
       it("should prevent GPT-4 context overflow", () => {
         // GPT-4: 128k context, often uses 4k max_tokens
         const model = createModel(128_000, 4_000);
-        // Threshold: 128k - 4k - min(4k, 20k) = 128k - 4k - 4k = 120k
+        // Threshold: 128k - 4k - min(4k, 15k) = 128k - 4k - 4k = 120k
         const chatHistory = createChatHistory(121_000); // Above threshold
 
         expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
@@ -362,8 +362,8 @@ describe("tokenizer", () => {
       it("should handle models with very high max_tokens", () => {
         // Some models allow very high max_tokens (e.g., 64k)
         const model = createModel(200_000, 64_000);
-        // Threshold: 200k - 64k - min(64k, 20k) = 200k - 64k - 20k = 116k
-        const chatHistory = createChatHistory(120_000); // Above threshold
+        // Threshold: 200k - 64k - min(64k, 15k) = 200k - 64k - 15k = 121k
+        const chatHistory = createChatHistory(125_000); // Above threshold
 
         expect(shouldAutoCompact({ chatHistory, model })).toBe(true);
       });
