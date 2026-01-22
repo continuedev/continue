@@ -123,6 +123,17 @@ export const CometAPIConfigSchema = OpenAIConfigSchema.extend({
 });
 export type CometAPIConfig = z.infer<typeof CometAPIConfigSchema>;
 
+export const AskSageConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("askSage"),
+  env: z
+    .object({
+      email: z.string().optional(),
+      userApiUrl: z.string().optional(),
+    })
+    .optional(),
+});
+export type AskSageConfig = z.infer<typeof AskSageConfigSchema>;
+
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
   env: z
@@ -205,5 +216,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
   CometAPIConfigSchema,
+  AskSageConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;
