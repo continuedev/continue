@@ -1156,6 +1156,12 @@ declare global {
     experimental?: ExperimentalConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
+    vectorDbProvider?: "lancedb" | "qdrant";
+    qdrantConfig?: {
+      mode: "docker" | "cloud";
+      url?: string;
+      apiKey?: string;
+    };
   }
   
   export type ConfigMergeType = "merge" | "overwrite";
@@ -1208,6 +1214,12 @@ declare global {
     experimental?: ExperimentalConfig;
     /** Analytics configuration */
     analytics?: AnalyticsConfig;
+    vectorDbProvider?: "lancedb" | "qdrant";
+    qdrantConfig?: {
+      mode: "docker" | "cloud";
+      url?: string;
+      apiKey?: string;
+    };
   }
   
   // in the actual Continue source code
@@ -1231,6 +1243,12 @@ declare global {
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
     tools: Tool[];
+    vectorDbProvider?: "lancedb" | "qdrant";
+    qdrantConfig?: {
+      mode: "docker" | "cloud";
+      url?: string;
+      apiKey?: string;
+    };
   }
   
   export interface BrowserSerializedContinueConfig {

@@ -228,6 +228,12 @@ export const controlPlaneConfigSchema = z.object({
   proxyUrl: z.string().optional(),
 });
 
+export const qdrantConfigSchema = z.object({
+  mode: z.enum(["docker", "cloud"]),
+  url: z.string().optional(),
+  apiKey: z.string().optional(),
+});
+
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
@@ -247,5 +253,7 @@ export const configJsonSchema = z.object({
   ui: uiOptionsSchema.optional(),
   docs: z.array(siteIndexingConfigSchema).optional(),
   controlPlane: controlPlaneConfigSchema.optional(),
+  vectorDbProvider: z.enum(["lancedb", "qdrant"]).optional(),
+  qdrantConfig: qdrantConfigSchema.optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

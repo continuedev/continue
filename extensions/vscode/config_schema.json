@@ -3534,6 +3534,37 @@
               }
             }
           }
+        },
+        "vectorDbProvider": {
+          "title": "Vector Database Provider",
+          "description": "The vector database provider to use for codebase indexing. Options: 'lancedb' (default) or 'qdrant'",
+          "type": "string",
+          "enum": ["lancedb", "qdrant"],
+          "default": "lancedb"
+        },
+        "qdrantConfig": {
+          "title": "Qdrant Configuration",
+          "description": "Configuration for Qdrant vector database. Required when vectorDbProvider is 'qdrant'",
+          "type": "object",
+          "properties": {
+            "mode": {
+              "title": "Mode",
+              "description": "Qdrant deployment mode: 'docker' (local Docker server) or 'cloud' (Qdrant Cloud)",
+              "type": "string",
+              "enum": ["docker", "cloud"]
+            },
+            "url": {
+              "title": "URL",
+              "description": "Qdrant server URL (defaults to http://localhost:6333 for docker mode, required for cloud mode)",
+              "type": "string"
+            },
+            "apiKey": {
+              "title": "API Key",
+              "description": "API key for Qdrant Cloud (required for cloud mode)",
+              "type": "string"
+            }
+          },
+          "required": ["mode"]
         }
       }
     }

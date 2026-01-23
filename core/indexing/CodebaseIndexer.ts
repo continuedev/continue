@@ -12,7 +12,7 @@ import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { Logger } from "../util/Logger.js";
-import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
+import { getIndexSqlitePath, getLanceDbPath, getQdrantPath } from "../util/paths.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
 import { ConfigResult } from "@continuedev/config-yaml";
@@ -24,6 +24,7 @@ import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { embedModelsAreEqual } from "./docs/DocsService.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
+import { QdrantIndex, QdrantConfig } from "./QdrantIndex.js";
 import { getComputeDeleteAddRemove, IndexLock } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -68,6 +69,7 @@ export class CodebaseIndexer {
       return "Code snippets";
     if (artifactId === ChunkCodebaseIndex.artifactId) return "Chunking";
     if (artifactId.startsWith("vectordb")) return "Embedding";
+    if (artifactId.startsWith("qdrant")) return "Embedding (Qdrant)";
     return artifactId; // fallback to original
   }
 
@@ -123,6 +125,7 @@ export class CodebaseIndexer {
   async clearIndexes() {
     const sqliteFilepath = getIndexSqlitePath();
     const lanceDbFolder = getLanceDbPath();
+    const qdrantFolder = getQdrantPath();
 
     try {
       await fs.unlink(sqliteFilepath);
@@ -142,6 +145,16 @@ export class CodebaseIndexer {
         folderPath: lanceDbFolder,
       });
       console.error(`Error deleting ${lanceDbFolder}: ${error}`);
+    }
+
+    try {
+      await fs.rm(qdrantFolder, { recursive: true, force: true });
+    } catch (error) {
+      // Capture indexer system failures to Sentry
+      Logger.error(error, {
+        folderPath: qdrantFolder,
+      });
+      console.error(`Error deleting ${qdrantFolder}: ${error}`);
     }
   }
 
@@ -188,11 +201,43 @@ export class CodebaseIndexer {
       codeSnippets: async () => new CodeSnippetsCodebaseIndex(this.ide),
       fullTextSearch: async () => new FullTextSearchCodebaseIndex(),
       embeddings: async () => {
-        const lanceDbIndex = await LanceDbIndex.create(
-          embeddingsModel,
-          this.ide.readFile.bind(this.ide),
-        );
-        return lanceDbIndex;
+        const vectorDbProvider = config.vectorDbProvider || "lancedb";
+        
+        if (vectorDbProvider === "qdrant") {
+          const qdrantConfig: QdrantConfig = config.qdrantConfig || {
+            mode: "docker",
+            url: "http://localhost:6333",
+          };
+          
+          // Set default URL if not provided (for docker mode)
+          if (!qdrantConfig.url && qdrantConfig.mode === "docker") {
+            qdrantConfig.url = "http://localhost:6333";
+          }
+          
+          const qdrantIndex = await QdrantIndex.create(
+            embeddingsModel,
+            this.ide.readFile.bind(this.ide),
+            qdrantConfig,
+          );
+          
+          // Fallback to LanceDB if Qdrant fails to initialize
+          if (!qdrantIndex) {
+            console.warn("Qdrant initialization failed, falling back to LanceDB");
+            return await LanceDbIndex.create(
+              embeddingsModel,
+              this.ide.readFile.bind(this.ide),
+            );
+          }
+          
+          return qdrantIndex;
+        } else {
+          // Default to LanceDB
+          const lanceDbIndex = await LanceDbIndex.create(
+            embeddingsModel,
+            this.ide.readFile.bind(this.ide),
+          );
+          return lanceDbIndex;
+        }
       },
     };
 
