@@ -6,6 +6,20 @@ The Continue CLI (`cn`) is a customizable command line coding agent.
 
 ## Installation
 
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
+```
+
+Or install with npm if you have Node.js 20+:
+
 ```bash
 npm i -g @continuedev/cli
 ```

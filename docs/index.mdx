@@ -4,6 +4,11 @@ icon: book-open
 description: "Create, run, and automate AI agents across Mission Control, terminal, and CI/CD"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Frame>
   <img src="/images/intro-0c302b9c15b890c251b1ad04586c880f.png" />
 </Frame>
@@ -61,21 +66,7 @@ You can go to [Mission Control Integrations](https://hub.continue.dev/integratio
 
 <Note>Terminal-native AI coding assistance with TUI and headless modes.</Note>
 
-<CodeGroup>
-
-    ```bash npm
-    npm i -g @continuedev/cli
-    ```
-
-    ```bash yarn
-    yarn global add @continuedev/cli
-    ```
-
-    ```bash pnpm
-    pnpm add -g @continuedev/cli
-    ```
-
-</CodeGroup>
+<CLIInstall />
 
 <CardGroup cols={2}>
   <Card

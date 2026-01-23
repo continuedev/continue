@@ -1,8 +1,13 @@
----
+20---
 title: "Building a Continuous AI Workflow with PostHog and GitHub"
 description: "Build an automated system that continuously monitors PostHog analytics, analyzes user behavior with AI, and creates GitHub issues automatically using PostHog MCP."
 sidebarTitle: "PostHog Analytics with Continue CLI"
 ---
+
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
 
 <Card title="What You'll Build" icon="robot">
   A fully automated workflow that uses Continue CLI with the PostHog MCP to fetch analytics data, analyze user experience issues with AI, and automatically create GitHub
@@ -36,9 +41,7 @@ Before starting, ensure you have:
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
   
   <Step title="Set up Continue CLI Account & API Key">

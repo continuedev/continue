@@ -35,8 +35,27 @@ Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI
 
 ### Quick Install
 
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
+```
+
+Or with npm:
+
 ```bash
 npm i -g @continuedev/cli
+```
+
+Then run:
+
+```bash
 cn
 ```
 
