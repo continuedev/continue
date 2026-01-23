@@ -413,9 +413,10 @@ export class AskSageApi implements BaseLlmApi {
         data.choices?.[0]?.message?.content ||
         "";
 
-      // Extract tool calls
+      // Extract tool calls and filter out malformed ones
       const rawToolCalls =
         data.tool_calls || data.choices?.[0]?.message?.tool_calls;
+      const validToolCalls = rawToolCalls?.filter((tc) => tc.function?.name);
 
       // Yield content as a single chunk
       if (content) {
@@ -426,9 +427,7 @@ export class AskSageApi implements BaseLlmApi {
       }
 
       // Yield tool calls if present
-      if (rawToolCalls && rawToolCalls.length > 0) {
-        // Filter out malformed tool calls before processing
-        const validToolCalls = rawToolCalls.filter((tc) => tc.function?.name);
+      if (validToolCalls && validToolCalls.length > 0) {
         for (let i = 0; i < validToolCalls.length; i++) {
           const tc = validToolCalls[i];
           yield chatChunkFromDelta({
@@ -455,7 +454,7 @@ export class AskSageApi implements BaseLlmApi {
         content: null,
         model: body.model,
         finish_reason:
-          rawToolCalls && rawToolCalls.length > 0 ? "tool_calls" : "stop",
+          validToolCalls && validToolCalls.length > 0 ? "tool_calls" : "stop",
       });
     } catch (error) {
       if (error instanceof Error) {
