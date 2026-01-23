@@ -158,7 +158,7 @@ function Install-Fnm {
         exit 1
     }
 
-    # Add fnm to current session PATH
+    # Add fnm to current session PATH and persist it
     $fnmPaths = @(
         $script:FnmPath,
         "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Schniz.fnm_*",
@@ -172,6 +172,13 @@ function Install-Fnm {
             if (Test-Path "$resolvedPath\fnm.exe") {
                 $env:PATH = "$resolvedPath;$env:PATH"
                 Write-Info "Found fnm at: $resolvedPath"
+                
+                # Persist fnm to user PATH if not already there
+                $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+                if ($userPath -notlike "*$resolvedPath*") {
+                    Write-Info "Adding fnm to user PATH for future sessions..."
+                    [Environment]::SetEnvironmentVariable('PATH', "$resolvedPath;$userPath", 'User')
+                }
                 return
             }
         }
@@ -272,6 +279,13 @@ function Install-Cli {
             }
             npm config set prefix $userNpmDir
             $env:PATH = "$userNpmDir;$env:PATH"
+            
+            # Persist npm global bin to user PATH
+            $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+            if ($userPath -notlike "*$userNpmDir*") {
+                Write-Info "Adding npm global directory to user PATH for future sessions..."
+                [Environment]::SetEnvironmentVariable('PATH', "$userNpmDir;$userPath", 'User')
+            }
         }
     }
 

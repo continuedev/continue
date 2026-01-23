@@ -146,8 +146,8 @@ source_nvm() {
 }
 
 source_fnm() {
-    for fnm_path in "$HOME/.local/share/fnm" "$HOME/.fnm" "$FNM_DIR"; do
-        if [ -d "$fnm_path" ]; then
+    for fnm_path in "$HOME/.local/share/fnm" "$HOME/.fnm" "${FNM_DIR:-}"; do
+        if [ -n "$fnm_path" ] && [ -d "$fnm_path" ]; then
             export PATH="$fnm_path:$PATH"
             break
         fi
@@ -179,7 +179,10 @@ check_node() {
 }
 
 install_node() {
-    CLEANUP_FNM=true
+    # Only mark for cleanup if fnm directory doesn't already exist
+    if [ ! -d "$FNM_INSTALL_DIR" ]; then
+        CLEANUP_FNM=true
+    fi
     info "Installing fnm (Fast Node Manager)..."
 
     mkdir -p "$FNM_INSTALL_DIR"
