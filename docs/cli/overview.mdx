@@ -4,6 +4,11 @@ description: "Command-line interface for automated coding tasks, scripting, and 
 sidebarTitle: "Overview"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Frame>
   <img src="/images/cn-demo.gif" />
 </Frame>
@@ -19,23 +24,17 @@ sidebarTitle: "Overview"
 
 Prerequisites:
 
-- [Node.js 18 or newer](https://nodejs.org/en/download/)
+- [Node.js 20 or newer](https://nodejs.org/en/download/)
 - A [Continue Mission Control](https://hub.continue.dev) account (recommended) or local configuration
 
-```bash npm
-# Install Continue CLI
-npm install -g @continuedev/cli
+<CLIInstall />
 
-# Navigate to your project
+Then navigate to your project and start coding:
 
+```bash
 cd your-awesome-project
-
-# Start coding with Continue
-
 cn
-
 # You'll be prompted to set up on first use
-
 ```
 
 That's it! You're ready to start automating with Continue CLI.
