@@ -1,6 +1,7 @@
 import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
+  setBetaNotepadToolEnabled,
   setBetaSubagentToolEnabled,
   setBetaUploadArtifactToolEnabled,
 } from "../tools/toolsConfig.js";
@@ -67,6 +68,9 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   }
   if (commandOptions.betaSubagentTool) {
     setBetaSubagentToolEnabled(true);
+  }
+  if (commandOptions.betaNotepad) {
+    setBetaNotepadToolEnabled(true);
   }
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {

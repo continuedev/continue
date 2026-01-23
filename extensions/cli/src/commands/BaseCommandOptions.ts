@@ -27,6 +27,8 @@ export interface BaseCommandOptions {
   betaUploadArtifactTool?: boolean;
   /** Enable beta Subagent tool */
   betaSubagentTool?: boolean;
+  /** Enable beta Notepad feature */
+  betaNotepad?: boolean;
 }
 
 /**

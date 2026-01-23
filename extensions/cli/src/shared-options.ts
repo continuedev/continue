@@ -15,6 +15,7 @@ export function addCommonOptions(command: Command): Command {
     .option("--auto", "Start in auto mode (all tools allowed)")
     .option("--verbose", "Enable verbose logging")
     .option("--beta-status-tool", "Enable beta status tool")
+    .option("--beta-notepad", "Enable beta notepad feature")
     .option(
       "--rule <rule>",
       "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
@@ -104,6 +105,8 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "auto",
     "tools",
     "verbose",
+    "betaStatusTool",
+    "betaNotepad",
     "rule",
     "mcp",
     "model",

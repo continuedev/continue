@@ -9,6 +9,7 @@ import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
+import { isBetaNotepadToolEnabled } from "./tools/toolsConfig.js";
 const { WalkerSync } = pkg;
 
 /**
@@ -116,6 +117,26 @@ async function getConfigYamlRules(): Promise<string[]> {
 }
 
 /**
+ * Fetch workflow notepad content from the API if WORKFLOW_ID is set and beta flag is enabled
+ */
+async function getWorkflowNotepad(): Promise<string | null> {
+  const workflowId = process.env.WORKFLOW_ID;
+  if (!workflowId || !isBetaNotepadToolEnabled()) {
+    return null;
+  }
+
+  try {
+    const { get } = await import("./util/apiClient.js");
+    const response = await get(`workflows/${workflowId}/notepad`);
+    return response.data?.notepad || null;
+  } catch (error) {
+    // Silently fail if API call fails (don't break agent startup)
+    console.warn("Could not fetch workflow notepad:", error);
+    return null;
+  }
+}
+
+/**
  * Load and construct a comprehensive system message with base message and rules section
  * @param additionalRules - Additional rules from --rule flags
  * @param format - Output format for headless mode
@@ -165,8 +186,20 @@ export async function constructSystemMessage(
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
+  // Fetch workflow notepad if WORKFLOW_ID is set
+  const notepad = await getWorkflowNotepad();
+
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
+
+  // Add workflow notepad context if available
+  if (notepad) {
+    systemMessage += `
+<context name="workflowNotepad">This is your persistent notepad for this workflow. It contains notes from previous runs. You can update it using the WorkflowNotepad tool.
+
+${notepad}
+</context>`;
+  }
 
   // Add plan mode specific instructions if in plan mode
   if (mode === "plan") {

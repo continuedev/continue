@@ -18,7 +18,7 @@ import type {
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
-import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
+import { ALL_BUILT_IN_TOOLS, workflowNotepadTool } from "./allBuiltIns.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -31,6 +31,7 @@ import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { skillsTool } from "./skills.js";
 import { subagentTool } from "./subagent.js";
 import {
+  isBetaNotepadToolEnabled,
   isBetaSubagentToolEnabled,
   isBetaUploadArtifactToolEnabled,
 } from "./toolsConfig.js";
@@ -92,6 +93,11 @@ export async function getAllAvailableTools(
     if (isBetaUploadArtifactToolEnabled()) {
       tools.push(uploadArtifactTool);
     }
+  }
+
+  // Add workflow notepad tool if WORKFLOW_ID is present and beta flag is enabled
+  if (process.env.WORKFLOW_ID && isBetaNotepadToolEnabled()) {
+    tools.push(workflowNotepadTool);
   }
 
   // If model is capable, exclude editTool in favor of multiEditTool
