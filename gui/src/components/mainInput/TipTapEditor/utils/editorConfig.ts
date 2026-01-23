@@ -22,6 +22,10 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
+import {
+  getLocalStorage,
+  setLocalStorage,
+} from "../../../../util/localStorage";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -379,8 +383,23 @@ export function createEditorConfig(options: {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState,
+    content:
+      props.editorState ??
+      (props.isMainInput
+        ? getLocalStorage(`inputDraft_${props.historyKey}`)
+        : undefined),
     editable: !isStreaming || props.isMainInput,
+    onUpdate: ({ editor }) => {
+      if (props.isMainInput) {
+        const content = editor.getJSON();
+        if (hasValidEditorContent(content)) {
+          setLocalStorage(`inputDraft_${props.historyKey}`, content);
+        } else {
+          // clear draft if content is empty
+          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+        }
+      }
+    },
   });
 
   const onEnter = (modifiers: InputModifiers) => {
@@ -400,6 +419,8 @@ export function createEditorConfig(options: {
 
     if (props.isMainInput) {
       addRef.current(json);
+      // clear draft from localStorage after successful submission
+      localStorage.removeItem(`inputDraft_${props.historyKey}`);
     }
 
     props.onEnter(json, modifiers, editor);
