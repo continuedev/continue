@@ -12,7 +12,14 @@ import {
   EmbeddingCreateParams,
   Model,
 } from "openai/resources/index";
-import { AskSageConfig } from "../types.js";
+import {
+  AskSageConfig,
+  AskSageTool,
+  AskSageToolChoice,
+  AskSageToolCall,
+  AskSageResponse,
+  AskSageTokenResponse,
+} from "../types.js";
 import { chatChunk, chatChunkFromDelta, customFetch } from "../util.js";
 import {
   BaseLlmApi,
@@ -26,23 +33,6 @@ const DEFAULT_USER_API_URL = "https://api.asksage.ai/user";
 const TOKEN_TTL = 3600000; // 1 hour in milliseconds
 
 /**
- * AskSage tool format (OpenAI-compatible)
- */
-interface AskSageTool {
-  type: string;
-  function: {
-    name: string;
-    description?: string;
-    parameters?: Record<string, unknown>;
-  };
-}
-
-type ToolChoice =
-  | "auto"
-  | "none"
-  | { type: "function"; function: { name: string } };
-
-/**
  * AskSage API request body format
  */
 interface AskSageRequestBody {
@@ -54,48 +44,9 @@ interface AskSageRequestBody {
   persona?: number;
   system_prompt?: string;
   tools?: AskSageTool[];
-  tool_choice?: ToolChoice;
+  tool_choice?: AskSageToolChoice;
   reasoning_effort?: "low" | "medium" | "high";
   streaming?: boolean;
-}
-
-/**
- * AskSage API response format
- */
-interface AskSageResponse {
-  text?: string;
-  answer?: string;
-  message?: string;
-  status?: number | string;
-  response?: unknown;
-  tool_calls?: Array<{
-    id: string;
-    type: "function";
-    function: {
-      name: string;
-      arguments: string;
-    };
-  }>;
-  choices?: Array<{
-    message?: {
-      content?: string;
-      tool_calls?: Array<{
-        id: string;
-        type: "function";
-        function: {
-          name: string;
-          arguments: string;
-        };
-      }>;
-    };
-  }>;
-}
-
-interface TokenResponse {
-  status: number | string;
-  response: {
-    access_token: string;
-  };
 }
 
 export class AskSageApi implements BaseLlmApi {
@@ -137,7 +88,7 @@ export class AskSageApi implements BaseLlmApi {
       body: JSON.stringify({ email: this.email, api_key: this.apiKey }),
     });
 
-    const data = (await res.json()) as TokenResponse;
+    const data = (await res.json()) as AskSageTokenResponse;
     if (parseInt(String(data.status)) !== 200) {
       throw new Error("Error getting access token: " + JSON.stringify(data));
     }
@@ -275,7 +226,7 @@ export class AskSageApi implements BaseLlmApi {
    */
   private convertToolChoice(
     toolChoice?: ChatCompletionCreateParamsNonStreaming["tool_choice"],
-  ): ToolChoice | undefined {
+  ): AskSageToolChoice | undefined {
     if (!toolChoice) {
       return undefined;
     }
@@ -348,13 +299,14 @@ export class AskSageApi implements BaseLlmApi {
     const rawToolCalls =
       data.tool_calls || data.choices?.[0]?.message?.tool_calls;
 
-    const toolCalls: ChatCompletionMessageToolCall[] | undefined =
-      rawToolCalls?.map((tc) => ({
+    const toolCalls: ChatCompletionMessageToolCall[] | undefined = rawToolCalls
+      ?.filter((tc) => tc.function?.name) // Filter out malformed tool calls
+      .map((tc) => ({
         id: tc.id,
         type: "function" as const,
         function: {
           name: tc.function.name,
-          arguments: tc.function.arguments,
+          arguments: tc.function.arguments ?? "",
         },
       }));
 
@@ -475,8 +427,10 @@ export class AskSageApi implements BaseLlmApi {
 
       // Yield tool calls if present
       if (rawToolCalls && rawToolCalls.length > 0) {
-        for (let i = 0; i < rawToolCalls.length; i++) {
-          const tc = rawToolCalls[i];
+        // Filter out malformed tool calls before processing
+        const validToolCalls = rawToolCalls.filter((tc) => tc.function?.name);
+        for (let i = 0; i < validToolCalls.length; i++) {
+          const tc = validToolCalls[i];
           yield chatChunkFromDelta({
             model: body.model,
             delta: {
@@ -487,7 +441,7 @@ export class AskSageApi implements BaseLlmApi {
                   type: "function",
                   function: {
                     name: tc.function.name,
-                    arguments: tc.function.arguments,
+                    arguments: tc.function.arguments ?? "",
                   },
                 },
               ],
