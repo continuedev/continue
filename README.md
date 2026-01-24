@@ -37,6 +37,11 @@ Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI
 
 ```bash
 npm i -g @continuedev/cli
+```
+
+### Usage
+
+```bash
 cn
 ```
 
