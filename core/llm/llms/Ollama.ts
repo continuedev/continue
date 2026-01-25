@@ -358,12 +358,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
   }
 
   private getEndpoint(endpoint: string): URL {
-    let base = this.apiBase;
-    if (process.env.IS_BINARY) {
-      base = base?.replace("localhost", "127.0.0.1");
+    if (!AIRGAPPED_OLLAMA_BASE.startsWith("http://127.0.0.1")) {
+      throw new Error("Ollama endpoint must be loopback in air-gapped mode");
     }
-
-    return new URL(endpoint, base);
+    return new URL(endpoint, AIRGAPPED_OLLAMA_BASE);
   }
 
   protected async *_streamComplete(
@@ -654,7 +652,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
      // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
-
+    
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({
