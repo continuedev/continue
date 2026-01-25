@@ -88,7 +88,7 @@
       "properties": {
         "continue.telemetryEnabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
           "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
           "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
@@ -132,21 +132,6 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
-        },
-        "continue.remoteConfigServerUrl": {
-          "type": "string",
-          "default": null,
-          "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
-        },
-        "continue.userToken": {
-          "type": "string",
-          "default": null,
-          "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
-        },
-        "continue.remoteConfigSyncPeriod": {
-          "type": "number",
-          "default": 60,
-          "description": "The period of time in minutes between automatic syncs."
         }
       }
     },
