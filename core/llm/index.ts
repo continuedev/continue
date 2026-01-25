@@ -327,7 +327,10 @@ export abstract class BaseLLM implements ILLM {
   }
 
   getConfigurationStatus() {
-    return LLMConfigurationStatuses.VALID;
+    if (this.providerName === "ollama") {
+      return LLMConfigurationStatuses.VALID;
+    }
+    throw new Error("Model installation is disabled in air-gapped build");
   }
 
   protected createOpenAiAdapter() {
