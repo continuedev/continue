@@ -15,12 +15,12 @@
     "url": "https://github.com/continuedev/continue/issues",
     "email": "nate@continue.dev"
   },
-  "homepage": "https://continue.dev",
+  "homepage": "https://continue.dev (not used in air-gapped builds)",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Continue (Air-Gapped)",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
+  "description": "Air-gapped AI code agent using a local Ollama instance only",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
