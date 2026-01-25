@@ -12,7 +12,18 @@ export const exitTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   run: async (): Promise<string> => {
-    const { gracefulExit } = await import("../util/exit.js");
+    const { gracefulExit, updateAgentMetadata } = await import(
+      "../util/exit.js"
+    );
+
+    // Mark agent as complete before exiting
+    try {
+      await updateAgentMetadata({ isComplete: true });
+    } catch (err) {
+      // Non-critical: log but don't block exit
+      console.debug("Failed to update completion metadata (non-critical)", err);
+    }
+
     await gracefulExit(1);
     return "";
   },
