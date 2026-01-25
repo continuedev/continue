@@ -317,6 +317,10 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = undefined;
     this.apiBase = undefined;
     this.onPremProxyUrl = undefined;
+
+    if (this.providerName === "ollama") {
+      this.apiBase = "http://127.0.0.1:11434";
+    }
   }
 
   get contextLength() {
