@@ -16,6 +16,7 @@ import {
   loadModelFromHub,
   loadPackageFromHub,
 } from "../hubLoader.js";
+import { resolveModelSlug } from "../util/genericModels.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -122,7 +123,9 @@ export class AgentFileService
             "Cannot load agent model, failed to load api client service",
           );
         }
-        const model = await loadModelFromHub(agentFile.model);
+        // Resolve generic model IDs (like "claude-haiku") to full hub slugs
+        const resolvedModelSlug = resolveModelSlug(agentFile.model);
+        const model = await loadModelFromHub(resolvedModelSlug);
         this.setState({
           agentFileModel: model,
         });
