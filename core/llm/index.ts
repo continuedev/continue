@@ -312,6 +312,11 @@ export abstract class BaseLLM implements ILLM {
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
+  
+    // Air-gapped enforcement: ignore all external API configuration
+    this.apiKey = undefined;
+    this.apiBase = undefined;
+    this.onPremProxyUrl = undefined;
   }
 
   get contextLength() {
