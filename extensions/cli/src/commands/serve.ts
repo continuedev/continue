@@ -430,9 +430,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`,
       ),
     );
-    logger.info(
-      `Inactivity timeout configured: ${timeoutSeconds}s (${timeoutMs}ms)`,
-    );
 
     // Run environment install script after server startup
     runEnvironmentInstallSafe();
@@ -500,9 +497,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       const userMessage = queuedMessage.message;
       state.isProcessing = true;
       state.lastActivity = Date.now();
-      logger.debug(
-        `Updated lastActivity: processing message "${userMessage.substring(0, 50)}${userMessage.length > 50 ? "..." : ""}"`,
-      );
       processedMessage = true;
 
       // Add user message via ChatHistoryService (single source of truth)
@@ -531,7 +525,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
         state.lastActivity = Date.now();
-        logger.debug("Updated lastActivity: after successful agent turn");
 
         // Update metadata after successful agent turn
         try {
@@ -591,31 +584,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   // Check for inactivity and shutdown
-  let inactivityCheckCount = 0;
   inactivityChecker = setInterval(() => {
-    inactivityCheckCount++;
-    const now = Date.now();
-    const timeSinceLastActivity = now - state.lastActivity;
-    const isProcessing = state.isProcessing;
-    const shouldShutdown = !isProcessing && timeSinceLastActivity > timeoutMs;
-
-    // Log every 30 seconds to track timeout progress
-    if (inactivityCheckCount % 30 === 0) {
-      logger.debug(
-        `Inactivity check #${inactivityCheckCount}: processing=${isProcessing}, ` +
-          `timeSinceLastActivity=${Math.floor(timeSinceLastActivity / 1000)}s, ` +
-          `timeout=${timeoutSeconds}s, shouldShutdown=${shouldShutdown}`,
-      );
-    }
-
-    if (shouldShutdown) {
+    if (!state.isProcessing && Date.now() - state.lastActivity > timeoutMs) {
       console.log(
         chalk.yellow(
           `\nShutting down due to ${timeoutSeconds} seconds of inactivity`,
         ),
-      );
-      logger.info(
-        `Inactivity timeout triggered after ${inactivityCheckCount} checks`,
       );
       state.serverRunning = false;
       stopStorageSync();
@@ -626,7 +600,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         try {
           const history = services.chatHistory?.getHistory();
           await updateAgentMetadata({ history, isComplete: true });
-          logger.info("Marked agent as complete due to inactivity timeout");
         } catch (err) {
           logger.debug("Failed to update metadata (non-critical)", err as any);
         }
