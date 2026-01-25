@@ -470,6 +470,11 @@ export abstract class BaseLLM implements ILLM {
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
+      const urlStr = String(url);
+      if (!urlStr.startsWith("http://127.0.0.1")) {
+        throw new Error(`Outbound network access blocked: ${urlStr}`);
+      }
+
       try {
         const resp = await fetchWithRequestOptions(
           new URL(input as any),
