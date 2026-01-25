@@ -1,5 +1,5 @@
 import { ModelRole } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
+import { fetchWithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
@@ -203,6 +203,15 @@ export abstract class BaseLLM implements ILLM {
   protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
+  if (
+    (this.constructor as typeof BaseLLM).providerName !== "ollama" &&
+    (this.constructor as typeof BaseLLM).providerName !== "llmReranker"
+  ) {
+    throw new Error(
+      `Provider ${(this.constructor as typeof BaseLLM).providerName} is disabled in air-gapped build`
+    );
+  }
+
     this._llmOptions = _options;
     this.lastRequestId = undefined;
 
@@ -459,7 +468,7 @@ export abstract class BaseLLM implements ILLM {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
       try {
-        const resp = await fetchwithRequestOptions(
+        const resp = await fetchWithRequestOptions(
           new URL(input as any),
           { ...init },
           { ...this.requestOptions },
