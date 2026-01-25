@@ -3,8 +3,7 @@ import { fetchWithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
-  ChatCompletionCreateParams,
-  constructLlmApi,
+  ChatCompletionCreateParams
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
@@ -332,13 +331,8 @@ export abstract class BaseLLM implements ILLM {
   }
 
   protected createOpenAiAdapter() {
-    return constructLlmApi({
-      provider: this.providerName as any,
-      apiKey: this.apiKey ?? "",
-      apiBase: this.apiBase,
-      requestOptions: this.requestOptions,
-      env: this._llmOptions.env,
-    });
+    // OpenAI-compatible adapters are disabled in air-gapped builds
+    return undefined;
   }
 
   listModels(): Promise<string[]> {
