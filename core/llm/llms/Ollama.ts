@@ -176,6 +176,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
+
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: headers,
@@ -372,9 +376,13 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-   // Air-gapped enforcement
-  this.apiBase = AIRGAPPED_OLLAMA_BASE;
-  this.apiKey = undefined;
+    // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
+
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
 
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
@@ -442,6 +450,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
     // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
+
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
 
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
@@ -583,6 +595,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
+
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: headers,
@@ -625,6 +641,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
+
     const response = await this.fetch(
       // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
       this.getEndpoint("api/tags"),
@@ -651,7 +671,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
      // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
-    
+
+    if (!this.apiBase?.startsWith("http://127.0.0.1")) {
+      throw new Error("Outbound network access blocked (Ollama)");
+    }
+
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({
