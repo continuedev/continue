@@ -12,7 +12,6 @@ import {
   ThinkingChatMessage,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
-import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 
@@ -680,68 +679,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     progressReporter?: (task: string, increment: number, total: number) => void,
   ): Promise<any> {
-    const modelInfo = await getRemoteModelInfo(modelName, signal);
-    if (!modelInfo) {
-      throw new Error(`'${modelName}' not found in the Ollama registry!`);
-    }
-
-    const release = await Ollama.modelsBeingInstalledMutex.acquire();
-    try {
-      if (Ollama.modelsBeingInstalled.has(modelName)) {
-        throw new Error(`Model '${modelName}' is already being installed.`);
-      }
-      Ollama.modelsBeingInstalled.add(modelName);
-    } finally {
-      release();
-    }
-
-    try {
-      const response = await fetch(this.getEndpoint("api/pull"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({ name: modelName }),
-        signal,
-      });
-
-      const reader = response.body?.getReader();
-      //TODO: generate proper progress based on modelInfo size
-      while (true) {
-        const { done, value } = (await reader?.read()) || {
-          done: true,
-          value: undefined,
-        };
-        if (done) {
-          break;
-        }
-
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split("\n").filter(Boolean);
-        for (const line of lines) {
-          const data = JSON.parse(line);
-          progressReporter?.(data.status, data.completed, data.total);
-        }
-      }
-    } finally {
-      const release = await Ollama.modelsBeingInstalledMutex.acquire();
-      try {
-        Ollama.modelsBeingInstalled.delete(modelName);
-      } finally {
-        release();
-      }
-    }
+    throw new Error("Model installation is disabled in air-gapped builds. Models must be preloaded.");
   }
 
   public async isInstallingModel(modelName: string): Promise<boolean> {
-    const release = await Ollama.modelsBeingInstalledMutex.acquire();
-    try {
-      return Ollama.modelsBeingInstalled.has(modelName);
-    } finally {
-      release();
-    }
-  }
+    return false;
 }
 
 export default Ollama;
