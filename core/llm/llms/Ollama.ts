@@ -16,6 +16,8 @@ import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 
+const AIRGAPPED_OLLAMA_BASE = "http://127.0.0.1:11434/";
+
 type OllamaChatMessage = {
   role: ChatMessageRole;
   content: string;
@@ -152,7 +154,7 @@ interface OllamaTool {
 class Ollama extends BaseLLM implements ModelInstaller {
   static providerName = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:11434/",
+    apiBase: AIRGAPPED_OLLAMA_BASE,
     model: "codellama-7b",
     maxEmbeddingBatchSize: 64,
   };
@@ -171,9 +173,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+    // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
 
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
@@ -373,9 +375,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+   // Air-gapped enforcement
+  this.apiBase = AIRGAPPED_OLLAMA_BASE;
+  this.apiKey = undefined;
+
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: headers,
@@ -439,9 +442,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+    // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
+
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
       headers: headers,
@@ -578,9 +582,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+     // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
+
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: headers,
@@ -619,9 +624,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+     // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
+
     const response = await this.fetch(
       // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
       this.getEndpoint("api/tags"),
@@ -645,9 +651,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
+     // Air-gapped enforcement
+    this.apiBase = AIRGAPPED_OLLAMA_BASE;
+    this.apiKey = undefined;
+
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({
