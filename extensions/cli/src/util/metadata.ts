@@ -1,5 +1,7 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { env } from "../env.js";
+
 import {
   post,
   ApiRequestError,
@@ -124,6 +126,9 @@ export async function postAgentMetadata(
   agentId: string,
   metadata: Record<string, any>,
 ): Promise<void> {
+  const endpoint = `agents/${agentId}/metadata`;
+  const fullUrl = new URL(endpoint, env.apiBase).toString();
+
   if (!agentId) {
     logger.debug("No agent ID provided, skipping metadata update");
     return;
@@ -134,36 +139,44 @@ export async function postAgentMetadata(
     return;
   }
 
-  try {
-    logger.debug("Posting metadata to control plane", {
-      agentId,
-      metadata,
-    });
+  const startTime = Date.now();
+  logger.info(`[metadata] POST ${fullUrl}`, {
+    agentId,
+    metadataKeys: Object.keys(metadata),
+  });
+  logger.info("[metadata] Request body", { metadata });
 
-    const response = await post(`agents/${agentId}/metadata`, { metadata });
+  try {
+    const response = await post(endpoint, { metadata });
+    const duration = Date.now() - startTime;
 
     if (response.ok) {
-      logger.info("Successfully posted metadata to control plane");
+      logger.info(
+        `[metadata] Success: ${response.status} (${duration}ms) ${fullUrl}`,
+      );
     } else {
       logger.warn(
-        `Unexpected response when posting metadata: ${response.status}`,
+        `[metadata] Unexpected response: ${response.status} (${duration}ms) ${fullUrl}`,
       );
     }
   } catch (error) {
+    const duration = Date.now() - startTime;
     // Non-critical: Log but don't fail the entire agent execution
     if (error instanceof AuthenticationRequiredError) {
-      logger.debug(
-        "Authentication required for metadata update (skipping)",
-        error.message,
+      logger.info(
+        `[metadata] Auth required (skipping) (${duration}ms) ${fullUrl}`,
       );
     } else if (error instanceof ApiRequestError) {
       logger.warn(
-        `Failed to post metadata: ${error.status} ${error.response || error.statusText}`,
+        `[metadata] Failed: ${error.status} ${error.statusText} (${duration}ms) ${fullUrl}`,
+        { response: error.response },
       );
     } else {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      logger.warn(`Error posting metadata: ${errorMessage}`);
+      logger.warn(
+        `[metadata] Error: ${errorMessage} (${duration}ms) ${fullUrl}`,
+      );
     }
   }
 }
