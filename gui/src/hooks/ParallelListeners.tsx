@@ -88,8 +88,9 @@ function ParallelListeners() {
       const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
-      const wasReasoningPreviouslyEnabled =
-        getLocalStorage("hasReasoningEnabled") !== false;
+      const wasReasoningPreviouslyEnabled = chatModel
+        ? getLocalStorage(`hasReasoningEnabled_${chatModel.title}`) !== false
+        : true;
       dispatch(
         setHasReasoningEnabled(
           supportsReasoning &&

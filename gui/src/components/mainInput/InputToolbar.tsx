@@ -139,7 +139,12 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem
                 onClick={() => {
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled));
-                  setLocalStorage("hasReasoningEnabled", !hasReasoningEnabled);
+                  if (defaultModel?.title) {
+                    setLocalStorage(
+                      `hasReasoningEnabled_${defaultModel.title}`,
+                      !hasReasoningEnabled,
+                    );
+                  }
                 }}
               >
                 <ToolTip

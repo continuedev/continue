@@ -17,7 +17,7 @@ type LocalStorageTypes = {
   disableIndexing: boolean;
   hasExitedFreeTrial: boolean;
   hasDismissedCliInstallBanner: boolean;
-  hasReasoningEnabled: boolean;
+  [key: `hasReasoningEnabled_${string}`]: boolean;
 };
 
 export enum LocalStorageKey {
