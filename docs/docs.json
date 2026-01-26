@@ -26,7 +26,7 @@
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control",
+              "mission-control/index",
               "mission-control/tasks",
               "mission-control/workflows",
               {
@@ -96,16 +96,32 @@
             ]
           },
           {
-            "group": "IDE Extensions",
-            "icon": "star",
+            "group": "Help",
+            "icon": "book-open",
             "expanded": false,
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+          }
+        ]
+      },
+      {
+        "tab": "IDE Extensions",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
-              "ide-extensions/settings",
+              "customize/overview"
+            ]
+          },
+          {
+            "group": "Features",
+            "expanded": false,
+            "icon": "star",
+            "pages": [
               {
                 "group": "Agent",
-                "expanded": false,
                 "icon": "robot",
                 "pages": [
                   "ide-extensions/agent/quick-start",
@@ -118,7 +134,6 @@
               },
               {
                 "group": "Chat",
-                "expanded": false,
                 "icon": "messages",
                 "pages": [
                   "ide-extensions/chat/quick-start",
@@ -130,8 +145,6 @@
               },
               {
                 "group": "Autocomplete",
-                "expanded": false,
-
                 "icon": "sparkles",
                 "pages": [
                   "ide-extensions/autocomplete/quick-start",
@@ -144,8 +157,6 @@
               },
               {
                 "group": "Edit",
-                "expanded": false,
-
                 "icon": "pen-to-square",
                 "pages": [
                   "ide-extensions/edit/quick-start",
@@ -157,20 +168,10 @@
               }
             ]
           },
-
-          {
-            "group": "Help",
-            "icon": "book-open",
-            "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
-          }
-        ]
-      },
-      {
-        "tab": "Customize",
-        "groups": [
           {
             "group": "Customize",
+            "expanded": false,
+            "icon": "sliders",
             "pages": [
               "customize/overview",
               "customize/models",
@@ -230,7 +231,6 @@
                   "customize/model-roles/reranking"
                 ]
               },
-
               {
                 "group": "Deep Dives",
                 "icon": "microscope",
@@ -246,6 +246,20 @@
                 ]
               },
               "customize/telemetry"
+            ]
+          },
+          {
+            "group": "Reference",
+            "expanded": false,
+            "icon": "code",
+            "pages": [
+              "reference",
+              "reference/yaml-migration",
+              "reference/continue-mcp",
+              "reference/json-reference",
+              "reference/deprecated-context-providers",
+              "reference/deprecated-codebase",
+              "reference/deprecated-docs"
             ]
           }
         ]
@@ -289,7 +303,11 @@
               },
               {
                 "group": "CLI Guides",
-                "pages": ["guides/cli", "guides/doc-writing-agent-cli"]
+                "pages": [
+                  "guides/cli",
+                  "guides/run-agents-locally",
+                  "guides/doc-writing-agent-cli"
+                ]
               },
               {
                 "group": "Continuous AI Guides",
@@ -323,24 +341,6 @@
                   "guides/klavis-mcp-continue-cookbook"
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Reference",
-        "groups": [
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "reference",
-              "reference/yaml-migration",
-              "reference/continue-mcp",
-              "reference/json-reference",
-              "reference/deprecated-context-providers",
-              "reference/deprecated-codebase",
-              "reference/deprecated-docs"
             ]
           }
         ]
@@ -537,7 +537,11 @@
     },
     {
       "source": "/customization/settings",
-      "destination": "/ide-extensions/settings"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/ide-extensions/settings",
+      "destination": "/customize/overview"
     },
     {
       "source": "/customize/tools",

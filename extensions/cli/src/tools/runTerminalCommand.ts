@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import fs from "fs";
 
 import {
   evaluateTerminalCommandSecurity,
@@ -15,11 +16,33 @@ import {
   truncateOutputFromStart,
 } from "../util/truncateOutput.js";
 
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
-const DEFAULT_BASH_MAX_CHARS = 50000;
+const DEFAULT_BASH_MAX_CHARS = 50000; // ~12.5k tokens
 const DEFAULT_BASH_MAX_LINES = 1000;
+
+/**
+ * When running on Windows, but inside WSL, shell commands need to run using the WSL environment.
+ */
+export function isRunningInWsl(): boolean {
+  // WSL only applies when platform reports as Linux
+  if (process.platform !== "linux") {
+    return false;
+  }
+
+  if (process.env.WSL_DISTRO_NAME) {
+    return true;
+  }
+
+  // Check /proc/version for Microsoft/WSL indicators
+  try {
+    const procVersion = fs.readFileSync("/proc/version", "utf8").toLowerCase();
+    return procVersion.includes("microsoft") || procVersion.includes("wsl");
+  } catch {
+    return false;
+  }
+}
 
 function getBashMaxChars(): number {
   return parseEnvNumber(
@@ -35,7 +58,7 @@ function getBashMaxLines(): number {
   );
 }
 
-// Helper function to use login shell on Unix/macOS and PowerShell on Windows
+// Helper function to use login shell on Unix/macOS and PowerShell on Windows and available shell in WSL
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
@@ -43,11 +66,20 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
       shell: "powershell.exe",
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
-  } else {
-    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
-    const userShell = process.env.SHELL || "/bin/bash";
-    return { shell: userShell, args: ["-l", "-c", command] };
   }
+
+  if (isRunningInWsl()) {
+    // in WSL, bash is always available
+    const wslShell = process.env.SHELL || "/bin/bash";
+    return {
+      shell: wslShell,
+      args: ["-l", "-c", command],
+    };
+  }
+
+  // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+  const userShell = process.env.SHELL || "/bin/bash";
+  return { shell: userShell, args: ["-l", "-c", command] };
 }
 
 export const runTerminalCommandTool: Tool = {
@@ -102,13 +134,23 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       ],
     };
   },
-  run: async ({
-    command,
-    timeout,
-  }: {
-    command: string;
-    timeout?: number;
-  }): Promise<string> => {
+  run: async (
+    {
+      command,
+      timeout,
+    }: {
+      command: string;
+      timeout?: number;
+    },
+    context?: ToolRunContext,
+  ): Promise<string> => {
+    // Divide limits by parallel tool call count to avoid context overflow
+    const parallelCount = context?.parallelToolCallCount ?? 1;
+    const baseMaxChars = getBashMaxChars();
+    const baseMaxLines = getBashMaxLines();
+    const maxChars = Math.floor(baseMaxChars / parallelCount);
+    const maxLines = Math.floor(baseMaxLines / parallelCount);
+
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
@@ -131,6 +173,20 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         TIMEOUT_MS = parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10);
       }
 
+      /**
+       * Appends a note about reduced limits when parallel tool calls are in effect.
+       */
+      const appendParallelLimitNote = (output: string): string => {
+        if (parallelCount > 1) {
+          return (
+            output +
+            `\n\n(Note: output limit reduced due to ${parallelCount} parallel tool calls. ` +
+            `Single-tool limit: ${baseMaxChars.toLocaleString()} characters or ${baseMaxLines.toLocaleString()} lines.)`
+          );
+        }
+        return output;
+      };
+
       const resetTimeout = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -142,12 +198,14 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          resolve(
-            truncateOutputFromStart(output, {
-              maxChars: getBashMaxChars(),
-              maxLines: getBashMaxLines(),
-            }).output,
-          );
+          const truncationResult = truncateOutputFromStart(output, {
+            maxChars,
+            maxLines,
+          });
+          const finalOutput = truncationResult.wasTruncated
+            ? appendParallelLimitNote(truncationResult.output)
+            : truncationResult.output;
+          resolve(finalOutput);
         }, TIMEOUT_MS);
       };
 
@@ -192,12 +250,14 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        resolve(
-          truncateOutputFromStart(output, {
-            maxChars: getBashMaxChars(),
-            maxLines: getBashMaxLines(),
-          }).output,
-        );
+        const truncationResult = truncateOutputFromStart(output, {
+          maxChars,
+          maxLines,
+        });
+        const finalOutput = truncationResult.wasTruncated
+          ? appendParallelLimitNote(truncationResult.output)
+          : truncationResult.output;
+        resolve(finalOutput);
       });
 
       child.on("error", (error) => {

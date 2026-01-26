@@ -123,6 +123,68 @@ export const CometAPIConfigSchema = OpenAIConfigSchema.extend({
 });
 export type CometAPIConfig = z.infer<typeof CometAPIConfigSchema>;
 
+export const AskSageConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("askSage"),
+  env: z
+    .object({
+      email: z.string().optional(),
+      userApiUrl: z.string().optional(),
+    })
+    .optional(),
+});
+export type AskSageConfig = z.infer<typeof AskSageConfigSchema>;
+
+/**
+ * AskSage tool format (OpenAI-compatible)
+ */
+export interface AskSageTool {
+  type: string;
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  };
+}
+
+export type AskSageToolChoice =
+  | "auto"
+  | "none"
+  | { type: "function"; function: { name: string } };
+
+export interface AskSageToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * AskSage API response format
+ */
+export interface AskSageResponse {
+  text?: string;
+  answer?: string;
+  message?: string;
+  status?: number | string;
+  response?: unknown;
+  tool_calls?: AskSageToolCall[];
+  choices?: Array<{
+    message?: {
+      content?: string;
+      tool_calls?: AskSageToolCall[];
+    };
+  }>;
+}
+
+export interface AskSageTokenResponse {
+  status: number | string;
+  response: {
+    access_token: string;
+  };
+}
+
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
   env: z
@@ -205,5 +267,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
   CometAPIConfigSchema,
+  AskSageConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

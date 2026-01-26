@@ -3,13 +3,10 @@ import * as fs from "fs";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
-import {
-  parseEnvNumber,
-  truncateByLinesAndChars,
-} from "../util/truncateOutput.js";
+import { parseEnvNumber } from "../util/truncateOutput.js";
 
 import { formatToolArgument } from "./formatters.js";
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
 const DEFAULT_READ_FILE_MAX_CHARS = 100000; // ~25k tokens
@@ -67,7 +64,10 @@ export const readFileTool: Tool = {
       ],
     };
   },
-  run: async (args: { filepath: string }): Promise<string> => {
+  run: async (
+    args: { filepath: string },
+    context?: ToolRunContext,
+  ): Promise<string> => {
     try {
       let { filepath } = args;
       if (filepath.startsWith("./")) {
@@ -82,20 +82,35 @@ export const readFileTool: Tool = {
       }
       const realPath = fs.realpathSync(filepath);
       const content = fs.readFileSync(realPath, "utf-8");
+
+      // Divide limits by parallel tool call count to avoid context overflow
+      const parallelCount = context?.parallelToolCallCount ?? 1;
+      const baseMaxLines = getReadFileMaxLines();
+      const baseMaxChars = getReadFileMaxChars();
+      const maxLines = Math.floor(baseMaxLines / parallelCount);
+      const maxChars = Math.floor(baseMaxChars / parallelCount);
+      const lineCount = content.split("\n").length;
+      const charCount = content.length;
+
+      if (charCount > maxChars || lineCount > maxLines) {
+        // Include note about single-tool limit when parallel calls reduce the limit
+        const parallelNote =
+          parallelCount > 1
+            ? ` (Note: limit reduced due to ${parallelCount} parallel tool calls. Single-tool limit: ${baseMaxChars.toLocaleString()} characters or ${baseMaxLines.toLocaleString()} lines.)`
+            : "";
+
+        throw new ContinueError(
+          ContinueErrorReason.FileTooLarge,
+          `File is too large to read: ${filepath} (${charCount.toLocaleString()} characters, ${lineCount.toLocaleString()} lines). ` +
+            `Maximum allowed: ${maxChars.toLocaleString()} characters or ${maxLines.toLocaleString()} lines.${parallelNote} ` +
+            `Consider using terminal commands like 'head', 'tail', 'sed', or 'grep' to read targeted parts of the file.`,
+        );
+      }
+
       // Mark this file as read for the edit tool
       markFileAsRead(realPath);
 
-      const maxLines = getReadFileMaxLines();
-      const maxChars = getReadFileMaxChars();
-
-      const { output: truncatedContent, wasTruncated } =
-        truncateByLinesAndChars(content, maxLines, maxChars, "file content");
-
-      if (wasTruncated) {
-        return `Content of ${filepath} (truncated):\n${truncatedContent}`;
-      }
-
-      return `Content of ${filepath}:\n${truncatedContent}`;
+      return `Content of ${filepath}:\n${content}`;
     } catch (error) {
       if (error instanceof ContinueError) {
         throw error;

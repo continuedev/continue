@@ -14,6 +14,7 @@ vi.mock("./stream/streamChatResponse.js", () => ({
 vi.mock("./util/tokenizer.js", () => ({
   countChatHistoryTokens: vi.fn(),
   getModelContextLimit: vi.fn(),
+  getModelMaxTokens: vi.fn(),
 }));
 
 describe("compaction infinite loop prevention", () => {

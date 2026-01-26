@@ -204,6 +204,18 @@ class FileSystemIde implements IDE {
     });
   }
 
+  removeFile(fileUri: string): Promise<void> {
+    const filepath = fileURLToPath(fileUri);
+    return new Promise((resolve, reject) => {
+      fs.unlink(filepath, (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      });
+    });
+  }
+
   showVirtualFile(title: string, contents: string): Promise<void> {
     return Promise.resolve();
   }

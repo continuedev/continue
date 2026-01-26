@@ -128,7 +128,7 @@ You only need to configure the PostHog MCP credential - it automatically handles
   organization 
   - It automatically uses your default project (no project ID
   needed) 
-  - If you have multiple projects, use `mcp__posthog__switch-project` to
+  - If you have multiple projects, use `switch-project` to
   change 
   - The MCP connects via `https://mcp.posthog.com/sse` using your account context.
 
@@ -300,7 +300,7 @@ The main workflow above focuses on analyzing session recordings to identify UX i
 
 ```bash
 # Get all feature flags and analyze them
-cn "Use PostHog MCP to fetch all feature flags with mcp__posthog__feature-flag-get-all. Then analyze each flag to identify: 1) Flags that are 100% rolled out and could be removed, 2) Flags that haven't been updated in 90+ days, 3) Flags with complex targeting that might need simplification, 4) Experimental flags that should be cleaned up."
+cn "Use PostHog MCP to fetch all feature flags with feature-flag-get-all. Then analyze each flag to identify: 1) Flags that are 100% rolled out and could be removed, 2) Flags that haven't been updated in 90+ days, 3) Flags with complex targeting that might need simplification, 4) Experimental flags that should be cleaned up."
 
 # Create cleanup issues for identified flags
 cn "For each problematic feature flag identified, create a GitHub issue using gh CLI:

@@ -644,6 +644,30 @@ describe("runTerminalCommandImpl", () => {
         ).resolves.toBeDefined();
       });
 
+      it("should use ide.runCommand when Windows host connects to WSL", async () => {
+        // When extension runs on Windows but connects to WSL, we can't spawn
+        // shells directly - must use ide.runCommand instead
+        const originalPlatform = process.platform;
+        Object.defineProperty(process, "platform", { value: "win32" });
+
+        try {
+          const extras = createMockExtras({ remoteName: "wsl" });
+
+          const result = await runTerminalCommandImpl(
+            { command: "echo test" },
+            extras,
+          );
+
+          // Should fall back to ide.runCommand, not try to spawn powershell.exe
+          expect(mockRunCommand).toHaveBeenCalledWith("echo test");
+          expect(result[0].content).toContain("Terminal output not available");
+        } finally {
+          Object.defineProperty(process, "platform", {
+            value: originalPlatform,
+          });
+        }
+      });
+
       it("should handle dev-container environment", async () => {
         mockGetWorkspaceDirs.mockResolvedValue(["file:///workspace"]);
 
