@@ -64,6 +64,8 @@ async function loadConfigYaml(options: {
   } = options;
 
   // Add local .continue blocks
+  // Use "content" field to pass pre-read content directly, avoiding
+  // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
@@ -73,6 +75,7 @@ async function loadConfigYaml(options: {
     return localBlocks.map((b) => ({
       uriType: "file" as const,
       fileUri: b.path,
+      content: b.content,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
