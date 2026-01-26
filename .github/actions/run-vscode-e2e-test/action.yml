@@ -17,6 +17,10 @@ inputs:
     description: "Whether this is a fork (affects SSH tests)"
     required: false
     default: "false"
+  github_token:
+    description: "GitHub token for authenticated API requests (e.g., @vscode/ripgrep download)"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -64,6 +68,8 @@ runs:
           cd core
           npm ci
         fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Fix VSCode binary permissions
       shell: bash

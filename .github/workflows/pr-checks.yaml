@@ -329,6 +329,7 @@ jobs:
           ssh_key: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
           ssh_host: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
           is_fork: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
+          github_token: ${{ secrets.CI_GITHUB_TOKEN }}
 
   jetbrains-tests:
     runs-on: ubuntu-latest
