@@ -29,6 +29,16 @@ export interface ToolCallPreview {
 export interface PreprocessToolCallResult {
   preview?: ToolCallPreview[];
   args: Record<string, any>;
+  context?: { toolCallId: string };
+}
+
+export interface ToolRunContext {
+  toolCallId: string;
+  /**
+   * Number of tool calls being executed in parallel.
+   * Tools should divide their output limits by this number to avoid context overflow.
+   */
+  parallelToolCallCount: number;
 }
 
 export interface Tool {
@@ -37,7 +47,7 @@ export interface Tool {
   description: string;
   parameters: ToolParametersSchema;
   preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
-  run: (args: any) => Promise<string>;
+  run: (args: any, context?: ToolRunContext) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly
   isBuiltIn: boolean;
   evaluateToolCallPolicy?: (

@@ -28,11 +28,17 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
-import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
+import { skillsTool } from "./skills.js";
+import { subagentTool } from "./subagent.js";
+import {
+  isBetaSubagentToolEnabled,
+  isBetaUploadArtifactToolEnabled,
+} from "./toolsConfig.js";
 import {
   type Tool,
   type ToolCall,
   type ToolParametersSchema,
+  type ToolRunContext,
   ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
@@ -119,6 +125,12 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
+  if (isBetaSubagentToolEnabled()) {
+    tools.push(await subagentTool());
+  }
+
+  tools.push(await skillsTool());
+
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
   );
@@ -177,7 +189,7 @@ export function convertToolToChatCompletionTool(
 export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   return {
     name: mcpTool.name,
-    displayName: mcpTool.name.replace("mcp__", "").replace("ide__", ""),
+    displayName: mcpTool.name,
     description: mcpTool.description ?? "",
     parameters: {
       type: "object",
@@ -198,6 +210,7 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
 
 export async function executeToolCall(
   toolCall: PreprocessedToolCall,
+  options: { parallelToolCallCount: number } = { parallelToolCallCount: 1 },
 ): Promise<string> {
   const startTime = Date.now();
 
@@ -205,15 +218,22 @@ export async function executeToolCall(
     logger.debug("Executing tool", {
       toolName: toolCall.name,
       arguments: toolCall.arguments,
+      parallelToolCallCount: options.parallelToolCallCount,
     });
 
     // Track edits if Git AI is enabled (no-op if not enabled)
     await services.gitAiIntegration.trackToolUse(toolCall, "PreToolUse");
 
+    const context: ToolRunContext = {
+      toolCallId: toolCall.id,
+      parallelToolCallCount: options.parallelToolCallCount,
+    };
+
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
+      context,
     );
     const duration = Date.now() - startTime;
 

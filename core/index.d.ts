@@ -842,6 +842,8 @@ export interface IDE {
 
   writeFile(path: string, contents: string): Promise<void>;
 
+  removeFile(path: string): Promise<void>;
+
   showVirtualFile(title: string, contents: string): Promise<void>;
 
   openFile(path: string): Promise<void>;
@@ -1153,9 +1155,10 @@ export interface ConfigDependentToolParams {
   isSignedIn: boolean;
   isRemote: boolean;
   modelName: string | undefined;
+  ide: IDE;
 }
 
-export type GetTool = (params: ConfigDependentToolParams) => Tool;
+export type GetTool = (params: ConfigDependentToolParams) => Promise<Tool>;
 
 export interface BaseCompletionOptions {
   temperature?: number;
@@ -1894,6 +1897,15 @@ export interface RuleMetadata {
 }
 export interface RuleWithSource extends RuleMetadata {
   rule: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  path: string;
+  content: string;
+  files: string[];
+  license?: string;
 }
 
 export interface CompleteOnboardingPayload {

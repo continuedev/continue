@@ -1,6 +1,6 @@
 import {
-  yamlConfigToPolicies,
   parseToolPattern,
+  yamlConfigToPolicies,
 } from "./permissionsYamlLoader.js";
 
 describe("permissionsYamlLoader", () => {
@@ -46,7 +46,7 @@ describe("permissionsYamlLoader", () => {
 
     it("should handle wildcard patterns", () => {
       const config = {
-        allow: ["mcp__*"],
+        allow: ["external_*"],
         exclude: ["*"],
       };
 
@@ -54,7 +54,7 @@ describe("permissionsYamlLoader", () => {
 
       expect(policies).toEqual([
         { tool: "*", permission: "exclude" },
-        { tool: "mcp__*", permission: "allow" },
+        { tool: "external_*", permission: "allow" },
       ]);
     });
 
