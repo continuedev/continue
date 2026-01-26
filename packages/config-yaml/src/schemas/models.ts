@@ -117,8 +117,8 @@ export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
   baseAgentSystemMessage: z.string().optional(),
   basePlanSystemMessage: z.string().optional(),
-  /** Tool prompt overrides keyed by tool name (e.g., "run_terminal_command") */
-  toolPromptOverrides: z.record(z.string(), toolOverrideSchema).optional(),
+  /** Tool overrides keyed by tool name (e.g., "run_terminal_command") */
+  toolOverrides: z.record(z.string(), toolOverrideSchema).optional(),
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 

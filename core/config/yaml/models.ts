@@ -3,27 +3,11 @@ import {
   ModelConfig,
 } from "@continuedev/config-yaml";
 
-import { ContinueConfig, ILLMLogger, LLMOptions, ToolOverride } from "../..";
+import { ContinueConfig, ILLMLogger, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
 
 const AUTODETECT = "AUTODETECT";
-
-/**
- * Converts YAML record format { toolName: {...} } to array format [{ name: toolName, ...}]
- * for use with applyToolOverrides
- */
-function convertToolPromptOverridesToArray(
-  record: Record<string, Omit<ToolOverride, "name">> | undefined,
-): ToolOverride[] | undefined {
-  if (!record) {
-    return undefined;
-  }
-  return Object.entries(record).map(([name, override]) => ({
-    name,
-    ...override,
-  }));
-}
 
 function getModelClass(
   model: ModelConfig,
@@ -83,9 +67,12 @@ async function modelConfigToBaseLLM({
     baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
     basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
-    toolPromptOverrides: convertToolPromptOverridesToArray(
-      model.chatOptions?.toolPromptOverrides,
-    ),
+    toolOverrides: model.chatOptions?.toolOverrides
+      ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
+          name,
+          ...o,
+        }))
+      : undefined,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),

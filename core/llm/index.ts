@@ -199,8 +199,8 @@ export abstract class BaseLLM implements ILLM {
 
   isFromAutoDetect?: boolean;
 
-  /** Tool prompt overrides for this model */
-  toolPromptOverrides?: ToolOverride[];
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
 
   lastRequestId: string | undefined;
 
@@ -309,7 +309,7 @@ export abstract class BaseLLM implements ILLM {
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
-    this.toolPromptOverrides = options.toolPromptOverrides;
+    this.toolOverrides = options.toolOverrides;
   }
 
   get contextLength() {
@@ -1119,12 +1119,12 @@ export abstract class BaseLLM implements ILLM {
   ): AsyncGenerator<ChatMessage, PromptLog> {
     this.lastRequestId = undefined;
 
-    // Apply per-model tool prompt overrides if configured
+    // Apply per-model tool overrides if configured
     let effectiveTools = options.tools;
-    if (this.toolPromptOverrides?.length && options.tools?.length) {
+    if (this.toolOverrides?.length && options.tools?.length) {
       const { tools: overriddenTools, errors } = applyToolOverrides(
         options.tools,
-        this.toolPromptOverrides,
+        this.toolOverrides,
       );
       effectiveTools = overriddenTools;
       // Log any warnings for unknown tool names

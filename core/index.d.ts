@@ -2,6 +2,7 @@ import {
   DataDestination,
   ModelRole,
   PromptTemplates,
+  ToolOverrideConfig,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
@@ -695,8 +696,8 @@ export interface LLMOptions {
   sourceFile?: string;
   isFromAutoDetect?: boolean;
 
-  /** Tool prompt overrides for this model */
-  toolPromptOverrides?: ToolOverride[];
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1146,27 +1147,12 @@ export interface Tool {
 
 /**
  * Configuration for overriding built-in tool prompts.
- * Allows customization of tool descriptions and behavior per model.
+ * Extends ToolOverrideConfig with required name for array usage.
  */
-export interface ToolOverride {
-  /** Tool name to override (matches function.name, e.g., "read_file", "run_terminal_command") */
+export type ToolOverride = ToolOverrideConfig & {
+  /** Tool name to override (matches function.name, e.g., "read_file") */
   name: string;
-  /** Override the tool's description shown to the LLM */
-  description?: string;
-  /** Override the display title shown in UI */
-  displayTitle?: string;
-  /** Override the action phrases */
-  wouldLikeTo?: string;
-  isCurrently?: string;
-  hasAlready?: string;
-  /** Override system message description for non-native tool calling */
-  systemMessageDescription?: {
-    prefix?: string;
-    exampleArgs?: Array<[string, string | number]>;
-  };
-  /** Set to true to disable this tool */
-  disabled?: boolean;
-}
+};
 
 interface ToolChoice {
   type: "function";
