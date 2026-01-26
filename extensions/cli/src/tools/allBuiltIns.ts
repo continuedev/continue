@@ -9,6 +9,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
+import { SKILLS_TOOL_META } from "./skills.js";
 import { statusTool } from "./status.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
 import { viewDiffTool } from "./viewDiff.js";
@@ -28,6 +29,7 @@ export const ALL_BUILT_IN_TOOLS = [
   searchCodeTool,
   statusTool,
   SUBAGENT_TOOL_META,
+  SKILLS_TOOL_META,
   uploadArtifactTool,
   viewDiffTool,
   writeChecklistTool,

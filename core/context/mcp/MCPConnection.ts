@@ -414,23 +414,30 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   /**
    * Resolves the command and arguments for the current platform
    * On Windows, batch script commands need to be executed via cmd.exe
+   * UNLESS we're connected to a WSL remote (where Linux commands should run)
    * @param originalCommand The original command
    * @param originalArgs The original command arguments
    * @returns An object with the resolved command and arguments
    */
-  private resolveCommandForPlatform(
+  private async resolveCommandForPlatform(
     originalCommand: string,
     originalArgs: string[],
-  ): { command: string; args: string[] } {
-    // If not on Windows or not a batch command, return as-is
+  ): Promise<{ command: string; args: string[] }> {
+    // Check if we're on Windows host connected to WSL remote
+    const ideInfo = await this.extras?.ide?.getIdeInfo();
+    const isWindowsHostWithWslRemote =
+      process.platform === "win32" && ideInfo?.remoteName === "wsl";
+
+    // If not on Windows, or connected to WSL, or not a batch command, return as-is
     if (
       process.platform !== "win32" ||
+      isWindowsHostWithWslRemote ||
       !WINDOWS_BATCH_COMMANDS.includes(originalCommand)
     ) {
       return { command: originalCommand, args: originalArgs };
     }
 
-    // On Windows, we need to execute batch commands via cmd.exe
+    // On Windows (local), we need to execute batch commands via cmd.exe
     // Format: cmd.exe /c command [args]
     return {
       command: "cmd.exe",
@@ -569,7 +576,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       }
     }
 
-    const { command, args } = this.resolveCommandForPlatform(
+    const { command, args } = await this.resolveCommandForPlatform(
       options.command,
       options.args || [],
     );

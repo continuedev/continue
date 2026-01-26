@@ -5,6 +5,7 @@ import {
   AuthenticationRequiredError,
   post,
 } from "../util/apiClient.js";
+import { updateAgentMetadata } from "../util/exit.js";
 import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
@@ -62,6 +63,24 @@ You should use this tool to notify the user whenever the state of your work chan
       await post(`agents/${agentId}/status`, { status: args.status });
 
       logger.info(`Status: ${args.status}`);
+
+      // If status is DONE or FAILED, mark agent as complete
+      const normalizedStatus = args.status.toUpperCase();
+      if (normalizedStatus === "DONE" || normalizedStatus === "FAILED") {
+        try {
+          await updateAgentMetadata({ isComplete: true });
+          logger.debug(
+            `Marked agent as complete due to status: ${args.status}`,
+          );
+        } catch (metadataErr) {
+          // Non-critical: log but don't fail the status update
+          logger.debug(
+            "Failed to update completion metadata (non-critical)",
+            metadataErr as any,
+          );
+        }
+      }
+
       return `Status set: ${args.status}`;
     } catch (error) {
       if (error instanceof ContinueError) {
