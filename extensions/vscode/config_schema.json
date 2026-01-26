@@ -1414,10 +1414,16 @@
                       "llama3.1-70b",
                       "llama3.3-70b",
                       "qwen2.5-coder-32b",
+                      "qwen3-32b",
+                      "qwen3-coder-30b-a3b",
+                      "qwen2.5-vl-72b",
                       "codestral-mamba-latest",
                       "mistral-7b",
                       "mistral-8x7b",
                       "mistral-nemo",
+                      "mistral-small-3.2-24b",
+                      "gpt-oss-20b",
+                      "gpt-oss-120b",
                       "DeepSeek-R1-Distill-Llama-70B"
                     ]
                   },

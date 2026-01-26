@@ -358,6 +358,29 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    ovhcloud: (model) => {
+      const lower = model.toLowerCase();
+
+      // Models that support tools according to OVHcloud AI Endpoints catalog
+      const toolSupportingModels = [
+        "llama-3.1-8b-instruct",
+        "qwen3-32b",
+        "qwen3-coder-30b-a3b-instruct",
+        "meta-llama-3_3-70b-instruct",
+        "deepseek-r1-distill-llama-70b",
+        "mistral-small-3.2-24b-instruct-2506",
+        "gpt-oss-120b",
+        "mistral-nemo-instruct-2407",
+        "gpt-oss-20b",
+        "qwen2.5-coder-32b-instruct",
+      ];
+
+      if (toolSupportingModels.some((m) => lower === m)) {
+        return true;
+      }
+
+      return false;
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
