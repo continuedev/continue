@@ -1,3 +1,5 @@
+import { logger } from "../util/logger.js";
+
 import { Tool } from "./types.js";
 
 export const exitTool: Tool = {
@@ -21,7 +23,10 @@ export const exitTool: Tool = {
       await updateAgentMetadata({ isComplete: true });
     } catch (err) {
       // Non-critical: log but don't block exit
-      console.debug("Failed to update completion metadata (non-critical)", err);
+      logger.debug(
+        "Failed to update completion metadata (non-critical)",
+        err as any,
+      );
     }
 
     await gracefulExit(1);
