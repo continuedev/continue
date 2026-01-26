@@ -11,6 +11,8 @@ import { streamChatResponse } from "./streamChatResponse.js";
 vi.mock("../compaction.js", () => ({
   compactChatHistory: vi.fn(),
   pruneLastMessage: vi.fn((history) => history.slice(0, -1)),
+  shouldAutoCompact: vi.fn(),
+  getAutoCompactMessage: vi.fn(() => "Auto-compacting..."),
 }));
 
 vi.mock("../session.js", () => ({
@@ -19,8 +21,6 @@ vi.mock("../session.js", () => ({
 }));
 
 vi.mock("../util/tokenizer.js", () => ({
-  shouldAutoCompact: vi.fn(),
-  getAutoCompactMessage: vi.fn(() => "Auto-compacting..."),
   countChatHistoryItemTokens: vi.fn(() => 100),
   validateContextLength: vi.fn(() => ({ isValid: true })),
 }));

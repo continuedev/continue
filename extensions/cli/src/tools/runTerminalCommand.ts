@@ -15,10 +15,10 @@ import {
   truncateOutputFromStart,
 } from "../util/truncateOutput.js";
 
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
-const DEFAULT_BASH_MAX_CHARS = 50000;
+const DEFAULT_BASH_MAX_CHARS = 50000; // ~12.5k tokens
 const DEFAULT_BASH_MAX_LINES = 1000;
 
 function getBashMaxChars(): number {
@@ -102,13 +102,23 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       ],
     };
   },
-  run: async ({
-    command,
-    timeout,
-  }: {
-    command: string;
-    timeout?: number;
-  }): Promise<string> => {
+  run: async (
+    {
+      command,
+      timeout,
+    }: {
+      command: string;
+      timeout?: number;
+    },
+    context?: ToolRunContext,
+  ): Promise<string> => {
+    // Divide limits by parallel tool call count to avoid context overflow
+    const parallelCount = context?.parallelToolCallCount ?? 1;
+    const baseMaxChars = getBashMaxChars();
+    const baseMaxLines = getBashMaxLines();
+    const maxChars = Math.floor(baseMaxChars / parallelCount);
+    const maxLines = Math.floor(baseMaxLines / parallelCount);
+
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
@@ -131,6 +141,20 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         TIMEOUT_MS = parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10);
       }
 
+      /**
+       * Appends a note about reduced limits when parallel tool calls are in effect.
+       */
+      const appendParallelLimitNote = (output: string): string => {
+        if (parallelCount > 1) {
+          return (
+            output +
+            `\n\n(Note: output limit reduced due to ${parallelCount} parallel tool calls. ` +
+            `Single-tool limit: ${baseMaxChars.toLocaleString()} characters or ${baseMaxLines.toLocaleString()} lines.)`
+          );
+        }
+        return output;
+      };
+
       const resetTimeout = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -142,12 +166,14 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          resolve(
-            truncateOutputFromStart(output, {
-              maxChars: getBashMaxChars(),
-              maxLines: getBashMaxLines(),
-            }).output,
-          );
+          const truncationResult = truncateOutputFromStart(output, {
+            maxChars,
+            maxLines,
+          });
+          const finalOutput = truncationResult.wasTruncated
+            ? appendParallelLimitNote(truncationResult.output)
+            : truncationResult.output;
+          resolve(finalOutput);
         }, TIMEOUT_MS);
       };
 
@@ -192,12 +218,14 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        resolve(
-          truncateOutputFromStart(output, {
-            maxChars: getBashMaxChars(),
-            maxLines: getBashMaxLines(),
-          }).output,
-        );
+        const truncationResult = truncateOutputFromStart(output, {
+          maxChars,
+          maxLines,
+        });
+        const finalOutput = truncationResult.wasTruncated
+          ? appendParallelLimitNote(truncationResult.output)
+          : truncationResult.output;
+        resolve(finalOutput);
       });
 
       child.on("error", (error) => {

@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
+import { AskSageApi } from "./apis/AskSage.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
@@ -73,6 +74,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new CohereApi(config);
     case "cometapi":
       return new CometAPIApi(config);
+    case "askSage":
+      return new AskSageApi(config);
     case "anthropic":
       return new AnthropicApi(config);
     case "gemini":

@@ -91,7 +91,7 @@ You can run the documentation server locally using either of the following metho
 3. Run the following command to start the documentation server:
 
    ```bash
-   npm run start
+   npm run dev
    ```
 
 #### Method 2: VS Code Task

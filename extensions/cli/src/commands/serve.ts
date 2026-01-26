@@ -526,10 +526,22 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
         state.lastActivity = Date.now();
 
-        // Update metadata after successful agent turn (mark as complete for this turn)
+        // Update metadata after successful agent turn
         try {
           const history = services.chatHistory?.getHistory();
-          await updateAgentMetadata({ history, isComplete: true });
+
+          // Check if the agent should be marked as complete
+          // The agent is complete if the last message is from the assistant and has no tool calls
+          let isComplete = false;
+          if (history && history.length > 0) {
+            const lastItem = history[history.length - 1];
+            if (lastItem?.message?.role === "assistant") {
+              const toolCalls = (lastItem.message as any).tool_calls;
+              isComplete = !toolCalls || toolCalls.length === 0;
+            }
+          }
+
+          await updateAgentMetadata({ history, isComplete });
         } catch (metadataErr) {
           // Non-critical: log but don't fail the agent execution
           logger.debug(

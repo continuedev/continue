@@ -36,6 +36,14 @@ class FileUtils(
         }
     }
 
+    fun removeFile(fileUri: String) {
+        val found = findFile(fileUri)
+            ?: return LOG.warn("File not found: $fileUri")
+        runWriteAction {
+            found.delete(this)
+        }
+    }
+
     fun listDir(fileUri: String): List<List<Any>> {
         val found = findFile(fileUri)
             ?: return emptyList()
