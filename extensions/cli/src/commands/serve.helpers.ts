@@ -1,9 +1,34 @@
-import type { Session, ToolStatus } from "core/index.js";
+import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
 
 import { services } from "../services/index.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
 import { logger } from "../util/logger.js";
+
+/**
+ * Remove partial assistant message if the last message is an empty assistant message.
+ * Used when a response is interrupted.
+ */
+export function removePartialAssistantMessage(
+  sessionHistory: ChatHistoryItem[],
+): void {
+  try {
+    const svcHistory = services.chatHistory.getHistory();
+    const last = svcHistory[svcHistory.length - 1];
+    if (last && last.message.role === "assistant" && !last.message.content) {
+      services.chatHistory.setHistory(svcHistory.slice(0, -1));
+    }
+  } catch {
+    const lastMessage = sessionHistory[sessionHistory.length - 1];
+    if (
+      lastMessage &&
+      lastMessage.message.role === "assistant" &&
+      !lastMessage.message.content
+    ) {
+      sessionHistory.pop();
+    }
+  }
+}
 
 // Modified version of streamChatResponse that supports interruption
 export async function streamChatResponseWithInterruption(
@@ -123,4 +148,22 @@ export interface ServerState {
   serverRunning: boolean;
   pendingPermission: PendingPermission | null;
   systemMessage?: string;
+}
+
+/**
+ * Check if the agent should be marked as complete based on conversation history.
+ * The agent is complete if the last message is from the assistant and has no tool calls.
+ */
+export function checkAgentComplete(
+  history: { message: { role: string; tool_calls?: any[] } }[] | undefined,
+): boolean {
+  if (!history || history.length === 0) {
+    return false;
+  }
+  const lastItem = history[history.length - 1];
+  if (lastItem?.message?.role !== "assistant") {
+    return false;
+  }
+  const toolCalls = (lastItem.message as any).tool_calls;
+  return !toolCalls || toolCalls.length === 0;
 }
