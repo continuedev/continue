@@ -180,15 +180,6 @@ export function HelpSection() {
           <Card className="!p-0">
             <div className="flex flex-col">
               <ConfigRow
-                title="Continue Hub"
-                description="Visit hub.continue.dev to explore custom agents and blocks"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post("openUrl", "https://hub.continue.dev/")
-                }
-              />
-
-              <ConfigRow
                 title="Documentation"
                 description="Learn how to configure and use Continue"
                 icon={LinkIcon}
