@@ -236,6 +236,7 @@ interface HandleSpecialCommandsOptions {
   message: string;
   isRemoteMode: boolean;
   remoteUrl?: string;
+  remoteSessionId?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
   onShowDiff?: (diffContent: string) => void;
@@ -320,12 +321,122 @@ async function handleRemoteApplyCommand(
 }
 
 /**
+ * Handle /accept command in remote mode
+ * @param remoteUrl - The devbox tunnel URL
+ * @param remoteSessionId - The agent session ID for backend API calls
+ * @param isLocal - Whether to apply changes locally instead of pushing to GitHub
+ * @param onShowStatusMessage - Callback to show status message
+ */
+async function handleRemoteAcceptCommand(
+  remoteUrl: string,
+  remoteSessionId: string | undefined,
+  isLocal: boolean,
+  onShowStatusMessage?: (message: string) => void,
+): Promise<void> {
+  const { post } = await import("../../util/apiClient.js");
+
+  if (!remoteSessionId) {
+    if (onShowStatusMessage) {
+      onShowStatusMessage("✗ Session ID not available for accept command");
+    }
+    return;
+  }
+
+  try {
+    if (isLocal) {
+      // First fetch the diff from devbox
+      const diffResponse = await fetch(`${remoteUrl}/diff`);
+      if (!diffResponse.ok) {
+        throw new Error(`Failed to fetch diff: ${diffResponse.statusText}`);
+      }
+
+      const responseData = await diffResponse.json();
+      const diffContent = responseData.diff || "";
+
+      if (!diffContent || diffContent.trim() === "") {
+        if (onShowStatusMessage) {
+          onShowStatusMessage("No changes to accept");
+        }
+        return;
+      }
+
+      // Mark as accepted in backend (without pushing to GitHub)
+      await post(`agents/${remoteSessionId}/accept-local`);
+
+      // Apply the diff locally
+      const { execFileSync } = await import("child_process");
+      try {
+        execFileSync("git", ["apply"], {
+          input: diffContent,
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+
+        if (onShowStatusMessage) {
+          onShowStatusMessage(
+            "✓ Changes accepted and applied locally. You can now commit them yourself.",
+          );
+        }
+      } catch (gitError: any) {
+        if (onShowStatusMessage) {
+          onShowStatusMessage(
+            `✓ Changes marked as accepted, but failed to apply locally: ${gitError.message}`,
+          );
+        }
+      }
+    } else {
+      // Accept and push to GitHub
+      await post(`agents/${remoteSessionId}/accept`);
+      if (onShowStatusMessage) {
+        onShowStatusMessage("✓ Changes accepted and pushed to GitHub");
+      }
+    }
+  } catch (error: any) {
+    logger.error("Failed to accept changes:", error);
+    if (onShowStatusMessage) {
+      onShowStatusMessage(`✗ Failed to accept changes: ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Handle /reject command in remote mode
+ * @param remoteSessionId - The agent session ID for backend API calls
+ * @param onShowStatusMessage - Callback to show status message
+ */
+async function handleRemoteRejectCommand(
+  remoteSessionId: string | undefined,
+  onShowStatusMessage?: (message: string) => void,
+): Promise<void> {
+  const { post } = await import("../../util/apiClient.js");
+
+  if (!remoteSessionId) {
+    if (onShowStatusMessage) {
+      onShowStatusMessage("✗ Session ID not available for reject command");
+    }
+    return;
+  }
+
+  try {
+    await post(`agents/${remoteSessionId}/reject`);
+    if (onShowStatusMessage) {
+      onShowStatusMessage("✓ Changes rejected");
+    }
+  } catch (error: any) {
+    logger.error("Failed to reject changes:", error);
+    if (onShowStatusMessage) {
+      onShowStatusMessage(`✗ Failed to reject changes: ${error.message}`);
+    }
+  }
+}
+
+/**
  * Handle special TUI commands
  */
 export async function handleSpecialCommands({
   message,
   isRemoteMode,
   remoteUrl,
+  remoteSessionId,
   onShowConfigSelector,
   exit,
   onShowDiff,
@@ -363,6 +474,31 @@ export async function handleSpecialCommands({
     (trimmedMessage === "/apply" || trimmedMessage.startsWith("/apply "))
   ) {
     await handleRemoteApplyCommand(remoteUrl, onShowStatusMessage);
+    return true;
+  }
+
+  // Handle /accept command in remote mode
+  if (
+    isRemoteMode &&
+    remoteUrl &&
+    (trimmedMessage === "/accept" || trimmedMessage.startsWith("/accept "))
+  ) {
+    const isLocal = trimmedMessage.includes("--local");
+    await handleRemoteAcceptCommand(
+      remoteUrl,
+      remoteSessionId,
+      isLocal,
+      onShowStatusMessage,
+    );
+    return true;
+  }
+
+  // Handle /reject command in remote mode
+  if (
+    isRemoteMode &&
+    (trimmedMessage === "/reject" || trimmedMessage.startsWith("/reject "))
+  ) {
+    await handleRemoteRejectCommand(remoteSessionId, onShowStatusMessage);
     return true;
   }
 

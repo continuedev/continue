@@ -119,6 +119,16 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
     description: "Apply the current diff to the local working tree",
     category: "system",
   },
+  {
+    name: "accept",
+    description: "Accept changes (use --local to apply locally)",
+    category: "system",
+  },
+  {
+    name: "reject",
+    description: "Reject the agent's changes",
+    category: "system",
+  },
 ];
 
 /**

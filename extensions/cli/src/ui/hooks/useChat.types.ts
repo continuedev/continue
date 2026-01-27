@@ -24,6 +24,7 @@ export interface UseChatProps {
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
+  remoteSessionId?: string;
   onShowDiff?: (diffContent: string) => void;
   onShowStatusMessage?: (message: string) => void;
 }

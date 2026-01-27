@@ -62,6 +62,7 @@ export function useChat({
   onRefreshStatic,
   isRemoteMode = false,
   remoteUrl,
+  remoteSessionId,
   onShowDiff,
   onShowStatusMessage,
 }: UseChatProps) {
@@ -465,6 +466,7 @@ export function useChat({
       message,
       isRemoteMode,
       remoteUrl,
+      remoteSessionId,
       onShowConfigSelector,
       exit,
       onShowDiff,

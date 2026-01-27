@@ -113,7 +113,7 @@ async function connectExistingAgent(
   console.info(
     chalk.white(`Connecting to remote agent tunnel at: ${tunnel.url}`),
   );
-  await launchRemoteTUI(tunnel.url, prompt);
+  await launchRemoteTUI(tunnel.url, prompt, agentId);
 }
 
 async function createAndConnectRemoteEnvironment(
@@ -159,7 +159,7 @@ async function createAndConnectRemoteEnvironment(
   console.info(
     chalk.white(`Connecting to remote environment at: ${result.url}`),
   );
-  await launchRemoteTUI(result.url, prompt);
+  await launchRemoteTUI(result.url, prompt, result.id);
 }
 
 function buildAgentRequestBody(
@@ -199,12 +199,16 @@ async function fetchAgentTunnel(agentId: string) {
   }
 }
 
-async function launchRemoteTUI(remoteUrl: string, prompt: string | undefined) {
+async function launchRemoteTUI(
+  remoteUrl: string,
+  prompt: string | undefined,
+  sessionId?: string,
+) {
   telemetryService.recordSessionStart();
   telemetryService.startActiveTime();
 
   try {
-    await startRemoteTUIChat(remoteUrl, prompt);
+    await startRemoteTUIChat(remoteUrl, prompt, sessionId);
   } finally {
     telemetryService.stopActiveTime();
   }

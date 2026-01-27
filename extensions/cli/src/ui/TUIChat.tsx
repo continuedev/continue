@@ -40,6 +40,7 @@ import {
 interface TUIChatProps {
   // Remote mode props
   remoteUrl?: string;
+  remoteSessionId?: string;
 
   // Local mode props - now optional since we'll get them from services
   configPath?: string;
@@ -186,6 +187,7 @@ function useChatHandlers(
 // eslint-disable-next-line complexity
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
+  remoteSessionId,
   configPath,
   initialPrompt,
   resume,
@@ -289,6 +291,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    remoteSessionId,
     onShowDiff: handleShowDiff,
     onShowStatusMessage: handleShowStatusMessage,
   });

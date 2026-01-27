@@ -128,6 +128,7 @@ export async function startTUIChat(
 export async function startRemoteTUIChat(
   remoteUrl: string,
   initialPrompt?: string,
+  remoteSessionId?: string,
 ) {
   // Critical safeguard: Prevent TUI initialization in TTY-less environment
   if (isTTYless()) {
@@ -157,6 +158,7 @@ export async function startRemoteTUIChat(
     React.createElement(ServiceContainerProvider, {
       children: React.createElement(AppRoot, {
         remoteUrl,
+        remoteSessionId,
         initialPrompt,
       }),
     }),
