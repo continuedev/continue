@@ -290,6 +290,7 @@ export interface BaseSessionMetadata {
   title: string;
   dateCreated: string;
   workspaceDirectory: string;
+  messageCount?: number;
 }
 
 export interface RangeInFile {
