@@ -15,9 +15,9 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
+import { setReasoningSetting } from "../../redux/slices/uiSlice";
 import { exitEdit } from "../../redux/thunks/edit";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { setLocalStorage } from "../../util/localStorage";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
@@ -140,9 +140,11 @@ function InputToolbar(props: InputToolbarProps) {
                 onClick={() => {
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled));
                   if (defaultModel?.title) {
-                    setLocalStorage(
-                      `hasReasoningEnabled_${defaultModel.title}`,
-                      !hasReasoningEnabled,
+                    dispatch(
+                      setReasoningSetting({
+                        modelTitle: defaultModel.title,
+                        enabled: !hasReasoningEnabled,
+                      }),
                     );
                   }
                 }}

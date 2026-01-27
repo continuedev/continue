@@ -31,7 +31,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -42,6 +42,9 @@ function ParallelListeners() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
+  );
+  const reasoningSettings = useAppSelector(
+    (store) => store.ui.reasoningSettings,
   );
   const hasDoneInitialConfigLoad = useRef(false);
 
@@ -88,8 +91,8 @@ function ParallelListeners() {
       const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
-      const wasReasoningPreviouslyEnabled = chatModel
-        ? getLocalStorage(`hasReasoningEnabled_${chatModel.title}`) !== false
+      const wasReasoningPreviouslyEnabled = chatModel?.title
+        ? reasoningSettings[chatModel.title] !== false
         : true;
       dispatch(
         setHasReasoningEnabled(
@@ -99,7 +102,7 @@ function ParallelListeners() {
         ),
       );
     },
-    [dispatch, hasDoneInitialConfigLoad, selectedProfileId],
+    [dispatch, hasDoneInitialConfigLoad, selectedProfileId, reasoningSettings],
   );
 
   // Load config from the IDE
