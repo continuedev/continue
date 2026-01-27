@@ -336,18 +336,47 @@ describe("hubLoader", () => {
   });
 
   describe("Real Hub Integration Tests", () => {
+    // These tests make real HTTP calls to external services
+    // They need higher retry counts and longer timeouts for CI reliability
+
+    // Wrap fetch with retry logic for flaky network conditions
+    const fetchWithRetry = async (
+      url: string,
+      options?: RequestInit,
+      maxRetries = 5,
+    ): Promise<Response> => {
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await originalFetch(url, options);
+          return response;
+        } catch (error) {
+          lastError = error as Error;
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+          const delay = Math.min(1000 * Math.pow(2, attempt), 16000);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+      throw lastError;
+    };
+
     // Restore real fetch and JSZip for these tests
     beforeEach(async () => {
       vi.clearAllMocks();
-      // Restore the original fetch
-      global.fetch = originalFetch;
+      // Use fetch with retry for network resilience
+      global.fetch = fetchWithRetry as typeof fetch;
       // Unmock JSZip to use the real implementation
       vi.unmock("jszip");
     });
 
+    afterEach(() => {
+      // Restore original fetch after each test
+      global.fetch = originalFetch;
+    });
+
     it(
       "should load rule from real hub: sanity/sanity-opinionated",
-      { retry: 3, timeout: 30000 },
+      { retry: 5, timeout: 60000 },
       async () => {
         const result = await loadPackageFromHub(
           "sanity/sanity-opinionated",
@@ -364,12 +393,8 @@ describe("hubLoader", () => {
 
     it(
       "should load MCP from real hub: upstash/context7-mcp",
-      { retry: 3, timeout: 30000 },
+      { retry: 5, timeout: 60000 },
       async () => {
-        // Restore real fetch and JSZip for this test
-        global.fetch = originalFetch;
-        vi.unmock("jszip");
-
         const testSlug = "upstash/context7-mcp";
         const result = await loadPackageFromHub(testSlug, mcpProcessor);
 
@@ -386,12 +411,8 @@ describe("hubLoader", () => {
 
     it(
       "should load model from real hub: openai/gpt-5",
-      { retry: 3, timeout: 30000 },
+      { retry: 5, timeout: 60000 },
       async () => {
-        // Restore real fetch and JSZip for this test
-        global.fetch = originalFetch;
-        vi.unmock("jszip");
-
         const testSlug = "openai/gpt-5";
         const result = await loadPackageFromHub(testSlug, modelProcessor);
 
@@ -410,7 +431,7 @@ describe("hubLoader", () => {
 
     it(
       "should load prompt from real hub: launchdarkly/using-flags",
-      { retry: 3, timeout: 30000 },
+      { retry: 5, timeout: 60000 },
       async () => {
         const result = await loadPackageFromHub(
           "launchdarkly/using-flags",

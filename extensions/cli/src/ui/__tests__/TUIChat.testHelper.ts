@@ -432,8 +432,9 @@ export async function waitForNextRender(): Promise<void> {
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setImmediate(resolve));
   // Add a delay to allow Ink terminal UI to render
-  // CI environments are slower, so we need a longer delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  // CI environments (especially macOS) are slower, so we need a longer delay
+  // Using 800ms to provide buffer for slower CI runners
+  await new Promise((resolve) => setTimeout(resolve, 800));
 }
 
 /**
@@ -459,20 +460,37 @@ export function expectNormalMode(frame: string | undefined) {
 }
 
 /**
- * Helper to wait for a condition to be true
- * similar to `waitFor` in testing libraries
+ * Helper to wait for a condition to be true using Vitest's vi.waitFor
+ * This is the recommended pattern for async testing in Vitest.
+ *
+ * Uses vi.waitFor internally which properly handles:
+ * - Retrying until condition is met
+ * - Timeout handling with clear error messages
+ * - Integration with Vitest's test runner
+ *
+ * @see https://vitest.dev/api/vi.html#vi-waitfor
+ * @see https://github.com/vadimdemedes/ink-testing-library/issues/3
+ *
+ * CI environments (especially macOS) are slower, so we use longer
+ * timeouts for reliability.
  */
 export async function waitForCondition(
   conditionFn: () => boolean,
-  timeoutMs = 2000,
-  intervalMs = 50,
+  timeoutMs = 5000, // 5 seconds for CI reliability
+  intervalMs = 100, // Poll every 100ms
 ): Promise<void> {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeoutMs) {
-    if (conditionFn()) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  try {
+    await vi.waitFor(
+      () => {
+        if (!conditionFn()) {
+          throw new Error("Condition not yet met");
+        }
+      },
+      { timeout: timeoutMs, interval: intervalMs },
+    );
+  } catch {
+    // Silently continue - let test assertions provide better error messages
+    // than generic "condition not met" timeouts
   }
 }
 

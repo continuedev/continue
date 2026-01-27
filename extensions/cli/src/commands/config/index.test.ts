@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -154,8 +155,10 @@ context: []
 
   describe("config path resolution", () => {
     it("should construct correct config path", () => {
-      expect(getConfigPath("/home/user/.continue")).toBe(
-        "/home/user/.continue/config.yaml",
+      // Use path.join for cross-platform compatibility (Windows uses backslashes)
+      const continueHome = path.join("/home", "user", ".continue");
+      expect(getConfigPath(continueHome)).toBe(
+        path.join(continueHome, "config.yaml"),
       );
     });
   });
