@@ -3,6 +3,11 @@ title: "Continuous AI: A Developer's Guide"
 description: "Learn how to integrate intelligent automation into development workflows, making AI assistance as natural as syntax highlighting. Implement systematic AI workflows that compound productivity gains over time."
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 Continuous AI is the integration of intelligent automation directly into development workflows, making AI assistance as natural and reliable as syntax highlighting or code completion. Its purpose is to amplify developer intent at every stage of the coding process.
 
 Think of it this way: DevOps automated the mechanical aspects of software delivery—building, testing, deploying. Continuous AI automates the intelligence aspects—understanding context, making suggestions, adapting to patterns, and learning from developer feedback.
@@ -179,7 +184,7 @@ Track how often you need to correct AI output. Lower intervention rates mean hig
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash npm i -g @continuedev/cli ```
+    <CLIInstall />
   </Step>
 
 <Step title="Pick One Workflow">Choose a daily friction point to automate</Step>

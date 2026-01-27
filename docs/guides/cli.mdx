@@ -4,6 +4,11 @@ sidebarTitle: "Continue CLI (cn)"
 description: "Learn how to use Continue's command-line interface for context engineering, automated coding tasks, and headless development workflows with customizable models, rules, and tools"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 `cn` is an open-source, modular coding agent for the command line.
 
 It provides a battle-tested agent loop so you can simply plug in your model, rules, and tools.
@@ -12,15 +17,11 @@ It provides a battle-tested agent loop so you can simply plug in your model, rul
 
 ## Quick Start
 
-<Info>
-  Make sure you have [Node.js 18 or higher
-  installed](https://nodejs.org/en/download/).
-</Info>
+<CLIInstall />
+
+Then start using it:
 
 ```bash
-# Install
-npm i -g @continuedev/cli
-
 # Interactive mode
 cn
 

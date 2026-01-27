@@ -4,6 +4,11 @@ description: "Use Continue and Klavis AI's Strata MCP to automate communication 
 sidebarTitle: "Klavis AI with Continue"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="What You'll Build" icon="wand-magic-sparkles">
   A communication workflow assistant that uses Continue CLI with Klavis AI's Strata MCP to manage and automate multi-platform workflows including Slack and Gmail—all through simple natural language prompts.
 </Card>
@@ -24,9 +29,7 @@ Before starting, ensure you have:
 For all options, first:
 <Steps>
 <Step title="Install Continue CLI">
-  ```bash
-  npm i -g @continuedev/cli
-  ```
+  <CLIInstall />
   </Step>
 
 <Step title="Get Klavis AI's Strata URL">

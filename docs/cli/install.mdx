@@ -4,6 +4,11 @@ description: "Get Continue CLI installed and configured for command-line AI codi
 sidebarTitle: "Install"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <iframe
   width="100%"
   height="400"
@@ -14,18 +19,9 @@ sidebarTitle: "Install"
   allowfullscreen
 ></iframe>
 
-<Info>
-  Make sure you have [Node.js 18 or higher
-  installed](https://nodejs.org/en/download/).
-</Info>
-
 ## Installation
 
-Install Continue CLI globally using npm:
-
-```bash
-npm i -g @continuedev/cli
-```
+<CLIInstall />
 
 ## Two Ways to Use Continue CLI
 

@@ -4,6 +4,11 @@ description: "Use Continue and the Atlassian Rovo MCP to search, summarize, and 
 sidebarTitle: "Atlassian Workflows with Continue"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="What You'll Build" icon="atlassian">
   An Atlassian workflow assistant that uses Continue with the Atlassian Rovo MCP to:
   - Search and summarize Jira issues across projects
@@ -36,9 +41,7 @@ Before starting, ensure you have:
 For all options, first:
 <Steps>
 <Step title="Install Continue CLI">
-  ```bash
-  npm i -g @continuedev/cli
-  ```
+  <CLIInstall />
   </Step>
 
 <Step title="Understand OAuth Flow">

@@ -4,6 +4,11 @@ description: "Set up an AI-powered content management workflow that helps you ma
 sidebarTitle: "Sanity CMS with Continue"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="What You'll Build" icon="database">
   An AI-powered content management system workflow that uses Continue's AI agent with Sanity
   MCP to manage schemas, execute GROQ queries, handle migrations, and maintain documentation - all through simple natural language prompts
@@ -22,9 +27,7 @@ Before starting, ensure you have:
 For all options, first:
 <Steps>
 <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
 
 <Step title="Install Sanity CLI">
