@@ -77,6 +77,62 @@ cn ls --json
 - `cn logout`: Sign out of current session
 - `cn remote`: Launch a remote instance
 - `cn serve`: Start HTTP server mode
+- `cn config`: Manage configuration file (see below)
+
+### Configuration Management (`cn config`)
+
+Manage your `config.yaml` file programmatically. Works with any OpenAI-compatible API.
+
+```bash
+# Verify configured models exist on provider
+cn config verify --provider openai
+
+# Sync config - remove models that don't exist
+cn config sync --provider openai --dry-run
+cn config sync --provider openai
+
+# List available models
+cn config list --provider openai --chat-only
+
+# Add/remove models
+cn config add gpt-4o --provider openai --role chat
+cn config remove gpt-3.5-turbo
+
+# Generate fresh config from available models
+cn config generate --provider openai --chat-only
+
+# Compare config to available models
+cn config diff --provider openai
+
+# Backup management
+cn config backups
+cn config restore config.backup-2026-01-27.yaml
+
+# JSON output for scripting
+cn config list --provider openai --json
+```
+
+**Subcommands:**
+
+| Command            | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `verify`           | Check if configured models exist on provider      |
+| `sync`             | Remove unavailable models (`--dry-run` supported) |
+| `validate`         | Validate config file structure                    |
+| `sections`         | Show config sections                              |
+| `list`             | List available models from provider               |
+| `test`             | Test each chat model with sample prompt           |
+| `add <model>`      | Add model with `--name`, `--role` options         |
+| `remove <model>`   | Remove model from config                          |
+| `generate`         | Bootstrap config from available models            |
+| `show`             | Display current config                            |
+| `diff`             | Compare config vs available models                |
+| `backups`          | List backup files                                 |
+| `restore <backup>` | Restore from backup                               |
+
+**Provider Presets:** `--provider` accepts: `openai`, `anthropic`, `azure`, `ollama`, `together`, `groq`, `mistral`
+
+**Filter Options:** `--chat-only`, `--embed-only`, `--rerank-only`, `--filter <pattern>`
 
 ### Session Listing (`cn ls`)
 
