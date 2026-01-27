@@ -142,7 +142,7 @@ export class HistoryManager {
 
       let found = false;
       const messageCount = session.history.filter(
-        (item) => item.message.role === "user",
+        (item) => item.message.role === "assistant",
       ).length;
       for (const sessionMetadata of sessionsList) {
         if (sessionMetadata.sessionId === session.sessionId) {
