@@ -83,7 +83,7 @@ export function OnboardingProvidersTab({
                     className="w-full"
                     {...formMethods.register(`${config?.provider}_apiKey`)}
                   />
-                  <span className="text-description-muted mt-1 block text-xs text-gray-400">
+                  <span className="text-description-muted text-input-placeholder mt-1 block text-xs">
                     <a
                       href={config?.apiKeyUrl}
                       target="_blank"
@@ -109,7 +109,7 @@ export function OnboardingProvidersTab({
               </Button>
 
               <div className="w-full text-center">
-                <span className="text-description text-gray-400">
+                <span className="text-description text-input-placeholder">
                   <span
                     className="cursor-pointer underline hover:brightness-125"
                     onClick={handleClickMoreProviders}
