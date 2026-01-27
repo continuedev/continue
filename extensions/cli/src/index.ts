@@ -6,6 +6,7 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
+import { registerConfigCommand } from "./commands/config/index.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
@@ -323,6 +324,9 @@ program
     await posthogService.capture("cliCommand", { command: "logout" });
     await logout();
   });
+
+// Config subcommand group (verify, sync, sections, validate, list, test)
+registerConfigCommand(program);
 
 // List sessions subcommand
 program
