@@ -11,6 +11,7 @@ type LocalStorageTypes = {
   vsCodeUriScheme: string;
   fontSize: number;
   [key: `inputHistory_${string}`]: JSONContent[];
+  [key: `inputDraft_${string}`]: JSONContent;
   extensionVersion: string;
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
