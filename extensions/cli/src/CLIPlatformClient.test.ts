@@ -337,6 +337,70 @@ describe("CLIPlatformClient", () => {
       });
     });
 
+    it("prioritizes .env file over process.env when both have the secret", async () => {
+      // This tests the correct priority order: .env files should be checked BEFORE process.env
+      // This matches the IDE's LocalPlatformClient behavior
+      const fqsn: FQSN = {
+        packageSlugs: [{ ownerSlug: "", packageSlug: "" }],
+        secretName: "API_KEY",
+      };
+
+      // Secret is in BOTH process.env AND .env file with DIFFERENT values
+      vi.stubEnv("API_KEY", "process-env-value");
+
+      // Mock .env file to return a different value
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue("API_KEY=dotenv-file-value\n");
+
+      const client = new CLIPlatformClient(null, mockApiClient as any);
+      const results = await client.resolveFQSNs([fqsn]);
+
+      // Should not call API since local env has the secret
+      expect(mockApiClient.syncSecrets).not.toHaveBeenCalled();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        found: true,
+        // The .env file value should be used, NOT the process.env value
+        value: "dotenv-file-value",
+        secretLocation: {
+          secretType: SecretType.LocalEnv,
+          secretName: "API_KEY",
+        },
+      });
+    });
+
+    it("falls back to process.env when .env file does not have the secret", async () => {
+      // .env file exists but doesn't have this specific secret
+      const fqsn: FQSN = {
+        packageSlugs: [{ ownerSlug: "", packageSlug: "" }],
+        secretName: "ONLY_IN_PROCESS_ENV",
+      };
+
+      // Secret is only in process.env
+      vi.stubEnv("ONLY_IN_PROCESS_ENV", "from-process-env");
+
+      // Mock .env file to exist but not contain this secret
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue("OTHER_KEY=other-value\n");
+
+      const client = new CLIPlatformClient(null, mockApiClient as any);
+      const results = await client.resolveFQSNs([fqsn]);
+
+      // Should not call API since process.env has the secret
+      expect(mockApiClient.syncSecrets).not.toHaveBeenCalled();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        found: true,
+        value: "from-process-env",
+        secretLocation: {
+          secretType: SecretType.LocalEnv,
+          secretName: "ONLY_IN_PROCESS_ENV",
+        },
+      });
+    });
+
     it("falls back to API for file-based FQSN when not in local env", async () => {
       // File-based FQSN with empty package slugs
       const fqsn: FQSN = {
