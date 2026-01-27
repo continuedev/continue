@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -65,17 +66,17 @@ describe("configModels", () => {
 
   describe("getConfigPath", () => {
     it("should return config.yaml path", () => {
-      expect(getConfigPath("/home/user/.continue")).toBe(
-        "/home/user/.continue/config.yaml",
+      const continueHome = path.join("/home", "user", ".continue");
+      expect(getConfigPath(continueHome)).toBe(
+        path.join(continueHome, "config.yaml"),
       );
     });
   });
 
   describe("getEnvPath", () => {
     it("should return .env path", () => {
-      expect(getEnvPath("/home/user/.continue")).toBe(
-        "/home/user/.continue/.env",
-      );
+      const continueHome = path.join("/home", "user", ".continue");
+      expect(getEnvPath(continueHome)).toBe(path.join(continueHome, ".env"));
     });
   });
 
