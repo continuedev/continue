@@ -18,14 +18,11 @@ import type {
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
 import {
-  customFetch
+  customFetch,
+  chatChunk,
+  usageChatChunk,
+  chatChunkFromDelta,
 } from "../util.js";
-import {
-  BaseLlmApi,
-  CreateRerankResponse,
-  FimCreateParamsStreaming,
-  RerankCreateParams,
-} from "./base.js";
 import {
   createResponsesStreamState,
   fromResponsesChunk,
@@ -33,6 +30,12 @@ import {
   responseToChatCompletion,
   toResponsesParams,
 } from "./openaiResponses.js";
+import {
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
