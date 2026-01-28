@@ -6,8 +6,11 @@ NODE_OPTIONS := --max-old-space-size=4096
 export NODE_OPTIONS
 
 ROOT_DIR := $(CURDIR)
+CORE_DIR := $(ROOT_DIR)/core
+GUI_DIR := $(ROOT_DIR)/gui
 VSCODE_DIR := $(ROOT_DIR)/extensions/vscode
 VSIX_DIR := $(VSCODE_DIR)/build
+VSIX := $(shell ls $(VSIX_DIR)/continue-*.vsix 2>/dev/null | head -n 1)
 
 # ============================
 # Default target
@@ -17,66 +20,76 @@ VSIX_DIR := $(VSCODE_DIR)/build
 all: build
 
 # ============================
-# Build targets
+# Build
 # ============================
 
 .PHONY: build
-build: build-deps build-vscode
+build: deps build-core build-gui build-vscode
 	@echo "==> Build complete"
 
-.PHONY: build-deps
-build-deps:
+# ----------------------------
+# Dependencies
+# ----------------------------
+
+.PHONY: deps
+deps:
 	@echo "==> Installing root dependencies"
 	npm install
 
-	@echo "==> Building core"
-	npx tsc -p core/tsconfig.json --pretty false
+# ----------------------------
+# Core
+# ----------------------------
 
+.PHONY: build-core
+build-core:
+	@echo "==> Building core"
+	cd $(CORE_DIR) && npm install
+	cd $(CORE_DIR) && npm run build
+
+# ----------------------------
+# GUI
+# ----------------------------
+
+.PHONY: build-gui
+build-gui:
 	@echo "==> Building GUI"
-	npx tsc -p gui/tsconfig.json --pretty false
+	cd $(GUI_DIR) && npm install
+	cd $(GUI_DIR) && npm run build
+
+# ----------------------------
+# VS Code Extension
+# ----------------------------
 
 .PHONY: build-vscode
 build-vscode:
-	@echo "==> Installing VSCode extension dependencies"
+	@echo "==> Building VSCode extension"
 	cd $(VSCODE_DIR) && npm install
-
-	@echo "==> Packaging VSCode extension"
 	cd $(VSCODE_DIR) && npm run package
 
 # ============================
-# Install target
+# Install
 # ============================
 
 .PHONY: install
 install:
-	@VSIX=$$(ls $(VSIX_DIR)/continue-*.vsix 2>/dev/null | head -n 1); \
-	if [ -z "$$VSIX" ]; then \
+	@if [ -z "$(VSIX)" ]; then \
 		echo "ERROR: VSIX not found. Run 'make build' first."; \
 		exit 1; \
-	fi; \
-	echo "==> Installing VSCode extension"; \
-	code --install-extension "$$VSIX" --force
+	fi
+	@echo "==> Installing VSCode extension"
+	code --install-extension "$(VSIX)"
 
 # ============================
-# Clean targets
+# Clean
 # ============================
 
 .PHONY: clean
-clean: clean-build clean-node
-	@echo "==> Clean complete"
-
-.PHONY: clean-build
-clean-build:
+clean:
 	@echo "==> Removing build artifacts"
+	rm -rf node_modules
+	rm -rf $(CORE_DIR)/node_modules
+	rm -rf $(GUI_DIR)/node_modules
+	rm -rf $(VSCODE_DIR)/node_modules
 	rm -rf $(VSIX_DIR)
 	rm -rf $(VSCODE_DIR)/out
-	rm -rf core/dist
-	rm -rf gui/dist
-
-.PHONY: clean-node
-clean-node:
-	@echo "==> Removing node_modules"
-	rm -rf node_modules
-	rm -rf core/node_modules
-	rm -rf gui/node_modules
-	rm -rf $(VSCODE_DIR)/node_modules
+	rm -rf $(GUI_DIR)/dist $(GUI_DIR)/build
