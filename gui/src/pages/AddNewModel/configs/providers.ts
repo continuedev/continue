@@ -1167,4 +1167,36 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
   },
+  nous: {
+    title: "Nous Research",
+    provider: "nous",
+    refPage: "nous",
+    description:
+      "Nous Research provides Hermes models via an OpenAI-compatible API with advanced reasoning capabilities.",
+    longDescription:
+      "Nous Research offers Hermes models including Hermes 3 and Hermes 4 with strong instruction following and reasoning. Get an API key at [portal.nousresearch.com](https://portal.nousresearch.com).",
+    icon: "nous.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "https://inference-api.nousresearch.com/v1",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nous Research API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.hermes43_36b,
+      models.hermes4_70b,
+      models.hermes4_405b,
+      models.hermes3Llama31_70b,
+      models.hermes3Llama31_405b,
+    ],
+    apiKeyUrl: "https://portal.nousresearch.com",
+  },
 };
