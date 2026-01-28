@@ -39,9 +39,25 @@ export function ToolPoliciesGroup({
   const toolGroupSettings = useAppSelector(
     (state) => state.ui.toolGroupSettings,
   );
+  const toolSettings = useAppSelector((state) => state.ui.toolSettings);
   const isGroupEnabled = useMemo(() => {
     return toolGroupSettings[groupName] !== "exclude";
   }, [toolGroupSettings, groupName]);
+
+  const { enabledCount, totalCount } = useMemo(() => {
+    const total = tools.length;
+    const enabled = tools.filter(
+      (tool) => toolSettings[tool.function.name] !== "disabled",
+    ).length;
+    return { enabledCount: enabled, totalCount: total };
+  }, [tools, toolSettings]);
+
+  const badgeText = useMemo(() => {
+    if (enabledCount === totalCount) {
+      return totalCount.toString();
+    }
+    return `${enabledCount}/${totalCount}`;
+  }, [enabledCount, totalCount]);
 
   return (
     <Card className="flex flex-1 flex-col p-0">
@@ -60,8 +76,8 @@ export function ToolPoliciesGroup({
               <WrenchScrewdriverIcon className="h-4 w-4 flex-shrink-0" />
             )}
             <span className="text-sm font-semibold">{displayName}</span>
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-600 px-0.5 text-xs font-medium text-white">
-              {tools.length}
+            <div className="flex h-5 min-w-5 items-center justify-center rounded-md bg-gray-600 px-1 text-xs font-medium text-white">
+              {badgeText}
             </div>
           </div>
         </div>
