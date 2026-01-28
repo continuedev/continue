@@ -7,6 +7,8 @@ export interface ErrorAnalysis {
   modelTitle: string;
   providerName: string;
   apiKeyUrl?: string;
+  helpUrl?: string;
+  hideGithubIssue?: boolean;
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
@@ -66,6 +68,8 @@ export function analyzeError(
 
   let message: undefined | string = undefined;
   let statusCode: undefined | number = undefined;
+  let helpUrl: undefined | string = undefined;
+  let hideGithubIssue: undefined | boolean = undefined;
 
   // Attempt to get error message and status code from error
   if (
@@ -97,6 +101,19 @@ export function analyzeError(
     }
   }
 
+  // Check for OpenAI organization verification error
+  if (
+    message &&
+    message.toLowerCase().includes("openai") &&
+    message
+      .toLowerCase()
+      .includes("organization must be verified to generate reasoning summaries")
+  ) {
+    helpUrl =
+      "https://help.openai.com/en/articles/10910291-api-organization-verification";
+    hideGithubIssue = true;
+  }
+
   return {
     parsedError,
     statusCode,
@@ -104,5 +121,7 @@ export function analyzeError(
     modelTitle,
     providerName,
     apiKeyUrl,
+    helpUrl,
+    hideGithubIssue,
   };
 }
