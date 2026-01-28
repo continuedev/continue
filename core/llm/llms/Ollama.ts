@@ -591,7 +591,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-     // Air-gapped enforcement
+    // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
@@ -637,7 +637,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-     // Air-gapped enforcement
+    // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
@@ -668,7 +668,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       "Content-Type": "application/json",
     };
 
-     // Air-gapped enforcement
+    // Air-gapped enforcement
     this.apiBase = AIRGAPPED_OLLAMA_BASE;
     this.apiKey = undefined;
 
@@ -703,11 +703,14 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     progressReporter?: (task: string, increment: number, total: number) => void,
   ): Promise<any> {
-    throw new Error("Model installation is disabled in air-gapped builds. Models must be preloaded.");
+    throw new Error(
+      "Model installation is disabled in air-gapped builds. Models must be preloaded.",
+    );
   }
 
   public async isInstallingModel(modelName: string): Promise<boolean> {
     return false;
+  }
 }
 
 export default Ollama;

@@ -1,65 +1,82 @@
-# ---------
-# Globals
-# ---------
-SHELL := /bin/bash
-NODE_HEAP_MB ?= 4096
-export NODE_OPTIONS := --max-old-space-size=$(NODE_HEAP_MB)
+# ============================
+# Configuration
+# ============================
 
-ROOT := $(shell pwd)
-CORE_DIR := core
-GUI_DIR := gui
-VSCODE_DIR := extensions/vscode
-VSIX := $(VSCODE_DIR)/build/continue-*.vsix
+NODE_OPTIONS := --max-old-space-size=4096
+export NODE_OPTIONS
 
-.DEFAULT_GOAL := build
+ROOT_DIR := $(CURDIR)
+VSCODE_DIR := $(ROOT_DIR)/extensions/vscode
+VSIX_DIR := $(VSCODE_DIR)/build
 
-# ---------
-# Build
-# ---------
+# ============================
+# Default target
+# ============================
+
+.PHONY: all
+all: build
+
+# ============================
+# Build targets
+# ============================
+
 .PHONY: build
-build: build-core build-gui package
+build: build-deps build-vscode
+	@echo "==> Build complete"
 
-.PHONY: build-core
-build-core:
+.PHONY: build-deps
+build-deps:
+	@echo "==> Installing root dependencies"
+	npm install
+
 	@echo "==> Building core"
-	cd $(CORE_DIR) && npm install
-	cd $(CORE_DIR) && npm run build
+	npx tsc -p core/tsconfig.json --pretty false
 
-.PHONY: build-gui
-build-gui:
 	@echo "==> Building GUI"
-	cd $(GUI_DIR) && npm install
-	cd $(GUI_DIR) && npm run build
+	npx tsc -p gui/tsconfig.json --pretty false
 
-# ---------
-# Package VSCode Extension
-# ---------
-.PHONY: package
-package:
-	@echo "==> Packaging VSCode extension"
+.PHONY: build-vscode
+build-vscode:
+	@echo "==> Installing VSCode extension dependencies"
 	cd $(VSCODE_DIR) && npm install
-	cd $(VSCODE_DIR) && npm run prepackage
+
+	@echo "==> Packaging VSCode extension"
 	cd $(VSCODE_DIR) && npm run package
 
-# ---------
-# Install
-# ---------
+# ============================
+# Install target
+# ============================
+
 .PHONY: install
 install:
-	@echo "==> Installing VSCode extension"
-	code --install-extension $(VSIX) --force
+	@VSIX=$$(ls $(VSIX_DIR)/continue-*.vsix 2>/dev/null | head -n 1); \
+	if [ -z "$$VSIX" ]; then \
+		echo "ERROR: VSIX not found. Run 'make build' first."; \
+		exit 1; \
+	fi; \
+	echo "==> Installing VSCode extension"; \
+	code --install-extension "$$VSIX" --force
 
-# ---------
-# Clean
-# ---------
+# ============================
+# Clean targets
+# ============================
+
 .PHONY: clean
-clean:
-	@echo "==> Cleaning workspace"
-	rm -rf node_modules
-	rm -rf $(CORE_DIR)/node_modules
-	rm -rf $(GUI_DIR)/node_modules
-	rm -rf $(VSCODE_DIR)/node_modules
-	rm -rf $(GUI_DIR)/dist
+clean: clean-build clean-node
+	@echo "==> Clean complete"
+
+.PHONY: clean-build
+clean-build:
+	@echo "==> Removing build artifacts"
+	rm -rf $(VSIX_DIR)
 	rm -rf $(VSCODE_DIR)/out
-	rm -rf $(VSCODE_DIR)/build
-	rm -rf **/tsconfig.tsbuildinfo
+	rm -rf core/dist
+	rm -rf gui/dist
+
+.PHONY: clean-node
+clean-node:
+	@echo "==> Removing node_modules"
+	rm -rf node_modules
+	rm -rf core/node_modules
+	rm -rf gui/node_modules
+	rm -rf $(VSCODE_DIR)/node_modules

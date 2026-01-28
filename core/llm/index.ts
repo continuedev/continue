@@ -1,9 +1,9 @@
 import { ModelRole } from "@continuedev/config-yaml";
-import { fetchWithRequestOptions } from "@continuedev/fetch";
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
-  ChatCompletionCreateParams
+  ChatCompletionCreateParams,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
@@ -202,14 +202,14 @@ export abstract class BaseLLM implements ILLM {
   protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
-  if (
-    (this.constructor as typeof BaseLLM).providerName !== "ollama" &&
-    (this.constructor as typeof BaseLLM).providerName !== "llmReranker"
-  ) {
-    throw new Error(
-      `Provider ${(this.constructor as typeof BaseLLM).providerName} is disabled in air-gapped build`
-    );
-  }
+    if (
+      (this.constructor as typeof BaseLLM).providerName !== "ollama" &&
+      (this.constructor as typeof BaseLLM).providerName !== "llmReranker"
+    ) {
+      throw new Error(
+        `Provider ${(this.constructor as typeof BaseLLM).providerName} is disabled in air-gapped build`,
+      );
+    }
 
     this._llmOptions = _options;
     this.lastRequestId = undefined;
@@ -311,7 +311,7 @@ export abstract class BaseLLM implements ILLM {
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
-  
+
     // Air-gapped enforcement: ignore all external API configuration
     this.apiKey = undefined;
     this.apiBase = undefined;
@@ -479,7 +479,7 @@ export abstract class BaseLLM implements ILLM {
       }
 
       try {
-        const resp = await fetchWithRequestOptions(
+        const resp = await fetchwithRequestOptions(
           new URL(input as any),
           { ...init },
           { ...this.requestOptions },
