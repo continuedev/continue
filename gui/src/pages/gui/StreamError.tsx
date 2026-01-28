@@ -230,7 +230,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         {selectedModel ? (
           <span>
             {`Provider: `}
-            <code>{selectedModel.provider}</code>
+            <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
         {/* TODO: status page links for providers? */}
