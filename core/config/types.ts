@@ -302,6 +302,7 @@ declare global {
       name: string;
       arguments: string;
     };
+    responsesOutputItemId?: string;
   }
   
   export interface ToolCallDelta {
@@ -311,6 +312,7 @@ declare global {
       name?: string;
       arguments?: string;
     };
+    responsesOutputItemId?: string;
   }
   
   export interface ToolResultChatMessage {

@@ -774,6 +774,7 @@ function toResponseInputContentList(
   return list;
 }
 
+// eslint-disable-next-line complexity
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
 
@@ -816,22 +817,34 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         const respId = msg.metadata?.responsesOutputItemId as
           | string
           | undefined;
+
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
 
-        if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-          // Emit full function_call output item
-          const tc = toolCalls[0];
-          const name = tc?.function?.name as string | undefined;
-          const args = tc?.function?.arguments as string | undefined;
-          const call_id = tc?.id as string | undefined;
-          const functionCallItem: ResponseFunctionToolCall = {
-            id: respId,
-            type: "function_call",
-            name: name || "",
-            arguments: typeof args === "string" ? args : "{}",
-            call_id: call_id || respId,
-          };
-          input.push(functionCallItem);
+        if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+          // Emit one function_call item per recorded tool call,
+          // prefer per-tool responsesOutputItemId when available
+          for (const tc of toolCalls) {
+            const name = tc?.function?.name as string | undefined;
+            const args = tc?.function?.arguments as string | undefined;
+            const tcRespId = (tc as any).responsesOutputItemId as
+              | string
+              | undefined;
+            const callId = tc?.id as string | undefined;
+            const rawItemId = tcRespId || respId || callId;
+            const itemId = rawItemId
+              ? rawItemId.startsWith("fc")
+                ? rawItemId
+                : `fc_${rawItemId}`
+              : undefined;
+            const functionCallItem: ResponseFunctionToolCall = {
+              id: itemId,
+              type: "function_call",
+              name: name || "",
+              arguments: typeof args === "string" ? args : "{}",
+              call_id: callId || tcRespId || respId || "",
+            };
+            input.push(functionCallItem);
+          }
         } else if (respId) {
           // Emit full assistant output message item
           const outputMessageItem: ResponseOutputMessage = {
