@@ -1,0 +1,95 @@
+---
+title: Nous Research
+slug: ../nous
+---
+
+<Tip>
+  **Discover Nous Research Hermes models for advanced reasoning and instruction following**
+</Tip>
+
+<Info>
+  You can get an API key from the [Nous Research Portal](https://portal.nousresearch.com/).
+</Info>
+
+## Available Models
+
+| Model | Context Length | Description |
+|-------|----------------|-------------|
+| `Hermes-4.3-36B` | 128k | Compact reasoning model with thinking capabilities |
+| `Hermes-4-70B` | 128k | Large reasoning model with 128k context |
+| `Hermes-4-405B` | 128k | Flagship reasoning model |
+| `Hermes-3-Llama-3.1-70B` | 32k | Instruction-tuned on Llama 3.1 70B |
+| `Hermes-3-Llama-3.1-405B` | 32k | Instruction-tuned on Llama 3.1 405B |
+
+## Configuration
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: Hermes 4.3 36B
+       provider: nous
+       model: Hermes-4.3-36B
+       apiKey: <YOUR_NOUS_API_KEY>
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "Hermes 4.3 36B",
+         "provider": "nous",
+         "model": "Hermes-4.3-36B",
+         "apiKey": "<YOUR_NOUS_API_KEY>"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Reasoning Mode
+
+Hermes 4 and DeepHermes models support reasoning with chain-of-thought. To enable reasoning, use the following system prompt:
+
+```
+You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem.
+```
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: Hermes 4.3 36B (Reasoning)
+       provider: nous
+       model: Hermes-4.3-36B
+       apiKey: <YOUR_NOUS_API_KEY>
+       systemMessage: |
+         You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem.
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "Hermes 4.3 36B (Reasoning)",
+         "provider": "nous",
+         "model": "Hermes-4.3-36B",
+         "apiKey": "<YOUR_NOUS_API_KEY>",
+         "systemMessage": "You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem."
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
