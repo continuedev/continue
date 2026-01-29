@@ -43,6 +43,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     modelTitle,
     providerName,
     apiKeyUrl,
+    helpUrl,
+    hideGithubIssue,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
@@ -284,14 +286,42 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         </div>
       )}
 
-      <div>
-        <span className="text-base font-medium">Report this error</span>
-        <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
-          <GhostButton
-            className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
-            onClick={() => {
-              const issueTitle = `Error: ${selectedModel?.title || "Model"} - ${statusCode || "Unknown error"}`;
-              const issueBody = `**Error Details**
+      {helpUrl ? (
+        <div>
+          <span className="text-base font-medium">
+            Get help with this error
+          </span>
+          <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
+            <GhostButton
+              className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
+              onClick={() => {
+                ideMessenger.post("openUrl", helpUrl);
+              }}
+            >
+              <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+              <span className="xs:flex hidden">View help documentation</span>
+            </GhostButton>
+            <GhostButton
+              className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
+              onClick={() => {
+                ideMessenger.post("openUrl", DISCORD_LINK);
+              }}
+            >
+              <DiscordIcon className="h-5 w-5" />
+              <span className="xs:flex hidden">Discord</span>
+            </GhostButton>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <span className="text-base font-medium">Report this error</span>
+          <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
+            {!hideGithubIssue && (
+              <GhostButton
+                className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
+                onClick={() => {
+                  const issueTitle = `Error: ${selectedModel?.title || "Model"} - ${statusCode || "Unknown error"}`;
+                  const issueBody = `**Error Details**
 
 Model: ${selectedModel?.title || "Unknown"}
 Provider: ${selectedModel?.provider || "Unknown"}
@@ -305,24 +335,26 @@ ${parsedError}
 **Additional Context**
 Please add any additional context about the error here
 `;
-              const url = `https://github.com/continuedev/continue/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
-              ideMessenger.post("openUrl", url);
-            }}
-          >
-            <GithubIcon className="h-5 w-5" />
-            <span className="xs:flex hidden">Open GitHub issue</span>
-          </GhostButton>
-          <GhostButton
-            className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
-            onClick={() => {
-              ideMessenger.post("openUrl", DISCORD_LINK);
-            }}
-          >
-            <DiscordIcon className="h-5 w-5" />
-            <span className="xs:flex hidden">Discord</span>
-          </GhostButton>
+                  const url = `https://github.com/continuedev/continue/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+                  ideMessenger.post("openUrl", url);
+                }}
+              >
+                <GithubIcon className="h-5 w-5" />
+                <span className="xs:flex hidden">Open GitHub issue</span>
+              </GhostButton>
+            )}
+            <GhostButton
+              className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
+              onClick={() => {
+                ideMessenger.post("openUrl", DISCORD_LINK);
+              }}
+            >
+              <DiscordIcon className="h-5 w-5" />
+              <span className="xs:flex hidden">Discord</span>
+            </GhostButton>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
