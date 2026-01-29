@@ -64,6 +64,25 @@ export function constructMessages(
   const msgs: MessageWithContextItems[] = [];
   let appliedRuleIndex = -1;
   let index = -1;
+
+  // Track tool call IDs that have corresponding tool result messages
+  const toolCallIdsWithResults = new Set<string>();
+  for (const item of historyCopy) {
+    if (item.message.role === "tool") {
+      const toolMessage = item.message as ToolResultChatMessage;
+      if (toolMessage.toolCallId) {
+        toolCallIdsWithResults.add(toolMessage.toolCallId);
+      }
+    }
+    if (item.toolCallStates) {
+      for (const toolCallState of item.toolCallStates) {
+        if (toolCallState.toolCallId) {
+          toolCallIdsWithResults.add(toolCallState.toolCallId);
+        }
+      }
+    }
+  }
+
   for (const item of historyCopy) {
     index++;
     if (
@@ -126,6 +145,24 @@ export function constructMessages(
         ctxItems: item.contextItems,
         message: item.message,
       });
+
+      // Add cancelled tool messages for dangling tool calls
+      if (item.message.toolCalls) {
+        item.message.toolCalls.forEach((toolCall) => {
+          if (toolCall.id && !toolCallIdsWithResults.has(toolCall.id)) {
+            msgs.push({
+              ctxItems: [],
+              message: {
+                role: "tool",
+                content: "Tool cancelled",
+                toolCallId: toolCall.id,
+              },
+            });
+          }
+        });
+      }
+
+      console.log("debug1 msg->", msgs);
 
       // Add a tool message for each tool call
       if (item.toolCallStates?.length) {
