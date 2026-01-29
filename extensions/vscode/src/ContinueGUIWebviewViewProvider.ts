@@ -71,7 +71,10 @@ export class ContinueGUIWebviewViewProvider
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
   ): string {
-    const extensionUri = getExtensionUri();
+    if (!context) {
+      throw new Error("ExtensionContext is not available");
+    }
+    const extensionUri = getExtensionUri(context);
     let scriptUri: string;
     let styleMainUri: string;
     const vscMediaUrl: string = panel.webview

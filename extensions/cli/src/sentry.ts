@@ -29,8 +29,7 @@ class SentryService {
   }
 
   private loadConfig(): SentryConfig {
-    const enabled =
-      process.env.SENTRY_ENABLED !== "false" && !!process.env.SENTRY_DSN;
+    const enabled = false; // Sentry disabled in airgapped mode
 
     return {
       enabled,

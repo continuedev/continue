@@ -21,8 +21,8 @@ export function getNonce() {
   return text;
 }
 
-export function getExtensionUri(): vscode.Uri {
-  return vscode.extensions.getExtension("Continue.continue")!.extensionUri;
+export function getExtensionUri(context: vscode.ExtensionContext): vscode.Uri {
+  return context.extensionUri;
 }
 
 export function getViewColumnOfFile(

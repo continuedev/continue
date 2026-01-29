@@ -281,36 +281,7 @@ export function saveSession(): void {
  * Load session from current terminal's session file
  */
 export function loadSession(): Session | null {
-  try {
-    // For resume, we need to find the most recent session
-    const sessionDir = getSessionDir();
-    if (!fs.existsSync(sessionDir)) {
-      return null;
-    }
-
-    const files = fs
-      .readdirSync(sessionDir)
-      .filter((f) => f.endsWith(".json") && f !== "sessions.json")
-      .map((f) => ({
-        name: f,
-        path: path.join(sessionDir, f),
-        mtime: fs.statSync(path.join(sessionDir, f)).mtime,
-      }))
-      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
-
-    if (files.length === 0) {
-      return null;
-    }
-
-    // Load the most recent session
-    const session: Session = JSON.parse(fs.readFileSync(files[0].path, "utf8"));
-    // Set this as the current session for future saves
-    SessionManager.getInstance().setSession(session);
-    return session;
-  } catch (error) {
-    logger.error("Error loading session:", error);
-    return null;
-  }
+  return null; // No sessions in airgapped mode
 }
 
 /**

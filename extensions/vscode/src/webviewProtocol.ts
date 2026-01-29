@@ -90,10 +90,16 @@ export class VsCodeWebviewProtocol
             // Respond without an error, so the UI doesn't show the error component
             respond({ done: true, status: "error" });
           }
-          let message = e.message;
+
+          let message =
+            typeof e?.message === "string"
+              ? e.message
+              : String(e?.message ?? "");
+
           respond({ done: true, error: message, status: "error" });
 
-          const stringified = JSON.stringify({ msg }, null, 2);
+          const stringified = JSON.stringify({ msg }, null, 2) ?? "";
+
           console.error(
             `Error handling webview message: ${stringified}\n\n${e}`,
           );

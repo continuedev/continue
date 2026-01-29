@@ -507,7 +507,7 @@ async function staticJump(ctx: {
       },
     });
 
-    if (!references || references.length === 0) {
+    if (!Array.isArray(references) || references.length === 0) {
       console.log(`No references found for identifier: ${identifierNode.text}`);
       return null;
     }
