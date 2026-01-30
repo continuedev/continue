@@ -229,10 +229,7 @@ export function getSlashCommandDropdownOptions(
         title: "Explore prompts",
         type: "action",
         action: () =>
-          ideMessenger.post(
-            "openUrl",
-            "https://hub.continue.dev/explore/prompts",
-          ),
+          ideMessenger.post("openUrl", "https://continue.dev/explore/prompts"),
         description: "",
         name: "",
         id: "",

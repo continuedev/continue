@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "Continue",
   "banner": {
-    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
+    "content": "**Introducing [Agents page in Mission Control](https://continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
     "dismissable": true
   },
   "colors": {
@@ -385,7 +385,7 @@
     "links": [
       {
         "label": "🚀 Get Started",
-        "href": "https://hub.continue.dev/"
+        "href": "https://continue.dev/"
       }
     ],
     "primary": {
