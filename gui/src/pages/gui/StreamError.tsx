@@ -230,7 +230,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         {selectedModel ? (
           <span>
             {`Provider: `}
-            <code>{selectedModel.provider}</code>
+            <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
         {/* TODO: status page links for providers? */}
@@ -294,7 +294,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               const issueBody = `**Error Details**
 
 Model: ${selectedModel?.title || "Unknown"}
-Provider: ${selectedModel?.provider || "Unknown"}
+Provider: ${selectedModel ? `${selectedModel.underlyingProviderName}${selectedModel.provider === "continue-proxy" ? " (continue-proxy)" : ""}` : "Unknown"}
 Status Code: ${statusCode || "N/A"}
 
 **Error Output**
