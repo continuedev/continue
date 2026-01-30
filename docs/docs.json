@@ -2,10 +2,6 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
-  "banner": {
-    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
-    "dismissable": true
-  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -20,7 +16,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index", "changelog"]
+            "pages": ["index"]
           },
           {
             "group": "Mission Control",
@@ -423,6 +419,10 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/changelog",
+      "destination": "https://changelog.continue.dev"
+    },
     {
       "source": "/hub",
       "destination": "/mission-control"
