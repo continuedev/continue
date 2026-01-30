@@ -55,13 +55,8 @@ export class CLIPlatformClient implements PlatformClient {
   }
 
   private findSecretInLocalEnvFiles(fqsn: FQSN): SecretResult | undefined {
-    // First check process.env (highest priority)
-    const processEnvSecret = this.findSecretInProcessEnv(fqsn);
-    if (processEnvSecret) {
-      return processEnvSecret;
-    }
-
-    // Then check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
+    // Check .env files FIRST (highest priority), matching IDE behavior
+    // Priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
     const workspaceDir = process.cwd();
     const envPaths = [
       path.join(env.continueHome, ".env"),
@@ -82,6 +77,12 @@ export class CLIPlatformClient implements PlatformClient {
           },
         };
       }
+    }
+
+    // Fall back to process.env if not found in .env files
+    const processEnvSecret = this.findSecretInProcessEnv(fqsn);
+    if (processEnvSecret) {
+      return processEnvSecret;
     }
 
     return undefined;
