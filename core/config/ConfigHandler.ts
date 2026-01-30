@@ -7,10 +7,25 @@ import {
 
 import type { ConfigResult } from "@continuedev/config-yaml";
 import { ModelRole } from "@continuedev/config-yaml";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
 
 import { AIRGAPPED_CONFIG } from "./airgappedConfig";
 
-export type { ProfileDescription } from "./ProfileLifecycleManager";
+import type { ProfileDescription } from "./ProfileLifecycleManager";
+
+const AIRGAPPED_PROFILE_DESCRIPTION: ProfileDescription = {
+  id: "local",
+  title: "Local",
+  fullSlug: {
+    ownerSlug: "local",
+    packageSlug: "local",
+    versionSlug: "local",
+  },
+  profileType: "local",
+  uri: "",
+  iconUrl: "",
+  errors: undefined,
+};
 
 const EMPTY_MODELS: Record<ModelRole, any[]> = {
   chat: [],
@@ -51,80 +66,88 @@ function serializeSlashCommands(
   }));
 }
 
+/**
+ * Convert runtime ILLM → UI ModelDescription
+ */
+function serializeModel(llm: any) {
+  return {
+    title: llm.title ?? llm.model,
+    provider: llm.providerName ?? llm.provider ?? "unknown",
+    underlyingProviderName:
+      llm.underlyingProviderName ?? llm.providerName ?? "unknown",
+    model: llm.model,
+    contextLength: llm.contextLength,
+    completionOptions: llm.completionOptions,
+    capabilities: llm.capabilities,
+    roles: llm.roles,
+    configurationStatus: llm.getConfigurationStatus?.(),
+  };
+}
+
+function serializeModelsByRole(
+  modelsByRole: Record<ModelRole, any[]>,
+): Record<ModelRole, any[]> {
+  const out = {} as Record<ModelRole, any[]>;
+  for (const role of Object.keys(modelsByRole) as ModelRole[]) {
+    out[role] = (modelsByRole[role] ?? []).map(serializeModel);
+  }
+  return out;
+}
+
+function serializeSelectedModelByRole(
+  selected: Record<ModelRole, any | null>,
+): Record<ModelRole, any | null> {
+  const out = {} as Record<ModelRole, any | null>;
+  for (const role of Object.keys(selected) as ModelRole[]) {
+    out[role] = selected[role] ? serializeModel(selected[role]) : null;
+  }
+  return out;
+}
+
+/**
+ * Minimal ConfigHandler for air-gapped mode.
+ * Satisfies ALL Continue core call sites.
+ */
 export class ConfigHandler {
   public isInitialized: Promise<void>;
 
-  // ------------------------------------------------------------------
-  // Required public fields (core expects these)
-  // ------------------------------------------------------------------
-
+  /**
+   * Core reads this in multiple places.
+   * `uri` MUST exist.
+   */
   public currentProfile = {
-    profileDescription: {
-      id: "airgapped",
-      profileType: "local" as const,
-      uri: undefined,
-    },
-
-    modelsByRole: {
-      chat: [],
-      autocomplete: [],
-      embed: [],
-      rerank: [],
-      edit: [],
-      apply: [],
-      summarize: [],
-      subagent: [],
-    } satisfies Record<ModelRole, any[]>,
-
-    selectedModelByRole: {
-      chat: null,
-      autocomplete: null,
-      embed: null,
-      rerank: null,
-      edit: null,
-      apply: null,
-      summarize: null,
-      subagent: null,
-    } satisfies Record<ModelRole, any | null>,
+    profileDescription: AIRGAPPED_PROFILE_DESCRIPTION,
   };
 
   public currentOrg: {
     id: string;
-    profiles: any[];
-  } | null = {
+    profiles: { profileDescription: ProfileDescription }[];
+  } = {
     id: "personal",
     profiles: [],
   };
 
   /**
-   * Stubbed control plane client
-   * Must satisfy ALL call sites in core.ts
+   * Stubbed control plane — MUST exist.
    */
   public controlPlaneClient = {
     shouldEnableRemoteSessions: async () => false,
-
-    listRemoteSessions: async () => {
-      return [];
+    listRemoteSessions: async () => [],
+    loadRemoteSession: async (_remoteId?: string) => {
+      throw new Error("Remote sessions disabled (air-gapped)");
     },
-
-    loadRemoteSession: async (_remoteId: string) => {
-      throw new Error("Remote sessions are disabled in air-gapped mode");
-    },
-
     getCreditStatus: async () => ({
       optedInToFreeTrial: false,
       hasCredits: true,
       creditBalance: Infinity,
       hasPurchasedCredits: true,
     }),
-
     getAccessToken: async () => {
-      throw new Error("Authentication is disabled in air-gapped mode");
+      throw new Error("Auth disabled (air-gapped)");
     },
   };
 
-  // ------------------------------------------------------------------
-
+  // Constructor signature MUST match core/tests
   constructor(
     _ide?: any,
     _llmLogger?: any,
@@ -150,7 +173,7 @@ export class ConfigHandler {
   }
 
   // ------------------------------------------------------------------
-  // Serialized config (for webview/UI)
+  // Serialized config (UI / Webview)
   // ------------------------------------------------------------------
 
   async getSerializedConfig(): Promise<
@@ -160,12 +183,6 @@ export class ConfigHandler {
 
     const serialized: BrowserSerializedContinueConfig = {
       usePlatform: false,
-      slashCommands: serializeSlashCommands(cfg.slashCommands ?? []),
-      contextProviders: (cfg.contextProviders ?? []).map((p) => p.description),
-      tools: cfg.tools ?? [],
-      rules: cfg.rules ?? [],
-      docs: cfg.docs ?? [],
-      mcpServerStatuses: cfg.mcpServerStatuses ?? [],
 
       allowAnonymousTelemetry: cfg.allowAnonymousTelemetry,
       completionOptions: cfg.completionOptions,
@@ -176,9 +193,21 @@ export class ConfigHandler {
       ui: cfg.ui,
       experimental: cfg.experimental,
       analytics: cfg.analytics,
+      docs: cfg.docs,
 
-      modelsByRole: EMPTY_MODELS,
-      selectedModelByRole: EMPTY_SELECTED,
+      slashCommands: serializeSlashCommands(cfg.slashCommands ?? []),
+
+      contextProviders: (cfg.contextProviders ?? []).map((p) => p.description),
+
+      tools: cfg.tools ?? [],
+      rules: cfg.rules ?? [],
+      mcpServerStatuses: cfg.mcpServerStatuses ?? [],
+
+      modelsByRole: serializeModelsByRole(cfg.modelsByRole ?? EMPTY_MODELS),
+
+      selectedModelByRole: serializeSelectedModelByRole(
+        cfg.selectedModelByRole ?? EMPTY_SELECTED,
+      ),
     };
 
     return {
@@ -192,39 +221,39 @@ export class ConfigHandler {
   // Event hooks
   // ------------------------------------------------------------------
 
-  onConfigUpdate(_listener: (result: ConfigResult<ContinueConfig>) => void) {
-    // no-op — config never changes
-  }
+  onConfigUpdate(
+    _listener: (result: ConfigResult<ContinueConfig>) => void,
+  ): void {}
 
   // ------------------------------------------------------------------
-  // Org / profile APIs (stubbed)
+  // Org / profile APIs
   // ------------------------------------------------------------------
+  getSerializedOrgs(): SerializedOrgWithProfiles[] {
+    if (!this.currentProfile) return [];
 
-  getSerializedOrgs() {
-    return [];
+    return [
+      {
+        id: "personal",
+        name: "Personal",
+        slug: "personal",
+        iconUrl: "",
+        profiles: [this.currentProfile.profileDescription],
+        selectedProfileId: this.currentProfile.profileDescription.id,
+      },
+    ];
   }
 
-  async setSelectedOrgId(_orgId?: string, _profileId?: string) {
-    return;
-  }
+  async setSelectedOrgId(_orgId?: string, _profileId?: string): Promise<void> {}
 
-  async setSelectedProfileId(_profileId?: string) {
-    return;
-  }
+  async setSelectedProfileId(_profileId?: string): Promise<void> {}
 
-  async openConfigProfile(_profileId?: string) {
-    return;
-  }
+  async openConfigProfile(_profileId?: string): Promise<void> {}
 
-  async refreshAll(_reason?: string) {
-    return;
-  }
+  async refreshAll(_reason?: string): Promise<void> {}
 
-  async updateIdeSettings(_settings?: any) {
-    return;
-  }
+  async updateIdeSettings(_settings?: any): Promise<void> {}
 
-  async updateControlPlaneSessionInfo(_info?: any) {
+  async updateControlPlaneSessionInfo(_info?: any): Promise<boolean> {
     return false;
   }
 

@@ -1,6 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
-import type { ProfileDescription } from "core/config/ConfigHandler";
+import type { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { useAppSelector } from "../../redux/hooks";
 import { fontSize } from "../../util";
 import { cn } from "../../util/cn";
