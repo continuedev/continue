@@ -37,6 +37,7 @@ export const requestOptionsSchema = z.object({
   extraBodyProperties: z.record(z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
+  stream: z.boolean().optional(),
 });
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 
@@ -97,6 +98,7 @@ export const modelDescriptionSchema = z.object({
       headers: z.record(z.string()).optional(),
       extraBodyProperties: z.record(z.any()).optional(),
       noProxy: z.array(z.string()).optional(),
+      stream: z.boolean().optional(),
     })
     .optional(),
   promptTemplates: z.record(z.string()).optional(),

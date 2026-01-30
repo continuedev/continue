@@ -1050,6 +1050,7 @@ export interface RequestOptions {
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
   clientCertificate?: ClientCertificateOptions;
+  stream?: boolean;
 }
 
 export interface CacheBehavior {
