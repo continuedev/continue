@@ -40,6 +40,7 @@ import {
 function appendReasoningFieldsIfSupported(
   msg: ChatCompletionAssistantMessageParam & {
     reasoning?: string;
+    reasoning_content?: string;
     reasoning_details?: any[];
   },
   options: CompletionOptions,
@@ -47,13 +48,16 @@ function appendReasoningFieldsIfSupported(
   providerFlags?: {
     includeReasoningField?: boolean;
     includeReasoningDetailsField?: boolean;
+    includeReasoningContentField?: boolean;
   },
 ) {
   if (!prevMessage || prevMessage.role !== "thinking") return;
 
   const includeReasoning = !!providerFlags?.includeReasoningField;
   const includeReasoningDetails = !!providerFlags?.includeReasoningDetailsField;
-  if (!includeReasoning && !includeReasoningDetails) return;
+  const includeReasoningContent = !!providerFlags?.includeReasoningContentField;
+  if (!includeReasoning && !includeReasoningDetails && !includeReasoningContent)
+    return;
 
   const reasoningDetailsValue =
     prevMessage.reasoning_details ||
@@ -84,6 +88,9 @@ function appendReasoningFieldsIfSupported(
   if (includeReasoning) {
     msg.reasoning = prevMessage.content as string;
   }
+  if (includeReasoningContent) {
+    msg.reasoning_content = prevMessage.content as string;
+  }
 }
 
 export function toChatMessage(
@@ -93,6 +100,7 @@ export function toChatMessage(
   providerFlags?: {
     includeReasoningField?: boolean;
     includeReasoningDetailsField?: boolean;
+    includeReasoningContentField?: boolean;
   },
 ): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
@@ -117,6 +125,7 @@ export function toChatMessage(
     // Base assistant message
     const msg: ChatCompletionAssistantMessageParam & {
       reasoning?: string;
+      reasoning_content?: string;
       reasoning_details?: {
         [key: string]: any;
         signature?: string | undefined;
@@ -191,6 +200,7 @@ export function toChatBody(
   providerFlags?: {
     includeReasoningField?: boolean;
     includeReasoningDetailsField?: boolean;
+    includeReasoningContentField?: boolean;
   },
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
