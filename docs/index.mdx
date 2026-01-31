@@ -10,6 +10,11 @@ Agents are markdown prompts describing the standards you want to enforce. They c
 For example, you could use [this agent](https://www.continue.dev/continuedev/code-security-review) as a starting point, or you could create the following file in your repository:
 
 ```markdown .continue/agents/security-review.md
+---
+name: Security Review
+description: Review PR for basic security vulnerabilities
+---
+
 Review this PR and check that:
 
 - No secrets or API keys are hardcoded
