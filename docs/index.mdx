@@ -3,11 +3,11 @@ title: "What is Continue?"
 description: "Run agents as CI checks on every PR"
 ---
 
-Continue lets you create agents that review every pull request. Each agent runs as a GitHub check — green if the code looks good, red with a suggested diff if not.
+Continue lets you create agents that review every pull request. Each agent runs as a GitHub check: green if the code looks good, red with a suggested diff if not.
 
 Agents are markdown prompts describing the standards you want to enforce. They can be defined at [continue.dev](https://continue.dev/agents) or in your repo at `.continue/agents/`.
 
-For example, you could create this file
+For example, you could use [this agent](https://www.continue.dev/continuedev/code-security-review) as a starting point, or you could create the following file in your repository:
 
 ```markdown .continue/agents/security-review.md
 Review this PR and check that:
@@ -17,21 +17,26 @@ Review this PR and check that:
 - Error responses use the standard error format
 ```
 
-or you could use this agent as a starting point.
-
 ## Get started
 
 1. Connect GitHub at [continue.dev](https://continue.dev/)
-2. [Create an agent](https://continue.dev/agents/new) — write your rules in markdown, set the trigger to GitHub
-3. Open a PR and watch it run
+2. [Create an agent](https://continue.dev/agents/new)
+3. Open a PR. The agent will show up as a check in GitHub.
+4. If changes are suggested, click the check in GitHub and accept or reject the suggestion to make the check pass.
 
 ## Example agents
 
 <CardGroup cols={2}>
-  <Card title="Snyk Security Agent" icon="shield-check" href="https://continue.dev/continuedev/snyk-continuous-ai-agent">
-    Scans for dependency vulnerabilities and opens fix PRs.
+  <Card title="Code Security Review" icon="shield-check" href="https://continue.dev/continuedev/code-security-review">
+    Performs a comprehensive security audit for OWASP Top 10 vulnerabilities and security best practices.
   </Card>
-  <Card title="Browse all agents" icon="magnifying-glass" href="https://continue.dev/agents">
-    Pre-built agents on continue.dev.
+  <Card title="Improve Test Coverage" icon="vial" href="https://continue.dev/continuedev/improve-test-coverage">
+    Make incremental improvements to test coverage every day.
+  </Card>
+  <Card title="Update AGENTS.md" icon="robot" href="https://continue.dev/continuedev/create-or-update-agentsmd">
+    Keep your AGENTS.md continuously synced with your codebase.
+  </Card>
+  <Card title="Draft Changelog Update" icon="file-lines" href="https://continue.dev/continuedev/create-or-update-changelog">
+    Create a draft update to CHANGELOG.md based on recent changes in a pull request.
   </Card>
 </CardGroup>
