@@ -53,6 +53,7 @@ export class OpenAIApi implements BaseLlmApi {
       apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
+      timeout: config?.requestOptions?.timeout || undefined,
     });
   }
 
