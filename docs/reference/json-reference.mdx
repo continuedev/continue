@@ -60,6 +60,10 @@ Each model has specific configuration options tailored to its provider and funct
   - `uploadImage`: Boolean indicating if the model supports image uploads.
   - `tools`: Boolean indicating if the model supports tool use.
 
+- `thinkingOpenTag`: Custom opening tag for extracting thinking/reasoning content from streamed responses. Used with models that output thinking content wrapped in custom tags (e.g., `<think>`, `<reasoning>`). Must be used together with `thinkingCloseTag`. See the [vLLM provider documentation](/customize/model-providers/more/vllm#thinking-output-format) for examples.
+
+- `thinkingCloseTag`: Custom closing tag for extracting thinking/reasoning content from streamed responses. Must be used together with `thinkingOpenTag`.
+
 _(AWS Only)_
 
 - `profile`: AWS security profile for authorization.
