@@ -4,6 +4,11 @@ sidebarTitle: "Automating Documentation Updates with Continue CLI"
 description: "Learn how to create automated documentation generation workflows using Continue CLI. Set up AI agents to analyze code changes and generate or update documentation automatically in GitHub workflows or local development."
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <iframe
   width="560"
   height="315"
@@ -43,11 +48,10 @@ This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyz
 ## Prerequisites
 
 <CardGroup cols={1}>
-  <Card title="Node.js 18+" icon="node-js">
-    Continue CLI requires Node.js 18 or higher. Install globally with:
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+  <Card title="Install Continue CLI" icon="terminal">
+    Continue CLI requires Node.js 20 or higher.
+    
+    <CLIInstall />
   </Card>
 
   <Card title="Continue API Key" icon="key">

@@ -4,6 +4,11 @@ description: "Build an AI-powered error monitoring workflow that analyzes Sentry
 sidebarTitle: "Sentry Automated Error Analysis with MCP"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Note>
 
   **🚀 New: Sentry Mission Control Integration with Continuous AI**
@@ -48,9 +53,7 @@ Before starting, ensure you have:
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
 
   <Step title="Set up Continue CLI Account & API Key">
