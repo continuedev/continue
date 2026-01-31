@@ -181,10 +181,10 @@ export function HelpSection() {
             <div className="flex flex-col">
               <ConfigRow
                 title="Continue Hub"
-                description="Visit hub.continue.dev to explore custom agents and blocks"
+                description="Visit continue.dev to explore custom agents and blocks"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://hub.continue.dev/")
+                  ideMessenger.post("openUrl", "https://continue.dev/")
                 }
               />
 
