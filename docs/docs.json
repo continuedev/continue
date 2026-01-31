@@ -16,7 +16,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "overview"]
           },
           {
             "group": "Mission Control",
@@ -350,17 +350,12 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Community",
-          "href": "https://discord.gg/NWtdYexhMs",
-          "icon": "discord"
-        },
-        {
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
         },
         {
-          "anchor": "Release Notes",
+          "anchor": "Changelog",
           "href": "https://changelog.continue.dev/",
           "icon": "bullhorn"
         }
@@ -394,7 +389,6 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ",
       "youtube": "https://www.youtube.com/@continuedev"
     }
   },

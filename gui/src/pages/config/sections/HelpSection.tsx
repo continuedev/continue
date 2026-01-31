@@ -211,10 +211,13 @@ export function HelpSection() {
 
               <ConfigRow
                 title="Join the community!"
-                description="Join us on Discord to stay up-to-date on the latest developments"
+                description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://discord.gg/vapESyrFmJ")
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://github.com/continuedev/continue/discussions",
+                  )
                 }
               />
             </div>
