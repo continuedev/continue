@@ -27,8 +27,13 @@ export function getAdjustedTokenCountFromModel(
     multiplier = ANTHROPIC_TOKEN_MULTIPLIER;
   } else if (lowerModelName.includes("gemini")) {
     multiplier = GEMINI_TOKEN_MULTIPLIER;
-  } else if (lowerModelName.includes("stral")) {
-    // devstral, mixtral, mistral, etc
+  } else if (
+    lowerModelName.includes("mistral") ||
+    lowerModelName.includes("mixtral") ||
+    lowerModelName.includes("codestral") ||
+    lowerModelName.includes("devstral")
+  ) {
+    // Mistral family models: mistral, mixtral, codestral, devstral, etc
     multiplier = MISTRAL_TOKEN_MULTIPLIER;
   }
   return Math.ceil(baseTokens * multiplier);
