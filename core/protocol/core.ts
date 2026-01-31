@@ -173,6 +173,33 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcpApp/fetchUI": [
+    {
+      toolCallId: string;
+      mcpServerId: string;
+      resourceUri: string;
+    },
+    {
+      htmlContent?: string;
+      permissions?: string[];
+      csp?: string[];
+      error?: string;
+    },
+  ];
+  "mcpApp/callTool": [
+    {
+      mcpServerId: string;
+      name: string;
+      arguments: Record<string, any>;
+    },
+    {
+      content: Array<{
+        type: string;
+        text?: string;
+        [key: string]: any;
+      }>;
+    },
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];

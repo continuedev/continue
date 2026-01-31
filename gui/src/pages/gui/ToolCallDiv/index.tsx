@@ -2,6 +2,7 @@ import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
+import { MCPAppIframe } from "../../../components/MCPApp/MCPAppIframe";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
@@ -42,6 +43,24 @@ export function ToolCallDiv({
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)
         : undefined;
+
+    // Render MCP App UI if available
+    if (toolCallState.mcpAppUI?.htmlContent) {
+      return (
+        <div className="px-1">
+          <div className="mb-2 text-sm text-gray-400">
+            {tool?.displayTitle || functionName}
+          </div>
+          <MCPAppIframe
+            htmlContent={toolCallState.mcpAppUI.htmlContent}
+            toolCallId={toolCallState.toolCallId}
+            permissions={toolCallState.mcpAppUI.permissions}
+            csp={toolCallState.mcpAppUI.csp}
+            toolResult={toolCallState.output}
+          />
+        </div>
+      );
+    }
 
     if (icon) {
       return (

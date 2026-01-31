@@ -235,6 +235,8 @@ export default async function doLoadConfig(options: {
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
         originalFunctionName: tool.name,
+        // Include MCP Apps UI metadata if present
+        mcpAppUI: tool._meta?.ui,
       }));
       newConfig.tools.push(...serverTools);
 

@@ -506,6 +506,12 @@ interface ToolCallState {
   processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;
+  mcpAppUI?: {
+    resourceUri: string;
+    htmlContent?: string;
+    permissions?: string[];
+    csp?: string[];
+  };
 }
 
 interface Reasoning {
@@ -1128,6 +1134,7 @@ export interface Tool {
   };
   defaultToolPolicy?: ToolPolicy;
   toolCallIcon?: string;
+  mcpAppUI?: MCPToolUIMetadata; // MCP Apps UI metadata
   preprocessArgs?: (
     args: Record<string, unknown>,
     extras: {
@@ -1356,6 +1363,29 @@ export interface MCPTool {
   inputSchema: {
     type: "object";
     properties?: Record<string, any>;
+  };
+  _meta?: {
+    ui?: MCPToolUIMetadata;
+  };
+}
+
+// MCP Apps UI metadata (https://modelcontextprotocol.io/docs/extensions/apps)
+export interface MCPToolUIMetadata {
+  resourceUri: string; // URI of the UI resource (typically ui://)
+  permissions?: string[]; // Additional iframe permissions (e.g., "microphone", "camera")
+  csp?: string[]; // Content Security Policy origins for loading external resources
+}
+
+export interface MCPAppResourceContent {
+  uri: string;
+  mimeType: string;
+  text?: string;
+  blob?: string;
+  _meta?: {
+    ui?: {
+      permissions?: string[];
+      csp?: string[];
+    };
   };
 }
 
