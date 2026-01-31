@@ -27,7 +27,6 @@
               "mission-control/workflows",
               {
                 "group": "Integrations",
-                "icon": "plug",
                 "pages": [
                   "mission-control/integrations",
                   "mission-control/integrations/github",
@@ -44,7 +43,6 @@
               "mission-control/sharing",
               {
                 "group": "Governance",
-                "icon": "building",
                 "pages": [
                   "mission-control/governance/creating-an-org",
                   "mission-control/governance/org-permissions",
@@ -53,7 +51,6 @@
               },
               {
                 "group": "Secrets",
-                "icon": "key",
                 "pages": [
                   "mission-control/secrets/secret-types",
                   "mission-control/secrets/secret-resolution"
@@ -61,7 +58,6 @@
               },
               {
                 "group": "Configs",
-                "icon": "book",
                 "pages": [
                   "mission-control/configs/intro",
                   "mission-control/configs/use-a-config",
@@ -118,7 +114,6 @@
             "pages": [
               {
                 "group": "Agent",
-                "icon": "robot",
                 "pages": [
                   "ide-extensions/agent/quick-start",
                   "ide-extensions/agent/how-it-works",
@@ -130,7 +125,6 @@
               },
               {
                 "group": "Chat",
-                "icon": "messages",
                 "pages": [
                   "ide-extensions/chat/quick-start",
                   "ide-extensions/chat/how-it-works",
@@ -141,7 +135,6 @@
               },
               {
                 "group": "Autocomplete",
-                "icon": "sparkles",
                 "pages": [
                   "ide-extensions/autocomplete/quick-start",
                   "ide-extensions/autocomplete/how-it-works",
@@ -153,7 +146,6 @@
               },
               {
                 "group": "Edit",
-                "icon": "pen-to-square",
                 "pages": [
                   "ide-extensions/edit/quick-start",
                   "ide-extensions/edit/how-it-works",
@@ -176,7 +168,6 @@
               "customize/prompts",
               {
                 "group": "Model Providers",
-                "icon": "server",
                 "pages": [
                   "customize/model-providers/overview",
                   {
@@ -216,7 +207,6 @@
               },
               {
                 "group": "Model Roles",
-                "icon": "robot",
                 "pages": [
                   "customize/model-roles/00-intro",
                   "customize/model-roles/chat",
@@ -229,7 +219,6 @@
               },
               {
                 "group": "Deep Dives",
-                "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
                   "customize/deep-dives/rules",
@@ -270,6 +259,7 @@
           },
           {
             "group": "Cloud Agents",
+            "icon": "cloud",
             "pages": [
               "guides/cloud-agents/cloud-agents-taxonomy",
               "guides/cloud-agents/guide-to-cloud-agents",
@@ -282,6 +272,7 @@
           },
           {
             "group": "Guides",
+            "icon": "compass",
             "pages": [
               {
                 "group": "Understanding Continue",
@@ -321,7 +312,6 @@
               },
               {
                 "group": "Cookbooks",
-                "icon": "book-open-cover",
                 "pages": [
                   "guides/posthog-github-continuous-ai",
                   "guides/continue-docs-mcp-cookbook",
