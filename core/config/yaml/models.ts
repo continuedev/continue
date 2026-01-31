@@ -67,6 +67,12 @@ async function modelConfigToBaseLLM({
     baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
     basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
+    toolOverrides: model.chatOptions?.toolOverrides
+      ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
+          name,
+          ...o,
+        }))
+      : undefined,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),
