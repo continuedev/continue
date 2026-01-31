@@ -14,6 +14,8 @@ describe("errorAnalysis", () => {
           modelTitle: "Chat model",
           providerName: "the model provider",
           apiKeyUrl: undefined,
+          helpUrl: undefined,
+          hideGithubIssue: undefined,
         });
       });
 
@@ -27,6 +29,8 @@ describe("errorAnalysis", () => {
           modelTitle: "Chat model",
           providerName: "the model provider",
           apiKeyUrl: undefined,
+          helpUrl: undefined,
+          hideGithubIssue: undefined,
         });
       });
 
@@ -40,6 +44,8 @@ describe("errorAnalysis", () => {
           modelTitle: "Chat model",
           providerName: "the model provider",
           apiKeyUrl: undefined,
+          helpUrl: undefined,
+          hideGithubIssue: undefined,
         });
       });
 
@@ -54,6 +60,8 @@ describe("errorAnalysis", () => {
           modelTitle: "Chat model",
           providerName: "the model provider",
           apiKeyUrl: undefined,
+          helpUrl: undefined,
+          hideGithubIssue: undefined,
         });
       });
 
@@ -68,6 +76,8 @@ describe("errorAnalysis", () => {
           modelTitle: "Chat model",
           providerName: "the model provider",
           apiKeyUrl: undefined,
+          helpUrl: undefined,
+          hideGithubIssue: undefined,
         });
       });
     });
@@ -529,6 +539,47 @@ describe("errorAnalysis", () => {
 
         expect(result.parsedError).toBe("Request timeout");
         expect(result.statusCode).toBe(undefined);
+      });
+
+      it("should handle OpenAI organization verification error", () => {
+        const error = new Error(
+          'HTTP 400 Bad Request\n\n{"message":"Your organization must be verified to generate reasoning summaries. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.","type":"invalid_request_error","param":"reasoning.summary","code":"unsupported_value"}',
+        );
+        const selectedModel = {
+          title: "GPT-4o",
+          provider: "openai",
+        };
+        const result = analyzeError(error, selectedModel);
+
+        expect(result.helpUrl).toBe(
+          "https://help.openai.com/en/articles/10910291-api-organization-verification",
+        );
+        expect(result.hideGithubIssue).toBe(true);
+        expect(result.providerName).toBe("OpenAI");
+      });
+
+      it("should match OpenAI verification error case-insensitively", () => {
+        const error = new Error(
+          "Error from OpenAI: Your Organization Must Be Verified To Generate Reasoning Summaries.",
+        );
+        const result = analyzeError(error, null);
+
+        expect(result.helpUrl).toBe(
+          "https://help.openai.com/en/articles/10910291-api-organization-verification",
+        );
+        expect(result.hideGithubIssue).toBe(true);
+      });
+
+      it("should not match partial OpenAI verification error messages", () => {
+        const error1 = new Error("Your organization must be verified");
+        const result1 = analyzeError(error1, null);
+        expect(result1.helpUrl).toBe(undefined);
+        expect(result1.hideGithubIssue).toBe(undefined);
+
+        const error2 = new Error("OpenAI error occurred");
+        const result2 = analyzeError(error2, null);
+        expect(result2.helpUrl).toBe(undefined);
+        expect(result2.hideGithubIssue).toBe(undefined);
       });
     });
   });
