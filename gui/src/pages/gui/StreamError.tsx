@@ -5,12 +5,11 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { DISCORD_LINK } from "core/util/constants";
+import { DISCUSSIONS_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
 import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
-import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
 import ToggleDiv from "../../components/ToggleDiv";
 import { useAuth } from "../../context/Auth";
@@ -230,7 +229,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         {selectedModel ? (
           <span>
             {`Provider: `}
-            <code>{selectedModel.provider}</code>
+            <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
         {/* TODO: status page links for providers? */}
@@ -294,7 +293,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               const issueBody = `**Error Details**
 
 Model: ${selectedModel?.title || "Unknown"}
-Provider: ${selectedModel?.provider || "Unknown"}
+Provider: ${selectedModel ? `${selectedModel.underlyingProviderName}${selectedModel.provider === "continue-proxy" ? " (continue-proxy)" : ""}` : "Unknown"}
 Status Code: ${statusCode || "N/A"}
 
 **Error Output**
@@ -315,11 +314,11 @@ Please add any additional context about the error here
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", DISCORD_LINK);
+              ideMessenger.post("openUrl", DISCUSSIONS_LINK);
             }}
           >
-            <DiscordIcon className="h-5 w-5" />
-            <span className="xs:flex hidden">Discord</span>
+            <GithubIcon className="h-5 w-5" />
+            <span className="xs:flex hidden">Discussions</span>
           </GhostButton>
         </div>
       </div>

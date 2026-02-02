@@ -131,6 +131,20 @@ describe("RegistryClient", () => {
         "Unknown package identifier type: unknown",
       );
     });
+
+    it("should return pre-read content directly for file with content field", async () => {
+      const client = new RegistryClient();
+
+      const id: PackageIdentifier = {
+        uriType: "file",
+        fileUri: "/nonexistent/path.yaml",
+        content: "pre-read yaml content",
+      };
+
+      // Should return content without trying to read the nonexistent file
+      const result = await client.getContent(id);
+      expect(result).toBe("pre-read yaml content");
+    });
   });
 
   describe("getContentFromFilePath", () => {

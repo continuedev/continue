@@ -42,7 +42,7 @@ Before starting, ensure you have:
   </Step>
   
   <Step title="Set up Continue CLI Account & API Key">
-        1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+        1. Visit [Continue Organizations](https://continue.dev/settings/organizations)
         2. Sign up or log in to your Continue account
         3. Navigate to your organization settings
         4. Click **"API Keys"** and then **"+ New API Key"** 
@@ -106,7 +106,7 @@ See the [secret types documentation](/mission-control/secrets/secret-types) for 
 
 You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Mission Control account:
 
-1.  Go to the [Continue Mission Control](https://hub.continue.dev)
+1.  Go to the [Continue Mission Control](https://continue.dev)
 2.  Sign in to your account
 3.  Navigate to your user settings
 4.  Look for the "Secrets" section
@@ -140,7 +140,7 @@ You only need to configure the PostHog MCP credential - it automatically handles
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [PostHog Continuous AI Agent](https://hub.continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [PostHog Continuous AI Agent](https://continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
         cn --agent continuedev/posthog-continuous-ai-agent
@@ -171,12 +171,12 @@ You only need to configure the PostHog MCP credential - it automatically handles
   <Tab title="🛠️ Manual Setup">
   <Steps>
     <Step title="Add PostHog MCP to Continue CLI">
-      First, install the [PostHog MCP](https://hub.continue.dev/posthog/http-mcp) to the Continue CLI by
+      First, install the [PostHog MCP](https://continue.dev/posthog/http-mcp) to the Continue CLI by
       1. Adding it to a Hub Config by clicking "Use MCP Server" and selecting a Config
       2. Adding it to your [Local Config](/reference#mcpservers)
     </Step>
     <Step title="Add PostHog + GitHub Analysis Rules">
-      Visit [PostHog GitHub Continuous AI Rules](https://hub.continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) and click "Use Rule" to add it to your Config.
+      Visit [PostHog GitHub Continuous AI Rules](https://continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) and click "Use Rule" to add it to your Config.
       
       You could also
       1. Pass `--rule bekah-hawrot-weigel/posthog-github-continuous-ai-rules` to `cn` OR
@@ -351,10 +351,10 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
 
 ## Next Steps
 
-- Consider [GitHub MCP](https://hub.continue.dev/github/github-mcp) as an alternative (note: can be token-expensive)
-- Configure [Slack MCP](https://hub.continue.dev/slack/slack-mcp) for alerts
+- Consider [GitHub MCP](https://continue.dev/github/github-mcp) as an alternative (note: can be token-expensive)
+- Configure [Slack MCP](https://continue.dev/slack/slack-mcp) for alerts
 - Set up [PostHog performance monitoring](https://posthog.com/docs/web-analytics)
-- Join the [Continue Discord](https://discord.gg/continue) for support
+- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 
@@ -364,6 +364,6 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
 - [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
 - [PostHog Error Tracking](https://posthog.com/docs/error-tracking)
 - [GitHub CLI Documentation](https://cli.github.com/)
-- [GitHub MCP on Continue Mission Control](https://hub.continue.dev/github/github-mcp) (alternative option)
+- [GitHub MCP on Continue Mission Control](https://continue.dev/github/github-mcp) (alternative option)
 - [Continue CLI Guide](https://docs.continue.dev/guides/cli)
 - [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)
