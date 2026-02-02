@@ -7,6 +7,7 @@
  */
 
 import * as fs from "fs";
+
 import type { ChatHistoryItem } from "core/index.js";
 
 import {
@@ -19,7 +20,6 @@ import { streamChatResponse } from "../../stream/streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
 
 import type { DiffContext } from "./diffContext.js";
-import type { CheckResult } from "./renderReport.js";
 import { captureWorktreeDiff } from "./worktree.js";
 
 export interface WorkerConfig {

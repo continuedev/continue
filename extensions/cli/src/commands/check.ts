@@ -9,12 +9,12 @@ import { logger } from "../util/logger.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import type { CheckState } from "./check/CheckProgress.js";
 import { CheckProgress } from "./check/CheckProgress.js";
+import type { WorkerConfig, WorkerResult } from "./check/checkWorker.js";
 import type { DiffContext } from "./check/diffContext.js";
 import { computeDiffContext } from "./check/diffContext.js";
 import type { CheckResult } from "./check/renderReport.js";
 import { renderReport } from "./check/renderReport.js";
 import { resolveChecks } from "./check/resolveChecks.js";
-import type { WorkerConfig, WorkerResult } from "./check/checkWorker.js";
 import { createWorktree, cleanupWorktree } from "./check/worktree.js";
 
 export interface CheckOptions extends ExtendedCommandOptions {
@@ -35,7 +35,7 @@ async function runCheckInWorker(
   diffContext: DiffContext,
   options: CheckOptions,
 ): Promise<WorkerResult> {
-  return new Promise<WorkerResult>((resolve, reject) => {
+  return new Promise<WorkerResult>((resolve, _reject) => {
     // Fork the current CLI entry point with the internal worker flag
     const workerPath = process.argv[1];
     const child = fork(workerPath, ["--internal-check-worker"], {
@@ -179,6 +179,81 @@ function applyPatches(results: CheckResult[]): void {
 }
 
 /**
+ * Mount the Ink live progress UI or fall back to static logs.
+ */
+async function mountProgressUI(
+  checkStates: CheckState[],
+  diffContext: DiffContext,
+  options: CheckOptions,
+): Promise<{ rerender?: () => void; unmount?: () => void }> {
+  const useLiveUI =
+    process.stdout.isTTY && !options.patch && options.format !== "json";
+
+  if (!useLiveUI) {
+    console.log(
+      chalk.dim(
+        `Running ${checkStates.length} check${checkStates.length > 1 ? "s" : ""}: ${checkStates.map((c) => c.name).join(", ")}`,
+      ),
+    );
+    return {};
+  }
+
+  const { render } = await import("ink");
+  const props = {
+    checks: checkStates,
+    baseBranch: diffContext.baseBranch,
+    changedFileCount: diffContext.changedFiles.length,
+  };
+  const instance = render(React.createElement(CheckProgress, props));
+  return {
+    rerender: () =>
+      instance.rerender(React.createElement(CheckProgress, props)),
+    unmount: () => instance.unmount(),
+  };
+}
+
+/**
+ * Output results and exit with appropriate code.
+ */
+function outputResultsAndExit(
+  results: CheckResult[],
+  diffContext: DiffContext,
+  options: CheckOptions,
+  checksFromHub: boolean,
+): void {
+  const format = options.format === "json" ? "json" : "text";
+  const report = renderReport(results, {
+    baseBranch: diffContext.baseBranch,
+    changedFileCount: diffContext.changedFiles.length,
+    format,
+    checksFromHub,
+  });
+
+  if (options.patch) {
+    const allPatches = results
+      .filter((r) => r.patch.trim())
+      .map((r) => r.patch)
+      .join("\n");
+    process.stdout.write(allPatches);
+    process.exit(
+      results.some((r) => r.status === "fail" || r.status === "error") ? 1 : 0,
+    );
+  }
+
+  console.log("\n" + report);
+
+  if (options.fix) {
+    console.log(chalk.dim("\nApplying fixes..."));
+    applyPatches(results);
+  }
+
+  const hasFailed = results.some(
+    (r) => r.status === "fail" || r.status === "error",
+  );
+  process.exit(hasFailed ? 1 : 0);
+}
+
+/**
  * Main check command handler.
  */
 export async function check(options: CheckOptions = {}): Promise<void> {
@@ -227,45 +302,17 @@ export async function check(options: CheckOptions = {}): Promise<void> {
 
   const checksFromHub = checks.some((c) => c.sourceType === "hub");
 
-  // Determine whether to show live Ink UI
-  const useLiveUI =
-    process.stdout.isTTY && !options.patch && options.format !== "json";
-
   // Build mutable state for the live UI
   const checkStates: CheckState[] = checks.map((c) => ({
     name: c.name,
     status: "pending" as const,
   }));
 
-  // Mount the Ink live progress UI (or fall back to static logs)
-  let rerender: (() => void) | undefined;
-  let unmountUI: (() => void) | undefined;
-
-  if (useLiveUI) {
-    const { render } = await import("ink");
-    const instance = render(
-      React.createElement(CheckProgress, {
-        checks: checkStates,
-        baseBranch: diffContext.baseBranch,
-        changedFileCount: diffContext.changedFiles.length,
-      }),
-    );
-    rerender = () =>
-      instance.rerender(
-        React.createElement(CheckProgress, {
-          checks: checkStates,
-          baseBranch: diffContext.baseBranch,
-          changedFileCount: diffContext.changedFiles.length,
-        }),
-      );
-    unmountUI = () => instance.unmount();
-  } else {
-    console.log(
-      chalk.dim(
-        `Running ${checks.length} check${checks.length > 1 ? "s" : ""}: ${checks.map((c) => c.name).join(", ")}`,
-      ),
-    );
-  }
+  const { rerender, unmount: unmountUI } = await mountProgressUI(
+    checkStates,
+    diffContext,
+    options,
+  );
 
   // Step 3: Create worktrees and run checks
   const results: CheckResult[] = [];
@@ -337,7 +384,6 @@ export async function check(options: CheckOptions = {}): Promise<void> {
   };
 
   if (options.failFast) {
-    // Run sequentially, stop on first failure
     for (let i = 0; i < checks.length; i++) {
       const result = await runSingleCheck(checks[i], i);
       results.push(result);
@@ -346,7 +392,6 @@ export async function check(options: CheckOptions = {}): Promise<void> {
       }
     }
   } else {
-    // Run all checks in parallel
     const settled = await Promise.allSettled(
       checks.map((resolvedCheck, i) => runSingleCheck(resolvedCheck, i)),
     );
@@ -357,41 +402,6 @@ export async function check(options: CheckOptions = {}): Promise<void> {
     }
   }
 
-  // Unmount the live UI before printing the final report
   unmountUI?.();
-
-  // Step 4: Render report
-  const format = options.format === "json" ? "json" : "text";
-  const report = renderReport(results, {
-    baseBranch: diffContext.baseBranch,
-    changedFileCount: diffContext.changedFiles.length,
-    format,
-    checksFromHub,
-  });
-
-  // For --patch mode, output just the patches
-  if (options.patch) {
-    const allPatches = results
-      .filter((r) => r.patch.trim())
-      .map((r) => r.patch)
-      .join("\n");
-    process.stdout.write(allPatches);
-    process.exit(
-      results.some((r) => r.status === "fail" || r.status === "error") ? 1 : 0,
-    );
-  }
-
-  console.log("\n" + report);
-
-  // Step 5: Apply fixes if --fix
-  if (options.fix) {
-    console.log(chalk.dim("\nApplying fixes..."));
-    applyPatches(results);
-  }
-
-  // Exit with appropriate code
-  const hasFailed = results.some(
-    (r) => r.status === "fail" || r.status === "error",
-  );
-  process.exit(hasFailed ? 1 : 0);
+  outputResultsAndExit(results, diffContext, options, checksFromHub);
 }

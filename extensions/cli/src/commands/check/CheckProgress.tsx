@@ -50,11 +50,11 @@ function ElapsedTime({ check }: { check: CheckState }) {
   }
 
   const seconds =
-    check.duration != null
-      ? Math.round(check.duration)
-      : check.startTime != null
-        ? Math.round((Date.now() - check.startTime) / 1000)
-        : 0;
+    check.duration === undefined
+      ? check.startTime === undefined
+        ? 0
+        : Math.round((Date.now() - check.startTime) / 1000)
+      : Math.round(check.duration);
 
   return <Text dimColor>{`${seconds}s`}</Text>;
 }
@@ -73,12 +73,12 @@ export const CheckProgress: React.FC<CheckProgressProps> = ({
         <Text bold>cn check</Text>
         <Text dimColor>─</Text>
         <Text>
-          {checks.length} check{checks.length !== 1 ? "s" : ""} against{" "}
+          {checks.length} check{checks.length === 1 ? "" : "s"} against{" "}
           {baseBranch}
         </Text>
         <Text dimColor>─</Text>
         <Text>
-          {changedFileCount} changed file{changedFileCount !== 1 ? "s" : ""}
+          {changedFileCount} changed file{changedFileCount === 1 ? "" : "s"}
         </Text>
       </Box>
 
