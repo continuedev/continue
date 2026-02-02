@@ -6,6 +6,7 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
+import { check } from "./commands/check.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
@@ -417,6 +418,22 @@ program
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "remote-test" });
     await remoteTest(prompt, options.url);
+  });
+
+// Check subcommand
+program
+  .command("check")
+  .description("Run AI-powered checks on your changes")
+  .option("--base <ref>", "Base git ref to diff against (default: auto-detect)")
+  .option("--format <format>", "Output format")
+  .option("--fix", "Automatically apply suggested fixes")
+  .option("--patch", "Show patches")
+  .option("--fail-fast", "Stop on first failure")
+  .option("--check-agents <agents...>", "Specific check agents to run")
+  .option("--verbose", "Enable verbose logging")
+  .action(async (options) => {
+    await posthogService.capture("cliCommand", { command: "check" });
+    await check(options);
   });
 
 // Handle unknown commands
