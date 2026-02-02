@@ -96,7 +96,7 @@ export const modelDescriptionSchema = z.object({
       proxy: z.string().optional(),
       headers: z.record(z.string()).optional(),
       extraBodyProperties: z.record(z.any()).optional(),
-      stream: z.boolean().optional(),
+      noProxy: z.array(z.string()).optional(),
     })
     .optional(),
   promptTemplates: z.record(z.string()).optional(),
