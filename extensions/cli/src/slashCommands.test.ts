@@ -59,7 +59,7 @@ vi.mock("./util/logger.js", () => ({
 vi.mock("./env.js", () => ({
   env: {
     continueHome: "/home/test/.continue",
-    appUrl: "https://hub.continue.dev",
+    appUrl: "https://continue.dev",
   },
 }));
 

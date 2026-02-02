@@ -180,7 +180,7 @@ class MCPConnection {
     if (unrendered.length > 0) {
       this.errors.push(
         `${this.options.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}.
-For personal use you can set the secret in the hub at https://hub.continue.dev/settings/secrets.
+For personal use you can set the secret in the hub at https://continue.dev/settings/secrets.
 Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled.`,
       );
     }
@@ -563,10 +563,15 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       // Set the initial PATH from process.env
       env.PATH = process.env.PATH;
 
-      // For non-Windows platforms, try to get the PATH from user shell
-      if (process.platform !== "win32") {
+      // For non-Windows platforms or WSL remotes, try to get the PATH from user shell
+      const ideInfo = await this.extras?.ide?.getIdeInfo();
+      const isWindowsHostWithWslRemote =
+        process.platform === "win32" && ideInfo?.remoteName === "wsl";
+      if (process.platform !== "win32" || isWindowsHostWithWslRemote) {
         try {
-          const shellEnvPath = await getEnvPathFromUserShell();
+          const shellEnvPath = await getEnvPathFromUserShell(
+            ideInfo?.remoteName,
+          );
           if (shellEnvPath && shellEnvPath !== process.env.PATH) {
             env.PATH = shellEnvPath;
           }
