@@ -179,7 +179,7 @@ export function HistoryTableRow({
       </td>
 
       {hovered && !editing && (
-        <td className="bg-input absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+        <td className="bg-input absolute right-2 top-12 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
           {isRemote ? (
             <HeaderButtonWithToolTip
               text="Open in browser"
