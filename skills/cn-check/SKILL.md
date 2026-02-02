@@ -50,7 +50,7 @@ cn check
 
 This auto-detects checks from three sources (in priority order):
 
-1. Hub API — checks configured for your repo on hub.continue.dev
+1. Hub API — checks configured for your repo on continue.dev
 2. Local agents — markdown files in `.continue/agents/*.md`
 
 ### Specify agents explicitly

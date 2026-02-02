@@ -295,7 +295,7 @@ export async function check(options: CheckOptions = {}): Promise<void> {
         chalk.dim(
           "  2. Or specify an agent: cn check --agent org/agent-name\n",
         ) +
-        chalk.dim("  3. Or configure checks on https://hub.continue.dev\n"),
+        chalk.dim("  3. Or configure checks on https://continue.dev\n"),
     );
     process.exit(0);
   }
