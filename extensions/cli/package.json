@@ -97,7 +97,7 @@
     "diff": "^7.0.0",
     "dotenv": "^16.5.0",
     "esbuild": "^0.25.9",
-    "eslint": "^9.32.0",
+    "eslint": "^9.39.2",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
