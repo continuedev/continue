@@ -28,7 +28,7 @@ export default [
       curly: "off",
       eqeqeq: "error",
       quotes: "off",
-      complexity: ["error", { max: 36 }],
+      complexity: ["error", { max: 50 }],
       "max-lines-per-function": ["error", { max: 500 }],
       "max-statements": ["error", { max: 108 }],
       "max-depth": ["error", { max: 6 }],

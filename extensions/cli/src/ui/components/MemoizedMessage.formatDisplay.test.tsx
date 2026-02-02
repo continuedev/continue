@@ -1,12 +1,7 @@
+import type { ChatHistoryItem, MessageContent, MessagePart } from "core";
 import { render } from "ink-testing-library";
 import React from "react";
 import { describe, expect, it } from "vitest";
-
-import type {
-  ChatHistoryItem,
-  MessageContent,
-  MessagePart,
-} from "../../../../../core/index.js";
 
 import { MemoizedMessage } from "./MemoizedMessage.js";
 
