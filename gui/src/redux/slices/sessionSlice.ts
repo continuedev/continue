@@ -15,6 +15,7 @@ import {
   ContextItem,
   ContextItemWithId,
   FileSymbolMap,
+  McpUiState,
   MessageModes,
   PromptLog,
   RuleMetadata,
@@ -851,6 +852,7 @@ export const sessionSlice = createSlice({
       action: PayloadAction<{
         toolCallId: string;
         contextItems: ContextItem[];
+        mcpUiState?: McpUiState;
       }>,
     ) => {
       // Update tool call state and corresponding tool output message
@@ -860,6 +862,7 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
+        toolCallState.mcpUiState = action.payload.mcpUiState;
       }
       const toolItem = findChatHistoryItemByToolCallId(
         state.history,

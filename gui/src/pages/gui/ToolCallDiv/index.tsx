@@ -3,9 +3,10 @@ import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
-import { MCPAppIframe } from "./MCPApp";
+import { McpAppRenderer } from "./MCPAppRenderer";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getIconByName, getStatusIcon } from "./utils";
@@ -20,7 +21,9 @@ export function ToolCallDiv({
   historyIndex,
 }: ToolCallDivProps) {
   const [open, setOpen] = useState(true);
-  const availableTools = useAppSelector((state) => state.config.config.tools);
+  const availableTools = useAppSelector(
+    (state: RootState) => state.config.config.tools,
+  );
 
   if (!toolCallStates?.length) return null;
 
@@ -44,21 +47,16 @@ export function ToolCallDiv({
         ? getIconByName(tool.toolCallIcon)
         : undefined;
 
-    if (toolCallState.mcpUiState?.htmlContent) {
+    if (toolCallState.mcpUiState) {
       return (
-        <div className="px-1">
-          <div className="mb-2 text-sm text-gray-400">
-            {tool?.displayTitle || functionName}
-          </div>
-          <MCPAppIframe
-            htmlContent={toolCallState.mcpUiState.htmlContent}
-            toolCallId={toolCallState.toolCallId}
-            permissions={toolCallState.mcpUiState.permissions}
-            csp={toolCallState.mcpUiState.csp}
-            toolResult={toolCallState.output}
-            resourceUri={toolCallState.mcpUiState?.resourceUri}
-          />
-        </div>
+        <ToolCallDisplay
+          icon={getStatusIcon(toolCallState.status)}
+          tool={tool}
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        >
+          <McpAppRenderer toolCallState={toolCallState} />
+        </ToolCallDisplay>
       );
     }
 

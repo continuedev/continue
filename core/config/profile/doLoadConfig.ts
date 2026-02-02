@@ -235,6 +235,7 @@ export default async function doLoadConfig(options: {
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
         originalFunctionName: tool.name,
+        mcpMeta: tool._meta,
       }));
       newConfig.tools.push(...serverTools);
 

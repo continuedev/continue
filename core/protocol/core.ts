@@ -28,6 +28,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  McpUiState,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -316,6 +317,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       contextItems: ContextItem[];
       errorMessage?: string;
       errorReason?: ContinueErrorReason;
+      mcpUiState?: McpUiState;
     },
   ];
   "tools/evaluatePolicy": [

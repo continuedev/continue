@@ -605,7 +605,12 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   }
 
   async getResource(uri: string) {
-    return await this.client.readResource({ uri });
+    return await this.client.readResource(
+      { uri },
+      {
+        timeout: this.options.timeout,
+      },
+    );
   }
 }
 

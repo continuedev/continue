@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ContextItem } from "core";
+import { ContextItem, McpUiState } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import posthog from "posthog-js";
@@ -57,6 +57,7 @@ export const callToolById = createAsyncThunk<
   );
 
   let output: ContextItem[] | undefined = undefined;
+  let mcpUiState: McpUiState | undefined = undefined;
   let error: ContinueError | undefined = undefined;
   let streamResponse: boolean;
 
@@ -92,6 +93,7 @@ export const callToolById = createAsyncThunk<
       throw new Error(result.error);
     } else {
       output = result.content.contextItems;
+      mcpUiState = result.content.mcpUiState;
       error = result.content.errorMessage
         ? new ContinueError(
             result.content.errorReason || ContinueErrorReason.Unspecified,
@@ -122,6 +124,7 @@ export const callToolById = createAsyncThunk<
       updateToolCallOutput({
         toolCallId,
         contextItems: output,
+        mcpUiState,
       }),
     );
   }

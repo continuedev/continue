@@ -461,6 +461,9 @@ void (async () => {
     "gui/assets/index.js",
     "gui/assets/index.css",
 
+    // MCP UI sandbox proxy
+    "gui/sandbox-proxy.html",
+
     // Tutorial
     "media/move-chat-panel-right.md",
     "continue_tutorial.py",

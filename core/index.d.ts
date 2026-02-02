@@ -3,6 +3,11 @@ import {
   ModelRole,
   PromptTemplates,
 } from "@continuedev/config-yaml";
+import { McpUiResourceMeta } from "@modelcontextprotocol/ext-apps";
+import {
+  Resource,
+  TextResourceContents,
+} from "@modelcontextprotocol/sdk/types.js";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
@@ -497,6 +502,20 @@ export type ToolStatus =
   | "done" // Tool execution completed successfully
   | "canceled"; // Tool call was canceled by user or system
 
+interface McpUiResourceContents extends TextResourceContents {
+  _meta?: {
+    ui?: McpUiResourceMeta;
+  };
+}
+
+interface McpTextResource extends Resource {
+  contents: McpUiResourceContents[];
+}
+
+interface McpUiState {
+  content: McpUiResourceContents;
+}
+
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
   toolCallId: string;
@@ -506,6 +525,7 @@ interface ToolCallState {
   processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;
+  mcpUiState?: McpUiState;
 }
 
 interface Reasoning {
@@ -1104,6 +1124,13 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
+export interface McpToolMeta {
+  ui?: {
+    resourceUri?: string;
+  };
+  "ui/resourceUri"?: string;
+}
+
 export interface Tool {
   type: "function";
   function: {
@@ -1139,6 +1166,7 @@ export interface Tool {
     parsedArgs: Record<string, unknown>,
     processedArgs?: Record<string, unknown>,
   ) => ToolPolicy;
+  mcpMeta?: McpToolMeta;
 }
 
 interface ToolChoice {
@@ -1357,6 +1385,7 @@ export interface MCPTool {
     type: "object";
     properties?: Record<string, any>;
   };
+  _meta?: Record<string, unknown> | undefined;
 }
 
 type BaseInternalMCPOptions = {
