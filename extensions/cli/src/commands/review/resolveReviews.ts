@@ -6,8 +6,8 @@ import { loadAuthConfig, getAccessToken } from "../../auth/workos.js";
 import { env } from "../../env.js";
 import { logger } from "../../util/logger.js";
 
-export interface ResolvedCheck {
-  /** Display name for the check */
+export interface ResolvedReview {
+  /** Display name for the review */
   name: string;
   /** Hub slug (org/agent) or local file path */
   source: string;
@@ -16,14 +16,14 @@ export interface ResolvedCheck {
 }
 
 /**
- * Determine which checks to run, using three sources in order:
+ * Determine which reviews to run, using three sources in order:
  * 1. CLI --agent flags (highest priority)
  * 2. Hub API (if logged in and no --agent flags)
  * 3. Local .continue/agents/*.md (fallback)
  */
-export async function resolveChecks(
+export async function resolveReviews(
   agentFlags?: string[],
-): Promise<ResolvedCheck[]> {
+): Promise<ResolvedReview[]> {
   // Source 1: CLI --agent flags
   if (agentFlags && agentFlags.length > 0) {
     return agentFlags.map((agent) => ({
@@ -34,24 +34,24 @@ export async function resolveChecks(
   }
 
   // Source 2: Hub API (silent failure if not logged in)
-  const hubChecks = await resolveFromHub();
-  if (hubChecks.length > 0) {
-    return hubChecks;
+  const hubReviews = await resolveFromHub();
+  if (hubReviews.length > 0) {
+    return hubReviews;
   }
 
   // Source 3: Local .continue/agents/*.md
-  const localChecks = resolveFromLocal();
-  if (localChecks.length > 0) {
-    return localChecks;
+  const localReviews = resolveFromLocal();
+  if (localReviews.length > 0) {
+    return localReviews;
   }
 
   return [];
 }
 
 /**
- * Try to resolve checks from the hub API based on the current repo.
+ * Try to resolve reviews from the hub API based on the current repo.
  */
-async function resolveFromHub(): Promise<ResolvedCheck[]> {
+async function resolveFromHub(): Promise<ResolvedReview[]> {
   try {
     const authConfig = loadAuthConfig();
     if (!authConfig) {
@@ -88,7 +88,7 @@ async function resolveFromHub(): Promise<ResolvedCheck[]> {
     });
 
     if (!response.ok) {
-      logger.debug(`Hub check resolution returned ${response.status}`);
+      logger.debug(`Hub review resolution returned ${response.status}`);
       return [];
     }
 
@@ -101,15 +101,15 @@ async function resolveFromHub(): Promise<ResolvedCheck[]> {
       sourceType: "hub" as const,
     }));
   } catch (e) {
-    logger.debug("Hub check resolution failed", { error: e });
+    logger.debug("Hub review resolution failed", { error: e });
     return [];
   }
 }
 
 /**
- * Resolve checks from local .continue/agents/*.md files.
+ * Resolve reviews from local .continue/agents/*.md files.
  */
-function resolveFromLocal(): ResolvedCheck[] {
+function resolveFromLocal(): ResolvedReview[] {
   const agentsDir = path.join(process.cwd(), ".continue", "agents");
   if (!fs.existsSync(agentsDir)) {
     return [];

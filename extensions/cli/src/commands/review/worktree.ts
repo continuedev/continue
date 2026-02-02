@@ -1,9 +1,12 @@
-import { execSync } from "child_process";
+import { exec, execSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { promisify } from "util";
 
 import { logger } from "../../util/logger.js";
+
+const execAsync = promisify(exec);
 
 /**
  * Create a git worktree that mirrors the user's current working tree state.
@@ -11,21 +14,19 @@ import { logger } from "../../util/logger.js";
  */
 export async function createWorktree(index: number): Promise<string> {
   const tmpDir = os.tmpdir();
-  const worktreePath = path.join(tmpDir, `cn-check-${Date.now()}-${index}`);
+  const worktreePath = path.join(tmpDir, `cn-review-${Date.now()}-${index}`);
 
   // Create the worktree at HEAD (detached)
-  execSync(`git worktree add "${worktreePath}" HEAD --detach`, {
-    stdio: ["pipe", "pipe", "pipe"],
-  });
+  await execAsync(`git worktree add "${worktreePath}" HEAD --detach`);
 
   // Apply uncommitted changes (staged + unstaged) to the worktree
   try {
-    const diff = execSync("git diff HEAD", {
-      encoding: "utf-8",
+    const { stdout: diff } = await execAsync("git diff HEAD", {
       maxBuffer: 10 * 1024 * 1024,
-      stdio: ["pipe", "pipe", "pipe"],
     });
     if (diff.trim()) {
+      // execAsync (promisified exec) doesn't support `input`, use execSync for apply.
+      // This is fine: the apply targets the isolated worktree, so it won't contend.
       execSync(`git -C "${worktreePath}" apply --allow-empty -`, {
         input: diff,
         stdio: ["pipe", "pipe", "pipe"],
@@ -39,16 +40,12 @@ export async function createWorktree(index: number): Promise<string> {
 
   // Copy untracked files to the worktree
   try {
-    const untrackedOutput = execSync(
+    const { stdout: untrackedOutput } = await execAsync(
       "git ls-files --others --exclude-standard",
-      {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      },
-    ).trim();
+    );
 
-    if (untrackedOutput) {
-      const untrackedFiles = untrackedOutput.split("\n");
+    if (untrackedOutput.trim()) {
+      const untrackedFiles = untrackedOutput.trim().split("\n");
       const cwd = process.cwd();
       for (const file of untrackedFiles) {
         const srcPath = path.join(cwd, file);
@@ -67,6 +64,12 @@ export async function createWorktree(index: number): Promise<string> {
   } catch (e) {
     logger.debug("Could not copy untracked files to worktree", { error: e });
   }
+
+  // Commit the initial state so captureWorktreeDiff only captures agent changes
+  await execAsync(`git -C "${worktreePath}" add -A`);
+  await execAsync(
+    `git -C "${worktreePath}" commit -m "cn-review: user working tree state (staged + unstaged + untracked)" --allow-empty --no-verify`,
+  );
 
   return worktreePath;
 }
@@ -96,9 +99,7 @@ export function captureWorktreeDiff(worktreePath: string): string {
  */
 export async function cleanupWorktree(worktreePath: string): Promise<void> {
   try {
-    execSync(`git worktree remove "${worktreePath}" --force`, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    await execAsync(`git worktree remove "${worktreePath}" --force`);
   } catch (e) {
     logger.debug("Could not remove worktree, attempting manual cleanup", {
       worktreePath,
@@ -107,10 +108,7 @@ export async function cleanupWorktree(worktreePath: string): Promise<void> {
     // Manual cleanup as fallback
     try {
       fs.rmSync(worktreePath, { recursive: true, force: true });
-      // Prune the worktree entry
-      execSync("git worktree prune", {
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      await execAsync("git worktree prune");
     } catch {
       // Best effort
     }
