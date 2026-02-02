@@ -4,10 +4,7 @@ import {
   PromptTemplates,
 } from "@continuedev/config-yaml";
 import { McpUiResourceMeta } from "@modelcontextprotocol/ext-apps";
-import {
-  Resource,
-  TextResourceContents,
-} from "@modelcontextprotocol/sdk/types.js";
+import { TextResourceContents } from "@modelcontextprotocol/sdk/types.js";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
@@ -506,10 +503,6 @@ interface McpUiResourceContents extends TextResourceContents {
   _meta?: {
     ui?: McpUiResourceMeta;
   };
-}
-
-interface McpTextResource extends Resource {
-  contents: McpUiResourceContents[];
 }
 
 interface McpUiState {
