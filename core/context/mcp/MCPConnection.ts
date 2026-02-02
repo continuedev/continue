@@ -603,6 +603,10 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     return transport;
   }
+
+  async getResource(uri: string) {
+    return await this.client.readResource({ uri });
+  }
 }
 
 export default MCPConnection;

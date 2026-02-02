@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
+import { MCPAppIframe } from "./MCPApp";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getIconByName, getStatusIcon } from "./utils";
@@ -42,6 +43,24 @@ export function ToolCallDiv({
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)
         : undefined;
+
+    if (toolCallState.mcpUiState?.htmlContent) {
+      return (
+        <div className="px-1">
+          <div className="mb-2 text-sm text-gray-400">
+            {tool?.displayTitle || functionName}
+          </div>
+          <MCPAppIframe
+            htmlContent={toolCallState.mcpUiState.htmlContent}
+            toolCallId={toolCallState.toolCallId}
+            permissions={toolCallState.mcpUiState.permissions}
+            csp={toolCallState.mcpUiState.csp}
+            toolResult={toolCallState.output}
+            resourceUri={toolCallState.mcpUiState?.resourceUri}
+          />
+        </div>
+      );
+    }
 
     if (icon) {
       return (
