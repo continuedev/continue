@@ -444,6 +444,13 @@ program.on("command:*", () => {
 });
 
 export async function runCli(): Promise<void> {
+  // Handle internal worker subprocess for cn check
+  if (process.argv.includes("--internal-check-worker")) {
+    const { runCheckWorker } = await import("./commands/check/checkWorker.js");
+    await runCheckWorker();
+    return;
+  }
+
   // Parse arguments and handle errors
   try {
     program.parse();
