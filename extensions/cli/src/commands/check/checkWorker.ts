@@ -8,16 +8,14 @@
 
 import * as fs from "fs";
 
-import type { ChatHistoryItem } from "core/index.js";
-
 import {
   initializeServices,
   getService,
+  services,
   SERVICE_NAMES,
 } from "../../services/index.js";
 import type { ModelServiceState } from "../../services/types.js";
 import { streamChatResponse } from "../../stream/streamChatResponse.js";
-import { constructSystemMessage } from "../../systemMessage.js";
 
 import type { DiffContext } from "./diffContext.js";
 import { captureWorktreeDiff } from "./worktree.js";
@@ -133,14 +131,6 @@ export async function runCheckWorker(): Promise<void> {
         throw new Error("Failed to initialize model service");
       }
 
-      // Build system message
-      const systemMessage = await constructSystemMessage(
-        "auto",
-        config.options.rule,
-        undefined,
-        true, // headless
-      );
-
       // Build the check prompt
       const checkPrompt = buildCheckPrompt(config.diffContext);
 
@@ -153,30 +143,20 @@ export async function runCheckWorker(): Promise<void> {
         agentInstructions = loadLocalAgentInstructions(config.agentSource);
       }
 
-      // Construct initial chat history
-      const chatHistory: ChatHistoryItem[] = [];
+      // Build the user prompt parts and add to ChatHistoryService
+      // so streamChatResponse picks them up via refreshChatHistoryFromService
+      const chatHistorySvc = services.chatHistory;
 
-      if (systemMessage) {
-        chatHistory.push({
-          message: { role: "user", content: systemMessage },
-          contextItems: [],
-        });
-      }
-
+      const promptParts: string[] = [];
       if (agentInstructions) {
-        chatHistory.push({
-          message: {
-            role: "user",
-            content: `## Agent Instructions\n\n${agentInstructions}`,
-          },
-          contextItems: [],
-        });
+        promptParts.push(`## Agent Instructions\n\n${agentInstructions}`);
       }
+      promptParts.push(checkPrompt);
 
-      chatHistory.push({
-        message: { role: "user", content: checkPrompt },
-        contextItems: [],
-      });
+      const userMessage = promptParts.join("\n\n");
+      chatHistorySvc.addUserMessage(userMessage);
+
+      const chatHistory = chatHistorySvc.getHistory();
 
       // Collect agent text output
       let agentOutput = "";
