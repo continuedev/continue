@@ -1201,8 +1201,6 @@ export abstract class BaseLLM implements ILLM {
             }
           }
 
-          console.log("debug1 llm options", this._llmOptions);
-
           const canUseResponses = this.canUseOpenAIResponses(completionOptions);
           const useStream = completionOptions.stream !== false;
 

@@ -15,6 +15,7 @@ export const completionOptionsSchema = z.object({
   keepAlive: z.number().optional(),
   numGpu: z.number().optional(),
   raw: z.boolean().optional(),
+  stream: z.boolean().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
@@ -95,7 +96,6 @@ export const modelDescriptionSchema = z.object({
       proxy: z.string().optional(),
       headers: z.record(z.string()).optional(),
       extraBodyProperties: z.record(z.any()).optional(),
-      noProxy: z.array(z.string()).optional(),
       stream: z.boolean().optional(),
     })
     .optional(),
