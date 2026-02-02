@@ -1,5 +1,5 @@
 /**
- * Check worker - runs in a forked process.
+ * Review worker - runs in a forked process.
  *
  * Receives configuration via IPC, initializes services,
  * runs the agent in the worktree, then captures the diff
@@ -44,12 +44,18 @@ export interface WorkerResult {
 }
 
 /**
- * Build the check prompt that gets prepended to the agent's own instructions.
+ * Build the review prompt that gets prepended to the agent's own instructions.
  */
-function buildCheckPrompt(diffContext: DiffContext): string {
+function buildReviewPrompt(diffContext: DiffContext): string {
   const fileList = diffContext.changedFiles.map((f) => `- ${f}`).join("\n");
 
-  let prompt = `You are running as a local code check. Review and fix the following changes.
+  let prompt = `You are a code review agent. Your job is to review ONLY the changed lines in the diff below and check them against your review rules.
+
+## Scope — READ THIS CAREFULLY
+- You MUST only review the files and lines shown in the diff.
+- Do NOT read, scan, or report on files outside the diff.
+- Do NOT report pre-existing issues in unchanged code — even in files that appear in the diff, only the changed lines are in scope.
+- If you need surrounding context to understand a change, you may read that file, but you must NOT flag issues in the unchanged parts.
 
 ## Changes (base: ${diffContext.baseBranch})
 ### Changed files
@@ -62,15 +68,16 @@ ${diffContext.diff || "(no diff available)"}
 `;
 
   if (diffContext.truncated) {
-    prompt += `\nNote: The diff was truncated due to size. Use Read and Search tools to inspect the full files.\n`;
+    prompt += `\nNote: The diff was truncated due to size. You may use Read tool to view the full content of the changed files listed above — but do NOT explore beyond them.\n`;
   }
 
   prompt += `
-## Context
+## Rules
 - You are in a temporary worktree. Dependencies (node_modules, etc.) are not installed.
-- Focus on source code analysis and edits.
-- Make any edits you think are needed to fix issues. Your changes will be captured as suggestions.
-- If there are no issues, simply say so and exit.
+- ONLY flag issues that exist in the changed lines of the diff.
+- ONLY make edits to files listed in the changed files above, and only to fix violations of your specific review rules in the changed code.
+- Do NOT make general improvements, refactoring, documentation changes, or style fixes.
+- If there are no violations in the changed code, do NOT edit any files. State that no issues were found and exit.
 `;
 
   return prompt;
@@ -91,16 +98,16 @@ function loadLocalAgentInstructions(filePath: string): string {
  * Entry point for the forked worker process.
  * Listens for IPC messages from the orchestrator.
  */
-export async function runCheckWorker(): Promise<void> {
+export async function runReviewWorker(): Promise<void> {
   if (typeof process.send !== "function") {
     console.error(
-      "Error: check worker must be run as a forked process (via cn check).",
+      "Error: review worker must be run as a forked process (via cn review).",
     );
     process.exit(1);
   }
 
   process.on("message", async (msg: { type: string; config: WorkerConfig }) => {
-    if (msg.type !== "run-check") return;
+    if (msg.type !== "run-review") return;
 
     const { config } = msg;
     const startTime = Date.now();
@@ -131,8 +138,8 @@ export async function runCheckWorker(): Promise<void> {
         throw new Error("Failed to initialize model service");
       }
 
-      // Build the check prompt
-      const checkPrompt = buildCheckPrompt(config.diffContext);
+      // Build the review prompt
+      const reviewPrompt = buildReviewPrompt(config.diffContext);
 
       // Load agent-specific instructions if it's a local file
       let agentInstructions = "";
@@ -151,7 +158,7 @@ export async function runCheckWorker(): Promise<void> {
       if (agentInstructions) {
         promptParts.push(`## Agent Instructions\n\n${agentInstructions}`);
       }
-      promptParts.push(checkPrompt);
+      promptParts.push(reviewPrompt);
 
       const userMessage = promptParts.join("\n\n");
       chatHistorySvc.addUserMessage(userMessage);
