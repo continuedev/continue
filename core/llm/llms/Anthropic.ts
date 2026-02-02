@@ -407,7 +407,7 @@ class Anthropic extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (!this.apiKey || this.apiKey === "") {
       throw new Error(
-        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+        "Request not sent. You have an Anthropic model configured in your config.yaml, but the API key is not set.",
       );
     }
 
