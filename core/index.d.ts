@@ -497,6 +497,7 @@ export type ToolStatus =
   | "done" // Tool execution completed successfully
   | "canceled"; // Tool call was canceled by user or system
 
+interface;
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
   toolCallId: string;
@@ -1134,7 +1135,7 @@ export interface Tool {
   };
   defaultToolPolicy?: ToolPolicy;
   toolCallIcon?: string;
-  mcpAppUI?: MCPToolUIMetadata; // MCP Apps UI metadata
+  mcpAppUI?: MCPToolUIMetadata;
   preprocessArgs?: (
     args: Record<string, unknown>,
     extras: {
@@ -1338,9 +1339,6 @@ export interface MCPPrompt {
   arguments?: MCPPromptArgs;
 }
 
-// Leaving here to ideate on
-// export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
-
 // https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
@@ -1349,10 +1347,17 @@ export interface MCPResource {
   mimeType?: string;
 }
 
+// https://modelcontextprotocol.io/docs/extensions/apps
+export type MCPToolUIMetadata = {
+  resourceUri: string; // URI of the UI resource (typically ui://)
+  permissions?: string[]; // Additional iframe permissions (e.g., "microphone", "camera")
+  csp?: string[]; // Content Security Policy origins for loading external resources
+};
+
 // https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
 export interface MCPResourceTemplate {
-  uriTemplate: string;
   name: string;
+  uriTemplate: string;
   description?: string;
   mimeType?: string;
 }
@@ -1369,23 +1374,13 @@ export interface MCPTool {
   };
 }
 
-// MCP Apps UI metadata (https://modelcontextprotocol.io/docs/extensions/apps)
-export interface MCPToolUIMetadata {
-  resourceUri: string; // URI of the UI resource (typically ui://)
-  permissions?: string[]; // Additional iframe permissions (e.g., "microphone", "camera")
-  csp?: string[]; // Content Security Policy origins for loading external resources
-}
-
 export interface MCPAppResourceContent {
   uri: string;
   mimeType: string;
   text?: string;
   blob?: string;
   _meta?: {
-    ui?: {
-      permissions?: string[];
-      csp?: string[];
-    };
+    ui?: Pick<MCPToolUIMetadata, "permissions", "csp">;
   };
 }
 

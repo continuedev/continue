@@ -118,6 +118,10 @@ class MCPConnection {
     };
   }
 
+  async getResource(uri: string) {
+    return await this.client.readResource({ uri });
+  }
+
   async connectClient(forceRefresh: boolean, externalSignal: AbortSignal) {
     if (this.status === "disabled") {
       return;

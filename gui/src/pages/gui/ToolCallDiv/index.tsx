@@ -43,7 +43,6 @@ export function ToolCallDiv({
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)
         : undefined;
-
     // Render MCP App UI if available
     if (toolCallState.mcpAppUI?.htmlContent) {
       return (
@@ -57,6 +56,7 @@ export function ToolCallDiv({
             permissions={toolCallState.mcpAppUI.permissions}
             csp={toolCallState.mcpAppUI.csp}
             toolResult={toolCallState.output}
+            resourceUri={toolCallState.mcpAppUI?.resourceUri}
           />
         </div>
       );

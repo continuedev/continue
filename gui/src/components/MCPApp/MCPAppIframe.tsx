@@ -6,7 +6,6 @@ interface MCPAppIframeProps {
   toolCallId: string;
   permissions?: string[];
   csp?: string[];
-  onMessage?: (message: any) => void;
   toolResult?: any;
   resourceUri?: string;
 }
@@ -19,7 +18,6 @@ interface MCPAppIframeProps {
 export function MCPAppIframe({
   htmlContent,
   toolCallId,
-  onMessage,
   toolResult,
   resourceUri = `ui://${toolCallId}`,
 }: MCPAppIframeProps) {

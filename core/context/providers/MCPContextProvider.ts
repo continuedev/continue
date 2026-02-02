@@ -74,9 +74,8 @@ class MCPContextProvider extends BaseContextProvider {
       throw new Error(`No MCP connection found for ${mcpId}`);
     }
 
-    const { contents } = await connection.client.readResource({
-      uri: this.insertInputToUriTemplate(uri, extras.fullInput),
-    });
+    const resourceuri = this.insertInputToUriTemplate(uri, extras.fullInput);
+    const { contents } = await connection.getResource(resourceuri);
 
     return await Promise.all(
       contents.map(async (resource) => {

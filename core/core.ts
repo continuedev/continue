@@ -563,6 +563,14 @@ export class Core {
       );
     });
 
+    // // MCP Apps
+    // on("mcp/fetchResourceUri", async (msg) => {
+    //   removeMCPAuth(msg.data.serverUrl, this.ide);
+    //   await MCPManagerSingleton.getInstance().refreshConnection(
+    //     msg.data.serverId,
+    //   );
+    // });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
