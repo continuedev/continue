@@ -15,7 +15,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@continuedev/config-yaml": "^1.38.0",
-    "@openapitools/openapi-generator-cli": "^2.25.1",
+    "@openapitools/openapi-generator-cli": "^2.27.0",
     "express": "^4.22.0",
     "swagger-ui-express": "^5.0.0"
   },
