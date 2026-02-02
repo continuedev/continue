@@ -548,13 +548,6 @@ export abstract class BaseLLM implements ILLM {
       options,
     );
 
-    if (
-      completionOptions.stream === false ||
-      this.requestOptions?.stream === false
-    ) {
-      completionOptions.stream = false;
-    }
-
     return { completionOptions, logEnabled: log, raw };
   }
 
@@ -1207,6 +1200,8 @@ export abstract class BaseLLM implements ILLM {
               this.llmRequestHook(completionOptions.model, prompt);
             }
           }
+
+          console.log("debug1 llm options", this._llmOptions);
 
           const canUseResponses = this.canUseOpenAIResponses(completionOptions);
           const useStream = completionOptions.stream !== false;

@@ -15,7 +15,6 @@ export const completionOptionsSchema = z.object({
   keepAlive: z.number().optional(),
   numGpu: z.number().optional(),
   raw: z.boolean().optional(),
-  stream: z.boolean().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
@@ -37,7 +36,6 @@ export const requestOptionsSchema = z.object({
   extraBodyProperties: z.record(z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
-  stream: z.boolean().optional(),
 });
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 

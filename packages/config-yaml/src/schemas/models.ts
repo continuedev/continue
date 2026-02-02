@@ -18,7 +18,6 @@ export const requestOptionsSchema = z.object({
   extraBodyProperties: z.record(z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
-  stream: z.boolean().optional(),
 });
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 export const modelRolesSchema = z.enum([
