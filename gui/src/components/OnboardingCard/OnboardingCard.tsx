@@ -23,7 +23,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
   const config = useAppSelector((store) => store.config.config);
 
   if (getLocalStorage("onboardingStatus") === undefined) {
-    setLocalStorage("onboardingStatus", "Started");
+    setLocalStorage("onboardingStatus", "Completed");
   }
 
   // Default to MODELS_ADD_ON tab if no active tab is set

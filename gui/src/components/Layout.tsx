@@ -1,9 +1,7 @@
-import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
-import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import TelemetryProviders from "../hooks/TelemetryProviders";
@@ -19,11 +17,7 @@ import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import {
-  isNewUserOnboarding,
-  OnboardingCard,
-  useOnboardingCard,
-} from "./OnboardingCard";
+import { useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -119,14 +113,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "addModel",
-    async () => {
-      navigate("/models");
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
     "navigateTo",
     async (data) => {
       if (data.toggle && location.pathname === data.path) {
@@ -136,38 +122,6 @@ const Layout = () => {
       }
     },
     [location, navigate],
-  );
-
-  useWebviewListener(
-    "setupLocalConfig",
-    async () => {
-      onboardingCard.open(OnboardingModes.LOCAL);
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "freeTrialExceeded",
-    async () => {
-      dispatch(setShowDialog(true));
-      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
-      dispatch(
-        setDialogMessage(
-          <div className="flex-1">
-            <OnboardingCard isDialog />
-          </div>,
-        ),
-      );
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "setupApiKey",
-    async () => {
-      onboardingCard.open(OnboardingModes.API_KEY);
-    },
-    [],
   );
 
   useWebviewListener(
@@ -228,57 +182,49 @@ const Layout = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (isNewUserOnboarding() && isHome) {
-      onboardingCard.open();
-    }
-  }, [isHome]);
-
   return (
     <LocalStorageProvider>
-      <AuthProvider>
-        <TelemetryProviders>
-          <LayoutTopDiv>
-            {showStagingIndicator && (
-              <span
-                title="Staging environment"
-                className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
-                style={{
-                  backgroundColor: "var(--vscode-list-warningForeground)",
-                }}
-              />
-            )}
-            <OSRContextMenu />
-            <div
+      <TelemetryProviders>
+        <LayoutTopDiv>
+          {showStagingIndicator && (
+            <span
+              title="Staging environment"
+              className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
               style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
+                backgroundColor: "var(--vscode-list-warningForeground)",
               }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+            />
+          )}
+          <OSRContextMenu />
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
+            }}
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
+              }}
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
 
-              <GridDiv>
-                <PostHogPageView />
-                <Outlet />
-                {/* The fatal error for chat is shown below input */}
-                {!isHome && <FatalErrorIndicator />}
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LayoutTopDiv>
-        </TelemetryProviders>
-      </AuthProvider>
+            <GridDiv>
+              <PostHogPageView />
+              <Outlet />
+              {/* The fatal error for chat is shown below input */}
+              {!isHome && <FatalErrorIndicator />}
+            </GridDiv>
+          </div>
+          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+        </LayoutTopDiv>
+      </TelemetryProviders>
     </LocalStorageProvider>
   );
 };

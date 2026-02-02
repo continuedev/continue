@@ -13,6 +13,14 @@ VSIX_DIR := $(VSCODE_DIR)/build
 VSIX := $(shell ls $(VSIX_DIR)/continue-*.vsix 2>/dev/null | head -n 1)
 
 # ============================
+# Ollama Model Seeding
+# ============================
+
+OLLAMA_IMAGE := ollama/ollama:latest
+OLLAMA_MODELS_DIR ?= /var/lib/ollama-models
+REQUIRED_OLLAMA_MODELS := llama3:8b codellama:7b
+
+# ============================
 # Default target
 # ============================
 
@@ -24,7 +32,7 @@ all: build
 # ============================
 
 .PHONY: build
-build: deps build-core build-gui build-vscode
+build: deps build-core build-gui build-vscode ollama-setup
 	@echo "==> Build complete"
 
 # ----------------------------
@@ -78,6 +86,59 @@ install:
 	fi
 	@echo "==> Installing VSCode extension"
 	code --install-extension "$(VSIX)"
+
+
+.PHONY: ollama-init-dir
+ollama-init-dir:
+	@echo "==> Creating Ollama model directory"
+	sudo mkdir -p $(OLLAMA_MODELS_SUBDIR)
+	sudo chown -R $$(id -u):$$(id -g) $(OLLAMA_MODELS_DIR)
+
+
+.PHONY: ollama-seed
+ollama-seed:
+	@echo "==> Checking whether Ollama models need seeding"
+	@mkdir -p $(OLLAMA_MODELS_DIR)
+
+	@if [ -d "$(OLLAMA_MODELS_DIR)/models/manifests" ]; then \
+		MISSING=0; \
+		for model in $(REQUIRED_OLLAMA_MODELS); do \
+			MANIFEST_PATH="$(OLLAMA_MODELS_DIR)/models/manifests/registry.ollama.ai/library/$${model/:/\/}"; \
+			if [ ! -d "$$MANIFEST_PATH" ]; then \
+				echo "  - Missing model: $$model"; \
+				MISSING=1; \
+			fi; \
+		done; \
+		if [ $$MISSING -eq 0 ]; then \
+			echo "==> All required Ollama models already present, skipping seed"; \
+			exit 0; \
+		fi; \
+	else \
+		echo "==> No Ollama manifests directory found, seeding required"; \
+	fi
+
+	@echo "==> Seeding missing Ollama models"
+	@docker run --rm \
+		--entrypoint /bin/sh \
+		-v $(OLLAMA_MODELS_DIR):/root/.ollama \
+		$(OLLAMA_IMAGE) \
+		-c '\
+			set -e; \
+			echo "[ollama] starting server"; \
+			ollama serve & \
+			sleep 5; \
+			for model in $(REQUIRED_OLLAMA_MODELS); do \
+				echo "[ollama] ensuring model $$model"; \
+				ollama pull $$model; \
+			done; \
+			echo "[ollama] seeding complete"; \
+		'
+
+	@echo "==> Ollama model seeding finished"
+
+.PHONY: ollama-setup
+ollama-setup: ollama-seed
+	@echo "==> Ollama models seeded and mmap-safe"
 
 # ============================
 # Clean

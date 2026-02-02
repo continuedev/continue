@@ -195,11 +195,14 @@ export class ConfigHandler {
       analytics: cfg.analytics,
       docs: cfg.docs,
 
-      slashCommands: serializeSlashCommands(cfg.slashCommands ?? []),
+      slashCommands: [],
+      // slashCommands: serializeSlashCommands(cfg.slashCommands ?? []),
 
       contextProviders: (cfg.contextProviders ?? []).map((p) => p.description),
 
-      tools: cfg.tools ?? [],
+      tools: [],
+      // tools: cfg.tools ?? [],
+
       rules: cfg.rules ?? [],
       mcpServerStatuses: cfg.mcpServerStatuses ?? [],
 
