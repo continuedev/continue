@@ -126,9 +126,16 @@ export function McpAppRenderer({
   const hasRestrictedPermissions = restrictedPermissions.length > 0;
 
   const sandboxAttribute = useMemo(() => {
-    const basePermissions = ["allow-scripts", "allow-same-origin"];
-    return basePermissions.join(" ");
-  }, [permissions]);
+    // SECURITY: Do NOT add 'allow-same-origin' together with 'allow-scripts'.
+    // This combination allows untrusted MCP HTML to access the parent webview
+    // via window.parent, defeating iframe sandboxing. Communication via
+    // PostMessageTransport works without same-origin access.
+    const sandboxPermissions = [
+      "allow-scripts", // Required for MCP app JavaScript execution
+      "allow-forms", // Allow form submissions within the iframe
+    ];
+    return sandboxPermissions.join(" ");
+  }, []);
 
   const allowAttribute = useMemo(() => {
     const attr = buildAllowAttribute(permissions);
@@ -220,7 +227,7 @@ export function McpAppRenderer({
           type: "text",
           text: renderContextItems([ci]),
         })),
-        isError: true,
+        isError: false,
       };
     };
 
