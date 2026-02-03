@@ -9,18 +9,11 @@ import CurrentFileContextProvider from "./CurrentFileContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DebugLocalsProvider from "./DebugLocalsProvider";
 import DiffContextProvider from "./DiffContextProvider";
-import DiscordContextProvider from "./DiscordContextProvider";
 import FileContextProvider from "./FileContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import FolderContextProvider from "./FolderContextProvider";
 import GitCommitContextProvider from "./GitCommitContextProvider";
-import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
-import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
-import GoogleContextProvider from "./GoogleContextProvider";
-import GreptileContextProvider from "./GreptileContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
-import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
-import MCPContextProvider from "./MCPContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import OSContextProvider from "./OSContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
@@ -43,8 +36,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   FileContextProvider,
   DiffContextProvider,
   FileTreeContextProvider,
-  GitHubIssuesContextProvider,
-  GoogleContextProvider,
   TerminalContextProvider,
   DebugLocalsProvider,
   OpenFilesContextProvider,
@@ -53,8 +44,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   OSContextProvider,
   ProblemsContextProvider,
   FolderContextProvider,
-  GitLabMergeRequestContextProvider,
-  JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
   CodebaseContextProvider,
@@ -63,10 +52,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   URLContextProvider,
   ContinueProxyContextProvider,
   RepoMapContextProvider,
-  DiscordContextProvider,
-  GreptileContextProvider,
   WebContextProvider,
-  MCPContextProvider,
   GitCommitContextProvider,
   ClipboardContextProvider,
   RulesContextProvider,

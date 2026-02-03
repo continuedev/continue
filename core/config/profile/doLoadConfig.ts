@@ -21,7 +21,6 @@ import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
-import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
@@ -288,14 +287,6 @@ export default async function doLoadConfig(options: {
             icon: server.faviconUrl,
           })),
         );
-      if (submenuItems.length > 0) {
-        const serverContextProvider = new MCPContextProvider({
-          submenuItems,
-          mcpId: server.id,
-          serverName: server.name,
-        });
-        newConfig.contextProviders.push(serverContextProvider);
-      }
     }
   }
 
