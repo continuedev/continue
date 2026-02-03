@@ -258,6 +258,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     "llama3.2-11b": "llama3.2:11b",
     "llama3.2-90b": "llama3.2:90b",
     "phi-2": "phi:2.7b",
+    "phi-3": "phi3:mini",
     "phind-codellama-34b": "phind-codellama:34b-v2",
     "qwen2.5-coder-0.5b": "qwen2.5-coder:0.5b",
     "qwen2.5-coder-1.5b": "qwen2.5-coder:1.5b",

@@ -1,17 +1,4 @@
 services:
-  # --------------------------------------------------
-  # One-shot filesystem check (SAFE, READ-ONLY)
-  # --------------------------------------------------
-  ollama-fs-check:
-    image: alpine:latest
-    command: sh -c 'echo "Filesystem type:" && stat -f -c %T /models'
-    volumes:
-      - /var/lib/ollama-models:/models:ro
-    restart: "no"
-
-  # --------------------------------------------------
-  # Ollama runtime (air-gapped, mmap-capable)
-  # --------------------------------------------------
   ollama:
     container_name: ollama-airgapped
 
@@ -25,25 +12,22 @@ services:
     ports:
       - "127.0.0.1:11434:11434"
 
-    # ✅ Bind mount → real host filesystem → mmap works
-    volumes:
-      - /var/lib/ollama-models:/root/.ollama
-
     tmpfs:
-      - /tmp:size=2g,mode=1777
+      - /tmp:size=4g,mode=1777
 
     pids_limit: 2048
     mem_limit: 16g
     memswap_limit: 24g
+    shm_size: 4g
     cpus: "8"
 
     environment:
       OLLAMA_FORCE_MMAP: "1"
-      OLLAMA_NUM_CTX: "4096"
+      OLLAMA_NUM_CTX: "2048"
       OLLAMA_NUM_PARALLEL: "1"
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_NO_UPDATE: "1"
       OLLAMA_HOST: "0.0.0.0"
-
-    depends_on:
-      - ollama-fs-check
+      OLLAMA_FLASH_ATTENTION: "0"
+      OLLAMA_DEBUG: "true"
+      OLLAMA_MODELS: "/root/.ollama/models"

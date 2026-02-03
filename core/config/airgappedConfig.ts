@@ -3,7 +3,8 @@ import Ollama from "../llm/llms/Ollama.js";
 
 const ollamaChat = new Ollama({
   title: "Ollama Llama3",
-  model: "llama3:8b",
+  contextLength: 2048,
+  model: "qwen2.5-coder-1.5b",
   apiBase: "http://127.0.0.1:11434",
 });
 
