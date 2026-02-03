@@ -193,7 +193,7 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
-// See https://huggingface.co/microsoft/phi-2#qa-format
+// Documentation unavailable in air-gapped mode
 const phi2TemplateMessages = templateFactory(
   (msg) => `\n\nInstruct: ${msg.content} `,
   "\n\nInstruct: ",
@@ -219,14 +219,7 @@ const openchatTemplateMessages = templateFactory(
   "<|end_of_turn|>",
 );
 
-/**
- * Chat template used by https://huggingface.co/TheBloke/XwinCoder-13B-GPTQ
- *
-
-<system>: You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.
-<user>: {prompt}
-<AI>:
- */
+/* Documentation unavailable in air-gapped mode */
 const xWinCoderTemplateMessages = templateFactory(
   (msg) => `<system>: ${msg.content}`,
   "\n<user>: ",

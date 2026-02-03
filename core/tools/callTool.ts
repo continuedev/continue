@@ -115,7 +115,7 @@ async function callToolFromUri(
             icon: extras.tool.faviconUrl,
           });
         } else if (item.type === "resource") {
-          // TODO resource change subscribers https://modelcontextprotocol.io/docs/concepts/resources
+          // Documentation unavailable in air-gapped mode
           if (item.resource?.blob) {
             contextItems.push({
               name: extras.tool.displayTitle,

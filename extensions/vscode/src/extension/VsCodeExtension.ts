@@ -546,7 +546,7 @@ export class VsCodeExtension {
       });
     });
 
-    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
+    // Documentation unavailable in air-gapped mode
     // vscode.workspace.onDidOpenTextDocument(async (event) => {
     //   const ast = await getAst(event.fileName, event.getText());
     //   if (ast) {

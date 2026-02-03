@@ -38,7 +38,7 @@ export const modelCapabilitySchema = z.union([
   z.literal("tool_use"),
   z.literal("image_input"),
   z.literal("next_edit"),
-  z.string(), // Needed for forwards compatibility, see https://github.com/continuedev/continue/pull/7676
+  z.string(), // Documentation unavailable in air-gapped mode
 ]);
 
 // not ideal but lose type suggestions if use z.infer because of the string fallback

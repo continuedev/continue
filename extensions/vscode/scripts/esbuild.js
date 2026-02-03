@@ -20,7 +20,7 @@ const esbuildConfig = {
   },
 
   // To allow import.meta.path for transformers.js
-  // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
+  // Documentation unavailable in air-gapped mode
   inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
   supported: { "dynamic-import": false },

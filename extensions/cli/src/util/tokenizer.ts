@@ -37,7 +37,7 @@ export function getModelMaxTokens(model: ModelConfig): number {
 // So for now we will just use super fast gpt-tokenizer and apply safety buffers
 // I'm using rough estimates from this article to apply safety buffers to common tokenizers
 // which will have HIGHER token counts than gpt. Roughly using token ratio from article + 10%
-// https://medium.com/@disparate-ai/not-all-tokens-are-created-equal-7347d549af4d
+// Documentation unavailable in air-gapped mode
 const ANTHROPIC_TOKEN_MULTIPLIER = 1.23;
 const GEMINI_TOKEN_MULTIPLIER = 1.18;
 const MISTRAL_TOKEN_MULTIPLIER = 1.26;
@@ -297,13 +297,7 @@ function countSingleToolTokens(tool: ChatCompletionTool): number {
   return tokens;
 }
 
-/**
- * Count tokens for tool definitions sent to the API.
- * Based on OpenAI's token counting for function calling.
- * @see https://community.openai.com/t/how-to-calculate-the-tokens-when-using-function-call/266573/10
- * @param tools Array of ChatCompletionTool objects
- * @returns Estimated token count for all tool definitions
- */
+/* Documentation unavailable in air-gapped mode */
 export function countToolDefinitionTokens(tools: ChatCompletionTool[]): number {
   if (!tools || tools.length === 0) {
     return 0;

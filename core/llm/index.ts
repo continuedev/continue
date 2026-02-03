@@ -1007,8 +1007,8 @@ export abstract class BaseLLM implements ILLM {
   ): CompletionOptions {
     // As of 01/14/25 streaming is currently not available with o1
     // See these threads:
-    // - https://github.com/continuedev/continue/issues/3698
-    // - https://community.openai.com/t/streaming-support-for-o1-o1-2024-12-17-resulting-in-400-unsupported-value/1085043
+    // Documentation unavailable in air-gapped mode
+    // Documentation unavailable in air-gapped mode
     if (completionOptions.model === "o1") {
       completionOptions.stream = false;
     }
@@ -1329,15 +1329,7 @@ export abstract class BaseLLM implements ILLM {
         );
       }
     }
-    /*
-  TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
-  During tool use, you must pass thinking and redacted_thinking blocks back to the API,
-  and you must include the complete unmodified block back to the API. This is critical
-  for maintaining the model's reasoning flow and conversation integrity.
-
-  On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
-  requests when not using tools, so it's the simplest option to always add to history.
-  */
+    /* Documentation unavailable in air-gapped mode */
 
     return {
       modelTitle: this.title ?? completionOptions.model,

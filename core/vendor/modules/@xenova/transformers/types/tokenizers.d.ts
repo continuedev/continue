@@ -268,50 +268,7 @@ export class PreTrainedTokenizer extends PreTrainedTokenizer_base {
    * @property {string} role The role of the message (e.g., "user" or "assistant" or "system").
    * @property {string} content The content of the message.
    */
-  /**
-   * Converts a list of message objects with `"role"` and `"content"` keys to a list of token
-   * ids. This method is intended for use with chat models, and will read the tokenizer's chat_template attribute to
-   * determine the format and control tokens to use when converting. When chat_template is None, it will fall back
-   * to the default_chat_template specified at the class level.
-   *
-   * See [here](https://huggingface.co/docs/transformers/chat_templating) for more information.
-   *
-   * **Example:** Applying a chat template to a conversation.
-   *
-   * ```javascript
-   * import { AutoTokenizer } from "@xenova/transformers";
-   *
-   * const tokenizer = await AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1");
-   *
-   * const chat = [
-   *   { "role": "user", "content": "Hello, how are you?" },
-   *   { "role": "assistant", "content": "I'm doing great. How can I help you today?" },
-   *   { "role": "user", "content": "I'd like to show off how chat templating works!" },
-   * ]
-   *
-   * const text = tokenizer.apply_chat_template(chat, { tokenize: false });
-   * // "<s>[INST] Hello, how are you? [/INST]I'm doing great. How can I help you today?</s> [INST] I'd like to show off how chat templating works! [/INST]"
-   *
-   * const input_ids = tokenizer.apply_chat_template(chat, { tokenize: true, return_tensor: false });
-   * // [1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]
-   * ```
-   *
-   * @param {Message[]} conversation A list of message objects with `"role"` and `"content"` keys.
-   * @param {Object} options An optional object containing the following properties:
-   * @param {string} [options.chat_template=null] A Jinja template to use for this conversion. If
-   * this is not passed, the model's default chat template will be used instead.
-   * @param {boolean} [options.add_generation_prompt=false] Whether to end the prompt with the token(s) that indicate
-   * the start of an assistant message. This is useful when you want to generate a response from the model.
-   * Note that this argument will be passed to the chat template, and so it must be supported in the
-   * template for this argument to have any effect.
-   * @param {boolean} [options.tokenize=true] Whether to tokenize the output. If false, the output will be a string.
-   * @param {boolean} [options.padding=false] Whether to pad sequences to the maximum length. Has no effect if tokenize is false.
-   * @param {boolean} [options.truncation=false] Whether to truncate sequences to the maximum length. Has no effect if tokenize is false.
-   * @param {number} [options.max_length=null] Maximum length (in tokens) to use for padding or truncation. Has no effect if tokenize is false.
-   * If not specified, the tokenizer's `max_length` attribute will be used as a default.
-   * @param {boolean} [options.return_tensor=true] Whether to return the output as a Tensor or an Array. Has no effect if tokenize is false.
-   * @returns {string | Tensor | number[]| number[][]} The tokenized output.
-   */
+  /* Documentation unavailable in air-gapped mode */
   apply_chat_template(
     conversation: {
       /**
@@ -404,19 +361,7 @@ export class MPNetTokenizer extends PreTrainedTokenizer {}
 export class FalconTokenizer extends PreTrainedTokenizer {}
 export class GPTNeoXTokenizer extends PreTrainedTokenizer {}
 export class EsmTokenizer extends PreTrainedTokenizer {}
-/**
- * The NllbTokenizer class is used to tokenize text for NLLB ("No Language Left Behind") models.
- *
- * No Language Left Behind (NLLB) is a first-of-its-kind, AI breakthrough project
- * that open-sources models capable of delivering high-quality translations directly
- * between any pair of 200+ languages — including low-resource languages like Asturian,
- * Luganda, Urdu and more. It aims to help people communicate with anyone, anywhere,
- * regardless of their language preferences. For more information, check out their
- * [paper](https://arxiv.org/abs/2207.04672).
- *
- * For a list of supported languages (along with their language codes),
- * @see {@link https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200}
- */
+/* Documentation unavailable in air-gapped mode */
 export class NllbTokenizer extends PreTrainedTokenizer {
   constructor(tokenizerJSON: any, tokenizerConfig: any);
   languageRegex: RegExp;
@@ -435,16 +380,7 @@ export class NllbTokenizer extends PreTrainedTokenizer {
     generate_kwargs: any,
   ): any;
 }
-/**
- * The M2M100Tokenizer class is used to tokenize text for M2M100 ("Many-to-Many") models.
- *
- * M2M100 is a multilingual encoder-decoder (seq-to-seq) model trained for Many-to-Many
- * multilingual translation. It was introduced in this [paper](https://arxiv.org/abs/2010.11125)
- * and first released in [this](https://github.com/pytorch/fairseq/tree/master/examples/m2m_100) repository.
- *
- * For a list of supported languages (along with their language codes),
- * @see {@link https://huggingface.co/facebook/m2m100_418M#languages-covered}
- */
+/* Documentation unavailable in air-gapped mode */
 export class M2M100Tokenizer extends PreTrainedTokenizer {
   constructor(tokenizerJSON: any, tokenizerConfig: any);
   languageRegex: RegExp;
@@ -586,21 +522,11 @@ export class WhisperTokenizer extends PreTrainedTokenizer {
 export class CodeGenTokenizer extends PreTrainedTokenizer {}
 export class CLIPTokenizer extends PreTrainedTokenizer {}
 export class SiglipTokenizer extends PreTrainedTokenizer {}
-/**
- * @todo This model is not yet supported by Hugging Face's "fast" tokenizers library (https://github.com/huggingface/tokenizers).
- * Therefore, this implementation (which is based on fast tokenizers) may produce slightly inaccurate results.
- */
+/* Documentation unavailable in air-gapped mode */
 export class MarianTokenizer extends PreTrainedTokenizer {
   languageRegex: RegExp;
   supported_language_codes: string[];
-  /**
-   * Encodes a single text. Overriding this method is necessary since the language codes
-   * must be removed before encoding with sentencepiece model.
-   * @see https://github.com/huggingface/transformers/blob/12d51db243a00726a548a43cc333390ebae731e3/src/transformers/models/marian/tokenization_marian.py#L204-L213
-   *
-   * @param {string|null} text The text to encode.
-   * @returns {Array} The encoded tokens.
-   */
+  /* Documentation unavailable in air-gapped mode */
   _encode_text(text: string | null): any[];
 }
 export class Wav2Vec2CTCTokenizer extends PreTrainedTokenizer {}

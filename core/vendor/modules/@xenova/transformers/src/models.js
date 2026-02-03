@@ -733,11 +733,7 @@ export class PreTrainedModel extends Callable {
     }
   }
 
-  /**
-   * Disposes of all the ONNX sessions that were created during inference.
-   * @returns {Promise<unknown[]>} An array of promises, one for each ONNX session that is being disposed.
-   * @todo Use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
-   */
+  /* Documentation unavailable in air-gapped mode */
   async dispose() {
     const promises = [];
     for (let key of Object.keys(this)) {
@@ -1189,7 +1185,7 @@ export class PreTrainedModel extends Callable {
     }
 
     // TODO implement early_stopping
-    // https://huggingface.co/blog/how-to-generate
+    // Documentation unavailable in air-gapped mode
 
     let numOutputTokens = 1;
     const maxOutputTokens =
@@ -1399,7 +1395,7 @@ export class PreTrainedModel extends Callable {
         if (pastKeyValues && name.includes("encoder")) {
           // Optimization introduced by optimum to reuse past key values. So, we just replace the constant
           // outputs with the previous past key values.
-          // https://github.com/huggingface/optimum/blob/0bf2c05fb7e1182b52d21b703cfc95fd9e4ea3dc/optimum/onnxruntime/base.py#L677-L704
+          // Documentation unavailable in air-gapped mode
           pkvs[newName] = pastKeyValues[newName];
         } else {
           pkvs[newName] = decoderResults[name];
@@ -3277,49 +3273,7 @@ export class VisionEncoderDecoderModel extends PreTrainedModel {
 // CLIP models
 export class CLIPPreTrainedModel extends PreTrainedModel {}
 
-/**
- * CLIP Text and Vision Model with a projection layers on top
- *
- * **Example:** Perform zero-shot image classification with a `CLIPModel`.
- *
- * ```javascript
- * import { AutoTokenizer, AutoProcessor, CLIPModel, RawImage } from '@xenova/transformers';
- *
- * // Load tokenizer, processor, and model
- * let tokenizer = await AutoTokenizer.from_pretrained('Xenova/clip-vit-base-patch16');
- * let processor = await AutoProcessor.from_pretrained('Xenova/clip-vit-base-patch16');
- * let model = await CLIPModel.from_pretrained('Xenova/clip-vit-base-patch16');
- *
- * // Run tokenization
- * let texts = ['a photo of a car', 'a photo of a football match']
- * let text_inputs = tokenizer(texts, { padding: true, truncation: true });
- *
- * // Read image and run processor
- * let image = await RawImage.read('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/football-match.jpg');
- * let image_inputs = await processor(image);
- *
- * // Run model with both text and pixel inputs
- * let output = await model({ ...text_inputs, ...image_inputs });
- * // {
- * //   logits_per_image: Tensor {
- * //     dims: [ 1, 2 ],
- * //     data: Float32Array(2) [ 18.579734802246094, 24.31830596923828 ],
- * //   },
- * //   logits_per_text: Tensor {
- * //     dims: [ 2, 1 ],
- * //     data: Float32Array(2) [ 18.579734802246094, 24.31830596923828 ],
- * //   },
- * //   text_embeds: Tensor {
- * //     dims: [ 2, 512 ],
- * //     data: Float32Array(1024) [ ... ],
- * //   },
- * //   image_embeds: Tensor {
- * //     dims: [ 1, 512 ],
- * //     data: Float32Array(512) [ ... ],
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class CLIPModel extends CLIPPreTrainedModel {}
 
 /**
@@ -3357,32 +3311,7 @@ export class CLIPTextModelWithProjection extends CLIPPreTrainedModel {
   }
 }
 
-/**
- * CLIP Vision Model with a projection layer on top (a linear layer on top of the pooled output)
- *
- * **Example:** Compute vision embeddings with `CLIPVisionModelWithProjection`.
- *
- * ```javascript
- * import { AutoProcessor, CLIPVisionModelWithProjection, RawImage} from '@xenova/transformers';
- *
- * // Load processor and vision model
- * const processor = await AutoProcessor.from_pretrained('Xenova/clip-vit-base-patch16');
- * const vision_model = await CLIPVisionModelWithProjection.from_pretrained('Xenova/clip-vit-base-patch16');
- *
- * // Read image and run processor
- * let image = await RawImage.read('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/football-match.jpg');
- * let image_inputs = await processor(image);
- *
- * // Compute embeddings
- * const { image_embeds } = await vision_model(image_inputs);
- * // Tensor {
- * //   dims: [ 1, 512 ],
- * //   type: 'float32',
- * //   data: Float32Array(512) [ ... ],
- * //   size: 512
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class CLIPVisionModelWithProjection extends CLIPPreTrainedModel {
   /** @type {PreTrainedModel.from_pretrained} */
   static async from_pretrained(pretrained_model_name_or_path, options = {}) {
@@ -3397,49 +3326,7 @@ export class CLIPVisionModelWithProjection extends CLIPPreTrainedModel {
 // SigLIP models
 export class SiglipPreTrainedModel extends PreTrainedModel {}
 
-/**
- * SigLIP Text and Vision Model with a projection layers on top
- *
- * **Example:** Perform zero-shot image classification with a `SiglipModel`.
- *
- * ```javascript
- * import { AutoTokenizer, AutoProcessor, SiglipModel, RawImage } from '@xenova/transformers';
- *
- * // Load tokenizer, processor, and model
- * const tokenizer = await AutoTokenizer.from_pretrained('Xenova/siglip-base-patch16-224');
- * const processor = await AutoProcessor.from_pretrained('Xenova/siglip-base-patch16-224');
- * const model = await SiglipModel.from_pretrained('Xenova/siglip-base-patch16-224');
- *
- * // Run tokenization
- * const texts = ['a photo of 2 cats', 'a photo of 2 dogs'];
- * const text_inputs = tokenizer(texts, { padding: 'max_length', truncation: true });
- *
- * // Read image and run processor
- * const image = await RawImage.read('http://images.cocodataset.org/val2017/000000039769.jpg');
- * const image_inputs = await processor(image);
- *
- * // Run model with both text and pixel inputs
- * const output = await model({ ...text_inputs, ...image_inputs });
- * // {
- * //   logits_per_image: Tensor {
- * //     dims: [ 1, 2 ],
- * //     data: Float32Array(2) [ -1.6019744873046875, -10.720091819763184 ],
- * //   },
- * //   logits_per_text: Tensor {
- * //     dims: [ 2, 1 ],
- * //     data: Float32Array(2) [ -1.6019744873046875, -10.720091819763184 ],
- * //   },
- * //   text_embeds: Tensor {
- * //     dims: [ 2, 768 ],
- * //     data: Float32Array(1536) [ ... ],
- * //   },
- * //   image_embeds: Tensor {
- * //     dims: [ 1, 768 ],
- * //     data: Float32Array(768) [ ... ],
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class SiglipModel extends SiglipPreTrainedModel {}
 
 /**
@@ -3477,32 +3364,7 @@ export class SiglipTextModel extends SiglipPreTrainedModel {
   }
 }
 
-/**
- * The vision model from SigLIP without any head or projection on top.
- *
- * **Example:** Compute vision embeddings with `SiglipVisionModel`.
- *
- * ```javascript
- * import { AutoProcessor, SiglipVisionModel, RawImage} from '@xenova/transformers';
- *
- * // Load processor and vision model
- * const processor = await AutoProcessor.from_pretrained('Xenova/siglip-base-patch16-224');
- * const vision_model = await SiglipVisionModel.from_pretrained('Xenova/siglip-base-patch16-224');
- *
- * // Read image and run processor
- * const image = await RawImage.read('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/football-match.jpg');
- * const image_inputs = await processor(image);
- *
- * // Compute embeddings
- * const { pooler_output } = await vision_model(image_inputs);
- * // Tensor {
- * //   dims: [ 1, 768 ],
- * //   type: 'float32',
- * //   data: Float32Array(768) [ ... ],
- * //   size: 768
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class SiglipVisionModel extends CLIPPreTrainedModel {
   /** @type {PreTrainedModel.from_pretrained} */
   static async from_pretrained(pretrained_model_name_or_path, options = {}) {
@@ -3524,52 +3386,7 @@ export class CLIPSegPreTrainedModel extends PreTrainedModel {}
 
 export class CLIPSegModel extends CLIPSegPreTrainedModel {}
 
-/**
- * CLIPSeg model with a Transformer-based decoder on top for zero-shot and one-shot image segmentation.
- *
- * **Example:** Perform zero-shot image segmentation with a `CLIPSegForImageSegmentation` model.
- *
- * ```javascript
- * import { AutoTokenizer, AutoProcessor, CLIPSegForImageSegmentation, RawImage } from '@xenova/transformers';
- *
- * // Load tokenizer, processor, and model
- * const tokenizer = await AutoTokenizer.from_pretrained('Xenova/clipseg-rd64-refined');
- * const processor = await AutoProcessor.from_pretrained('Xenova/clipseg-rd64-refined');
- * const model = await CLIPSegForImageSegmentation.from_pretrained('Xenova/clipseg-rd64-refined');
- *
- * // Run tokenization
- * const texts = ['a glass', 'something to fill', 'wood', 'a jar'];
- * const text_inputs = tokenizer(texts, { padding: true, truncation: true });
- *
- * // Read image and run processor
- * const image = await RawImage.read('https://github.com/timojl/clipseg/blob/master/example_image.jpg?raw=true');
- * const image_inputs = await processor(image);
- *
- * // Run model with both text and pixel inputs
- * const { logits } = await model({ ...text_inputs, ...image_inputs });
- * // logits: Tensor {
- * //   dims: [4, 352, 352],
- * //   type: 'float32',
- * //   data: Float32Array(495616) [ ... ],
- * //   size: 495616
- * // }
- * ```
- *
- * You can visualize the predictions as follows:
- * ```javascript
- * const preds = logits
- *   .unsqueeze_(1)
- *   .sigmoid_()
- *   .mul_(255)
- *   .round_()
- *   .to('uint8');
- *
- * for (let i = 0; i < preds.dims[0]; ++i) {
- *   const img = RawImage.fromTensor(preds[i]);
- *   img.save(`prediction_${i}.png`);
- * }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class CLIPSegForImageSegmentation extends CLIPSegPreTrainedModel {}
 //////////////////////////////////////////////////
 
@@ -3926,61 +3743,7 @@ export class ViTForImageClassification extends ViTPreTrainedModel {
 //////////////////////////////////////////////////
 export class VitMattePreTrainedModel extends PreTrainedModel {}
 
-/**
- * ViTMatte framework leveraging any vision backbone e.g. for ADE20k, CityScapes.
- *
- * **Example:** Perform image matting with a `VitMatteForImageMatting` model.
- * ```javascript
- * import { AutoProcessor, VitMatteForImageMatting, RawImage } from '@xenova/transformers';
- *
- * // Load processor and model
- * const processor = await AutoProcessor.from_pretrained('Xenova/vitmatte-small-distinctions-646');
- * const model = await VitMatteForImageMatting.from_pretrained('Xenova/vitmatte-small-distinctions-646');
- *
- * // Load image and trimap
- * const image = await RawImage.fromURL('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/vitmatte_image.png');
- * const trimap = await RawImage.fromURL('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/vitmatte_trimap.png');
- *
- * // Prepare image + trimap for the model
- * const inputs = await processor(image, trimap);
- *
- * // Predict alpha matte
- * const { alphas } = await model(inputs);
- * // Tensor {
- * //   dims: [ 1, 1, 640, 960 ],
- * //   type: 'float32',
- * //   size: 614400,
- * //   data: Float32Array(614400) [ 0.9894027709960938, 0.9970508813858032, ... ]
- * // }
- * ```
- *
- * You can visualize the alpha matte as follows:
- * ```javascript
- * import { Tensor, cat } from '@xenova/transformers';
- *
- * // Visualize predicted alpha matte
- * const imageTensor = new Tensor(
- *   'uint8',
- *   new Uint8Array(image.data),
- *   [image.height, image.width, image.channels]
- * ).transpose(2, 0, 1);
- *
- * // Convert float (0-1) alpha matte to uint8 (0-255)
- * const alphaChannel = alphas
- *   .squeeze(0)
- *   .mul_(255)
- *   .clamp_(0, 255)
- *   .round_()
- *   .to('uint8');
- *
- * // Concatenate original image with predicted alpha
- * const imageData = cat([imageTensor, alphaChannel], 0);
- *
- * // Save output image
- * const outputImage = RawImage.fromTensor(imageData);
- * outputImage.save('output.png');
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class VitMatteForImageMatting extends VitMattePreTrainedModel {
   /**
    * @param {any} model_inputs
@@ -4163,38 +3926,7 @@ export class Swin2SRPreTrainedModel extends PreTrainedModel {}
  */
 export class Swin2SRModel extends Swin2SRPreTrainedModel {}
 
-/**
- * Swin2SR Model transformer with an upsampler head on top for image super resolution and restoration.
- *
- * **Example:** Super-resolution w/ `Xenova/swin2SR-classical-sr-x2-64`.
- *
- * ```javascript
- * import { AutoProcessor, Swin2SRForImageSuperResolution, RawImage } from '@xenova/transformers';
- *
- * // Load processor and model
- * const model_id = 'Xenova/swin2SR-classical-sr-x2-64';
- * const processor = await AutoProcessor.from_pretrained(model_id);
- * const model = await Swin2SRForImageSuperResolution.from_pretrained(model_id);
- *
- * // Prepare model inputs
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/butterfly.jpg';
- * const image = await RawImage.fromURL(url);
- * const inputs = await processor(image);
- *
- * // Run model
- * const outputs = await model(inputs);
- *
- * // Convert Tensor to RawImage
- * const output = outputs.reconstruction.squeeze().clamp_(0, 1).mul_(255).round_().to('uint8');
- * const outputImage = RawImage.fromTensor(output);
- * // RawImage {
- * //   data: Uint8Array(786432) [ 41, 31, 24, ... ],
- * //   width: 512,
- * //   height: 512,
- * //   channels: 3
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class Swin2SRForImageSuperResolution extends Swin2SRPreTrainedModel {}
 //////////////////////////////////////////////////
 
@@ -4206,42 +3938,7 @@ export class DPTPreTrainedModel extends PreTrainedModel {}
  */
 export class DPTModel extends DPTPreTrainedModel {}
 
-/**
- * DPT Model with a depth estimation head on top (consisting of 3 convolutional layers) e.g. for KITTI, NYUv2.
- *
- * **Example:** Depth estimation w/ `Xenova/dpt-hybrid-midas`.
- * ```javascript
- * import { DPTForDepthEstimation, AutoProcessor, RawImage, interpolate, max } from '@xenova/transformers';
- *
- * // Load model and processor
- * const model_id = 'Xenova/dpt-hybrid-midas';
- * const model = await DPTForDepthEstimation.from_pretrained(model_id);
- * const processor = await AutoProcessor.from_pretrained(model_id);
- *
- * // Load image from URL
- * const url = 'http://images.cocodataset.org/val2017/000000039769.jpg';
- * const image = await RawImage.fromURL(url);
- *
- * // Prepare image for the model
- * const inputs = await processor(image);
- *
- * // Run model
- * const { predicted_depth } = await model(inputs);
- *
- * // Interpolate to original size
- * const prediction = interpolate(predicted_depth, image.size.reverse(), 'bilinear', false);
- *
- * // Visualize the prediction
- * const formatted = prediction.mul_(255 / max(prediction.data)[0]).to('uint8');
- * const depth = RawImage.fromTensor(formatted);
- * // RawImage {
- * //   data: Uint8Array(307200) [ 85, 85, 84, ... ],
- * //   width: 640,
- * //   height: 480,
- * //   channels: 1
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class DPTForDepthEstimation extends DPTPreTrainedModel {}
 //////////////////////////////////////////////////
 
@@ -4253,122 +3950,14 @@ export class GLPNPreTrainedModel extends PreTrainedModel {}
  */
 export class GLPNModel extends GLPNPreTrainedModel {}
 
-/**
- * GLPN Model transformer with a lightweight depth estimation head on top e.g. for KITTI, NYUv2.
- *
- * **Example:** Depth estimation w/ `Xenova/glpn-kitti`.
- * ```javascript
- * import { GLPNForDepthEstimation, AutoProcessor, RawImage, interpolate, max } from '@xenova/transformers';
- *
- * // Load model and processor
- * const model_id = 'Xenova/glpn-kitti';
- * const model = await GLPNForDepthEstimation.from_pretrained(model_id);
- * const processor = await AutoProcessor.from_pretrained(model_id);
- *
- * // Load image from URL
- * const url = 'http://images.cocodataset.org/val2017/000000039769.jpg';
- * const image = await RawImage.fromURL(url);
- *
- * // Prepare image for the model
- * const inputs = await processor(image);
- *
- * // Run model
- * const { predicted_depth } = await model(inputs);
- *
- * // Interpolate to original size
- * const prediction = interpolate(predicted_depth, image.size.reverse(), 'bilinear', false);
- *
- * // Visualize the prediction
- * const formatted = prediction.mul_(255 / max(prediction.data)[0]).to('uint8');
- * const depth = RawImage.fromTensor(formatted);
- * // RawImage {
- * //   data: Uint8Array(307200) [ 207, 169, 154, ... ],
- * //   width: 640,
- * //   height: 480,
- * //   channels: 1
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class GLPNForDepthEstimation extends GLPNPreTrainedModel {}
 //////////////////////////////////////////////////
 
 //////////////////////////////////////////////////
 export class DonutSwinPreTrainedModel extends PreTrainedModel {}
 
-/**
- * The bare Donut Swin Model transformer outputting raw hidden-states without any specific head on top.
- *
- * **Example:** Step-by-step Document Parsing.
- *
- * ```javascript
- * import { AutoProcessor, AutoTokenizer, AutoModelForVision2Seq, RawImage } from '@xenova/transformers';
- *
- * // Choose model to use
- * const model_id = 'Xenova/donut-base-finetuned-cord-v2';
- *
- * // Prepare image inputs
- * const processor = await AutoProcessor.from_pretrained(model_id);
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/receipt.png';
- * const image = await RawImage.read(url);
- * const image_inputs = await processor(image);
- *
- * // Prepare decoder inputs
- * const tokenizer = await AutoTokenizer.from_pretrained(model_id);
- * const task_prompt = '<s_cord-v2>';
- * const decoder_input_ids = tokenizer(task_prompt, {
- *   add_special_tokens: false,
- * }).input_ids;
- *
- * // Create the model
- * const model = await AutoModelForVision2Seq.from_pretrained(model_id);
- *
- * // Run inference
- * const output = await model.generate(image_inputs.pixel_values, {
- *   decoder_input_ids,
- *   max_length: model.config.decoder.max_position_embeddings,
- * });
- *
- * // Decode output
- * const decoded = tokenizer.batch_decode(output)[0];
- * // <s_cord-v2><s_menu><s_nm> CINNAMON SUGAR</s_nm><s_unitprice> 17,000</s_unitprice><s_cnt> 1 x</s_cnt><s_price> 17,000</s_price></s_menu><s_sub_total><s_subtotal_price> 17,000</s_subtotal_price></s_sub_total><s_total><s_total_price> 17,000</s_total_price><s_cashprice> 20,000</s_cashprice><s_changeprice> 3,000</s_changeprice></s_total></s>
- * ```
- *
- * **Example:** Step-by-step Document Visual Question Answering (DocVQA)
- *
- * ```javascript
- * import { AutoProcessor, AutoTokenizer, AutoModelForVision2Seq, RawImage } from '@xenova/transformers';
- *
- * // Choose model to use
- * const model_id = 'Xenova/donut-base-finetuned-docvqa';
- *
- * // Prepare image inputs
- * const processor = await AutoProcessor.from_pretrained(model_id);
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/invoice.png';
- * const image = await RawImage.read(url);
- * const image_inputs = await processor(image);
- *
- * // Prepare decoder inputs
- * const tokenizer = await AutoTokenizer.from_pretrained(model_id);
- * const question = 'What is the invoice number?';
- * const task_prompt = `<s_docvqa><s_question>${question}</s_question><s_answer>`;
- * const decoder_input_ids = tokenizer(task_prompt, {
- *   add_special_tokens: false,
- * }).input_ids;
- *
- * // Create the model
- * const model = await AutoModelForVision2Seq.from_pretrained(model_id);
- *
- * // Run inference
- * const output = await model.generate(image_inputs.pixel_values, {
- *   decoder_input_ids,
- *   max_length: model.config.decoder.max_position_embeddings,
- * });
- *
- * // Decode output
- * const decoded = tokenizer.batch_decode(output)[0];
- * // <s_docvqa><s_question> What is the invoice number?</s_question><s_answer> us-001</s_answer></s>
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class DonutSwinModel extends DonutSwinPreTrainedModel {}
 //////////////////////////////////////////////////
 
@@ -4465,46 +4054,7 @@ export class YolosObjectDetectionOutput extends ModelOutput {
 //////////////////////////////////////////////////
 export class SamPreTrainedModel extends PreTrainedModel {}
 
-/**
- * Segment Anything Model (SAM) for generating segmentation masks, given an input image
- * and optional 2D location and bounding boxes.
- *
- * **Example:** Perform mask generation w/ `Xenova/sam-vit-base`.
- * ```javascript
- * import { SamModel, AutoProcessor, RawImage } from '@xenova/transformers';
- *
- * const model = await SamModel.from_pretrained('Xenova/sam-vit-base');
- * const processor = await AutoProcessor.from_pretrained('Xenova/sam-vit-base');
- *
- * const img_url = 'https://huggingface.co/ybelkada/segment-anything/resolve/main/assets/car.png';
- * const raw_image = await RawImage.read(img_url);
- * const input_points = [[[450, 600]]] // 2D localization of a window
- *
- * const inputs = await processor(raw_image, input_points);
- * const outputs = await model(inputs);
- *
- * const masks = await processor.post_process_masks(outputs.pred_masks, inputs.original_sizes, inputs.reshaped_input_sizes);
- * // [
- * //   Tensor {
- * //     dims: [ 1, 3, 1764, 2646 ],
- * //     type: 'bool',
- * //     data: Uint8Array(14002632) [ ... ],
- * //     size: 14002632
- * //   }
- * // ]
- * const scores = outputs.iou_scores;
- * // Tensor {
- * //   dims: [ 1, 1, 3 ],
- * //   type: 'float32',
- * //   data: Float32Array(3) [
- * //     0.8892380595207214,
- * //     0.9311248064041138,
- * //     0.983696699142456
- * //   ],
- * //   size: 3
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class SamModel extends SamPreTrainedModel {
   /**
    * Creates a new instance of the `SamModel` class.
@@ -4678,32 +4228,7 @@ export class M2M100ForConditionalGeneration extends M2M100PreTrainedModel {
 // Wav2Vec2 models
 export class Wav2Vec2PreTrainedModel extends PreTrainedModel {}
 
-/**
- * The bare Wav2Vec2 Model transformer outputting raw hidden-states without any specific head on top.
- *
- * **Example:** Load and run a `Wav2Vec2Model` for feature extraction.
- *
- * ```javascript
- * import { AutoProcessor, AutoModel, read_audio } from '@xenova/transformers';
- *
- * // Read and preprocess audio
- * const processor = await AutoProcessor.from_pretrained('Xenova/mms-300m');
- * const audio = await read_audio('https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/mlk.flac', 16000);
- * const inputs = await processor(audio);
- *
- * // Run model with inputs
- * const model = await AutoModel.from_pretrained('Xenova/mms-300m');
- * const output = await model(inputs);
- * // {
- * //   last_hidden_state: Tensor {
- * //     dims: [ 1, 1144, 1024 ],
- * //     type: 'float32',
- * //     data: Float32Array(1171456) [ ... ],
- * //     size: 1171456
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class Wav2Vec2Model extends Wav2Vec2PreTrainedModel {}
 
 export class Wav2Vec2ForCTC extends Wav2Vec2PreTrainedModel {
@@ -4733,32 +4258,7 @@ export class Wav2Vec2ForSequenceClassification extends Wav2Vec2PreTrainedModel {
 // Hubert models
 export class HubertPreTrainedModel extends PreTrainedModel {}
 
-/**
- * The bare Hubert Model transformer outputting raw hidden-states without any specific head on top.
- *
- * **Example:** Load and run a `HubertModel` for feature extraction.
- *
- * ```javascript
- * import { AutoProcessor, AutoModel, read_audio } from '@xenova/transformers';
- *
- * // Read and preprocess audio
- * const processor = await AutoProcessor.from_pretrained('Xenova/hubert-base-ls960');
- * const audio = await read_audio('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav', 16000);
- * const inputs = await processor(audio);
- *
- * // Load and run model with inputs
- * const model = await AutoModel.from_pretrained('Xenova/hubert-base-ls960');
- * const output = await model(inputs);
- * // {
- * //   last_hidden_state: Tensor {
- * //     dims: [ 1, 549, 768 ],
- * //     type: 'float32',
- * //     data: Float32Array(421632) [0.0682469978928566, 0.08104046434164047, -0.4975186586380005, ...],
- * //     size: 421632
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class HubertModel extends Wav2Vec2PreTrainedModel {}
 
 /**
@@ -4797,32 +4297,7 @@ export class HubertForSequenceClassification extends Wav2Vec2PreTrainedModel {
  */
 export class WavLMPreTrainedModel extends PreTrainedModel {}
 
-/**
- * The bare WavLM Model transformer outputting raw hidden-states without any specific head on top.
- *
- * **Example:** Load and run a `WavLMModel` for feature extraction.
- *
- * ```javascript
- * import { AutoProcessor, AutoModel, read_audio } from '@xenova/transformers';
- *
- * // Read and preprocess audio
- * const processor = await AutoProcessor.from_pretrained('Xenova/wavlm-base');
- * const audio = await read_audio('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav', 16000);
- * const inputs = await processor(audio);
- *
- * // Run model with inputs
- * const model = await AutoModel.from_pretrained('Xenova/wavlm-base');
- * const output = await model(inputs);
- * // {
- * //   last_hidden_state: Tensor {
- * //     dims: [ 1, 549, 768 ],
- * //     type: 'float32',
- * //     data: Float32Array(421632) [-0.349443256855011, -0.39341306686401367,  0.022836603224277496, ...],
- * //     size: 421632
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class WavLMModel extends WavLMPreTrainedModel {}
 
 /**
@@ -4865,46 +4340,7 @@ export class SpeechT5PreTrainedModel extends PreTrainedModel {}
  */
 export class SpeechT5Model extends SpeechT5PreTrainedModel {}
 
-/**
- * SpeechT5 Model with a speech encoder and a text decoder.
- *
- * **Example:** Generate speech from text with `SpeechT5ForSpeechToText`.
- * ```javascript
- * import { AutoTokenizer, AutoProcessor, SpeechT5ForTextToSpeech, SpeechT5HifiGan, Tensor } from '@xenova/transformers';
- *
- * // Load the tokenizer and processor
- * const tokenizer = await AutoTokenizer.from_pretrained('Xenova/speecht5_tts');
- * const processor = await AutoProcessor.from_pretrained('Xenova/speecht5_tts');
- *
- * // Load the models
- * // NOTE: We use the unquantized versions as they are more accurate
- * const model = await SpeechT5ForTextToSpeech.from_pretrained('Xenova/speecht5_tts', { quantized: false });
- * const vocoder = await SpeechT5HifiGan.from_pretrained('Xenova/speecht5_hifigan', { quantized: false });
- *
- * // Load speaker embeddings from URL
- * const speaker_embeddings_data = new Float32Array(
- *     await (await fetch('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/speaker_embeddings.bin')).arrayBuffer()
- * );
- * const speaker_embeddings = new Tensor(
- *     'float32',
- *     speaker_embeddings_data,
- *     [1, speaker_embeddings_data.length]
- * )
- *
- * // Run tokenization
- * const { input_ids } = tokenizer('Hello, my dog is cute');
- *
- * // Generate waveform
- * const { waveform } = await model.generate_speech(input_ids, speaker_embeddings, { vocoder });
- * console.log(waveform)
- * // Tensor {
- * //   dims: [ 26112 ],
- * //   type: 'float32',
- * //   size: 26112,
- * //   data: Float32Array(26112) [ -0.00043630177970044315, -0.00018082228780258447, ... ],
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class SpeechT5ForSpeechToText extends SpeechT5PreTrainedModel {}
 
 /**
@@ -5180,32 +4616,7 @@ export class ClapTextModelWithProjection extends ClapPreTrainedModel {
   }
 }
 
-/**
- * CLAP Audio Model with a projection layer on top (a linear layer on top of the pooled output).
- *
- * **Example:** Compute audio embeddings with `ClapAudioModelWithProjection`.
- *
- * ```javascript
- * import { AutoProcessor, ClapAudioModelWithProjection, read_audio } from '@xenova/transformers';
- *
- * // Load processor and audio model
- * const processor = await AutoProcessor.from_pretrained('Xenova/clap-htsat-unfused');
- * const audio_model = await ClapAudioModelWithProjection.from_pretrained('Xenova/clap-htsat-unfused');
- *
- * // Read audio and run processor
- * const audio = await read_audio('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cat_meow.wav');
- * const audio_inputs = await processor(audio);
- *
- * // Compute embeddings
- * const { audio_embeds } = await audio_model(audio_inputs);
- * // Tensor {
- * //   dims: [ 1, 512 ],
- * //   type: 'float32',
- * //   data: Float32Array(512) [ ... ],
- * //   size: 512
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ClapAudioModelWithProjection extends ClapPreTrainedModel {
   /** @type {PreTrainedModel.from_pretrained} */
   static async from_pretrained(pretrained_model_name_or_path, options = {}) {

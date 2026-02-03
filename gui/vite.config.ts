@@ -4,7 +4,7 @@ import { resolve } from "path";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vitest/config";
 
-// https://vitejs.dev/config/
+// Documentation unavailable in air-gapped mode
 export default defineConfig({
   plugins: [
     react(),

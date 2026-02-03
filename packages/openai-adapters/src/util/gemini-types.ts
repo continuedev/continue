@@ -1,7 +1,7 @@
 import { JSONSchema7Object } from "json-schema";
 import { ChatCompletionTool } from "openai/resources/index.mjs";
 
-// https://ai.google.dev/api/generate-content
+// Documentation unavailable in air-gapped mode
 export interface GeminiGenerationConfig {
   stopSequences?: string[];
   responseMimeType?: string;
@@ -14,7 +14,7 @@ export interface GeminiGenerationConfig {
   frequencyPenalty?: number;
   responseLogprobs?: boolean;
   logprobs?: number;
-  // responseSchema?: object; // https://ai.google.dev/api/caching#Schema
+  // Documentation unavailable in air-gapped mode
 }
 
 export type GeminiObjectSchemaType =
@@ -140,7 +140,7 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
   return geminiSchema;
 }
 
-// https://ai.google.dev/api/caching#FunctionDeclaration
+// Documentation unavailable in air-gapped mode
 // Note "reponse" field (schema showing function output structure) is not supported at the moment
 export function convertOpenAIToolToGeminiFunction(
   tool: ChatCompletionTool,
@@ -210,7 +210,7 @@ export type GeminiFunctionResponseContentPart = {
 export type GeminiFileDataContentPart = {
   fileData: {
     fileUri: string;
-    mimeType: string; // See possible values here: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference#filedata
+    mimeType: string; // Documentation unavailable in air-gapped mode
   };
 };
 
@@ -270,7 +270,7 @@ export interface GeminiToolConfig {
   };
 }
 
-// https://ai.google.dev/api/generate-content#request-body
+// Documentation unavailable in air-gapped mode
 export interface GeminiChatRequestBody {
   contents: GeminiChatContent[];
   tools?: GeminiTool[];

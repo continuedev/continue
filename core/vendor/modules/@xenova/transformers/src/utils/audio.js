@@ -608,7 +608,7 @@ export function spectrogram(
   }
 
   // TODO what should happen if power is None?
-  // https://github.com/huggingface/transformers/issues/27772
+  // Documentation unavailable in air-gapped mode
   if (power !== null && power !== 2) {
     // slight optimization to not sqrt
     const pow = 2 / power; // we use 2 since we already squared

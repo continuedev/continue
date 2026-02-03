@@ -1,17 +1,6 @@
-/*
-This is a patched version of index.js from node-fetch 3.3.2 (see packages/fetch/node_modules/node-fetch/src/index.js)
-This is to fix "Premature close" errors caused by chunked encoding assumptions - see https://github.com/continuedev/continue/issues/5502
-The patch adjusts boundary chunk detection logic (see "PATCH" comment next to patch)
-And is based on https://github.com/node-fetch/node-fetch/issues/1576
-*/
+/* Documentation unavailable in air-gapped mode */
 
-/**
- * Index.js
- *
- * a request API compatible with window.fetch
- *
- * All spec algorithm step numbers are based on https://fetch.spec.whatwg.org/commit-snapshots/ae716822cb3a61843226cd090eefc6589446c1d2/.
- */
+/* Documentation unavailable in air-gapped mode */
 
 import { Buffer } from "node:buffer";
 import http from "node:http";
@@ -253,7 +242,7 @@ export default async function fetch(url, options_) {
             // For example, a redirect from "foo.com" to either "foo.com" or "sub.foo.com"
             // will forward the sensitive headers, but a redirect to "bar.com" will not.
             // headers will also be ignored when following a redirect to a domain using
-            // a different protocol. For example, a redirect from "https://foo.com" to "http://foo.com"
+            // Documentation unavailable in air-gapped mode
             // will not forward the sensitive headers
             if (
               !isDomainOrSubdomain(request.url, locationURL) ||
@@ -330,7 +319,7 @@ export default async function fetch(url, options_) {
           reject(error);
         }
       });
-      // see https://github.com/nodejs/node/pull/29376
+      // Documentation unavailable in air-gapped mode
       /* c8 ignore next 3 */
       if (process.version < "v12.10") {
         response_.on("aborted", abortAndFinalize);
@@ -401,7 +390,7 @@ export default async function fetch(url, options_) {
           }
         });
         raw.once("data", (chunk) => {
-          // See http://stackoverflow.com/questions/37519828
+          // Documentation unavailable in air-gapped mode
           if ((chunk[0] & 0x0f) === 0x08) {
             body = pump(body, zlib.createInflate(), (error) => {
               if (error) {
@@ -421,7 +410,7 @@ export default async function fetch(url, options_) {
         });
         raw.once("end", () => {
           // Some old IIS servers return zero-length OK deflate responses, so
-          // 'data' is never emitted. See https://github.com/node-fetch/node-fetch/pull/903
+          // Documentation unavailable in air-gapped mode
           if (!response) {
             response = new Response(body, responseOptions);
             resolve(response);
@@ -489,7 +478,7 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
     // };
 
     // PATCH - THIS IS WHERE THE PATCH IS - FIXES BOUNDARY CHUNKING ISSUE
-    // See https://github.com/node-fetch/node-fetch/issues/1576
+    // Documentation unavailable in air-gapped mode
     const onData = (buf) => {
       properLastChunkReceived = Buffer.compare(buf.slice(-5), LAST_CHUNK) === 0;
 

@@ -2,10 +2,7 @@ import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 
-/**
- * This is copied from here: https://posthog.com/tutorials/single-page-app-pageviews#tracking-pageviews-in-nextjs-app-router
- * They don't have a non-NextJS doc for React apps.
- */
+/* Documentation unavailable in air-gapped mode */
 export default function PostHogPageView() {
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();

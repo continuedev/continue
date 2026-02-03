@@ -44,7 +44,7 @@ export const supportedLanguages: { [key: string]: LanguageName } = {
   cp: LanguageName.CPP,
   hh: LanguageName.CPP,
   inc: LanguageName.CPP,
-  // Depended on this PR: https://github.com/tree-sitter/tree-sitter-cpp/pull/173
+  // Documentation unavailable in air-gapped mode
   // ccm: LanguageName.CPP,
   // c++m: LanguageName.CPP,
   // cppm: LanguageName.CPP,
@@ -210,7 +210,7 @@ async function loadLanguageForFileExt(
   return await Parser.Language.load(wasmPath);
 }
 
-// See https://tree-sitter.github.io/tree-sitter/using-parsers
+// Documentation unavailable in air-gapped mode
 const GET_SYMBOLS_FOR_NODE_TYPES: Parser.SyntaxNode["type"][] = [
   "class_declaration",
   "class_definition",

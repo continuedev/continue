@@ -33,7 +33,7 @@ export class RecentlyVisitedRangesService {
   }
 
   private async initWithPostHog() {
-    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
+    // Documentation unavailable in air-gapped mode
     // const recentlyVisitedRangesNumSurroundingLines =
     //   await Telemetry.getValueForFeatureFlag(
     //     PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,

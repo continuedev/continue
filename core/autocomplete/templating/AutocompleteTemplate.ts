@@ -34,7 +34,7 @@ export interface AutocompleteTemplate {
   completionOptions?: Partial<CompletionOptions>;
 }
 
-// https://huggingface.co/stabilityai/stable-code-3b
+// Documentation unavailable in air-gapped mode
 const stableCodeFimTemplate: AutocompleteTemplate = {
   template: "<fim_prefix>{{{prefix}}}<fim_suffix>{{{suffix}}}<fim_middle>",
   completionOptions: {
@@ -50,9 +50,9 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+// Documentation unavailable in air-gapped mode
 // This issue asks about the use of <|repo_name|> and <|file_sep|> together with <|fim_prefix|>, <|fim_suffix|> and <|fim_middle|>
-// https://github.com/QwenLM/Qwen2.5-Coder/issues/343
+// Documentation unavailable in air-gapped mode
 const qwenCoderFimTemplate: AutocompleteTemplate = {
   template:
     "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
@@ -71,7 +71,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// https://www.ibm.com/granite/docs/models/granite#fim
+// Documentation unavailable in air-gapped mode
 const granite4FimTemplate: AutocompleteTemplate = {
   template:
     "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
@@ -240,7 +240,7 @@ const codegemmaFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// https://arxiv.org/pdf/2402.19173.pdf section 5.1
+// Documentation unavailable in air-gapped mode
 const starcoder2FimTemplate: AutocompleteTemplate = {
   template: (
     prefix,
@@ -279,7 +279,7 @@ const codeLlamaFimTemplate: AutocompleteTemplate = {
   completionOptions: { stop: ["<PRE>", "<SUF>", "<MID>", "<EOT>"] },
 };
 
-// https://huggingface.co/deepseek-ai/deepseek-coder-1.3b-base
+// Documentation unavailable in air-gapped mode
 const deepseekFimTemplate: AutocompleteTemplate = {
   template:
     "<｜fim▁begin｜>{{{prefix}}}<｜fim▁hole｜>{{{suffix}}}<｜fim▁end｜>",
@@ -294,7 +294,7 @@ const deepseekFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// https://github.com/THUDM/CodeGeeX4/blob/main/guides/Infilling_guideline.md
+// Documentation unavailable in air-gapped mode
 const codegeexFimTemplate: AutocompleteTemplate = {
   template: (
     prefix,
@@ -348,7 +348,7 @@ Fill in the blank to complete the code block. Your response should include only 
 
 const holeFillerTemplate: AutocompleteTemplate = {
   template: (prefix: string, suffix: string) => {
-    // From https://github.com/VictorTaelin/AI-scripts
+    // Documentation unavailable in air-gapped mode
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
 
 ## EXAMPLE QUERY:

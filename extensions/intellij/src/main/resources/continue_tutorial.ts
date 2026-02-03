@@ -60,4 +60,4 @@ function sortingAlgorithm2(x: number[]): number[] {
 // 1. Switch from "Chat" to "Agent" mode using the dropdown in the bottom left of the input box
 // 2. Use the "/init" slash command to generate a CONTINUE.md file
 
-  // ——————————————————      Learn more at https://docs.continue.dev      ——————————————————— //
+  // Documentation unavailable in air-gapped mode

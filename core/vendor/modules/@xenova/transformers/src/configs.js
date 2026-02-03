@@ -1,30 +1,4 @@
-/**
- * @file Helper module for using model configs. For more information, see the corresponding
- * [Python documentation](https://huggingface.co/docs/transformers/main/en/model_doc/auto#transformers.AutoConfig).
- *
- * **Example:** Load an `AutoConfig`.
- *
- * ```javascript
- * import { AutoConfig } from '@xenova/transformers';
- * let config = await AutoConfig.from_pretrained('bert-base-uncased');
- * console.log(config);
- * // PretrainedConfig {
- * //   "model_type": "bert",
- * //   "is_encoder_decoder": false,
- * //   "architectures": [
- * //       "BertForMaskedLM"
- * //   ],
- * //   "vocab_size": 30522
- * //   "num_attention_heads": 12,
- * //   "num_hidden_layers": 12,
- * //   "hidden_size": 768,
- * //   "max_position_embeddings": 512,
- * //   ...
- * // }
- * ```
- *
- * @module configs
- */
+/* Documentation unavailable in air-gapped mode */
 
 import { getModelJSON } from "./utils/hub.js";
 
@@ -48,10 +22,7 @@ async function loadConfig(pretrained_model_name_or_path, options) {
   return info;
 }
 
-/**
- * Base class for all configuration classes. For more information, see the corresponding
- * [Python documentation](https://huggingface.co/docs/transformers/main/en/main_classes/configuration#transformers.PretrainedConfig).
- */
+/* Documentation unavailable in air-gapped mode */
 export class PretrainedConfig {
   // NOTE: Typo in original
 

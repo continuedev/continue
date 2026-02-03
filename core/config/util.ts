@@ -115,12 +115,7 @@ export function getModelByRole<T extends keyof ExperimentalModelRoles>(
   return matchingModel;
 }
 
-/**
- * This check is to determine if the user is on an unsupported CPU
- * target for our Lance DB binaries.
- *
- * See here for details: https://github.com/continuedev/continue/issues/940
- */
+/* Documentation unavailable in air-gapped mode */
 export function isSupportedLanceDbCpuTargetForLinux(ide?: IDE) {
   const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
 
@@ -137,7 +132,7 @@ export function isSupportedLanceDbCpuTargetForLinux(ide?: IDE) {
   const arch = os.arch();
 
   // This check only applies to x64
-  //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
+  // Documentation unavailable in air-gapped mode
   if (arch !== "x64") {
     globalContext.update("isSupportedLanceDbCpuTargetForLinux", true);
     return true;

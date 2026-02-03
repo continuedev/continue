@@ -38,7 +38,7 @@ export class ImportDefinitionsService {
 
   private async _getFileInfo(filepath: string): Promise<FileInfo | null> {
     if (filepath.endsWith(".ipynb")) {
-      // Commenting out this line was the solution to https://github.com/continuedev/continue/issues/1463
+      // Documentation unavailable in air-gapped mode
       return null;
     }
 

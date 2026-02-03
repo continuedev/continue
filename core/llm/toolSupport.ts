@@ -37,7 +37,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     openai: (model) => {
       const lower = model.toLowerCase();
-      // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
+      // Documentation unavailable in air-gapped mode
       if (
         lower.startsWith("gpt-4") ||
         lower.startsWith("gpt-5") ||
@@ -56,12 +56,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return true;
       }
 
-      // https://ai.google.dev/gemma/docs/capabilities/function-calling
+      // Documentation unavailable in air-gapped mode
       if (lower.startsWith("gemma")) {
         return true;
       }
 
-      // firworks-ai https://docs.fireworks.ai/guides/function-calling
+      // Documentation unavailable in air-gapped mode
       if (model.startsWith("accounts/fireworks/models/")) {
         switch (model.substring(26)) {
           case "llama-v3p1-405b-instruct":
@@ -122,7 +122,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     mistral: (model) => {
-      // https://docs.mistral.ai/capabilities/function_calling/
+      // Documentation unavailable in air-gapped mode
       return (
         !model.toLowerCase().includes("mamba") &&
         [
@@ -137,7 +137,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         ].some((part) => model.toLowerCase().includes(part))
       );
     },
-    // https://ollama.com/search?c=tools
+    // Documentation unavailable in air-gapped mode
     ollama: (model) => {
       let modelName = "";
       // Extract the model name after the last slash to support other registries
@@ -190,7 +190,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     sambanova: (model) => {
-      // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
+      // Documentation unavailable in air-gapped mode
       if (
         model.toLowerCase().startsWith("meta-llama-3") ||
         model.toLowerCase().includes("llama-4") ||
@@ -204,8 +204,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     deepseek: (model) => {
-      // https://api-docs.deepseek.com/quick_start/pricing
-      // https://api-docs.deepseek.com/guides/function_calling
+      // Documentation unavailable in air-gapped mode
+      // Documentation unavailable in air-gapped mode
       if (model === "deepseek-reasoner" || model === "deepseek-chat") {
         return true;
       }
@@ -232,7 +232,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     openrouter: (model) => {
-      // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
+      // Documentation unavailable in air-gapped mode
 
       // Specific free models that don't support tools
       // Fixes issue #6619 - moonshotai/kimi-k2:free causing 400 errors
@@ -314,7 +314,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     moonshot: (model) => {
       // support moonshot models
-      // https://platform.moonshot.ai/docs/pricing/chat#concepts
+      // Documentation unavailable in air-gapped mode
       if (
         model.toLowerCase().startsWith("kimi") &&
         model.toLowerCase() !== "kimi-thinking-preview"

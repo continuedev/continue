@@ -120,7 +120,7 @@ export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
   if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
     if (ideType === "jetbrains") {
-      // https://github.com/continuedev/continue/pull/7224
+      // Documentation unavailable in air-gapped mode
       // This was here because we had different context provider support between jetbrains and vs code
       // Leaving so we could differentiate later but for now configs are the same between IDEs
       fs.writeFileSync(p, YAML.stringify(defaultConfig));

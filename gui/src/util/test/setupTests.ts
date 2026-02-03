@@ -29,7 +29,7 @@ window.addEventListener("unhandledrejection", (event) => {
   }
 });
 
-// https://github.com/vitest-dev/vitest/issues/821
+// Documentation unavailable in air-gapped mode
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({

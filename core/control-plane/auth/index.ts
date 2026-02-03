@@ -18,7 +18,7 @@ export async function getAuthUrlForTokenPage(
     response_type: "code",
     client_id: env.WORKOS_CLIENT_ID,
     redirect_uri: `${env.APP_URL}tokens/${useOnboarding ? "onboarding-" : ""}callback`,
-    // redirect_uri: "http://localhost:3000/tokens/callback",
+    // Documentation unavailable in air-gapped mode
     state: uuidv4(),
     provider: "authkit",
   };

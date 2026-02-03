@@ -11,7 +11,7 @@ const globalThis = global;
 
 globalThis.jest = jest;
 
-// https://github.com/mswjs/msw/issues/1576#issuecomment-1482643055
+// Documentation unavailable in air-gapped mode
 globalThis.fetch = fetch;
 globalThis.Request = Request;
 globalThis.Response = Response;

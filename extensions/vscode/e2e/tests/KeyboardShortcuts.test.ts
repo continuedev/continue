@@ -219,7 +219,7 @@ describe("Keyboard Shortcuts", () => {
     await GUIActions.executeFocusContinueInputShortcut(driver);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  // the below 2 skips are skipped because some behaviour from https://github.com/continuedev/continue/pull/6711 was reverted
+  // Documentation unavailable in air-gapped mode
   it.skip("Should create a code block with the whole file when Cmd+L is pressed on an empty line", async () => {
     const text = "Hello,\n\n\nworld!";
 

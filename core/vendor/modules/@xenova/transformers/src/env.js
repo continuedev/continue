@@ -53,34 +53,14 @@ const localModelPath = RUNNING_LOCALLY
   : DEFAULT_LOCAL_MODEL_PATH;
 
 // Set path to wasm files. This is needed when running in a web worker.
-// https://onnxruntime.ai/docs/api/js/interfaces/Env.WebAssemblyFlags.html#wasmPaths
+// Documentation unavailable in air-gapped mode
 // We use remote wasm files by default to make it easier for newer users.
 // In practice, users should probably self-host the necessary .wasm files.
 onnx_env.wasm.wasmPaths = RUNNING_LOCALLY
   ? path.join(__dirname, "/dist/")
   : `https://cdn.jsdelivr.net/npm/@xenova/transformers@${VERSION}/dist/`;
 
-/**
- * Global variable used to control execution. This provides users a simple way to configure Transformers.js.
- * @property {Object} backends Expose environment variables of different backends,
- * allowing users to set these variables if they want to.
- * @property {string} __dirname Directory name of module. Useful for resolving local paths.
- * @property {string} version This version of Transformers.js.
- * @property {boolean} allowRemoteModels Whether to allow loading of remote files, defaults to `true`.
- * If set to `false`, it will have the same effect as setting `local_files_only=true` when loading pipelines, models, tokenizers, processors, etc.
- * @property {string} remoteHost Host URL to load models from. Defaults to the Hugging Face Hub.
- * @property {string} remotePathTemplate Path template to fill in and append to `remoteHost` when loading models.
- * @property {boolean} allowLocalModels Whether to allow loading of local files, defaults to `true`.
- * If set to `false`, it will skip the local file check and try to load the model from the remote host.
- * @property {string} localModelPath Path to load local models from. Defaults to `/models/`.
- * @property {boolean} useFS Whether to use the file system to load files. By default, it is `true` if available.
- * @property {boolean} useBrowserCache Whether to use Cache API to cache models. By default, it is `true` if available.
- * @property {boolean} useFSCache Whether to use the file system to cache files. By default, it is `true` if available.
- * @property {string} cacheDir The directory to use for caching files with the file system. By default, it is `./.cache`.
- * @property {boolean} useCustomCache Whether to use a custom cache system (defined by `customCache`), defaults to `false`.
- * @property {Object} customCache The custom cache to use. Defaults to `null`. Note: this must be an object which
- * implements the `match` and `put` functions of the Web Cache API. For more information, see https://developer.mozilla.org/en-US/docs/Web/API/Cache
- */
+/* Documentation unavailable in air-gapped mode */
 export const env = {
   /////////////////// Backends settings ///////////////////
   backends: {

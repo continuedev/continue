@@ -83,7 +83,7 @@ export function getGitHubActionsRepoUrl(): string | null {
     return null;
   }
 
-  // GITHUB_SERVER_URL defaults to https://github.com but can be different for GitHub Enterprise
+  // Documentation unavailable in air-gapped mode
   const serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com";
 
   return `${serverUrl}/${githubRepository}`;

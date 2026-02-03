@@ -1686,7 +1686,7 @@ console.log(multiplyNumbers(2, 3));
   //   return data;
   // }
 
-  // fetchData('https://api.example.com/data');
+  // Documentation unavailable in air-gapped mode
   // `,
   //     llmOutput: `const data = await response.json();`,
   //     expectedCompletion: `const data = await response.json();`,

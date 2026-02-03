@@ -59,7 +59,7 @@ export class WatsonXApi implements BaseLlmApi {
       // if (this.config.env.bearerTokenRequired) {
       // In certain WatsonX environments, ZenApiKey authentication is disabled,
       // and it's necessary to call this endpoint with username+api_key to get a bearer token.
-      // See the docs: https://www.ibm.com/docs/en/watsonx/w-and-w/2.1.0?topic=keys-generating-bearer-token
+      // Documentation unavailable in air-gapped mode
       // Ask @sestinj why the rest is commented out.
       const base64Decoded = Buffer.from(
         this.config.apiKey ?? "",

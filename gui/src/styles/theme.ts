@@ -1,5 +1,5 @@
-// All vscode variables https://gist.github.com/estruyf/ba49203e1a7d6868e9320a4ea480c27a
-// Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
+// Documentation unavailable in air-gapped mode
+// Documentation unavailable in air-gapped mode
 
 // The current default theme is dark with blue accents
 export const THEME_COLORS = {

@@ -785,51 +785,7 @@ export class SummarizationPipeline
  * @typedef {TextPipelineConstructorArgs & TranslationPipelineCallback & Disposable} TranslationPipelineType
  */
 
-/**
- * Translates text from one language to another.
- *
- * **Example:** Multilingual translation w/ `Xenova/nllb-200-distilled-600M`.
- *
- * See [here](https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200)
- * for the full list of languages and their corresponding codes.
- *
- * ```javascript
- * const translator = await pipeline('translation', 'Xenova/nllb-200-distilled-600M');
- * const output = await translator('जीवन एक चॉकलेट बॉक्स की तरह है।', {
- *   src_lang: 'hin_Deva', // Hindi
- *   tgt_lang: 'fra_Latn', // French
- * });
- * // [{ translation_text: 'La vie est comme une boîte à chocolat.' }]
- * ```
- *
- * **Example:** Multilingual translation w/ `Xenova/m2m100_418M`.
- *
- * See [here](https://huggingface.co/facebook/m2m100_418M#languages-covered)
- * for the full list of languages and their corresponding codes.
- *
- * ```javascript
- * const translator = await pipeline('translation', 'Xenova/m2m100_418M');
- * const output = await translator('生活就像一盒巧克力。', {
- *   src_lang: 'zh', // Chinese
- *   tgt_lang: 'en', // English
- * });
- * // [{ translation_text: 'Life is like a box of chocolate.' }]
- * ```
- *
- * **Example:** Multilingual translation w/ `Xenova/mbart-large-50-many-to-many-mmt`.
- *
- * See [here](https://huggingface.co/facebook/mbart-large-50-many-to-many-mmt#languages-covered)
- * for the full list of languages and their corresponding codes.
- *
- * ```javascript
- * const translator = await pipeline('translation', 'Xenova/mbart-large-50-many-to-many-mmt');
- * const output = await translator('संयुक्त राष्ट्र के प्रमुख का कहना है कि सीरिया में कोई सैन्य समाधान नहीं है', {
- *   src_lang: 'hi_IN', // Hindi
- *   tgt_lang: 'fr_XX', // French
- * });
- * // [{ translation_text: 'Le chef des Nations affirme qu 'il n 'y a military solution in Syria.' }]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class TranslationPipeline
   extends /** @type {new (options: TextPipelineConstructorArgs) => TranslationPipelineType} */ (
     /** @type {any} */ (Text2TextGenerationPipeline)
@@ -1236,57 +1192,9 @@ export class FeatureExtractionPipeline
 // export class SentenceSimilarityPipeline extends Pipeline {
 // }
 
-/**
- * @typedef {Object} AudioClassificationSingle
- * @property {string} label The label predicted.
- * @property {number} score The corresponding probability.
- * @typedef {AudioClassificationSingle[]} AudioClassificationOutput
- *
- * @typedef {Object} AudioClassificationPipelineOptions Parameters specific to audio classification pipelines.
- * @property {number} [topk=null] The number of top labels that will be returned by the pipeline.
- * If the provided number is `null` or higher than the number of labels available in the model configuration,
- * it will default to the number of labels.
- *
- * @callback AudioClassificationPipelineCallback Classify the sequence(s) given as inputs.
- * @param {AudioPipelineInputs} audio The input audio file(s) to be classified. The input is either:
- * - `string` or `URL` that is the filename/URL of the audio file, the file will be read at the processor's sampling rate
- * to get the waveform using the [`AudioContext`](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) API.
- * If `AudioContext` is not available, you should pass the raw waveform in as a Float32Array of shape `(n, )`.
- * - `Float32Array` or `Float64Array` of shape `(n, )`, representing the raw audio at the correct sampling rate (no further check will be done).
- * @param {AudioClassificationPipelineOptions} [options] The options to use for audio classification.
- * @returns {Promise<AudioClassificationOutput|AudioClassificationOutput[]>} An array or object containing the predicted labels and scores.
- *
- * @typedef {AudioPipelineConstructorArgs & AudioClassificationPipelineCallback & Disposable} AudioClassificationPipelineType
- */
+/* Documentation unavailable in air-gapped mode */
 
-/**
- * Audio classification pipeline using any `AutoModelForAudioClassification`.
- * This pipeline predicts the class of a raw waveform or an audio file.
- *
- * **Example:** Perform audio classification with `Xenova/wav2vec2-large-xlsr-53-gender-recognition-librispeech`.
- * ```javascript
- * const classifier = await pipeline('audio-classification', 'Xenova/wav2vec2-large-xlsr-53-gender-recognition-librispeech');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav';
- * const output = await classifier(url);
- * // [
- * //   { label: 'male', score: 0.9981542229652405 },
- * //   { label: 'female', score: 0.001845747814513743 }
- * // ]
- * ```
- *
- * **Example:** Perform audio classification with `Xenova/ast-finetuned-audioset-10-10-0.4593` and return top 4 results.
- * ```javascript
- * const classifier = await pipeline('audio-classification', 'Xenova/ast-finetuned-audioset-10-10-0.4593');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cat_meow.wav';
- * const output = await classifier(url, { topk: 4 });
- * // [
- * //   { label: 'Meow', score: 0.5617874264717102 },
- * //   { label: 'Cat', score: 0.22365376353263855 },
- * //   { label: 'Domestic animals, pets', score: 0.1141069084405899 },
- * //   { label: 'Animal', score: 0.08985692262649536 },
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class AudioClassificationPipeline
   extends /** @type {new (options: AudioPipelineConstructorArgs) => AudioClassificationPipelineType} */ (
     Pipeline
@@ -1334,45 +1242,9 @@ export class AudioClassificationPipeline
   }
 }
 
-/**
- * @typedef {Object} ZeroShotAudioClassificationOutput
- * @property {string} label The label identified by the model. It is one of the suggested `candidate_label`.
- * @property {number} score The score attributed by the model for that label (between 0 and 1).
- *
- * @typedef {Object} ZeroShotAudioClassificationPipelineOptions Parameters specific to zero-shot audio classification pipelines.
- * @property {string} [hypothesis_template="This is a sound of {}."] The sentence used in conjunction with `candidate_labels`
- * to attempt the audio classification by replacing the placeholder with the candidate_labels.
- * Then likelihood is estimated by using `logits_per_audio`.
- *
- * @callback ZeroShotAudioClassificationPipelineCallback Classify the sequence(s) given as inputs.
- * @param {AudioPipelineInputs} audio The input audio file(s) to be classified. The input is either:
- * - `string` or `URL` that is the filename/URL of the audio file, the file will be read at the processor's sampling rate
- * to get the waveform using the [`AudioContext`](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) API.
- * If `AudioContext` is not available, you should pass the raw waveform in as a Float32Array of shape `(n, )`.
- * - `Float32Array` or `Float64Array` of shape `(n, )`, representing the raw audio at the correct sampling rate (no further check will be done).
- * @param {string[]} candidate_labels The candidate labels for this audio.
- * @param {ZeroShotAudioClassificationPipelineOptions} [options] The options to use for zero-shot audio classification.
- * @returns {Promise<ZeroShotAudioClassificationOutput[]|ZeroShotAudioClassificationOutput[][]>} An array of objects containing the predicted labels and scores.
- *
- * @typedef {TextAudioPipelineConstructorArgs & ZeroShotAudioClassificationPipelineCallback & Disposable} ZeroShotAudioClassificationPipelineType
- */
+/* Documentation unavailable in air-gapped mode */
 
-/**
- * Zero shot audio classification pipeline using `ClapModel`. This pipeline predicts the class of an audio when you
- * provide an audio and a set of `candidate_labels`.
- *
- * **Example**: Perform zero-shot audio classification with `Xenova/clap-htsat-unfused`.
- * ```javascript
- * const classifier = await pipeline('zero-shot-audio-classification', 'Xenova/clap-htsat-unfused');
- * const audio = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/dog_barking.wav';
- * const candidate_labels = ['dog', 'vaccum cleaner'];
- * const scores = await classifier(audio, candidate_labels);
- * // [
- * //   { score: 0.9993992447853088, label: 'dog' },
- * //   { score: 0.0006007603369653225, label: 'vaccum cleaner' }
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ZeroShotAudioClassificationPipeline
   extends /** @type {new (options: TextAudioPipelineConstructorArgs) => ZeroShotAudioClassificationPipelineType} */ (
     Pipeline
@@ -1444,105 +1316,9 @@ export class ZeroShotAudioClassificationPipeline
  * @property {string} text The recognized text.
  */
 
-/**
- * @typedef {Object} AutomaticSpeechRecognitionOutput
- * @property {string} text The recognized text.
- * @property {Chunk[]} [chunks] When using `return_timestamps`, the `chunks` will become a list
- * containing all the various text chunks identified by the model.
- *
- * @typedef {Object} AutomaticSpeechRecognitionSpecificParams Parameters specific to automatic-speech-recognition pipelines.
- * @property {boolean|'word'} [kwargs.return_timestamps] Whether to return timestamps or not. Default is `false`.
- * @property {number} [kwargs.chunk_length_s] The length of audio chunks to process in seconds. Default is 0 (no chunking).
- * @property {number} [kwargs.stride_length_s] The length of overlap between consecutive audio chunks in seconds. If not provided, defaults to `chunk_length_s / 6`.
- * @property {ChunkCallback} [kwargs.chunk_callback] Callback function to be called with each chunk processed.
- * @property {boolean} [kwargs.force_full_sequences] Whether to force outputting full sequences or not. Default is `false`.
- * @property {string} [kwargs.language] The source language. Default is `null`, meaning it should be auto-detected. Use this to potentially improve performance if the source language is known.
- * @property {string} [kwargs.task] The task to perform. Default is `null`, meaning it should be auto-detected.
- * @property {number[][]} [kwargs.forced_decoder_ids] A list of pairs of integers which indicates a mapping from generation indices to token indices
- * that will be forced before sampling. For example, [[1, 123]] means the second generated token will always be a token of index 123.
- * @property {number} [num_frames] The number of frames in the input audio.
- * @typedef {import('./utils/generation.js').GenerationConfigType & AutomaticSpeechRecognitionSpecificParams} AutomaticSpeechRecognitionConfig
- *
- * @callback AutomaticSpeechRecognitionPipelineCallback Transcribe the audio sequence(s) given as inputs to text.
- * @param {AudioPipelineInputs} audio The input audio file(s) to be transcribed. The input is either:
- * - `string` or `URL` that is the filename/URL of the audio file, the file will be read at the processor's sampling rate
- * to get the waveform using the [`AudioContext`](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) API.
- * If `AudioContext` is not available, you should pass the raw waveform in as a Float32Array of shape `(n, )`.
- * - `Float32Array` or `Float64Array` of shape `(n, )`, representing the raw audio at the correct sampling rate (no further check will be done).
- * @param {AutomaticSpeechRecognitionConfig} [options] Additional keyword arguments to pass along to the generate method of the model.
- * @returns {Promise<AutomaticSpeechRecognitionOutput|AutomaticSpeechRecognitionOutput[]>} An object containing the transcription text and optionally timestamps if `return_timestamps` is `true`.
- *
- * @typedef {TextAudioPipelineConstructorArgs & AutomaticSpeechRecognitionPipelineCallback & Disposable} AutomaticSpeechRecognitionPipelineType
- */
+/* Documentation unavailable in air-gapped mode */
 
-/**
- * Pipeline that aims at extracting spoken text contained within some audio.
- *
- * **Example:** Transcribe English.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav';
- * const output = await transcriber(url);
- * // { text: " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country." }
- * ```
- *
- * **Example:** Transcribe English w/ timestamps.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav';
- * const output = await transcriber(url, { return_timestamps: true });
- * // {
- * //   text: " And so my fellow Americans ask not what your country can do for you, ask what you can do for your country."
- * //   chunks: [
- * //     { timestamp: [0, 8],  text: " And so my fellow Americans ask not what your country can do for you" }
- * //     { timestamp: [8, 11], text: " ask what you can do for your country." }
- * //   ]
- * // }
- * ```
- *
- * **Example:** Transcribe English w/ word-level timestamps.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/jfk.wav';
- * const output = await transcriber(url, { return_timestamps: 'word' });
- * // {
- * //   "text": " And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
- * //   "chunks": [
- * //     { "text": " And", "timestamp": [0, 0.78] },
- * //     { "text": " so", "timestamp": [0.78, 1.06] },
- * //     { "text": " my", "timestamp": [1.06, 1.46] },
- * //     ...
- * //     { "text": " for", "timestamp": [9.72, 9.92] },
- * //     { "text": " your", "timestamp": [9.92, 10.22] },
- * //     { "text": " country.", "timestamp": [10.22, 13.5] }
- * //   ]
- * // }
- * ```
- *
- * **Example:** Transcribe French.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-small');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/french-audio.mp3';
- * const output = await transcriber(url, { language: 'french', task: 'transcribe' });
- * // { text: " J'adore, j'aime, je n'aime pas, je déteste." }
- * ```
- *
- * **Example:** Translate French to English.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-small');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/french-audio.mp3';
- * const output = await transcriber(url, { language: 'french', task: 'translate' });
- * // { text: " I love, I like, I don't like, I hate." }
- * ```
- *
- * **Example:** Transcribe/translate audio longer than 30 seconds.
- * ```javascript
- * const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/ted_60.wav';
- * const output = await transcriber(url, { chunk_length_s: 30, stride_length_s: 5 });
- * // { text: " So in college, I was a government major, which means [...] So I'd start off light and I'd bump it up" }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class AutomaticSpeechRecognitionPipeline
   extends /** @type {new (options: TextAudioPipelineConstructorArgs) => AutomaticSpeechRecognitionPipelineType} */ (
     Pipeline
@@ -1758,25 +1534,7 @@ export class AutomaticSpeechRecognitionPipeline
  * @typedef {TextImagePipelineConstructorArgs & ImageToTextPipelineCallback & Disposable} ImageToTextPipelineType
  */
 
-/**
- * Image To Text pipeline using a `AutoModelForVision2Seq`. This pipeline predicts a caption for a given image.
- *
- * **Example:** Generate a caption for an image w/ `Xenova/vit-gpt2-image-captioning`.
- * ```javascript
- * const captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cats.jpg';
- * const output = await captioner(url);
- * // [{ generated_text: 'a cat laying on a couch with another cat' }]
- * ```
- *
- * **Example:** Optical Character Recognition (OCR) w/ `Xenova/trocr-small-handwritten`.
- * ```javascript
- * const captioner = await pipeline('image-to-text', 'Xenova/trocr-small-handwritten');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/handwriting.jpg';
- * const output = await captioner(url);
- * // [{ generated_text: 'Mr. Brown commented icily.' }]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ImageToTextPipeline
   extends /** @type {new (options: TextImagePipelineConstructorArgs) => ImageToTextPipelineType} */ (
     Pipeline
@@ -1830,46 +1588,7 @@ export class ImageToTextPipeline
  * @typedef {ImagePipelineConstructorArgs & ImageClassificationPipelineCallback & Disposable} ImageClassificationPipelineType
  */
 
-/**
- * Image classification pipeline using any `AutoModelForImageClassification`.
- * This pipeline predicts the class of an image.
- *
- * **Example:** Classify an image.
- * ```javascript
- * const classifier = await pipeline('image-classification', 'Xenova/vit-base-patch16-224');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/tiger.jpg';
- * const output = await classifier(url);
- * // [
- * //   { label: 'tiger, Panthera tigris', score: 0.632695734500885 },
- * // ]
- * ```
- *
- * **Example:** Classify an image and return top `n` classes.
- * ```javascript
- * const classifier = await pipeline('image-classification', 'Xenova/vit-base-patch16-224');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/tiger.jpg';
- * const output = await classifier(url, { topk: 3 });
- * // [
- * //   { label: 'tiger, Panthera tigris', score: 0.632695734500885 },
- * //   { label: 'tiger cat', score: 0.3634825646877289 },
- * //   { label: 'lion, king of beasts, Panthera leo', score: 0.00045060308184474707 },
- * // ]
- * ```
- *
- * **Example:** Classify an image and return all classes.
- * ```javascript
- * const classifier = await pipeline('image-classification', 'Xenova/vit-base-patch16-224');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/tiger.jpg';
- * const output = await classifier(url, { topk: 0 });
- * // [
- * //   { label: 'tiger, Panthera tigris', score: 0.632695734500885 },
- * //   { label: 'tiger cat', score: 0.3634825646877289 },
- * //   { label: 'lion, king of beasts, Panthera leo', score: 0.00045060308184474707 },
- * //   { label: 'jaguar, panther, Panthera onca, Felis onca', score: 0.00035465499968267977 },
- * //   ...
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ImageClassificationPipeline
   extends /** @type {new (options: ImagePipelineConstructorArgs) => ImageClassificationPipelineType} */ (
     Pipeline
@@ -1936,21 +1655,7 @@ export class ImageClassificationPipeline
  * @typedef {ImagePipelineConstructorArgs & ImageSegmentationPipelineCallback & Disposable} ImageSegmentationPipelineType
  */
 
-/**
- * Image segmentation pipeline using any `AutoModelForXXXSegmentation`.
- * This pipeline predicts masks of objects and their classes.
- *
- * **Example:** Perform image segmentation with `Xenova/detr-resnet-50-panoptic`.
- * ```javascript
- * const segmenter = await pipeline('image-segmentation', 'Xenova/detr-resnet-50-panoptic');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cats.jpg';
- * const output = await segmenter(url);
- * // [
- * //   { label: 'remote', score: 0.9984649419784546, mask: RawImage { ... } },
- * //   { label: 'cat', score: 0.9994316101074219, mask: RawImage { ... } }
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ImageSegmentationPipeline
   extends /** @type {new (options: ImagePipelineConstructorArgs) => ImageSegmentationPipelineType} */ (
     Pipeline
@@ -2093,22 +1798,7 @@ export class ImageSegmentationPipeline
  * @typedef {TextImagePipelineConstructorArgs & ZeroShotImageClassificationPipelineCallback & Disposable} ZeroShotImageClassificationPipelineType
  */
 
-/**
- * Zero shot image classification pipeline. This pipeline predicts the class of
- * an image when you provide an image and a set of `candidate_labels`.
- *
- * **Example:** Zero shot image classification w/ `Xenova/clip-vit-base-patch32`.
- * ```javascript
- * const classifier = await pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/tiger.jpg';
- * const output = await classifier(url, ['tiger', 'horse', 'dog']);
- * // [
- * //   { score: 0.9993917942047119, label: 'tiger' },
- * //   { score: 0.0003519294841680676, label: 'horse' },
- * //   { score: 0.0002562698791734874, label: 'dog' }
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ZeroShotImageClassificationPipeline
   extends /** @type {new (options: TextImagePipelineConstructorArgs) => ZeroShotImageClassificationPipelineType} */ (
     Pipeline
@@ -2190,28 +1880,7 @@ export class ZeroShotImageClassificationPipeline
  * @typedef {ImagePipelineConstructorArgs & ObjectDetectionPipelineCallback & Disposable} ObjectDetectionPipelineType
  */
 
-/**
- * Object detection pipeline using any `AutoModelForObjectDetection`.
- * This pipeline predicts bounding boxes of objects and their classes.
- *
- * **Example:** Run object-detection with `Xenova/detr-resnet-50`.
- * ```javascript
- * const detector = await pipeline('object-detection', 'Xenova/detr-resnet-50');
- * const img = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cats.jpg';
- * const output = await detector(img, { threshold: 0.9 });
- * // [{
- * //   score: 0.9976370930671692,
- * //   label: "remote",
- * //   box: { xmin: 31, ymin: 68, xmax: 190, ymax: 118 }
- * // },
- * // ...
- * // {
- * //   score: 0.9984092116355896,
- * //   label: "cat",
- * //   box: { xmin: 331, ymin: 19, xmax: 649, ymax: 371 }
- * // }]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ObjectDetectionPipeline
   extends /** @type {new (options: ImagePipelineConstructorArgs) => ObjectDetectionPipelineType} */ (
     Pipeline
@@ -2290,70 +1959,7 @@ export class ObjectDetectionPipeline
  * @typedef {TextImagePipelineConstructorArgs & ZeroShotObjectDetectionPipelineCallback & Disposable} ZeroShotObjectDetectionPipelineType
  */
 
-/**
- * Zero-shot object detection pipeline. This pipeline predicts bounding boxes of
- * objects when you provide an image and a set of `candidate_labels`.
- *
- * **Example:** Zero-shot object detection w/ `Xenova/owlvit-base-patch32`.
- * ```javascript
- * const detector = await pipeline('zero-shot-object-detection', 'Xenova/owlvit-base-patch32');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/astronaut.png';
- * const candidate_labels = ['human face', 'rocket', 'helmet', 'american flag'];
- * const output = await detector(url, candidate_labels);
- * // [
- * //   {
- * //     score: 0.24392342567443848,
- * //     label: 'human face',
- * //     box: { xmin: 180, ymin: 67, xmax: 274, ymax: 175 }
- * //   },
- * //   {
- * //     score: 0.15129457414150238,
- * //     label: 'american flag',
- * //     box: { xmin: 0, ymin: 4, xmax: 106, ymax: 513 }
- * //   },
- * //   {
- * //     score: 0.13649864494800568,
- * //     label: 'helmet',
- * //     box: { xmin: 277, ymin: 337, xmax: 511, ymax: 511 }
- * //   },
- * //   {
- * //     score: 0.10262022167444229,
- * //     label: 'rocket',
- * //     box: { xmin: 352, ymin: -1, xmax: 463, ymax: 287 }
- * //   }
- * // ]
- * ```
- *
- * **Example:** Zero-shot object detection w/ `Xenova/owlvit-base-patch32` (returning top 4 matches and setting a threshold).
- * ```javascript
- * const detector = await pipeline('zero-shot-object-detection', 'Xenova/owlvit-base-patch32');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/beach.png';
- * const candidate_labels = ['hat', 'book', 'sunglasses', 'camera'];
- * const output = await detector(url, candidate_labels, { topk: 4, threshold: 0.05 });
- * // [
- * //   {
- * //     score: 0.1606510728597641,
- * //     label: 'sunglasses',
- * //     box: { xmin: 347, ymin: 229, xmax: 429, ymax: 264 }
- * //   },
- * //   {
- * //     score: 0.08935828506946564,
- * //     label: 'hat',
- * //     box: { xmin: 38, ymin: 174, xmax: 258, ymax: 364 }
- * //   },
- * //   {
- * //     score: 0.08530698716640472,
- * //     label: 'camera',
- * //     box: { xmin: 187, ymin: 350, xmax: 260, ymax: 411 }
- * //   },
- * //   {
- * //     score: 0.08349756896495819,
- * //     label: 'book',
- * //     box: { xmin: 261, ymin: 280, xmax: 494, ymax: 425 }
- * //   }
- * // ]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ZeroShotObjectDetectionPipeline
   extends /** @type {new (options: TextImagePipelineConstructorArgs) => ZeroShotObjectDetectionPipelineType} */ (
     Pipeline
@@ -2387,7 +1993,7 @@ export class ZeroShotObjectDetectionPipeline
 
     // Since non-maximum suppression is performed for exporting, we need to
     // process each image separately. For more information, see:
-    // https://github.com/huggingface/optimum/blob/e3b7efb1257c011db907ef40ab340e795cc5684c/optimum/exporters/onnx/model_configs.py#L1028-L1032
+    // Documentation unavailable in air-gapped mode
     const toReturn = [];
     for (let i = 0; i < preparedImages.length; ++i) {
       const image = preparedImages[i];
@@ -2436,20 +2042,7 @@ export class ZeroShotObjectDetectionPipeline
  * @typedef {TextImagePipelineConstructorArgs & DocumentQuestionAnsweringPipelineCallback & Disposable} DocumentQuestionAnsweringPipelineType
  */
 
-/**
- * Document Question Answering pipeline using any `AutoModelForDocumentQuestionAnswering`.
- * The inputs/outputs are similar to the (extractive) question answering pipeline; however,
- * the pipeline takes an image (and optional OCR'd words/boxes) as input instead of text context.
- *
- * **Example:** Answer questions about a document with `Xenova/donut-base-finetuned-docvqa`.
- * ```javascript
- * const qa_pipeline = await pipeline('document-question-answering', 'Xenova/donut-base-finetuned-docvqa');
- * const image = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/invoice.png';
- * const question = 'What is the invoice number?';
- * const output = await qa_pipeline(image, question);
- * // [{ answer: 'us-001' }]
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class DocumentQuestionAnsweringPipeline
   extends /** @type {new (options: TextImagePipelineConstructorArgs) => DocumentQuestionAnsweringPipelineType} */ (
     Pipeline
@@ -2521,41 +2114,7 @@ export class DocumentQuestionAnsweringPipeline
  * @typedef {TextToAudioPipelineConstructorArgs & TextToAudioPipelineCallback & Disposable} TextToAudioPipelineType
  */
 
-/**
- * Text-to-audio generation pipeline using any `AutoModelForTextToWaveform` or `AutoModelForTextToSpectrogram`.
- * This pipeline generates an audio file from an input text and optional other conditional inputs.
- *
- * **Example:** Generate audio from text with `Xenova/speecht5_tts`.
- * ```javascript
- * const synthesizer = await pipeline('text-to-speech', 'Xenova/speecht5_tts', { quantized: false });
- * const speaker_embeddings = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/speaker_embeddings.bin';
- * const out = await synthesizer('Hello, my dog is cute', { speaker_embeddings });
- * // {
- * //   audio: Float32Array(26112) [-0.00005657337896991521, 0.00020583874720614403, ...],
- * //   sampling_rate: 16000
- * // }
- * ```
- *
- * You can then save the audio to a .wav file with the `wavefile` package:
- * ```javascript
- * import wavefile from 'wavefile';
- * import fs from 'fs';
- *
- * const wav = new wavefile.WaveFile();
- * wav.fromScratch(1, out.sampling_rate, '32f', out.audio);
- * fs.writeFileSync('out.wav', wav.toBuffer());
- * ```
- *
- * **Example:** Multilingual speech generation with `Xenova/mms-tts-fra`. See [here](https://huggingface.co/models?pipeline_tag=text-to-speech&other=vits&sort=trending) for the full list of available languages (1107).
- * ```javascript
- * const synthesizer = await pipeline('text-to-speech', 'Xenova/mms-tts-fra');
- * const out = await synthesizer('Bonjour');
- * // {
- * //   audio: Float32Array(23808) [-0.00037693005288019776, 0.0003325853613205254, ...],
- * //   sampling_rate: 16000
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class TextToAudioPipeline
   extends /** @type {new (options: TextToAudioPipelineConstructorArgs) => TextToAudioPipelineType} */ (
     Pipeline
@@ -2680,22 +2239,7 @@ export class TextToAudioPipeline
  * @typedef {ImagePipelineConstructorArgs & ImageToImagePipelineCallback & Disposable} ImageToImagePipelineType
  */
 
-/**
- * Image to Image pipeline using any `AutoModelForImageToImage`. This pipeline generates an image based on a previous image input.
- *
- * **Example:** Super-resolution w/ `Xenova/swin2SR-classical-sr-x2-64`
- * ```javascript
- * const upscaler = await pipeline('image-to-image', 'Xenova/swin2SR-classical-sr-x2-64');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/butterfly.jpg';
- * const output = await upscaler(url);
- * // RawImage {
- * //   data: Uint8Array(786432) [ 41, 31, 24,  43, ... ],
- * //   width: 512,
- * //   height: 512,
- * //   channels: 3
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class ImageToImagePipeline
   extends /** @type {new (options: ImagePipelineConstructorArgs) => ImageToImagePipelineType} */ (
     Pipeline
@@ -2743,30 +2287,7 @@ export class ImageToImagePipeline
  * @typedef {ImagePipelineConstructorArgs & DepthEstimationPipelineCallback & Disposable} DepthEstimationPipelineType
  */
 
-/**
- * Depth estimation pipeline using any `AutoModelForDepthEstimation`. This pipeline predicts the depth of an image.
- *
- * **Example:** Depth estimation w/ `Xenova/dpt-hybrid-midas`
- * ```javascript
- * const depth_estimator = await pipeline('depth-estimation', 'Xenova/dpt-hybrid-midas');
- * const url = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/cats.jpg';
- * const out = await depth_estimator(url);
- * // {
- * //   predicted_depth: Tensor {
- * //     dims: [ 384, 384 ],
- * //     type: 'float32',
- * //     data: Float32Array(147456) [ 542.859130859375, 545.2833862304688, 546.1649169921875, ... ],
- * //     size: 147456
- * //   },
- * //   depth: RawImage {
- * //     data: Uint8Array(307200) [ 86, 86, 86, ... ],
- * //     width: 640,
- * //     height: 480,
- * //     channels: 1
- * //   }
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class DepthEstimationPipeline
   extends /** @type {new (options: ImagePipelineConstructorArgs) => DepthEstimationPipelineType} */ (
     Pipeline
@@ -3069,7 +2590,7 @@ const SUPPORTED_TASKS = Object.freeze({
     type: "image",
   },
 
-  // This task serves as a useful interface for dealing with sentence-transformers (https://huggingface.co/sentence-transformers).
+  // Documentation unavailable in air-gapped mode
   "feature-extraction": {
     tokenizer: AutoTokenizer,
     pipeline: FeatureExtractionPipeline,

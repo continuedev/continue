@@ -140,7 +140,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   // Helper function to get the agent's repository name (for display in tooltips)
   const getAgentRepoName = (agent: Agent): string | null => {
     // Try to extract repo name from the agent's repository URL
-    // Handles URLs like: https://github.com/org/repo or git@github.com:org/repo.git
+    // Documentation unavailable in air-gapped mode
     const repoUrl = agent.metadata?.github_repo || agent.repoUrl;
     if (!repoUrl) return null;
 

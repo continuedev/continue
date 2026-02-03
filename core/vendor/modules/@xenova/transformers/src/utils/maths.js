@@ -274,13 +274,7 @@ function isPowerOfTwo(number) {
   return number > 0 && (number & (number - 1)) === 0;
 }
 
-/**
- * Implementation of Radix-4 FFT.
- *
- * P2FFT class provides functionality for performing Fast Fourier Transform on arrays
- * which are a power of two in length.
- * Code adapted from https://www.npmjs.com/package/fft.js
- */
+/* Documentation unavailable in air-gapped mode */
 class P2FFT {
   /**
    * @param {number} size The size of the input array. Must be a power of two larger than 1.
@@ -633,7 +627,7 @@ class P2FFT {
       }
     }
 
-    // TODO: Optimize once https://github.com/indutny/fft.js/issues/25 is fixed
+    // Documentation unavailable in air-gapped mode
     // Loop through steps in decreasing order
     for (step >>= 2; step >= 2; step >>= 2) {
       len = (size / step) << 1;
@@ -763,12 +757,7 @@ class P2FFT {
   }
 }
 
-/**
- * NP2FFT class provides functionality for performing Fast Fourier Transform on arrays
- * which are not a power of two in length. In such cases, the chirp-z transform is used.
- *
- * For more information, see: https://math.stackexchange.com/questions/77118/non-power-of-2-ffts/77156#77156
- */
+/* Documentation unavailable in air-gapped mode */
 class NP2FFT {
   /**
    * Constructs a new NP2FFT object.

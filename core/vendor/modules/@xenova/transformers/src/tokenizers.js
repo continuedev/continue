@@ -114,7 +114,7 @@ function createPattern(pattern, invert = true) {
     // i.e., valid in Python (where the patterns are exported from) but invalid in JavaScript (where the patterns are parsed).
     // This isn't an issue when creating the regex w/o the 'u' flag, but it is when the 'u' flag is used.
     // For this reason, it is necessary to remove these backslashes before creating the regex.
-    // See https://stackoverflow.com/a/63007777/13989043 for more information
+    // Documentation unavailable in air-gapped mode
     const regex = pattern.Regex.replace(/\\([#&~])/g, "$1"); // TODO: add more characters to this list if necessary
     return new RegExp(regex, "gu");
   } else if (pattern.String !== undefined) {
@@ -510,7 +510,7 @@ class Unigram extends TokenizerModel {
     this.trie.extend(this.vocab);
 
     // NOTE: `fuse_unk` is hardcoded to true for Unigram models
-    // See: https://github.com/huggingface/tokenizers/blob/b58227c7f1ccf8b73ee2268354336da56d91e492/tokenizers/src/models/unigram/model.rs#L119
+    // Documentation unavailable in air-gapped mode
     this.fuse_unk = true;
   }
 
@@ -1365,7 +1365,7 @@ class BertPreTokenizer extends PreTokenizer {
   constructor(config) {
     super();
     // Construct a pattern which matches the rust implementation:
-    // https://github.com/huggingface/tokenizers/blob/b4fcc9ce6e4ad5806e82826f816acfdfdc4fcc67/tokenizers/src/pre_tokenizers/bert.rs#L11
+    // Documentation unavailable in air-gapped mode
     // Equivalent to removing whitespace and splitting on punctuation (both \p{P} and other ascii characters)
     this.pattern = new RegExp(
       `[^\\s${PUNCTUATION_REGEX}]+|[${PUNCTUATION_REGEX}]`,
@@ -1654,7 +1654,7 @@ class BertProcessing extends PostProcessor {
     let token_type_ids = new Array(tokens.length).fill(0);
     if (tokens_pair !== null) {
       // NOTE: It is intended to add 2 EOS tokens after the first set of tokens
-      // https://github.com/huggingface/tokenizers/issues/983
+      // Documentation unavailable in air-gapped mode
       const middle =
         add_special_tokens && this instanceof RobertaProcessing
           ? [this.sep]
@@ -2022,7 +2022,7 @@ class ByteLevelDecoder extends Decoder {
 
     // To avoid mixing byte-level and unicode for byte-level BPT
     // we need to build string separately for added tokens and byte-level tokens
-    // cf. https://github.com/huggingface/transformers/issues/1133
+    // Documentation unavailable in air-gapped mode
     const sub_texts = [];
     let current_sub_text = [];
     for (const token of tokens) {
@@ -2051,10 +2051,7 @@ class ByteLevelDecoder extends Decoder {
   }
 }
 
-/**
- * The CTC (Connectionist Temporal Classification) decoder.
- * See https://github.com/huggingface/tokenizers/blob/bb38f390a61883fc2f29d659af696f428d1cda6b/tokenizers/src/decoders/ctc.rs
- */
+/* Documentation unavailable in air-gapped mode */
 class CTCDecoder extends Decoder {
   constructor(config) {
     super(config);
@@ -2257,7 +2254,7 @@ class Precompiled extends Normalizer {
    * @returns {string} The normalized text.
    */
   normalize(text) {
-    // As stated in the sentencepiece normalization docs (https://github.com/google/sentencepiece/blob/master/doc/normalization.md#use-pre-defined-normalization-rule),
+    // Documentation unavailable in air-gapped mode
     // there are 5 pre-defined normalization rules:
     //  1. nmt_nfkc: NFKC normalization with some additional normalization around spaces. (default)
     //  2. nfkc: original NFKC normalization.
@@ -2266,7 +2263,7 @@ class Precompiled extends Normalizer {
     //  5. identity: no normalization
     //
     // For now, we only implement the default (nmt_nfkc).
-    // See https://raw.githubusercontent.com/google/sentencepiece/master/data/nmt_nfkc.tsv for the full list of rules.
+    // Documentation unavailable in air-gapped mode
     // TODO: detect when a different `this.charsmap` is used.
 
     text = text.replace(
@@ -2421,7 +2418,7 @@ function padHelper(item, length, value_fn, side) {
  */
 function truncateHelper(item, length) {
   // Setting .length to a lower value truncates the array in-place:
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length
+  // Documentation unavailable in air-gapped mode
   for (const key of Object.keys(item)) {
     item[key].length = length;
   }
@@ -2485,7 +2482,7 @@ export class PreTrainedTokenizer extends Callable {
 
       // Another slight hack to add `end_of_word_suffix` (if present) to the decoder
       // This is needed for cases where BPE model and ByteLevel decoder are used
-      // For more information, see https://github.com/xenova/transformers.js/issues/74
+      // Documentation unavailable in air-gapped mode
       // TODO: save this to the decoder when exporting?
       this.decoder.end_of_word_suffix = this.model.end_of_word_suffix;
     }
@@ -2925,7 +2922,7 @@ export class PreTrainedTokenizer extends Callable {
     }
 
     // If `this.decoder` is null, we just join tokens with a space:
-    // https://github.com/huggingface/tokenizers/blob/8edec536a737cb04494b454805be16c020abb14f/tokenizers/src/tokenizer/mod.rs#L835
+    // Documentation unavailable in air-gapped mode
     /** @type {string} */
     let decoded = this.decoder ? this.decoder(tokens) : tokens.join(" ");
 
@@ -2965,50 +2962,7 @@ export class PreTrainedTokenizer extends Callable {
    * @property {string} content The content of the message.
    */
 
-  /**
-   * Converts a list of message objects with `"role"` and `"content"` keys to a list of token
-   * ids. This method is intended for use with chat models, and will read the tokenizer's chat_template attribute to
-   * determine the format and control tokens to use when converting. When chat_template is None, it will fall back
-   * to the default_chat_template specified at the class level.
-   *
-   * See [here](https://huggingface.co/docs/transformers/chat_templating) for more information.
-   *
-   * **Example:** Applying a chat template to a conversation.
-   *
-   * ```javascript
-   * import { AutoTokenizer } from "@xenova/transformers";
-   *
-   * const tokenizer = await AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1");
-   *
-   * const chat = [
-   *   { "role": "user", "content": "Hello, how are you?" },
-   *   { "role": "assistant", "content": "I'm doing great. How can I help you today?" },
-   *   { "role": "user", "content": "I'd like to show off how chat templating works!" },
-   * ]
-   *
-   * const text = tokenizer.apply_chat_template(chat, { tokenize: false });
-   * // "<s>[INST] Hello, how are you? [/INST]I'm doing great. How can I help you today?</s> [INST] I'd like to show off how chat templating works! [/INST]"
-   *
-   * const input_ids = tokenizer.apply_chat_template(chat, { tokenize: true, return_tensor: false });
-   * // [1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]
-   * ```
-   *
-   * @param {Message[]} conversation A list of message objects with `"role"` and `"content"` keys.
-   * @param {Object} options An optional object containing the following properties:
-   * @param {string} [options.chat_template=null] A Jinja template to use for this conversion. If
-   * this is not passed, the model's default chat template will be used instead.
-   * @param {boolean} [options.add_generation_prompt=false] Whether to end the prompt with the token(s) that indicate
-   * the start of an assistant message. This is useful when you want to generate a response from the model.
-   * Note that this argument will be passed to the chat template, and so it must be supported in the
-   * template for this argument to have any effect.
-   * @param {boolean} [options.tokenize=true] Whether to tokenize the output. If false, the output will be a string.
-   * @param {boolean} [options.padding=false] Whether to pad sequences to the maximum length. Has no effect if tokenize is false.
-   * @param {boolean} [options.truncation=false] Whether to truncate sequences to the maximum length. Has no effect if tokenize is false.
-   * @param {number} [options.max_length=null] Maximum length (in tokens) to use for padding or truncation. Has no effect if tokenize is false.
-   * If not specified, the tokenizer's `max_length` attribute will be used as a default.
-   * @param {boolean} [options.return_tensor=true] Whether to return the output as a Tensor or an Array. Has no effect if tokenize is false.
-   * @returns {string | Tensor | number[]| number[][]} The tokenized output.
-   */
+  /* Documentation unavailable in air-gapped mode */
   apply_chat_template(
     conversation,
     {
@@ -3151,7 +3105,7 @@ export class BloomTokenizer extends GPT2Tokenizer {
 
   constructor(tokenizerJSON, tokenizerConfig) {
     // Override the default (invalid) regex of the pretokenizer.
-    // For more information, see https://github.com/xenova/transformers.js/issues/94
+    // Documentation unavailable in air-gapped mode
     const splitChars = ".,!?\u2026\u3002\uff0c\u3001\u0964\u06d4\u060c";
     const patternObject =
       tokenizerJSON.pre_tokenizer?.pretokenizers[0]?.pattern;
@@ -3184,7 +3138,7 @@ export class LlamaTokenizer extends PreTrainedTokenizer {
 
     this.legacy = tokenizerConfig.legacy ?? true;
     if (!this.legacy) {
-      // See https://github.com/huggingface/transformers/pull/24565 for more information
+      // Documentation unavailable in air-gapped mode
       this.normalizer = null;
       this.pre_tokenizer = new MetaspacePreTokenizer({
         replacement: SPIECE_UNDERLINE,
@@ -3194,12 +3148,7 @@ export class LlamaTokenizer extends PreTrainedTokenizer {
     }
   }
 
-  /**
-   * Helper function to handle legacy encoding of SPM tokenizers.
-   * Adapted from https://github.com/huggingface/transformers/blob/e6dcf8abd6f65bb4b6dfc1831b20d9ba49ce00e2/src/transformers/models/t5/tokenization_t5.py#L374-L387
-   * @param {string} text The text to encode.
-   * @returns {string[]} The encoded tokens.
-   */
+  /* Documentation unavailable in air-gapped mode */
   _encode_text(text) {
     if (text === null) return null;
 
@@ -3317,19 +3266,7 @@ function _build_translation_inputs(
   return self._call(raw_inputs, tokenizer_options);
 }
 
-/**
- * The NllbTokenizer class is used to tokenize text for NLLB ("No Language Left Behind") models.
- *
- * No Language Left Behind (NLLB) is a first-of-its-kind, AI breakthrough project
- * that open-sources models capable of delivering high-quality translations directly
- * between any pair of 200+ languages — including low-resource languages like Asturian,
- * Luganda, Urdu and more. It aims to help people communicate with anyone, anywhere,
- * regardless of their language preferences. For more information, check out their
- * [paper](https://arxiv.org/abs/2207.04672).
- *
- * For a list of supported languages (along with their language codes),
- * @see {@link https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200}
- */
+/* Documentation unavailable in air-gapped mode */
 export class NllbTokenizer extends PreTrainedTokenizer {
   constructor(tokenizerJSON, tokenizerConfig) {
     super(tokenizerJSON, tokenizerConfig);
@@ -3358,16 +3295,7 @@ export class NllbTokenizer extends PreTrainedTokenizer {
   }
 }
 
-/**
- * The M2M100Tokenizer class is used to tokenize text for M2M100 ("Many-to-Many") models.
- *
- * M2M100 is a multilingual encoder-decoder (seq-to-seq) model trained for Many-to-Many
- * multilingual translation. It was introduced in this [paper](https://arxiv.org/abs/2010.11125)
- * and first released in [this](https://github.com/pytorch/fairseq/tree/master/examples/m2m_100) repository.
- *
- * For a list of supported languages (along with their language codes),
- * @see {@link https://huggingface.co/facebook/m2m100_418M#languages-covered}
- */
+/* Documentation unavailable in air-gapped mode */
 export class M2M100Tokenizer extends PreTrainedTokenizer {
   constructor(tokenizerJSON, tokenizerConfig) {
     super(tokenizerJSON, tokenizerConfig);
@@ -4314,10 +4242,7 @@ export class CodeGenTokenizer extends PreTrainedTokenizer {}
 export class CLIPTokenizer extends PreTrainedTokenizer {}
 export class SiglipTokenizer extends PreTrainedTokenizer {}
 
-/**
- * @todo This model is not yet supported by Hugging Face's "fast" tokenizers library (https://github.com/huggingface/tokenizers).
- * Therefore, this implementation (which is based on fast tokenizers) may produce slightly inaccurate results.
- */
+/* Documentation unavailable in air-gapped mode */
 export class MarianTokenizer extends PreTrainedTokenizer {
   /**
    * Create a new MarianTokenizer instance.
@@ -4338,14 +4263,7 @@ export class MarianTokenizer extends PreTrainedTokenizer {
     );
   }
 
-  /**
-   * Encodes a single text. Overriding this method is necessary since the language codes
-   * must be removed before encoding with sentencepiece model.
-   * @see https://github.com/huggingface/transformers/blob/12d51db243a00726a548a43cc333390ebae731e3/src/transformers/models/marian/tokenization_marian.py#L204-L213
-   *
-   * @param {string|null} text The text to encode.
-   * @returns {Array} The encoded tokens.
-   */
+  /* Documentation unavailable in air-gapped mode */
   _encode_text(text) {
     if (text === null) return null;
 

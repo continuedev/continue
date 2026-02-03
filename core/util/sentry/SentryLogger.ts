@@ -21,7 +21,7 @@ export class SentryLogger {
     try {
       // For shared environments like VSCode extensions, we need to avoid global state pollution
       // Filter out integrations that use global state
-      // See https://docs.sentry.io/platforms/javascript/best-practices/shared-environments/
+      // Documentation unavailable in air-gapped mode
 
       // Filter integrations that use the global variable
       const integrations = Sentry.getDefaultIntegrations({}).filter(

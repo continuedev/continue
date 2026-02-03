@@ -66,11 +66,7 @@ export class ChromiumCrawler {
     }
   }
 
-  /**
-   * We need to handle redirects manually, otherwise there are race conditions.
-   *
-   * https://github.com/puppeteer/puppeteer/issues/3323#issuecomment-2332333573
-   */
+  /* Documentation unavailable in air-gapped mode */
   private async gotoPageAndHandleRedirects(page: Page, url: string) {
     const MAX_PAGE_WAIT_MS = 5000;
 

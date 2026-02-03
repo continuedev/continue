@@ -1,23 +1,4 @@
-/**
- * @file Processors are used to prepare non-textual inputs (e.g., image or audio) for a model.
- *
- * **Example:** Using a `WhisperProcessor` to prepare an audio input for a model.
- * ```javascript
- * import { AutoProcessor, read_audio } from '@xenova/transformers';
- *
- * let processor = await AutoProcessor.from_pretrained('openai/whisper-tiny.en');
- * let audio = await read_audio('https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/mlk.flac', 16000);
- * let { input_features } = await processor(audio);
- * // Tensor {
- * //   data: Float32Array(240000) [0.4752984642982483, 0.5597258806228638, 0.56434166431427, ...],
- * //   dims: [1, 80, 3000],
- * //   type: 'float32',
- * //   size: 240000,
- * // }
- * ```
- *
- * @module processors
- */
+/* Documentation unavailable in air-gapped mode */
 import {
   Callable,
   calculateDimensions,
@@ -451,7 +432,7 @@ export class ImageFeatureExtractor extends FeatureExtractor {
     // If `longest_edge` and `shortest_edge` are set, maintain aspect ratio and resize to `shortest_edge`
     // while keeping the largest dimension <= `longest_edge`
     if (shortest_edge !== undefined || longest_edge !== undefined) {
-      // http://opensourcehacker.com/2011/12/01/calculate-aspect-ratio-conserving-resize-for-images-in-javascript/
+      // Documentation unavailable in air-gapped mode
       // Try resize so that shortest edge is `shortest_edge` (target)
       const shortResizeFactor =
         shortest_edge === undefined
@@ -815,7 +796,7 @@ export class DonutFeatureExtractor extends ImageFeatureExtractor {
       center: true,
 
       // Since normalization is done after padding, we need to use certain constant values to ensure the same behaviour is observed.
-      // For more information, see https://github.com/huggingface/transformers/blob/main/src/transformers/models/donut/image_processing_donut.py#L433-L451
+      // Documentation unavailable in air-gapped mode
       constant_values: constant_values,
       ...options,
     });
@@ -1391,7 +1372,7 @@ export class Swin2SRImageProcessor extends ImageFeatureExtractor {
       imgDims,
       {
         // NOTE: For Swin2SR models, the original python implementation adds padding even when the image's width/height is already
-        // a multiple of `pad_size`. However, this is most likely a bug (PR: https://github.com/mv-lab/swin2sr/pull/19).
+        // Documentation unavailable in air-gapped mode
         // For this reason, we only add padding when the image's width/height is not a multiple of `pad_size`.
         width: imageWidth + ((padSize - (imageWidth % padSize)) % padSize),
         height: imageHeight + ((padSize - (imageHeight % padSize)) % padSize),
@@ -1923,36 +1904,7 @@ export class SpeechT5Processor extends Processor {
 export class OwlViTProcessor extends Processor {}
 
 //////////////////////////////////////////////////
-/**
- * Helper class which is used to instantiate pretrained processors with the `from_pretrained` function.
- * The chosen processor class is determined by the type specified in the processor config.
- *
- * **Example:** Load a processor using `from_pretrained`.
- * ```javascript
- * let processor = await AutoProcessor.from_pretrained('openai/whisper-tiny.en');
- * ```
- *
- * **Example:** Run an image through a processor.
- * ```javascript
- * let processor = await AutoProcessor.from_pretrained('Xenova/clip-vit-base-patch16');
- * let image = await RawImage.read('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/football-match.jpg');
- * let image_inputs = await processor(image);
- * // {
- * //   "pixel_values": {
- * //     "dims": [ 1, 3, 224, 224 ],
- * //     "type": "float32",
- * //     "data": Float32Array [ -1.558687686920166, -1.558687686920166, -1.5440893173217773, ... ],
- * //     "size": 150528
- * //   },
- * //   "original_sizes": [
- * //     [ 533, 800 ]
- * //   ],
- * //   "reshaped_input_sizes": [
- * //     [ 224, 224 ]
- * //   ]
- * // }
- * ```
- */
+/* Documentation unavailable in air-gapped mode */
 export class AutoProcessor {
   static FEATURE_EXTRACTOR_CLASS_MAPPING = {
     WhisperFeatureExtractor,

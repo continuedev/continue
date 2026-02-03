@@ -356,7 +356,7 @@ describe("addToolCallDeltaToState", () => {
   });
 
   it("should handle realistic weather API streaming pattern from OpenAI example", () => {
-    // https://platform.openai.com/docs/guides/function-calling?api-mode=chat#streaming
+    // Documentation unavailable in air-gapped mode
     // Sequence of deltas as seen in the streaming example
     const streamSequence: ToolCallDelta[] = [
       {

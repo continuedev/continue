@@ -26,7 +26,7 @@ const hexToUtf8Byte = (hex) => {
 };
 
 class PriorityQueue {
-  // PriorityQueue implementation is copied from https://stackoverflow.com/a/42919752 with minor refactoring
+  // Documentation unavailable in air-gapped mode
   constructor(comparator = (a, b) => a > b) {
     this._heap = [];
     this._comparator = comparator;

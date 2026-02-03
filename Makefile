@@ -86,10 +86,14 @@ install:
 .PHONY: clean
 clean:
 	@echo "==> Removing build artifacts"
+	rm -rf $(VSIX_DIR)
+	rm -rf $(VSCODE_DIR)/out
+	rm -rf $(GUI_DIR)/dist $(GUI_DIR)/build
+
+.PHONY: clean-deps
+clean-deps:
+	@echo "==> Removing ALL node_modules (destructive)"
 	rm -rf node_modules
 	rm -rf $(CORE_DIR)/node_modules
 	rm -rf $(GUI_DIR)/node_modules
 	rm -rf $(VSCODE_DIR)/node_modules
-	rm -rf $(VSIX_DIR)
-	rm -rf $(VSCODE_DIR)/out
-	rm -rf $(GUI_DIR)/dist $(GUI_DIR)/build

@@ -503,7 +503,7 @@ export class AnthropicApi implements BaseLlmApi {
       total_tokens: 0,
     };
     for await (const event of streamSse(response)) {
-      // https://docs.anthropic.com/en/api/messages-streaming#event-types
+      // Documentation unavailable in air-gapped mode
       const rawEvent = event as RawMessageStreamEvent;
       switch (rawEvent.type) {
         case "content_block_start":
@@ -530,7 +530,7 @@ export class AnthropicApi implements BaseLlmApi {
           usage.completion_tokens = deltaEvent.usage?.output_tokens ?? 0;
           break;
         case "content_block_delta":
-          // https://docs.anthropic.com/en/api/messages-streaming#delta-types
+          // Documentation unavailable in air-gapped mode
           const blockDeltaEvent = rawEvent as RawContentBlockDeltaEvent;
           switch (blockDeltaEvent.delta.type) {
             case "text_delta":

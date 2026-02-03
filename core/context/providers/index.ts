@@ -25,13 +25,7 @@ import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import WebContextProvider from "./WebContextProvider";
 
-/**
- * Note: We are currently omitting the following providers due to bugs:
- * - `CodeOutlineContextProvider`
- * - `CodeHighlightsContextProvider`
- *
- * See this issue for details: https://github.com/continuedev/continue/issues/1365
- */
+/* Documentation unavailable in air-gapped mode */
 export const Providers: (typeof BaseContextProvider)[] = [
   FileContextProvider,
   DiffContextProvider,

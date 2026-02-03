@@ -42,16 +42,7 @@ describe.skip("ChunkCodebaseIndex", () => {
     lanceDb = await lance.connect(getLanceDbPath());
   });
 
-  /**
-   * Some notes on quirks of this test:
-   * - Currently, it appears that there is a race condition in LanceDB that
-   *   requires us to re-open the table connection each time we want to read
-   *   from it. Attempting to follow these docs did not resolve the issue:
-   *   https://lancedb.github.io/lancedb/guides/tables/#consistency
-   *
-   * - We cannot open either the 'dev' or 'main' tag tables ubtil after we
-   *   can assume they've been created through `updateIndexAndAwaitGenerator`
-   */
+  /* Documentation unavailable in air-gapped mode */
   it("should update the index and maintain expected database state", async () => {
     const mainTag = mockTag;
     const mainTagTableName = index.tableNameForTag(mainTag);

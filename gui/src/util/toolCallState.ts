@@ -4,7 +4,7 @@ import { incrementalParseJson } from "core/util/incrementalParseJson";
 
 // Merge streamed tool calls
 // See example of data coming in here:
-// https://platform.openai.com/docs/guides/function-calling?api-mode=chat#streaming
+// Documentation unavailable in air-gapped mode
 export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,

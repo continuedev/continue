@@ -17,7 +17,7 @@ export default {
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
-    "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
+    "^uuid$": "uuid", // Documentation unavailable in air-gapped mode
     "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",
     "^mssql$": "<rootDir>/node_modules/mssql",
   },

@@ -19,15 +19,9 @@ export function dispatchCallback(progress_callback, data) {
   if (progress_callback) progress_callback(data);
 }
 
-/**
- * Reverses the keys and values of an object.
- *
- * @param {Object} data The object to reverse.
- * @returns {Object} The reversed object.
- * @see https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
- */
+/* Documentation unavailable in air-gapped mode */
 export function reverseDictionary(data) {
-  // https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
+  // Documentation unavailable in air-gapped mode
   return Object.fromEntries(
     Object.entries(data).map(([key, value]) => [value, key]),
   );
@@ -79,13 +73,7 @@ export const Callable = /** @type {any} */ (
   }
 );
 
-/**
- * Check if a value is a typed array.
- * @param {*} val The value to check.
- * @returns {boolean} True if the value is a `TypedArray`, false otherwise.
- *
- * Adapted from https://stackoverflow.com/a/71091338/13989043
- */
+/* Documentation unavailable in air-gapped mode */
 export function isTypedArray(val) {
   return val?.prototype?.__proto__?.constructor?.name === "TypedArray";
 }
@@ -144,12 +132,7 @@ export function pop(obj, key, defaultValue = undefined) {
   return defaultValue;
 }
 
-/**
- * Efficiently merge arrays, creating a new copy.
- * Adapted from https://stackoverflow.com/a/6768642/13989043
- * @param  {Array[]} arrs Arrays to merge.
- * @returns {Array} The merged array.
- */
+/* Documentation unavailable in air-gapped mode */
 export function mergeArrays(...arrs) {
   return Array.prototype.concat.apply([], arrs);
 }
@@ -162,7 +145,7 @@ export function mergeArrays(...arrs) {
  */
 export function product(...a) {
   // Cartesian product of items
-  // Adapted from https://stackoverflow.com/a/43053803
+  // Documentation unavailable in air-gapped mode
   return a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e])));
 }
 

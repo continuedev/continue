@@ -15,13 +15,7 @@
  * @private
  */
 export function dispatchCallback(progress_callback: Function, data: any): void;
-/**
- * Reverses the keys and values of an object.
- *
- * @param {Object} data The object to reverse.
- * @returns {Object} The reversed object.
- * @see https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
- */
+/* Documentation unavailable in air-gapped mode */
 export function reverseDictionary(data: any): any;
 /**
  * Escapes regular expression special characters from a string by replacing them with their escaped counterparts.
@@ -30,13 +24,7 @@ export function reverseDictionary(data: any): any;
  * @returns {string} The escaped string.
  */
 export function escapeRegExp(string: string): string;
-/**
- * Check if a value is a typed array.
- * @param {*} val The value to check.
- * @returns {boolean} True if the value is a `TypedArray`, false otherwise.
- *
- * Adapted from https://stackoverflow.com/a/71091338/13989043
- */
+/* Documentation unavailable in air-gapped mode */
 export function isTypedArray(val: any): boolean;
 /**
  * Check if a value is an integer.
@@ -66,12 +54,7 @@ export function calculateDimensions(arr: any[]): number[];
  * @throws {Error} If the key does not exist and no default value is provided.
  */
 export function pop(obj: any, key: string, defaultValue?: any): any;
-/**
- * Efficiently merge arrays, creating a new copy.
- * Adapted from https://stackoverflow.com/a/6768642/13989043
- * @param  {Array[]} arrs Arrays to merge.
- * @returns {Array} The merged array.
- */
+/* Documentation unavailable in air-gapped mode */
 export function mergeArrays(...arrs: any[][]): any[];
 /**
  * Compute the Cartesian product of given arrays

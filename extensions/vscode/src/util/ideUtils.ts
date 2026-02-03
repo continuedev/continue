@@ -216,7 +216,7 @@ export class VsCodeIdeUtils {
     } catch (err: any) {
       if (
         ignoreMissingProviders &&
-        //see https://github.com/microsoft/vscode/blob/c9c54f9e775e5f57d97bef796797b5bc670c8150/src/vs/workbench/api/common/extHostFileSystemConsumer.ts#L230
+        // Documentation unavailable in air-gapped mode
         (err.name === NO_FS_PROVIDER_ERROR ||
           err.message?.includes(NO_FS_PROVIDER_ERROR))
       ) {

@@ -395,10 +395,7 @@ export interface ThinkingChatMessage {
   metadata?: Record<string, unknown>;
 }
 
-/**
- * This is meant to be equivalent to the OpenAI [usage object](https://platform.openai.com/docs/api-reference/chat/object#chat/object-usage)
- * but potentially with additional information that is needed for other providers.
- */
+/* Documentation unavailable in air-gapped mode */
 export interface Usage {
   completionTokens: number;
   promptTokens: number;
@@ -609,7 +606,7 @@ export type LLMInteractionItem =
 // conditional types in Typescript.
 //
 // www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
-// https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+// Documentation unavailable in air-gapped mode
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
   ? Omit<T, K>
   : never;
@@ -1334,7 +1331,7 @@ export interface MCPPrompt {
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
-// https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
+// Documentation unavailable in air-gapped mode
 export interface MCPResource {
   name: string;
   uri: string;
@@ -1342,7 +1339,7 @@ export interface MCPResource {
   mimeType?: string;
 }
 
-// https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
+// Documentation unavailable in air-gapped mode
 export interface MCPResourceTemplate {
   uriTemplate: string;
   name: string;
@@ -1734,7 +1731,7 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 
 // config.ts - give users simplified interfaces
 export interface Config {
-  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
+  /* Documentation unavailable in air-gapped mode */
   allowAnonymousTelemetry?: boolean;
   /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
@@ -1935,7 +1932,7 @@ export interface MessageOption {
 
 /* LSP-specific interfaces. */
 
-// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind.
+// Documentation unavailable in air-gapped mode
 // We shift this one index down to match vscode.SymbolKind.
 export enum SymbolKind {
   File = 0,
@@ -1966,15 +1963,15 @@ export enum SymbolKind {
   TypeParameter = 25,
 }
 
-// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+// Documentation unavailable in air-gapped mode
 export namespace SymbolTag {
   export const Deprecated: 1 = 1;
 }
 
-// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+// Documentation unavailable in air-gapped mode
 export type SymbolTag = 1;
 
-// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentSymbol.
+// Documentation unavailable in air-gapped mode
 export interface DocumentSymbol {
   name: string;
   detail?: string;

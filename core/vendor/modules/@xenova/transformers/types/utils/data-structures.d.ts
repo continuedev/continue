@@ -6,15 +6,7 @@
  *
  * @module utils/data-structures
  */
-/**
- * Efficient Heap-based Implementation of a Priority Queue.
- * It uses an array-based binary heap, where the root is at index `0`, and the
- * children of node `i` are located at indices `2i + 1` and `2i + 2`, respectively.
- *
- * Adapted from the following sources:
- * - https://stackoverflow.com/a/42919752/13989043 (original)
- * - https://github.com/belladoreai/llama-tokenizer-js (minor improvements)
- */
+/* Documentation unavailable in air-gapped mode */
 export class PriorityQueue {
   /**
    * Create a new PriorityQueue.

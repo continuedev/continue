@@ -30,7 +30,7 @@ type OllamaChatMessage = {
   }[];
 };
 
-// See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
+// Documentation unavailable in air-gapped mode
 interface OllamaModelFileParams {
   mirostat?: number;
   mirostat_eta?: number;
@@ -65,7 +65,7 @@ interface OllamaModelFileParams {
   use_mlock?: boolean;
 }
 
-// See https://github.com/ollama/ollama/blob/main/docs/api.md
+// Documentation unavailable in air-gapped mode
 interface OllamaBaseOptions {
   model: string; // the model name
   options?: OllamaModelFileParams; // additional model parameters listed in the documentation for the Modelfile such as temperature
@@ -290,7 +290,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   }
 
   get contextLength() {
-    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // twice of https://github.com/ollama/ollama/blob/29ddfc2cab7f5a83a96c3133094f67b22e4f27d1/envconfig/config.go#L185
+    const DEFAULT_OLLAMA_CONTEXT_LENGTH = 8192; // Documentation unavailable in air-gapped mode
     return this._contextLength ?? DEFAULT_OLLAMA_CONTEXT_LENGTH;
   }
 

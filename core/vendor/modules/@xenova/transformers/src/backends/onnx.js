@@ -41,7 +41,7 @@ if (typeof process !== "undefined" && process?.release?.name === "node") {
 
   // SIMD for WebAssembly does not operate correctly in some recent versions of iOS (16.4.x).
   // As a temporary fix, we disable it for now.
-  // For more information, see: https://github.com/microsoft/onnxruntime/issues/15644
+  // Documentation unavailable in air-gapped mode
   const isIOS =
     typeof navigator !== "undefined" &&
     /iP(hone|od|ad).+16_4.+AppleWebKit/.test(navigator.userAgent);

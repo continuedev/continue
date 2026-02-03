@@ -59,7 +59,7 @@ if (BROWSER_ENV) {
   throw new Error("Unable to load image processing library.");
 }
 
-// Defined here: https://github.com/python-pillow/Pillow/blob/a405e8406b83f8bfb8916e93971edc7407b8b1ff/src/libImaging/Imaging.h#L262-L268
+// Documentation unavailable in air-gapped mode
 const RESAMPLING_MAPPING = {
   0: "nearest",
   1: "lanczos",
@@ -102,22 +102,7 @@ export class RawImage {
     return [this.width, this.height];
   }
 
-  /**
-   * Helper method for reading an image from a variety of input types.
-   * @param {RawImage|string|URL} input
-   * @returns The image object.
-   *
-   * **Example:** Read image from a URL.
-   * ```javascript
-   * let image = await RawImage.read('https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/football-match.jpg');
-   * // RawImage {
-   * //   "data": Uint8ClampedArray [ 25, 25, 25, 19, 19, 19, ... ],
-   * //   "width": 800,
-   * //   "height": 533,
-   * //   "channels": 3
-   * // }
-   * ```
-   */
+  /* Documentation unavailable in air-gapped mode */
   static async read(input) {
     if (input instanceof RawImage) {
       return input;
@@ -379,8 +364,8 @@ export class RawImage {
           break;
 
         case "lanczos":
-          // https://github.com/python-pillow/Pillow/discussions/5519
-          // https://github.com/lovell/sharp/blob/main/docs/api-resize.md
+          // Documentation unavailable in air-gapped mode
+          // Documentation unavailable in air-gapped mode
           img = img.resize({
             width,
             height,

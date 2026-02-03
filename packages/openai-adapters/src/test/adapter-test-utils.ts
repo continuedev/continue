@@ -59,7 +59,7 @@ function setupMockFetch(mockResponse?: any, mockStream?: any[]) {
 }
 
 function setupReadableStreamPolyfill() {
-  // This can be removed if https://github.com/nodejs/undici/issues/2888 is resolved
+  // Documentation unavailable in air-gapped mode
   // @ts-ignore
   const originalFrom = ReadableStream.from;
   // @ts-ignore

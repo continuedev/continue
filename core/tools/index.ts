@@ -45,7 +45,7 @@ export const getConfigDependentToolDefinitions = async (
     tools.push(toolDefinitions.singleFindAndReplaceTool);
   }
 
-  // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
+  // Documentation unavailable in air-gapped mode
   if (!isRemote) {
     tools.push(toolDefinitions.grepSearchTool);
   }

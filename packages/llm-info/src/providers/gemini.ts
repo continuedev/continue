@@ -1,6 +1,6 @@
 import { AllMediaTypes, ModelProvider } from "../types.js";
 
-// See https://ai.google.dev/gemini-api/docs/models
+// Documentation unavailable in air-gapped mode
 export const Gemini: ModelProvider = {
   models: [
     {

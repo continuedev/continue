@@ -23,7 +23,7 @@ export type AgentFile = z.infer<typeof agentFileSchema>;
  * Parsed agent tool reference
  */
 export interface AgentToolReference {
-  /** MCP server slug (owner/package) or URL (https://...) if this is an MCP tool */
+  /* Documentation unavailable in air-gapped mode */
   mcpServer?: string;
   /** Specific tool name - either MCP tool name or built-in tool name */
   toolName?: string;
@@ -85,20 +85,7 @@ export function serializeAgentFile(agentFile: AgentFile): string {
   return `---\n${yamlFrontmatter}\n---\n${prompt}`;
 }
 
-/**
- * Parse agent tools string into structured format
- *
- * Supports formats:
- * - owner/package - all tools from MCP server
- * - owner/package:tool_name - specific tool from MCP server
- * - https://mcp.url.com or http://mcp.url.com - all tools from URL-based MCP server
- * - https://mcp.url.com:tool_name - specific tool from URL-based MCP server
- * - ToolName or tool_name - built-in tool
- * - built_in - all built-in tools
- *
- * @param toolsString Comma-separated tools string
- * @returns Parsed tools configuration
- */
+/* Documentation unavailable in air-gapped mode */
 export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
   if (!toolsString?.trim()) {
     return { tools: [], mcpServers: [], allBuiltIn: false };
@@ -121,7 +108,7 @@ export function parseAgentFileTools(toolsString?: string): ParsedAgentTools {
       toolRef.startsWith("http://") ||
       toolRef.startsWith("https://")
     ) {
-      // URL-based MCP tool reference: "https://mcp.url.com" or "https://mcp.url.com:tool_name"
+      // Documentation unavailable in air-gapped mode
       const protocolEndIndex = toolRef.indexOf("://") + 3;
       const lastColonIndex = toolRef.lastIndexOf(":");
 

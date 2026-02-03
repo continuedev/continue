@@ -16,9 +16,9 @@
 //   let docsService: DocsService;
 
 //   const mockSiteConfig: SiteIndexingConfig = {
-//     startUrl: "https://amplified.dev/",
+// Documentation unavailable in air-gapped mode
 //     title: "Test repo",
-//     faviconUrl: "https://github.com/favicon.ico",
+// Documentation unavailable in air-gapped mode
 //   };
 
 //   /**

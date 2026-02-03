@@ -1,8 +1,4 @@
-/**
- * @file Utility functions to interact with the Hugging Face Hub (https://huggingface.co/models)
- *
- * @module utils/hub
- */
+/* Documentation unavailable in air-gapped mode */
 
 import fs from "fs";
 import path from "path";
@@ -159,7 +155,7 @@ class FileResponse {
  * @returns {boolean} True if the string is a valid HTTP or HTTPS URL, false otherwise.
  */
 function isValidHttpUrl(string, validHosts = null) {
-  // https://stackoverflow.com/a/43467144
+  // Documentation unavailable in air-gapped mode
   let url;
   try {
     url = new URL(string);
@@ -227,14 +223,14 @@ export async function getFile(urlOrPath) {
 }
 
 const ERROR_MAPPING = {
-  // 4xx errors (https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses)
+  // Documentation unavailable in air-gapped mode
   400: "Bad request error occurred while trying to load file",
   401: "Unauthorized access to file",
   403: "Forbidden access to file",
   404: "Could not locate file",
   408: "Request timeout error occurred while trying to load file",
 
-  // 5xx errors (https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#server_error_responses)
+  // Documentation unavailable in air-gapped mode
   500: "Internal server error error occurred while trying to load file",
   502: "Bad gateway error occurred while trying to load file",
   503: "Service unavailable error occurred while trying to load file",
@@ -692,7 +688,7 @@ async function readResponse(response, progress_callback) {
  * @returns {string} A string representing the joined path.
  */
 function pathJoin(...parts) {
-  // https://stackoverflow.com/a/55142565
+  // Documentation unavailable in air-gapped mode
   parts = parts.map((part, index) => {
     if (index) {
       part = part.replace(new RegExp("^/"), "");

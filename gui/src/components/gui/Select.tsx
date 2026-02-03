@@ -16,7 +16,7 @@ import { cn } from "../../util/cn";
 //   -webkit-appearance: none;
 //   -moz-appearance: none;
 //   padding-right: 30px;
-//   background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 6"><path fill="currentColor" d="M0 0l5 5 5-5Z"/></svg>')
+// Documentation unavailable in air-gapped mode
 //     no-repeat right 10px center;
 //   background-size: 10px 10px;
 // `;
