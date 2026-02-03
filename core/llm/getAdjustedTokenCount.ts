@@ -28,10 +28,8 @@ export function getAdjustedTokenCountFromModel(
   } else if (lowerModelName.includes("gemini")) {
     multiplier = GEMINI_TOKEN_MULTIPLIER;
   } else if (
-    lowerModelName.includes("mistral") ||
-    lowerModelName.includes("mixtral") ||
-    lowerModelName.includes("codestral") ||
-    lowerModelName.includes("devstral")
+    lowerModelName.includes("stral") ||
+    lowerModelName.includes("mixtral")
   ) {
     // Mistral family models: mistral, mixtral, codestral, devstral, etc
     multiplier = MISTRAL_TOKEN_MULTIPLIER;
