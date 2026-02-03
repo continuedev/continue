@@ -356,6 +356,7 @@ export interface ToolCall {
     name: string;
     arguments: string;
   };
+  responsesOutputItemId?: string;
 }
 
 export interface ToolCallDelta {
@@ -365,6 +366,7 @@ export interface ToolCallDelta {
     name?: string;
     arguments?: string;
   };
+  responsesOutputItemId?: string;
 }
 
 export interface ToolResultChatMessage {
