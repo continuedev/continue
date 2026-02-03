@@ -29,5 +29,5 @@ services:
       OLLAMA_NO_UPDATE: "1"
       OLLAMA_HOST: "0.0.0.0"
       OLLAMA_FLASH_ATTENTION: "0"
-      OLLAMA_DEBUG: "true"
+      OLLAMA_DEBUG: "false"
       OLLAMA_MODELS: "/root/.ollama/models"
