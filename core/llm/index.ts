@@ -28,6 +28,7 @@ import {
   RequestOptions,
   TabAutocompleteOptions,
   TemplateType,
+  ToolOverride,
   Usage,
 } from "../index.js";
 import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
@@ -65,6 +66,8 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
+
 export class LLMError extends Error {
   constructor(
     message: string,
@@ -196,6 +199,9 @@ export abstract class BaseLLM implements ILLM {
 
   isFromAutoDetect?: boolean;
 
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
+
   lastRequestId: string | undefined;
 
   private _llmOptions: LLMOptions;
@@ -303,6 +309,7 @@ export abstract class BaseLLM implements ILLM {
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
+    this.toolOverrides = options.toolOverrides;
   }
 
   get contextLength() {
@@ -1111,8 +1118,28 @@ export abstract class BaseLLM implements ILLM {
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     this.lastRequestId = undefined;
+
+    // Apply per-model tool overrides if configured
+    let effectiveTools = options.tools;
+    if (this.toolOverrides?.length && options.tools?.length) {
+      const { tools: overriddenTools, errors } = applyToolOverrides(
+        options.tools,
+        this.toolOverrides,
+      );
+      effectiveTools = overriddenTools;
+      // Log any warnings for unknown tool names
+      for (const error of errors) {
+        if (!error.fatal) {
+          console.warn(`Tool override warning: ${error.message}`);
+        }
+      }
+    }
+
+    // Use effectiveTools for the rest of this method
+    const optionsWithOverrides = { ...options, tools: effectiveTools };
+
     let { completionOptions, logEnabled } =
-      this._parseCompletionOptions(options);
+      this._parseCompletionOptions(optionsWithOverrides);
     const interaction = logEnabled
       ? this.logger?.createInteractionLog()
       : undefined;
@@ -1130,7 +1157,7 @@ export abstract class BaseLLM implements ILLM {
         knownContextLength: this._contextLength,
         maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
         supportsImages: this.supportsImages(),
-        tools: options.tools,
+        tools: optionsWithOverrides.tools,
       });
 
       messages = compiledChatMessages;
