@@ -26,7 +26,6 @@ import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
@@ -437,25 +436,14 @@ async function injectControlPlaneProxyInfo(
   info: ControlPlaneProxyInfo,
 ): Promise<ContinueConfig> {
   Object.keys(config.modelsByRole).forEach((key) => {
-    config.modelsByRole[key as ModelRole].forEach((model) => {
-      if (model.providerName === "continue-proxy") {
-        (model as ContinueProxy).controlPlaneProxyInfo = info;
-      }
-    });
+    config.modelsByRole[key as ModelRole].forEach((model) => {});
   });
 
   Object.keys(config.selectedModelByRole).forEach((key) => {
     const model = config.selectedModelByRole[key as ModelRole];
-    if (model?.providerName === "continue-proxy") {
-      (model as ContinueProxy).controlPlaneProxyInfo = info;
-    }
   });
 
-  config.modelsByRole.chat.forEach((model) => {
-    if (model.providerName === "continue-proxy") {
-      (model as ContinueProxy).controlPlaneProxyInfo = info;
-    }
-  });
+  config.modelsByRole.chat.forEach((model) => {});
 
   return config;
 }

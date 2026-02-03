@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { ChatMessage, IDE, ILLM, Range, RangeInFile } from "../index.js";
-import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { ContextRetrievalService } from "../autocomplete/context/ContextRetrievalService.js";
@@ -153,9 +152,6 @@ export class NextEditProvider {
       llm.completionOptions.temperature = 0.01;
     }
 
-    if (llm instanceof OpenAI) {
-      llm.useLegacyCompletionsEndpoint = true;
-    }
     // TODO: Resolve import error with TRIAL_FIM_MODEL
     // else if (
     //   llm.providerName === "free-trial" &&
