@@ -1,4 +1,7 @@
-import { runTerminalCommandTool } from "./runTerminalCommand.js";
+import {
+  isRunningInWsl,
+  runTerminalCommandTool,
+} from "./runTerminalCommand.js";
 
 describe("runTerminalCommandTool", () => {
   const isWindows = process.platform === "win32";
@@ -101,6 +104,20 @@ describe("runTerminalCommandTool", () => {
           command: "uname -s",
         });
         expect(result.trim()).toBe("Linux");
+      });
+    }
+  });
+
+  describe("WSL detection", () => {
+    it("should cache the WSL detection result", () => {
+      const firstResult = isRunningInWsl();
+      const secondResult = isRunningInWsl();
+      expect(firstResult).toBe(secondResult);
+    });
+
+    if (!isLinux) {
+      it("should return false on non-Linux platforms", () => {
+        expect(isRunningInWsl()).toBe(false);
       });
     }
   });

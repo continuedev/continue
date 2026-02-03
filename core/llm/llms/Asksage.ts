@@ -8,6 +8,13 @@ import {
   ToolCallDelta,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
+import {
+  AskSageTool,
+  AskSageToolChoice,
+  AskSageToolCall,
+  AskSageResponse,
+  AskSageTokenResponse,
+} from "@continuedev/openai-adapters";
 
 // Extended options for AskSage
 interface AskSageCompletionOptions extends CompletionOptions {
@@ -18,7 +25,7 @@ interface AskSageCompletionOptions extends CompletionOptions {
   askSageTools?: AskSageTool[];
   enabledMcpTools?: string[];
   toolsToExecute?: string[];
-  askSageToolChoice?: ToolChoice;
+  askSageToolChoice?: AskSageToolChoice;
   reasoningEffort?: "low" | "medium" | "high";
   deepAgentId?: number;
   streaming?: boolean;
@@ -28,20 +35,6 @@ interface AskSageCompletionOptions extends CompletionOptions {
 const DEFAULT_API_URL = "https://api.asksage.ai/server";
 const DEFAULT_USER_API_URL = "https://api.asksage.ai/user";
 const TOKEN_TTL = 3600000; // 1 hour in milliseconds
-
-interface AskSageTool {
-  type: string;
-  function: {
-    name: string;
-    description?: string;
-    parameters?: Record<string, unknown>;
-  };
-}
-
-type ToolChoice =
-  | "auto"
-  | "none"
-  | { type: "function"; function: { name: string } };
 
 interface AskSageRequestArgs {
   model?: string;
@@ -56,42 +49,11 @@ interface AskSageRequestArgs {
   tools?: AskSageTool[];
   enabled_mcp_tools?: string[];
   tools_to_execute?: string[];
-  tool_choice?: ToolChoice;
+  tool_choice?: AskSageToolChoice;
   reasoning_effort?: "low" | "medium" | "high";
   deep_agent_id?: number;
   streaming?: boolean;
   file?: unknown;
-}
-
-interface AskSageToolCall {
-  id: string;
-  type: "function";
-  function: {
-    name: string;
-    arguments: string;
-  };
-}
-
-interface AskSageResponse {
-  text?: string;
-  answer?: string;
-  message?: string;
-  status?: number | string;
-  response?: unknown;
-  tool_calls?: AskSageToolCall[];
-  choices?: Array<{
-    message?: {
-      content?: string;
-      tool_calls?: AskSageToolCall[];
-    };
-  }>;
-}
-
-interface TokenResponse {
-  status: number | string;
-  response: {
-    access_token: string;
-  };
 }
 
 class Asksage extends BaseLLM {
@@ -132,7 +94,7 @@ class Asksage extends BaseLLM {
       body: JSON.stringify({ email: this.email, api_key: this.apiKey }),
     });
 
-    const data = (await res.json()) as TokenResponse;
+    const data = (await res.json()) as AskSageTokenResponse;
     if (parseInt(String(data.status)) !== 200) {
       throw new Error("Error getting access token: " + JSON.stringify(data));
     }

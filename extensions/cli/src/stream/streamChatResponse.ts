@@ -12,6 +12,7 @@ import { pruneLastMessage } from "../compaction.js";
 import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
+import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
@@ -460,7 +461,11 @@ export async function streamChatResponse(
     );
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getRequestTools(isHeadless);
+    const rawTools = await getRequestTools(isHeadless);
+    const tools = applyChatCompletionToolOverrides(
+      rawTools,
+      model.chatOptions?.toolOverrides,
+    );
 
     // Pre-API auto-compaction checkpoint (now includes tools)
     const preCompactionResult = await handlePreApiCompaction(chatHistory, {

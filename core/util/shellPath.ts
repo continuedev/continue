@@ -2,9 +2,12 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
-export async function getEnvPathFromUserShell(): Promise<string | undefined> {
-  if (process.platform === "win32") {
-    console.warn(`${getEnvPathFromUserShell.name} not implemented for Windows`);
+export async function getEnvPathFromUserShell(
+  remoteName?: string,
+): Promise<string | undefined> {
+  const isWindowsHostWithWslRemote =
+    process.platform === "win32" && remoteName === "wsl";
+  if (process.platform === "win32" && !isWindowsHostWithWslRemote) {
     return undefined;
   }
 

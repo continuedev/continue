@@ -183,7 +183,14 @@ export {
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";
-export type { LLMConfig } from "./types.js";
+export type {
+  LLMConfig,
+  AskSageTool,
+  AskSageToolChoice,
+  AskSageToolCall,
+  AskSageResponse,
+  AskSageTokenResponse,
+} from "./types.js";
 
 export {
   addCacheControlToLastTwoUserMessages,

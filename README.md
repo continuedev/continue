@@ -17,9 +17,6 @@
 <a target="_blank" href="https://changelog.continue.dev" style="background:none">
     <img src="https://img.shields.io/badge/changelog-%96EFF3" style="height: 22px;" />
 </a>
-<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 22px;" />
-</a>
 
 <p></p>
 
@@ -31,7 +28,7 @@
 
 </div>
 
-Get started in [Mission Control](https://hub.continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
+Get started in [Mission Control](https://continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
 
 ### Quick Install
 
@@ -82,7 +79,7 @@ Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?item
 ## Contributing
 
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
-join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
+join the [GitHub Discussions](https://github.com/continuedev/continue/discussions).
 
 ## License
 
