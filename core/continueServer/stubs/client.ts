@@ -3,6 +3,7 @@ import type {
   EmbeddingsCacheResponse,
   IContinueServerClient,
 } from "../interface.js";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 
 export class ContinueServerClient implements IContinueServerClient {
   url: URL | undefined;
@@ -32,7 +33,9 @@ export class ContinueServerClient implements IContinueServerClient {
 
   public async getConfig(): Promise<{ configJson: string }> {
     const userToken = await this.userToken;
-    const response = await fetch(new URL("sync", this.url).href, {
+    const syncUrl = new URL("sync", this.url);
+    assertLocalhostUrl(syncUrl, "continue-server");
+    const response = await fetch(syncUrl.href, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${userToken}`,
@@ -66,6 +69,7 @@ export class ContinueServerClient implements IContinueServerClient {
     const url = new URL("indexing/cache", this.url);
 
     try {
+      assertLocalhostUrl(url, "continue-server");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -104,6 +108,7 @@ export class ContinueServerClient implements IContinueServerClient {
     }
 
     const url = new URL("feedback", this.url);
+    assertLocalhostUrl(url, "continue-server");
 
     const response = await fetch(url, {
       method: "POST",

@@ -1,5 +1,8 @@
 import { ModelRole } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
+import {
+  assertLocalhostRequest,
+  fetchwithRequestOptions,
+} from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
@@ -473,10 +476,7 @@ export abstract class BaseLLM implements ILLM {
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
-      const urlStr = String(url);
-      if (!urlStr.startsWith("http://127.0.0.1")) {
-        throw new Error(`Outbound network access blocked: ${urlStr}`);
-      }
+      assertLocalhostRequest(input, "llm-fetch");
 
       try {
         const resp = await fetchwithRequestOptions(

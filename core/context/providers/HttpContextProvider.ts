@@ -6,6 +6,7 @@ import {
   IDE,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -51,6 +52,7 @@ class HttpContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const parsedUrl = new URL(this.options.url);
+    assertLocalhostUrl(parsedUrl, "context-http");
     const response = await extras.fetch(parsedUrl, {
       method: "POST",
       headers: {

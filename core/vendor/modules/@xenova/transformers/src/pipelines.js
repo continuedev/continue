@@ -2617,6 +2617,22 @@ export class TextToAudioPipeline
       typeof speaker_embeddings === "string" ||
       speaker_embeddings instanceof URL
     ) {
+      const resolvedUrl =
+        speaker_embeddings instanceof URL
+          ? speaker_embeddings
+          : new URL(speaker_embeddings);
+      const hostname = resolvedUrl.hostname.toLowerCase();
+      const isLocalhost =
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1" ||
+        hostname === "0.0.0.0" ||
+        hostname.endsWith(".localhost");
+      if (!isLocalhost) {
+        throw new Error(
+          `Airgapped mode: external network calls are disabled. Host "${resolvedUrl.hostname}" is not allowed.`,
+        );
+      }
       // Load from URL with fetch
       speaker_embeddings = new Float32Array(
         await (await fetch(speaker_embeddings)).arrayBuffer(),

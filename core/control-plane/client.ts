@@ -439,7 +439,9 @@ export class ControlPlaneClient {
       }
 
       // Now fetch the session state from the remote agent's /state endpoint
-      const stateResponse = await fetch(`${tunnelUrl}/state`);
+      const stateUrl = new URL("state", tunnelUrl);
+      assertLocalhostUrl(stateUrl, "control-plane-remote");
+      const stateResponse = await fetch(stateUrl.toString());
       if (!stateResponse.ok) {
         throw new Error(
           `Failed to fetch state from remote agent: ${stateResponse.statusText}`,
