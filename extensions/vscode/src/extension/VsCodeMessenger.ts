@@ -592,9 +592,9 @@ export class VsCodeMessenger {
                     "Checkout failed, trying to fetch first...",
                     checkoutError,
                   );
-                  // If checkout fails, fetch and try again
-                  await repo.fetch();
-                  await repo.checkout(branch);
+                  throw new Error(
+                    "Airgapped mode: git fetch is disabled. Ensure the target branch exists locally before retrying.",
+                  );
                 }
               },
             );

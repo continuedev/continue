@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { assertLocalhostUrl, streamResponse } from "@continuedev/fetch";
 import { SlashCommand } from "../../../index.js";
 import { removeQuotesAndEscapes } from "../../../util/index.js";
 
@@ -10,6 +10,7 @@ const HttpSlashCommand: SlashCommand = {
     if (!url) {
       throw new Error("URL is not defined in params");
     }
+    assertLocalhostUrl(new URL(url), "slash-http");
     const response = await fetch(url, {
       method: "POST",
       headers: {

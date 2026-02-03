@@ -5,6 +5,27 @@ import {
 import fetch, { Response } from "node-fetch";
 import OpenAI from "openai";
 
+function assertLocalhostUrl(url: URL, context?: string): void {
+  const hostname = url.hostname.toLowerCase();
+  const isLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "0.0.0.0" ||
+    hostname.endsWith(".localhost");
+
+  if (!["http:", "https:", "ws:", "wss:"].includes(url.protocol)) {
+    return;
+  }
+
+  if (!isLocalhost) {
+    const contextSuffix = context ? ` (${context})` : "";
+    throw new Error(
+      `Airgapped mode: external network calls are disabled${contextSuffix}. Host "${url.hostname}" is not allowed.`,
+    );
+  }
+}
+
 /**
  * Interface for OpenAI client options with assistant models
  */
@@ -97,7 +118,9 @@ export function createOpenAIClient({
       }
 
       // Using node-fetch explicitly, otherwise `fetch` has shadowing issues
-      const response = await fetch(url.toString(), modifiedInit as any);
+      const requestUrl = new URL(url.toString());
+      assertLocalhostUrl(requestUrl, "continue-sdk-openai");
+      const response = await fetch(requestUrl.toString(), modifiedInit as any);
 
       return response as unknown as Response;
     },

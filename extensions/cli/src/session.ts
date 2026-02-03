@@ -18,6 +18,7 @@ import {
   loadAuthConfig,
 } from "./auth/workos.js";
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+import { assertLocalhostUrl } from "./util/networkGuard.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
@@ -403,7 +404,9 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
       return [];
     }
 
-    const response = await fetch(new URL("agents", env.apiBase), {
+    const url = new URL("agents", env.apiBase);
+    assertLocalhostUrl(url, "cli-sessions");
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

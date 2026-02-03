@@ -15,6 +15,7 @@ import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
 import { get } from "../util/apiClient.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
+import { assertLocalhostUrl } from "../util/networkGuard.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { isAuthError } from "./mcpUtils.js";
@@ -546,6 +547,8 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   private constructSseTransport(
     serverConfig: SseMcpServer,
   ): SSEClientTransport {
+    const url = new URL(serverConfig.url);
+    assertLocalhostUrl(url, "mcp-sse");
     const apiKey = this.apiKeyCache.get(serverConfig.name);
     // Merge apiKey into headers if provided
     const headers = {
@@ -555,7 +558,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       }),
     };
 
-    return new SSEClientTransport(new URL(serverConfig.url), {
+    return new SSEClientTransport(url, {
       eventSourceInit: {
         fetch: (input, init) =>
           fetch(input, {
@@ -574,6 +577,8 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   ): StreamableHTTPClientTransport {
     // Merge apiKey into headers if provided
     const apiKey = this.apiKeyCache.get(serverConfig.name);
+    const url = new URL(serverConfig.url);
+    assertLocalhostUrl(url, "mcp-http");
 
     const headers = {
       ...serverConfig.requestOptions?.headers,
@@ -582,7 +587,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       }),
     };
 
-    return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
+    return new StreamableHTTPClientTransport(url, {
       requestInit: { headers },
     });
   }

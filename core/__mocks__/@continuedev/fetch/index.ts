@@ -11,6 +11,13 @@ export const fetchwithRequestOptions = vi.fn(
   },
 );
 
+export const assertLocalhostUrl = vi.fn();
+export const assertLocalhostRequest = vi.fn();
+
 export const streamSse = vi.fn(function* () {
+  yield "";
+});
+
+export const streamResponse = vi.fn(function* () {
   yield "";
 });

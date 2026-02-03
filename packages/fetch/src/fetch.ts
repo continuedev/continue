@@ -5,6 +5,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
 import patchedFetch from "./node-fetch-patch.js";
+import { assertLocalhostUrl } from "./networkGuard.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
 
 const { http, https } = (followRedirects as any).default;
@@ -85,6 +86,7 @@ export async function fetchwithRequestOptions(
   requestOptions?: RequestOptions,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
+  assertLocalhostUrl(url, "fetchwithRequestOptions");
   if (url.host === "localhost") {
     url.host = "127.0.0.1";
   }

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { exec } from "node:child_process";
 import path from "node:path";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import { IDE } from "..";
 
 export interface ModelInfo {
@@ -59,6 +60,7 @@ export async function getRemoteModelInfo(
   const [modelName, tag = "latest"] = modelId.split(":");
   const url = `https://registry.ollama.ai/v2/library/${modelName}/manifests/${tag}`;
   try {
+    assertLocalhostUrl(new URL(url), "ollama-registry");
     const sig = signal ? signal : AbortSignal.timeout(3000);
     const response = await fetch(url, { signal: sig });
 

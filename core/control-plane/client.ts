@@ -8,6 +8,7 @@ import {
   SecretResult,
   SecretType,
 } from "@continuedev/config-yaml";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
@@ -136,10 +137,11 @@ export class ControlPlaneClient {
     }
 
     const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-    const url = new URL(path, env.CONTROL_PLANE_URL).toString();
+    const url = new URL(path, env.CONTROL_PLANE_URL);
+    assertLocalhostUrl(url, "control-plane");
     const ideInfo = await this.ide.getIdeInfo();
 
-    const resp = await fetch(url, {
+    const resp = await fetch(url.toString(), {
       ...init,
       headers: {
         ...init.headers,

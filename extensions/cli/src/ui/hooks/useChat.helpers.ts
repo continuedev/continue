@@ -5,6 +5,7 @@ import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "src/util/logger.js";
+import { assertLocalhostUrl } from "../../util/networkGuard.js";
 
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
 import { loadSession, startNewSession } from "../../session.js";
@@ -250,7 +251,9 @@ async function handleRemoteDiffCommand(
   onShowDiff?: (diffContent: string) => void,
 ): Promise<void> {
   try {
-    const response = await fetch(`${remoteUrl}/diff`);
+    const url = new URL("diff", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch diff: ${response.statusText}`);
     }
@@ -277,7 +280,9 @@ async function handleRemoteApplyCommand(
   onShowStatusMessage?: (message: string) => void,
 ): Promise<void> {
   try {
-    const response = await fetch(`${remoteUrl}/diff`);
+    const url = new URL("diff", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch diff: ${response.statusText}`);
     }

@@ -1,4 +1,5 @@
 import { Analytics } from "@continuedev/config-types";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import fetch from "node-fetch";
 
 import { ControlPlaneClient } from "../client.js";
@@ -27,8 +28,9 @@ export default class ContinueProxyAnalyticsProvider
     const url = new URL(
       `proxy/analytics/${this.controlPlaneProxyInfo.workspaceId}/capture`,
       this.controlPlaneProxyInfo?.controlPlaneProxyUrl,
-    ).toString();
-    void fetch(url, {
+    );
+    assertLocalhostUrl(url, "analytics");
+    void fetch(url.toString(), {
       method: "POST",
       body: JSON.stringify({
         event,

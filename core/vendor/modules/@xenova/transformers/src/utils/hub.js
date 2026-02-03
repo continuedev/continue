@@ -185,6 +185,21 @@ export async function getFile(urlOrPath) {
     typeof process !== "undefined" &&
     process?.release?.name === "node"
   ) {
+    if (isValidHttpUrl(urlOrPath)) {
+      const parsed = new URL(urlOrPath);
+      const hostname = parsed.hostname.toLowerCase();
+      const isLocalhost =
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1" ||
+        hostname === "0.0.0.0" ||
+        hostname.endsWith(".localhost");
+      if (!isLocalhost) {
+        throw new Error(
+          `Airgapped mode: external network calls are disabled. Host "${parsed.hostname}" is not allowed.`,
+        );
+      }
+    }
     const IS_CI = !!process.env?.TESTING_REMOTELY;
     const version = env.version;
 

@@ -4,6 +4,7 @@ import { env } from "../env.js";
 import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
+import { assertLocalhostUrl } from "../util/networkGuard.js";
 
 import type { StorageSyncServiceState } from "./types.js";
 
@@ -164,6 +165,7 @@ export class StorageSyncService {
     );
 
     try {
+      assertLocalhostUrl(url, "storage-sync");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -225,6 +227,7 @@ export class StorageSyncService {
     const url = new URL("agents/storage/presigned-url", env.apiBase);
 
     try {
+      assertLocalhostUrl(url, "storage-sync");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -323,6 +326,7 @@ export class StorageSyncService {
   ): Promise<void> {
     // Parse the URL to extract any required headers from the query parameters
     const parsedUrl = new URL(url);
+    assertLocalhostUrl(parsedUrl, "storage-sync");
     const headers: Record<string, string> = {
       "Content-Type": contentType,
     };
@@ -333,7 +337,7 @@ export class StorageSyncService {
       headers["x-amz-server-side-encryption"] = "AES256";
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(parsedUrl.toString(), {
       method: "PUT",
       headers,
       body,

@@ -3,6 +3,27 @@ import * as path from "node:path";
 import { Registry } from "./interfaces/index.js";
 import { FullSlug, PackageIdentifier } from "./interfaces/slugs.js";
 
+function assertLocalhostUrl(url: URL, context?: string): void {
+  const hostname = url.hostname.toLowerCase();
+  const isLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "0.0.0.0" ||
+    hostname.endsWith(".localhost");
+
+  if (!["http:", "https:", "ws:", "wss:"].includes(url.protocol)) {
+    return;
+  }
+
+  if (!isLocalhost) {
+    const contextSuffix = context ? ` (${context})` : "";
+    throw new Error(
+      `Airgapped mode: external network calls are disabled${contextSuffix}. Host "${url.hostname}" is not allowed.`,
+    );
+  }
+}
+
 interface RegistryClientOptions {
   accessToken?: string;
   apiBase?: string;
@@ -51,16 +72,18 @@ export class RegistryClient implements Registry {
   }
 
   private async getContentFromSlug(fullSlug: FullSlug): Promise<string> {
-    const response = await fetch(
-      `${this.apiBase}registry/v1/${fullSlug.ownerSlug}/${fullSlug.packageSlug}/${fullSlug.versionSlug}`,
-      {
-        headers: {
-          ...(this.accessToken
-            ? { Authorization: `Bearer ${this.accessToken}` }
-            : {}),
-        },
-      },
+    const url = new URL(
+      `registry/v1/${fullSlug.ownerSlug}/${fullSlug.packageSlug}/${fullSlug.versionSlug}`,
+      this.apiBase,
     );
+    assertLocalhostUrl(url, "registry-client");
+    const response = await fetch(url.toString(), {
+      headers: {
+        ...(this.accessToken
+          ? { Authorization: `Bearer ${this.accessToken}` }
+          : {}),
+      },
+    });
     const data = await response.json();
     return data.content;
   }

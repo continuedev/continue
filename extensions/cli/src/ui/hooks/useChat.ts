@@ -17,6 +17,7 @@ import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
+import { assertLocalhostUrl } from "../../util/networkGuard.js";
 
 import {
   handleAutoCompaction,
@@ -662,7 +663,9 @@ export function useChat({
     // In remote mode, send interrupt signal to server
     if (isRemoteMode && remoteUrl) {
       // Send a message to interrupt the remote server
-      fetch(`${remoteUrl}/message`, {
+      const url = new URL("message", remoteUrl);
+      assertLocalhostUrl(url, "remote-chat");
+      fetch(url.toString(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

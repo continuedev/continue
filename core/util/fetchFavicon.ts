@@ -1,9 +1,11 @@
 import { JSDOM } from "jsdom";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 
 export async function findFaviconPath(url: URL): Promise<string | undefined> {
   const baseUrl = `${url.protocol}//${url.hostname}`;
 
   try {
+    assertLocalhostUrl(new URL(baseUrl), "favicon");
     const response = await fetch(baseUrl);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -34,6 +36,7 @@ export async function getFaviconBase64(
   faviconUrl: string,
 ): Promise<string | undefined> {
   try {
+    assertLocalhostUrl(new URL(faviconUrl), "favicon");
     const response = await fetch(faviconUrl);
 
     if (!response.ok) {

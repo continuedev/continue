@@ -1,4 +1,5 @@
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { ContinueError, ContinueErrorReason } from "../util/errors";
@@ -30,6 +31,7 @@ async function callHttpTool(
   args: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
+  assertLocalhostUrl(new URL(url), "tool-http");
   const response = await extras.fetch(url, {
     method: "POST",
     headers: {

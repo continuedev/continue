@@ -9,6 +9,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import { Logger } from "core/util/Logger";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -335,18 +336,20 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
-    const response = await fetch(
-      new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          refreshToken,
-        }),
-      },
+    const refreshUrl = new URL(
+      "/auth/refresh",
+      controlPlaneEnv.CONTROL_PLANE_URL,
     );
+    assertLocalhostUrl(refreshUrl, "workos-refresh");
+    const response = await fetch(refreshUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refreshToken,
+      }),
+    });
     if (!response.ok) {
       const text = await response.text();
       throw new Error("Error refreshing token: " + text);
@@ -582,21 +585,20 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     codeVerifier: string,
     hubEnv: HubEnv,
   ) {
-    const resp = await fetch(
-      "https://api.workos.com/user_management/authenticate",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          client_id: hubEnv.WORKOS_CLIENT_ID,
-          code_verifier: codeVerifier,
-          grant_type: "authorization_code",
-          code: token,
-        }),
+    const workosUrl = "https://api.workos.com/user_management/authenticate";
+    assertLocalhostUrl(new URL(workosUrl), "workos-auth");
+    const resp = await fetch(workosUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        client_id: hubEnv.WORKOS_CLIENT_ID,
+        code_verifier: codeVerifier,
+        grant_type: "authorization_code",
+        code: token,
+      }),
+    });
     const text = await resp.text();
     const data = JSON.parse(text);
     return data;

@@ -7,6 +7,27 @@ import {
 } from "@continuedev/config-yaml";
 import { IContinueHubClient } from "./IContinueHubClient.js";
 
+function assertLocalhostUrl(url: URL, context?: string): void {
+  const hostname = url.hostname.toLowerCase();
+  const isLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "0.0.0.0" ||
+    hostname.endsWith(".localhost");
+
+  if (!["http:", "https:", "ws:", "wss:"].includes(url.protocol)) {
+    return;
+  }
+
+  if (!isLocalhost) {
+    const contextSuffix = context ? ` (${context})` : "";
+    throw new Error(
+      `Airgapped mode: external network calls are disabled${contextSuffix}. Host "${url.hostname}" is not allowed.`,
+    );
+  }
+}
+
 interface ContinueHubClientOptions {
   apiKey?: string;
   apiBase?: string;
@@ -25,7 +46,8 @@ export class ContinueHubClient implements IContinueHubClient {
   }
 
   private async request(path: string, init: RequestInit): Promise<Response> {
-    const url = new URL(path, this.apiBase).toString();
+    const url = new URL(path, this.apiBase);
+    assertLocalhostUrl(url, "hub-client");
 
     const finalInit: RequestInit = {
       ...this.fetchOptions,
@@ -43,7 +65,7 @@ export class ContinueHubClient implements IContinueHubClient {
       };
     }
 
-    const resp = await fetch(url, finalInit);
+    const resp = await fetch(url.toString(), finalInit);
 
     if (!resp.ok) {
       throw new Error(

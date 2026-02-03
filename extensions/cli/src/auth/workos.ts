@@ -7,6 +7,7 @@ import nodeFetch from "node-fetch";
 import open from "open";
 
 import { logger } from "src/util/logger.js";
+import { assertLocalhostUrl } from "../util/networkGuard.js";
 
 import { getApiClient } from "../config.js";
 // eslint-disable-next-line import/order
@@ -281,16 +282,16 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
     });
 
     // Use WorkOS User Management device authorization endpoint
-    const response = await fetch(
-      "https://api.workos.com/user_management/authorize/device",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params,
+    const deviceAuthUrl =
+      "https://api.workos.com/user_management/authorize/device";
+    assertLocalhostUrl(new URL(deviceAuthUrl), "workos-device");
+    const response = await fetch(deviceAuthUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    );
+      body: params,
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -331,14 +332,14 @@ async function pollForDeviceToken(
       };
 
       // Poll WorkOS User Management token endpoint
-      const response = await fetch(
-        "https://api.workos.com/user_management/authenticate",
-        {
-          method: "POST",
-          headers,
-          body: params,
-        },
-      );
+      const authenticateUrl =
+        "https://api.workos.com/user_management/authenticate";
+      assertLocalhostUrl(new URL(authenticateUrl), "workos-authenticate");
+      const response = await fetch(authenticateUrl, {
+        method: "POST",
+        headers,
+        body: params,
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -412,7 +413,9 @@ async function refreshToken(
     // Load existing config to preserve organizationId and other fields
     const existingConfig = loadAuthConfig();
 
-    const response = await fetch(new URL("auth/refresh", env.apiBase), {
+    const refreshUrl = new URL("auth/refresh", env.apiBase);
+    assertLocalhostUrl(refreshUrl, "workos-refresh");
+    const response = await fetch(refreshUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -590,6 +593,7 @@ async function resolveOrgScopeForApiKey(
     // Prefer a dedicated endpoint for scope discovery. This should return JSON like:
     // { organizationId: string | null } (aka orgScopeId)
     const url = new URL("auth/scope", env.apiBase);
+    assertLocalhostUrl(url, "workos-scope");
     const resp = await fetch(url, {
       method: "GET",
       headers: {

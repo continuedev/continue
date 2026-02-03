@@ -4,6 +4,7 @@ import * as path from "path";
 import { env } from "../env.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { assertLocalhostUrl } from "../util/networkGuard.js";
 
 import { BaseService } from "./BaseService.js";
 import type { ArtifactUploadServiceState } from "./types.js";
@@ -176,6 +177,7 @@ export class ArtifactUploadService extends BaseService<ArtifactUploadServiceStat
     const url = new URL("agents/artifacts/upload-url", env.apiBase);
 
     try {
+      assertLocalhostUrl(url, "artifact-upload");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -226,7 +228,9 @@ export class ArtifactUploadService extends BaseService<ArtifactUploadServiceStat
     const fileBuffer = fs.readFileSync(filePath);
 
     // Upload to S3
-    const response = await fetch(presignedUrl, {
+    const uploadUrl = new URL(presignedUrl);
+    assertLocalhostUrl(uploadUrl, "artifact-upload");
+    const response = await fetch(uploadUrl.toString(), {
       method: "PUT",
       headers: {
         "Content-Type": contentType,

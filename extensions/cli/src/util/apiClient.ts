@@ -3,6 +3,7 @@ import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
 import { env } from "../env.js";
 
 import { logger } from "./logger.js";
+import { assertLocalhostUrl } from "./networkGuard.js";
 
 export interface ApiRequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -96,6 +97,7 @@ export async function makeAuthenticatedRequest<T = any>(
     const url = new URL(endpoint, env.apiBase);
     logger.debug(`Making ${method} request to: ${url.toString()}`);
 
+    assertLocalhostUrl(url, "cli-api");
     const response = await fetch(url, requestOptions);
 
     // Handle error responses

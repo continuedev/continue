@@ -3,6 +3,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import { services } from "../../services/index.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
+import { assertLocalhostUrl } from "../../util/networkGuard.js";
 
 import { RemoteServerState } from "./useChat.types.js";
 
@@ -21,7 +22,9 @@ async function pollRemoteServerState(
   remoteUrl: string,
 ): Promise<RemoteServerState | null> {
   try {
-    const response = await fetch(`${remoteUrl}/state`);
+    const url = new URL("state", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch state: ${response.statusText}`);
     }
@@ -140,7 +143,9 @@ export async function handleRemoteExit(
   });
 
   try {
-    const response = await fetch(`${remoteUrl}/exit`, {
+    const url = new URL("exit", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString(), {
       method: "POST",
     });
 
@@ -185,7 +190,9 @@ export async function handleRemoteMessage({
   messageContent,
 }: HandleRemoteMessageOptions): Promise<void> {
   try {
-    const response = await fetch(`${remoteUrl}/message`, {
+    const url = new URL("message", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -217,7 +224,9 @@ export async function handleRemoteMessage({
  */
 export async function handleRemoteDiff(remoteUrl: string): Promise<void> {
   try {
-    const response = await fetch(`${remoteUrl}/diff`);
+    const url = new URL("diff", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch diff: ${response.statusText}`);
     }
@@ -250,7 +259,9 @@ export async function handleRemoteDiff(remoteUrl: string): Promise<void> {
  */
 export async function handleRemoteApply(remoteUrl: string): Promise<void> {
   try {
-    const response = await fetch(`${remoteUrl}/diff`);
+    const url = new URL("diff", remoteUrl);
+    assertLocalhostUrl(url, "remote-chat");
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch diff: ${response.statusText}`);
     }

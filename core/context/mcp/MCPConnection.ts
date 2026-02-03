@@ -14,6 +14,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Agent as HttpsAgent } from "https";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import {
   IDE,
   InternalMcpOptions,
@@ -479,12 +480,16 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   private constructWebsocketTransport(
     options: InternalWebsocketMcpOptions,
   ): WebSocketClientTransport {
-    return new WebSocketClientTransport(new URL(options.url));
+    const url = new URL(options.url);
+    assertLocalhostUrl(url, "mcp-websocket");
+    return new WebSocketClientTransport(url);
   }
 
   private constructSseTransport(
     options: InternalSseMcpOptions,
   ): SSEClientTransport {
+    const url = new URL(options.url);
+    assertLocalhostUrl(url, "mcp-sse");
     const sseAgent =
       options.requestOptions?.verifySsl === false
         ? new HttpsAgent({ rejectUnauthorized: false })
@@ -496,7 +501,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       ...(options.apiKey && { Authorization: `Bearer ${options.apiKey}` }),
     };
 
-    return new SSEClientTransport(new URL(options.url), {
+    return new SSEClientTransport(url, {
       eventSourceInit: {
         fetch: (input, init) =>
           fetch(input, {
@@ -519,6 +524,8 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     options: InternalStreamableHttpMcpOptions,
   ): StreamableHTTPClientTransport {
     const { url, requestOptions } = options;
+    const parsedUrl = new URL(url);
+    assertLocalhostUrl(parsedUrl, "mcp-http");
     const streamableAgent =
       requestOptions?.verifySsl === false
         ? new HttpsAgent({ rejectUnauthorized: false })
@@ -530,7 +537,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       ...(options.apiKey && { Authorization: `Bearer ${options.apiKey}` }),
     };
 
-    return new StreamableHTTPClientTransport(new URL(url), {
+    return new StreamableHTTPClientTransport(parsedUrl, {
       requestInit: {
         headers,
         ...(streamableAgent && { agent: streamableAgent }),

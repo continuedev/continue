@@ -1,5 +1,6 @@
 import { URL } from "node:url";
 
+import { assertLocalhostUrl } from "@continuedev/fetch";
 import { getHeaders } from "../../../continueServer/stubs/headers";
 import { TRIAL_PROXY_URL } from "../../../control-plane/client";
 import { PageData } from "./DocsCrawler";
@@ -12,7 +13,9 @@ export class DefaultCrawler {
   ) {}
 
   async crawl(): Promise<PageData[]> {
-    const resp = await fetch(new URL("crawl", TRIAL_PROXY_URL).toString(), {
+    const crawlUrl = new URL("crawl", TRIAL_PROXY_URL);
+    assertLocalhostUrl(crawlUrl, "docs-crawler");
+    const resp = await fetch(crawlUrl.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

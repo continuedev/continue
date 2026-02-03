@@ -8,6 +8,7 @@ import JSZip from "jszip";
 import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
 import { logger } from "./util/logger.js";
+import { assertLocalhostUrl } from "./util/networkGuard.js";
 
 /**
  * Pattern to match valid hub slugs (owner/package format)
@@ -159,6 +160,7 @@ export async function loadPackageFromHub<T>(
       headers.Authorization = `Bearer ${accessToken}`;
     }
 
+    assertLocalhostUrl(downloadUrl, "hub-loader");
     const response = await fetch(downloadUrl, { headers });
 
     if (!response.ok) {

@@ -1,6 +1,7 @@
 import { URL } from "node:url";
 
 import * as cheerio from "cheerio";
+import { assertLocalhostUrl } from "@continuedev/fetch";
 
 import { PageData } from "./DocsCrawler";
 
@@ -91,6 +92,7 @@ export default class CheerioCrawler {
     let response;
 
     try {
+      assertLocalhostUrl(location, "docs-crawler");
       response = await fetch(location.toString());
     } catch (error: unknown) {
       if (
