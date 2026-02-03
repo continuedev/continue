@@ -11,6 +11,12 @@ sidebarTitle: "Using Netlify MCP for Performance Optimization"
 </Card>
 
 <Info>
+  The new [Netlify Mission Control Integration](/mission-control/integrations/netlify) enables **[Continuous AI](/guides/continuous-ai)** for deployment automation - where AI agents autonomously manage deployments, monitor site performance, and respond to deployment events. This cookbook focuses on CLI-based performance optimization workflows, but you can also deploy autonomous deployment agents through Mission Control.
+
+  **Get Started:** Use this cookbook to understand Netlify MCP fundamentals, then [enable Mission Control](/mission-control/integrations/netlify) to deploy autonomous deployment management agents across your organization.
+</Info>
+
+<Info>
   **Did You Know?** Netlify is more than just static hosting! It offers:
   - [Split Testing](https://docs.netlify.com/site-deploys/split-testing/) for A/B testing branches
   - [Analytics](https://docs.netlify.com/analytics/get-started/) with Core Web Vitals tracking
@@ -39,8 +45,8 @@ This cookbook teaches you to:
 - [Netlify account](https://netlify.com) (free tier works)
 - Node.js 22+ installed (required for Netlify)
 - [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
-- [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) configured
-- [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) (recommended)
+- [Netlify MCP](https://continue.dev/netlify/netlify-mcp) configured
+- [Netlify Development Rules](https://continue.dev/netlify/netlify-development) (recommended)
 
 ## Quick Setup
 
@@ -82,7 +88,7 @@ After completing **Quick Setup** above, you have two paths to get started:
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Netlify Continuous AI Agent](https://hub.continue.dev/continuedev/netlify-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Netlify Continuous AI Agent](https://continue.dev/continuedev/netlify-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
         cn --agent continuedev/netlify-continuous-ai-agent
@@ -120,13 +126,13 @@ After completing **Quick Setup** above, you have two paths to get started:
   1. Authenticate with Netlify:
   `netlify login`
   2. Visit [Netlify MCP on Continue
-  Hub](https://hub.continue.dev/netlify/netlify-mcp)
+  Hub](https://continue.dev/netlify/netlify-mcp)
   3. Follow the configuration instructions for your editor
 
 </Step>
 
   <Step title="Add Development Rules">
-    Install the [Netlify Development Rules](https://hub.continue.dev/netlify/netlify-development) bundle for best practices:
+    Install the [Netlify Development Rules](https://continue.dev/netlify/netlify-development) bundle for best practices:
 
     1. Visit the bundle page on Continue Mission Control
     2. Click **"Install Rules"**
@@ -459,7 +465,7 @@ Unlike Google Analytics, Netlify Analytics:
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
 - `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
 - `NETLIFY_SITE_ID`: Your Netlify site ID
 
@@ -705,14 +711,14 @@ The Netlify Performance Rules enforce:
 
 ## Next Steps
 
-- Install [Netlify MCP](https://hub.continue.dev/netlify/netlify-mcp) from Continue Mission Control
+- Install [Netlify MCP](https://continue.dev/netlify/netlify-mcp) from Continue Mission Control
 - Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
 - Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
-- Join the [Continue Discord](https://discord.gg/continue) for support
+- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 
-- [Netlify MCP on Continue Mission Control](https://hub.continue.dev/netlify/netlify-mcp)
+- [Netlify MCP on Continue Mission Control](https://continue.dev/netlify/netlify-mcp)
 - [Core Web Vitals Guide](https://web.dev/vitals/)
 - [Netlify Analytics Documentation](https://docs.netlify.com/analytics/)
 - [Continue Performance Guides](https://docs.continue.dev/guides)

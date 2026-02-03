@@ -1,13 +1,17 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
+import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 import React from "react";
 
-import { compactChatHistory } from "../compaction.js";
+import {
+  compactChatHistory,
+  getAutoCompactMessage,
+  shouldAutoCompact,
+} from "../compaction.js";
 import { updateSessionHistory } from "../session.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
-import { getAutoCompactMessage, shouldAutoCompact } from "../util/tokenizer.js";
 
 interface AutoCompactionCallbacks {
   // For streaming mode
@@ -26,6 +30,8 @@ interface AutoCompactionOptions {
   isHeadless?: boolean;
   format?: "json";
   callbacks?: AutoCompactionCallbacks;
+  systemMessage?: string;
+  tools?: ChatCompletionTool[];
 }
 
 /**
@@ -128,9 +134,22 @@ export async function handleAutoCompaction(
   compactionIndex: number | null;
   wasCompacted: boolean;
 }> {
-  const { isHeadless = false, callbacks } = options;
+  const {
+    isHeadless = false,
+    callbacks,
+    systemMessage: providedSystemMessage,
+    tools,
+  } = options;
 
-  if (!model || !shouldAutoCompact(chatHistory, model)) {
+  if (
+    !model ||
+    !shouldAutoCompact({
+      chatHistory,
+      model,
+      systemMessage: providedSystemMessage,
+      tools,
+    })
+  ) {
     return { chatHistory, compactionIndex: null, wasCompacted: false };
   }
 
@@ -142,18 +161,41 @@ export async function handleAutoCompaction(
   notifyCompactionStart(getAutoCompactMessage(model), isHeadless, callbacks);
 
   try {
-    // Compact the history
-    const result = await compactChatHistory(
-      chatHistory,
+    // Get system message to calculate its token count for compaction pruning
+    // Use provided message if available, otherwise fetch it (for backward compatibility)
+    const systemMessage =
+      providedSystemMessage ??
+      (async () => {
+        const { services } = await import("../services/index.js");
+        return services.systemMessage.getSystemMessage(
+          services.toolPermissions.getState().currentMode,
+        );
+      })();
+    const resolvedSystemMessage =
+      typeof systemMessage === "string" ? systemMessage : await systemMessage;
+
+    const { countChatHistoryItemTokens } = await import("../util/tokenizer.js");
+    const systemMessageTokens = countChatHistoryItemTokens(
+      {
+        message: {
+          role: "system",
+          content: resolvedSystemMessage,
+        },
+        contextItems: [],
+      },
       model,
-      llmApi,
-      isHeadless
+    );
+
+    // Compact the history
+    const result = await compactChatHistory(chatHistory, model, llmApi, {
+      callbacks: isHeadless
         ? undefined
         : {
             onStreamContent: callbacks?.onContent,
             onStreamComplete: () => {},
           },
-    );
+      systemMessageTokens,
+    });
 
     // Save the compacted session
     updateSessionHistory(result.compactedHistory);

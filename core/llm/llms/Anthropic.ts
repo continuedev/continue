@@ -28,6 +28,7 @@ import {
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import { extractBase64FromDataUrl } from "../../util/url.js";
 import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 
@@ -105,14 +106,22 @@ class Anthropic extends BaseLLM {
             });
           }
         } else {
-          parts.push({
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
-              data: part.imageUrl.url.split(",")[1],
-            },
-          });
+          const base64Data = extractBase64FromDataUrl(part.imageUrl.url);
+          if (base64Data) {
+            parts.push({
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: getAnthropicMediaTypeFromDataUrl(part.imageUrl.url),
+                data: base64Data,
+              },
+            });
+          } else {
+            console.warn(
+              "Anthropic: skipping image with invalid data URL format",
+              part.imageUrl.url,
+            );
+          }
         }
       }
     }
@@ -417,6 +426,7 @@ class Anthropic extends BaseLLM {
     const headers = getAnthropicHeaders(
       this.apiKey,
       shouldCacheSystemMessage || shouldCachePrompt,
+      this.apiBase,
     );
 
     const body: MessageCreateParams = {

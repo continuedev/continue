@@ -7,11 +7,11 @@ sidebarTitle: Codebase and Documentation Awareness
 
 Agent mode works best when it understands the context of your project. This guide shows you how to give agent mode access to codebases and documentation, making it more helpful and accurate.
 
-## Make agent mode aware of your open codebase
+## Make Agent Mode Aware of Your Open Codebase
 
 When agent mode understands your current codebase, it can provide more relevant suggestions and answers.
 
-### Let agent mode explore the codebase using tools
+### Let Agent Mode Explore the Codebase Using Tools
 
 Agent mode can use built-in tools to navigate and understand your code:
 
@@ -19,7 +19,7 @@ Agent mode can use built-in tools to navigate and understand your code:
 2. **Code search**: Use search to find relevant code snippets
 3. **Git integration**: Access commit history and understand code evolution
 
-### Create rules to help the agent understand your codebase
+### Create Rules to Help the Agent Understand Your Codebase
 
 Rules guide agent mode's behavior and understanding. Place markdown files in `.continue/rules` in your project to provide context:
 
@@ -46,15 +46,15 @@ This is a React application with:
 
 Learn more about [rules configuration](/customize/deep-dives/rules).
 
-## Make agent mode aware of other codebases
+## Make Agent Mode Aware of Other Codebases
 
 Sometimes you need agent mode to understand code beyond your current project.
 
-### Public codebases
+### Public Codebases
 
 For open-source projects and public repositories, you have several options:
 
-#### Rules with hyperlinks
+#### Rules with Hyperlinks
 
 Create rules that point to external codebases:
 
@@ -87,32 +87,32 @@ You can use the `gh` CLI to:
 
 #### DeepWiki MCP
 
-[DeepWiki MCP](https://hub.continue.dev/deepwiki/deepwiki-mcp) lets agent mode explore any public GitHub repository.
+[DeepWiki MCP](https://continue.dev/deepwiki/deepwiki-mcp) lets agent mode explore any public GitHub repository.
 
 Once configured, agent mode can explore repositories like:
 
 - "Explore the React repository structure"
 - "Find how authentication is implemented in NextAuth.js"
 
-### Internal codebases
+### Internal Codebases
 
 For private and internal repositories, you need additional setup:
 
-#### Custom MCP servers
+#### Custom MCP Servers
 
 Create an MCP server that has access to your internal repositories.
 
-#### Custom code RAG
+#### Custom Code RAG
 
 For faster retrieval and lower costs with very large internal codebases, consider implementing a [custom code RAG](/guides/custom-code-rag) system. This is an advanced approach that requires more setup but can provide performance benefits at scale.
 
-## Make agent mode aware of relevant documentation
+## Make Agent Mode Aware of Relevant Documentation
 
 Documentation provides crucial context for agent mode to understand APIs, frameworks, and best practices.
 
-### Public documentation
+### Public Documentation
 
-#### Rules with documentation links
+#### Rules with Documentation Links
 
 Guide agent mode to relevant documentation:
 
@@ -130,18 +130,18 @@ Always cite documentation when explaining concepts.
 
 #### Context7 MCP
 
-[Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables agent mode to search and retrieve information from public documentation:
+[Context7 MCP](https://continue.dev/upstash/context7-mcp) enables agent mode to search and retrieve information from public documentation:
 
 Agent mode can then answer questions like:
 
 - "How do I use React hooks?"
 - "What's the syntax for Tailwind CSS animations?"
 
-### Internal documentation
+### Internal Documentation
 
 For private documentation and wikis:
 
-#### Rules with internal links
+#### Rules with Internal Links
 
 Create rules that reference internal resources:
 
@@ -157,11 +157,11 @@ Our team documentation is available at:
 Always follow our internal standards when suggesting code.
 ```
 
-#### Custom MCP servers for docs
+#### Custom MCP Servers for Docs
 
 Create an MCP server that accesses your internal documentation.
 
-## Migrating from deprecated context providers
+## Migrating from Deprecated Context Providers
 
 If you were previously using the `@Codebase` or `@Docs` context providers, here's how to migrate to the new approach:
 
@@ -183,7 +183,7 @@ The `@Docs` context provider has been deprecated. Instead:
 
 The new approach provides better integration with Continue's Agent mode features and more intelligent context selection.
 
-## Next steps
+## Next Steps
 
 - Learn more about [MCP servers](/reference/continue-mcp)
 - Explore [rules configuration](/customize/deep-dives/rules)

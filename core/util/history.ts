@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import { Session, BaseSessionMetadata } from "../index.js";
+import { BaseSessionMetadata, Session } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
 
 import { NEW_SESSION_TITLE } from "./constants.js";
@@ -108,6 +108,16 @@ export class HistoryManager {
       workspaceDirectory: session.workspaceDirectory,
       history: session.history,
     };
+    if (session.mode) {
+      orderedSession.mode = session.mode;
+    }
+    if (session.chatModelTitle !== undefined) {
+      orderedSession.chatModelTitle = session.chatModelTitle;
+    }
+    if (session.usage !== undefined) {
+      orderedSession.usage = session.usage;
+    }
+
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
       JSON.stringify(orderedSession, undefined, 2),
@@ -131,10 +141,14 @@ export class HistoryManager {
       }
 
       let found = false;
+      const messageCount = session.history.filter(
+        (item) => item.message.role === "assistant",
+      ).length;
       for (const sessionMetadata of sessionsList) {
         if (sessionMetadata.sessionId === session.sessionId) {
           sessionMetadata.title = session.title;
           sessionMetadata.workspaceDirectory = session.workspaceDirectory;
+          sessionMetadata.messageCount = messageCount;
           found = true;
           break;
         }
@@ -146,6 +160,7 @@ export class HistoryManager {
           title: session.title,
           dateCreated: String(Date.now()),
           workspaceDirectory: session.workspaceDirectory,
+          messageCount,
         };
         sessionsList.push(sessionMetadata);
       }

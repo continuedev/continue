@@ -1,6 +1,8 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
+/* eslint-disable max-lines */
 
-import type { ToolStatus } from "core/index.js";
+import type { ToolStatus, Usage } from "core/index.js";
+import { calculateRequestCost } from "core/llm/utils/calculateRequestCost.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
@@ -14,9 +16,9 @@ import {
   serviceContainer,
   services,
 } from "../services/index.js";
+import { trackSessionUsage } from "../session.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
-import { calculateTokenCost } from "../telemetry/utils.js";
 import {
   executeToolCall,
   getAllAvailableTools,
@@ -241,6 +243,28 @@ export function processToolCallDelta(
   }
 }
 
+// Helper function to detect provider from model name
+function detectProvider(modelName: string): string {
+  const normalized = modelName.toLowerCase();
+  if (normalized.includes("gpt") || normalized.includes("openai")) {
+    return "openai";
+  }
+  if (normalized.includes("claude") || normalized.includes("anthropic")) {
+    return "anthropic";
+  }
+  // Default to anthropic for backward compatibility
+  return "anthropic";
+}
+
+// Simple fallback cost calculation for unknown models
+function calculateFallbackCost(
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  // Default pricing: $1/MTok input, $2/MTok output
+  return (inputTokens * 1 + outputTokens * 2) / 1_000_000;
+}
+
 // Helper function to record telemetry
 export function recordStreamTelemetry(options: {
   requestStartTime: number;
@@ -249,6 +273,7 @@ export function recordStreamTelemetry(options: {
   outputTokens: number;
   model: any;
   tools?: any[];
+  fullUsage?: any;
 }): number {
   const {
     requestStartTime,
@@ -257,13 +282,73 @@ export function recordStreamTelemetry(options: {
     outputTokens,
     model,
     tools,
+    fullUsage,
   } = options;
   const totalDuration = responseEndTime - requestStartTime;
-  const cost = calculateTokenCost(inputTokens, outputTokens, model.model);
 
-  telemetryService.recordTokenUsage(inputTokens, "input", model.model);
-  telemetryService.recordTokenUsage(outputTokens, "output", model.model);
+  // Calculate cost using comprehensive pricing that includes caching
+  let cost: number;
+  let usage: Usage;
+
+  if (fullUsage) {
+    // Transform API usage format to Usage interface
+    usage = {
+      promptTokens: fullUsage.prompt_tokens,
+      completionTokens: fullUsage.completion_tokens,
+      promptTokensDetails: fullUsage.prompt_tokens_details
+        ? {
+            cachedTokens: fullUsage.prompt_tokens_details.cache_read_tokens,
+            cacheWriteTokens:
+              fullUsage.prompt_tokens_details.cache_write_tokens,
+          }
+        : undefined,
+    };
+
+    // Detect provider and calculate cost
+    const provider = detectProvider(model.model);
+    const costBreakdown = calculateRequestCost(provider, model.model, usage);
+
+    // Use fallback for unknown models
+    cost =
+      costBreakdown?.cost ??
+      calculateFallbackCost(
+        fullUsage.prompt_tokens,
+        fullUsage.completion_tokens,
+      );
+  } else {
+    // Fallback when fullUsage not available
+    usage = {
+      promptTokens: inputTokens,
+      completionTokens: outputTokens,
+    };
+    cost = calculateFallbackCost(inputTokens, outputTokens);
+  }
+
+  // Use tokens from fullUsage if available, otherwise use the passed params
+  const actualInputTokens = fullUsage?.prompt_tokens ?? inputTokens;
+  const actualOutputTokens = fullUsage?.completion_tokens ?? outputTokens;
+
+  telemetryService.recordTokenUsage(actualInputTokens, "input", model.model);
+  telemetryService.recordTokenUsage(actualOutputTokens, "output", model.model);
+
+  // Record cache tokens if available
+  if (fullUsage?.prompt_tokens_details?.cache_read_tokens) {
+    telemetryService.recordTokenUsage(
+      fullUsage.prompt_tokens_details.cache_read_tokens,
+      "cacheRead",
+      model.model,
+    );
+  }
+  if (fullUsage?.prompt_tokens_details?.cache_write_tokens) {
+    telemetryService.recordTokenUsage(
+      fullUsage.prompt_tokens_details.cache_write_tokens,
+      "cacheCreation",
+      model.model,
+    );
+  }
+
   telemetryService.recordCost(cost, model.model);
+  trackSessionUsage(cost, usage);
 
   telemetryService.recordResponseTime(
     totalDuration,
@@ -276,8 +361,8 @@ export function recordStreamTelemetry(options: {
     model: model.model,
     durationMs: totalDuration,
     success: true,
-    inputTokens,
-    outputTokens,
+    inputTokens: actualInputTokens,
+    outputTokens: actualOutputTokens,
     costUsd: cost,
   });
 
@@ -286,8 +371,8 @@ export function recordStreamTelemetry(options: {
     posthogService.capture("apiRequest", {
       model: model.model,
       durationMs: totalDuration,
-      inputTokens,
-      outputTokens,
+      inputTokens: actualInputTokens,
+      outputTokens: actualOutputTokens,
       costUsd: cost,
     });
   } catch {}
@@ -406,6 +491,10 @@ export async function executeStreamedToolCalls(
 }> {
   // Strategy: queue permissions (preserve order), then run approved tools in parallel.
   // If any permission is rejected, cancel the remaining tools in this batch.
+  //
+  // NOTE: parallelToolCallCount is passed to each tool so they can divide their
+  // output limits accordingly to avoid context overflow. Bash/Read do this for now
+  const parallelToolCallCount = preprocessedCalls.length;
 
   type IndexedCall = { index: number; call: PreprocessedToolCall };
   const indexedCalls: IndexedCall[] = preprocessedCalls.map((call, index) => ({
@@ -489,7 +578,10 @@ export async function executeStreamedToolCalls(
               name: call.name,
               arguments: call.arguments,
             });
-            const toolResult = await executeToolCall(call);
+
+            const toolResult = await executeToolCall(call, {
+              parallelToolCallCount,
+            });
             const entry: ToolResultWithStatus = {
               role: "tool",
               tool_call_id: call.id,

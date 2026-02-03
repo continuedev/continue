@@ -327,13 +327,19 @@ export function convertFromUnifiedHistory(
 
     messages.push(baseMessage);
 
-    // Add tool result messages if there are completed tool calls
+    // Add tool result messages if there are completed tool calls, and fallback when tool output is missing
     if (item.toolCallStates) {
       for (const toolState of item.toolCallStates) {
         if (toolState.output && toolState.output.length > 0) {
           messages.push({
             role: "tool",
             content: toolState.output.map((o: any) => o.content).join("\n"),
+            tool_call_id: toolState.toolCallId,
+          });
+        } else {
+          messages.push({
+            role: "tool",
+            content: "Tool cancelled",
             tool_call_id: toolState.toolCallId,
           });
         }

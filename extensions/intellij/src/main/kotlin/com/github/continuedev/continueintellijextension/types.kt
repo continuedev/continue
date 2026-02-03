@@ -166,8 +166,6 @@ interface IDE {
 
     suspend fun getClipboardContent(): Map<String, String>
 
-    suspend fun isTelemetryEnabled(): Boolean
-
     suspend fun isWorkspaceRemote(): Boolean
 
     suspend fun getUniqueId(): String
@@ -188,6 +186,8 @@ interface IDE {
     suspend fun fileExists(filepath: String): Boolean
 
     suspend fun writeFile(path: String, contents: String)
+
+    suspend fun removeFile(path: String)
 
     suspend fun showVirtualFile(title: String, contents: String)
 

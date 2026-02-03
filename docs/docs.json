@@ -2,10 +2,6 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
-  "banner": {
-    "content": "Continue CLI v1.5.1 is live 🚀 Learn how you can leverage the CLI with our [MCP Cookbooks](https://docs.continue.dev/guides/overview#mcp-integration-cookbooks)",
-    "dismissable": true
-  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -20,40 +16,41 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index"]
+            "pages": ["index", "overview"]
           },
           {
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control",
+              "mission-control/index",
               "mission-control/tasks",
               "mission-control/workflows",
+              {
+                "group": "Integrations",
+                "pages": [
+                  "mission-control/integrations",
+                  "mission-control/integrations/github",
+                  "mission-control/integrations/sentry",
+                  "mission-control/integrations/snyk",
+                  "mission-control/integrations/slack",
+                  "mission-control/integrations/posthog",
+                  "mission-control/integrations/atlassian",
+                  "mission-control/integrations/netlify",
+                  "mission-control/integrations/supabase"
+                ]
+              },
               "mission-control/metrics",
               "mission-control/sharing",
               {
                 "group": "Governance",
-                "icon": "building",
                 "pages": [
                   "mission-control/governance/creating-an-org",
                   "mission-control/governance/org-permissions",
                   "mission-control/governance/pricing"
                 ]
               },
-
-              {
-                "group": "Integrations",
-                "icon": "plug",
-                "pages": [
-                  "mission-control/integrations",
-                  "mission-control/integrations/github",
-                  "mission-control/integrations/sentry",
-                  "mission-control/integrations/slack-agent"
-                ]
-              },
               {
                 "group": "Secrets",
-                "icon": "key",
                 "pages": [
                   "mission-control/secrets/secret-types",
                   "mission-control/secrets/secret-resolution"
@@ -61,7 +58,6 @@
               },
               {
                 "group": "Configs",
-                "icon": "book",
                 "pages": [
                   "mission-control/configs/intro",
                   "mission-control/configs/use-a-config",
@@ -87,81 +83,8 @@
               "cli/overview",
               "cli/install",
               "cli/quick-start",
-              "cli/guides"
-            ]
-          },
-          {
-            "group": "IDE Extensions",
-            "icon": "star",
-            "expanded": false,
-            "pages": [
-              "ide-extensions/install",
-              "ide-extensions/quick-start",
-              {
-                "group": "Agent",
-                "expanded": false,
-                "icon": "robot",
-                "pages": [
-                  "ide-extensions/agent/quick-start",
-                  "ide-extensions/agent/how-it-works",
-                  "ide-extensions/agent/plan-mode",
-                  "ide-extensions/agent/model-setup",
-                  "ide-extensions/agent/how-to-customize",
-                  "ide-extensions/agent/context-selection"
-                ]
-              },
-              {
-                "group": "Chat",
-                "expanded": false,
-                "icon": "messages",
-                "pages": [
-                  "ide-extensions/chat/quick-start",
-                  "ide-extensions/chat/how-it-works",
-                  "ide-extensions/chat/model-setup",
-                  "ide-extensions/chat/how-to-customize",
-                  "ide-extensions/chat/context-selection"
-                ]
-              },
-              {
-                "group": "Autocomplete",
-                "expanded": false,
-
-                "icon": "sparkles",
-                "pages": [
-                  "ide-extensions/autocomplete/quick-start",
-                  "ide-extensions/autocomplete/how-it-works",
-                  "ide-extensions/autocomplete/model-setup",
-                  "ide-extensions/autocomplete/how-to-customize",
-                  "ide-extensions/autocomplete/context-selection",
-                  "ide-extensions/autocomplete/next-edit"
-                ]
-              },
-              {
-                "group": "Edit",
-                "expanded": false,
-
-                "icon": "pen-to-square",
-                "pages": [
-                  "ide-extensions/edit/quick-start",
-                  "ide-extensions/edit/how-it-works",
-                  "ide-extensions/edit/model-setup",
-                  "ide-extensions/edit/how-to-customize",
-                  "ide-extensions/edit/context-selection"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Customization",
-            "icon": "sliders",
-            "expanded": false,
-            "pages": [
-              "customization/overview",
-              "customization/models",
-              "customization/mcp-tools",
-              "customization/rules",
-              "customization/prompts",
-              "customization/settings"
+              "cli/guides",
+              "cli/configuration"
             ]
           },
           {
@@ -173,15 +96,78 @@
         ]
       },
       {
-        "tab": "Customize",
+        "tab": "IDE Extensions",
         "groups": [
           {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": [
+              "ide-extensions/install",
+              "ide-extensions/quick-start",
+              "customize/overview"
+            ]
+          },
+          {
+            "group": "Features",
+            "expanded": false,
+            "icon": "star",
+            "pages": [
+              {
+                "group": "Agent",
+                "pages": [
+                  "ide-extensions/agent/quick-start",
+                  "ide-extensions/agent/how-it-works",
+                  "ide-extensions/agent/plan-mode",
+                  "ide-extensions/agent/model-setup",
+                  "ide-extensions/agent/how-to-customize",
+                  "ide-extensions/agent/context-selection"
+                ]
+              },
+              {
+                "group": "Chat",
+                "pages": [
+                  "ide-extensions/chat/quick-start",
+                  "ide-extensions/chat/how-it-works",
+                  "ide-extensions/chat/model-setup",
+                  "ide-extensions/chat/how-to-customize",
+                  "ide-extensions/chat/context-selection"
+                ]
+              },
+              {
+                "group": "Autocomplete",
+                "pages": [
+                  "ide-extensions/autocomplete/quick-start",
+                  "ide-extensions/autocomplete/how-it-works",
+                  "ide-extensions/autocomplete/model-setup",
+                  "ide-extensions/autocomplete/how-to-customize",
+                  "ide-extensions/autocomplete/context-selection",
+                  "ide-extensions/autocomplete/next-edit"
+                ]
+              },
+              {
+                "group": "Edit",
+                "pages": [
+                  "ide-extensions/edit/quick-start",
+                  "ide-extensions/edit/how-it-works",
+                  "ide-extensions/edit/model-setup",
+                  "ide-extensions/edit/how-to-customize",
+                  "ide-extensions/edit/context-selection"
+                ]
+              }
+            ]
+          },
+          {
             "group": "Customize",
+            "expanded": false,
+            "icon": "sliders",
             "pages": [
               "customize/overview",
+              "customize/models",
+              "customize/mcp-tools",
+              "customize/rules",
+              "customize/prompts",
               {
                 "group": "Model Providers",
-                "icon": "server",
                 "pages": [
                   "customize/model-providers/overview",
                   {
@@ -191,6 +177,7 @@
                       "customize/model-providers/top-level/azure",
                       "customize/model-providers/top-level/bedrock",
                       "customize/model-providers/top-level/gemini",
+                      "customize/model-providers/top-level/huggingfaceinference",
                       "customize/model-providers/top-level/inception",
                       "customize/model-providers/top-level/lmstudio",
                       "customize/model-providers/top-level/ollama",
@@ -207,9 +194,9 @@
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
-                      "customize/model-providers/more/huggingfaceinferenceapi",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
+                      "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/together",
@@ -220,7 +207,6 @@
               },
               {
                 "group": "Model Roles",
-                "icon": "robot",
                 "pages": [
                   "customize/model-roles/00-intro",
                   "customize/model-roles/chat",
@@ -231,10 +217,8 @@
                   "customize/model-roles/reranking"
                 ]
               },
-
               {
                 "group": "Deep Dives",
-                "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
                   "customize/deep-dives/rules",
@@ -248,57 +232,10 @@
               },
               "customize/telemetry"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/overview",
-              "guides/understanding-configs",
-              "guides/configuring-models-rules-tools",
-              "guides/codebase-documentation-awareness",
-              "guides/cli",
-              "guides/doc-writing-agent-cli",
-              "guides/continuous-ai",
-              "guides/continuous-ai-readiness-assessment",
-              "guides/plan-mode-guide",
-              "guides/ollama-guide",
-              "guides/instinct",
-              "guides/running-continue-without-internet",
-              "guides/custom-code-rag",
-              "guides/how-to-self-host-a-model",
-              "guides/notion-continue-guide",
-              "guides/github-pr-review-bot"
-            ]
           },
           {
-            "group": "Cookbooks",
-            "icon": "book-open-cover",
-            "pages": [
-              "guides/posthog-github-continuous-ai",
-              "guides/continue-docs-mcp-cookbook",
-              "guides/github-mcp-continue-cookbook",
-              "guides/atlassian-mcp-continue-cookbook",
-              "guides/sanity-mcp-continue-cookbook",
-              "guides/sentry-mcp-error-monitoring",
-              "guides/snyk-mcp-continue-cookbook",
-              "guides/supabase-mcp-database-workflow",
-              "guides/dlt-mcp-continue-cookbook",
-              "guides/netlify-mcp-continuous-deployment",
-              "guides/chrome-devtools-mcp-performance"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Reference",
-        "groups": [
-          {
             "group": "Reference",
+            "expanded": false,
             "icon": "code",
             "pages": [
               "reference",
@@ -308,6 +245,88 @@
               "reference/deprecated-context-providers",
               "reference/deprecated-codebase",
               "reference/deprecated-docs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": ["guides/overview"]
+          },
+          {
+            "group": "Cloud Agents",
+            "icon": "cloud",
+            "pages": [
+              "guides/cloud-agents/cloud-agents-taxonomy",
+              "guides/cloud-agents/guide-to-cloud-agents",
+              "guides/cloud-agents/when-to-use-cloud-agents",
+              "guides/cloud-agents/from-task-to-automation",
+              "guides/cloud-agents/cloud-agents-vs-ci",
+              "guides/cloud-agents/operating-cloud-agents-safely",
+              "guides/cloud-agents/automated-security-remediation-with-snyk"
+            ]
+          },
+          {
+            "group": "Guides",
+            "icon": "compass",
+            "pages": [
+              {
+                "group": "Understanding Continue",
+                "pages": [
+                  "guides/understanding-configs",
+                  "guides/configuring-models-rules-tools",
+                  "guides/codebase-documentation-awareness",
+                  "guides/plan-mode-guide",
+                  "guides/ollama-guide",
+                  "guides/instinct",
+                  "guides/running-continue-without-internet",
+                  "guides/custom-code-rag",
+                  "guides/how-to-self-host-a-model"
+                ]
+              },
+              {
+                "group": "CLI Guides",
+                "pages": [
+                  "guides/cli",
+                  "guides/run-agents-locally",
+                  "guides/doc-writing-agent-cli"
+                ]
+              },
+              {
+                "group": "Continuous AI Guides",
+                "pages": [
+                  "guides/continuous-ai",
+                  "guides/continuous-ai-readiness-assessment"
+                ]
+              },
+              {
+                "group": "Integration Guides",
+                "pages": [
+                  "guides/notion-continue-guide",
+                  "guides/github-pr-review-bot"
+                ]
+              },
+              {
+                "group": "Cookbooks",
+                "pages": [
+                  "guides/posthog-github-continuous-ai",
+                  "guides/continue-docs-mcp-cookbook",
+                  "guides/github-mcp-continue-cookbook",
+                  "guides/atlassian-mcp-continue-cookbook",
+                  "guides/sanity-mcp-continue-cookbook",
+                  "guides/sentry-mcp-error-monitoring",
+                  "guides/snyk-mcp-continue-cookbook",
+                  "guides/supabase-mcp-database-workflow",
+                  "guides/dlt-mcp-continue-cookbook",
+                  "guides/netlify-mcp-continuous-deployment",
+                  "guides/chrome-devtools-mcp-performance",
+                  "guides/klavis-mcp-continue-cookbook"
+                ]
+              }
             ]
           }
         ]
@@ -321,17 +340,12 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Community",
-          "href": "https://discord.gg/NWtdYexhMs",
-          "icon": "discord"
-        },
-        {
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
         },
         {
-          "anchor": "Release Notes",
+          "anchor": "Changelog",
           "href": "https://changelog.continue.dev/",
           "icon": "bullhorn"
         }
@@ -352,7 +366,7 @@
     "links": [
       {
         "label": "🚀 Get Started",
-        "href": "https://hub.continue.dev/"
+        "href": "https://continue.dev/"
       }
     ],
     "primary": {
@@ -365,7 +379,6 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ",
       "youtube": "https://www.youtube.com/@continuedev"
     }
   },
@@ -390,6 +403,10 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/changelog",
+      "destination": "https://changelog.continue.dev"
+    },
     {
       "source": "/hub",
       "destination": "/mission-control"
@@ -472,23 +489,47 @@
     },
     {
       "source": "/hub/blocks/create-a-block",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks/bundles",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/customize",
-      "destination": "/customization/overview"
+      "destination": "/hub/introduction"
     },
     {
       "source": "/customization",
-      "destination": "/customization/overview"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customization/overview",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customization/overview#change-your-model-provider",
+      "destination": "/customize/model-providers/overview#change-your-model-provider"
+    },
+    {
+      "source": "/customization/models",
+      "destination": "/customize/models"
+    },
+    {
+      "source": "/customization/mcp-tools",
+      "destination": "/customize/mcp-tools"
+    },
+    {
+      "source": "/customization/rules",
+      "destination": "/customize/rules"
+    },
+    {
+      "source": "/customization/prompts",
+      "destination": "/customize/prompts"
+    },
+    {
+      "source": "/customization/settings",
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/ide-extensions/settings",
+      "destination": "/customize/overview"
     },
     {
       "source": "/customize/tools",
-      "destination": "/customization/mcp-tools"
+      "destination": "/customize/mcp-tools"
     },
     {
       "source": "/install/vscode",
@@ -620,39 +661,39 @@
     },
     {
       "source": "/actions/how-to-use-it",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/how-to-customize",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/model-setup",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/context-selection",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/actions/how-it-works",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/customize/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/customization/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/advanced/deep-dives/slash-commands",
-      "destination": "/customize/deep-dives/slash-commands"
+      "destination": "/customize/deep-dives/prompts"
     },
     {
       "source": "/walkthroughs/quick-actions",
@@ -665,10 +706,6 @@
     {
       "source": "/customize/deep-dives/vscode-actions",
       "destination": "/customize/overview"
-    },
-    {
-      "source": "/changelog",
-      "destination": "/reference"
     },
     {
       "source": "/customization/code-config",
@@ -1064,7 +1101,7 @@
     },
     {
       "source": "/about",
-      "destination": "/about-us"
+      "destination": "https://continue.dev/about-us"
     },
     {
       "source": "/autocomplete/model-setup",
@@ -1140,7 +1177,7 @@
     },
     {
       "source": "/guides/set-up-codestral",
-      "destination": "/customize/model-providers/top-level/mistral"
+      "destination": "/customize/model-providers/more/mistral"
     },
     {
       "source": "/guides/build-your-own-context-provider",
@@ -1159,6 +1196,11 @@
       "source": "/customize/deep-dives/settings",
       "destination": "/customize/overview"
     },
+    {
+      "source": "/hub/blocks/bundles",
+      "destination": "/hub/introduction"
+    },
+
     {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
@@ -1445,11 +1487,15 @@
     },
     {
       "source": "/hub/agents/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack-agent"
+      "destination": "/mission-control/integrations/slack"
+    },
+    {
+      "source": "/mission-control/integrations/slack-agent",
+      "destination": "/mission-control/integrations/slack"
     },
     {
       "source": "/hub/integrations/github",

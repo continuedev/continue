@@ -42,7 +42,7 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "@octokit/rest": "^20.0.2",
+    "@octokit/rest": "^20.1.2",
     "adm-zip": "^0.5.16",
     "commander": "^12.0.0",
     "core": "file:../core",
@@ -53,9 +53,9 @@
     "posthog-node": "^3.6.3",
     "system-ca": "^1.0.2",
     "tar": "^7.5.1",
-    "undici": "^7.10.0",
+    "undici": "^7.16.0",
     "uuid": "^9.0.1",
-    "vectordb": "^0.4.20",
+    "vectordb": "0.4.20",
     "win-ca": "^3.5.1"
   }
 }

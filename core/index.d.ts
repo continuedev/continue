@@ -267,11 +267,22 @@ export interface IContextProvider {
   get deprecationMessage(): string | null;
 }
 
+export interface SessionUsage extends Usage {
+  /** Total cumulative cost in USD for all LLM API calls in this session */
+  totalCost: number;
+}
+
 export interface Session {
   sessionId: string;
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
+  /** Optional: per-session UI mode (chat/agent/plan/background) */
+  mode?: MessageModes;
+  /** Optional: title of the selected chat model for this session */
+  chatModelTitle?: string | null;
+  /** Optional: cumulative usage and cost for all LLM API calls in this session */
+  usage?: SessionUsage;
 }
 
 export interface BaseSessionMetadata {
@@ -279,6 +290,7 @@ export interface BaseSessionMetadata {
   title: string;
   dateCreated: string;
   workspaceDirectory: string;
+  messageCount?: number;
 }
 
 export interface RangeInFile {
@@ -830,6 +842,8 @@ export interface IDE {
 
   writeFile(path: string, contents: string): Promise<void>;
 
+  removeFile(path: string): Promise<void>;
+
   showVirtualFile(title: string, contents: string): Promise<void>;
 
   openFile(path: string): Promise<void>;
@@ -1141,9 +1155,10 @@ export interface ConfigDependentToolParams {
   isSignedIn: boolean;
   isRemote: boolean;
   modelName: string | undefined;
+  ide: IDE;
 }
 
-export type GetTool = (params: ConfigDependentToolParams) => Tool;
+export type GetTool = (params: ConfigDependentToolParams) => Promise<Tool>;
 
 export interface BaseCompletionOptions {
   temperature?: number;
@@ -1506,6 +1521,7 @@ export interface RangeInFileWithNextEditInfo {
   filepath: string;
   range: Range;
   fileContents: string;
+  fileContentsBefore: string;
   editText: string;
   afterCursorPos: Position;
   beforeCursorPos: Position;
@@ -1881,6 +1897,15 @@ export interface RuleMetadata {
 }
 export interface RuleWithSource extends RuleMetadata {
   rule: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  path: string;
+  content: string;
+  files: string[];
+  license?: string;
 }
 
 export interface CompleteOnboardingPayload {

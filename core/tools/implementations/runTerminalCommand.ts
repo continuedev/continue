@@ -1,7 +1,6 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
-import util from "node:util";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
@@ -44,7 +43,45 @@ import {
 } from "../../util/processTerminalStates";
 import { getBooleanArg, getStringArg } from "../parseArgs";
 
-const asyncExec = util.promisify(childProcess.exec);
+/**
+ * Resolves the working directory from workspace dirs.
+ * Falls back to home directory or temp directory if no workspace is available.
+ */
+function resolveWorkingDirectory(workspaceDirs: string[]): string {
+  // Handle file:// URIs (local workspaces)
+  const fileWorkspaceDir = workspaceDirs.find((dir) =>
+    dir.startsWith("file:/"),
+  );
+  if (fileWorkspaceDir) {
+    try {
+      return fileURLToPath(fileWorkspaceDir);
+    } catch {
+      // fileURLToPath can fail on malformed URIs or in some remote environments
+      // Fall through to default handling
+    }
+  }
+
+  // Handle other URI schemes (vscode-remote://wsl, vscode-remote://ssh-remote, etc.)
+  const remoteWorkspaceDir = workspaceDirs.find(
+    (dir) => dir.includes("://") && !dir.startsWith("file:/"),
+  );
+  if (remoteWorkspaceDir) {
+    try {
+      const url = new URL(remoteWorkspaceDir);
+      return decodeURIComponent(url.pathname);
+    } catch {
+      // Fall through to other handlers
+    }
+  }
+
+  // Default to user's home directory with fallbacks
+  try {
+    return process.env.HOME || process.env.USERPROFILE || process.cwd();
+  } catch {
+    // Final fallback if even process.cwd() fails - use system temp directory
+    return os.tmpdir();
+  }
+}
 
 // Add color-supporting environment variables
 const getColorEnv = () => ({
@@ -77,25 +114,21 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
+  // When extension host runs on Windows but connects to WSL, we can't spawn
+  // shells directly - the platform is "win32" but commands should run in Linux.
+  // Use ide.runCommand() instead to let VS Code handle the remote execution.
+  const isWindowsHostWithWslRemote =
+    process.platform === "win32" && ideInfo.remoteName === "wsl";
+
+  if (
+    ENABLED_FOR_REMOTES.includes(ideInfo.remoteName) &&
+    !isWindowsHostWithWslRemote
+  ) {
     // For streaming output
     if (extras.onPartialOutput) {
       try {
         const workspaceDirs = await extras.ide.getWorkspaceDirs();
-
-        // Handle case where no workspace is available
-        let cwd: string;
-        if (workspaceDirs.length > 0) {
-          cwd = fileURLToPath(workspaceDirs[0]);
-        } else {
-          // Default to user's home directory with fallbacks
-          try {
-            cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-          } catch (error) {
-            // Final fallback if even process.cwd() fails - use system temp directory
-            cwd = os.tmpdir();
-          }
-        }
+        const cwd = resolveWorkingDirectory(workspaceDirs);
 
         return new Promise((resolve, reject) => {
           let terminalOutput = "";
@@ -281,20 +314,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     } else {
       // Fallback to non-streaming for older clients
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
-
-      // Handle case where no workspace is available
-      let cwd: string;
-      if (workspaceDirs.length > 0) {
-        cwd = fileURLToPath(workspaceDirs[0]);
-      } else {
-        // Default to user's home directory with fallbacks
-        try {
-          cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-        } catch (error) {
-          // Final fallback if even process.cwd() fails - use system temp directory
-          cwd = os.tmpdir();
-        }
-      }
+      const cwd = resolveWorkingDirectory(workspaceDirs);
 
       if (waitForCompletion) {
         // Standard execution, waiting for completion

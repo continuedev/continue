@@ -1,6 +1,6 @@
 ---
 title: "Telemetry"
-description: "Learn about Continue's anonymous telemetry collection practices, what usage data is collected, and how to opt out if you prefer not to share your usage information"
+description: "Learn about Continue's anonymous telemetry collection practices, what usage data is tracked, and how to opt out of data collection to maintain your privacy preferences"
 ---
 
 ## Overview
@@ -25,6 +25,25 @@ The following usage information is collected and reported:
 
 ## How to Opt Out
 
+### IDE extensions
+
 You can disable anonymous telemetry by toggling "Allow Anonymous Telemetry" off in the user settings.
 
+#### VS Code
+
 Alternatively in VS Code, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box (this will override the Settings Page settings). VS Code settings can be accessed with `File` > `Preferences` > `Settings` (or use the keyboard shortcut `ctrl` + `,` on Windows/Linux or `cmd` + `,` on macOS).
+
+### CLI
+
+For `cn`, the Continue CLI, set the environment variable `CONTINUE_TELEMETRY_ENABLED=0` before running commands:
+
+```bash
+export CONTINUE_TELEMETRY_ENABLED=0
+cn <your prompt>
+```
+
+Or run it inline:
+
+```bash
+CONTINUE_TELEMETRY_ENABLED=0 cn <your prompt>
+```

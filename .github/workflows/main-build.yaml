@@ -18,7 +18,7 @@ jobs:
       matrix:
         platform: [Linux, macOS]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2 # Get the last 2 commits to find the merge commit
 
@@ -101,7 +101,7 @@ jobs:
           echo "✅ Successfully downloaded artifact"
 
       - name: Republish as main branch artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: vscode-extension-build-${{ matrix.platform }}
           path: ./temp-download/*

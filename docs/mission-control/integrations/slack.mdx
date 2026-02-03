@@ -1,0 +1,121 @@
+---
+title: "Agent for Slack"
+description: "Kick off Cloud Agents from Slack by mentioning @Continue"
+---
+
+<Warning>
+
+  Continue uses AI to generate code, issues, and pull requests. AI-generated content may contain inaccuracies, errors, or unexpected results. Always review AI-generated code and changes before merging. Human oversight is recommended for all automated development tasks.
+
+  Please review our Privacy policy here https://www.continue.dev/privacy
+  
+  The Continue App for Slack is currently in beta development and undergoing Slack's approval process.
+
+</Warning>
+
+<Card title="Connect Continue to Slack to Help You Complete:" icon="slack" href="https://continue.dev/integrations/slack">
+
+  - Quick bug fixes and feature implementations
+  - Code reviews and refactoring
+  - Documentation updates
+  - Automated development tasks
+
+</Card>
+
+## Usage
+
+To kick off a Cloud Agent, mention `@Continue` with a short task description.
+
+### Thread Context
+
+When you mention `@Continue` in a **Slack thread**, Continue automatically uses the entire conversation as context. This means your Cloud Agent starts with full situational awareness.
+
+If you start a **new message** (not a reply), Continue only sees that single message for context.  
+
+Use this for quick standalone requests.
+
+<Tip>
+
+  Provide clear, detailed prompts to help Continue understand your requirements:
+
+  ✅ **Good**: `@Continue Fix the authentication timeout issue in /api/v1/auth/login. Users are getting logged out after 5 minutes instead of 30.`
+
+  ❌ **Poor**: `@Continue fix auth`
+
+</Tip>
+
+<Accordion title="Repository Selection">
+
+  Continue determines which repository to work in with the following precedence:
+
+  1. **Specify in message**: Add `repo=repo-name` to your message:
+
+  ```
+  @Continue repo=my-app Fix the login validation bug
+  ```
+
+  <Tip>
+
+    Be sure the repository name matches a GitHub repository that the Continue GitHub App has access to.
+
+  </Tip>
+
+  2. **Default repo**: Uses the default repository if set in the integration settings
+
+  3. **Interactive selection**: If no repository is found, Continue will follow up with a dropdown to select a repository
+
+</Accordion>
+
+### Sending Follow-up Messages
+
+Once an agent is created, you can send additional messages by mentioning `@Continue` in the same thread:
+
+```
+@Continue Also add error handling for edge cases
+```
+
+Continue will forward your message to the existing agent session instead of creating a new one. 
+
+## Monitoring Agent Progress
+
+Click the agent link in Slack to view the agent's progress in [Mission Control](https://continue.dev).
+
+You can also click the Slack icon in the agents page to return to the Slack message.
+
+## Disconnecting
+
+To remove your Slack connection:
+
+1. Go to [continue.dev/settings/integrations](https://continue.dev/settings/integrations)
+2. Find your Slack connection
+3. Click "Disconnect"
+
+## Support
+
+<Warning>
+
+  Our integration with Slack is in active development. We'd love to hear your feedback:
+  - Report issues: [GitHub Issues](https://github.com/continuedev/continue/issues)
+  - Feature requests: [GitHub Discussions](https://github.com/continuedev/continue/discussions)
+
+</Warning>
+
+See our support page for more details: https://continue.dev/support
+
+## Related Resources
+
+<CardGroup cols={2}>
+
+  <Card title="Cloud Agents Introduction" icon="robot" href="../../agents/intro">
+
+    Learn about Continue Cloud Agents.
+
+  </Card>
+
+  <Card title="GitHub Integration" icon="github" href="https://continue.dev/settings/integrations/github">
+
+    Add the GitHub Integration to create issues and PRs
+
+  </Card>
+
+</CardGroup>

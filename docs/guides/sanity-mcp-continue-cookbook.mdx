@@ -14,7 +14,7 @@ sidebarTitle: "Sanity CMS with Continue"
 Before starting, ensure you have:
 
 - Continue account with **Hub access**
-  - Read: [Understanding Configs — How to get started with Hub configs](/hub/configs/intro)
+  - Read: [Understanding Configs — How to get started with Hub configs](/mission-control/configs/intro)
 - Node.js 20+ installed locally
 - A [Sanity account](https://www.sanity.io/) and project (free tier works)
 - Basic understanding of content management systems
@@ -34,7 +34,7 @@ For all options, first:
   </Step>
 </Steps>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys) and proper environment variable configuration.
+  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys) and proper environment variable configuration.
   </Warning>
 
 ## Getting Started with Sanity
@@ -72,38 +72,38 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
       <Step title="Load the Pre-Built Agent">
-        Visit the [Sanity Assistant Agent](https://hub.continue.dev/continuedev/sanity-assistant-agent) on Continue Mission Control and click **"Install Config"** or run:
-        
+        Visit the [Sanity Assistant Agent](https://continue.dev/continuedev/sanity-assistant-agent) on Continue Mission Control and click **"Install Config"** or run:
+
         ```bash
         cn --agent continuedev/sanity-assistant-agent
         ```
 
         This agent includes:
-        - **[Sanity MCP](https://hub.continue.dev/sanity/sanity-mcp)** pre-configured and ready to use
+        - **[Sanity MCP](https://continue.dev/sanity/sanity-mcp)** pre-configured and ready to use
         - **Content management rules** for best practices
         - **Schema optimization** guidelines
       </Step>
 
       <Step title="Your First MCP Conversation">
         Start with these beginner-friendly prompts to explore your content:
-        
+
         ```bash
         # Content exploration
         "Show me all blog posts published in the last month"
-        
-        # Schema understanding  
+
+        # Schema understanding
         "Show me all the document types in my Sanity schema and explain their relationships"
-        
+
         # Content management
         "Create a new product page for our upcoming feature"
         ```
 
-        That's it! The agent handles everything automatically. For more starter prompts and examples, see the [official Sanity MCP blog post](https://www.sanity.io/blog/model-context-protocol).
+        That's it! The agent handles everything automatically. For more starter prompts and examples, see the [official Sanity MCP blog post](https://www.sanity.io/blog/introducing-sanity-model-context-protocol-server).
       </Step>
     </Steps>
 
     <Info>
-      **Why Use the Agent?** The pre-built Sanity Assistant agent provides consistent content management workflows and handles MCP configuration automatically, making it easier to get started with AI-powered CMS operations. Results are more consistent and debugging is easier thanks to the [Sanity MCP](https://hub.continue.dev/sanity/sanity-mcp) integration and pre-tested prompts.
+      **Why Use the Agent?** The pre-built Sanity Assistant agent provides consistent content management workflows and handles MCP configuration automatically, making it easier to get started with AI-powered CMS operations. Results are more consistent and debugging is easier thanks to the [Sanity MCP](https://continue.dev/sanity/sanity-mcp) integration and pre-tested prompts.
     </Info>
 
   </Tab>
@@ -111,18 +111,18 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="🛠️ Manual Setup">
 <Steps>
   <Step title="Create a New Agent via the Continue Mission Control">
-    Go to the [Continue Mission Control](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+    Go to the [Continue Mission Control](https://continue.dev) and [create a new agent](https://continue.dev/agents/new).
     </Step>
 
   <Step title="Connect Sanity MCP via Continue Mission Control">
-    Visit the [Sanity MCP on Continue Mission Control](https://hub.continue.dev/sanity/sanity-mcp) and click **"Install"** to add it to the agent you created in the step above.
+    Visit the [Sanity MCP on Continue Mission Control](https://continue.dev/sanity/sanity-mcp) and click **"Install"** to add it to the agent you created in the step above.
 
     This will add Sanity MCP to your agent's available tools. The Mission Control listing automatically configures the MCP connection.
 
     <Tip>
       **Alternative installation methods:**
       1. **Quick CLI install**: `cn --mcp sanity/sanity-mcp`
-      2. **With config**: Use [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) for environment variable setup
+      2. **With config**: Use [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config) for environment variable setup
       3. **Manual configuration**: Add the MCP to your agent configuration
 
       Once installed, Sanity MCP tools become available to your Continue agent for all prompts.
@@ -132,8 +132,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       **Authentication Options:**
       - **Interactive mode**: OAuth authentication via browser (expires after 7 days)
       - **Headless/CI mode**: Uses environment variables (SANITY_API_TOKEN, SANITY_PROJECT_ID, etc.)
-      
-      See [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) for environment variable setup.
+
+      See [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config) for environment variable setup.
     </Info>
 
   </Step>
@@ -147,8 +147,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         # "Show me all the document types in my Sanity schema and explain their relationships"
         # "Create a new product page for our upcoming feature"
         ```
-        
-        For more examples, see the [Sanity MCP blog post](https://www.sanity.io/blog/model-context-protocol).
+
+        For more examples, see the [Sanity MCP blog post](https://www.sanity.io/blog/introducing-sanity-model-context-protocol-server).
   </Step>
 </Steps>
 
@@ -211,7 +211,7 @@ With everything set up, you're ready for your first AI-powered content conversat
 </CardGroup>
 
 <Info>
-**New to MCP?** These prompts demonstrate the power of natural language content management. For more examples and detailed explanations, check out the [official Sanity MCP blog post](https://www.sanity.io/blog/model-context-protocol).
+**New to MCP?** These prompts demonstrate the power of natural language content management. For more examples and detailed explanations, check out the [official Sanity MCP blog post](https://www.sanity.io/blog/introducing-sanity-model-context-protocol-server).
 </Info>
 
 ## Content Management Recipes
@@ -219,7 +219,7 @@ With everything set up, you're ready for your first AI-powered content conversat
 Now you can use natural language prompts to manage your Sanity content and schemas. The Continue agent automatically calls the appropriate Sanity MCP tools.
 
 <Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://hub.continue.dev), click **Edit**, and add prompts under the **Prompts** section.
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://continue.dev), click **Edit**, and add prompts under the **Prompts** section.
 </Info>
 
 <Info>
@@ -232,7 +232,7 @@ You can add prompts to your agent's configuration for easy access in future sess
   changes, test your prompts in plan mode (see the [Plan Mode
   Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it.
-  
+
   To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 </Info>
 
@@ -354,14 +354,14 @@ suggest optimizations to improve response times.
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
 - `SANITY_PROJECT_ID`: Your Sanity project ID
 - `SANITY_DATASET`: Your Sanity dataset name (usually "production")
 - `SANITY_API_TOKEN`: Your Sanity API token with appropriate permissions
 - `MCP_USER_ROLE`: Your MCP user role (typically "admin" or "editor")
 
 <Info>
-  The workflow uses the [Sanity Assistant Agent](https://hub.continue.dev/continuedev/sanity-assistant-agent) with environment variable authentication via [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
+  The workflow uses the [Sanity Assistant Agent](https://continue.dev/continuedev/sanity-assistant-agent) with environment variable authentication via [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
 </Info>
 
 ### Create Workflow File
@@ -447,7 +447,7 @@ jobs:
 ```
 
 <Info>
-  Environment variables enable the MCP to authenticate without OAuth browser prompts. The [Sanity MCP Config](https://hub.continue.dev/sanity/sanity-mcp-config) documentation provides detailed setup instructions for all required variables.
+  Environment variables enable the MCP to authenticate without OAuth browser prompts. The [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config) documentation provides detailed setup instructions for all required variables.
 </Info>
 
 ## Content Management Best Practices
@@ -509,7 +509,7 @@ then provide a corrected version that achieves the intended result."
 
 <Check>
   **Verification Steps:**
-  - Sanity MCP is installed via [Continue Mission Control](https://hub.continue.dev/sanity/sanity-mcp)
+  - Sanity MCP is installed via [Continue Mission Control](https://continue.dev/sanity/sanity-mcp)
   - Project is authenticated with Sanity
   - Schema files are present and valid
   - Dataset permissions are correctly configured
@@ -545,7 +545,7 @@ After completing this guide, you have a complete **AI-powered content management
   <Card title="Sanity Documentation" icon="book" href="https://www.sanity.io/docs">
     Complete Sanity platform documentation
   </Card>
-  <Card title="Continue Mission Control" icon="plug" href="https://hub.continue.dev">
+  <Card title="Continue Mission Control" icon="plug" href="https://continue.dev">
     Explore more MCP integrations and agents
   </Card>
   <Card
@@ -558,7 +558,7 @@ After completing this guide, you have a complete **AI-powered content management
   <Card
     title="Sanity MCP Blog Post"
     icon="newspaper"
-    href="https://www.sanity.io/blog/model-context-protocol"
+    href="https://www.sanity.io/blog/introducing-sanity-model-context-protocol-server"
   >
     Official Sanity MCP introduction with examples
   </Card>

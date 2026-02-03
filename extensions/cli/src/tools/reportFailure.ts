@@ -6,6 +6,7 @@ import {
   AuthenticationRequiredError,
   post,
 } from "../util/apiClient.js";
+import { updateAgentMetadata } from "../util/exit.js";
 import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
@@ -73,6 +74,18 @@ export const reportFailureTool: Tool = {
         status: "FAILED",
         errorMessage: trimmedMessage,
       });
+
+      // Mark agent as complete since it failed
+      try {
+        await updateAgentMetadata({ isComplete: true });
+        logger.debug("Marked agent as complete due to failure");
+      } catch (metadataErr) {
+        // Non-critical: log but don't fail the failure report
+        logger.debug(
+          "Failed to update completion metadata (non-critical)",
+          metadataErr as any,
+        );
+      }
 
       logger.info(`Failure reported: ${trimmedMessage}`);
       return "Failure reported to user.";

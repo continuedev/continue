@@ -4,8 +4,17 @@ import {
   CompletionOptions,
   LLMOptions,
   TextMessagePart,
+  Tool,
+  ToolCallDelta,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
+import {
+  AskSageTool,
+  AskSageToolChoice,
+  AskSageToolCall,
+  AskSageResponse,
+  AskSageTokenResponse,
+} from "@continuedev/openai-adapters";
 
 // Extended options for AskSage
 interface AskSageCompletionOptions extends CompletionOptions {
@@ -16,7 +25,7 @@ interface AskSageCompletionOptions extends CompletionOptions {
   askSageTools?: AskSageTool[];
   enabledMcpTools?: string[];
   toolsToExecute?: string[];
-  askSageToolChoice?: ToolChoice;
+  askSageToolChoice?: AskSageToolChoice;
   reasoningEffort?: "low" | "medium" | "high";
   deepAgentId?: number;
   streaming?: boolean;
@@ -26,20 +35,6 @@ interface AskSageCompletionOptions extends CompletionOptions {
 const DEFAULT_API_URL = "https://api.asksage.ai/server";
 const DEFAULT_USER_API_URL = "https://api.asksage.ai/user";
 const TOKEN_TTL = 3600000; // 1 hour in milliseconds
-
-interface AskSageTool {
-  type: string;
-  function: {
-    name: string;
-    description?: string;
-    parameters?: Record<string, unknown>;
-  };
-}
-
-type ToolChoice =
-  | "auto"
-  | "none"
-  | { type: "function"; function: { name: string } };
 
 interface AskSageRequestArgs {
   model?: string;
@@ -54,31 +49,11 @@ interface AskSageRequestArgs {
   tools?: AskSageTool[];
   enabled_mcp_tools?: string[];
   tools_to_execute?: string[];
-  tool_choice?: ToolChoice;
+  tool_choice?: AskSageToolChoice;
   reasoning_effort?: "low" | "medium" | "high";
   deep_agent_id?: number;
   streaming?: boolean;
   file?: unknown;
-}
-
-interface AskSageResponse {
-  text?: string;
-  answer?: string;
-  message?: string;
-  status?: number | string;
-  response?: unknown;
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-}
-
-interface TokenResponse {
-  status: number | string;
-  response: {
-    access_token: string;
-  };
 }
 
 class Asksage extends BaseLLM {
@@ -119,7 +94,7 @@ class Asksage extends BaseLLM {
       body: JSON.stringify({ email: this.email, api_key: this.apiKey }),
     });
 
-    const data = (await res.json()) as TokenResponse;
+    const data = (await res.json()) as AskSageTokenResponse;
     if (parseInt(String(data.status)) !== 200) {
       throw new Error("Error getting access token: " + JSON.stringify(data));
     }
@@ -185,6 +160,17 @@ class Asksage extends BaseLLM {
     };
   }
 
+  protected _convertToolToAskSageTool(tool: Tool): AskSageTool {
+    return {
+      type: tool.type,
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+      },
+    };
+  }
+
   protected _convertArgs(
     options: AskSageCompletionOptions,
     messages: ChatMessage[],
@@ -195,6 +181,14 @@ class Asksage extends BaseLLM {
     } else {
       formattedMessage = messages.map(this._convertMessage);
     }
+
+    // Convert standard tools to AskSage format, or use askSageTools if provided
+    const tools =
+      options.tools?.map((tool) => this._convertToolToAskSageTool(tool)) ??
+      options.askSageTools;
+
+    // Map standard toolChoice to AskSage format, or use askSageToolChoice if provided
+    const toolChoice = options.toolChoice ?? options.askSageToolChoice;
 
     const args: AskSageRequestArgs = {
       message: formattedMessage,
@@ -207,10 +201,8 @@ class Asksage extends BaseLLM {
         options.systemPrompt ??
         process.env.ASKSAGE_SYSTEM_PROMPT ??
         "You are an expert software developer. You give helpful and concise responses.",
-      tools: options.askSageTools,
-      // enabled_mcp_tools: options.enabledMcpTools as string[] | undefined,
-      // tools_to_execute: options.toolsToExecute as string[] | undefined,
-      tool_choice: options.askSageToolChoice,
+      tools,
+      tool_choice: toolChoice,
       reasoning_effort: options.reasoningEffort as
         | "low"
         | "medium"
@@ -391,6 +383,22 @@ class Asksage extends BaseLLM {
 
       const data = (await response.json()) as AskSageResponse;
 
+      // Extract tool calls from response (check both top-level and choices format)
+      const rawToolCalls =
+        data.tool_calls || data.choices?.[0]?.message?.tool_calls;
+
+      // Convert to ToolCallDelta format if present
+      const toolCalls: ToolCallDelta[] | undefined = rawToolCalls?.map(
+        (tc) => ({
+          id: tc.id,
+          type: tc.type,
+          function: {
+            name: tc.function.name,
+            arguments: tc.function.arguments,
+          },
+        }),
+      );
+
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content:
@@ -399,6 +407,7 @@ class Asksage extends BaseLLM {
           data.message ||
           data.choices?.[0]?.message?.content ||
           "",
+        ...(toolCalls && toolCalls.length > 0 ? { toolCalls } : {}),
       };
 
       yield assistantMessage;

@@ -1,5 +1,7 @@
 import { PackageIdentifier } from "../interfaces/slugs.js";
 import {
+  fillTemplateVariables,
+  getTemplateVariables,
   parseMarkdownRuleOrAssistantUnrolled,
   replaceInputsWithSecrets,
 } from "./unroll.js";
@@ -272,5 +274,75 @@ data:
     expect(result).not.toContain("inputs.style");
     expect(result).not.toContain("inputs.dbHost");
     expect(result).not.toContain("inputs.dbPassword");
+  });
+});
+
+describe("getTemplateVariables edge cases", () => {
+  it("handles undefined input gracefully", () => {
+    const result = getTemplateVariables(undefined as any);
+    expect(result).toEqual([]);
+  });
+
+  it("handles null input gracefully", () => {
+    const result = getTemplateVariables(null as any);
+    expect(result).toEqual([]);
+  });
+
+  it("handles non-string input gracefully", () => {
+    const result = getTemplateVariables(123 as any);
+    expect(result).toEqual([]);
+  });
+
+  it("handles empty string correctly", () => {
+    const result = getTemplateVariables("");
+    expect(result).toEqual([]);
+  });
+
+  it("extracts template variables from valid input", () => {
+    const result = getTemplateVariables("\${{ secrets.apiKey }}");
+    expect(result).toEqual(["secrets.apiKey"]);
+  });
+
+  it("extracts multiple template variables", () => {
+    const result = getTemplateVariables(
+      "\${{ secrets.key1 }} and \${{ inputs.key2 }}",
+    );
+    expect(result).toContain("secrets.key1");
+    expect(result).toContain("inputs.key2");
+    expect(result.length).toBe(2);
+  });
+});
+
+describe("fillTemplateVariables edge cases", () => {
+  it("handles undefined input gracefully", () => {
+    const result = fillTemplateVariables(undefined as any, {});
+    expect(result).toBe("");
+  });
+
+  it("handles null input gracefully", () => {
+    const result = fillTemplateVariables(null as any, {});
+    expect(result).toBe("");
+  });
+
+  it("handles non-string input gracefully", () => {
+    const result = fillTemplateVariables(123 as any, {});
+    expect(result).toBe("");
+  });
+
+  it("handles empty string correctly", () => {
+    const result = fillTemplateVariables("", {});
+    expect(result).toBe("");
+  });
+
+  it("fills template variables with valid input", () => {
+    const result = fillTemplateVariables("\${{ secrets.apiKey }}", {
+      "secrets.apiKey": "my-secret-key",
+    });
+    expect(result).toBe("my-secret-key");
+  });
+
+  it("leaves unfilled variables unchanged", () => {
+    const result = fillTemplateVariables("\${{ secrets.apiKey }}", {});
+    expect(result).toBe("\${{ secrets.apiKey }}");
   });
 });

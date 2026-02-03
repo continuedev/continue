@@ -3,8 +3,28 @@ import * as fs from "fs";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+import { parseEnvNumber } from "../util/truncateOutput.js";
+
 import { formatToolArgument } from "./formatters.js";
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
+
+// Output truncation defaults
+const DEFAULT_READ_FILE_MAX_CHARS = 100000; // ~25k tokens
+const DEFAULT_READ_FILE_MAX_LINES = 5000;
+
+function getReadFileMaxChars(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_CHARS,
+    DEFAULT_READ_FILE_MAX_CHARS,
+  );
+}
+
+function getReadFileMaxLines(): number {
+  return parseEnvNumber(
+    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_LINES,
+    DEFAULT_READ_FILE_MAX_LINES,
+  );
+}
 
 // Track files that have been read in the current session
 export const readFilesSet = new Set<string>();
@@ -44,7 +64,10 @@ export const readFileTool: Tool = {
       ],
     };
   },
-  run: async (args: { filepath: string }): Promise<string> => {
+  run: async (
+    args: { filepath: string },
+    context?: ToolRunContext,
+  ): Promise<string> => {
     try {
       let { filepath } = args;
       if (filepath.startsWith("./")) {
@@ -59,14 +82,33 @@ export const readFileTool: Tool = {
       }
       const realPath = fs.realpathSync(filepath);
       const content = fs.readFileSync(realPath, "utf-8");
+
+      // Divide limits by parallel tool call count to avoid context overflow
+      const parallelCount = context?.parallelToolCallCount ?? 1;
+      const baseMaxLines = getReadFileMaxLines();
+      const baseMaxChars = getReadFileMaxChars();
+      const maxLines = Math.floor(baseMaxLines / parallelCount);
+      const maxChars = Math.floor(baseMaxChars / parallelCount);
+      const lineCount = content.split("\n").length;
+      const charCount = content.length;
+
+      if (charCount > maxChars || lineCount > maxLines) {
+        // Include note about single-tool limit when parallel calls reduce the limit
+        const parallelNote =
+          parallelCount > 1
+            ? ` (Note: limit reduced due to ${parallelCount} parallel tool calls. Single-tool limit: ${baseMaxChars.toLocaleString()} characters or ${baseMaxLines.toLocaleString()} lines.)`
+            : "";
+
+        throw new ContinueError(
+          ContinueErrorReason.FileTooLarge,
+          `File is too large to read: ${filepath} (${charCount.toLocaleString()} characters, ${lineCount.toLocaleString()} lines). ` +
+            `Maximum allowed: ${maxChars.toLocaleString()} characters or ${maxLines.toLocaleString()} lines.${parallelNote} ` +
+            `Consider using terminal commands like 'head', 'tail', 'sed', or 'grep' to read targeted parts of the file.`,
+        );
+      }
+
       // Mark this file as read for the edit tool
       markFileAsRead(realPath);
-
-      const lines = content.split("\n");
-      if (lines.length > 5000) {
-        const truncatedContent = lines.slice(0, 5000).join("\n");
-        return `Content of ${filepath} (truncated to first 5000 lines of ${lines.length} total):\n${truncatedContent}`;
-      }
 
       return `Content of ${filepath}:\n${content}`;
     } catch (error) {

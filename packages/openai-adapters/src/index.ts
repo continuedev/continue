@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
+import { AskSageApi } from "./apis/AskSage.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
@@ -73,6 +74,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new CohereApi(config);
     case "cometapi":
       return new CometAPIApi(config);
+    case "askSage":
+      return new AskSageApi(config);
     case "anthropic":
       return new AnthropicApi(config);
     case "gemini":
@@ -180,7 +183,14 @@ export {
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";
-export type { LLMConfig } from "./types.js";
+export type {
+  LLMConfig,
+  AskSageTool,
+  AskSageToolChoice,
+  AskSageToolCall,
+  AskSageResponse,
+  AskSageTokenResponse,
+} from "./types.js";
 
 export {
   addCacheControlToLastTwoUserMessages,
@@ -190,3 +200,4 @@ export {
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
+export { parseDataUrl, extractBase64FromDataUrl } from "./util/url.js";

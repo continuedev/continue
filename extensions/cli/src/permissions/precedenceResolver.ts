@@ -1,6 +1,4 @@
-import { logger } from "../util/logger.js";
-
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { getDefaultToolPolicies } from "./defaultPolicies.js";
 import {
   loadPermissionsYaml,
   yamlConfigToPolicies,
@@ -14,11 +12,10 @@ export interface PermissionSources {
     ask?: string[];
     exclude?: string[];
   };
-  /** Config.yaml permissions - second precedence (not implemented yet) */
-  configPermissions?: ToolPermissionPolicy[];
   /** ~/.continue/permissions.yaml - third precedence */
   personalSettings?: boolean; // Whether to load from permissions.yaml
   /** Default policies - lowest precedence */
+  isHeadless?: boolean;
   useDefaults?: boolean;
 }
 
@@ -36,61 +33,30 @@ export interface PermissionSources {
 export function resolvePermissionPrecedence(
   sources: PermissionSources,
 ): ToolPermissionPolicy[] {
-  const layers: {
-    name: string;
-    policies: ToolPermissionPolicy[];
-  }[] = [];
-
-  // Layer 4: Default policies (lowest precedence)
-  if (sources.useDefaults !== false) {
-    layers.push({
-      name: "defaults",
-      policies: [...DEFAULT_TOOL_POLICIES],
-    });
-  }
-
-  // Layer 3: Personal settings from ~/.continue/permissions.yaml
-  if (sources.personalSettings !== false) {
-    const yamlConfig = loadPermissionsYaml();
-    if (yamlConfig) {
-      const yamlPolicies = yamlConfigToPolicies(yamlConfig);
-      if (yamlPolicies.length > 0) {
-        layers.push({
-          name: "personal-settings",
-          policies: yamlPolicies,
-        });
-      }
-    }
-  }
-
-  // Layer 2: Config permissions (when implemented)
-  if (sources.configPermissions) {
-    layers.push({
-      name: "config",
-      policies: sources.configPermissions,
-    });
-  }
+  const policies: ToolPermissionPolicy[] = [];
 
   // Layer 1: Command line flags (highest precedence)
   if (sources.commandLineFlags) {
     const cliPolicies = commandLineFlagsToPolicies(sources.commandLineFlags);
-    if (cliPolicies.length > 0) {
-      layers.push({
-        name: "cli-flags",
-        policies: cliPolicies,
-      });
+    policies.push(...cliPolicies);
+  }
+
+  // Layer 2: Personal settings from ~/.continue/permissions.yaml
+  if (sources.personalSettings !== false) {
+    const yamlConfig = loadPermissionsYaml();
+    if (yamlConfig) {
+      const yamlPolicies = yamlConfigToPolicies(yamlConfig);
+      policies.push(...yamlPolicies);
     }
   }
 
-  // Combine layers with proper precedence
-  const combinedPolicies = combineLayersWithPrecedence(layers);
+  // Layer 3: Default policies (lowest precedence)
+  if (sources.useDefaults !== false) {
+    const defaultPolicies = getDefaultToolPolicies(sources.isHeadless);
+    policies.push(...defaultPolicies);
+  }
 
-  logger.debug("Resolved permission precedence", {
-    layers: layers.map((l) => ({ name: l.name, count: l.policies.length })),
-    totalPolicies: combinedPolicies.length,
-  });
-
-  return combinedPolicies;
+  return policies;
 }
 
 /**
@@ -126,25 +92,4 @@ function commandLineFlagsToPolicies(flags: {
   }
 
   return policies;
-}
-
-/**
- * Combines permission layers with proper precedence.
- * Higher precedence layers come later in the array and are prepended to the result.
- */
-function combineLayersWithPrecedence(
-  layers: Array<{ name: string; policies: ToolPermissionPolicy[] }>,
-): ToolPermissionPolicy[] {
-  // Start with empty array
-  let combined: ToolPermissionPolicy[] = [];
-
-  // Add layers in order (lowest to highest precedence)
-  // Since we're building from lowest to highest, and we want first-match-wins,
-  // we prepend higher precedence policies
-  for (const layer of layers) {
-    // Prepend this layer's policies (higher precedence at the front)
-    combined = [...layer.policies, ...combined];
-  }
-
-  return combined;
 }

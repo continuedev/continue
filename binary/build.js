@@ -101,21 +101,22 @@ async function buildWithEsbuild() {
     ),
   );
 
-  const copyLanceDBPromises = [];
+  // Install LanceDB packages sequentially to avoid race conditions
+  // when multiple packages copy to the same node_modules/@lancedb directory
   for (const target of targets) {
     if (!TARGET_TO_LANCEDB[target]) {
       continue;
     }
-    console.log(`[info] Downloading for ${target}...`);
-    copyLanceDBPromises.push(
-      installAndCopyNodeModules(TARGET_TO_LANCEDB[target], "@lancedb"),
-    );
+    console.log(`[info] Downloading LanceDB for ${target}...`);
+    try {
+      await installAndCopyNodeModules(TARGET_TO_LANCEDB[target], "@lancedb");
+      console.log(`[info] Copied LanceDB for ${target}`);
+    } catch (err) {
+      console.error(`[error] Failed to copy LanceDB for ${target}:`, err);
+      process.exit(1);
+    }
   }
-  await Promise.all(copyLanceDBPromises).catch(() => {
-    console.error("[error] Failed to copy LanceDB");
-    process.exit(1);
-  });
-  console.log("[info] Copied all LanceDB");
+  console.log("[info] All LanceDB packages installed");
 
   // tree-sitter-wasm
   const treeSitterWasmsDir = path.join(out, "tree-sitter-wasms");

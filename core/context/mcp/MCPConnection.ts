@@ -3,6 +3,10 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { fileURLToPath } from "url";
 
 import {
+  decodeSecretLocation,
+  getTemplateVariables,
+} from "@continuedev/config-yaml";
+import {
   SSEClientTransport,
   SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -161,6 +165,24 @@ class MCPConnection {
           Authorization: `Bearer ${accessToken}`,
         };
       }
+    }
+
+    const vars = getTemplateVariables(JSON.stringify(this.options));
+    const unrendered = vars.map((v) => {
+      const stripped = v.replace("secrets.", "");
+      try {
+        return decodeSecretLocation(stripped).secretName;
+      } catch {
+        return stripped;
+      }
+    });
+
+    if (unrendered.length > 0) {
+      this.errors.push(
+        `${this.options.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}.
+For personal use you can set the secret in the hub at https://continue.dev/settings/secrets.
+Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled.`,
+      );
     }
 
     this.connectionPromise = Promise.race([
@@ -392,23 +414,30 @@ class MCPConnection {
   /**
    * Resolves the command and arguments for the current platform
    * On Windows, batch script commands need to be executed via cmd.exe
+   * UNLESS we're connected to a WSL remote (where Linux commands should run)
    * @param originalCommand The original command
    * @param originalArgs The original command arguments
    * @returns An object with the resolved command and arguments
    */
-  private resolveCommandForPlatform(
+  private async resolveCommandForPlatform(
     originalCommand: string,
     originalArgs: string[],
-  ): { command: string; args: string[] } {
-    // If not on Windows or not a batch command, return as-is
+  ): Promise<{ command: string; args: string[] }> {
+    // Check if we're on Windows host connected to WSL remote
+    const ideInfo = await this.extras?.ide?.getIdeInfo();
+    const isWindowsHostWithWslRemote =
+      process.platform === "win32" && ideInfo?.remoteName === "wsl";
+
+    // If not on Windows, or connected to WSL, or not a batch command, return as-is
     if (
       process.platform !== "win32" ||
+      isWindowsHostWithWslRemote ||
       !WINDOWS_BATCH_COMMANDS.includes(originalCommand)
     ) {
       return { command: originalCommand, args: originalArgs };
     }
 
-    // On Windows, we need to execute batch commands via cmd.exe
+    // On Windows (local), we need to execute batch commands via cmd.exe
     // Format: cmd.exe /c command [args]
     return {
       command: "cmd.exe",
@@ -534,10 +563,15 @@ class MCPConnection {
       // Set the initial PATH from process.env
       env.PATH = process.env.PATH;
 
-      // For non-Windows platforms, try to get the PATH from user shell
-      if (process.platform !== "win32") {
+      // For non-Windows platforms or WSL remotes, try to get the PATH from user shell
+      const ideInfo = await this.extras?.ide?.getIdeInfo();
+      const isWindowsHostWithWslRemote =
+        process.platform === "win32" && ideInfo?.remoteName === "wsl";
+      if (process.platform !== "win32" || isWindowsHostWithWslRemote) {
         try {
-          const shellEnvPath = await getEnvPathFromUserShell();
+          const shellEnvPath = await getEnvPathFromUserShell(
+            ideInfo?.remoteName,
+          );
           if (shellEnvPath && shellEnvPath !== process.env.PATH) {
             env.PATH = shellEnvPath;
           }
@@ -547,7 +581,7 @@ class MCPConnection {
       }
     }
 
-    const { command, args } = this.resolveCommandForPlatform(
+    const { command, args } = await this.resolveCommandForPlatform(
       options.command,
       options.args || [],
     );

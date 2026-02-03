@@ -345,66 +345,82 @@ describe("hubLoader", () => {
       vi.unmock("jszip");
     });
 
-    it("should load rule from real hub: sanity/sanity-opinionated", async () => {
-      const result = await loadPackageFromHub(
-        "sanity/sanity-opinionated",
-        ruleProcessor,
-      );
+    it(
+      "should load rule from real hub: sanity/sanity-opinionated",
+      { retry: 3, timeout: 30000 },
+      async () => {
+        const result = await loadPackageFromHub(
+          "sanity/sanity-opinionated",
+          ruleProcessor,
+        );
 
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(0);
-      // Rules are markdown, should contain some markdown elements
-      expect(result).toMatch(/[#\-\*]/);
-    }, 30000);
+        expect(result).toBeDefined();
+        expect(typeof result).toBe("string");
+        expect(result.length).toBeGreaterThan(0);
+        // Rules are markdown, should contain some markdown elements
+        expect(result).toMatch(/[#\-\*]/);
+      },
+    );
 
-    it("should load MCP from real hub: upstash/context7-mcp", async () => {
-      // Restore real fetch and JSZip for this test
-      global.fetch = originalFetch;
-      vi.unmock("jszip");
+    it(
+      "should load MCP from real hub: upstash/context7-mcp",
+      { retry: 3, timeout: 30000 },
+      async () => {
+        // Restore real fetch and JSZip for this test
+        global.fetch = originalFetch;
+        vi.unmock("jszip");
 
-      const testSlug = "upstash/context7-mcp";
-      const result = await loadPackageFromHub(testSlug, mcpProcessor);
+        const testSlug = "upstash/context7-mcp";
+        const result = await loadPackageFromHub(testSlug, mcpProcessor);
 
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("object");
-      // Should now return the parsed MCP configuration
-      expect(result).toHaveProperty("name");
-      expect(typeof result.name).toBe("string");
-      // The MCP should have type and url properties
-      expect(result).toHaveProperty("type");
-      expect(result).toHaveProperty("url");
-    }, 30000);
+        expect(result).toBeDefined();
+        expect(typeof result).toBe("object");
+        // Should now return the parsed MCP configuration
+        expect(result).toHaveProperty("name");
+        expect(typeof result.name).toBe("string");
+        // The MCP should have type and url properties
+        expect(result).toHaveProperty("type");
+        expect(result).toHaveProperty("url");
+      },
+    );
 
-    it("should load model from real hub: openai/gpt-5", async () => {
-      // Restore real fetch and JSZip for this test
-      global.fetch = originalFetch;
-      vi.unmock("jszip");
+    it(
+      "should load model from real hub: openai/gpt-5",
+      { retry: 3, timeout: 30000 },
+      async () => {
+        // Restore real fetch and JSZip for this test
+        global.fetch = originalFetch;
+        vi.unmock("jszip");
 
-      const testSlug = "openai/gpt-5";
-      const result = await loadPackageFromHub(testSlug, modelProcessor);
+        const testSlug = "openai/gpt-5";
+        const result = await loadPackageFromHub(testSlug, modelProcessor);
 
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("object");
-      // Should now return the extracted model from the models array
-      expect(result).toHaveProperty("name");
-      expect(result).toHaveProperty("provider");
-      expect(result).toHaveProperty("model");
-      // Check that the model properties are correct
-      expect(result.provider).toBe("openai");
-      expect(result.model).toBe("gpt-5");
-      expect(result.name).toBe("GPT-5");
-    }, 30000);
+        expect(result).toBeDefined();
+        expect(typeof result).toBe("object");
+        // Should now return the extracted model from the models array
+        expect(result).toHaveProperty("name");
+        expect(result).toHaveProperty("provider");
+        expect(result).toHaveProperty("model");
+        // Check that the model properties are correct
+        expect(result.provider).toBe("openai");
+        expect(result.model).toBe("gpt-5");
+        expect(result.name).toBe("GPT-5");
+      },
+    );
 
-    it("should load prompt from real hub: launchdarkly/using-flags", async () => {
-      const result = await loadPackageFromHub(
-        "launchdarkly/using-flags",
-        promptProcessor,
-      );
+    it(
+      "should load prompt from real hub: launchdarkly/using-flags",
+      { retry: 3, timeout: 30000 },
+      async () => {
+        const result = await loadPackageFromHub(
+          "launchdarkly/using-flags",
+          promptProcessor,
+        );
 
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(0);
-    }, 30000);
+        expect(result).toBeDefined();
+        expect(typeof result).toBe("string");
+        expect(result.length).toBeGreaterThan(0);
+      },
+    );
   });
 });

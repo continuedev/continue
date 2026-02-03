@@ -36,7 +36,7 @@ describe("MCPService", () => {
   beforeEach(() => {
     mcpService = new MCPService();
     mockAssistant = {
-      name: "test-assistant",
+      name: "Test Config",
       version: "1.0.0",
       mcpServers: [
         {
@@ -196,7 +196,7 @@ describe("MCPService", () => {
 
     it("should default to stdio transport when type is not specified", async () => {
       const defaultAssistant: AssistantConfig = {
-        name: "default-assistant",
+        name: "Default Config",
         version: "1.0.0",
         mcpServers: [
           {

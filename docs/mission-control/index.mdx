@@ -1,56 +1,90 @@
 ---
 title: "Continue Mission Control"
-description: "Your command center for Continue. Create Tasks, set up Workflows, manage Agents, connect Integrations, and share with your team—all in one place."
+description: "Continue Mission Control is the control plane for cloud agents where teams create, monitor, and automate AI-powered workflows across their toolchain. Create Tasks, manage Agents, connect Integrations, and share with your team all in one place."
 sidebarTitle: "Overview"
 ---
 
 ## What You Can Do in Mission Control
 
-Mission Control is where developers and teams use Continue to power everyday coding workflows. From quick one-off Tasks to fully automated pipelines, everything starts here.
+Mission Control is where developers and teams use Continue to power everyday coding workflows. From quick one-off Tasks to fully automated pipelines, everything starts here with Cloud Agents (AI-powered).
 
-<CardGroup cols={4}>
+<CardGroup cols={3}>
   <Card title="Create & Run Tasks" icon="list" href="/mission-control/tasks">
     Trigger your AI Agents and review or approve the results. 
   </Card>
-   <Card title="Manage Your Agents" icon="robot" href="/agents/intro">
-        Create, configure, and monitor your custom Agents across repositories.
-  </Card>
- <Card title="Set Up Workflows" icon="clock" href="/mission-control/workflows">
-    Schedule recurring Tasks, connect webhooks to trigger Agents automatically, or add 
+   <Card title="Manage Your Cloud Agents" icon="robot" href="/agents/intro">
+        Configure, run, and monitor your custom Cloud Agents across repositories.
   </Card>
     <Card title="Connect Integrations" icon="plug" href="/mission-control/integrations">
-    Link GitHub, Slack, and Sentry to power your Tasks and Workflows.
+    Link GitHub, Slack, Sentry, and more to power your Cloud Agents.
   </Card>
 </CardGroup>
+
+## Inbox: One Place to Triage, Assign, and Take Action
+
+<Info>
+The Inbox is your team's central queue for all Cloud Agent powered Tasks, activity, and first-class integrations like Sentry and Snyk. It gives developers a shared place to review work, delegate responsibility, and launch follow-up Tasks—all without leaving Mission Control.
+</Info>
+
+<CardGroup cols={4}>
+  <Card title="Unified View" icon="list">
+    See every incoming Task, Sentry alert, Snyk vulnerability, and workflow output in one place.
+  </Card>
+
+  <Card title="Powerful Filtering" icon="filter">
+    Slice the Inbox by Agent, repository, integration, creator, status, or time to surface what matters now.
+  </Card>
+
+  <Card title="Clear Ownership" icon="user-check">
+    Assign Sessions to teammates so responsibilities are explicit and reviews move forward.
+  </Card>
+
+  <Card title="Take Action Fast" icon="zap">
+    Launch follow-up Tasks, investigate errors, or generate fixes directly from the Inbox—no context switching.
+  </Card>
+</CardGroup>
+
+### First-Class Integration Tabs
+
+Some signals deserve their own dedicated view. When you connect integrations:
+
+<AccordionGroup>
+<Accordion title="Sentry">
+  See error events organized by project with occurrences, first/last seen timestamps, and one-click **Solve** actions that launch an Agent to investigate or generate a fix.
+</Accordion>
+
+<Accordion title="Snyk">
+  Review high-severity vulnerabilities, check CVSS scores, and trigger Agents to patch or upgrade dependencies.
+</Accordion>
+</AccordionGroup>
 
 ## Monitoring & Insights
 
 <Info>
-Track performance, share configurations across your organization, and monitor agent activity in real time.
+Track performance, share configurations across your organization, and monitor Cloud Agent activity in real time.
 </Info>
 
 <CardGroup cols={3}>
 
   <Card title="Metrics" icon="chart-column" href="/mission-control/metrics">
-    Measure success rates, PR activity, and intervention trends across Agents.
+    Measure success rates, PR activity, and intervention trends across Cloud Agents.
   </Card>
 
   <Card title="Organization Sharing" icon="users" href="/mission-control/governance/org-permissions">
-    Share Agents and Workflows with teammates using built-in access controls.
+    Share Cloud Agents with teammates using built-in access controls.
   </Card>
 
-  <Card title="Agent Monitoring" icon="radar" href="/agents/overview#monitoring">
-    View active runs, logs, and outcomes for every Agent session.
+  <Card title="Cloud Agent Monitoring" icon="radar" href="/agents/overview#monitoring">
+    View active runs, logs, and outcomes for every Cloud Agent session.
   </Card>
 
 </CardGroup>
 ---
 
 
-## Components Behind Mission Control
+## Components Behind Mission Control's Cloud Agents
 
-Mission Control uses your configured components to power Agents, Tasks, and Workflows:
-Agents are built from reusable components that you can create, share, and customize:
+Cloud Agents are built from reusable components that you can create, share, and customize:
 
 <CardGroup cols={2}>
 
@@ -60,7 +94,7 @@ Agents are built from reusable components that you can create, share, and custom
 
   </Card>
 
-  <Card title="MCPs" icon="wrench">
+  <Card title="Tools" icon="wrench">
 
     Model Context Protocol servers that provide tools and capabilities like database access, web search, or custom functions
 
@@ -68,7 +102,7 @@ Agents are built from reusable components that you can create, share, and custom
 
   <Card title="Rules" icon="shield">
 
-    Guidelines that shape AI behavior - coding standards, constraints, or specific instructions for your domain
+    Guidelines that shape AI Agent behavior - coding standards, constraints, or specific instructions for your domain
 
   </Card>
 
@@ -82,7 +116,7 @@ Agents are built from reusable components that you can create, share, and custom
 
 <Tip>
 
-  Components are the building blocks for agents that you can create new or remix from an existing component. When you create a component in mission control, it becomes available according to the permissions you set: Personal, Public, or Organization.
+   When you create a component for your Cloud Agent in Mission Control, it becomes available according to the permissions you set: Personal, Public, or Organization.
 
 </Tip>
 
@@ -109,16 +143,16 @@ For personal or single-use configurations, you can skip the inputs layer and ref
 
 <CardGroup cols={3}>
 
-  <Card title="Create a Task" icon="plus" href="https://hub.continue.dev">
+  <Card title="Create a Task" icon="plus" href="https://continue.dev">
     Start with a prompt and run an Agent on demand.
   </Card>
 
-  <Card title="Build a Workflow" icon="clock" href="https://hub.continue.dev/workflows">
-    Automate your Tasks using cron schedules or webhooks.
+  <Card title="Build Workflows for Cloud Agents" icon="clock" href="https://continue.dev/agents/new">
+    Automate work using GitHub triggers, cron schedules, or webhooks.
   </Card>
 
-  <Card title="Add Integrations" icon="workflow" href="https://hub.continue.dev/integrations">
-    Connect GitHub, Slack, and Sentry to extend your Agents.
+  <Card title="Add Integrations" icon="workflow" href="https://continue.dev/integrations">
+    Connect Slack, Sentry, Snyk and more to extend your Agents.
   </Card>
 
 </CardGroup>

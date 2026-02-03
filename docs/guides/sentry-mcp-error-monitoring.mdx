@@ -4,6 +4,24 @@ description: "Build an AI-powered error monitoring workflow that analyzes Sentry
 sidebarTitle: "Sentry Automated Error Analysis with MCP"
 ---
 
+<Note>
+
+  **🚀 New: Sentry Mission Control Integration with Continuous AI**
+  
+  The new [Sentry Mission Control Integration](/mission-control/integrations/sentry) enables **[Continuous AI](/guides/continuous-ai)** for error monitoring - where AI agents autonomously detect, analyze, and fix production errors. When Sentry detects an issue, your agent automatically analyzes it, generates a fix, creates a PR, and validates the solution without manual intervention.
+  
+  **Mission Control Benefits:**
+  - **Webhook-based triggers** - Automatically respond when new errors occur in production
+  - **Centralized error workflows** - Manage all error monitoring Tasks from one dashboard
+  - **Dedicated inbox view** - Monitor all Sentry-related agent activity at [continue.dev/inbox?view=sentry](https://continue.dev/inbox?view=sentry)
+  - **Metrics & intervention rates** - Track how often agents successfully fix errors without human help
+  
+  This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine error analysis and fixes autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces mean time to resolution (MTTR) and improves application reliability.
+  
+  **Get Started:** Use this cookbook to understand error monitoring fundamentals, then [enable Mission Control](/mission-control/integrations/sentry) to deploy autonomous error-fixing agents across your organization.
+
+</Note>
+
 <Card title="What You'll Build" icon="bug">
   An automated error monitoring system that uses Continue CLI with Sentry MCP to analyze production errors, identify root causes with AI, and create detailed GitHub issues with suggested fixes.
 </Card>
@@ -36,7 +54,7 @@ Before starting, ensure you have:
   </Step>
 
   <Step title="Set up Continue CLI Account & API Key">
-    1. Visit [Continue Organizations](https://hub.continue.dev/settings/organizations)
+    1. Visit [Continue Organizations](https://continue.dev/settings/organizations)
     2. Sign up or log in to your Continue account
     3. Navigate to your organization settings
     4. Click **"API Keys"** and then **"+ New API Key"**
@@ -138,7 +156,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Sentry Continuous AI Agent](https://hub.continue.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Sentry Continuous AI Agent](https://continue.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
         cn --agent continuedev/sentry-continuous-ai-agent
@@ -424,7 +442,7 @@ jobs:
 
 <Warning>
   **Required GitHub Secrets**:
-  - `CONTINUE_API_KEY`: Your Continue API key from [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+  - `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
   - `SENTRY_AUTH_TOKEN`: Your Sentry User Auth Token (needs scopes: `org:read`, `project:read`, `project:releases`, `event:read`)
   - `SENTRY_ORG`: Your Sentry organization slug
   - `SENTRY_PROJECT`: Your Sentry project slug
@@ -521,8 +539,8 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 - Set up [Sentry performance monitoring](https://docs.sentry.io/product/performance/)
 - Configure [Sentry release tracking](https://docs.sentry.io/product/releases/) for deployment correlation
-- Integrate [Slack MCP](https://hub.continue.dev/slack/slack-mcp) for error alerts
-- Join the [Continue Discord](https://discord.gg/continue) for support
+- Integrate [Slack MCP](https://continue.dev/slack/slack-mcp) for error alerts
+- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 

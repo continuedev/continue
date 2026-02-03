@@ -80,6 +80,24 @@ export const CometAPI: ModelProvider = {
 
     // Claude Series
     {
+      model: "claude-sonnet-4-5",
+      displayName: "Claude 4.5 Sonnet",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Anthropic's smartest model for complex agents and coding with exceptional performance in reasoning and multilingual tasks.",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-haiku-4-5-20251001",
+      displayName: "Claude 4.5 Haiku (2025-10-01)",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Anthropic's fastest model with near-frontier intelligence, ideal for quick and accurate responses.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "claude-opus-4-1-20250805",
       displayName: "Claude Opus 4.1 (2025-08-05)",
       contextLength: 200000,
@@ -136,6 +154,15 @@ export const CometAPI: ModelProvider = {
 
     // Gemini Series
     {
+      model: "gemini-3-pro-preview",
+      displayName: "Gemini 3 Pro Preview",
+      contextLength: 2000000,
+      maxCompletionTokens: 8192,
+      description:
+        "Gemini flagship model with high precision multimodal capabilities.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "gemini-2.5-pro",
       displayName: "Gemini 2.5 Pro",
       contextLength: 2000000,
@@ -174,9 +201,18 @@ export const CometAPI: ModelProvider = {
 
     // Grok Series
     {
+      model: "grok-4-1-fast-reasoning",
+      displayName: "Grok 4.1 Fast Reasoning",
+      contextLength: 256000,
+      maxCompletionTokens: 4096,
+      description:
+        "Latest Grok model with faster and improved reasoning and conversational abilities.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "grok-4-0709",
       displayName: "Grok 4 (07-09)",
-      contextLength: 128000,
+      contextLength: 256000,
       maxCompletionTokens: 4096,
       description:
         "Latest Grok model with improved reasoning and conversational abilities.",

@@ -9,7 +9,6 @@ import {
   ModelRole,
   PackageIdentifier,
   RegistryClient,
-  TEMPLATE_VAR_REGEX,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -65,6 +64,8 @@ async function loadConfigYaml(options: {
   } = options;
 
   // Add local .continue blocks
+  // Use "content" field to pass pre-read content directly, avoiding
+  // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
@@ -74,6 +75,7 @@ async function loadConfigYaml(options: {
     return localBlocks.map((b) => ({
       uriType: "file" as const,
       fileUri: b.path,
+      content: b.content,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -188,6 +190,7 @@ export async function configYamlToContinueConfig(options: {
       autocomplete: [],
       rerank: [],
       summarize: [],
+      subagent: [],
     },
     selectedModelByRole: {
       chat: null,
@@ -197,6 +200,7 @@ export async function configYamlToContinueConfig(options: {
       autocomplete: null,
       rerank: null,
       summarize: null,
+      subagent: null,
     },
     rules: [],
     requestOptions: { ...config.requestOptions },
@@ -236,22 +240,6 @@ export async function configYamlToContinueConfig(options: {
     useLocalCrawling: doc.useLocalCrawling,
     sourceFile: doc.sourceFile,
   }));
-
-  config.mcpServers?.forEach((mcpServer) => {
-    if ("args" in mcpServer) {
-      const mcpArgVariables =
-        mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
-
-      if (mcpArgVariables.length === 0) {
-        return;
-      }
-
-      localErrors.push({
-        fatal: false,
-        message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-      });
-    }
-  });
 
   // Prompt files -
   try {
@@ -349,6 +337,10 @@ export async function configYamlToContinueConfig(options: {
 
       if (model.roles?.includes("rerank")) {
         continueConfig.modelsByRole.rerank.push(...llms);
+      }
+
+      if (model.roles?.includes("subagent")) {
+        continueConfig.modelsByRole.subagent.push(...llms);
       }
     } catch (e) {
       localErrors.push({

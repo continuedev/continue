@@ -2,9 +2,9 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 
 import { compactChatHistory } from "../../compaction.js";
 import { updateSessionHistory } from "../../session.js";
+import { handleAutoCompaction as coreHandleAutoCompaction } from "../../stream/streamChatResponse.autoCompaction.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { shouldAutoCompact } from "../../util/tokenizer.js";
 
 interface HandleCompactCommandOptions {
   chatHistory: ChatHistoryItem[];
@@ -44,13 +44,9 @@ export async function handleCompactCommand({
 
   try {
     // Compact the chat history directly (already in unified format) with abort controller
-    const result = await compactChatHistory(
-      chatHistory,
-      model,
-      llmApi,
-      undefined,
-      compactionController,
-    );
+    const result = await compactChatHistory(chatHistory, model, llmApi, {
+      abortController: compactionController,
+    });
 
     // Check if operation was aborted before proceeding with success actions
     if (compactionController.signal.aborted) {
@@ -135,88 +131,31 @@ export async function handleAutoCompaction({
   compactionIndex: _compactionIndex,
   setChatHistory,
   setCompactionIndex,
-  abortController,
+  abortController: _abortController,
 }: HandleAutoCompactionOptions): Promise<{
   currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
 }> {
-  try {
-    // Check if auto-compaction is needed
-    // Check if auto-compaction is needed using ChatHistoryItem directly
-    if (!model || !shouldAutoCompact(chatHistory, model)) {
-      return {
-        currentChatHistory: chatHistory,
-        currentCompactionIndex: _compactionIndex,
-      };
-    }
+  // Delegate to core handleAutoCompaction which decides whether compaction is needed
+  // Note: TUI mode doesn't have access to tools/systemMessage at this point,
+  // so the core function uses a simplified check.
+  const result = await coreHandleAutoCompaction(chatHistory, model, llmApi, {
+    isHeadless: false,
+    callbacks: {
+      setChatHistory,
+      setCompactionIndex,
+    },
+  });
 
-    logger.info("Auto-compaction triggered for TUI mode");
-
-    // Compact the unified history
-    const result = await compactChatHistory(
-      chatHistory,
-      model,
-      llmApi,
-      undefined,
-      abortController,
-    );
-
-    // Keep the system message and append the compaction summary
-    // This replaces the old messages with a summary to reduce context size
-    const systemMessage = chatHistory.find(
-      (item) => item.message.role === "system",
-    );
-
-    const compactedMessage: ChatHistoryItem = {
-      message: {
-        role: "assistant" as const,
-        content: result.compactionContent,
-      },
-      contextItems: [],
-      conversationSummary: result.compactionContent, // Mark this as a summary
-    };
-
-    // Create new history with system message (if exists) and compaction summary
-    const updatedHistory: ChatHistoryItem[] = systemMessage
-      ? [systemMessage, compactedMessage]
-      : [compactedMessage];
-
-    // Add success message to the history that will be returned
-    const successMessage: ChatHistoryItem = {
-      message: {
-        role: "system",
-        content: "Chat history auto-compacted successfully.",
-      },
-      contextItems: [],
-    };
-
-    const finalHistory = [...updatedHistory, successMessage];
-
-    setChatHistory(finalHistory);
-    setCompactionIndex(updatedHistory.length - 1);
-
-    return {
-      currentChatHistory: finalHistory,
-      currentCompactionIndex: updatedHistory.length - 1,
-    };
-  } catch (error) {
-    logger.error("Auto-compaction failed:", error);
-
-    // Add error message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Auto-compaction failed: ${formatError(error)}. Continuing without compaction...`,
-        },
-        contextItems: [],
-      },
-    ]);
-
+  if (!result.wasCompacted) {
     return {
       currentChatHistory: chatHistory,
-      currentCompactionIndex: null,
+      currentCompactionIndex: _compactionIndex,
     };
   }
+
+  return {
+    currentChatHistory: result.chatHistory,
+    currentCompactionIndex: result.compactionIndex,
+  };
 }

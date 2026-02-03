@@ -58,6 +58,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "sagemaker",
   "continue-proxy",
   "mistral",
+  "mimo",
   "sambanova",
   "vertexai",
   "watsonx",
@@ -199,6 +200,9 @@ function modelSupportsReasoning(
     !model.model.includes("-3-") &&
     !model.model.includes("-3.5-")
   ) {
+    return true;
+  }
+  if (model.model.includes("command-a-reasoning")) {
     return true;
   }
   if (model.model.includes("deepseek-r")) {

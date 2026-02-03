@@ -850,14 +850,10 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "claude-2",
-                      "claude-instant-1",
-                      "claude-3-5-sonnet-latest",
-                      "claude-3-7-sonnet-20250219",
-                      "claude-3-opus-20240229",
-                      "claude-3-sonnet-20240229",
-                      "claude-3-haiku-20240307",
-                      "claude-2.1"
+                      "claude-sonnet-4",
+                      "claude-sonnet-4-5",
+                      "claude-opus-4-1",
+                      "claude-haiku-4-5"
                     ]
                   },
                   {
@@ -893,7 +889,10 @@
                   "command-r-plus-08-2024",
                   "command-r7b-12-2024",
                   "command-r7b-arabic-02-2025",
-                  "command-a-03-2025"
+                  "command-a-03-2025",
+                  "command-a-vision-07-2025",
+                  "command-a-reasoning-08-2025",
+                  "command-a-translate-08-2025"
                 ]
               }
             }
@@ -1415,10 +1414,16 @@
                       "llama3.1-70b",
                       "llama3.3-70b",
                       "qwen2.5-coder-32b",
+                      "qwen3-32b",
+                      "qwen3-coder-30b-a3b",
+                      "qwen2.5-vl-72b",
                       "codestral-mamba-latest",
                       "mistral-7b",
                       "mistral-8x7b",
                       "mistral-nemo",
+                      "mistral-small-3.2-24b",
+                      "gpt-oss-20b",
+                      "gpt-oss-120b",
                       "DeepSeek-R1-Distill-Llama-70B"
                     ]
                   },
@@ -1607,14 +1612,10 @@
                       "codeup-13b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "claude-2",
-                      "claude-instant-1",
-                      "claude-3-5-sonnet-latest",
-                      "claude-3-5-sonnet-20240620",
-                      "claude-3-opus-20240229",
-                      "claude-3-sonnet-20240229",
-                      "claude-3-haiku-20240307",
-                      "claude-2.1",
+                      "claude-sonnet-4",
+                      "claude-sonnet-4-5",
+                      "claude-opus-4-1",
+                      "claude-haiku-4-5",
                       "command-r",
                       "command-r-plus",
                       "chat-bison-001",

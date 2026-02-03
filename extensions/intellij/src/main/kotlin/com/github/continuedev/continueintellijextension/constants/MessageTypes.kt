@@ -4,7 +4,6 @@ class MessageTypes {
     companion object {
         val IDE_MESSAGE_TYPES = listOf(
             "readRangeInFile",
-            "isTelemetryEnabled",
             "getUniqueId",
             "getDiff",
             "getTerminalContents",
@@ -85,6 +84,8 @@ class MessageTypes {
             "config/newAssistantFile",
             "config/ideSettingsUpdate",
             "config/addLocalWorkspaceBlock",
+            "config/addGlobalRule",
+            "config/deleteRule",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/refreshProfiles",

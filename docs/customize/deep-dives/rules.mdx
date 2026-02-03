@@ -31,7 +31,7 @@ Continue supports two types of rules with different behaviors:
 <Columns cols={2}>
 <Card title="Local Rules" icon="folder">
 - **Location**: `.continue/rules` folder in your workspace
-- **Visibility**: Automatically visible when using Hub assistants
+- **Visibility**: Automatically visible when using Hub configs
 - **Creation**: Add rules button in VSCode or manual file creation
 - **File Management**: Creates actual `.md` files you can edit directly
 </Card>
@@ -53,7 +53,7 @@ When using Continue, rules are loaded in this order:
 4. **Global rules** (from `~/.continue/rules` folder)
 
 <Info>
-**TL;DR**: Local rules show up automatically when using Hub assistants. Hub rules show up automatically when referenced in your config.
+**TL;DR**: Local rules show up automatically when using Hub configs. Hub rules show up automatically when referenced in your config.
 </Info>
 
 ## Quick Start: How to Create Your First Rule File
@@ -94,8 +94,8 @@ For example, you can say "Create a rule for this", and a rule will be created fo
 
 Rules can also be created and managed on the Continue Mission Control:
 
-1. **Browse existing rules**: [Explore available rules](https://hub.continue.dev/explore?type=rules)
-2. **Create new rules**: [Create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub
+1. **Browse existing rules**: [Explore available rules](https://continue.dev/hub?type=rules)
+2. **Create new rules**: [Create your own](https://continue.dev/new?type=block&blockType=rules) in the Hub
 3. **Copy from local rules**: Copy/paste content from your `.continue/rules` files to create Hub rules
 
 ### Working Between Hub and Local Rules
@@ -117,7 +117,7 @@ To use Hub rules in your local setup:
 To move local rules to the Hub:
 
 1. Copy the content from your `.continue/rules/rule-name.md` file
-2. Go to [Create new rule](https://hub.continue.dev/new?type=block&blockType=rules)
+2. Go to [Create new rule](https://continue.dev/new?type=block&blockType=rules)
 3. Paste the content and configure the rule
 4. Optionally, remove the local file and reference the Hub rule in your config
 
@@ -228,7 +228,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 **Solution**:
 - **Hub rules** only appear when referenced in your config.yaml using the `uses:` syntax
-- **Local rules** automatically appear when using Hub assistants
+- **Local rules** automatically appear when using Hub configs
 - There's currently no automatic bidirectional sync
 
 ### Issue: "Edit" Links Point to Wrong Location
@@ -239,7 +239,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 **Workaround**:
 1. **For local rules**: Navigate directly to `.continue/rules/` folder and edit the `.md` file
-2. **For Hub rules**: Go directly to your assistant page on [Continue Mission Control](https://hub.continue.dev) and edit from there
+2. **For Hub rules**: Go directly to your assistant page on [Continue Mission Control](https://continue.dev) and edit from there
 3. Keep track of which rules are local vs Hub-based to avoid confusion
 
 <Info>

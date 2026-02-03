@@ -9,6 +9,7 @@ import { prependPrompt } from "src/util/promptProcessor.js";
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { setAgentId } from "../index.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,
@@ -22,12 +23,16 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession, getCompleteStateSnapshot } from "../session.js";
+import {
+  createSession,
+  getCompleteStateSnapshot,
+  loadOrCreateSessionById,
+} from "../session.js";
 import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
-import { gracefulExit } from "../util/exit.js";
+import { gracefulExit, updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
 import { logger } from "../util/logger.js";
@@ -35,6 +40,8 @@ import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import {
+  checkAgentComplete,
+  removePartialAssistantMessage,
   streamChatResponseWithInterruption,
   type ServerState,
 } from "./serve.helpers.js";
@@ -46,9 +53,32 @@ interface ServeOptions extends ExtendedCommandOptions {
   id?: string;
 }
 
+/**
+ * Decide whether to enqueue the initial prompt on server startup.
+ * We only want to send it when starting a brand-new session; if any non-system
+ * messages already exist (e.g., after resume), skip to avoid replaying.
+ */
+export function shouldQueueInitialPrompt(
+  history: ChatHistoryItem[],
+  prompt?: string | null,
+): boolean {
+  if (!prompt) {
+    return false;
+  }
+
+  // If there are any non-system messages, we already have conversation context
+  const hasConversation = history.some(
+    (item) => item.message.role !== "system",
+  );
+  return !hasConversation;
+}
+
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   await posthogService.capture("sessionStart", {});
+
+  // Set agent ID for error reporting if provided
+  setAgentId(options.id);
 
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
@@ -138,7 +168,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     });
   }
 
-  const session = createSession(initialHistory);
+  const trimmedId = options.id?.trim();
+  const session =
+    trimmedId && trimmedId.length > 0
+      ? loadOrCreateSessionById(trimmedId, initialHistory)
+      : createSession(initialHistory);
 
   // Align ChatHistoryService with server session and enable remote mode
   try {
@@ -351,9 +385,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
 
     // Give a moment for the response to be sent
-    const handleExitResponse = () => {
-      server.close(() => {
+    const handleExitResponse = async () => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
+
+        // Update metadata one final time before exiting (with completion flag)
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata({ history, isComplete: true });
+        } catch (err) {
+          logger.debug("Failed to update metadata (non-critical)", err as any);
+        }
+
         gracefulExit(0).catch((err) => {
           logger.error(`Graceful exit failed: ${formatError(err)}`);
           process.exit(1);
@@ -398,34 +441,30 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       agentFileState?.agentFile?.prompt,
       actualPrompt,
     );
+
     if (initialPrompt) {
-      console.log(chalk.dim("\nProcessing initial prompt..."));
-      await messageQueue.enqueueMessage(initialPrompt);
-      processMessages(state, llmApi);
+      const existingHistory =
+        (() => {
+          try {
+            return services.chatHistory.getHistory();
+          } catch {
+            return state.session.history;
+          }
+        })() ?? [];
+
+      if (shouldQueueInitialPrompt(existingHistory, initialPrompt)) {
+        logger.info(chalk.dim("\nProcessing initial prompt..."));
+        await messageQueue.enqueueMessage(initialPrompt);
+        processMessages(state, llmApi);
+      } else {
+        logger.info(
+          chalk.dim(
+            "Skipping initial prompt because existing conversation history was found.",
+          ),
+        );
+      }
     }
   });
-
-  // Process messages from the queue
-  function removePartialAssistantMessage(state: ServerState) {
-    try {
-      const svcHistory = services.chatHistory.getHistory();
-      const last = svcHistory[svcHistory.length - 1];
-      if (last && last.message.role === "assistant" && !last.message.content) {
-        const trimmed = svcHistory.slice(0, -1);
-        services.chatHistory.setHistory(trimmed);
-      }
-    } catch {
-      const lastMessage =
-        state.session.history[state.session.history.length - 1];
-      if (
-        lastMessage &&
-        lastMessage.message.role === "assistant" &&
-        !lastMessage.message.content
-      ) {
-        state.session.history.pop();
-      }
-    }
-  }
 
   async function processMessages(state: ServerState, llmApi: any) {
     let processedMessage = false;
@@ -466,11 +505,24 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
         state.lastActivity = Date.now();
+
+        // Update metadata after successful agent turn
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata({
+            history,
+            isComplete: checkAgentComplete(history),
+          });
+        } catch (metadataErr) {
+          logger.debug(
+            "Failed to update metadata after turn (non-critical)",
+            metadataErr as any,
+          );
+        }
       } catch (e: any) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
-          // Remove any partial assistant message
-          removePartialAssistantMessage(state);
+          removePartialAssistantMessage(state.session.history);
         } else {
           logger.error(`Error: ${formatError(e)}`);
 
@@ -522,8 +574,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       );
       state.serverRunning = false;
       stopStorageSync();
-      server.close(() => {
+      server.close(async () => {
         telemetryService.stopActiveTime();
+
+        // Update metadata one final time before exiting (with completion flag)
+        try {
+          const history = services.chatHistory?.getHistory();
+          await updateAgentMetadata({ history, isComplete: true });
+        } catch (err) {
+          logger.debug("Failed to update metadata (non-critical)", err as any);
+        }
+
         gracefulExit(0).catch((err) => {
           logger.error(`Graceful exit failed: ${formatError(err)}`);
           process.exit(1);
@@ -545,8 +606,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       clearInterval(inactivityChecker);
       inactivityChecker = null;
     }
-    server.close(() => {
+    server.close(async () => {
       telemetryService.stopActiveTime();
+
+      // Update metadata one final time before exiting (with completion flag)
+      try {
+        const history = services.chatHistory?.getHistory();
+        await updateAgentMetadata({ history, isComplete: true });
+      } catch (err) {
+        logger.debug("Failed to update metadata (non-critical)", err as any);
+      }
+
       gracefulExit(0).catch((err) => {
         logger.error(`Graceful exit failed: ${formatError(err)}`);
         process.exit(1);
@@ -554,7 +624,3 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     });
   });
 }
-
-// Function moved to serve.helpers.ts - remove implementation
-// async function streamChatResponseWithInterruption - moved to helpers {
-// Implementation moved to serve.helpers.ts

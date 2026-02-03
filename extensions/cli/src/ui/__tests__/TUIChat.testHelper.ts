@@ -458,6 +458,24 @@ export function expectNormalMode(frame: string | undefined) {
   expect(frame).toContain("Continue CLI");
 }
 
+/**
+ * Helper to wait for a condition to be true
+ * similar to `waitFor` in testing libraries
+ */
+export async function waitForCondition(
+  conditionFn: () => boolean,
+  timeoutMs = 2000,
+  intervalMs = 50,
+): Promise<void> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    if (conditionFn()) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
 // Make runTest available globally for test files
 declare global {
   var runTest: (

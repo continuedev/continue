@@ -6,6 +6,7 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
+import { review } from "./commands/review.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
@@ -20,6 +21,8 @@ import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { post } from "./util/apiClient.js";
+import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -31,6 +34,9 @@ let showExitMessage: boolean;
 let exitMessageCallback: (() => void) | null;
 let lastCtrlCTime: number;
 
+// Agent ID for serve mode - set when serve command is invoked with --id
+let agentId: string | undefined;
+
 // Initialize state immediately to avoid temporal dead zone issues with exported functions
 (function initializeTUIState() {
   tuiUnmount = null;
@@ -38,6 +44,11 @@ let lastCtrlCTime: number;
   exitMessageCallback = null;
   lastCtrlCTime = 0;
 })();
+
+// Set the agent ID for error reporting (called by serve command)
+export function setAgentId(id: string | undefined) {
+  agentId = id;
+}
 
 // Register TUI cleanup function for graceful shutdown
 export function setTUIUnmount(unmount: () => void) {
@@ -89,22 +100,74 @@ export function shouldShowExitMessage(): boolean {
   return showExitMessage;
 }
 
+// Helper to report unhandled errors to the API when running in serve mode
+async function reportUnhandledErrorToApi(error: Error): Promise<void> {
+  if (!agentId) {
+    // Not running in serve mode with an agent ID, skip API reporting
+    return;
+  }
+
+  try {
+    await post(`agents/${agentId}/status`, {
+      status: "FAILED",
+      errorMessage: `Unhandled error: ${error.message}`,
+    });
+    logger.debug(`Reported unhandled error to API for agent ${agentId}`);
+  } catch (apiError) {
+    // If API reporting fails, just log it - don't crash
+    logger.debug(
+      `Failed to report error to API: ${apiError instanceof Error ? apiError.message : String(apiError)}`,
+    );
+  }
+}
+
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection at:", { promise, reason });
-  sentryService.captureException(
-    reason instanceof Error ? reason : new Error(String(reason)),
-    {
-      promise: String(promise),
-    },
-  );
-  // Don't exit the process, just log the error
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  markUnhandledError();
+
+  // Extract useful information from the reason
+  const errorDetails = {
+    promiseString: String(promise),
+    reasonType: typeof reason,
+    reasonConstructor: reason?.constructor?.name,
+  };
+
+  // If reason is an Error, use it directly for better stack traces
+  if (reason instanceof Error) {
+    logger.error("Unhandled Promise Rejection", reason, errorDetails);
+    // Report to API if running in serve mode
+    reportUnhandledErrorToApi(reason).catch(() => {
+      // Silently fail if API reporting errors - already logged in helper
+    });
+  } else {
+    // Convert non-Error reasons to Error for consistent handling
+    const error = new Error(`Unhandled rejection: ${String(reason)}`);
+    logger.error("Unhandled Promise Rejection", error, {
+      ...errorDetails,
+      originalReason: String(reason),
+    });
+    // Report to API if running in serve mode
+    reportUnhandledErrorToApi(error).catch(() => {
+      // Silently fail if API reporting errors - already logged in helper
+    });
+  }
+
+  // Note: Sentry capture is handled by logger.error() above
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 process.on("uncaughtException", (error) => {
+  // Mark that an unhandled error occurred - this will cause non-zero exit
+  markUnhandledError();
+
   logger.error("Uncaught Exception:", error);
-  sentryService.captureException(error);
-  // Don't exit the process, just log the error
+  // Report to API if running in serve mode
+  reportUnhandledErrorToApi(error).catch(() => {
+    // Silently fail if API reporting errors - already logged in helper
+  });
+  // Note: Sentry capture is handled by logger.error() above
+  // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
 // keyboard interruption handler for non-TUI flows
@@ -136,6 +199,10 @@ addCommonOptions(program)
   )
   .option("--resume", "Resume from last session")
   .option("--fork <sessionId>", "Fork from an existing session ID")
+  .option(
+    "--beta-subagent-tool",
+    "Enable beta Subagent tool for invoking subagents",
+  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "cn" });
@@ -216,11 +283,11 @@ addCommonOptions(program)
       }
     }
 
-    // In headless mode, ensure we have a prompt unless using --agent flag
-    // Agent files can provide their own prompts
-    if (options.print && !prompt && !options.agent) {
+    // In headless mode, ensure we have a prompt unless using --agent flag or --resume flag
+    // Agent files can provide their own prompts, and resume can work without new input
+    if (options.print && !prompt && !options.agent && !options.resume) {
       safeStderr(
-        "Error: A prompt is required when using the -p/--print flag, unless --prompt or --agent is provided.\n\n",
+        "Error: A prompt is required when using the -p/--print flag, unless --prompt, --agent, or --resume is provided.\n\n",
       );
       safeStderr("Usage examples:\n");
       safeStderr('  cn -p "please review my current git diff"\n');
@@ -228,6 +295,7 @@ addCommonOptions(program)
       safeStderr('  cn -p "analyze the code in src/"\n');
       safeStderr("  cn -p --agent my-org/my-agent\n");
       safeStderr("  cn -p --prompt my-org/my-prompt\n");
+      safeStderr("  cn -p --resume\n");
       await gracefulExit(1);
     }
 
@@ -323,6 +391,10 @@ program
     "--id <storageId>",
     "Upload session snapshots to Continue-managed storage using the provided identifier",
   )
+  .option(
+    "--beta-upload-artifact-tool",
+    "Enable beta UploadArtifact tool for uploading screenshots, videos, and logs",
+  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "serve" });
@@ -348,6 +420,22 @@ program
     await remoteTest(prompt, options.url);
   });
 
+// Review subcommand
+program
+  .command("review")
+  .description("Run AI-powered reviews on your changes")
+  .option("--base <ref>", "Base git ref to diff against (default: auto-detect)")
+  .option("--format <format>", "Output format")
+  .option("--fix", "Automatically apply suggested fixes")
+  .option("--patch", "Show patches")
+  .option("--fail-fast", "Stop on first failure")
+  .option("--review-agents <agents...>", "Specific review agents to run")
+  .option("--verbose", "Enable verbose logging")
+  .action(async (options) => {
+    await posthogService.capture("cliCommand", { command: "review" });
+    await review(options);
+  });
+
 // Handle unknown commands
 program.on("command:*", () => {
   console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
@@ -356,6 +444,15 @@ program.on("command:*", () => {
 });
 
 export async function runCli(): Promise<void> {
+  // Handle internal worker subprocess for cn review
+  if (process.argv.includes("--internal-review-worker")) {
+    const { runReviewWorker } = await import(
+      "./commands/review/reviewWorker.js"
+    );
+    await runReviewWorker();
+    return;
+  }
+
   // Parse arguments and handle errors
   try {
     program.parse();

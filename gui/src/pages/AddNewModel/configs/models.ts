@@ -98,7 +98,24 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
     },
     icon: "openai.png",
-    providerOptions: ["vllm"],
+    dimensions: [
+      {
+        name: "Provider",
+        description: "The provider to use for this model",
+        options: {
+          vllm: {
+            model: "openai/gpt-oss-20b",
+            title: "gpt-oss-20b (vLLM)",
+          },
+          ovhcloud: {
+            model: "gpt-oss-20b",
+            title: "gpt-oss-20b (OVHcloud)",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["vllm", "ovhcloud"],
     isOpenSource: true,
   },
   gptOss120B: {
@@ -112,7 +129,24 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
     },
     icon: "openai.png",
-    providerOptions: ["vllm"],
+    dimensions: [
+      {
+        name: "Provider",
+        description: "The provider to use for this model",
+        options: {
+          vllm: {
+            model: "openai/gpt-oss-120b",
+            title: "gpt-oss-120b (vLLM)",
+          },
+          ovhcloud: {
+            model: "gpt-oss-120b",
+            title: "gpt-oss-120b (OVHcloud)",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["vllm", "ovhcloud"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -913,6 +947,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini3ProPreview: {
+    title: "Gemini 3 Pro",
+    description:
+      "Google's latest Pro model with up to 64k output context. Best for complex tasks involving reasoning.",
+    params: {
+      title: "Gemini 3 Pro",
+      model: "gemini-3-pro-preview",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
   c4aiAyaExpanse8B: {
     title: "C4AI Aya Expanse 8B",
     description:
@@ -1067,6 +1115,48 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cohere.png",
     isOpenSource: false,
   },
+  commandAVision072025: {
+    title: "Command A Vision 07-2025",
+    description:
+      "Command A Vision is Cohere's first model capable of processing images, excelling in enterprise use cases such as analyzing charts, graphs, and diagrams, table understanding, OCR, document Q&A, and object detection.",
+    params: {
+      model: "command-a-vision-07-2025",
+      contextLength: 128_000,
+      title: "Command A Vision 07-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandAReasoning082025: {
+    title: "Command A Reasoning 08-2025",
+    description:
+      "Command A Reasoning is Cohere’s first reasoning model, able to ‘think’ before generating an output in a way that allows it to perform well in certain kinds of nuanced problem-solving and agent-based tasks in 23 languages.",
+    params: {
+      model: "command-a-reasoning-08-2025",
+      contextLength: 256_000,
+      title: "Command A Reasoning 08-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandATranslate082025: {
+    title: "Command A Translate 08-2025",
+    description:
+      "Command A Translate is Cohere’s state of the art machine translation model, excelling at a variety of translation tasks on 23 languages",
+    params: {
+      model: "command-a-translate-08-2025",
+      contextLength: 8_000,
+      title: "Command A Translate 08-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
   gpt5: {
     title: "GPT-5",
     description: "OpenAI's next-generation, high-intelligence flagship model",
@@ -1074,6 +1164,18 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-5",
       contextLength: 400_000,
       title: "GPT-5",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt5_1: {
+    title: "GPT-5.1",
+    description: "OpenAI's GPT-5.1 model for advanced reasoning and chat",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      title: "GPT-5.1",
     },
     providerOptions: ["openai"],
     icon: "openai.png",
@@ -1145,10 +1247,38 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  claude4Sonnet: {
-    title: "Claude 4 Sonnet",
+  claude45Sonnet: {
+    title: "Claude Sonnet 4.5",
     description:
-      "The most intelligent model in the Claude 4 series. Costing lesser than Claude 4 Opus.",
+      "Anthropic's smartest model for complex agents and coding with exceptional performance in reasoning and multilingual tasks.",
+    params: {
+      model: "claude-sonnet-4-5-20250929",
+      contextLength: 200_000,
+      title: "Claude 4.5 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic", "replicate"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude45Haiku: {
+    title: "Claude Haiku 4.5",
+    description:
+      "Anthropic's fastest model with near-frontier intelligence, ideal for quick and accurate responses.",
+    params: {
+      model: "claude-haiku-4-5-20251001",
+      contextLength: 200_000,
+      title: "Claude Haiku 4.5",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude4Sonnet: {
+    title: "Claude Sonnet 4",
+    description:
+      "The most intelligent model in the Claude 4 series. Costing lesser than Claude Opus 4.",
     params: {
       model: "claude-4-sonnet-latest",
       contextLength: 200_000,
@@ -1159,27 +1289,26 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude41Opus: {
-    title: "Claude 4.1 Opus",
-    description: "The most capable model in the Claude 4 series",
+  claude4_5Opus: {
+    title: "Claude 4.5 Opus",
+    description: "The most capable model in the Claude 4.5 series",
     params: {
-      model: "claude-opus-4-1-20250805",
+      model: "claude-opus-4-5",
       contextLength: 200_000,
-      title: "Claude 4.1 Opus",
+      title: "Claude 4.5 Opus",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude35Haiku: {
-    title: "Claude 3.5 Haiku",
-    description:
-      "The fastest model in the Claude 3.5 series: a compact model for near-instant responsiveness",
+  claude41Opus: {
+    title: "Claude Opus 4.1",
+    description: "The most capable model in the Claude 4 series",
     params: {
-      model: "claude-3-5-haiku-latest",
+      model: "claude-opus-4-1-20250805",
       contextLength: 200_000,
-      title: "Claude 3.5 Haiku",
+      title: "Claude Opus 4.1",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
@@ -1575,20 +1704,7 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  asksageclaude35Sonnet: {
-    title: "Claude 3.5 Sonnet",
-    description:
-      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
-    params: {
-      model: "claude-35-sonnet",
-      contextLength: 200_000,
-      title: "Claude 3.5 Sonnet",
-      apiKey: "",
-    },
-    providerOptions: ["askSage"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
+
   asksageclaude37sonnet: {
     title: "Claude 3.7 Sonnet",
     description: "Anthropic's 3.7 model.",
@@ -1615,19 +1731,7 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  asksageclaude35gov: {
-    title: "Claude 3.5 Sonnet gov*",
-    description: "Anthropic's 3.5 Sonnet model.",
-    params: {
-      model: "aws-bedrock-claude-35-sonnet-gov",
-      contextLength: 200_000,
-      title: "Claude 3.5 Sonnet gov*",
-      apiKey: "",
-    },
-    providerOptions: ["askSage"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
+
   asksageclaude4s: {
     title: "Claude 4 Sonnet",
     description: "Anthropic's Claude 4 Sonnet",
@@ -1826,6 +1930,49 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
+  Qwen3Coder30BA3B: {
+    title: "Qwen 3 Coder 30B A3B",
+    description:
+      "Qwen3-Coder-30B-A3B-Instruct is Alibaba Cloud's advanced code-specialized LLM that excels in agentic coding tasks and supports extended context lengths for handling large code repositories.",
+    refUrl: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    params: {
+      title: "Qwen 3 Coder 30B A3B",
+      model: "qwen3-coder-30b-a3b",
+      contextLength: 262144,
+    },
+    icon: "qwen.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
+  Qwen25VL72B: {
+    title: "Qwen 2.5 VL 72B",
+    description:
+      "Qwen2.5-VL is a powerful vision-language model, designed for advanced image understanding. It can generate detailed image captions, analyze documents, OCR, detect objects, and answer questions based on visuals.",
+    refUrl: "https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct",
+    params: {
+      title: "Qwen 2.5 VL 72B",
+      model: "qwen2.5-vl-72b",
+      contextLength: 32768,
+    },
+    icon: "qwen.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
+  MistralSmall32: {
+    title: "Mistral Small 3.2 24B",
+    description:
+      "Building upon Mistral Small 3 (2501), Mistral Small 3.2 (2506) adds state-of-the-art vision understanding and enhances long context capabilities up to 128k tokens without compromising text performance.",
+    refUrl:
+      "https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+    params: {
+      title: "Mistral Small 3.2 24B",
+      model: "mistral-small-3.2-24b",
+      contextLength: 131072,
+    },
+    icon: "mistral.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
   grokCodeFast1: {
     title: "Grok Code Fast 1",
     description:
@@ -1860,6 +2007,34 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Grok 4 Fast Non-Reasoning",
       model: "grok-4-fast-non-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastReasoning: {
+    title: "Grok 4.1 Fast Reasoning",
+    description:
+      "xAI's upgraded reasoning model offering strong performance in complex tasks.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Reasoning",
+      model: "grok-4-1-fast-reasoning",
+      contextLength: 2_000_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
+  grok41FastNonReasoning: {
+    title: "Grok 4.1 Fast Non-Reasoning",
+    description:
+      "xAI's upgraded non-reasoning model optimized for speed and efficiency.",
+    refUrl: "https://docs.x.ai/docs/models/grok-4-1-fast-non-reasoning",
+    params: {
+      title: "Grok 4.1 Fast Non-Reasoning",
+      model: "grok-4-1-fast-non-reasoning",
       contextLength: 2_000_000,
     },
     icon: "xAI.png",
@@ -2117,11 +2292,11 @@ export const models: { [key: string]: ModelPackage } = {
     description: "Qwen 3 32B model from Alibaba",
     params: {
       title: "Qwen 3 32B",
-      model: "Qwen3-32B",
-      contextLength: 8192,
+      model: "qwen3-32b",
+      contextLength: 32768,
     },
     icon: "qwen.png",
-    providerOptions: ["sambanova"],
+    providerOptions: ["sambanova", "ovhcloud"],
     isOpenSource: true,
   },
   gptOss120b: {
@@ -2320,19 +2495,154 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cometapi.png",
     isOpenSource: false,
   },
-  cometapiClaude35HaikuLatest: {
-    title: "Claude 3.5 Haiku Latest",
+  cometapiClaude45Sonnet: {
+    title: "Claude 4.5 Sonnet Latest",
     description:
-      "Claude 3.5 Haiku Latest via CometAPI - fast and efficient model from Anthropic.",
+      "Claude 4.5 Sonnet Latest via CometAPI - Anthropic's smartest model for complex agents and coding.",
     params: {
-      model: "claude-3-5-haiku-latest",
+      model: "claude-sonnet-4-5-20250929",
       contextLength: 200_000,
-      title: "Claude 3.5 Haiku Latest",
+      title: "Claude 4.5 Sonnet Latest",
       apiKey: "",
     },
     providerOptions: ["cometapi"],
     icon: "cometapi.png",
     isOpenSource: false,
+  },
+  cometapiClaude45Haiku: {
+    title: "Claude 4.5 Haiku Latest",
+    description:
+      "Claude 4.5 Haiku Latest via CometAPI - Anthropic's fastest model with near-frontier intelligence.",
+    params: {
+      model: "claude-haiku-4-5-20251001",
+      contextLength: 200_000,
+      title: "Claude 4.5 Haiku Latest",
+      apiKey: "",
+    },
+    providerOptions: ["cometapi"],
+    icon: "cometapi.png",
+    isOpenSource: false,
+  },
+  asksageclaude35Sonnet: {
+    title: "Claude 3.5 Sonnet",
+    description:
+      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+    params: {
+      model: "claude-35-sonnet",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude35gov: {
+    title: "Claude 3.5 Sonnet gov*",
+    description: "Anthropic's 3.5 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-35-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45sonnetgov: {
+    title: "Claude 4.5 Sonnet gov*",
+    description: "Anthropic's 4.5 Sonnet model.",
+    params: {
+      model: "aws-bedrock-claude-45-sonnet-gov",
+      contextLength: 200_000,
+      title: "Claude 4.5 Sonnet gov*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45opus: {
+    title: "Claude 4.5 Opus*",
+    description: "Claude 4.5 Opus",
+    params: {
+      model: "google-claude-45-opus",
+      contextLength: 200_000,
+      title: "Claude 4.5 Opus*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksageclaude45haiku: {
+    title: "Claude 4.5 Haiku*",
+    description: "Claude 4.5 Haiku",
+    params: {
+      model: "google-claude-45-haiku",
+      contextLength: 200_000,
+      title: "Claude 4.5 Haiku*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  asksagegpt51: {
+    title: "GPT-5.1*",
+    description: "OpenAI's GPT-5.1 model",
+    params: {
+      model: "gpt-5.1",
+      contextLength: 400_000,
+      maxTokens: 200_000,
+      title: "GPT-5.1*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt52: {
+    title: "GPT-5.2*",
+    description: "OpenAI's GPT-5.2 model",
+    params: {
+      model: "gpt-5.2",
+      contextLength: 400_000,
+      maxTokens: 200_000,
+      title: "GPT-5.2*",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpt03mini: {
+    title: "GPT-o3-mini",
+    description: "Azure OpenAI GPT o3-mini model.",
+    params: {
+      model: "gpt-o3-mini",
+      contextLength: 200_000,
+      maxTokens: 100_000,
+      title: "GPT-o3-mini",
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegroqllama4scout: {
+    title: "Llama 4 Scout",
+    description: "Llama-4 Scout is a large language model customized by Groq.",
+    params: {
+      title: "Llama 4 Scout",
+      model: "groq-llama4-scout",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["askSage"],
+    icon: "groq.png",
+    isOpenSource: true,
   },
 
   // Gemini series models via CometAPI
@@ -2520,6 +2830,22 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["cometapi"],
     icon: "cometapi.png",
+    isOpenSource: false,
+  },
+
+  // Xiaomi Mimo models
+  mimoV2Flash: {
+    title: "mimo-v2-flash",
+    description: "Xiaomi's fast and efficient language model",
+    refUrl: "https://platform.xiaomimimo.com/",
+    params: {
+      title: "mimo-v2-flash",
+      model: "mimo-v2-flash",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["mimo"],
+    icon: "mimo.png",
     isOpenSource: false,
   },
 };

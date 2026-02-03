@@ -33,12 +33,12 @@ For all options, first:
   </Step>
 
 <Step title="Configure GitHub Token">
-  Add your `GITHUB_TOKEN` to your [Continue Mission Control agent's environment variables](https://hub.continue.dev/settings).
+  Add your `GITHUB_TOKEN` to your [Continue Mission Control agent's environment variables](https://continue.dev/settings).
   </Step>
 </Steps>
 
 <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://hub.continue.dev/settings/api-keys).
+  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys).
   For write actions (e.g., posting comments), your token must include the relevant GitHub scopes.
 </Warning>
 
@@ -54,7 +54,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
       <Step title="Install GitHub MCP via Continue Mission Control">
-        Visit the [GitHub Project Manager Agent](https://hub.continue.dev/continuedev/github-project-manager-agent) on Continue Mission Control and click **Install** to add it to your agent.
+        Visit the [GitHub Project Manager Agent](https://continue.dev/continuedev/github-project-manager-agent) on Continue Mission Control and click **Install** to add it to your agent.
 
         The listing provides a pre-configured MCP block; add your `GITHUB_TOKEN` in Hub.
       </Step>
@@ -76,13 +76,17 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="🛠️ Manual Setup">
     <Steps>
       <Step title="Create a New Agent on Continue Mission Control">
-        Go to the [Continue Mission Control](https://hub.continue.dev) and [create a new agent](https://hub.continue.dev/new?type=agent).
+        Go to the [Continue Mission Control](https://continue.dev) and [create a new agent](https://continue.dev/agents/new).
       </Step>
 
       <Step title="Add GitHub MCP">
         Install from Hub (recommended) or add YAML manually. Minimal YAML example:
 
         ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
         mcpServers:
           - name: GitHub MCP
             command: npx
@@ -238,7 +242,7 @@ Run headless commands on a schedule or in PRs to keep teams informed.
 
 Repository Settings → Secrets and variables → Actions:
 
-- `CONTINUE_API_KEY`: From [hub.continue.dev/settings/api-keys](https://hub.continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: From [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
 - `GITHUB_TOKEN`: A token with permissions to read issues/PRs and post comments
 
 ### Example Workflow
@@ -327,13 +331,13 @@ After completing this guide, you have a complete **AI-powered GitHub workflow sy
 ## Additional Resources
 
 <CardGroup cols={2}>
-  <Card title="GitHub MCP (Anthropic)" icon="link" href="https://hub.continue.dev/anthropic/github-mcp">
+  <Card title="GitHub MCP (Anthropic)" icon="link" href="https://continue.dev/anthropic/github-mcp">
     Anthropic GitHub MCP on Continue Mission Control
   </Card>
   <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
     How MCP works with Continue agents
   </Card>
-  <Card title="GitHub Project Manager Agent" icon="robot" href="https://hub.continue.dev/continuedev/github-project-manager-agent">
+  <Card title="GitHub Project Manager Agent" icon="robot" href="https://continue.dev/continuedev/github-project-manager-agent">
     Pre-configured agent on Continue Mission Control
   </Card>
   <Card title="GitHub MCP Server" icon="link" href="https://github.com/github/github-mcp-server/blob/main/README.md">

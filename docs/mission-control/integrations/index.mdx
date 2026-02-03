@@ -1,33 +1,55 @@
 ---
 title: "Overview"
-description: "Connect GitHub, Slack, and Sentry to power richer Agents, Tasks, and Workflows."
+description: "Connect GitHub, Slack, Sentry, Snyk, PostHog, Atlassian, and Netlify to power Cloud Agents to automate your development workflows."
 sidebarTitle: "Overview"
 ---
 
 <Info>
-Integrations let Continue connect to the tools you already use, so Agents can read code, open pull requests, send messages, react to real-world events, and more.
+Integrations let Continue connect to the tools you already use, so Cloud Agents can read code, open pull requests, send messages, react to real-world events, and more.
 </Info>
 
-Mission Control currently supports three first-class integrations:
+Mission Control currently supports these first-class Cloud Agent integrations:
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
 
   <Card title="GitHub" icon="github" href="/mission-control/integrations/github">
     Required for PR creation, repo access, diffs, and workflow triggers.
   </Card>
 
-  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack-agent">
+  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack">
     Mention @continue to kick off Agents directly from Slack.
   </Card>
 
-  <Card title="Sentry" icon="alert-triangle" href="/mission-control/integrations/sentry">
-    Trigger Agents automatically when new Sentry issues appear.
+  <Card title="Sentry" icon="bug" href="/mission-control/integrations/sentry">
+    Trigger Cloud Agents automatically when new Sentry issues appear.
   </Card>
 
+  <Card title="Snyk" icon="shield-check" href="/mission-control/integrations/snyk">
+    Detect and fix security vulnerabilities automatically.
+  </Card>
+
+  <Card title="PostHog" icon="chart-line" href="/mission-control/integrations/posthog">
+    Detect telemetry changes in merged PRs and creates or updates corresponding dashboards.  
+  </Card>
+
+  <Card title="Atlassian" icon="atlassian" href="/mission-control/integrations/atlassian">
+    Connect Jira and Confluence to automate project management and docs.
+  </Card>
+
+  <Card title="Netlify" icon="gauge-high" href="/mission-control/integrations/netlify">
+    Optimize site by comparing performance on PR preview and production Netlify deploys.
+  </Card>
+ <Card title="Sanity" icon="database" href="/mission-control/integrations/sanity">
+  Set up workflows that validate content and schemas on every PR.
+ </Card>
+ <Card title="Supabase" icon="server" href="/mission-control/integrations/supabase">
+  Monitor database performance, generate migrations, and optimize queries automatically.
+</Card>
 </CardGroup>
 
 
 ## Next Steps
 
-  <Card title="Try out an Integration" icon="laptop" href="https://hub.continue.dev/integrations">
+  <Card title="Try out an Integration" icon="laptop" href="https://continue.dev/integrations"> 
+    Connect your favorite tools to Mission Control and unlock new Agent capabilities.
   </Card>
