@@ -6,12 +6,12 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
-import { review } from "./commands/review.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
+import { review } from "./commands/review.js";
 import { serve } from "./commands/serve.js";
 import {
   handleValidationErrors,
