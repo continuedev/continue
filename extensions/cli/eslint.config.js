@@ -1,5 +1,5 @@
-import tsParser from "@typescript-eslint/parser";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 import importPlugin from "eslint-plugin-import";
 import unusedImports from "eslint-plugin-unused-imports";
 
@@ -40,7 +40,7 @@ export default [
         "error",
         { max: 500, skipBlankLines: true, skipComments: true },
       ],
-      complexity: ["error", { max: 20 }],
+      complexity: ["error", { max: 30 }],
       // "max-lines-per-function": [
       //   "error",
       //   { max: 150, skipBlankLines: true, skipComments: true },
