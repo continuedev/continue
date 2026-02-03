@@ -56,3 +56,47 @@ Instead of logs and latency, agent observability focuses on:
   </Card>
 
 </CardGroup>
+
+## Sharing Metrics
+
+Share your metrics with stakeholders, team members, or external collaborators using shareable snapshot links.
+
+### Creating a Share Link
+
+<Steps>
+  <Step title="Navigate to Metrics">
+    Go to [continue.dev/metrics](https://continue.dev/metrics) while logged in.
+  </Step>
+
+  <Step title="Click Share">
+    Click the **Share** button in the page header. This creates a point-in-time snapshot of your current metrics view.
+  </Step>
+
+  <Step title="Copy the Link">
+    The share URL is automatically copied to your clipboard. Share it with anyone who needs to see your metrics.
+  </Step>
+</Steps>
+
+### How Shared Metrics Work
+
+<AccordionGroup>
+  <Accordion title="Point-in-Time Snapshots">
+    When you create a share link, Continue captures a snapshot of your metrics data at that moment. The shared view displays:
+    - Summary stats (total runs, merge rate, active agents)
+    - Activity calendar showing run history
+    - Activity by agent chart
+    - Merge rate trend chart
+  </Accordion>
+
+  <Accordion title="No Authentication Required">
+    Anyone with the share link can view the metrics snapshot without logging in. This makes it easy to share with stakeholders who don't have Continue accounts.
+  </Accordion>
+
+  <Accordion title="Automatic Expiration">
+    Share links expire after 30 days by default. The expiration date is shown at the bottom of the shared view. After expiration, the link will no longer work.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Shared metrics are read-only snapshots. They don't update when your live metrics change—create a new share link to share updated data.
+</Note>
