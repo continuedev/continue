@@ -55,3 +55,4 @@ aiohttp==3.7.4
 jupyter==1.0.0
 gunicorn==20.1.0
 psycopg2==2.9.1
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
