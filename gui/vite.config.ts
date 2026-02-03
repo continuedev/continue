@@ -1,4 +1,3 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import react from "@vitejs/plugin-react-swc";
 import { resolve } from "path";
 import tailwindcss from "tailwindcss";
@@ -6,14 +5,7 @@ import { defineConfig } from "vitest/config";
 
 // Documentation unavailable in air-gapped mode
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    sentryVitePlugin({
-      org: "continue-xd",
-      project: "continue",
-    }),
-  ],
+  plugins: [react(), tailwindcss()],
   build: {
     sourcemap: true,
 
