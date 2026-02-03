@@ -1,3 +1,4 @@
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { ModelPackage } from "./models";
 
 interface OpenRouterModel {
@@ -8,29 +9,23 @@ interface OpenRouterModel {
   hugging_face_id: string;
 }
 
-/**
- * Convert OpenRouter model data to ModelPackage format
- */
 function convertOpenRouterModelToPackage(model: OpenRouterModel): ModelPackage {
-  // Extract provider name from id (e.g., "openai/gpt-5.1" -> "openai")
-  const [provider] = model.id.split("/");
-
   return {
     title: model.name,
     description: model.description,
     refUrl: `https://openrouter.ai/models/${model.id}`,
     params: {
+      title: model.name,
       model: model.id,
       contextLength: model.context_length,
     },
     isOpenSource: !!model.hugging_face_id,
-    tags: [provider as any],
+    tags: [ModelProviderTags.RequiresApiKey],
+    providerOptions: ["openrouter"],
+    icon: "openrouter.png",
   };
 }
 
-/**
- * Fetch OpenRouter models from the API
- */
 async function fetchOpenRouterModelsFromAPI(): Promise<OpenRouterModel[]> {
   const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/models";
 
