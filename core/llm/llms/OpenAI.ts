@@ -5,6 +5,12 @@ import {
 
 import { streamSse } from "@continuedev/fetch";
 import {
+  ResponseCreateParamsBase,
+  ResponseInputItem,
+  ResponseInputMessageContentList,
+  Tool as ResponsesTool,
+} from "openai/resources/responses/responses.mjs";
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -19,13 +25,6 @@ import {
   toChatBody,
   toResponsesInput,
 } from "../openaiTypeConverters.js";
-import {
-  ResponseInput,
-  ResponseInputItem,
-  ResponseInputMessageContentList,
-  ResponseCreateParamsBase,
-  Tool as ResponsesTool,
-} from "openai/resources/responses/responses.mjs";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -517,6 +516,9 @@ class OpenAI extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    throw new Error(
+      "organization must be verified to generate reasoning summaries openai",
+    );
     if (
       !isChatOnlyModel(options.model) &&
       this.supportsCompletions() &&

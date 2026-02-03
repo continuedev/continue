@@ -44,7 +44,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     providerName,
     apiKeyUrl,
     helpUrl,
-    hideGithubIssue,
+    hideIssueReporting,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
@@ -299,16 +299,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               }}
             >
               <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-              <span className="xs:flex hidden">View help documentation</span>
-            </GhostButton>
-            <GhostButton
-              className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
-              onClick={() => {
-                ideMessenger.post("openUrl", DISCORD_LINK);
-              }}
-            >
-              <DiscordIcon className="h-5 w-5" />
-              <span className="xs:flex hidden">Discord</span>
+              <span className="xs:flex hidden">Help/Docs</span>
             </GhostButton>
           </div>
         </div>
@@ -316,7 +307,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
         <div>
           <span className="text-base font-medium">Report this error</span>
           <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
-            {!hideGithubIssue && (
+            {!hideIssueReporting && (
               <GhostButton
                 className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
                 onClick={() => {
@@ -343,15 +334,17 @@ Please add any additional context about the error here
                 <span className="xs:flex hidden">Open GitHub issue</span>
               </GhostButton>
             )}
-            <GhostButton
-              className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
-              onClick={() => {
-                ideMessenger.post("openUrl", DISCORD_LINK);
-              }}
-            >
-              <DiscordIcon className="h-5 w-5" />
-              <span className="xs:flex hidden">Discord</span>
-            </GhostButton>
+            {!hideIssueReporting && (
+              <GhostButton
+                className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
+                onClick={() => {
+                  ideMessenger.post("openUrl", DISCORD_LINK);
+                }}
+              >
+                <DiscordIcon className="h-5 w-5" />
+                <span className="xs:flex hidden">Discord</span>
+              </GhostButton>
+            )}
           </div>
         </div>
       )}

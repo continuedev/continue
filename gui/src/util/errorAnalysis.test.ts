@@ -15,7 +15,7 @@ describe("errorAnalysis", () => {
           providerName: "the model provider",
           apiKeyUrl: undefined,
           helpUrl: undefined,
-          hideGithubIssue: undefined,
+          hideIssueReporting: undefined,
         });
       });
 
@@ -30,7 +30,7 @@ describe("errorAnalysis", () => {
           providerName: "the model provider",
           apiKeyUrl: undefined,
           helpUrl: undefined,
-          hideGithubIssue: undefined,
+          hideIssueReporting: undefined,
         });
       });
 
@@ -45,7 +45,7 @@ describe("errorAnalysis", () => {
           providerName: "the model provider",
           apiKeyUrl: undefined,
           helpUrl: undefined,
-          hideGithubIssue: undefined,
+          hideIssueReporting: undefined,
         });
       });
 
@@ -61,7 +61,7 @@ describe("errorAnalysis", () => {
           providerName: "the model provider",
           apiKeyUrl: undefined,
           helpUrl: undefined,
-          hideGithubIssue: undefined,
+          hideIssueReporting: undefined,
         });
       });
 
@@ -77,7 +77,7 @@ describe("errorAnalysis", () => {
           providerName: "the model provider",
           apiKeyUrl: undefined,
           helpUrl: undefined,
-          hideGithubIssue: undefined,
+          hideIssueReporting: undefined,
         });
       });
     });
@@ -554,7 +554,7 @@ describe("errorAnalysis", () => {
         expect(result.helpUrl).toBe(
           "https://help.openai.com/en/articles/10910291-api-organization-verification",
         );
-        expect(result.hideGithubIssue).toBe(true);
+        expect(result.hideIssueReporting).toBe(true);
         expect(result.providerName).toBe("OpenAI");
       });
 
@@ -567,19 +567,19 @@ describe("errorAnalysis", () => {
         expect(result.helpUrl).toBe(
           "https://help.openai.com/en/articles/10910291-api-organization-verification",
         );
-        expect(result.hideGithubIssue).toBe(true);
+        expect(result.hideIssueReporting).toBe(true);
       });
 
       it("should not match partial OpenAI verification error messages", () => {
         const error1 = new Error("Your organization must be verified");
         const result1 = analyzeError(error1, null);
         expect(result1.helpUrl).toBe(undefined);
-        expect(result1.hideGithubIssue).toBe(undefined);
+        expect(result1.hideIssueReporting).toBe(undefined);
 
         const error2 = new Error("OpenAI error occurred");
         const result2 = analyzeError(error2, null);
         expect(result2.helpUrl).toBe(undefined);
-        expect(result2.hideGithubIssue).toBe(undefined);
+        expect(result2.hideIssueReporting).toBe(undefined);
       });
     });
   });

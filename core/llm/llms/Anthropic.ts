@@ -405,6 +405,9 @@ class Anthropic extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    throw new Error(
+      "organization must be verified to generate reasoning summaries openai",
+    );
     if (!this.apiKey || this.apiKey === "") {
       throw new Error(
         "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
