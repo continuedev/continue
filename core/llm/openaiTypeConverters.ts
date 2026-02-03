@@ -774,8 +774,139 @@ function toResponseInputContentList(
   return list;
 }
 
+/** Result type for serializeThinkingMessage */
+type SerializeThinkingResult =
+  | { type: "item"; item: ResponseInputItem }
+  | { type: "skip" };
+
+/**
+ * Serialize a thinking message to a ResponseInputItem.
+ * @param msg - The thinking message to serialize
+ * @param nextMsgHasReference - Whether the next assistant message references this reasoning
+ * @returns The serialized item, a skip signal, or undefined if no details
+ */
+function serializeThinkingMessage(
+  msg: ThinkingChatMessage,
+  nextMsgHasReference: boolean,
+): SerializeThinkingResult | undefined {
+  const details = msg.reasoning_details ?? [];
+  if (!details.length) return undefined;
+
+  let id: string | undefined;
+  let summaryText = "";
+  let encrypted: string | undefined;
+  let reasoningText = "";
+
+  for (const raw of details as Array<Record<string, unknown>>) {
+    const d = raw as {
+      type?: string;
+      id?: string;
+      text?: string;
+      encrypted_content?: string;
+    };
+    if (d.type === "reasoning_id" && d.id) id = d.id;
+    else if (d.type === "encrypted_content" && d.encrypted_content)
+      encrypted = d.encrypted_content;
+    else if (d.type === "summary_text" && typeof d.text === "string")
+      summaryText += d.text;
+    else if (d.type === "reasoning_text" && typeof d.text === "string")
+      reasoningText += d.text;
+  }
+
+  if (id) {
+    // Only skip if: no encrypted_content AND next assistant message has a responsesOutputItemId.
+    // The responsesOutputItemId indicates the assistant expects its paired reasoning to be present,
+    // so omitting reasoning without encrypted_content would cause a 400 error.
+    if (!encrypted && nextMsgHasReference) {
+      return { type: "skip" };
+    }
+
+    const reasoningItem: ResponseReasoningItem = {
+      id,
+      type: "reasoning",
+      summary: [],
+    } as ResponseReasoningItem;
+    if (summaryText) {
+      reasoningItem.summary = [{ type: "summary_text", text: summaryText }];
+    }
+    if (reasoningText) {
+      reasoningItem.content = [{ type: "reasoning_text", text: reasoningText }];
+    }
+    if (encrypted) {
+      reasoningItem.encrypted_content = encrypted;
+    }
+
+    return { type: "item", item: reasoningItem as ResponseInputItem };
+  }
+  return undefined;
+}
+
+/** Result type for serializeAssistantMessage */
+type SerializeAssistantResult =
+  | { type: "item"; item: ResponseInputItem }
+  | { type: "fallback"; role: "assistant"; content: string };
+
+/**
+ * Serialize an assistant message to a ResponseInputItem.
+ * @param msg - The assistant message to serialize
+ * @param stripId - Whether to strip the responsesOutputItemId (when paired reasoning was skipped)
+ */
+function serializeAssistantMessage(
+  msg: ChatMessage,
+  stripId: boolean,
+): SerializeAssistantResult {
+  const text = getTextFromMessageContent(msg.content);
+  const originalRespId = msg.metadata?.responsesOutputItemId as
+    | string
+    | undefined;
+  const respId = stripId ? undefined : originalRespId;
+
+  const toolCalls = (msg as AssistantChatMessage).toolCalls as
+    | ToolCallDelta[]
+    | undefined;
+
+  if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+    const tc = toolCalls[0];
+    const name = tc?.function?.name as string | undefined;
+    const args = tc?.function?.arguments as string | undefined;
+    const call_id = tc?.id as string | undefined;
+
+    // ResponseFunctionToolCall has optional 'id' field
+    const functionCallItem: ResponseFunctionToolCall = {
+      type: "function_call",
+      name: name || "",
+      arguments: typeof args === "string" ? args : "{}",
+      call_id: call_id || respId || "",
+    };
+    if (respId) {
+      functionCallItem.id = respId;
+    }
+    return { type: "item", item: functionCallItem };
+  } else if (respId) {
+    // Emit full assistant output message item with ID
+    const outputMessageItem: ResponseOutputMessage = {
+      id: respId,
+      role: "assistant",
+      type: "message",
+      status: "completed",
+      content: [
+        {
+          type: "output_text",
+          text: text || "",
+          annotations: [],
+        } satisfies ResponseOutputText,
+      ],
+    };
+    return { type: "item", item: outputMessageItem };
+  } else {
+    // Fallback to EasyInput assistant message
+    return { type: "fallback", role: "assistant", content: text || "" };
+  }
+}
+
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
+  let stripNextAssistantId = false;
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -811,47 +942,13 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "assistant": {
-        const text = getTextFromMessageContent(msg.content);
-
-        const respId = msg.metadata?.responsesOutputItemId as
-          | string
-          | undefined;
-        const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
-
-        if (respId && Array.isArray(toolCalls) && toolCalls.length > 0) {
-          // Emit full function_call output item
-          const tc = toolCalls[0];
-          const name = tc?.function?.name as string | undefined;
-          const args = tc?.function?.arguments as string | undefined;
-          const call_id = tc?.id as string | undefined;
-          const functionCallItem: ResponseFunctionToolCall = {
-            id: respId,
-            type: "function_call",
-            name: name || "",
-            arguments: typeof args === "string" ? args : "{}",
-            call_id: call_id || respId,
-          };
-          input.push(functionCallItem);
-        } else if (respId) {
-          // Emit full assistant output message item
-          const outputMessageItem: ResponseOutputMessage = {
-            id: respId,
-            role: "assistant",
-            type: "message",
-            status: "completed",
-            content: [
-              {
-                type: "output_text",
-                text: text || "",
-                annotations: [],
-              } satisfies ResponseOutputText,
-            ],
-          };
-          input.push(outputMessageItem);
+        const result = serializeAssistantMessage(msg, stripNextAssistantId);
+        if (result.type === "item") {
+          input.push(result.item);
         } else {
-          // Fallback to EasyInput assistant message
-          pushMessage("assistant", text || "");
+          pushMessage(result.role, result.content);
         }
+        stripNextAssistantId = false;
         break;
       }
       case "tool": {
@@ -869,47 +966,22 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "thinking": {
-        const details = (msg as ThinkingChatMessage).reasoning_details ?? [];
-        if (details.length) {
-          let id: string | undefined;
-          let summaryText = "";
-          let encrypted: string | undefined;
-          let reasoningText = "";
-          for (const raw of details as Array<Record<string, unknown>>) {
-            const d = raw as {
-              type?: string;
-              id?: string;
-              text?: string;
-              encrypted_content?: string;
-            };
-            if (d.type === "reasoning_id" && d.id) id = d.id;
-            else if (d.type === "encrypted_content" && d.encrypted_content)
-              encrypted = d.encrypted_content;
-            else if (d.type === "summary_text" && typeof d.text === "string")
-              summaryText += d.text;
-            else if (d.type === "reasoning_text" && typeof d.text === "string")
-              reasoningText += d.text;
-          }
-          if (id) {
-            const reasoningItem: ResponseReasoningItem = {
-              id,
-              type: "reasoning",
-              summary: [],
-            } as ResponseReasoningItem;
-            if (summaryText) {
-              reasoningItem.summary = [
-                { type: "summary_text", text: summaryText },
-              ];
-            }
-            if (reasoningText) {
-              reasoningItem.content = [
-                { type: "reasoning_text", text: reasoningText },
-              ];
-            }
-            if (encrypted) {
-              reasoningItem.encrypted_content = encrypted;
-            }
-            input.push(reasoningItem as ResponseInputItem);
+        // Look ahead: check if next assistant message has a responsesOutputItemId reference
+        const nextMsg = messages[i + 1];
+        const nextMsgHasReference =
+          nextMsg?.role === "assistant" &&
+          nextMsg?.metadata?.responsesOutputItemId !== undefined;
+
+        const result = serializeThinkingMessage(
+          msg as ThinkingChatMessage,
+          nextMsgHasReference,
+        );
+        if (result) {
+          if (result.type === "skip") {
+            // Reasoning skipped; strip the ID from the next assistant message
+            stripNextAssistantId = true;
+          } else {
+            input.push(result.item);
           }
         }
         break;
