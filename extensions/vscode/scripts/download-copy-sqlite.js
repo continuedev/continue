@@ -56,7 +56,13 @@ async function downloadSqlite(target, targetDir) {
 async function installAndCopySqlite(target) {
   // Replace the installed with pre-built
   console.log("[info] Downloading pre-built sqlite3 binary");
-  rimrafSync("../../core/node_modules/sqlite3/build");
+  const existingBuild = "../../core/node_modules/sqlite3/build";
+  if (fs.existsSync(existingBuild)) {
+    console.log("[info] Using existing sqlite3 build directory");
+    return;
+  } else {
+    rimrafSync("../../core/node_modules/sqlite3/build");
+  }
   await downloadSqlite(target, "../../core/node_modules/sqlite3/build.tar.gz");
   execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
   fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
@@ -65,6 +71,10 @@ async function installAndCopySqlite(target) {
 async function installAndCopyEsbuild(target) {
   // Download and unzip esbuild
   console.log("[info] Downloading pre-built esbuild binary");
+  if (fs.existsSync("node_modules/@esbuild")) {
+    console.log("[info] Using existing @esbuild binaries");
+    return;
+  }
   rimrafSync("node_modules/@esbuild");
   fs.mkdirSync("node_modules/@esbuild", { recursive: true });
   await downloadFile(
