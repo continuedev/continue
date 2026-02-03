@@ -65,7 +65,7 @@ an enhancement are:
   - If not, [create an issue](https://github.com/continuedev/continue/issues)
   - Please describe the enhancement in as much detail as you can, and why it would be useful
 
-- Join the [Continue Discord](https://discord.gg/NWtdYexhMs) and tell us about your idea in the `#feedback` channel
+- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) and tell us about your idea
 
 ## 📖 Updating / Improving Documentation
 
@@ -233,7 +233,7 @@ When contributing, please update or create the appropriate tests to help verify 
 
 ### Getting Help
 
-Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
+Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) to engage with maintainers and other contributors.
 
 ## Contributing New LLM Providers/Models
 

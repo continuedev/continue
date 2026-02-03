@@ -15,6 +15,7 @@ export type ToolGroupPolicy = "include" | "exclude";
 export type ToolPolicies = { [toolName: string]: ToolPolicy };
 export type RulePolicies = { [ruleName: string]: RulePolicy };
 export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
+export type ReasoningSettings = { [modelTitle: string]: boolean };
 
 type UIState = {
   showDialog: boolean;
@@ -26,6 +27,7 @@ type UIState = {
   toolSettings: ToolPolicies;
   toolGroupSettings: ToolGroupPolicies;
   ruleSettings: RulePolicies;
+  reasoningSettings: ReasoningSettings;
   ttsActive: boolean;
 };
 
@@ -46,6 +48,7 @@ export const DEFAULT_UI_SLICE: UIState = {
     [BUILT_IN_GROUP_NAME]: "include",
   },
   ruleSettings: {},
+  reasoningSettings: {},
 };
 
 export const uiSlice = createSlice({
@@ -139,6 +142,13 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
+    setReasoningSetting: (
+      state,
+      action: PayloadAction<{ modelTitle: string; enabled: boolean }>,
+    ) => {
+      state.reasoningSettings[action.payload.modelTitle] =
+        action.payload.enabled;
+    },
   },
 });
 
@@ -155,6 +165,7 @@ export const {
   addRule,
   toggleRuleSetting,
   setTTSActive,
+  setReasoningSetting,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
