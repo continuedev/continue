@@ -12,6 +12,7 @@ import { pruneLastMessage } from "../compaction.js";
 import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
+import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
@@ -454,15 +455,17 @@ export async function streamChatResponse(
     chatHistory = refreshChatHistoryFromService(chatHistory, isCompacting);
     logger.debug("Starting conversation iteration");
 
-    logger.debug("debug1 streamChatResponse history", { chatHistory });
-
     // Get system message once per iteration (can change based on tool permissions mode)
     const systemMessage = await services.systemMessage.getSystemMessage(
       services.toolPermissions.getState().currentMode,
     );
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const tools = await getRequestTools(isHeadless);
+    const rawTools = await getRequestTools(isHeadless);
+    const tools = applyChatCompletionToolOverrides(
+      rawTools,
+      model.chatOptions?.toolOverrides,
+    );
 
     // Pre-API auto-compaction checkpoint (now includes tools)
     const preCompactionResult = await handlePreApiCompaction(chatHistory, {

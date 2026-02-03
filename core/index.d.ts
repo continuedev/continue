@@ -2,6 +2,7 @@ import {
   DataDestination,
   ModelRole,
   PromptTemplates,
+  ToolOverrideConfig,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
@@ -290,6 +291,7 @@ export interface BaseSessionMetadata {
   title: string;
   dateCreated: string;
   workspaceDirectory: string;
+  messageCount?: number;
 }
 
 export interface RangeInFile {
@@ -694,6 +696,9 @@ export interface LLMOptions {
 
   sourceFile?: string;
   isFromAutoDetect?: boolean;
+
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -840,6 +845,8 @@ export interface IDE {
   fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;
+
+  removeFile(path: string): Promise<void>;
 
   showVirtualFile(title: string, contents: string): Promise<void>;
 
@@ -1139,6 +1146,15 @@ export interface Tool {
   ) => ToolPolicy;
 }
 
+/**
+ * Configuration for overriding built-in tool prompts.
+ * Extends ToolOverrideConfig with required name for array usage.
+ */
+export type ToolOverride = ToolOverrideConfig & {
+  /** Tool name to override (matches function.name, e.g., "read_file") */
+  name: string;
+};
+
 interface ToolChoice {
   type: "function";
   function: {
@@ -1152,9 +1168,10 @@ export interface ConfigDependentToolParams {
   isSignedIn: boolean;
   isRemote: boolean;
   modelName: string | undefined;
+  ide: IDE;
 }
 
-export type GetTool = (params: ConfigDependentToolParams) => Tool;
+export type GetTool = (params: ConfigDependentToolParams) => Promise<Tool>;
 
 export interface BaseCompletionOptions {
   temperature?: number;
@@ -1893,6 +1910,15 @@ export interface RuleMetadata {
 }
 export interface RuleWithSource extends RuleMetadata {
   rule: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  path: string;
+  content: string;
+  files: string[];
+  license?: string;
 }
 
 export interface CompleteOnboardingPayload {

@@ -349,4 +349,101 @@ describe("MCPConnection", () => {
       }
     });
   });
+
+  describe("resolveCommandForPlatform", () => {
+    const baseOptions: InternalStdioMcpOptions = {
+      name: "test-mcp",
+      id: "test-id",
+      type: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-filesystem", "."],
+    };
+
+    it("should NOT wrap with cmd.exe when Windows host connects to WSL remote", async () => {
+      const mockIde = {
+        getIdeInfo: vi.fn().mockResolvedValue({ remoteName: "wsl" }),
+      } as any;
+
+      const conn = new MCPConnection(baseOptions, { ide: mockIde });
+
+      // Mock process.platform to be win32
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, "platform", { value: "win32" });
+
+      try {
+        const result = await (conn as any).resolveCommandForPlatform("npx", [
+          "-y",
+          "test",
+        ]);
+        // Should NOT wrap with cmd.exe when in WSL
+        expect(result.command).toBe("npx");
+        expect(result.args).toEqual(["-y", "test"]);
+      } finally {
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      }
+    });
+
+    it("should wrap with cmd.exe when Windows host is local (not WSL)", async () => {
+      const mockIde = {
+        getIdeInfo: vi.fn().mockResolvedValue({ remoteName: "" }),
+      } as any;
+
+      const conn = new MCPConnection(baseOptions, { ide: mockIde });
+
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, "platform", { value: "win32" });
+
+      try {
+        const result = await (conn as any).resolveCommandForPlatform("npx", [
+          "-y",
+          "test",
+        ]);
+        // Should wrap with cmd.exe for local Windows
+        expect(result.command).toBe("cmd.exe");
+        expect(result.args).toEqual(["/c", "npx", "-y", "test"]);
+      } finally {
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      }
+    });
+
+    it("should NOT wrap with cmd.exe on Linux regardless of batch command", async () => {
+      const conn = new MCPConnection(baseOptions);
+
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, "platform", { value: "linux" });
+
+      try {
+        const result = await (conn as any).resolveCommandForPlatform("npx", [
+          "-y",
+          "test",
+        ]);
+        expect(result.command).toBe("npx");
+        expect(result.args).toEqual(["-y", "test"]);
+      } finally {
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      }
+    });
+
+    it("should NOT wrap non-batch commands even on Windows", async () => {
+      const mockIde = {
+        getIdeInfo: vi.fn().mockResolvedValue({ remoteName: "" }),
+      } as any;
+
+      const conn = new MCPConnection(baseOptions, { ide: mockIde });
+
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, "platform", { value: "win32" });
+
+      try {
+        const result = await (conn as any).resolveCommandForPlatform("python", [
+          "script.py",
+        ]);
+        // python is not in WINDOWS_BATCH_COMMANDS, so no wrapping
+        expect(result.command).toBe("python");
+        expect(result.args).toEqual(["script.py"]);
+      } finally {
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      }
+    });
+  });
 });

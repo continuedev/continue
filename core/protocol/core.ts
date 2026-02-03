@@ -95,6 +95,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/addGlobalRule": [undefined | { baseFilename?: string }, void];
+  "config/deleteRule": [{ filepath: string }, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];

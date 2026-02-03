@@ -2,10 +2,6 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
-  "banner": {
-    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
-    "dismissable": true
-  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -20,18 +16,17 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index", "changelog"]
+            "pages": ["index", "overview"]
           },
           {
             "group": "Mission Control",
             "icon": "globe",
             "pages": [
-              "mission-control",
+              "mission-control/index",
               "mission-control/tasks",
               "mission-control/workflows",
               {
                 "group": "Integrations",
-                "icon": "plug",
                 "pages": [
                   "mission-control/integrations",
                   "mission-control/integrations/github",
@@ -48,7 +43,6 @@
               "mission-control/sharing",
               {
                 "group": "Governance",
-                "icon": "building",
                 "pages": [
                   "mission-control/governance/creating-an-org",
                   "mission-control/governance/org-permissions",
@@ -57,7 +51,6 @@
               },
               {
                 "group": "Secrets",
-                "icon": "key",
                 "pages": [
                   "mission-control/secrets/secret-types",
                   "mission-control/secrets/secret-resolution"
@@ -65,7 +58,6 @@
               },
               {
                 "group": "Configs",
-                "icon": "book",
                 "pages": [
                   "mission-control/configs/intro",
                   "mission-control/configs/use-a-config",
@@ -96,17 +88,32 @@
             ]
           },
           {
-            "group": "IDE Extensions",
-            "icon": "star",
+            "group": "Help",
+            "icon": "book-open",
             "expanded": false,
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+          }
+        ]
+      },
+      {
+        "tab": "IDE Extensions",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
             "pages": [
               "ide-extensions/install",
               "ide-extensions/quick-start",
-              "ide-extensions/settings",
+              "customize/overview"
+            ]
+          },
+          {
+            "group": "Features",
+            "expanded": false,
+            "icon": "star",
+            "pages": [
               {
                 "group": "Agent",
-                "expanded": false,
-                "icon": "robot",
                 "pages": [
                   "ide-extensions/agent/quick-start",
                   "ide-extensions/agent/how-it-works",
@@ -118,8 +125,6 @@
               },
               {
                 "group": "Chat",
-                "expanded": false,
-                "icon": "messages",
                 "pages": [
                   "ide-extensions/chat/quick-start",
                   "ide-extensions/chat/how-it-works",
@@ -130,9 +135,6 @@
               },
               {
                 "group": "Autocomplete",
-                "expanded": false,
-
-                "icon": "sparkles",
                 "pages": [
                   "ide-extensions/autocomplete/quick-start",
                   "ide-extensions/autocomplete/how-it-works",
@@ -144,9 +146,6 @@
               },
               {
                 "group": "Edit",
-                "expanded": false,
-
-                "icon": "pen-to-square",
                 "pages": [
                   "ide-extensions/edit/quick-start",
                   "ide-extensions/edit/how-it-works",
@@ -157,20 +156,10 @@
               }
             ]
           },
-
-          {
-            "group": "Help",
-            "icon": "book-open",
-            "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
-          }
-        ]
-      },
-      {
-        "tab": "Customize",
-        "groups": [
           {
             "group": "Customize",
+            "expanded": false,
+            "icon": "sliders",
             "pages": [
               "customize/overview",
               "customize/models",
@@ -179,7 +168,6 @@
               "customize/prompts",
               {
                 "group": "Model Providers",
-                "icon": "server",
                 "pages": [
                   "customize/model-providers/overview",
                   {
@@ -219,7 +207,6 @@
               },
               {
                 "group": "Model Roles",
-                "icon": "robot",
                 "pages": [
                   "customize/model-roles/00-intro",
                   "customize/model-roles/chat",
@@ -230,10 +217,8 @@
                   "customize/model-roles/reranking"
                 ]
               },
-
               {
                 "group": "Deep Dives",
-                "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
                   "customize/deep-dives/rules",
@@ -246,6 +231,20 @@
                 ]
               },
               "customize/telemetry"
+            ]
+          },
+          {
+            "group": "Reference",
+            "expanded": false,
+            "icon": "code",
+            "pages": [
+              "reference",
+              "reference/yaml-migration",
+              "reference/continue-mcp",
+              "reference/json-reference",
+              "reference/deprecated-context-providers",
+              "reference/deprecated-codebase",
+              "reference/deprecated-docs"
             ]
           }
         ]
@@ -260,6 +259,7 @@
           },
           {
             "group": "Cloud Agents",
+            "icon": "cloud",
             "pages": [
               "guides/cloud-agents/cloud-agents-taxonomy",
               "guides/cloud-agents/guide-to-cloud-agents",
@@ -272,6 +272,7 @@
           },
           {
             "group": "Guides",
+            "icon": "compass",
             "pages": [
               {
                 "group": "Understanding Continue",
@@ -289,7 +290,11 @@
               },
               {
                 "group": "CLI Guides",
-                "pages": ["guides/cli", "guides/doc-writing-agent-cli"]
+                "pages": [
+                  "guides/cli",
+                  "guides/run-agents-locally",
+                  "guides/doc-writing-agent-cli"
+                ]
               },
               {
                 "group": "Continuous AI Guides",
@@ -307,7 +312,6 @@
               },
               {
                 "group": "Cookbooks",
-                "icon": "book-open-cover",
                 "pages": [
                   "guides/posthog-github-continuous-ai",
                   "guides/continue-docs-mcp-cookbook",
@@ -326,24 +330,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Reference",
-        "groups": [
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "reference",
-              "reference/yaml-migration",
-              "reference/continue-mcp",
-              "reference/json-reference",
-              "reference/deprecated-context-providers",
-              "reference/deprecated-codebase",
-              "reference/deprecated-docs"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -354,17 +340,12 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Community",
-          "href": "https://discord.gg/NWtdYexhMs",
-          "icon": "discord"
-        },
-        {
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
         },
         {
-          "anchor": "Release Notes",
+          "anchor": "Changelog",
           "href": "https://changelog.continue.dev/",
           "icon": "bullhorn"
         }
@@ -385,7 +366,7 @@
     "links": [
       {
         "label": "🚀 Get Started",
-        "href": "https://hub.continue.dev/"
+        "href": "https://continue.dev/"
       }
     ],
     "primary": {
@@ -398,7 +379,6 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ",
       "youtube": "https://www.youtube.com/@continuedev"
     }
   },
@@ -423,6 +403,10 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/changelog",
+      "destination": "https://changelog.continue.dev"
+    },
     {
       "source": "/hub",
       "destination": "/mission-control"
@@ -537,7 +521,11 @@
     },
     {
       "source": "/customization/settings",
-      "destination": "/ide-extensions/settings"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/ide-extensions/settings",
+      "destination": "/customize/overview"
     },
     {
       "source": "/customize/tools",

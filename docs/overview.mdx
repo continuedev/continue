@@ -1,0 +1,155 @@
+---
+title: "Overview"
+description: "Run agents as CI checks on every PR"
+---
+
+<Frame>
+  <img src="/images/intro-0c302b9c15b890c251b1ad04586c880f.png" />
+</Frame>
+
+## Mission Control
+<Note>
+  Central dashboard for managing Agents, Tasks, Workflows, and Integrations.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Create a Task" icon="plus" href="/mission-control/tasks">
+    Prompt an agent to complete a one-off task.
+
+    <sub>• Run a one-time task or test for automation</sub><br />
+    <sub>• Monitor progress in the tasks tab</sub>
+  </Card>
+  <Card title="Create an Agent Workflow" icon="clock" href="/mission-control/workflows">
+    Schedule or trigger your agents automatically.
+
+    <sub>• Cron, Webhook, or GitHub-based triggers</sub><br />
+    <sub>• Ideal for daily audits or status checks</sub>
+  </Card>
+  <Card title="Clear Your Inbox Queue" icon="inbox" href="https://continue.dev/inbox">
+    Trigger your inbox agents to resolve opened PRs.
+
+    <sub>• Address review comments</sub><br />
+    <sub>• Fix CI test failures and resolve merge conflicts</sub>
+  </Card>
+</CardGroup>
+
+## Integrations
+<Note>
+  Connect Continue to your existing developer tools to automate the repetitive work you don't have time for.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="GitHub" icon="github" href="/mission-control/integrations/github">
+    Enable repository access for Agents to read and create PRs.
+  </Card>
+  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack">
+    Mention <code>@Continue</code> in Slack to trigger Agents and receive updates.
+  </Card>
+  <Card title="Sentry" icon="alert-triangle" href="/mission-control/integrations/sentry">
+    Automatically generate PRs to fix new issues from Sentry alerts.
+  </Card>
+  <Card title="Snyk" icon="shield-check" href="/mission-control/integrations/snyk">
+    Detect and fix security vulnerabilities automatically.
+  </Card>
+</CardGroup>
+
+You can go to [Mission Control Integrations](https://continue.dev/integrations) for the full list of tools you can connect, or for more information see [the docs page](https://docs.continue.dev/mission-control/integrations).
+
+
+## Continue CLI
+
+<Note>Terminal-native AI coding assistance with TUI and headless modes.</Note>
+
+<CodeGroup>
+
+    ```bash npm
+    npm i -g @continuedev/cli
+    ```
+
+    ```bash yarn
+    yarn global add @continuedev/cli
+    ```
+
+    ```bash pnpm
+    pnpm add -g @continuedev/cli
+    ```
+
+</CodeGroup>
+
+<CardGroup cols={2}>
+  <Card
+    title="TUI Mode"
+    icon="terminal"
+    href="/cli/overview#tui-mode%3A-interactive-development"
+  >
+    Interactive Terminal User Interface for development workflows
+
+    <sub>• Automate builds & refactoring</sub>
+    <br />
+    <sub>• Pre-commit hooks & scripted fixes</sub>
+    <br />
+    <sub>• Terminal-first development</sub>
+  </Card>
+  <Card
+    title="Headless Mode"
+    icon="server"
+    href="/cli/overview#headless-mode%3A-production-automation"
+  >
+    Automated AI coding for CI/CD and server environments
+
+    <sub>• Run in CI/CD pipelines</sub>
+    <br />
+    <sub>• Batch processing & bulk operations</sub>
+    <br />
+    <sub>• Server & container deployments</sub>
+  </Card>
+</CardGroup>
+
+## IDE Extensions
+
+<Note>
+  Optional IDE extensions for real-time code editing and assistance.
+</Note>
+
+Learn more about [extension features](https://docs.continue.dev/ide-extensions/quick-start) and how to [customize](https://docs.continue.dev/customize/overview) →
+
+<CardGroup cols={2}>
+  <Card
+    title="VS Code"
+    icon="code"
+    href="https://marketplace.visualstudio.com/items?itemName=Continue.continue"
+  >
+    Install from VS Code Marketplace
+    <sub>Real-time coding assistance and refactoring</sub>
+  </Card>
+  <Card
+    title="JetBrains"
+    icon="jet-fighter"
+    href="https://plugins.jetbrains.com/plugin/22707-continue-extension"
+  >
+    Install from JetBrains Plugin Repository
+    <sub>Community supported for autocomplete and multi-file edits</sub>
+  </Card>
+</CardGroup>
+
+## Resources
+
+<CardGroup cols={3}>
+  <Card title="Continue Mission Control" icon="globe" href="https://continue.dev/">
+    Create your agents, run tasks, add workflows and integrations
+  </Card>
+  <Card
+    title="GitHub Discussions"
+    icon="comments"
+    href="https://github.com/continuedev/continue/discussions"
+  >
+    Get help from the community
+  </Card>
+  <Card
+    title="Integrations"
+    icon="plug"
+    href="/mission-control/integrations"
+  >
+    Connect GitHub, Slack, Sentry, and Snyk to power your automations.
+  </Card>
+</CardGroup>

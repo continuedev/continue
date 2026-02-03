@@ -2,6 +2,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 
 // Export command functions
 export { chat } from "./chat.js";
+export { review } from "./review.js";
 export { login } from "./login.js";
 export { logout } from "./logout.js";
 export { listSessionsCommand } from "./ls.js";

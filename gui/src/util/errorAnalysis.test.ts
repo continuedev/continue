@@ -228,10 +228,10 @@ describe("errorAnalysis", () => {
     });
 
     describe("selectedModel handling", () => {
-      it("should use selectedModel title and provider", () => {
+      it("should use selectedModel title and underlyingProviderName", () => {
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai",
+          underlyingProviderName: "openai",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -246,7 +246,7 @@ describe("errorAnalysis", () => {
       it("should use selectedModel info when no matching provider is found", () => {
         const selectedModel = {
           title: "Custom Model",
-          provider: "unknown-provider",
+          underlyingProviderName: "unknown-provider",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -258,7 +258,7 @@ describe("errorAnalysis", () => {
 
       it("should handle selectedModel with missing title", () => {
         const selectedModel = {
-          provider: "openai",
+          underlyingProviderName: "openai",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -270,7 +270,7 @@ describe("errorAnalysis", () => {
         );
       });
 
-      it("should handle selectedModel with missing provider", () => {
+      it("should handle selectedModel with missing underlyingProviderName", () => {
         const selectedModel = {
           title: "Custom Model",
         };
@@ -297,7 +297,7 @@ describe("errorAnalysis", () => {
       it("should match Anthropic provider", () => {
         const selectedModel = {
           title: "Claude 3.5 Sonnet",
-          provider: "anthropic",
+          underlyingProviderName: "anthropic",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -311,7 +311,7 @@ describe("errorAnalysis", () => {
       it("should match Groq provider", () => {
         const selectedModel = {
           title: "Llama 3.1 70B",
-          provider: "groq",
+          underlyingProviderName: "groq",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -323,7 +323,7 @@ describe("errorAnalysis", () => {
       it("should match provider with no apiKeyUrl", () => {
         const selectedModel = {
           title: "Llama 3.1",
-          provider: "ollama",
+          underlyingProviderName: "ollama",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -335,7 +335,7 @@ describe("errorAnalysis", () => {
       it("should be case sensitive for provider matching", () => {
         const selectedModel = {
           title: "GPT-4",
-          provider: "OpenAI", // Different case
+          underlyingProviderName: "OpenAI", // Different case
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -352,7 +352,7 @@ describe("errorAnalysis", () => {
         );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai",
+          underlyingProviderName: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
@@ -382,7 +382,7 @@ describe("errorAnalysis", () => {
         );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai",
+          underlyingProviderName: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
@@ -486,7 +486,7 @@ describe("errorAnalysis", () => {
         );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai",
+          underlyingProviderName: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
@@ -502,7 +502,7 @@ describe("errorAnalysis", () => {
         );
         const selectedModel = {
           title: "Claude 3.5 Sonnet",
-          provider: "anthropic",
+          underlyingProviderName: "anthropic",
         };
         const result = analyzeError(error, selectedModel);
 
@@ -514,7 +514,7 @@ describe("errorAnalysis", () => {
         const error = new Error("Network request failed");
         const selectedModel = {
           title: "Local Model",
-          provider: "ollama",
+          underlyingProviderName: "ollama",
         };
         const result = analyzeError(error, selectedModel);
 

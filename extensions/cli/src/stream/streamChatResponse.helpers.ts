@@ -491,6 +491,10 @@ export async function executeStreamedToolCalls(
 }> {
   // Strategy: queue permissions (preserve order), then run approved tools in parallel.
   // If any permission is rejected, cancel the remaining tools in this batch.
+  //
+  // NOTE: parallelToolCallCount is passed to each tool so they can divide their
+  // output limits accordingly to avoid context overflow. Bash/Read do this for now
+  const parallelToolCallCount = preprocessedCalls.length;
 
   type IndexedCall = { index: number; call: PreprocessedToolCall };
   const indexedCalls: IndexedCall[] = preprocessedCalls.map((call, index) => ({
@@ -574,7 +578,10 @@ export async function executeStreamedToolCalls(
               name: call.name,
               arguments: call.arguments,
             });
-            const toolResult = await executeToolCall(call);
+
+            const toolResult = await executeToolCall(call, {
+              parallelToolCallCount,
+            });
             const entry: ToolResultWithStatus = {
               role: "tool",
               tool_call_id: call.id,

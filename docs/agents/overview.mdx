@@ -28,43 +28,58 @@ These execution modes allow Continue agents to function as cloud agents, running
 <Tabs>
   <Tab title="🌐 Mission Control">
     **Interactive web interface**
-    
+
     Trigger from the Continue Mission Control and review results in real-time.
-    
+
     ```bash
-    # Navigate to hub.continue.dev/agents
+    # Navigate to continue.dev/agents
     # Click "Run Agent" on any agent
     # Monitor progress and review outputs
     ```
-    
+
     Perfect for: Interactive debugging, reviewing agent outputs, team collaboration
   </Tab>
 
   <Tab title="💻 TUI Mode">
     **Interactive terminal mode**
-    
+
     Launch from terminal for live interaction and testing.
-    
+
     ```bash
     cn --agent my-org/github-pr-agent
     # Interactive chat interface opens
     # Type your specific request
     # Review and approve actions
     ```
-    
+
     Perfect for: Local development, testing prompts, quick one-off tasks
   </Tab>
 
   <Tab title="🤖 Headless Mode">
     **Automated execution**
-    
+
     Run one-off or scheduled tasks automatically without interaction.
-    
+
     ```bash
     cn -p --agent my-org/snyk-agent "Run weekly security scan"
     ```
-    
+
     Perfect for: CI/CD pipelines, scheduled tasks, webhook integrations
+  </Tab>
+
+  <Tab title="📁 Local Agents">
+    **Version-controlled agents in your repository**
+
+    Define agents in `.continue/agents/` and run them with the CLI or GitHub Actions.
+
+    ```bash
+    # Run a local agent file
+    cn --agent .continue/agents/my-agent.md
+    ```
+
+    Perfect for: Team-shared workflows, CI/CD automation, version-controlled agent definitions
+
+    [Learn more about local agents →](/guides/run-agents-locally)
   </Tab>
 </Tabs>
 
@@ -83,14 +98,14 @@ These execution modes allow Continue agents to function as cloud agents, running
 Skip the setup and use battle-tested agents from our cookbook collection:
 
 <CardGroup cols={2}>
-  <Card title="🔒 Security Scanning" icon="shield-check" href="https://hub.continue.dev/continuedev/snyk-continuous-ai-agent">
+  <Card title="🔒 Security Scanning" icon="shield-check" href="https://continue.dev/continuedev/snyk-continuous-ai-agent">
     
     `continuedev/snyk-continuous-ai-agent`
     
 A cloud agent that monitors vulnerabilities and automatically opens PRs with fixes.    
   </Card>
   
-  <Card title="🐛 GitHub Management" icon="github" href="https://hub.continue.dev/continuedev/github-project-manager-agent">
+  <Card title="🐛 GitHub Management" icon="github" href="https://continue.dev/continuedev/github-project-manager-agent">
     
     `continuedev/github-project-manager-agent`
     
@@ -98,7 +113,7 @@ A cloud agent that monitors vulnerabilities and automatically opens PRs with fix
     
   </Card>
   
-  <Card title="📊 Analytics Insights" icon="chart-bar" href="https://hub.continue.dev/continuedev/posthog-continuous-ai-agent">
+  <Card title="📊 Analytics Insights" icon="chart-bar" href="https://continue.dev/continuedev/posthog-continuous-ai-agent">
     
     `continuedev/posthog-continuous-ai-agent`
     
@@ -106,7 +121,7 @@ A cloud agent that monitors vulnerabilities and automatically opens PRs with fix
     
   </Card>
   
-  <Card title="⚡ Performance Optimization" icon="gauge-high" href="https://hub.continue.dev/continuedev/netlify-continuous-ai-agent">
+  <Card title="⚡ Performance Optimization" icon="gauge-high" href="https://continue.dev/continuedev/netlify-continuous-ai-agent">
     
     `continuedev/netlify-continuous-ai-agent`
     
@@ -114,7 +129,7 @@ A cloud agent that monitors vulnerabilities and automatically opens PRs with fix
     
   </Card>
   
-  <Card title="🗄️ Database Auditing" icon="database" href="https://hub.continue.dev/continuedev/supabase-agent">
+  <Card title="🗄️ Database Auditing" icon="database" href="https://continue.dev/continuedev/supabase-agent">
     
     `continuedev/supabase-agent`
     
@@ -122,7 +137,7 @@ A cloud agent that monitors vulnerabilities and automatically opens PRs with fix
     
   </Card>
   
-  <Card title="🔄 Data Pipelines" icon="arrows-rotate" href="https://hub.continue.dev/continuedev/dlt-agent">
+  <Card title="🔄 Data Pipelines" icon="arrows-rotate" href="https://continue.dev/continuedev/dlt-agent">
     
     `continuedev/dlt-agent`
     
@@ -234,16 +249,20 @@ The practice of using cloud agents, which we call Continuous AI, requires foreth
   <Card title="Create an Agent" icon="plus" href="/agents/create-and-edit">
     Build your first custom agent with prompts, rules, and tools
   </Card>
-  
+
+  <Card title="Run Agents Locally" icon="folder-open" href="/guides/run-agents-locally">
+    Set up version-controlled agents in your repository
+  </Card>
+
   <Card title="Explore Cookbooks" icon="book-open" href="/guides/overview#mcp-integration-cookbooks">
     Browse pre-built agents for security, analytics, and more
   </Card>
-  
+
   <Card title="CLI Guide" icon="terminal" href="/cli/overview">
     Learn to run agents from the command line
   </Card>
-  
-  <Card title="Mission Control" icon="desktop" href="https://hub.continue.dev/hub?type=agents">
+
+  <Card title="Mission Control" icon="desktop" href="https://continue.dev/agents">
     Access the web interface to manage agents
   </Card>
 </CardGroup>

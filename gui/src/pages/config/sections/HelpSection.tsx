@@ -181,10 +181,10 @@ export function HelpSection() {
             <div className="flex flex-col">
               <ConfigRow
                 title="Continue Hub"
-                description="Visit hub.continue.dev to explore custom agents and blocks"
+                description="Visit continue.dev to explore custom agents and blocks"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://hub.continue.dev/")
+                  ideMessenger.post("openUrl", "https://continue.dev/")
                 }
               />
 
@@ -211,10 +211,13 @@ export function HelpSection() {
 
               <ConfigRow
                 title="Join the community!"
-                description="Join us on Discord to stay up-to-date on the latest developments"
+                description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://discord.gg/vapESyrFmJ")
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://github.com/continuedev/continue/discussions",
+                  )
                 }
               />
             </div>

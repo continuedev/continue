@@ -10,7 +10,7 @@ It provides a battle-tested agent loop so you can simply plug in your model, rul
 
 ![cn](/images/cn-demo.gif)
 
-## Quick start
+## Quick Start
 
 <Info>
   Make sure you have [Node.js 18 or higher
@@ -62,7 +62,7 @@ Learn how to add custom models [here](/customize/overview). Then, you can use th
 
 ### How to Configure Rules
 
-`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from Mission Control. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
+`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from Mission Control. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://continue.dev/nate/spanish) to always speak in Spanish.
 
 ### How to Configure Tools
 
@@ -87,12 +87,12 @@ cn --exclude Fetch
 
 ## API Key Authentication
 
-For automation in CI or other headless environments, you can use an API key to authenticate with Continue. First, obtain your personal API key [here](https://hub.continue.dev/settings/api-keys). Then, set it as the `CONTINUE_API_KEY` environment variable. You can now use `cn -p` (headless mode) without needing to log in.
+For automation in CI or other headless environments, you can use an API key to authenticate with Continue. First, obtain your personal API key [here](https://continue.dev/settings/api-keys). Then, set it as the `CONTINUE_API_KEY` environment variable. You can now use `cn -p` (headless mode) without needing to log in.
 
-If you wish to run an automation on behalf of your organization you can obtain an organization-scoped API key by going to [your organization's settings](https://hub.continue.dev/settings/organizations) -> API Keys.
+If you wish to run an automation on behalf of your organization you can obtain an organization-scoped API key by going to [your organization's settings](https://continue.dev/settings/organizations) -> API Keys.
 
 ## Troubleshooting
 
 Run `cn` with the `--verbose` flag to see more detailed logs. These will be output to `~/.continue/logs/cn.log`.
 
-If you have feedback on the beta, please [share in our Discord](https://discord.com/invite/EfJEfdFnDQ) or [leave feedback in the GitHub discussion](https://github.com/continuedev/continue/discussions/7307).
+If you have feedback on the beta, please [leave feedback in the GitHub discussion](https://github.com/continuedev/continue/discussions/7307).

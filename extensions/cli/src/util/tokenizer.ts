@@ -5,12 +5,11 @@ import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
 import { logger } from "./logger.js";
 
-// Global auto-compact threshold (80% of context limit)
-// This is intentionally not configurable to ensure consistent behavior
-// across all usage scenarios. Change this value only for testing purposes.
-export const AUTO_COMPACT_THRESHOLD = 0.8;
+const DEFAULT_MAX_TOKENS_RATIO = 0.35;
+const MAX_MAX_TOKENS = 64_000;
+// Default context length when model config doesn't specify one
+export const DEFAULT_CONTEXT_LENGTH = 200_000;
 
-const DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION = 200_000;
 /**
  * Get the context length limit for a model
  * @param modelName The model name
@@ -18,17 +17,58 @@ const DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION = 200_000;
  */
 export function getModelContextLimit(model: ModelConfig): number {
   return (
-    model.defaultCompletionOptions?.contextLength ??
-    DEFAULT_CONTEXT_LENGTH_FOR_COMPACTION
+    model.defaultCompletionOptions?.contextLength ?? DEFAULT_CONTEXT_LENGTH
   );
+}
+
+export function getModelMaxTokens(model: ModelConfig): number {
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = model.defaultCompletionOptions?.maxTokens;
+
+  return maxTokens === undefined
+    ? Math.ceil(
+        Math.min(contextLimit * DEFAULT_MAX_TOKENS_RATIO, MAX_MAX_TOKENS),
+      )
+    : maxTokens;
+}
+
+// Importing a bunch of tokenizers can be very resource intensive (MB-scale per tokenizer)
+// Using token counting APIs (e.g. for anthropic) can be complicated and unreliable in many environments
+// So for now we will just use super fast gpt-tokenizer and apply safety buffers
+// I'm using rough estimates from this article to apply safety buffers to common tokenizers
+// which will have HIGHER token counts than gpt. Roughly using token ratio from article + 10%
+// https://medium.com/@disparate-ai/not-all-tokens-are-created-equal-7347d549af4d
+const ANTHROPIC_TOKEN_MULTIPLIER = 1.23;
+const GEMINI_TOKEN_MULTIPLIER = 1.18;
+const MISTRAL_TOKEN_MULTIPLIER = 1.26;
+
+function getAdjustedTokenCountFromModel(
+  baseTokens: number,
+  model: ModelConfig,
+) {
+  let multiplier = 1;
+  const modelName = model.model?.toLowerCase() ?? "";
+  if (modelName.includes("claude")) {
+    multiplier = ANTHROPIC_TOKEN_MULTIPLIER;
+  } else if (modelName.includes("gemini")) {
+    multiplier = GEMINI_TOKEN_MULTIPLIER;
+  } else if (modelName.includes("stral")) {
+    // devstral, mixtral, mistral, etc
+    multiplier = MISTRAL_TOKEN_MULTIPLIER;
+  }
+  return Math.ceil(baseTokens * multiplier);
 }
 
 /**
  * Count tokens in message content (string or multimodal array)
  */
-function countContentTokens(content: string | any[]): number {
+function countContentTokens(
+  content: string | any[],
+  model: ModelConfig,
+): number {
   if (typeof content === "string") {
-    return encode(content).length;
+    const count = encode(content).length;
+    return getAdjustedTokenCountFromModel(count, model);
   }
 
   if (Array.isArray(content)) {
@@ -41,7 +81,7 @@ function countContentTokens(content: string | any[]): number {
         tokenCount += 1024; // Rough estimate for image tokens
       }
     }
-    return tokenCount;
+    return getAdjustedTokenCountFromModel(tokenCount, model);
   }
 
   return 0;
@@ -91,6 +131,7 @@ function countToolOutputTokens(
  */
 export function countChatHistoryItemTokens(
   historyItem: ChatHistoryItem,
+  model: ModelConfig,
 ): number {
   try {
     let tokenCount = 0;
@@ -98,7 +139,7 @@ export function countChatHistoryItemTokens(
     const message = historyItem.message;
 
     // Count tokens in content
-    tokenCount += countContentTokens(message.content);
+    tokenCount += countContentTokens(message.content, model);
 
     // Add tokens for role (roughly 1-2 tokens)
     tokenCount += 2;
@@ -155,25 +196,18 @@ export function countChatHistoryItemTokens(
 }
 
 /**
- * Estimate the token count for a single message (legacy compatibility)
- * @param message The message to count tokens for
- * @returns The estimated token count
- * @deprecated Use countChatHistoryItemTokens instead
- */
-export function countMessageTokens(message: ChatHistoryItem): number {
-  return countChatHistoryItemTokens(message);
-}
-
-/**
  * Estimate the total token count for a chat history
  * @param chatHistory The chat history to count tokens for
  * @returns The estimated total token count
  */
-export function countChatHistoryTokens(chatHistory: ChatHistoryItem[]): number {
+export function countChatHistoryTokens(
+  chatHistory: ChatHistoryItem[],
+  model: ModelConfig,
+): number {
   let totalTokens = 0;
 
   for (const historyItem of chatHistory) {
-    totalTokens += countChatHistoryItemTokens(historyItem);
+    totalTokens += countChatHistoryItemTokens(historyItem, model);
   }
 
   // Add some overhead for message structure (roughly 3 tokens per message)
@@ -291,6 +325,7 @@ export function countToolDefinitionTokens(tools: ChatCompletionTool[]): number {
  */
 export interface TotalInputTokenParams {
   chatHistory: ChatHistoryItem[];
+  model: ModelConfig;
   systemMessage?: string;
   tools?: ChatCompletionTool[];
 }
@@ -304,7 +339,7 @@ export interface TotalInputTokenParams {
 export function countTotalInputTokens(params: TotalInputTokenParams): number {
   const { chatHistory, systemMessage, tools } = params;
 
-  let totalTokens = countChatHistoryTokens(chatHistory);
+  let totalTokens = countChatHistoryTokens(chatHistory, params.model);
 
   // Add system message tokens if provided and not already in history
   if (systemMessage) {
@@ -323,79 +358,6 @@ export function countTotalInputTokens(params: TotalInputTokenParams): number {
   }
 
   return totalTokens;
-}
-
-/**
- * Parameters for auto-compaction check
- */
-export interface AutoCompactParams {
-  chatHistory: ChatHistoryItem[];
-  model: ModelConfig;
-  systemMessage?: string;
-  tools?: ChatCompletionTool[];
-}
-
-/**
- * Check if the chat history exceeds the auto-compact threshold.
- * Accounts for system message and tool definitions in the calculation.
- * @param params Object containing chatHistory, model, optional systemMessage, and optional tools
- * @returns Whether auto-compacting should be triggered
- */
-export function shouldAutoCompact(params: AutoCompactParams): boolean {
-  const { chatHistory, model, systemMessage, tools } = params;
-
-  const inputTokens = countTotalInputTokens({
-    chatHistory,
-    systemMessage,
-    tools,
-  });
-  const contextLimit = getModelContextLimit(model);
-  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
-
-  // Calculate available space considering max_tokens reservation
-  // If maxTokens is not set, reserve 35% of context for output as a safe default
-  // (64k/200k with claude = 32%, round up to give a buffer)
-  const reservedForOutput =
-    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
-  const availableForInput = contextLimit - reservedForOutput;
-
-  // Ensure we have positive space available for input
-  if (availableForInput <= 0) {
-    throw new Error(
-      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
-    );
-  }
-
-  const usage = inputTokens / availableForInput;
-
-  const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
-  const systemTokens = systemMessage ? encode(systemMessage).length : 0;
-
-  logger.debug("Context usage check", {
-    inputTokens,
-    historyTokens: countChatHistoryTokens(chatHistory),
-    systemTokens,
-    toolTokens,
-    contextLimit,
-    maxTokens,
-    reservedForOutput,
-    availableForInput,
-    usage: `${Math.round(usage * 100)}%`,
-    threshold: `${Math.round(AUTO_COMPACT_THRESHOLD * 100)}%`,
-    shouldCompact: usage >= AUTO_COMPACT_THRESHOLD,
-  });
-
-  return usage >= AUTO_COMPACT_THRESHOLD;
-}
-
-/**
- * Get a descriptive message for auto-compaction that shows the context limit
- * @param model The model configuration
- * @returns A descriptive message explaining why compaction is needed
- */
-export function getAutoCompactMessage(model: ModelConfig): string {
-  const limit = getModelContextLimit(model);
-  return `Approaching context limit (${(limit / 1000).toFixed(0)}K tokens). Auto-compacting chat history...`;
 }
 
 /**
@@ -428,6 +390,7 @@ export function validateContextLength(params: ValidateContextLengthParams): {
     chatHistory,
     systemMessage,
     tools,
+    model,
   });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;

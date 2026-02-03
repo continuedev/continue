@@ -98,7 +98,24 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
     },
     icon: "openai.png",
-    providerOptions: ["vllm"],
+    dimensions: [
+      {
+        name: "Provider",
+        description: "The provider to use for this model",
+        options: {
+          vllm: {
+            model: "openai/gpt-oss-20b",
+            title: "gpt-oss-20b (vLLM)",
+          },
+          ovhcloud: {
+            model: "gpt-oss-20b",
+            title: "gpt-oss-20b (OVHcloud)",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["vllm", "ovhcloud"],
     isOpenSource: true,
   },
   gptOss120B: {
@@ -112,7 +129,24 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
     },
     icon: "openai.png",
-    providerOptions: ["vllm"],
+    dimensions: [
+      {
+        name: "Provider",
+        description: "The provider to use for this model",
+        options: {
+          vllm: {
+            model: "openai/gpt-oss-120b",
+            title: "gpt-oss-120b (vLLM)",
+          },
+          ovhcloud: {
+            model: "gpt-oss-120b",
+            title: "gpt-oss-120b (OVHcloud)",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["vllm", "ovhcloud"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -1896,6 +1930,49 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
+  Qwen3Coder30BA3B: {
+    title: "Qwen 3 Coder 30B A3B",
+    description:
+      "Qwen3-Coder-30B-A3B-Instruct is Alibaba Cloud's advanced code-specialized LLM that excels in agentic coding tasks and supports extended context lengths for handling large code repositories.",
+    refUrl: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    params: {
+      title: "Qwen 3 Coder 30B A3B",
+      model: "qwen3-coder-30b-a3b",
+      contextLength: 262144,
+    },
+    icon: "qwen.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
+  Qwen25VL72B: {
+    title: "Qwen 2.5 VL 72B",
+    description:
+      "Qwen2.5-VL is a powerful vision-language model, designed for advanced image understanding. It can generate detailed image captions, analyze documents, OCR, detect objects, and answer questions based on visuals.",
+    refUrl: "https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct",
+    params: {
+      title: "Qwen 2.5 VL 72B",
+      model: "qwen2.5-vl-72b",
+      contextLength: 32768,
+    },
+    icon: "qwen.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
+  MistralSmall32: {
+    title: "Mistral Small 3.2 24B",
+    description:
+      "Building upon Mistral Small 3 (2501), Mistral Small 3.2 (2506) adds state-of-the-art vision understanding and enhances long context capabilities up to 128k tokens without compromising text performance.",
+    refUrl:
+      "https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+    params: {
+      title: "Mistral Small 3.2 24B",
+      model: "mistral-small-3.2-24b",
+      contextLength: 131072,
+    },
+    icon: "mistral.png",
+    providerOptions: ["ovhcloud"],
+    isOpenSource: true,
+  },
   grokCodeFast1: {
     title: "Grok Code Fast 1",
     description:
@@ -2215,11 +2292,11 @@ export const models: { [key: string]: ModelPackage } = {
     description: "Qwen 3 32B model from Alibaba",
     params: {
       title: "Qwen 3 32B",
-      model: "Qwen3-32B",
-      contextLength: 8192,
+      model: "qwen3-32b",
+      contextLength: 32768,
     },
     icon: "qwen.png",
-    providerOptions: ["sambanova"],
+    providerOptions: ["sambanova", "ovhcloud"],
     isOpenSource: true,
   },
   gptOss120b: {
