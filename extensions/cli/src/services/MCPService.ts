@@ -1,16 +1,6 @@
-import { Agent as HttpsAgent } from "https";
-
 import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import {
-  HttpMcpServer,
-  SseMcpServer,
-  StdioMcpServer,
-} from "node_modules/@continuedev/config-yaml/dist/schemas/mcp/index.js";
 
 import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
 
@@ -19,6 +9,11 @@ import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import {
+  constructHttpTransport,
+  constructSseTransport,
+  constructStdioTransport,
+} from "./mcpTransports.js";
 import { isAuthError } from "./mcpUtils.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -474,7 +469,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     if ("command" in serverConfig) {
       // STDIO: no need to check type, just if command is present
-      const transport = this.constructStdioTransport(serverConfig, connection);
+      const transport = constructStdioTransport(serverConfig, connection);
       await client.connect(transport, {});
     } else {
       // SSE/HTTP: if type isn't explicit: try http and fall back to sse
@@ -483,21 +478,22 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
           if (serverConfig.apiKey && !this.apiKeyCache.get(serverConfig.name)) {
             this.apiKeyCache.set(serverConfig.name, serverConfig.apiKey);
           }
+          const apiKey = this.apiKeyCache.get(serverConfig.name);
           if (serverConfig.type === "sse") {
-            const transport = this.constructSseTransport(serverConfig);
+            const transport = constructSseTransport(serverConfig, apiKey);
             await client.connect(transport, {});
           } else if (serverConfig.type === "streamable-http") {
-            const transport = this.constructHttpTransport(serverConfig);
+            const transport = constructHttpTransport(serverConfig, apiKey);
             await client.connect(transport, {});
           } else {
             try {
-              const transport = this.constructHttpTransport(serverConfig);
+              const transport = constructHttpTransport(serverConfig, apiKey);
               await client.connect(transport, {});
             } catch (e) {
               if (isAuthError(e)) {
                 throw e;
               }
-              const transport = this.constructSseTransport(serverConfig);
+              const transport = constructSseTransport(serverConfig, apiKey);
               await client.connect(transport, {});
             }
           }
@@ -527,7 +523,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
             );
           }
 
-          const transport = this.constructStdioTransport(
+          const transport = constructStdioTransport(
             {
               name: serverConfig.name,
               command: "npx",
@@ -543,96 +539,5 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     }
 
     return client;
-  }
-
-  private constructSseTransport(
-    serverConfig: SseMcpServer,
-  ): SSEClientTransport {
-    const apiKey = this.apiKeyCache.get(serverConfig.name);
-    const sseAgent =
-      serverConfig.requestOptions?.verifySsl === false
-        ? new HttpsAgent({ rejectUnauthorized: false })
-        : undefined;
-
-    const headers = {
-      ...serverConfig.requestOptions?.headers,
-      ...(apiKey && {
-        Authorization: `Bearer ${apiKey}`,
-      }),
-    };
-
-    return new SSEClientTransport(new URL(serverConfig.url), {
-      eventSourceInit: {
-        fetch: (input, init) =>
-          fetch(input, {
-            ...init,
-            headers: {
-              ...init?.headers,
-              ...headers,
-            },
-            ...(sseAgent && { agent: sseAgent }),
-          }),
-      },
-      requestInit: {
-        headers,
-        ...(sseAgent && { agent: sseAgent }),
-      },
-    });
-  }
-  private constructHttpTransport(
-    serverConfig: HttpMcpServer,
-  ): StreamableHTTPClientTransport {
-    const apiKey = this.apiKeyCache.get(serverConfig.name);
-    const streamableAgent =
-      serverConfig.requestOptions?.verifySsl === false
-        ? new HttpsAgent({ rejectUnauthorized: false })
-        : undefined;
-
-    const headers = {
-      ...serverConfig.requestOptions?.headers,
-      ...(apiKey && {
-        Authorization: `Bearer ${apiKey}`,
-      }),
-    };
-
-    return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
-      requestInit: {
-        headers,
-        ...(streamableAgent && { agent: streamableAgent }),
-      },
-    });
-  }
-  private constructStdioTransport(
-    serverConfig: StdioMcpServer,
-    connection: ServerConnection,
-  ): StdioClientTransport {
-    const env: Record<string, string> = serverConfig.env || {};
-    if (process.env) {
-      for (const [key, value] of Object.entries(process.env)) {
-        if (!(key in env) && !!value) {
-          env[key] = value;
-        }
-      }
-    }
-
-    const transport = new StdioClientTransport({
-      command: serverConfig.command,
-      args: serverConfig.args || [],
-      env,
-      cwd: serverConfig.cwd,
-      stderr: "pipe",
-    });
-
-    const stderrStream = transport.stderr;
-    if (stderrStream) {
-      stderrStream.on("data", (data: Buffer) => {
-        const stderrOutput = data.toString().trim();
-        if (stderrOutput) {
-          connection.warnings.push(stderrOutput);
-        }
-      });
-    }
-
-    return transport;
   }
 }
