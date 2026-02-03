@@ -57,12 +57,7 @@ async function fetchOpenRouterModelsFromAPI(): Promise<OpenRouterModel[]> {
   }
 }
 
-/**
- * Generate ModelPackage objects from OpenRouter models API
- */
-async function generateOpenRouterModels(): Promise<{
-  [key: string]: ModelPackage;
-}> {
+export async function getOpenRouterModelsList(): Promise<ModelPackage[]> {
   const models: { [key: string]: ModelPackage } = {};
 
   const apiModels = await fetchOpenRouterModelsFromAPI();
@@ -83,23 +78,5 @@ async function generateOpenRouterModels(): Promise<{
     }
   });
 
-  return models;
-}
-
-/**
- * Export a function to fetch all OpenRouter models
- * This returns a promise since we're now fetching from the API
- */
-export async function getOpenRouterModels(): Promise<{
-  [key: string]: ModelPackage;
-}> {
-  return generateOpenRouterModels();
-}
-
-/**
- * Export a function to get OpenRouter models as an array
- */
-export async function getOpenRouterModelsList(): Promise<ModelPackage[]> {
-  const models = await getOpenRouterModels();
   return Object.values(models);
 }
