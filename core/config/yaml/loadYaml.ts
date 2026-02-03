@@ -258,9 +258,30 @@ export async function configYamlToContinueConfig(options: {
           continueConfig.slashCommands?.push(slashCommand);
         }
       } catch (e) {
+        // If the file is in a rules directory, we can provide a more helpful error message
+        // because we know it's likely a rule definition
+        const isRuleFile =
+          file.path.toLowerCase().includes("/rules/") ||
+          file.path.toLowerCase().includes("\\rules\\");
+
+        let message = `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`;
+
+        if (isRuleFile) {
+          const isYamlError =
+            e instanceof Error &&
+            (e.name?.includes("YAML") || e.message.includes("flow sequence"));
+
+          const prefix = isYamlError
+            ? "Failed to parse rule definition"
+            : "Failed to process rule definition";
+
+          const errorDetails = e instanceof Error ? e.message : String(e);
+          message = `${prefix} ${file.path}: ${errorDetails}`;
+        }
+
         localErrors.push({
           fatal: false,
-          message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
+          message,
         });
       }
     });
