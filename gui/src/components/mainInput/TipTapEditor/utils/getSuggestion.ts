@@ -226,10 +226,12 @@ export function getSlashCommandDropdownOptions(
 
     if (query.length === 0 && commandItems.length === 0) {
       commandItems.push({
-        title: "Explore prompts",
+        title: "Create a prompt",
         type: "action",
         action: () =>
-          ideMessenger.post("openUrl", "https://continue.dev/explore/prompts"),
+          ideMessenger.request("config/addLocalWorkspaceBlock", {
+            blockType: "prompts",
+          }),
         description: "",
         name: "",
         id: "",
