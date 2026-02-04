@@ -55,7 +55,11 @@ import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/ut
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import {
+  getLocalStorage,
+  InputDraftWithPosition,
+  setLocalStorage,
+} from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -119,12 +123,13 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
-  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const sessionId = useAppSelector((state) => state.session.id);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const allSessionMetadata = useAppSelector(
@@ -134,12 +139,37 @@ export function Chat() {
     (state) => state.ui.hasDismissedExploreDialog,
   );
   const mode = useAppSelector((state) => state.session.mode);
-  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
 
   useAutoScroll(stepsDivRef, history);
+
+  useEffect(() => {
+    const historyKey = isInEdit ? "edit" : "chat";
+    const savedDraft = getLocalStorage(`editingDraft_${historyKey}`) as
+      | InputDraftWithPosition
+      | undefined;
+    if (savedDraft && savedDraft.messageId && stepsDivRef.current) {
+      timerRef.current = setTimeout(() => {
+        // scroll to and focus on the message being edited
+        requestAnimationFrame(() => {
+          if (stepsDivRef.current && savedDraft.scrollTop !== undefined) {
+            stepsDivRef.current.scrollTop = savedDraft.scrollTop;
+          }
+          const editorElement = document.querySelector(
+            `[data-testid="editor-input-${savedDraft.messageId}"]`,
+          ) as HTMLElement;
+          if (editorElement) {
+            editorElement.focus();
+          }
+        });
+      }, 100);
+    }
+    return () => {
+      clearTimeout(timerRef.current);
+    };
+  }, [sessionId, isInEdit]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -337,6 +367,13 @@ export function Chat() {
         latestSummaryIndex !== -1 && index < latestSummaryIndex;
 
       if (message.role === "user") {
+        const historyKey = isInEdit ? "edit" : "chat";
+        const savedDraft = getLocalStorage(`editingDraft_${historyKey}`) as
+          | InputDraftWithPosition
+          | undefined;
+        const draftContent =
+          savedDraft?.messageId === message.id ? savedDraft.content : undefined;
+
         return (
           <ContinueInputBox
             onEnter={(editorState, modifiers) =>
@@ -344,7 +381,7 @@ export function Chat() {
             }
             isLastUserInput={isLastUserInput(index)}
             isMainInput={false}
-            editorState={editorState ?? item.message.content}
+            editorState={draftContent ?? editorState ?? item.message.content}
             contextItems={contextItems}
             appliedRules={appliedRules}
             inputId={message.id}

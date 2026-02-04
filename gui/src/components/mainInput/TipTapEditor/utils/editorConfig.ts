@@ -401,13 +401,29 @@ export function createEditorConfig(options: {
         : undefined),
     editable: !isStreaming || props.isMainInput,
     onUpdate: ({ editor }) => {
+      const content = editor.getJSON();
       if (props.isMainInput) {
-        const content = editor.getJSON();
         if (hasValidEditorContent(content)) {
           setLocalStorage(`inputDraft_${props.historyKey}`, content);
+          localStorage.removeItem(`editingDraft_${props.historyKey}`);
         } else {
           // clear draft if content is empty
           localStorage.removeItem(`inputDraft_${props.historyKey}`);
+        }
+      } else {
+        if (hasValidEditorContent(content)) {
+          const scrollContainer = document.querySelector(
+            '[class*="overflow-y-scroll"]',
+          );
+          const scrollTop = scrollContainer?.scrollTop ?? 0;
+          setLocalStorage(`editingDraft_${props.historyKey}`, {
+            content,
+            messageId: props.inputId,
+            scrollTop,
+          });
+          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+        } else {
+          localStorage.removeItem(`editingDraft_${props.historyKey}`);
         }
       }
     },
@@ -428,10 +444,12 @@ export function createEditorConfig(options: {
       return;
     }
 
+    // clear draft from localStorage after successful submission
     if (props.isMainInput) {
       addRef.current(json);
-      // clear draft from localStorage after successful submission
       localStorage.removeItem(`inputDraft_${props.historyKey}`);
+    } else {
+      localStorage.removeItem(`editingDraft_${props.historyKey}`);
     }
 
     props.onEnter(json, modifiers, editor);
