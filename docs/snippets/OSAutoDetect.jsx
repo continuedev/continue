@@ -1,6 +1,7 @@
-// Auto-selects the Windows tab if the user is on Windows
+// Auto-selects the appropriate tab based on the user's OS
 // Import with: import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
 // Usage: <OSAutoDetect /> at the top of a page with OS-specific tabs
+// Tab order: 0 = macOS/Linux, 1 = Windows, 2 = npm (default)
 
 export const OSAutoDetect = () => {
   return (
@@ -11,7 +12,14 @@ export const OSAutoDetect = () => {
             window.addEventListener('load', function() {
               const ua = navigator.userAgent.toLowerCase();
               const isWindows = ua.includes('win');
-              const tabIndex = isWindows ? 1 : 0;
+              const isMac = ua.includes('mac');
+              // macOS/Linux (0), Windows (1), npm (2 - default)
+              let tabIndex = 2;
+              if (isMac) {
+                tabIndex = 0;
+              } else if (isWindows) {
+                tabIndex = 1;
+              }
               const tabButtons = document.querySelectorAll('[role="tablist"] button');
               if (tabButtons && tabButtons[tabIndex]) {
                 tabButtons[tabIndex].click();
