@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import fs from "fs";
 
 import {
   evaluateTerminalCommandSecurity,
@@ -21,6 +22,28 @@ import { Tool, ToolRunContext } from "./types.js";
 const DEFAULT_BASH_MAX_CHARS = 50000; // ~12.5k tokens
 const DEFAULT_BASH_MAX_LINES = 1000;
 
+/**
+ * When running on Windows, but inside WSL, shell commands need to run using the WSL environment.
+ */
+export function isRunningInWsl(): boolean {
+  // WSL only applies when platform reports as Linux
+  if (process.platform !== "linux") {
+    return false;
+  }
+
+  if (process.env.WSL_DISTRO_NAME) {
+    return true;
+  }
+
+  // Check /proc/version for Microsoft/WSL indicators
+  try {
+    const procVersion = fs.readFileSync("/proc/version", "utf8").toLowerCase();
+    return procVersion.includes("microsoft") || procVersion.includes("wsl");
+  } catch {
+    return false;
+  }
+}
+
 function getBashMaxChars(): number {
   return parseEnvNumber(
     process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
@@ -35,7 +58,7 @@ function getBashMaxLines(): number {
   );
 }
 
-// Helper function to use login shell on Unix/macOS and PowerShell on Windows
+// Helper function to use login shell on Unix/macOS and PowerShell on Windows and available shell in WSL
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
@@ -43,11 +66,20 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
       shell: "powershell.exe",
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
-  } else {
-    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
-    const userShell = process.env.SHELL || "/bin/bash";
-    return { shell: userShell, args: ["-l", "-c", command] };
   }
+
+  if (isRunningInWsl()) {
+    // in WSL, bash is always available
+    const wslShell = process.env.SHELL || "/bin/bash";
+    return {
+      shell: wslShell,
+      args: ["-l", "-c", command],
+    };
+  }
+
+  // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+  const userShell = process.env.SHELL || "/bin/bash";
+  return { shell: userShell, args: ["-l", "-c", command] };
 }
 
 export const runTerminalCommandTool: Tool = {

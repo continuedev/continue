@@ -740,6 +740,21 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
+  // Check for unresolved input template variables (missing required inputs)
+  const unresolvedInputs = getTemplateVariables(templatedYaml).filter((v) =>
+    v.startsWith("inputs."),
+  );
+  if (unresolvedInputs.length > 0) {
+    const missingInputNames = unresolvedInputs.map((v) =>
+      v.replace("inputs.", ""),
+    );
+    const blockName = packageIdentifierToShorthandSlug(id);
+    throw new Error(
+      `Missing required input(s) for block "${blockName}": ${missingInputNames.join(", ")}. ` +
+        `Please provide these values in the "with" block.`,
+    );
+  }
+
   // Add source slug for mcp servers
   const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
   if (

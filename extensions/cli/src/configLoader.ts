@@ -377,7 +377,9 @@ async function loadDefaultConfig(
   });
 
   if (!resp.configResult.config) {
-    throw new Error("Failed to load default agent.");
+    throw new Error(
+      `Failed to load default agent. Body:\n${JSON.stringify(resp)}`,
+    );
   }
   let apiConfig = resp.configResult.config as AssistantUnrolled;
   if (injectBlocks.length > 0) {

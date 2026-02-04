@@ -3,6 +3,7 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { getOpenRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -39,6 +40,39 @@ const completionParamsInputsConfigs = Object.values(completionParamsInputs);
 const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
+
+// Initialize OpenRouter models placeholder with a loading placeholder
+const OPENROUTER_LOADING_PLACEHOLDER: ModelPackage = {
+  title: "Loading models...",
+  description: "Fetching available models from OpenRouter",
+  params: {
+    model: "placeholder",
+    contextLength: 0,
+  },
+  isOpenSource: false,
+};
+
+let openRouterModelsList: ModelPackage[] = [OPENROUTER_LOADING_PLACEHOLDER];
+
+/**
+ * Initialize OpenRouter models by fetching from the API
+ * This should be called once when the component mounts
+ */
+export async function initializeOpenRouterModels() {
+  try {
+    const models = await getOpenRouterModelsList();
+    if (models.length > 0) {
+      openRouterModelsList = models;
+      // Update the providers object with the fetched models
+      if (providers.openrouter) {
+        providers.openrouter.packages = openRouterModelsList;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to initialize OpenRouter models:", error);
+    // Keep placeholder on error so the UI doesn't break
+  }
+}
 
 export const apiBaseInput: InputDescriptor = {
   inputType: "text",
@@ -178,6 +212,29 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  openrouter: {
+    title: "OpenRouter",
+    provider: "openrouter",
+    description:
+      "OpenRouter provides access to a variety of LLMs including open-source and proprietary models.",
+    longDescription: `To get started with OpenRouter, sign up for an account at [openrouter.ai](https://openrouter.ai/) and obtain your API key from the dashboard.`,
+    icon: "openrouter.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "openrouter",
+    apiKeyUrl: "https://openrouter.ai/settings/keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OpenRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: openRouterModelsList,
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",
@@ -254,6 +311,12 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.mistralOs,
       models.mistralNemo,
       models.Qwen25Coder32b,
+      models.Qwen3Coder30BA3B,
+      models.Qwen25VL72B,
+      models.qwen332B,
+      models.MistralSmall32,
+      models.gptOss20B,
+      models.gptOss120B,
       models.deepseekR1DistillLlama70B,
     ],
     apiKeyUrl: "https://endpoints.ai.cloud.ovh.net/",
@@ -1160,5 +1223,37 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
+  },
+  nous: {
+    title: "Nous Research",
+    provider: "nous",
+    refPage: "nous",
+    description:
+      "Nous Research provides Hermes models via an OpenAI-compatible API with advanced reasoning capabilities.",
+    longDescription:
+      "Nous Research offers Hermes models including Hermes 3 and Hermes 4 with strong instruction following and reasoning. Get an API key at [portal.nousresearch.com](https://portal.nousresearch.com).",
+    icon: "nous.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "https://inference-api.nousresearch.com/v1",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nous Research API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.hermes43_36b,
+      models.hermes4_70b,
+      models.hermes4_405b,
+      models.hermes3Llama31_70b,
+      models.hermes3Llama31_405b,
+    ],
+    apiKeyUrl: "https://portal.nousresearch.com",
   },
 };

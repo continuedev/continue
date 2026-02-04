@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.3.29",
+  "version": "1.3.30",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -730,7 +730,7 @@
   "dependencies": {
     "@continuedev/config-types": "file:../../packages/config-types",
     "@continuedev/fetch": "file:../../packages/fetch",
-    "@electron/rebuild": "^3.2.10",
+    "@electron/rebuild": "^3.7.2",
     "@reduxjs/toolkit": "^1.9.3",
     "@vscode/ripgrep": "^1.15.9",
     "axios": "^1.13.1",
@@ -767,7 +767,7 @@
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "svg-builder": "^2.0.0",
-    "systeminformation": "^5.27.14",
+    "systeminformation": "^5.30.0",
     "tailwindcss": "^3.3.2",
     "undici": "^6.21.3",
     "uuid": "^9.0.1",
@@ -775,7 +775,7 @@
     "vectordb": "0.4.20",
     "vitest": "^3.1.4",
     "vscode-languageclient": "^8.0.2",
-    "ws": "^8.13.0",
+    "ws": "^8.19.0",
     "yarn": "^1.22.21"
   },
   "overrides": {

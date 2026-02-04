@@ -60,11 +60,22 @@ export function hasValidEditorContent(json: JSONContent): boolean {
     (c) => c.type === PromptBlock.name || c.type === CodeBlock.name,
   );
 
-  // Check for text content
-  const hasTextContent = json.content?.some((c) => c.content);
+  // Check for non-whitespace text content
+  const hasNonWhitespaceText = json.content?.some((c) =>
+    c.content?.some((child) => {
+      if (child.type === "text" && child.text) {
+        return child.text.trim().length > 0;
+      }
+      // Mentions and other non-text nodes are valid content
+      if (child.type === "mention") {
+        return true;
+      }
+      return false;
+    }),
+  );
 
-  // Content is valid if it has either text or special blocks
-  return hasTextContent || hasPromptOrCodeBlock || false;
+  // Content is valid if it has either non-whitespace text or special blocks
+  return hasNonWhitespaceText || hasPromptOrCodeBlock || false;
 }
 
 /**
