@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-export interface CheckResult {
+export interface ReviewResult {
   /** Agent slug or local path */
   agent: string;
   /** Display name */
@@ -25,10 +25,10 @@ export interface RenderOptions {
 }
 
 /**
- * Render the check results report.
+ * Render the review results report.
  */
 export function renderReport(
-  results: CheckResult[],
+  results: ReviewResult[],
   options: RenderOptions,
 ): string {
   if (options.format === "json") {
@@ -38,7 +38,7 @@ export function renderReport(
 }
 
 function renderJsonReport(
-  results: CheckResult[],
+  results: ReviewResult[],
   _options: RenderOptions,
 ): string {
   const passed = results.filter((r) => r.status === "pass").length;
@@ -47,7 +47,7 @@ function renderJsonReport(
 
   return JSON.stringify(
     {
-      checks: results.map((r) => ({
+      reviews: results.map((r) => ({
         agent: r.agent,
         name: r.name,
         status: r.status,
@@ -69,29 +69,21 @@ function renderJsonReport(
 }
 
 function renderTextReport(
-  results: CheckResult[],
+  results: ReviewResult[],
   options: RenderOptions,
 ): string {
   const isTTY = process.stdout.isTTY;
   const lines: string[] = [];
 
-  lines.push(isTTY ? chalk.bold("# Check Results") : "# Check Results");
-  lines.push("");
-  lines.push(
-    `Checked against \`${options.baseBranch}...HEAD\` (${options.changedFileCount} files changed)`,
+  const failedResults = results.filter(
+    (r) => r.status === "fail" || r.status === "error",
   );
-  lines.push("");
 
-  for (const result of results) {
+  // Only output details for failures/errors — passes are already in the table
+  for (const result of failedResults) {
     const durationStr = `(${result.duration.toFixed(1)}s)`;
 
-    if (result.status === "pass") {
-      const header = isTTY
-        ? chalk.green(`## ✓ ${result.name}`) + " " + chalk.dim(durationStr)
-        : `## ✓ ${result.name} ${durationStr}`;
-      lines.push(header);
-      lines.push("No issues found.");
-    } else if (result.status === "error") {
+    if (result.status === "error") {
       const header = isTTY
         ? chalk.red(`## ✗ ${result.name}`) + " " + chalk.dim(durationStr)
         : `## ✗ ${result.name} ${durationStr}`;
@@ -120,28 +112,19 @@ function renderTextReport(
     lines.push("");
   }
 
-  // Summary
-  lines.push("---");
-  const failed = results.filter(
-    (r) => r.status === "fail" || r.status === "error",
-  ).length;
-  const total = results.length;
-
-  if (failed === 0) {
-    const summary = `**All ${total} checks passed.**`;
-    lines.push(isTTY ? chalk.green(summary) : summary);
-  } else {
-    const summary = `**${failed} of ${total} checks failed.**`;
+  if (failedResults.length > 0) {
+    lines.push("---");
+    const summary = `**${failedResults.length} of ${results.length} reviews failed.**`;
     lines.push(isTTY ? chalk.red(summary) : summary);
+    lines.push("");
   }
 
   // Migration nudge
-  lines.push("");
   if (options.checksFromHub) {
     lines.push(
       isTTY
-        ? chalk.dim("These checks also run on your PRs via Continue CI.")
-        : "These checks also run on your PRs via Continue CI.",
+        ? chalk.dim("These reviews also run on your PRs via Continue CI.")
+        : "These reviews also run on your PRs via Continue CI.",
     );
   } else {
     lines.push(

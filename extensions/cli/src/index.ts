@@ -6,12 +6,12 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
-import { check } from "./commands/check.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
+import { review } from "./commands/review.js";
 import { serve } from "./commands/serve.js";
 import {
   handleValidationErrors,
@@ -420,20 +420,20 @@ program
     await remoteTest(prompt, options.url);
   });
 
-// Check subcommand
+// Review subcommand
 program
-  .command("check")
-  .description("Run AI-powered checks on your changes")
+  .command("review")
+  .description("Run AI-powered reviews on your changes")
   .option("--base <ref>", "Base git ref to diff against (default: auto-detect)")
   .option("--format <format>", "Output format")
   .option("--fix", "Automatically apply suggested fixes")
   .option("--patch", "Show patches")
   .option("--fail-fast", "Stop on first failure")
-  .option("--check-agents <agents...>", "Specific check agents to run")
+  .option("--review-agents <agents...>", "Specific review agents to run")
   .option("--verbose", "Enable verbose logging")
   .action(async (options) => {
-    await posthogService.capture("cliCommand", { command: "check" });
-    await check(options);
+    await posthogService.capture("cliCommand", { command: "review" });
+    await review(options);
   });
 
 // Handle unknown commands
@@ -444,10 +444,12 @@ program.on("command:*", () => {
 });
 
 export async function runCli(): Promise<void> {
-  // Handle internal worker subprocess for cn check
-  if (process.argv.includes("--internal-check-worker")) {
-    const { runCheckWorker } = await import("./commands/check/checkWorker.js");
-    await runCheckWorker();
+  // Handle internal worker subprocess for cn review
+  if (process.argv.includes("--internal-review-worker")) {
+    const { runReviewWorker } = await import(
+      "./commands/review/reviewWorker.js"
+    );
+    await runReviewWorker();
     return;
   }
 

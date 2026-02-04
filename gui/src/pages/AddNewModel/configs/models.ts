@@ -37,6 +37,76 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  hermes3Llama31_405b: {
+    title: "Hermes 3 Llama 3.1 405B",
+    description:
+      "Nous Research's Hermes 3, a powerful instruction-tuned model built on Llama 3.1 405B with strong reasoning and tool use capabilities.",
+    refUrl: "https://nousresearch.com/hermes3",
+    params: {
+      title: "Hermes 3 Llama 3.1 405B",
+      model: "Hermes-3-Llama-3.1-405B",
+      contextLength: 32_000,
+    },
+    icon: "nous.png",
+    providerOptions: ["nous"],
+    isOpenSource: true,
+  },
+  hermes3Llama31_70b: {
+    title: "Hermes 3 Llama 3.1 70B",
+    description:
+      "Nous Research's Hermes 3, built on Llama 3.1 70B with strong instruction following and reasoning.",
+    refUrl: "https://nousresearch.com/hermes3",
+    params: {
+      title: "Hermes 3 Llama 3.1 70B",
+      model: "Hermes-3-Llama-3.1-70B",
+      contextLength: 32_000,
+    },
+    icon: "nous.png",
+    providerOptions: ["nous"],
+    isOpenSource: true,
+  },
+  hermes4_405b: {
+    title: "Hermes 4 405B",
+    description:
+      "Nous Research's Hermes 4, featuring enhanced reasoning with thinking tags for chain-of-thought.",
+    refUrl: "https://nousresearch.com",
+    params: {
+      title: "Hermes 4 405B",
+      model: "Hermes-4-405B",
+      contextLength: 128_000,
+    },
+    icon: "nous.png",
+    providerOptions: ["nous"],
+    isOpenSource: true,
+  },
+  hermes4_70b: {
+    title: "Hermes 4 70B",
+    description:
+      "Nous Research's Hermes 4 70B with reasoning capabilities and 128k context.",
+    refUrl: "https://nousresearch.com",
+    params: {
+      title: "Hermes 4 70B",
+      model: "Hermes-4-70B",
+      contextLength: 128_000,
+    },
+    icon: "nous.png",
+    providerOptions: ["nous"],
+    isOpenSource: true,
+  },
+  hermes43_36b: {
+    title: "Hermes 4.3 36B",
+    description:
+      "Nous Research's Hermes 4.3 36B, a compact reasoning model with 128k context.",
+    refUrl: "https://nousresearch.com",
+    params: {
+      title: "Hermes 4.3 36B",
+      model: "Hermes-4.3-36B",
+      contextLength: 128_000,
+    },
+    icon: "nous.png",
+    providerOptions: ["nous"],
+    isOpenSource: true,
+  },
   deepseekV3Chat: {
     title: "deepseek v3",
     description: "A model from deekseek for chat",

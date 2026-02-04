@@ -70,6 +70,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "groq",
   "gemini",
   "docker",
+  "nous",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -363,6 +364,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   if (lower.includes("deepseek")) {
     return "deepseek";
+  }
+
+  if (lower.includes("hermes")) {
+    return "chatml";
   }
 
   if (lower.includes("ninja") || lower.includes("openchat")) {

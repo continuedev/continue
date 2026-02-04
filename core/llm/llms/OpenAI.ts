@@ -5,6 +5,12 @@ import {
 
 import { streamSse } from "@continuedev/fetch";
 import {
+  ResponseCreateParamsBase,
+  ResponseInputItem,
+  ResponseInputMessageContentList,
+  Tool as ResponsesTool,
+} from "openai/resources/responses/responses.mjs";
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -19,13 +25,6 @@ import {
   toChatBody,
   toResponsesInput,
 } from "../openaiTypeConverters.js";
-import {
-  ResponseInput,
-  ResponseInputItem,
-  ResponseInputMessageContentList,
-  ResponseCreateParamsBase,
-  Tool as ResponsesTool,
-} from "openai/resources/responses/responses.mjs";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -279,6 +278,7 @@ class OpenAI extends BaseLLM {
     const finalOptions = toChatBody(messages, options, {
       includeReasoningField: this.supportsReasoningField,
       includeReasoningDetailsField: this.supportsReasoningDetailsField,
+      includeReasoningContentField: this.supportsReasoningContentField,
     });
 
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());

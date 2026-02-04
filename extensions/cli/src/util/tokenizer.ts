@@ -1,5 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import type { ChatHistoryItem } from "core/index.js";
+import { getAdjustedTokenCountFromModel } from "core/llm/getAdjustedTokenCount.js";
 import { encode } from "gpt-tokenizer";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
@@ -32,33 +33,6 @@ export function getModelMaxTokens(model: ModelConfig): number {
     : maxTokens;
 }
 
-// Importing a bunch of tokenizers can be very resource intensive (MB-scale per tokenizer)
-// Using token counting APIs (e.g. for anthropic) can be complicated and unreliable in many environments
-// So for now we will just use super fast gpt-tokenizer and apply safety buffers
-// I'm using rough estimates from this article to apply safety buffers to common tokenizers
-// which will have HIGHER token counts than gpt. Roughly using token ratio from article + 10%
-// https://medium.com/@disparate-ai/not-all-tokens-are-created-equal-7347d549af4d
-const ANTHROPIC_TOKEN_MULTIPLIER = 1.23;
-const GEMINI_TOKEN_MULTIPLIER = 1.18;
-const MISTRAL_TOKEN_MULTIPLIER = 1.26;
-
-function getAdjustedTokenCountFromModel(
-  baseTokens: number,
-  model: ModelConfig,
-) {
-  let multiplier = 1;
-  const modelName = model.model?.toLowerCase() ?? "";
-  if (modelName.includes("claude")) {
-    multiplier = ANTHROPIC_TOKEN_MULTIPLIER;
-  } else if (modelName.includes("gemini")) {
-    multiplier = GEMINI_TOKEN_MULTIPLIER;
-  } else if (modelName.includes("stral")) {
-    // devstral, mixtral, mistral, etc
-    multiplier = MISTRAL_TOKEN_MULTIPLIER;
-  }
-  return Math.ceil(baseTokens * multiplier);
-}
-
 /**
  * Count tokens in message content (string or multimodal array)
  */
@@ -68,7 +42,7 @@ function countContentTokens(
 ): number {
   if (typeof content === "string") {
     const count = encode(content).length;
-    return getAdjustedTokenCountFromModel(count, model);
+    return getAdjustedTokenCountFromModel(count, model.model ?? "");
   }
 
   if (Array.isArray(content)) {
@@ -81,7 +55,7 @@ function countContentTokens(
         tokenCount += 1024; // Rough estimate for image tokens
       }
     }
-    return getAdjustedTokenCountFromModel(tokenCount, model);
+    return getAdjustedTokenCountFromModel(tokenCount, model.model ?? "");
   }
 
   return 0;

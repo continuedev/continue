@@ -183,7 +183,6 @@ function useChatHandlers(
   };
 }
 
-// eslint-disable-next-line complexity
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
   configPath,
