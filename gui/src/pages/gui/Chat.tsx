@@ -508,6 +508,9 @@ export function Chat() {
           onEnter={(editorState, modifiers, editor) =>
             sendInput(editorState, modifiers, undefined, editor)
           }
+          editorState={getLocalStorage(
+            `inputDraft_${isInEdit ? "edit" : "chat"}`,
+          )}
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 

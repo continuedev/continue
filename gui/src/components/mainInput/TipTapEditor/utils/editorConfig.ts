@@ -22,10 +22,7 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import {
-  getLocalStorage,
-  setLocalStorage,
-} from "../../../../util/localStorage";
+import { setLocalStorage } from "../../../../util/localStorage";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -394,11 +391,7 @@ export function createEditorConfig(options: {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content:
-      props.editorState ??
-      (props.isMainInput
-        ? getLocalStorage(`inputDraft_${props.historyKey}`)
-        : undefined),
+    content: props.editorState,
     editable: !isStreaming || props.isMainInput,
     onUpdate: ({ editor }) => {
       const content = editor.getJSON();
