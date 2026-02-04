@@ -1,9 +1,9 @@
 import {
   AssistantUnrolled,
+  AssistantUnrolledNonNullable,
   BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
-  isAssistantUnrolledNonNullable,
   mergeConfigYamlRequestOptions,
   mergeUnrolledAssistants,
   ModelRole,
@@ -145,8 +145,8 @@ async function loadConfigYaml(options: {
     }
   }
 
-  if (config && isAssistantUnrolledNonNullable(config)) {
-    errors.push(...validateConfigYaml(config));
+  if (config) {
+    errors.push(...validateConfigYaml(nonNullifyConfigYaml(config)));
   }
 
   if (errors?.some((error) => error.fatal)) {
@@ -165,15 +165,30 @@ async function loadConfigYaml(options: {
   };
 }
 
+function nonNullifyConfigYaml(
+  unrolledAssistant: AssistantUnrolled,
+): AssistantUnrolledNonNullable {
+  return {
+    ...unrolledAssistant,
+    data: unrolledAssistant.data?.filter((k) => !!k),
+    context: unrolledAssistant.context?.filter((k) => !!k),
+    docs: unrolledAssistant.docs?.filter((k) => !!k),
+    mcpServers: unrolledAssistant.mcpServers?.filter((k) => !!k),
+    models: unrolledAssistant.models?.filter((k) => !!k),
+    prompts: unrolledAssistant.prompts?.filter((k) => !!k),
+    rules: unrolledAssistant.rules?.filter((k) => !!k).map((k) => k!),
+  };
+}
+
 export async function configYamlToContinueConfig(options: {
-  config: AssistantUnrolled;
+  unrolledAssistant: AssistantUnrolled;
   ide: IDE;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
   workOsAccessToken: string | undefined;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  let { config, ide, ideInfo, uniqueId, llmLogger } = options;
+  let { unrolledAssistant, ide, ideInfo, uniqueId, llmLogger } = options;
 
   const localErrors: ConfigValidationError[] = [];
 
@@ -203,22 +218,10 @@ export async function configYamlToContinueConfig(options: {
       subagent: null,
     },
     rules: [],
-    requestOptions: { ...config.requestOptions },
+    requestOptions: { ...unrolledAssistant.requestOptions },
   };
 
-  // Right now, if there are any missing packages in the config, then we will just throw an error
-  if (!isAssistantUnrolledNonNullable(config)) {
-    return {
-      config: continueConfig,
-      errors: [
-        {
-          message:
-            "Failed to load config due to missing blocks, see which blocks are missing below",
-          fatal: true,
-        },
-      ],
-    };
-  }
+  const config = nonNullifyConfigYaml(unrolledAssistant);
 
   for (const rule of config.rules ?? []) {
     const convertedRule = convertYamlRuleToContinueRule(rule);
@@ -255,9 +258,30 @@ export async function configYamlToContinueConfig(options: {
           continueConfig.slashCommands?.push(slashCommand);
         }
       } catch (e) {
+        // If the file is in a rules directory, we can provide a more helpful error message
+        // because we know it's likely a rule definition
+        const isRuleFile =
+          file.path.toLowerCase().includes("/rules/") ||
+          file.path.toLowerCase().includes("\\rules\\");
+
+        let message = `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`;
+
+        if (isRuleFile) {
+          const isYamlError =
+            e instanceof Error &&
+            (e.name?.includes("YAML") || e.message.includes("flow sequence"));
+
+          const prefix = isYamlError
+            ? "Failed to parse rule definition"
+            : "Failed to process rule definition";
+
+          const errorDetails = e instanceof Error ? e.message : String(e);
+          message = `${prefix} ${file.path}: ${errorDetails}`;
+        }
+
         localErrors.push({
           fatal: false,
-          message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
+          message,
         });
       }
     });
@@ -447,7 +471,7 @@ export async function loadContinueConfigFromYaml(options: {
 
   const { config: continueConfig, errors: localErrors } =
     await configYamlToContinueConfig({
-      config: configYamlResult.config,
+      unrolledAssistant: configYamlResult.config,
       ide,
       ideInfo,
       uniqueId,

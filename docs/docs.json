@@ -198,6 +198,7 @@
                       "customize/model-providers/more/llamastack",
                       "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
+                      "customize/model-providers/more/nous",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/together",
                       "customize/model-providers/more/xAI"

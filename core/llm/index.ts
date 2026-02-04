@@ -93,6 +93,7 @@ export abstract class BaseLLM implements ILLM {
   // Provider capabilities (overridable by subclasses)
   protected supportsReasoningField: boolean = false;
   protected supportsReasoningDetailsField: boolean = false;
+  protected supportsReasoningContentField: boolean = false;
 
   get providerName(): string {
     return (this.constructor as typeof BaseLLM).providerName;
@@ -1209,6 +1210,7 @@ export abstract class BaseLLM implements ILLM {
           let body = toChatBody(messages, completionOptions, {
             includeReasoningField: this.supportsReasoningField,
             includeReasoningDetailsField: this.supportsReasoningDetailsField,
+            includeReasoningContentField: this.supportsReasoningContentField,
           });
           body = this.modifyChatBody(body);
 

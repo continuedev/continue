@@ -43,6 +43,7 @@ import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Nous from "./Nous";
 import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
@@ -114,6 +115,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Nous,
   Venice,
   VertexAI,
   xAI,
