@@ -1,155 +1,49 @@
 ---
-title: "Welcome to Continue"
-icon: book-open
-description: "Create, run, and automate AI agents across Mission Control, terminal, and CI/CD"
+title: "What is Continue?"
+description: "Run agents as CI checks on every PR"
 ---
 
-<Frame>
-  <img src="/images/intro-0c302b9c15b890c251b1ad04586c880f.png" />
-</Frame>
+<video autoPlay muted loop playsInline className="rounded-xl" src="https://continue.dev/videos/demo.mp4" />
 
-## Mission Control
-<Note>
-  Central dashboard for managing Agents, Tasks, Workflows, and Integrations.
-</Note>
+Continue lets you create agents that review every pull request. Each agent runs as a GitHub check: green if the code looks good, red with a suggested diff if not.
 
-<CardGroup cols={3}>
-  <Card title="Create a Task" icon="plus" href="/mission-control/tasks">
-    Prompt an agent to complete a one-off task.
+Agents are markdown prompts describing the standards you want to enforce. They can be defined at [continue.dev](https://continue.dev/agents) or in your repo at `.continue/agents/`.
 
-    <sub>• Run a one-time task or test for automation</sub><br />
-    <sub>• Monitor progress in the tasks tab</sub>
-  </Card>
-  <Card title="Create an Agent Workflow" icon="clock" href="/mission-control/workflows">
-    Schedule or trigger your agents automatically.
+For example, you could use [this agent](https://www.continue.dev/continuedev/code-security-review) as a starting point, or you could create the following file in your repository:
 
-    <sub>• Cron, Webhook, or GitHub-based triggers</sub><br />
-    <sub>• Ideal for daily audits or status checks</sub>
-  </Card>
-  <Card title="Clear Your Inbox Queue" icon="inbox" href="https://hub.continue.dev/inbox">
-    Trigger your inbox agents to resolve opened PRs.
+```markdown .continue/agents/security-review.md
+---
+name: Security Review
+description: Review PR for basic security vulnerabilities
+---
 
-    <sub>• Address review comments</sub><br />
-    <sub>• Fix CI test failures and resolve merge conflicts</sub>
-  </Card>
-</CardGroup>
+Review this PR and check that:
 
-## Integrations
-<Note>
-  Connect Continue to your existing developer tools to automate the repetitive work you don't have time for.
-</Note>
+- No secrets or API keys are hardcoded
+- All new API endpoints have input validation
+- Error responses use the standard error format
+```
+
+## Get started
+
+1. Connect GitHub at [continue.dev](https://continue.dev/)
+2. [Create an agent](https://continue.dev/agents/new)
+3. Open a PR. The agent will show up as a check in GitHub.
+4. If changes are suggested, click the check in GitHub and accept or reject the suggestion to make the check pass.
+
+## Example agents
 
 <CardGroup cols={2}>
-  <Card title="GitHub" icon="github" href="/mission-control/integrations/github">
-    Enable repository access for Agents to read and create PRs.
+  <Card title="Code Security Review" icon="shield-check" href="https://continue.dev/continuedev/code-security-review">
+    Performs a comprehensive security audit for OWASP Top 10 vulnerabilities and security best practices.
   </Card>
-  <Card title="Slack" icon="slack" href="/mission-control/integrations/slack">
-    Mention <code>@Continue</code> in Slack to trigger Agents and receive updates.
+  <Card title="Improve Test Coverage" icon="vial" href="https://continue.dev/continuedev/improve-test-coverage">
+    Make incremental improvements to test coverage every day.
   </Card>
-  <Card title="Sentry" icon="alert-triangle" href="/mission-control/integrations/sentry">
-    Automatically generate PRs to fix new issues from Sentry alerts.
+  <Card title="Update AGENTS.md" icon="robot" href="https://continue.dev/continuedev/create-or-update-agentsmd">
+    Keep your AGENTS.md continuously synced with your codebase.
   </Card>
-  <Card title="Snyk" icon="shield-check" href="/mission-control/integrations/snyk">
-    Detect and fix security vulnerabilities automatically.
-  </Card>
-</CardGroup>
-
-You can go to [Mission Control Integrations](https://hub.continue.dev/integrations) for the full list of tools you can connect, or for more information see [the docs page](https://docs.continue.dev/mission-control/integrations).
-
-
-## Continue CLI
-
-<Note>Terminal-native AI coding assistance with TUI and headless modes.</Note>
-
-<CodeGroup>
-
-    ```bash npm
-    npm i -g @continuedev/cli
-    ```
-
-    ```bash yarn
-    yarn global add @continuedev/cli
-    ```
-
-    ```bash pnpm
-    pnpm add -g @continuedev/cli
-    ```
-
-</CodeGroup>
-
-<CardGroup cols={2}>
-  <Card
-    title="TUI Mode"
-    icon="terminal"
-    href="/cli/overview#tui-mode%3A-interactive-development"
-  >
-    Interactive Terminal User Interface for development workflows
-
-    <sub>• Automate builds & refactoring</sub>
-    <br />
-    <sub>• Pre-commit hooks & scripted fixes</sub>
-    <br />
-    <sub>• Terminal-first development</sub>
-  </Card>
-  <Card
-    title="Headless Mode"
-    icon="server"
-    href="/cli/overview#headless-mode%3A-production-automation"
-  >
-    Automated AI coding for CI/CD and server environments
-
-    <sub>• Run in CI/CD pipelines</sub>
-    <br />
-    <sub>• Batch processing & bulk operations</sub>
-    <br />
-    <sub>• Server & container deployments</sub>
-  </Card>
-</CardGroup>
-
-## IDE Extensions
-
-<Note>
-  Optional IDE extensions for real-time code editing and assistance.
-</Note>
-
-
-<CardGroup cols={2}>
-  <Card
-    title="VS Code"
-    icon="code"
-    href="https://marketplace.visualstudio.com/items?itemName=Continue.continue"
-  >
-    Install from VS Code Marketplace
-    <sub>Real-time coding assistance and refactoring</sub>
-  </Card>
-  <Card
-    title="JetBrains"
-    icon="jet-fighter"
-    href="https://plugins.jetbrains.com/plugin/22707-continue-extension"
-  >
-    Install from JetBrains Plugin Repository
-    <sub>Community supported for autocomplete and multi-file edits</sub>
-  </Card>
-</CardGroup>
-
-## Resources
-
-<CardGroup cols={3}>
-  <Card title="Continue Mission Control" icon="globe" href="https://hub.continue.dev/">
-    Create your agents, run tasks, add workflows and integrations
-  </Card>
-  <Card
-    title="GitHub Discussions"
-    icon="comments"
-    href="https://github.com/continuedev/continue/discussions"
-  >
-    Get help from the community
-  </Card>
-  <Card
-    title="Integrations"
-    icon="plug"
-    href="/mission-control/integrations"
-  >
-    Connect GitHub, Slack, Sentry, and Snyk to power your automations.
+  <Card title="Draft Changelog Update" icon="file-lines" href="https://continue.dev/continuedev/create-or-update-changelog">
+    Create a draft update to CHANGELOG.md based on recent changes in a pull request.
   </Card>
 </CardGroup>

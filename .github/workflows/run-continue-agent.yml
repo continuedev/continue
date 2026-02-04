@@ -48,4 +48,4 @@ jobs:
             -H "Authorization: Bearer $CONTINUE_API_KEY" \
             -d "$json_body")
           id=$(echo $response | jq -r '.id')
-          echo "https://hub.continue.dev/hub?type=agents/$id"
+          echo "https://continue.dev/hub?type=agents/$id"

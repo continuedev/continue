@@ -2,10 +2,6 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Continue",
-  "banner": {
-    "content": "**Introducing [Agents page in Mission Control](https://hub.continue.dev/agents).** A single view for all your cloud agents: where they run, how they're triggered, and how to reuse them across your work.",
-    "dismissable": true
-  },
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -20,7 +16,7 @@
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index", "changelog"]
+            "pages": ["index", "overview"]
           },
           {
             "group": "Mission Control",
@@ -31,7 +27,6 @@
               "mission-control/workflows",
               {
                 "group": "Integrations",
-                "icon": "plug",
                 "pages": [
                   "mission-control/integrations",
                   "mission-control/integrations/github",
@@ -48,7 +43,6 @@
               "mission-control/sharing",
               {
                 "group": "Governance",
-                "icon": "building",
                 "pages": [
                   "mission-control/governance/creating-an-org",
                   "mission-control/governance/org-permissions",
@@ -57,7 +51,6 @@
               },
               {
                 "group": "Secrets",
-                "icon": "key",
                 "pages": [
                   "mission-control/secrets/secret-types",
                   "mission-control/secrets/secret-resolution"
@@ -65,7 +58,6 @@
               },
               {
                 "group": "Configs",
-                "icon": "book",
                 "pages": [
                   "mission-control/configs/intro",
                   "mission-control/configs/use-a-config",
@@ -122,7 +114,6 @@
             "pages": [
               {
                 "group": "Agent",
-                "icon": "robot",
                 "pages": [
                   "ide-extensions/agent/quick-start",
                   "ide-extensions/agent/how-it-works",
@@ -134,7 +125,6 @@
               },
               {
                 "group": "Chat",
-                "icon": "messages",
                 "pages": [
                   "ide-extensions/chat/quick-start",
                   "ide-extensions/chat/how-it-works",
@@ -145,7 +135,6 @@
               },
               {
                 "group": "Autocomplete",
-                "icon": "sparkles",
                 "pages": [
                   "ide-extensions/autocomplete/quick-start",
                   "ide-extensions/autocomplete/how-it-works",
@@ -157,7 +146,6 @@
               },
               {
                 "group": "Edit",
-                "icon": "pen-to-square",
                 "pages": [
                   "ide-extensions/edit/quick-start",
                   "ide-extensions/edit/how-it-works",
@@ -180,7 +168,6 @@
               "customize/prompts",
               {
                 "group": "Model Providers",
-                "icon": "server",
                 "pages": [
                   "customize/model-providers/overview",
                   {
@@ -211,6 +198,7 @@
                       "customize/model-providers/more/llamastack",
                       "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
+                      "customize/model-providers/more/nous",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/together",
                       "customize/model-providers/more/xAI"
@@ -220,7 +208,6 @@
               },
               {
                 "group": "Model Roles",
-                "icon": "robot",
                 "pages": [
                   "customize/model-roles/00-intro",
                   "customize/model-roles/chat",
@@ -233,7 +220,6 @@
               },
               {
                 "group": "Deep Dives",
-                "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
                   "customize/deep-dives/rules",
@@ -274,6 +260,7 @@
           },
           {
             "group": "Cloud Agents",
+            "icon": "cloud",
             "pages": [
               "guides/cloud-agents/cloud-agents-taxonomy",
               "guides/cloud-agents/guide-to-cloud-agents",
@@ -286,6 +273,7 @@
           },
           {
             "group": "Guides",
+            "icon": "compass",
             "pages": [
               {
                 "group": "Understanding Continue",
@@ -325,7 +313,6 @@
               },
               {
                 "group": "Cookbooks",
-                "icon": "book-open-cover",
                 "pages": [
                   "guides/posthog-github-continuous-ai",
                   "guides/continue-docs-mcp-cookbook",
@@ -354,17 +341,12 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Community",
-          "href": "https://discord.gg/NWtdYexhMs",
-          "icon": "discord"
-        },
-        {
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
         },
         {
-          "anchor": "Release Notes",
+          "anchor": "Changelog",
           "href": "https://changelog.continue.dev/",
           "icon": "bullhorn"
         }
@@ -385,7 +367,7 @@
     "links": [
       {
         "label": "🚀 Get Started",
-        "href": "https://hub.continue.dev/"
+        "href": "https://continue.dev/"
       }
     ],
     "primary": {
@@ -398,7 +380,6 @@
       "x": "https://twitter.com/continuedev",
       "github": "https://github.com/continuedev/continue",
       "linkedin": "https://linkedin.com/company/continuedev",
-      "discord": "https://discord.gg/vapESyrFmJ",
       "youtube": "https://www.youtube.com/@continuedev"
     }
   },
@@ -423,6 +404,10 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/changelog",
+      "destination": "https://changelog.continue.dev"
+    },
     {
       "source": "/hub",
       "destination": "/mission-control"

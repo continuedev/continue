@@ -97,7 +97,7 @@ describe("subagentTool", () => {
         prompt: "Subagent prompt",
         subagent_name: "code-agent",
       },
-      { toolCallId: "tool-call-id" },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
     );
 
     expect(vi.mocked(executeSubAgent)).toHaveBeenCalledTimes(1);

@@ -38,6 +38,7 @@ import {
   type Tool,
   type ToolCall,
   type ToolParametersSchema,
+  type ToolRunContext,
   ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
@@ -209,6 +210,7 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
 
 export async function executeToolCall(
   toolCall: PreprocessedToolCall,
+  options: { parallelToolCallCount: number } = { parallelToolCallCount: 1 },
 ): Promise<string> {
   const startTime = Date.now();
 
@@ -216,16 +218,22 @@ export async function executeToolCall(
     logger.debug("Executing tool", {
       toolName: toolCall.name,
       arguments: toolCall.arguments,
+      parallelToolCallCount: options.parallelToolCallCount,
     });
 
     // Track edits if Git AI is enabled (no-op if not enabled)
     await services.gitAiIntegration.trackToolUse(toolCall, "PreToolUse");
 
+    const context: ToolRunContext = {
+      toolCallId: toolCall.id,
+      parallelToolCallCount: options.parallelToolCallCount,
+    };
+
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
       toolCall.preprocessResult?.args ?? toolCall.arguments,
-      { toolCallId: toolCall.id },
+      context,
     );
     const duration = Date.now() - startTime;
 
