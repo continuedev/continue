@@ -1,7 +1,6 @@
+import type { ChatHistoryItem } from "core";
 import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
-
-import type { ChatHistoryItem } from "../../../../core/index.js";
 
 import { defaultBoxStyles } from "./styles.js";
 import { TextBuffer } from "./TextBuffer.js";

@@ -1,11 +1,8 @@
+import type { ToolCallState, ChatHistoryItem } from "core/index.js";
 import { render } from "ink-testing-library";
 import React from "react";
 import { vi } from "vitest";
 
-import type {
-  ToolCallState,
-  ChatHistoryItem,
-} from "../../../../../core/index.js";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {

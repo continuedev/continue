@@ -1,6 +1,6 @@
+import type { ChatHistoryItem } from "core";
 import React, { useCallback } from "react";
 
-import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { MemoizedMessage } from "../components/MemoizedMessage.js";
 
 export function useMessageRenderer() {
