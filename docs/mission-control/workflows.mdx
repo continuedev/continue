@@ -77,7 +77,8 @@ description: "Cloud agents that are triggered on a schedule or when events occur
     Pick how this Workflow should run:
 
     - Cron – run on a schedule (daily, weekly, hourly, custom)  
-    - Webhook – run when an external system sends a request (e.g. GitHub PR event)
+    - GitHub – run when GitHub events occur (PR opened, merged, issue opened, label added)
+    - Webhook – run when an external system sends a request
 
   </Step>
 
@@ -103,23 +104,43 @@ description: "Cloud agents that are triggered on a schedule or when events occur
 
       </Accordion>
 
+      <Accordion title="GitHub Trigger Workflow">
+
+        For GitHub event-based Workflows:
+
+        1. Select GitHub as the trigger type
+        2. Choose your connected GitHub App installation
+        3. Select the event type:
+           - **PR opened** – triggers when a pull request is opened
+           - **PR merged** – triggers when a pull request is merged
+           - **Issue opened** – triggers when an issue is created
+           - **Label added** – triggers when a specific label is added to a PR or issue
+
+        **Re-run on new commits (PR opened only):**  
+        When using the "PR opened" event type, enable **Re-run on new commits** to send a follow-up message to the active agent session whenever new commits are pushed to the PR. The agent receives commit details (SHA, message, author) and can continue working on the updated code without creating a duplicate session.
+
+        Example use cases:
+        - Run an Agent on every new pull request for automated review
+        - Trigger code quality checks when PRs are opened
+        - Keep agents updated on PR changes with the re-run option
+
+      </Accordion>
+
       <Accordion title="Webhook Workflow">
 
-        For event-based Workflows:
+        For custom webhook-based Workflows:
 
         1. Select Webhook as the trigger type  
         2. (Optional) Set a Secret Header (e.g. `X-Webhook-Secret`)  
         3. (Optional) Set a Secret Value (token your external system must send)  
 
-        You’ll receive a webhook URL to call from:
-        - GitHub Actions
-        - GitHub webhooks
+        You'll receive a webhook URL to call from:
         - CI/CD pipelines
         - Any external system that can send HTTP requests
 
         Example use cases:
-        - Run an Agent whenever a pull request is opened  
         - Kick off a workflow when Snyk or Sentry detects an issue  
+        - Integrate with custom internal tools
 
       </Accordion>
 
