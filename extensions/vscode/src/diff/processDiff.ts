@@ -94,31 +94,30 @@ export async function processDiff(
     core.invoke("cancelApply", undefined);
   }
 
-  if (newFileUri) {
-    await processSingleFileDiff(
-      action,
-      sidebar,
-      ide,
-      verticalDiffManager,
-      newFileUri,
-      streamId,
-      toolCallId,
+  let fileUriToProcess = newFileUri;
+
+  if (!fileUriToProcess) {
+    const allFilesWithDiffs = verticalDiffManager.getAllFilesWithDiffs();
+    if (allFilesWithDiffs.length > 0) {
+      fileUriToProcess = allFilesWithDiffs[0].fileUri;
+      streamId = allFilesWithDiffs[0].streamId;
+    }
+  }
+
+  if (!fileUriToProcess) {
+    console.warn(
+      `No file provided or current file open while attempting to resolve diff`,
     );
     return;
   }
 
-  const allFilesWithDiffs = verticalDiffManager.getAllFilesWithDiffs();
-
-  // accept all diffs in the files
-  for (const { fileUri, streamId: fileStreamId } of allFilesWithDiffs) {
-    await processSingleFileDiff(
-      action,
-      sidebar,
-      ide,
-      verticalDiffManager,
-      fileUri,
-      fileStreamId,
-      toolCallId,
-    );
-  }
+  await processSingleFileDiff(
+    action,
+    sidebar,
+    ide,
+    verticalDiffManager,
+    fileUriToProcess,
+    streamId,
+    toolCallId,
+  );
 }

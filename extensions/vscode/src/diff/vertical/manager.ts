@@ -156,16 +156,19 @@ export class VerticalDiffManager {
 
     this.disableDocumentChangeListener();
 
+    const hasRemainingDiffs = this.fileUriToHandler.size > 0;
     void vscode.commands.executeCommand(
       "setContext",
       "continue.diffVisible",
-      false,
+      hasRemainingDiffs,
     );
 
-    void this.webviewProtocol.request(
-      "focusContinueInputWithoutClear",
-      undefined,
-    );
+    if (!hasRemainingDiffs) {
+      void this.webviewProtocol.request(
+        "focusContinueInputWithoutClear",
+        undefined,
+      );
+    }
   }
 
   async acceptRejectVerticalDiffBlock(
