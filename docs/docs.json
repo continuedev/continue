@@ -1516,5 +1516,6 @@
       "title": "Page lost in the cloud",
       "description": "This page didn’t make it back from its last run. Check the URL, or head back to the docs and re-deploy your curiosity."
     }
-  }
+  },
+  "description": "Documentation for building, running, and monitoring cloud agents with Continue, so AI work enables you to ship as fast as you code."
 }
