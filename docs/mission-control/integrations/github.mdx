@@ -44,6 +44,25 @@ The following **official workflow templates** are maintained by the Continue tea
 
 <Tip>Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → GitHub](https://continue.dev/integrations/github)**.</Tip>
 
+## GitHub Trigger Event Types
+
+When creating a workflow with a GitHub trigger, you can choose from the following event types:
+
+| Event Type | Description |
+|------------|-------------|
+| **PR Opened** | Triggers when a new pull request is opened |
+| **PR Merged** | Triggers when a pull request is merged |
+| **Label Added** | Triggers when a specific label is added to an issue or PR |
+| **Issue Opened** | Triggers when a new issue is created |
+| **PR Review Comment** | Triggers when a review comment is added to a pull request |
+| **Check Failed** | Triggers when a CI check suite fails |
+
+<Info>
+  **PR Review Comment** triggers provide context about the comment including the file path, comment body, and author. **Check Failed** triggers include the names of failed checks and a link to the check details.
+</Info>
+
+---
+
 ## Workflow: GitHub issue → pull request (Cloud Agent)
 
 **Problem**: GitHub issues pile up because turning an issue into a tested PR takes time and context switching.
