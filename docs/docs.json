@@ -361,7 +361,8 @@
   "background": {
     "color": {
       "dark": "#1a1a1a"
-    }
+    },
+    "decoration": "gradient"
   },
   "navbar": {
     "links": [
@@ -1506,5 +1507,14 @@
       "source": "/hub/integrations/sentry",
       "destination": "/mission-control/integrations/sentry"
     }
-  ]
+  ],
+  "fonts": {
+    "family": "Montserrat"
+  },
+  "errors": {
+    "404": {
+      "title": "Page lost in the cloud",
+      "description": "This page didn’t make it back from its last run. Check the URL, or head back to the docs and re-deploy your curiosity."
+    }
+  }
 }
