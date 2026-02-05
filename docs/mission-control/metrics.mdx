@@ -43,6 +43,33 @@ Instead of logs and latency, agent observability focuses on:
 
 </AccordionGroup>
 
+## Available Charts
+
+The Metrics page displays time-series charts for analyzing agent performance over configurable date ranges.
+
+### Outcome Breakdown
+
+Stacked bar chart showing daily session outcomes:
+
+- **Accept** – User accepted the suggestion or PR was merged
+- **Reject** – User rejected the suggestion
+- **Skip** – PR was closed without merging, or session completed with uncommitted changes
+- **No Action** – Session completed without creating commits or PRs
+
+Filter by workflow to see outcomes for specific agent configurations.
+
+### PR Velocity
+
+Line chart tracking average time from session creation to merge (in hours). Shows both average and median values per day to help identify bottlenecks in your review process.
+
+### PR Volume
+
+Bar chart showing the number of PRs created per day. Use this to understand agent activity levels and spot trends in automation usage.
+
+### Failure Rate
+
+Line chart displaying the daily percentage of sessions that resulted in reject or skip outcomes. A rising failure rate may indicate agents need better prompts, rules, or tool configurations.
+
 ## Why Metrics Matter
 
 <CardGroup cols={2}>
