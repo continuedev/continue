@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { AddModelForm } from "../../forms/AddModelForm";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
@@ -129,6 +130,13 @@ function ModelSelect() {
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
   const { selectedProfile } = useAuth();
   const tinyFont = useFontSize(-4);
+
+  useWebviewListener("openModelSelect", async () => {
+    if (buttonRef.current) {
+      buttonRef.current.click();
+      buttonRef.current.focus();
+    }
+  });
 
   let selectedModel = null;
   let allModels = null;
