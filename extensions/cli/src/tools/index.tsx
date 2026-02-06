@@ -19,6 +19,7 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
 import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
+import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -68,6 +69,7 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
+  checkBackgroundJobTool,
 ];
 
 const BUILTIN_SEARCH_TOOLS: Tool[] = [searchCodeTool];
