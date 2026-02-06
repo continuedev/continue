@@ -4,6 +4,11 @@ description: "Use Continue CLI with Notion to generate docs, manage tasks, and a
 sidebarTitle: "Notion with Continue"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="What You'll Build" icon="notion">
 
   A workflow that lets you query, update, and create Notion pages or database
@@ -25,7 +30,7 @@ This guide teaches you to:
 
 Before starting, ensure you have:
 
-- [Continue CLI](https://docs.continue.dev/cli/overview) installed (`npm i -g @continuedev/cli`)
+- [Continue CLI](https://docs.continue.dev/cli/overview) installed
 - A [Notion workspace](https://notion.so) with Editor (or higher) access
 - Node.js 18+ installed locally
 - [Continue account](https://continue.dev) with **Hub access**
@@ -40,9 +45,8 @@ Before starting, ensure you have:
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
+    
     Verify installation:
     ```bash
     cn --version

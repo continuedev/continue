@@ -4,6 +4,11 @@ description: "Learn how to audit Row Level Security in your Supabase database, i
 sidebarTitle: "Supabase RLS Security Audit"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="What You'll Build" icon="shield-check">
   A security audit workflow that uses Continue CLI with Supabase MCP to identify RLS vulnerabilities, generate secure policies, fix permission issues, and ensure your database follows security best practices.
 </Card>
@@ -29,9 +34,7 @@ Before starting, ensure you have:
 
 <Steps>
   <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
 
   <Step title="Set up Continue CLI Account & API Key">

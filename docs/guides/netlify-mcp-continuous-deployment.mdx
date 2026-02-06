@@ -4,6 +4,11 @@ description: "Optimize web performance with A/B testing, automated monitoring, a
 sidebarTitle: "Using Netlify MCP for Performance Optimization"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="Ship Faster Code, Not Slower Sites" icon="gauge-high">
   Use AI to automatically monitor performance metrics, run A/B tests between
   branches, and get actionable optimization suggestions based on real user data
@@ -44,7 +49,7 @@ This cookbook teaches you to:
 - GitHub repository with a web project
 - [Netlify account](https://netlify.com) (free tier works)
 - Node.js 22+ installed (required for Netlify)
-- [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
+- [Continue CLI](https://docs.continue.dev/guides/cli)
 - [Netlify MCP](https://continue.dev/netlify/netlify-mcp) configured
 - [Netlify Development Rules](https://continue.dev/netlify/netlify-development) (recommended)
 
@@ -61,9 +66,7 @@ This cookbook teaches you to:
 For all options, first:
 <Steps>
 <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
 
 <Step title="Install Netlify CLI">

@@ -4,6 +4,11 @@ description: "Measure and optimize web performance with Chrome DevTools MCP, aut
 sidebarTitle: "Chrome DevTools MCP for Performance"
 ---
 
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
 <Card title="Debug Performance Like a Pro" icon="gauge-high">
   Use AI to automatically trace performance, analyze Core Web Vitals, diagnose bottlenecks, and get actionable optimization suggestions directly from Chrome DevTools
 </Card>
@@ -36,7 +41,7 @@ This cookbook teaches you to:
 - Chrome browser installed
 - Web project with a running development server (or deployed URL)
 - Node.js 20+ installed
-- [Continue CLI](https://docs.continue.dev/guides/cli) (`npm i -g @continuedev/cli`)
+- [Continue CLI](https://docs.continue.dev/guides/cli)
 - [Chrome DevTools MCP](https://continue.dev) configured
 
 ## Quick Setup
@@ -44,9 +49,7 @@ This cookbook teaches you to:
 For all options, first:
 <Steps>
 <Step title="Install Continue CLI">
-    ```bash
-    npm i -g @continuedev/cli
-    ```
+    <CLIInstall />
   </Step>
 </Steps>
 
