@@ -130,6 +130,10 @@ export interface ArtifactUploadServiceState {
   lastError: string | null;
 }
 
+export type {
+  BackgroundJob,
+  BackgroundJobStatus,
+} from "./BackgroundJobManager.js";
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 export type { GitAiIntegrationServiceState } from "./GitAiIntegrationService.js";
@@ -153,6 +157,7 @@ export const SERVICE_NAMES = {
   AGENT_FILE: "agentFile",
   ARTIFACT_UPLOAD: "artifactUpload",
   GIT_AI_INTEGRATION: "gitAiIntegration",
+  BACKGROUND_JOBS: "backgroundJobs",
 } as const;
 
 /**
