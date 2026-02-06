@@ -1,6 +1,6 @@
 ---
 title: "Metrics"
-description: "Agent observability for Cloud Agents: track activity, success rates, PR outcomes, cost, and workflow reliability across your repositories."
+description: "Agent observability for Cloud Agents: track activity, success rates, PR outcomes, trends, and workflow reliability across your repositories."
 ---
 
 <Info>
@@ -15,7 +15,8 @@ Instead of logs and latency, agent observability focuses on:
 - Runs and execution frequency  
 - Success vs. human intervention  
 - Pull request outcomes  
-- Cost per run and per workflow  
+- Cost per run and per workflow
+- Period-over-period trends and insights
 
 <AccordionGroup>
 
@@ -43,6 +44,37 @@ Instead of logs and latency, agent observability focuses on:
 
 </AccordionGroup>
 
+## Trends and Insights
+
+Each metric card displays period-over-period comparisons with:
+
+- **Trend indicators** — Directional arrows (↑↓−) showing whether a metric increased, decreased, or remained stable
+- **Percentage change** — The relative change compared to the previous period (e.g., "+44%")
+- **Human-readable insights** — Contextual descriptions explaining what the change means
+- **Comparison period** — Reference to the time range being compared (e.g., "vs previous 30 days")
+
+### Tracked Metrics
+
+| Metric | What It Measures | Positive Trend |
+|--------|------------------|----------------|
+| **Total Runs** | Number of agent executions | Increase (more automation) |
+| **Acceptance Rate** | Percentage of PRs merged | Increase (higher quality output) |
+| **Active Agents** | Number of agents in use | Increase (broader adoption) |
+| **Total Cost** | Compute and API costs | Decrease (efficiency gains) |
+
+### Trend Classification
+
+Trends are classified based on a 5% threshold:
+- Changes **≥5%** are marked as increasing or decreasing
+- Changes **<5%** are considered stable
+
+### Sentiment Coloring
+
+Metric cards use color-coded sentiment to provide quick visual feedback:
+- **Green** — Positive outcome (e.g., higher acceptance rate, lower costs)
+- **Red** — Negative outcome (e.g., declining runs, rising costs)
+- **Gray** — Neutral or stable
+
 ## Why Metrics Matter
 
 <CardGroup cols={2}>
@@ -53,6 +85,14 @@ Instead of logs and latency, agent observability focuses on:
 
   <Card title="Measure Automation Value" icon="bar-chart">
     See how much work your automated Workflows are completing across your repos.
+  </Card>
+
+  <Card title="Track Progress Over Time" icon="arrow-trend-up">
+    Monitor how your agent performance changes period-over-period with trend insights.
+  </Card>
+
+  <Card title="Communicate Outcomes" icon="bullhorn">
+    Use outcome-focused language to share agent ROI with stakeholders.
   </Card>
 
 </CardGroup>
