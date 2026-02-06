@@ -13,6 +13,7 @@ import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
 import {
   parseEnvNumber,
   truncateOutputFromStart,
@@ -182,7 +183,9 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
     const maxChars = Math.floor(baseMaxChars / parallelCount);
     const maxLines = Math.floor(baseMaxLines / parallelCount);
 
-    return new Promise((resolve, reject) => {
+    emitBashToolStarted();
+
+    const terminalOutput: string = await new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
       const child = spawn(shell, args);
@@ -335,5 +338,9 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         reject(`Error: ${error.message}`);
       });
     });
+
+    emitBashToolEnded();
+
+    return terminalOutput;
   },
 };
