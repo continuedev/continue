@@ -405,8 +405,8 @@ export function createEditorConfig(options: {
         }
       } else {
         if (hasValidEditorContent(content)) {
-          const scrollContainer = document.querySelector(
-            '[class*="overflow-y-scroll"]',
+          const scrollContainer = document.getElementById(
+            "chat-scroll-container",
           );
           const scrollTop = scrollContainer?.scrollTop ?? 0;
           setLocalStorage(`editingDraft_${props.historyKey}`, {
@@ -440,10 +440,9 @@ export function createEditorConfig(options: {
     // clear draft from localStorage after successful submission
     if (props.isMainInput) {
       addRef.current(json);
-      localStorage.removeItem(`inputDraft_${props.historyKey}`);
-    } else {
-      localStorage.removeItem(`editingDraft_${props.historyKey}`);
     }
+    localStorage.removeItem(`inputDraft_${props.historyKey}`);
+    localStorage.removeItem(`editingDraft_${props.historyKey}`);
 
     props.onEnter(json, modifiers, editor);
   };

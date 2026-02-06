@@ -476,6 +476,7 @@ export function Chat() {
       {widget}
 
       <StepsDiv
+        id="chat-scroll-container"
         ref={stepsDivRef}
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
