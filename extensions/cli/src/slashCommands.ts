@@ -9,6 +9,7 @@ import {
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
+import { backgroundJobManager } from "./services/BackgroundJobManager.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
@@ -169,6 +170,36 @@ function handleTitle(args: string[]) {
   }
 }
 
+function handleJobs() {
+  const allJobs = backgroundJobManager.getAllJobs();
+  if (allJobs.length === 0) {
+    return {
+      exit: false,
+      output: chalk.dim("No background jobs"),
+    };
+  }
+
+  const lines = [chalk.bold("Background Jobs:")];
+  for (const job of allJobs) {
+    const statusColor =
+      job.status === "running" || job.status === "pending"
+        ? chalk.yellow
+        : job.status === "completed"
+          ? chalk.green
+          : chalk.red;
+    const duration = job.endTime
+      ? `${Math.round((job.endTime.getTime() - job.startTime.getTime()) / 1000)}s`
+      : `${Math.round((Date.now() - job.startTime.getTime()) / 1000)}s`;
+    lines.push(
+      `  ${statusColor(job.status.padEnd(10))} ${chalk.cyan(job.id)} ${chalk.dim(`(${duration})`)} ${job.command.substring(0, 40)}${job.command.length > 40 ? "..." : ""}`,
+    );
+  }
+  return {
+    exit: false,
+    output: lines.join("\n"),
+  };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -203,6 +234,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   update: () => {
     return { openUpdateSelector: true };
   },
+  jobs: handleJobs,
 };
 
 export async function handleSlashCommands(
