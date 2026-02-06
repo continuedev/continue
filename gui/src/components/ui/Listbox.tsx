@@ -11,6 +11,7 @@ import { FontSizeModifier, useFontSize } from "./font";
 
 type ListboxButtonProps = React.ComponentProps<typeof HLButton> & {
   fontSizeModifier?: FontSizeModifier;
+  title?: string;
 };
 
 const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
