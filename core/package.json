@@ -20,6 +20,7 @@
     "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.11.4",
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@shikijs/colorized-brackets": "^3.7.0",
     "@shikijs/transformers": "^3.7.0",
     "@types/diff": "^7.0.1",

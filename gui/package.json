@@ -20,6 +20,7 @@
     "@continuedev/terminal-security": "file:../packages/terminal-security",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@panzoom/panzoom": "^4.6.0",
     "@reduxjs/toolkit": "^2.11.2",
     "@sentry/react": "^9.43.0",

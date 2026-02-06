@@ -3,8 +3,10 @@ import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
+import { McpAppRenderer } from "./MCPAppRenderer";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getIconByName, getStatusIcon } from "./utils";
@@ -19,7 +21,9 @@ export function ToolCallDiv({
   historyIndex,
 }: ToolCallDivProps) {
   const [open, setOpen] = useState(true);
-  const availableTools = useAppSelector((state) => state.config.config.tools);
+  const availableTools = useAppSelector(
+    (state: RootState) => state.config.config.tools,
+  );
 
   if (!toolCallStates?.length) return null;
 
@@ -42,6 +46,19 @@ export function ToolCallDiv({
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)
         : undefined;
+
+    if (toolCallState.mcpUiState) {
+      return (
+        <ToolCallDisplay
+          icon={getStatusIcon(toolCallState.status)}
+          tool={tool}
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        >
+          <McpAppRenderer toolCallState={toolCallState} />
+        </ToolCallDisplay>
+      );
+    }
 
     if (icon) {
       return (
