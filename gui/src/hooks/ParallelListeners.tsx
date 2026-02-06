@@ -272,7 +272,7 @@ function ParallelListeners() {
       localStorage.removeItem("editingDraft_edit");
       localStorage.removeItem("editingDraft_chat");
     };
-  });
+  }, []);
 
   return <></>;
 }
