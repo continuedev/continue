@@ -277,6 +277,30 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("lmstudio", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["lmstudio"];
+
+    it("should return true for supported models (same as ollama)", () => {
+      expect(supportsFn("llama3.1")).toBe(true);
+      expect(supportsFn("llama3.2-8b")).toBe(true);
+      expect(supportsFn("qwen2")).toBe(true);
+      expect(supportsFn("mixtral-8x7b")).toBe(true);
+      expect(supportsFn("mistral-7b")).toBe(true);
+    });
+
+    it("should return false for explicitly unsupported models (same as ollama)", () => {
+      expect(supportsFn("vision")).toBe(false);
+      expect(supportsFn("math")).toBe(false);
+      expect(supportsFn("guard")).toBe(false);
+    });
+
+    it("should handle case insensitivity (same as ollama)", () => {
+      expect(supportsFn("LLAMA3.1")).toBe(true);
+      expect(supportsFn("MIXTRAL-8x7b")).toBe(true);
+      expect(supportsFn("VISION")).toBe(false);
+    });
+  });
+
   describe("xAI", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["xAI"];
 
@@ -339,6 +363,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(PROVIDER_TOOL_SUPPORT["gemini"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["bedrock"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["ollama"]("")).toBe(false);
+      expect(PROVIDER_TOOL_SUPPORT["lmstudio"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["novita"]("")).toBe(false);
     });
 
