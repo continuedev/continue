@@ -189,6 +189,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    lmstudio: (model) => PROVIDER_TOOL_SUPPORT["ollama"](model),
     sambanova: (model) => {
       // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
       if (
