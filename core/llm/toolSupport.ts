@@ -191,7 +191,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     lmstudio: (model) => {
       // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
-      // Convert to format that matches Ollama's heuristic (e.g., "llama3.1")
+      // Check Ollama's exclusions first (before normalizing hyphens)
+      const ollamaResult = PROVIDER_TOOL_SUPPORT["ollama"](model);
+      if (!ollamaResult) {
+        return false;
+      }
+      // If Ollama says yes, also check with normalized version to catch hyphenated variants
       const normalized = model.toLowerCase().replace(/-/g, "");
       return PROVIDER_TOOL_SUPPORT["ollama"](normalized);
     },
