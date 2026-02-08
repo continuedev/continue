@@ -121,6 +121,26 @@ const STATE_ICONS: Record<string, string> = {
 };
 
 /**
+ * Fetch and print the diff for a check, indented under the check output.
+ */
+async function printCheckDiff(check: CheckStatus): Promise<void> {
+  try {
+    const diffResponse = await get<{ diff: string }>(
+      `agents/${check.sessionId}/diff`,
+    );
+    if (!diffResponse.data.diff) {
+      return;
+    }
+    console.log(`\n${chalk.bold(`   Diff:`)}`);
+    for (const line of diffResponse.data.diff.split("\n")) {
+      console.log(`   ${line}`);
+    }
+  } catch (err) {
+    logger.debug(`Failed to fetch diff for ${check.sessionId}: ${err}`);
+  }
+}
+
+/**
  * List check statuses for a PR, including diffs for checks with commits.
  */
 async function listChecks(prUrl: string): Promise<void> {
@@ -156,19 +176,7 @@ async function listChecks(prUrl: string): Promise<void> {
     }
 
     if (check.commitMessage) {
-      try {
-        const diffResponse = await get<{ diff: string }>(
-          `agents/${check.sessionId}/diff`,
-        );
-        if (diffResponse.data.diff) {
-          console.log(`\n${chalk.bold(`   Diff:`)}`);
-          for (const line of diffResponse.data.diff.split("\n")) {
-            console.log(`   ${line}`);
-          }
-        }
-      } catch (err) {
-        logger.debug(`Failed to fetch diff for ${check.sessionId}: ${err}`);
-      }
+      await printCheckDiff(check);
     }
 
     console.log();
