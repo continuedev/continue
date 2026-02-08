@@ -321,6 +321,12 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("Guard-Model")).toBe(false);
     });
 
+    it("should return false for mistrallite in hyphenated forms", () => {
+      // Hyphenated form "mistral-lite" normalizes to "mistrallite" which must be excluded
+      expect(supportsFn("Mistral-Lite")).toBe(false);
+      expect(supportsFn("mistral-lite")).toBe(false);
+    });
+
     it("should handle case insensitivity (same as ollama)", () => {
       expect(supportsFn("LLAMA3.1")).toBe(true);
       expect(supportsFn("MIXTRAL-8x7b")).toBe(true);

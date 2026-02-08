@@ -201,14 +201,19 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       //    Ollama's exclusion list uses "mistral-openorca" (with hyphen),
       //    so we must also check the hyphen-stripped form "mistralopenorca"
       //    to catch models like "MistralOpenOrca".
+      const exclusions = [
+        "vision",
+        "math",
+        "guard",
+        "mistrallite",
+        "mistral-openorca",
+      ];
       if (
-        ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-          (part) => lower.includes(part),
+        exclusions.some(
+          (part) =>
+            lower.includes(part) || normalized.includes(part.replace(/-/g, "")),
         )
       ) {
-        return false;
-      }
-      if (normalized.includes("mistralopenorca")) {
         return false;
       }
 
