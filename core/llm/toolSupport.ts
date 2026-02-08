@@ -191,13 +191,29 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     lmstudio: (model) => {
       // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
-      // Check Ollama's exclusions first (before normalizing hyphens)
-      const ollamaResult = PROVIDER_TOOL_SUPPORT["ollama"](model);
-      if (!ollamaResult) {
+      // First check exclusions on both raw and normalized names
+      const lower = model.toLowerCase();
+      const normalized = lower.replace(/-/g, "");
+      const exclusions = ["vision", "math", "guard", "mistrallite"];
+      if (
+        exclusions.some(
+          (part) => lower.includes(part) || normalized.includes(part),
+        )
+      ) {
         return false;
       }
-      // If Ollama says yes, also check with normalized version to catch hyphenated variants
-      const normalized = model.toLowerCase().replace(/-/g, "");
+      // Check "mistral-openorca" specifically (hyphen-sensitive exclusion)
+      if (
+        lower.includes("mistral-openorca") ||
+        lower.includes("mistralopenorca")
+      ) {
+        return false;
+      }
+      // Try Ollama's support check with the raw model name first
+      if (PROVIDER_TOOL_SUPPORT["ollama"](model)) {
+        return true;
+      }
+      // Fall back to normalized (hyphen-removed) version for LM Studio's hyphenated IDs
       return PROVIDER_TOOL_SUPPORT["ollama"](normalized);
     },
     sambanova: (model) => {
