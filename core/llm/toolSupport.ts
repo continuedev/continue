@@ -192,15 +192,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     lmstudio: (model) => {
       // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
       // that don't match Ollama's substring patterns (e.g., "llama3.1").
-      // Strategy: check exclusions on both raw and normalized forms first,
-      // then try Ollama's heuristic with both raw and normalized forms.
+      // We check exclusions against BOTH the raw lowercased name and the
+      // normalized (hyphen-stripped) form so that e.g. "mistral-lite"
+      // is correctly caught by the "mistrallite" exclusion.
       const lower = model.toLowerCase();
       const normalized = lower.replace(/-/g, "");
 
-      // 1. Check exclusions on both raw and normalized names.
-      //    Ollama's exclusion list uses "mistral-openorca" (with hyphen),
-      //    so we must also check the hyphen-stripped form "mistralopenorca"
-      //    to catch models like "MistralOpenOrca".
+      // Exclusions must be checked against both raw and normalized IDs.
+      // "mistrallite" catches both "mistrallite" (raw) and "mistral-lite"
+      // (normalized → "mistrallite").  "mistral-openorca" catches both the
+      // hyphenated form and "MistralOpenOrca" (normalized → "mistralopenorca").
       const exclusions = [
         "vision",
         "math",
@@ -208,24 +209,21 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "mistrallite",
         "mistral-openorca",
       ];
-      if (
+      const isExcluded = (name: string) =>
         exclusions.some(
           (part) =>
-            lower.includes(part) || normalized.includes(part.replace(/-/g, "")),
-        )
-      ) {
+            name.includes(part) || name.includes(part.replace(/-/g, "")),
+        );
+
+      if (isExcluded(lower) || isExcluded(normalized)) {
         return false;
       }
 
-      // 2. Try Ollama's heuristic with the raw name first
+      // Delegate to Ollama's heuristic with raw name first (covers patterns
+      // that contain hyphens, e.g. "command-r"), then with the normalized
+      // name (covers LM Studio IDs like "Meta-Llama-3.1-8B" → "llama3.1").
       const ollamaFn = PROVIDER_TOOL_SUPPORT["ollama"];
-      if (ollamaFn(model)) {
-        return true;
-      }
-
-      // 3. Fall back to normalized (hyphen-stripped) name for LM Studio IDs
-      //    e.g., "Meta-Llama-3.1-8B" → "metallama3.18b" matches "llama3.1"
-      return ollamaFn(normalized);
+      return ollamaFn(model) || ollamaFn(normalized);
     },
     sambanova: (model) => {
       // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
