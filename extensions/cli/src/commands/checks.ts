@@ -20,11 +20,6 @@ interface ChecksStatusResponse {
   pullRequestUrl: string;
 }
 
-interface ChecksOptions {
-  diff?: boolean;
-  json?: boolean;
-}
-
 /**
  * Parse owner/repo from a git remote URL.
  * Supports HTTPS and SSH formats.
@@ -126,21 +121,13 @@ const STATE_ICONS: Record<string, string> = {
 };
 
 /**
- * List check statuses for a PR.
+ * List check statuses for a PR, including diffs for checks with commits.
  */
-async function listChecks(
-  prUrl: string,
-  options: ChecksOptions,
-): Promise<void> {
+async function listChecks(prUrl: string): Promise<void> {
   const response = await get<ChecksStatusResponse>(
     `api/checks/status?pullRequestUrl=${encodeURIComponent(prUrl)}`,
   );
   const { checks } = response.data;
-
-  if (options.json) {
-    console.log(JSON.stringify(response.data, null, 2));
-    return;
-  }
 
   if (checks.length === 0) {
     console.log(chalk.dim("No checks found for this PR."));
@@ -168,27 +155,23 @@ async function listChecks(
       console.log(`   Suggestion: ${statusColor(check.suggestionStatus)}`);
     }
 
-    console.log();
-  }
-
-  if (options.diff) {
-    for (const check of checks) {
-      if (!check.commitMessage) {
-        continue;
-      }
+    if (check.commitMessage) {
       try {
         const diffResponse = await get<{ diff: string }>(
           `agents/${check.sessionId}/diff`,
         );
         if (diffResponse.data.diff) {
-          console.log(chalk.bold(`--- Diff: ${check.name} ---`));
-          console.log(diffResponse.data.diff);
-          console.log();
+          console.log(`\n${chalk.bold(`   Diff:`)}`);
+          for (const line of diffResponse.data.diff.split("\n")) {
+            console.log(`   ${line}`);
+          }
         }
       } catch (err) {
         logger.debug(`Failed to fetch diff for ${check.sessionId}: ${err}`);
       }
     }
+
+    console.log();
   }
 
   // Summary line
@@ -284,16 +267,13 @@ async function rejectChecks(prUrl: string): Promise<void> {
  * Main entry point for `cn checks` command.
  *
  * Usage:
- *   cn checks [pr-url]              - List checks
+ *   cn checks [pr-url]              - List checks with diffs
  *   cn checks accept [pr-url]       - Accept pending suggestions
  *   cn checks reject [pr-url]       - Reject pending suggestions
- *   cn checks [pr-url] --diff       - Show diffs inline
- *   cn checks [pr-url] --json       - JSON output
  */
 export async function checks(
   actionOrUrl: string | undefined,
   prUrlArg: string | undefined,
-  options: ChecksOptions,
 ): Promise<void> {
   try {
     // Determine if first arg is an action or a PR URL
@@ -318,7 +298,7 @@ export async function checks(
         await rejectChecks(prUrl);
         break;
       default:
-        await listChecks(prUrl, options);
+        await listChecks(prUrl);
         break;
     }
   } catch (err) {

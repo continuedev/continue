@@ -425,18 +425,10 @@ program
 program
   .command("checks [action] [pr-url]")
   .description("Show CI check statuses for a PR")
-  .option("--diff", "Show suggested diffs inline")
-  .option("--json", "Output in JSON format")
-  .action(
-    async (
-      action: string | undefined,
-      prUrl: string | undefined,
-      options: any,
-    ) => {
-      await posthogService.capture("cliCommand", { command: "checks" });
-      await checks(action, prUrl, options);
-    },
-  );
+  .action(async (action: string | undefined, prUrl: string | undefined) => {
+    await posthogService.capture("cliCommand", { command: "checks" });
+    await checks(action, prUrl);
+  });
 
 // Review subcommand
 program
