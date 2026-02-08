@@ -189,7 +189,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
-    lmstudio: (model) => PROVIDER_TOOL_SUPPORT["ollama"](model),
+    lmstudio: (model) => {
+      // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
+      // Convert to format that matches Ollama's heuristic (e.g., "llama3.1")
+      const normalized = model.toLowerCase().replace(/-/g, "");
+      return PROVIDER_TOOL_SUPPORT["ollama"](normalized);
+    },
     sambanova: (model) => {
       // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
       if (

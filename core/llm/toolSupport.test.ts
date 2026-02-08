@@ -288,16 +288,37 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("mistral-7b")).toBe(true);
     });
 
+    it("should return true for LM Studio hyphenated model IDs", () => {
+      // LM Studio uses hyphenated model identifiers like "Meta-Llama-3.1-8B-Instruct-GGUF"
+      expect(supportsFn("Meta-Llama-3.1-8B-Instruct-GGUF")).toBe(true);
+      expect(supportsFn("Meta-Llama-3.2-3B-Instruct")).toBe(true);
+      expect(supportsFn("Qwen2-7B-Instruct")).toBe(true);
+      expect(supportsFn("Mixtral-8x7B-Instruct-v0.1")).toBe(true);
+      expect(supportsFn("Mistral-7B-Instruct-v0.2")).toBe(true);
+      expect(supportsFn("llama-3.1-8b-instruct")).toBe(true);
+    });
+
     it("should return false for explicitly unsupported models (same as ollama)", () => {
       expect(supportsFn("vision")).toBe(false);
       expect(supportsFn("math")).toBe(false);
       expect(supportsFn("guard")).toBe(false);
     });
 
+    it("should return false for hyphenated unsupported model names", () => {
+      expect(supportsFn("Llama-Vision-Free")).toBe(false);
+      expect(supportsFn("Math-Solver-7B")).toBe(false);
+      expect(supportsFn("Guard-Model")).toBe(false);
+    });
+
     it("should handle case insensitivity (same as ollama)", () => {
       expect(supportsFn("LLAMA3.1")).toBe(true);
       expect(supportsFn("MIXTRAL-8x7b")).toBe(true);
       expect(supportsFn("VISION")).toBe(false);
+    });
+
+    it("should handle case insensitivity with hyphenated names", () => {
+      expect(supportsFn("META-LLAMA-3.1-8B-INSTRUCT")).toBe(true);
+      expect(supportsFn("Qwen2-7B-Instruct-GGUF")).toBe(true);
     });
   });
 
