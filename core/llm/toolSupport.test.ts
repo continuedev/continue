@@ -302,6 +302,17 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("vision")).toBe(false);
       expect(supportsFn("math")).toBe(false);
       expect(supportsFn("guard")).toBe(false);
+      expect(supportsFn("mistrallite")).toBe(false);
+      expect(supportsFn("mistral-openorca")).toBe(false);
+    });
+
+    it("should return false for mistral-openorca in all forms", () => {
+      // Hyphenated form (matches Ollama's exclusion directly)
+      expect(supportsFn("mistral-openorca")).toBe(false);
+      // Non-hyphenated form (must not bypass exclusion via "mistral" support match)
+      expect(supportsFn("MistralOpenOrca")).toBe(false);
+      // With suffix
+      expect(supportsFn("Mistral-OpenOrca-7B")).toBe(false);
     });
 
     it("should return false for hyphenated unsupported model names", () => {

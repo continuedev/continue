@@ -191,30 +191,36 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     lmstudio: (model) => {
       // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
-      // First check exclusions on both raw and normalized names
+      // that don't match Ollama's substring patterns (e.g., "llama3.1").
+      // Strategy: check exclusions on both raw and normalized forms first,
+      // then try Ollama's heuristic with both raw and normalized forms.
       const lower = model.toLowerCase();
       const normalized = lower.replace(/-/g, "");
-      const exclusions = ["vision", "math", "guard", "mistrallite"];
+
+      // 1. Check exclusions on both raw and normalized names.
+      //    Ollama's exclusion list uses "mistral-openorca" (with hyphen),
+      //    so we must also check the hyphen-stripped form "mistralopenorca"
+      //    to catch models like "MistralOpenOrca".
       if (
-        exclusions.some(
-          (part) => lower.includes(part) || normalized.includes(part),
+        ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
+          (part) => lower.includes(part),
         )
       ) {
         return false;
       }
-      // Check "mistral-openorca" specifically (hyphen-sensitive exclusion)
-      if (
-        lower.includes("mistral-openorca") ||
-        lower.includes("mistralopenorca")
-      ) {
+      if (normalized.includes("mistralopenorca")) {
         return false;
       }
-      // Try Ollama's support check with the raw model name first
-      if (PROVIDER_TOOL_SUPPORT["ollama"](model)) {
+
+      // 2. Try Ollama's heuristic with the raw name first
+      const ollamaFn = PROVIDER_TOOL_SUPPORT["ollama"];
+      if (ollamaFn(model)) {
         return true;
       }
-      // Fall back to normalized (hyphen-removed) version for LM Studio's hyphenated IDs
-      return PROVIDER_TOOL_SUPPORT["ollama"](normalized);
+
+      // 3. Fall back to normalized (hyphen-stripped) name for LM Studio IDs
+      //    e.g., "Meta-Llama-3.1-8B" → "metallama3.18b" matches "llama3.1"
+      return ollamaFn(normalized);
     },
     sambanova: (model) => {
       // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
