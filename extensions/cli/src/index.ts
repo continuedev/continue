@@ -6,6 +6,7 @@ import "./init.js";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
+import { checks } from "./commands/checks.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
@@ -419,6 +420,23 @@ program
     await posthogService.capture("cliCommand", { command: "remote-test" });
     await remoteTest(prompt, options.url);
   });
+
+// Checks subcommand
+program
+  .command("checks [action] [pr-url]")
+  .description("Show CI check statuses for a PR")
+  .option("--diff", "Show suggested diffs inline")
+  .option("--json", "Output in JSON format")
+  .action(
+    async (
+      action: string | undefined,
+      prUrl: string | undefined,
+      options: any,
+    ) => {
+      await posthogService.capture("cliCommand", { command: "checks" });
+      await checks(action, prUrl, options);
+    },
+  );
 
 // Review subcommand
 program
