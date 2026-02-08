@@ -86,12 +86,96 @@ Agent files are markdown documents with YAML frontmatter. The frontmatter config
 |-------|----------|-------------|
 | `name` | Yes | Display name for the agent |
 | `description` | Yes | Brief description of what the agent does |
+| `on` | No | Trigger configuration for automated execution (see [Trigger Configuration](#trigger-configuration)) |
 
 <Info>
   The markdown body is the agent's system prompt. Write clear, specific instructions with examples for best results.
 </Info>
 
 For additional options like `rules`, `model`, and MCP tool configuration, see the [Create & Edit Agents](/agents/create-and-edit) guide.
+
+### Trigger Configuration
+
+The `on:` key defines when an agent runs automatically. When you push agent files with `on:` config to a connected GitHub repository, Continue creates the corresponding workflow triggers.
+
+<Info>
+  Agents without an `on:` key default to triggering on GitHub pull request opened events.
+</Info>
+
+#### Supported Triggers
+
+| Trigger | Frontmatter | Description |
+|---------|-------------|-------------|
+| GitHub events | `on: { github: { ... } }` | PR opened, merged, issues, comments, check failures |
+| Cron schedule | `on: { schedule: { cron: "..." } }` | Run on a schedule (cron syntax) |
+| Sentry | `on: { sentry: {} }` | New Sentry issues |
+| Snyk | `on: { snyk: {} }` | New Snyk vulnerabilities |
+| Slack | `on: { slack: {} }` | Slack messages |
+| Webhook | `on: { webhook: {} }` | Generic webhook calls |
+
+#### GitHub Trigger Examples
+
+```yaml
+# Trigger on PR opened to main branch
+on:
+  github:
+    pull_request:
+      types: [opened]
+      branches: [main]
+```
+
+```yaml
+# Trigger on issues with bug label
+on:
+  github:
+    issues:
+      types: [opened]
+      labels: [bug]
+```
+
+**GitHub event types:**
+
+| Event | Configuration |
+|-------|---------------|
+| PR opened | `pull_request: { types: [opened] }` |
+| PR merged | `pull_request: { types: [merged] }` |
+| Issue opened | `issues: { types: [opened] }` |
+| Issue labeled | `issues: { types: [labeled] }` |
+| PR review comment | `pull_request_review_comment: {}` |
+| Check failed | `check_run: { conclusion: [failure] }` |
+
+Filters like `branches`, `paths`, and `labels` are optional.
+
+#### Schedule Trigger
+
+```yaml
+# Run every weekday at 9am UTC
+on:
+  schedule:
+    cron: "0 9 * * 1-5"
+```
+
+#### Multiple Triggers
+
+Agents can have multiple triggers. Each creates a separate workflow:
+
+```yaml
+---
+name: Code Guardian
+description: Monitors PRs and responds to Sentry errors
+on:
+  github:
+    pull_request:
+      types: [opened]
+      branches: [main]
+  sentry:
+    severity: [critical]
+---
+
+You are a code quality guardian...
+```
+
+This creates two workflows: one for GitHub PR events, one for Sentry alerts.
 
 ## Example: Conventional PR Title Agent
 
