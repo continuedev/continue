@@ -133,7 +133,7 @@ export interface ArtifactUploadServiceState {
 export type {
   BackgroundJob,
   BackgroundJobStatus,
-} from "./BackgroundJobManager.js";
+} from "./BackgroundJobService.js";
 export type { ChatHistoryState } from "./ChatHistoryService.js";
 export type { FileIndexServiceState } from "./FileIndexService.js";
 export type { GitAiIntegrationServiceState } from "./GitAiIntegrationService.js";

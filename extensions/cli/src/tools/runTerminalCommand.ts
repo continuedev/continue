@@ -6,7 +6,7 @@ import {
   type ToolPolicy,
 } from "@continuedev/terminal-security";
 
-import { backgroundJobManager } from "../services/BackgroundJobManager.js";
+import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -91,7 +91,7 @@ export function runCommandInBackground(command: string): {
   jobId?: string;
   error?: string;
 } {
-  const job = backgroundJobManager.createJob(command);
+  const job = backgroundJobService.createJob(command);
   if (!job) {
     return {
       success: false,
@@ -100,7 +100,7 @@ export function runCommandInBackground(command: string): {
   }
 
   const { shell, args } = getShellCommand(command);
-  const child = backgroundJobManager.startJob(job.id, shell, args);
+  const child = backgroundJobService.startJob(job.id, shell, args);
 
   if (!child) {
     return {
@@ -231,7 +231,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         }
         backgroundSignalManager.off("backgroundRequested", moveToBackground);
 
-        const job = backgroundJobManager.createJobWithProcess(
+        const job = backgroundJobService.createJobWithProcess(
           command,
           child as ChildProcess,
           stdout,

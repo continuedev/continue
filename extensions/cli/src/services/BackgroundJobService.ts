@@ -23,7 +23,11 @@ export interface BackgroundJob {
 const MAX_CONCURRENT_JOBS = 5;
 const MAX_OUTPUT_LINES = 1000;
 
-export class BackgroundJobManager {
+/**
+ * Service for managing background job execution and lifecycle
+ * Handles spawning, tracking, and cleanup of background processes
+ */
+export class BackgroundJobService {
   private jobs: Map<string, BackgroundJob> = new Map();
   private processes: Map<string, ChildProcess> = new Map();
   private jobCounter = 0;
@@ -209,12 +213,6 @@ export class BackgroundJobManager {
     }
     this.processes.clear();
   }
-
-  reset(): void {
-    this.killAllJobs();
-    this.jobs.clear();
-    this.jobCounter = 0;
-  }
 }
 
-export const backgroundJobManager = new BackgroundJobManager();
+export const backgroundJobService = new BackgroundJobService();

@@ -10,7 +10,6 @@ import { AgentFileService } from "./AgentFileService.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { ArtifactUploadService } from "./ArtifactUploadService.js";
 import { AuthService } from "./AuthService.js";
-import { backgroundJobManager } from "./BackgroundJobManager.js";
 import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
 import { FileIndexService } from "./FileIndexService.js";
@@ -388,7 +387,7 @@ export const services = {
   toolPermissions: toolPermissionService,
   artifactUpload: artifactUploadService,
   gitAiIntegration: gitAiIntegrationService,
-  backgroundJobs: backgroundJobManager,
+  backgroundJobs: backgroundJobService,
 } as const;
 
 export type ServicesType = typeof services;

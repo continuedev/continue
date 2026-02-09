@@ -1,7 +1,7 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { sentryService } from "../sentry.js";
-import { backgroundJobManager } from "../services/BackgroundJobManager.js";
+import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
@@ -196,11 +196,10 @@ export async function gracefulExit(code: number = 0): Promise<void> {
   displaySessionUsage();
 
   try {
-    // todo: rename backgroundJobManager to backgroundCommandService
-    const runningJobs = backgroundJobManager.getRunningJobCount();
+    const runningJobs = backgroundJobService.getRunningJobCount();
     if (runningJobs > 0) {
       logger.debug(`Killing ${runningJobs} background job(s) on exit`);
-      backgroundJobManager.killAllJobs();
+      backgroundJobService.killAllJobs();
     }
   } catch (err) {
     logger.debug("Background job cleanup error (ignored)", err as any);

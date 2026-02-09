@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 
 import {
   BackgroundJob,
-  backgroundJobManager,
-} from "../services/BackgroundJobManager.js";
+  backgroundJobService,
+} from "../services/BackgroundJobService.js";
 import { truncateOutputFromStart } from "../util/truncateOutput.js";
 
 import { defaultBoxStyles } from "./styles.js";
@@ -30,18 +30,18 @@ export function JobsSelector({ onCancel }: JobsSelectorProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedJob, setSelectedJob] = useState<BackgroundJob | null>(null);
-  const [jobs, setJobs] = useState(() => backgroundJobManager.getAllJobs());
+  const [jobs, setJobs] = useState(() => backgroundJobService.getAllJobs());
 
   // Refetch the job details every 1 second
   useEffect(() => {
     const interval = setInterval(() => {
       if (viewMode === "detail" && selectedJob) {
-        const freshJob = backgroundJobManager.getJob(selectedJob.id);
+        const freshJob = backgroundJobService.getJob(selectedJob.id);
         if (freshJob) {
           setSelectedJob(freshJob);
         }
       } else {
-        setJobs(backgroundJobManager.getAllJobs());
+        setJobs(backgroundJobService.getAllJobs());
       }
     }, 1000);
 
@@ -59,9 +59,9 @@ export function JobsSelector({ onCancel }: JobsSelectorProps) {
       }
       // Cancel the selected job if it's still active
       if (input === "x" && selectedJob) {
-        const job = backgroundJobManager.getJob(selectedJob.id);
+        const job = backgroundJobService.getJob(selectedJob.id);
         if (job && (job.status === "running" || job.status === "pending")) {
-          backgroundJobManager.cancelJob(selectedJob.id);
+          backgroundJobService.cancelJob(selectedJob.id);
         }
         return;
       }
