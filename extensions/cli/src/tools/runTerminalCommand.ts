@@ -8,6 +8,7 @@ import {
 
 import { backgroundJobManager } from "../services/BackgroundJobManager.js";
 import { backgroundSignalManager } from "../services/BackgroundSignalManager.js";
+import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -271,17 +272,33 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         }, TIMEOUT_MS);
       };
 
+      const showCurrentOutput = () => {
+        if (!context?.toolCallId) return;
+        try {
+          const currentOutput = stdout + (stderr ? `\nStderr: ${stderr}` : "");
+          services.chatHistory.addToolResult(
+            context.toolCallId,
+            currentOutput,
+            "calling",
+          );
+        } catch {
+          // Ignore errors during streaming updates
+        }
+      };
+
       // Start the initial timeout
       resetTimeout();
 
       child.stdout.on("data", (data) => {
         stdout += data.toString();
         resetTimeout();
+        showCurrentOutput();
       });
 
       child.stderr.on("data", (data) => {
         stderr += data.toString();
         resetTimeout();
+        showCurrentOutput();
       });
 
       child.on("close", (code) => {
