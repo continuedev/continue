@@ -7,13 +7,13 @@ import {
 } from "@continuedev/terminal-security";
 
 import { backgroundJobManager } from "../services/BackgroundJobManager.js";
-import { backgroundSignalManager } from "../services/BackgroundSignalManager.js";
 import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+import { backgroundSignalManager } from "../util/backgroundSignalManager.js";
 import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
 import {
   parseEnvNumber,

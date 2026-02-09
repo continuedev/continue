@@ -1,5 +1,5 @@
 import type { PermissionMode } from "../../permissions/types.js";
-import { backgroundSignalManager } from "../../services/BackgroundSignalManager.js";
+import { backgroundSignalManager } from "../../util/backgroundSignalManager.js";
 import {
   checkClipboardForImage,
   getClipboardImage,

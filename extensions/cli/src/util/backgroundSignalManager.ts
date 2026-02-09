@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 
-export class BackgroundSignalManager extends EventEmitter {
+// Event emitter to notify that running terminal command should be moved to background
+class BackgroundSignalManager extends EventEmitter {
   signalBackground(): void {
     this.emit("backgroundRequested");
   }
