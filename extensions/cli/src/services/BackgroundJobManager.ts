@@ -144,6 +144,9 @@ export class BackgroundJobManager {
   completeJob(jobId: string, exitCode: number): void {
     const job = this.jobs.get(jobId);
     if (job) {
+      if (job.status === "cancelled") {
+        return;
+      }
       job.status = exitCode === 0 ? "completed" : "failed";
       job.exitCode = exitCode;
       job.endTime = new Date();

@@ -18,6 +18,7 @@ export interface UseChatProps {
   onShowUpdateSelector: () => void;
   onShowModelSelector?: () => void;
   onShowSessionSelector?: () => void;
+  onShowJobsSelector?: () => void;
   onReload?: () => Promise<void>;
   onClear?: () => void;
   onRefreshStatic?: () => void;
@@ -63,6 +64,7 @@ export interface SlashCommandResult {
   openMcpSelector?: boolean;
   openUpdateSelector?: boolean;
   openSessionSelector?: boolean;
+  openJobsSelector?: boolean;
   compact?: boolean;
   diffContent?: string;
 }

@@ -283,6 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
+    onShowJobsSelector: () => navigateTo("jobs"),
     onReload: handleReload,
     onClear: handleClear,
     onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
