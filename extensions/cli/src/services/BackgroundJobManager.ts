@@ -1,5 +1,4 @@
 import { ChildProcess, spawn } from "child_process";
-import { EventEmitter } from "events";
 
 import { logger } from "../util/logger.js";
 
@@ -23,7 +22,7 @@ export interface BackgroundJob {
 
 const MAX_CONCURRENT_JOBS = 5;
 
-export class BackgroundJobManager extends EventEmitter {
+export class BackgroundJobManager {
   private jobs: Map<string, BackgroundJob> = new Map();
   private processes: Map<string, ChildProcess> = new Map();
   private jobCounter = 0;
@@ -49,7 +48,6 @@ export class BackgroundJobManager extends EventEmitter {
     };
 
     this.jobs.set(id, job);
-    this.emit("jobCreated", job);
     return job;
   }
 
@@ -61,7 +59,6 @@ export class BackgroundJobManager extends EventEmitter {
     }
 
     job.status = "running";
-    this.emit("jobStarted", job);
 
     const child = spawn(shell, args, { stdio: "pipe" });
     this.processes.set(jobId, child);
@@ -111,7 +108,6 @@ export class BackgroundJobManager extends EventEmitter {
 
     this.jobs.set(id, job);
     this.processes.set(id, child);
-    this.emit("jobCreated", job);
 
     child.stdout?.on("data", (data: Buffer) => {
       this.appendOutput(id, data.toString());
@@ -136,7 +132,6 @@ export class BackgroundJobManager extends EventEmitter {
     const job = this.jobs.get(jobId);
     if (job) {
       job.output += data;
-      this.emit("jobOutput", job, data);
     }
   }
 
@@ -147,7 +142,6 @@ export class BackgroundJobManager extends EventEmitter {
       job.exitCode = exitCode;
       job.endTime = new Date();
       this.processes.delete(jobId);
-      this.emit("jobCompleted", job);
     }
   }
 
@@ -158,7 +152,6 @@ export class BackgroundJobManager extends EventEmitter {
       job.error = error;
       job.endTime = new Date();
       this.processes.delete(jobId);
-      this.emit("jobFailed", job);
     }
   }
 
@@ -175,7 +168,6 @@ export class BackgroundJobManager extends EventEmitter {
 
     job.status = "cancelled";
     job.endTime = new Date();
-    this.emit("jobCancelled", job);
     return true;
   }
 
@@ -207,7 +199,6 @@ export class BackgroundJobManager extends EventEmitter {
       }
     }
     this.processes.clear();
-    this.emit("allJobsKilled");
   }
 
   reset(): void {
