@@ -1,7 +1,6 @@
 import { ChildProcess, spawn } from "child_process";
 
 import { logger } from "../util/logger.js";
-import { truncateOutputFromStart } from "../util/truncateOutput.js";
 
 export type BackgroundJobStatus =
   | "pending"
@@ -22,7 +21,6 @@ export interface BackgroundJob {
 }
 
 const MAX_CONCURRENT_JOBS = 5;
-const MAX_OUTPUT_CHARS = 50_000;
 const MAX_OUTPUT_LINES = 1000;
 
 export class BackgroundJobManager {
@@ -131,15 +129,15 @@ export class BackgroundJobManager {
     return job;
   }
 
+  // todo: improve write efficiency with ring buffer or similar
   appendOutput(jobId: string, data: string): void {
     const job = this.jobs.get(jobId);
     if (job) {
       job.output += data;
-      const { output } = truncateOutputFromStart(job.output, {
-        maxChars: MAX_OUTPUT_CHARS,
-        maxLines: MAX_OUTPUT_LINES,
-      });
-      job.output = output;
+      const lines = job.output.split("\n");
+      if (lines.length > MAX_OUTPUT_LINES) {
+        job.output = lines.slice(-MAX_OUTPUT_LINES).join("\n");
+      }
     }
   }
 
