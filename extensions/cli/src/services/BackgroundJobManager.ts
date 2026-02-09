@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from "child_process";
 
 import { logger } from "../util/logger.js";
+import { truncateOutputFromStart } from "../util/truncateOutput.js";
 
 export type BackgroundJobStatus =
   | "pending"
@@ -21,6 +22,8 @@ export interface BackgroundJob {
 }
 
 const MAX_CONCURRENT_JOBS = 5;
+const MAX_OUTPUT_CHARS = 50_000;
+const MAX_OUTPUT_LINES = 1000;
 
 export class BackgroundJobManager {
   private jobs: Map<string, BackgroundJob> = new Map();
@@ -132,6 +135,11 @@ export class BackgroundJobManager {
     const job = this.jobs.get(jobId);
     if (job) {
       job.output += data;
+      const { output } = truncateOutputFromStart(job.output, {
+        maxChars: MAX_OUTPUT_CHARS,
+        maxLines: MAX_OUTPUT_LINES,
+      });
+      job.output = output;
     }
   }
 
