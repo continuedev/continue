@@ -47,7 +47,7 @@ export function validateConfigYaml(
 
     if (model.requestOptions?.headers) {
       for (const [key, value] of Object.entries(model.requestOptions.headers)) {
-        if (containsUnicode(value)) {
+        if (containsUnicode(key) || containsUnicode(value)) {
           errors.push({
             fatal: true,
             message: `Model "${model.name}" has a request header "${key}" containing unicode characters. Request headers should only contain ASCII characters.`,
