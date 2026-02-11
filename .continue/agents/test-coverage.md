@@ -10,16 +10,19 @@ Review this pull request to determine if new functionality has adequate test cov
 ## When Tests Are Expected
 
 1. **New exported functions or classes** - Any new public function, class, or module that is exported and used by other parts of the codebase should have at least basic unit tests covering:
+
    - The happy path (expected inputs produce expected outputs)
    - Edge cases (empty inputs, null/undefined, boundary values)
    - Error cases (invalid inputs throw or return appropriate errors)
 
 2. **New CLI commands or subcommands** - Should have:
+
    - Smoke tests verifying the command registers and runs
    - Tests for flag parsing and validation
    - Tests for expected output format
 
 3. **Bug fixes** - If a PR fixes a bug, there should be a regression test that:
+
    - Reproduces the original bug condition
    - Verifies the fix resolves it
 

@@ -12,12 +12,14 @@ Review this pull request for changes to dependencies. A significant portion of P
 ### For Any `package.json` Changes
 
 1. **New dependencies** - For each newly added dependency:
+
    - Is it well-maintained (not abandoned)?
    - Does it have known vulnerabilities?
    - Is it the right choice, or does an existing dependency already cover this use case?
    - Is the version pinned appropriately (exact vs range)?
 
 2. **Major version bumps** - For major version upgrades:
+
    - Are there breaking changes that affect our usage?
    - Have the callers been updated to match the new API?
 

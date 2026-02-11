@@ -10,6 +10,7 @@ Analyze this pull request for breaking changes that may leave stale references e
 ## What Constitutes a Breaking Change
 
 1. **CLI command renames or removals** - If a command registered in `extensions/cli/src/commands/` is renamed, removed, or has its flags changed, check that:
+
    - Documentation in `docs/` reflects the new name
    - Agent definitions in `.continue/agents/` don't reference the old command
    - Skills in `skills/` are updated
@@ -17,10 +18,12 @@ Analyze this pull request for breaking changes that may leave stale references e
    - GitHub Actions workflows don't invoke the old command
 
 2. **Public API changes** - If exported functions, interfaces, or types in `core/` or `packages/` are renamed or have signature changes, check that:
+
    - All callers in `gui/`, `extensions/`, and `binary/` are updated
    - Type definitions in `packages/config-types/` are consistent
 
 3. **Configuration schema changes** - If config file formats (YAML or JSON) are modified, check that:
+
    - Validation logic handles both old and new formats (or migration is provided)
    - Documentation examples use the new format
    - Default configs are updated

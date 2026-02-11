@@ -12,6 +12,7 @@ Review this pull request for error handling quality. The most common user-facing
 1. **Catch blocks that discard error details** - Look for `catch` blocks that re-throw or return a generic message without including the original error's message, status code, or context.
 
 2. **HTTP status codes without user-friendly mapping** - When making API calls (especially to LLM providers), ensure that common HTTP errors produce distinct, actionable messages:
+
    - `401` → "Invalid API key" (not "Unknown error")
    - `402` → "Insufficient funds or quota exceeded"
    - `403` → "Access denied - check your API key permissions"

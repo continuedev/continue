@@ -10,17 +10,20 @@ Review this pull request for input validation quality. The most common user issu
 ## What to Check
 
 1. **API keys and secrets** - Any code that accepts API keys, tokens, or credentials should:
+
    - Reject obviously invalid values (empty strings, whitespace-only, placeholder text like "your-api-key-here")
    - Validate format where possible (e.g., OpenAI keys start with `sk-`, Anthropic keys start with `sk-ant-`)
    - Provide a clear error message before making a network request with a bad key
 
 2. **Configuration values** - New or modified config parsing should:
+
    - Validate required fields are present and non-empty
    - Validate types (e.g., numbers are actually numbers, URLs are valid URLs)
    - Provide clear error messages that name the specific field and expected format
    - Not crash the entire config loading process for a single invalid value
 
 3. **User text inputs** - New or modified UI inputs should:
+
    - Handle empty/whitespace-only submissions gracefully
    - Sanitize inputs that will be used in file paths, URLs, or shell commands
    - Not allow submission of invalid data that will fail silently later
