@@ -57,9 +57,16 @@ When creating a workflow with a GitHub trigger, you can choose from the followin
 | **PR Review Comment** | Triggers when a review comment is added to a pull request |
 | **Check Failed** | Triggers when a CI check suite fails |
 
-<Info>
-  **PR Review Comment** triggers provide context about the comment including the file path, comment body, and author. **Check Failed** triggers include the names of failed checks and a link to the check details.
-</Info>
+A task kicked off by a trigger receives a summary of the event, which is appended to the Agent's prompt.
+
+For example, an agent triggered by an `Issue Opened` trigger would see:
+
+```
+Issue #123 was opened: Login page crashes on mobile devices
+Issue URL: https://github.com/acme/webapp/issues/123
+```
+
+You can see the full initial prompt for a specific task in its logs.
 
 ---
 
