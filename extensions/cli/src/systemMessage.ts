@@ -2,9 +2,11 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
+import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
+import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
@@ -115,6 +117,79 @@ async function getConfigYamlRules(): Promise<string[]> {
   return [];
 }
 
+function getRuleNameFromPath(filePath: string): string {
+  const segments = filePath.split(/[/\\]/);
+  const lastTwoParts = segments.slice(-2);
+  return lastTwoParts.filter(Boolean).join("/").replace(/\.md$/, "");
+}
+
+/**
+ * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
+ */
+export function loadMarkdownRulesWithMetadata(): RuleObject[] {
+  const cwd = process.cwd();
+  const rulesDirs = [
+    path.join(cwd, ".continue", "rules"),
+    path.join(env.continueHome, "rules"),
+  ];
+
+  const rules: RuleObject[] = [];
+
+  for (const dir of rulesDirs) {
+    if (!fs.existsSync(dir)) continue;
+
+    let files: string[];
+    try {
+      files = fs.readdirSync(dir, { recursive: true }) as string[];
+    } catch {
+      continue;
+    }
+
+    for (const file of files) {
+      if (!String(file).endsWith(".md")) continue;
+
+      const filePath = path.join(dir, String(file));
+      try {
+        const stat = fs.statSync(filePath);
+        if (!stat.isFile()) continue;
+      } catch {
+        continue;
+      }
+
+      try {
+        const content = fs.readFileSync(filePath, "utf-8");
+        const { frontmatter, markdown } = parseMarkdownRule(content);
+
+        if (frontmatter.invokable) continue;
+
+        const isAlwaysApply =
+          frontmatter.alwaysApply === true ||
+          (frontmatter.alwaysApply === undefined &&
+            !frontmatter.globs &&
+            !frontmatter.regex);
+
+        if (isAlwaysApply && markdown.trim()) {
+          const ruleName =
+            frontmatter.name || getRuleNameFromPath(String(file));
+          rules.push({
+            name: ruleName,
+            rule: markdown,
+            description: frontmatter.description,
+            globs: frontmatter.globs,
+            regex: frontmatter.regex,
+            alwaysApply: true,
+            sourceFile: filePath,
+          });
+        }
+      } catch {
+        // Skip files that can't be read or parsed
+      }
+    }
+  }
+
+  return rules;
+}
+
 /**
  * Load and construct a comprehensive system message with base message and rules section
  * @param additionalRules - Additional rules from --rule flags
@@ -164,6 +239,16 @@ export async function constructSystemMessage(
 
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
+
+  // Load markdown rules from .continue/rules/ directories
+  const markdownRules = loadMarkdownRulesWithMetadata();
+  // Deduplicate against already-loaded rules
+  const existingRulesSet = new Set(processedRules);
+  for (const rule of markdownRules) {
+    if (!existingRulesSet.has(rule.rule)) {
+      processedRules.push(rule.rule);
+    }
+  }
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
