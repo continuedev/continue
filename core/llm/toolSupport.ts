@@ -189,6 +189,42 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    lmstudio: (model) => {
+      // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
+      // that don't match Ollama's substring patterns (e.g., "llama3.1").
+      // We check exclusions against BOTH the raw lowercased name and the
+      // normalized (hyphen-stripped) form so that e.g. "mistral-lite"
+      // is correctly caught by the "mistrallite" exclusion.
+      const lower = model.toLowerCase();
+      const normalized = lower.replace(/-/g, "");
+
+      // Exclusions must be checked against both raw and normalized IDs.
+      // "mistrallite" catches both "mistrallite" (raw) and "mistral-lite"
+      // (normalized → "mistrallite").  "mistral-openorca" catches both the
+      // hyphenated form and "MistralOpenOrca" (normalized → "mistralopenorca").
+      const exclusions = [
+        "vision",
+        "math",
+        "guard",
+        "mistrallite",
+        "mistral-openorca",
+      ];
+      const isExcluded = (name: string) =>
+        exclusions.some(
+          (part) =>
+            name.includes(part) || name.includes(part.replace(/-/g, "")),
+        );
+
+      if (isExcluded(lower) || isExcluded(normalized)) {
+        return false;
+      }
+
+      // Delegate to Ollama's heuristic with raw name first (covers patterns
+      // that contain hyphens, e.g. "command-r"), then with the normalized
+      // name (covers LM Studio IDs like "Meta-Llama-3.1-8B" → "llama3.1").
+      const ollamaFn = PROVIDER_TOOL_SUPPORT["ollama"];
+      return ollamaFn(model) || ollamaFn(normalized);
+    },
     sambanova: (model) => {
       // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
       if (
