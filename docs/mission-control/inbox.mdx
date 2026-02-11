@@ -1,0 +1,264 @@
+---
+title: "Inbox"
+description: "Your mission control for pull requests — review, merge, and ship code faster with AI-powered assistance"
+---
+
+The Inbox is your unified command center for managing pull requests across all your GitHub repositories. Instead of context-switching between GitHub tabs, IDE windows, and chat interfaces, the Inbox brings everything together so you can review code, trigger AI agents, and merge PRs — all from one place.
+
+## Why Use the Inbox?
+
+Modern development teams face a paradox: AI can write code faster than ever, but the review and merge process remains a bottleneck. The Inbox solves this by making PR management as fast as code generation.
+
+<AccordionGroup>
+  <Accordion title="Ship as fast as you code">
+    When AI agents generate PRs at scale, you need a way to review and merge them efficiently. The Inbox shows all your open PRs with real-time status — failing checks, review comments, merge conflicts — so you can take action immediately without hunting through GitHub notifications.
+  </Accordion>
+
+  <Accordion title="One-click agent assistance">
+    See a failing CI check? Click "Fix" and an AI agent will analyze the failure and create a follow-up PR with the solution. Got a nitpicky review comment? Click "Address" and let the agent handle it. The Inbox turns every PR blocker into a one-click automation.
+  </Accordion>
+
+  <Accordion title="Context without context-switching">
+    The Inbox prefetches PR details on hover, shows diffs inline, and lets you merge without leaving the page. You maintain your flow state while staying informed about every PR's status.
+  </Accordion>
+</AccordionGroup>
+
+## Inbox Overview
+
+Navigate to the [Inbox](https://continue.dev/inbox) to see all open pull requests across your connected repositories.
+
+### PR List View
+
+The PR list shows your open pull requests with key information at a glance:
+
+- **Status indicators** — Draft, open, or ready to merge
+- **Todo badges** — Count of failing checks, unresolved comments, and actionable agent sessions
+- **Running agents** — Spinner icon when agents are actively working on the PR
+- **Repository and author** — Quick context without opening the PR
+- **Relative timestamps** — How long ago the PR was created
+
+<Tip>
+  Hover over any PR card to prefetch its details. When you click through, the detail view loads instantly.
+</Tip>
+
+### Filtering PRs
+
+Use the filters at the top of the Inbox to focus on what matters:
+
+- **Repository** — Filter by specific repositories
+- **Author** — Show PRs by specific team members or just your own
+- **Source** — Filter by GitHub PRs or agent-generated suggestions
+- **Status** — Focus on PRs with unresolved items (failing checks, comments, conflicts)
+
+## PR Detail View
+
+Click any PR to open the detail view, which shows everything you need to review and merge.
+
+### Merge Status Panel
+
+The merge status panel at the top provides a comprehensive view of merge readiness:
+
+<Frame>
+  <img src="/images/inbox/merge-status-panel.png" alt="Merge Status Panel showing circular gauge, status summary, and merge button" />
+</Frame>
+
+**Circular Gauge** — Visual representation of PR health:
+- Green segments = passing checks
+- Yellow segments = pending checks  
+- Red segments = failing checks
+- Purple segments = unresolved review comments
+
+**Status Summary** — Quick text summary like "2 failing checks, 3 unresolved comments"
+
+**Merge Button** — Merge directly from the Inbox with your preferred merge method:
+- Squash and merge (default)
+- Create a merge commit
+- Rebase and merge
+
+<Note>
+  If required checks are failing but you have permission to override, an "Override" checkbox appears next to the merge button.
+</Note>
+
+### Collapsible Sections
+
+The detail view organizes PR information into expandable sections that auto-expand when they contain actionable items:
+
+#### Agent Checks Section
+
+Shows all AI agent sessions associated with this PR:
+
+- **Active agents** — Sessions currently running with status indicators
+- **Suggested workflows** — Pre-configured agents that match this PR but haven't run yet
+- **Quick actions** — Start, view, or manage agent sessions directly
+
+Each agent row shows:
+- Agent/workflow name
+- Current status (running, completed, needs review, error)
+- Action buttons (View, Start, Retry)
+
+<Tip>
+  Click "Add Agent" to create a new workflow that will automatically run on future PRs matching this repository and trigger type.
+</Tip>
+
+#### Checks Section
+
+Lists all CI/CD checks with their status:
+
+**Failing Checks**
+- Expanded by default when failures exist
+- Each check shows name, duration, and app icon
+- "Fix" button triggers an agent to analyze and fix the failure
+- "Fix all" button addresses all failing checks in a single agent session
+
+**Passing Checks** — Collapsed by default, expandable to verify
+
+**Pending Checks** — Shows spinner and "in progress" status
+
+**Skipped Checks** — Neutral checks that didn't run
+
+Click any check to view detailed logs in a modal.
+
+#### Review Comments Section
+
+Displays unresolved review comments with full context:
+
+- Code snippet with diff hunk
+- Comment author and timestamp
+- File path and line numbers
+- "Address" button to trigger an agent that resolves the comment
+- "Resolve" button to mark as resolved
+
+<Note>
+  When an agent successfully addresses a review comment, the comment is automatically resolved after the agent's PR is merged.
+</Note>
+
+#### Merge Conflicts Section
+
+When conflicts exist, this section provides:
+
+- Clear indication that conflicts block merging
+- "Resolve" button to trigger an agent that resolves conflicts automatically
+- The agent will analyze both branches and create a conflict-free merge
+
+### Tabs
+
+The detail view includes additional tabs for deeper exploration:
+
+**Files** — Browse the diff with a file tree sidebar
+- Hierarchical folder structure
+- Click files to jump to their diff
+- Inline review comments shown in context
+
+**Conversation** — Full PR conversation history from GitHub
+
+**Tasks** — All agent sessions linked to this PR with detailed status
+
+## Shipping Workflow
+
+Here's how to use the Inbox to maintain high velocity:
+
+### 1. Triage Your PRs
+
+Open the Inbox and scan the todo badges. Focus on PRs with:
+- Failing checks (red badge)
+- Unresolved comments (purple badge)  
+- Merge conflicts (conflict indicator)
+
+### 2. Fix Issues with Agents
+
+For each blocker, use one-click agent actions:
+
+| Blocker | Action | What Happens |
+|---------|--------|--------------|
+| Failing check | Click "Fix" | Agent analyzes logs, creates fix PR |
+| Review comment | Click "Address" | Agent reads comment, implements change |
+| All failing checks | Click "Fix all" | Agent fixes everything in one PR |
+| Merge conflicts | Click "Resolve" | Agent resolves conflicts automatically |
+
+### 3. Review Agent Output
+
+When agents complete, their PRs appear as new items in your Inbox. Review the generated code, approve, and merge.
+
+### 4. Merge When Ready
+
+When all checks pass and comments are resolved:
+1. Select your merge method from the dropdown
+2. Click the merge button
+3. The PR is merged without leaving the Inbox
+
+<Tip>
+  For PRs created by agents, you can often trust the AI's work and merge quickly. The agent has already run tests and addressed any issues.
+</Tip>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Configure workflows for common fixes">
+    Create reusable workflows for issues that recur across your codebase — linting fixes, test failures, security updates. These appear as suggested agents on matching PRs.
+  </Accordion>
+
+  <Accordion title="Use the 'Fix all' button strategically">
+    When multiple checks fail for related reasons (e.g., a type error causing cascading test failures), "Fix all" often produces a more coherent solution than fixing checks individually.
+  </Accordion>
+
+  <Accordion title="Review in batches">
+    Check the Inbox 2-3 times per day rather than constantly. This lets agents work in the background while you focus on deep work.
+  </Accordion>
+
+  <Accordion title="Trust but verify agent PRs">
+    Agent-generated fixes are usually correct, but always glance at the diff before merging. Look for:
+    - Unexpected file changes
+    - Overly complex solutions
+    - Changes outside the intended scope
+  </Accordion>
+</AccordionGroup>
+
+## Keyboard Shortcuts
+
+Navigate the Inbox efficiently with keyboard shortcuts:
+
+| Shortcut | Action |
+|----------|--------|
+| `j` / `k` | Move down/up in PR list |
+| `Enter` | Open selected PR detail |
+| `Escape` | Close detail view |
+| `m` | Open merge dropdown (when in detail view) |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="PRs not showing up">
+    - Verify your GitHub App is installed with access to the repository
+    - Check that you're viewing the correct organization scope
+    - Refresh the page to fetch latest PR data
+  </Accordion>
+
+  <Accordion title="Agent fixes not working">
+    - Ensure you have sufficient credits or a valid API key configured
+    - Check that the agent has access to the repository via GitHub App
+    - Review the agent session logs for specific error messages
+  </Accordion>
+
+  <Accordion title="Merge button disabled">
+    - Check the status summary for blocking issues
+    - Verify you have merge permissions on the repository
+    - For protected branches, ensure required reviews are approved
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Workflows" icon="diagram-project" href="/mission-control/workflows">
+    Create automated agent workflows that trigger on PR events
+  </Card>
+  <Card title="GitHub Integration" icon="github" href="/mission-control/integrations/github">
+    Connect your GitHub repositories to enable the Inbox
+  </Card>
+  <Card title="Tasks" icon="list-check" href="/mission-control/tasks">
+    View and manage all agent sessions across your organization
+  </Card>
+  <Card title="Metrics" icon="chart-line" href="/mission-control/metrics">
+    Track agent performance and merge rates
+  </Card>
+</CardGroup>
