@@ -17,12 +17,13 @@ import type {
 } from "openai/resources/responses/responses.js";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
+import { customFetch } from "../util.js";
 import {
-  customFetch,
-  chatChunk,
-  usageChatChunk,
-  chatChunkFromDelta,
-} from "../util.js";
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 import {
   createResponsesStreamState,
   fromResponsesChunk,
@@ -30,12 +31,6 @@ import {
   responseToChatCompletion,
   toResponsesParams,
 } from "./openaiResponses.js";
-import {
-  BaseLlmApi,
-  CreateRerankResponse,
-  FimCreateParamsStreaming,
-  RerankCreateParams,
-} from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
@@ -87,6 +82,39 @@ export class OpenAIApi implements BaseLlmApi {
     // Add stream_options to include usage in streaming responses
     if (body.stream) {
       (body as any).stream_options = { include_usage: true };
+    }
+
+    // 1. Assistant messages with tool_calls must include 'reasoning_content' (even if empty) to avoid 400 errors.
+    const isOfficialDeepSeek =
+      this.apiBase?.includes("api.deepseek.com") ||
+      body.model.includes("deepseek-reasoner");
+
+    if (isOfficialDeepSeek) {
+      body.messages = body.messages.map((msg) => {
+        if (msg.role === "assistant") {
+          const assistantMsg = msg as any;
+
+          if (
+            assistantMsg.tool_calls?.length > 0 &&
+            !assistantMsg.reasoning_content
+          ) {
+            return {
+              ...assistantMsg,
+              reasoning_content: "",
+            };
+          }
+
+          return assistantMsg;
+        }
+        return msg;
+      });
+
+      if (body.max_tokens && body.model.includes("reasoner")) {
+        body.max_completion_tokens = body.max_tokens;
+        (body as any).max_tokens = undefined;
+      }
+
+      return body;
     }
 
     // o-series models - only apply for official OpenAI API
