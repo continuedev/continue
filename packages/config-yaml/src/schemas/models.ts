@@ -193,6 +193,7 @@ const baseModelFields = {
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),
   autocompleteOptions: autocompleteOptionsSchema.optional(),
+  aiSdkProviderId: z.string().optional(),
 };
 
 export const modelSchema = z.union([

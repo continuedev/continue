@@ -35,9 +35,14 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
 export class AiSdkApi implements BaseLlmApi {
   private provider?: (modelId: string) => any;
   private config: AiSdkConfig;
+  private providerId: string;
+  private modelId: string;
 
   constructor(config: AiSdkConfig) {
     this.config = config;
+    const [providerId, ...modelParts] = config.model.split("/");
+    this.providerId = providerId;
+    this.modelId = modelParts.join("/");
   }
 
   private initializeProvider() {
@@ -45,11 +50,11 @@ export class AiSdkApi implements BaseLlmApi {
       return;
     }
 
-    const createFn = PROVIDER_MAP[this.config.aiSdkProviderId];
+    const createFn = PROVIDER_MAP[this.providerId];
     if (!createFn) {
       const supportedProviders = Object.keys(PROVIDER_MAP).join(", ");
       throw new Error(
-        `Unknown AI SDK provider: "${this.config.aiSdkProviderId}". ` +
+        `Unknown AI SDK provider: "${this.providerId}". ` +
           `Supported providers: ${supportedProviders}. ` +
           `To use a different provider, install the @ai-sdk/* package and add it to the provider map.`,
       );
@@ -99,7 +104,7 @@ export class AiSdkApi implements BaseLlmApi {
       (msg) => msg.role !== "system",
     );
 
-    const modelId = this.config.model ?? body.model;
+    const modelId = this.modelId ?? body.model;
     const model = this.provider!(modelId);
     const vercelTools = await convertToolsToVercelFormat(body.tools);
 
@@ -184,7 +189,7 @@ export class AiSdkApi implements BaseLlmApi {
       (msg) => msg.role !== "system",
     );
 
-    const modelId = this.config.model ?? body.model;
+    const modelId = this.modelId ?? body.model;
     const model = this.provider!(modelId);
     const vercelTools = await convertToolsToVercelFormat(body.tools);
 
