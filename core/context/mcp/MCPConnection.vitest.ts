@@ -175,6 +175,39 @@ describe("MCPConnection", () => {
       );
       expect(mockResolve).toHaveBeenCalledWith("src", ide);
     });
+
+    it("should convert file:// URIs to filesystem paths", async () => {
+      const conn = new MCPConnection(baseOptions);
+
+      await expect(
+        (conn as any).resolveCwd("file:///home/user/project"),
+      ).resolves.toBe("/home/user/project");
+    });
+
+    it("should convert vscode-remote:// URIs to filesystem paths", async () => {
+      const conn = new MCPConnection(baseOptions);
+
+      await expect(
+        (conn as any).resolveCwd(
+          "vscode-remote://ssh-remote+myserver/home/user/project",
+        ),
+      ).resolves.toBe("/home/user/project");
+    });
+
+    it("should handle workspace URIs from remote IDE", async () => {
+      const ide = {} as any;
+      const mockResolve = vi
+        .spyOn(ideUtils, "resolveRelativePathInDir")
+        .mockResolvedValue(
+          "vscode-remote://ssh-remote+myserver/home/user/workspace/src",
+        );
+      const conn = new MCPConnection(baseOptions, { ide });
+
+      await expect((conn as any).resolveCwd("src")).resolves.toBe(
+        "/home/user/workspace/src",
+      );
+      expect(mockResolve).toHaveBeenCalledWith("src", ide);
+    });
   });
 
   describe("connectClient", () => {
