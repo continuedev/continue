@@ -387,6 +387,7 @@ export const services = {
   toolPermissions: toolPermissionService,
   artifactUpload: artifactUploadService,
   gitAiIntegration: gitAiIntegrationService,
+  backgroundJobs: backgroundJobService,
 } as const;
 
 export type ServicesType = typeof services;
