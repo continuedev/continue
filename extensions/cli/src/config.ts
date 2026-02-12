@@ -72,6 +72,7 @@ export function createLlmApi(
   } else {
     config = {
       provider: model.provider as any,
+      model: model.model,
       apiKey: model.apiKey,
       apiBase: model.apiBase,
       requestOptions: model.requestOptions,

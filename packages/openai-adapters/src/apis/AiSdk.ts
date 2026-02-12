@@ -40,6 +40,11 @@ export class AiSdkApi implements BaseLlmApi {
 
   constructor(config: AiSdkConfig) {
     this.config = config;
+    if (!config.model) {
+      throw new Error(
+        "AI SDK provider requires a model in the format '<provider>/<model>' (e.g., 'openai/gpt-4o')",
+      );
+    }
     const [providerId, ...modelParts] = config.model.split("/");
     this.providerId = providerId;
     this.modelId = modelParts.join("/");
