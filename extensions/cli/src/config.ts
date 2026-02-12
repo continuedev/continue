@@ -44,7 +44,7 @@ function mergeUserAgentIntoRequestOptions(
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
- * Handles special logic for continue-proxy and ai-sdk providers and constructs the API
+ * Handles special logic for continue-proxy provider and constructs the API
  */
 export function createLlmApi(
   model: ModelConfig,
@@ -53,32 +53,31 @@ export function createLlmApi(
   const accessToken = getAccessToken(authConfig);
   const organizationId = getOrganizationId(authConfig);
 
-  let config: LLMConfig;
-
-  if (model.provider === "continue-proxy") {
-    config = {
-      provider: model.provider,
-      requestOptions: mergeUserAgentIntoRequestOptions(model.requestOptions),
-      apiBase: model.apiBase,
-      apiKey: accessToken ?? undefined,
-      env: {
-        apiKeyLocation: (model as any).apiKeyLocation,
-        orgScopeId: organizationId ?? null,
-        proxyUrl:
-          (model as { onPremProxyUrl: string | undefined }).onPremProxyUrl ??
-          (env.apiBase ? env.apiBase : undefined),
-      },
-    };
-  } else {
-    config = {
-      provider: model.provider as any,
-      model: model.model,
-      apiKey: model.apiKey,
-      apiBase: model.apiBase,
-      requestOptions: model.requestOptions,
-      env: model.env,
-    };
-  }
+  const config: LLMConfig =
+    model.provider === "continue-proxy"
+      ? {
+          provider: model.provider,
+          requestOptions: mergeUserAgentIntoRequestOptions(
+            model.requestOptions,
+          ),
+          apiBase: model.apiBase,
+          apiKey: accessToken ?? undefined,
+          env: {
+            apiKeyLocation: (model as any).apiKeyLocation,
+            orgScopeId: organizationId ?? null,
+            proxyUrl:
+              (model as { onPremProxyUrl: string | undefined })
+                .onPremProxyUrl ?? (env.apiBase ? env.apiBase : undefined),
+          },
+        }
+      : {
+          provider: model.provider as any,
+          model: model.model,
+          apiKey: model.apiKey,
+          apiBase: model.apiBase,
+          requestOptions: model.requestOptions,
+          env: model.env,
+        };
 
   return constructLlmApi(config) ?? null;
 }
