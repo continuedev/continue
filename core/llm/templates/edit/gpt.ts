@@ -73,8 +73,31 @@ export const gptEditPrompt: PromptTemplateFunction = (history, otherData) => {
 };
 
 export const defaultApplyPrompt: PromptTemplateFunction = (
-  history,
+  _history,
   otherData,
 ) => {
-  return `${otherData.original_code}\n\nThe following code was suggested as an edit:\n\`\`\`\n${otherData.new_code}\n\`\`\`\nPlease apply it to the previous code. Leave existing comments in place unless changes require modifying them.`;
+  return [
+    {
+      role: "user",
+      content: dedent`
+        ORIGINAL CODE:
+        \`\`\`
+        ${otherData.original_code}
+        \`\`\`
+
+        SUGGESTED EDIT:
+        \`\`\`
+        ${otherData.new_code}
+        \`\`\`
+
+        Apply the SUGGESTED EDIT to the ORIGINAL CODE. Output the complete modified file.
+        - Output ONLY code. Do NOT explain, summarize, or describe changes.
+        - Leave existing comments in place unless changes require modifying them.
+        - Preserve all unchanged code exactly as-is.`,
+    },
+    {
+      role: "assistant",
+      content: `\`\`\`\n`,
+    },
+  ];
 };
