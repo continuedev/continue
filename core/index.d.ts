@@ -1254,6 +1254,9 @@ export interface ModelDescription {
 
   sourceFile?: string;
   isFromAutoDetect?: boolean;
+
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
 }
 
 export interface JSONEmbedOptions {
