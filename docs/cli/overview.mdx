@@ -1,6 +1,5 @@
 ---
 title: "Overview"
-description: "Command-line interface for automated coding tasks, scripting, and headless development workflows with Continue's AI coding capabilities"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -8,227 +7,46 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 <OSAutoDetect />
 
+Continue CLI (`cn`) is a terminal-based coding agent. It can edit files, run commands, and work through multi-step tasks — the same agent that powers the Continue IDE extensions, running in your terminal.
+
 <Frame>
   <img src="/images/cn-demo.gif" />
 </Frame>
 
-## Get Started in 30 Seconds
-
-Prerequisites:
-
-- [Node.js 18 or newer](https://nodejs.org/en/download/)
-- A [Continue Mission Control](https://continue.dev) account (recommended) or local configuration
+## Install
 
 <CLIInstall />
 
-Then navigate to your project and start coding:
+## First run
 
 ```bash
-cd your-awesome-project
+cd your-project
 cn
-# You'll be prompted to set up on first use
 ```
 
-That's it! You're ready to start automating with Continue CLI.
+On first launch you'll be asked to log in with [Continue](https://continue.dev) or enter an Anthropic API key. After that, you're in a session and can start typing.
 
-[Continue with CLI Quickstart →](/cli/quick-start)
+## Two modes
 
-## Two Ways to Use Continue CLI
+**[TUI mode](/cli/tui-mode)** — run `cn` to start an interactive session. You type messages, reference files with `@`, approve tool calls, and iterate with the agent. This is the default.
 
-Continue CLI offers two distinct modes designed for different workflows:
+**[Headless mode](/cli/headless-mode)** — run `cn -p "your prompt"` for single-shot automation. The agent runs to completion and prints its response to stdout. Use this in scripts, CI/CD, and git hooks.
 
-### TUI Mode: Interactive Development
+## Common flags
 
-**Perfect for exploration, debugging, and iterating on AI workflows**
+| Flag | Effect |
+|------|--------|
+| `-p "prompt"` | Headless mode — run prompt and exit |
+| `--config <path or slug>` | Use a specific config file or assistant |
+| `--resume` | Resume the most recent session |
+| `--auto` | Allow all tools without prompting |
+| `--readonly` | Plan mode — read-only tools only |
+| `--allow <tool>` | Allow a specific tool (repeatable) |
+| `--exclude <tool>` | Exclude a specific tool (repeatable) |
+| `--rule <rule>` | Add a rule — file path, hub slug, or string (repeatable) |
+| `--mcp <slug>` | Add an MCP server from the hub (repeatable) |
+| `--model <slug>` | Add a model from the hub (repeatable) |
+| `--agent <slug>` | Load an agent file from the hub |
+| `--verbose` | Enable verbose logging |
 
-```bash
-cn
-> @src/components/UserProfile.js Review this component for security issues
-> Generate comprehensive unit tests
-> Suggest performance improvements
-```
-
-- **Interactive conversations** with your codebase
-- **Iterate and refine** prompts and approaches
-- **Explore and understand** complex codebases
-- **Perfect for experimentation** and learning
-
-### Headless Mode: Production Automation
-
-**Perfect for CI/CD, automation, and reliable workflows**
-
-```bash
-cn -p "Generate a conventional commit message for staged changes"
-cn -p "Review pull request changes for security vulnerabilities"
-cn -p "Update documentation based on recent code changes"
-```
-
-- **Single-command execution** for automation
-- **Reliable, repeatable results** for production use
-- **CI/CD and pipeline integration**
-- **Git hooks and automated workflows**
-
-<Info>
-  **Tool Permissions in TUI vs Headless Mode**
-
-  Continue CLI tools have three permission levels:
-  - **allow**: Executes automatically without confirmation
-  - **ask**: Prompts for user confirmation before execution (e.g., `writeFile`, `runTerminalCommand`)
-  - **exclude**: Tool is not available to the AI
-
-  **In headless mode**, tools with "ask" permission are automatically excluded to prevent the AI from seeing tools it cannot call. This ensures reliable automation without user intervention.
-
-  **In TUI mode**, tools with "ask" permission are available and will prompt for confirmation when the AI attempts to use them.
-
-  💡 **Tip**: If your workflow requires tools that need confirmation (like file writes or terminal commands), use TUI mode. For fully automated workflows with read-only operations, use headless mode.
-</Info>
-
-### Development Workflow: TUI → Headless
-
-<Tip>
-  **Pro Tip**: Start in TUI mode to iterate on your AI agent. Once
-  you have a workflow that works reliably, deploy it as a Continuous AI
-  automation.
-</Tip>
-
-1. **Experiment in TUI mode** to perfect your agent
-2. **Test different approaches** interactively until you get consistent results
-3. **Convert successful workflows** to automated Continuous AI commands
-4. **Deploy in production** with confidence in your proven approach
-
-## Why developers love Continue CLI
-
-- **Works in your terminal**: Not another chat window. Not another IDE. Continue CLI meets you where you already work, with the tools you already love.
-- **Takes action**: Continue CLI can directly edit files, run commands, and create commits. Need more? Check out our [MCPs](/customize/deep-dives/mcp).
-- **Automate tasks**: Create issues from PostHog data, automatically assign labels to issues, and more. Do all this in a single command from your developer machines, or automatically in CI.
-- **Flexible development flow**: Start interactive, then automate proven workflows.
-
-## Key Capabilities
-
-### Context Engineering
-
-- Use `@` to reference files and provide context
-- Use `/` to run slash commands for specific tasks
-- Access the same context providers as IDE extensions
-
-### Tool Integration
-
-- File editing and creation
-- Terminal command execution
-- Codebase understanding and analysis
-- Git integration
-- Web search and documentation access
-
-### Model Flexibility
-
-- Switch between models with `/model` command
-- Use any model configured in your `config.yaml`
-- Access Continue Mission Control models and configurations
-
-## Continue Mission Control Integration
-
-Continue CLI integrates seamlessly with [Continue Mission Control](https://continue.dev) for:
-
-### API Access
-
-Get an API key for automation workflows:
-
-1. Visit [Continue Mission Control API Keys](https://continue.dev/settings/api-keys)
-2. Create a new API key
-3. Use with `cn login` or in your automation scripts
-
-### Secrets Management
-
-Store secure credentials for CLI workflows:
-
-1. Visit [Continue Mission Control Secrets](https://continue.dev/settings/secrets)
-2. Add your API keys and sensitive data
-3. Reference in configurations with `${{ secrets.SECRET_NAME }}`
-
-### Configuration Sync
-
-- Cloud-managed configurations automatically sync
-- Share configurations across team members
-- Version control for your AI workflows
-
-## Common Use Cases
-
-### TUI Mode Examples
-
-**Interactive development and exploration:**
-
-<CodeGroup>
-```bash Codebase Exploration
-# Start interactive session
-cn
-> @src/components Find all unused React components
-> /explain How does authentication work in this codebase?
-> @auth/ What security patterns are used here?
-```
-
-```bash Iterative Debugging
-# Debug issues interactively
-cn
-> @tests/auth.test.js This test is failing, help me understand why
-> @src/auth/middleware.js Let's examine this middleware
-> /debug What could be causing the timeout error?
-```
-
-```bash Workflow Development
-# Develop and test automation workflows
-cn
-> @package.json @CHANGELOG.md Generate a release notes template
-> # Test and refine the approach
-> # Once working, convert to: cn -p "Generate release notes"
-```
-
-</CodeGroup>
-
-### Headless Mode Examples
-
-**Production automation and scripting:**
-
-<CodeGroup>
-```bash Git Automation
-# Generate commit messages
-cn -p "Generate a conventional commit message for the current changes"
-
-# Code review automation
-
-cn -p "Review the current git changes for bugs and suggest improvements"
-
-````
-
-```bash CI/CD Integration
-# In your pipeline scripts
-cn -p "Analyze test failures and suggest fixes"
-
-# Automated documentation updates
-cn -p "@README.md Update this documentation based on recent changes"
-````
-
-```bash Issue Management
-# Create GitHub issues from PostHog data
-cn -p "@posthog-data.json Create GitHub issues for UX problems found in this session data"
-
-# Automated security audits
-cn -p "Scan the codebase for potential security vulnerabilities"
-```
-
-</CodeGroup>
-
-## Next Steps
-
-<CardGroup cols={3}>
-  <Card title="CLI Quickstart" href="/cli/quick-start">
-    Learn basic commands and common workflows
-  </Card>
-
-<Card title="Installation Guide" href="/cli/install">
-  Install Continue CLI and set up your environment
-</Card>
-
-  <Card title="CLI Workflows" href="/guides/overview#continuous-ai">
-    Task-specific tutorials and examples
-  </Card>
-</CardGroup>
+Run `cn --help` for the full list.

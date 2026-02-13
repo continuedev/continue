@@ -44,7 +44,14 @@
           {
             "group": "CLI",
             "icon": "terminal",
-            "pages": ["cli/overview", "cli/install", "cli/quick-start"]
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/tui-mode",
+              "cli/headless-mode",
+              "cli/configuration",
+              "cli/tool-permissions"
+            ]
           }
         ]
       },
