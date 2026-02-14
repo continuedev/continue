@@ -550,25 +550,32 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     provider: "deepseek",
     icon: "deepseek.png",
     description:
-      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
-    longDescription:
-      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+      "DeepSeek - Advanced language models for reasoning, coding, and chat",
+    longDescription: `DeepSeek provides an affordable API for state-of-the-art language models with exceptional performance for reasoning, code completion, and general conversation. Get your API key from [platform.deepseek.com](https://platform.deepseek.com).
+
+**Important Notes:**
+- 128k context length
+- **DeepSeek Chat**: Standard model with 8k max output token limit, supports tools
+- **DeepSeek Reasoner**: Reasoning mode with 64k max output token limit, supports tools  
+- **DeepSeek FIM (Beta)**: Fill-in-the-Middle, no tools support`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
         inputType: "text",
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your DeepSeek API key",
+        placeholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         required: true,
+        description: "Your DeepSeek API key from platform.deepseek.com",
       },
+      ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.deepseekCoderApi,
-      models.deepseekChatApi,
-      models.deepseekReasonerApi,
+      models.deepseekChat,
+      models.deepseekReasoner,
+      models.deepseekFimBeta,
     ],
-    apiKeyUrl: "https://platform.deepseek.com/api_keys",
+    apiKeyUrl: "https://platform.deepseek.com",
   },
   together: {
     title: "TogetherAI",

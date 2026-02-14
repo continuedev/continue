@@ -19,7 +19,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
-import Deepseek from "./Deepseek";
+import DeepSeek from "./DeepSeek";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -101,7 +101,7 @@ export const LLMClasses = [
   NCompass,
   ContinueProxy,
   Cloudflare,
-  Deepseek,
+  DeepSeek,
   Docker,
   Msty,
   Azure,

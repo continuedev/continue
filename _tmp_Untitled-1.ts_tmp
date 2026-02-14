@@ -1,0 +1,330 @@
+/**
+ * Default configuration values for DeepSeek models
+ */
+export interface DeepSeekModelDefaults {
+  maxTokens: number;
+  temperature: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  maxStopWords: number;
+  supportsTools: boolean;
+  supportsFim: boolean;
+  supportsReasoning: boolean;
+}
+
+/**
+ * Default configuration for DeepSeek models
+ */
+export const DEEPSEEK_MODEL_DEFAULTS: Record<string, DeepSeekModelDefaults> = {
+  // DeepSeek Chat models
+  "deepseek-chat": {
+    maxTokens: 128000,
+    temperature: 0.5,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    maxStopWords: 16,
+    supportsTools: true,
+    supportsFim: false,
+    supportsReasoning: false,
+  },
+  
+  // DeepSeek Reasoner models
+  "deepseek-reasoner": {
+    maxTokens: 128000,
+    temperature: 0, // Reasoner models typically ignore temperature
+    topP: 1,        // Reasoner models typically ignore top_p
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    maxStopWords: 16,
+    supportsTools: false, // Reasoner doesn't support native tool calling
+    supportsFim: false,
+    supportsReasoning: true,
+  },
+
+  // Base models (if available)
+  "deepseek-chat-fim": {
+    maxTokens: 128000,
+    temperature: 0.7,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    maxStopWords: 16,
+    supportsTools: false,
+    supportsFim: true,
+    supportsReasoning: false,
+  },
+
+  // Default fallback for unknown models
+  "default": {
+    maxTokens: 128000,
+    temperature: 0.7,
+    topP: 0.95,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    maxStopWords: 16,
+    supportsTools: false,
+    supportsFim: false,
+    supportsReasoning: false,
+  }
+};
+
+/**
+ * Gets the default configuration for a specific DeepSeek model
+ */
+export function getModelDefaults(modelName: string): DeepSeekModelDefaults {
+  const modelKey = Object.keys(DEEPSEEK_MODEL_DEFAULTS).find(key => 
+    modelName.toLowerCase().includes(key.toLowerCase())
+  );
+  
+  return modelKey 
+    ? DEEPSEEK_MODEL_DEFAULTS[modelKey] 
+    : DEEPSEEK_MODEL_DEFAULTS.default;
+}
+
+/**
+ * Applies model-specific defaults to a request body
+ */
+export function applyModelDefaults(
+  body: any, 
+  modelName: string
+): any {
+  const defaults = getModelDefaults(modelName);
+  
+  return {
+    ...body,
+    max_tokens: body.max_tokens ?? defaults.maxTokens,
+    temperature: body.temperature ?? defaults.temperature,
+    top_p: body.top_p ?? defaults.topP,
+    frequency_penalty: body.frequency_penalty ?? defaults.frequencyPenalty,
+    presence_penalty: body.presence_penalty ?? defaults.presencePenalty,
+    stop: body.stop ?? defaults.stopSequences,
+  };
+}
+
+/**
+ * Checks if a model supports specific features
+ */
+export function modelSupportsFeature(
+  modelName: string, 
+  feature: 'tools' | 'fim' | 'reasoning'
+): boolean {
+  const defaults = getModelDefaults(modelName);
+  
+  switch (feature) {
+    case 'tools':
+      return defaults.supportsTools;
+    case 'fim':
+      return defaults.supportsFim;
+    case 'reasoning':
+      return defaults.supportsReasoning;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Validates if a request is compatible with the model capabilities
+ */
+export function validateModelCompatibility(
+  body: any, 
+  modelName: string
+): string[] {
+  const warnings: string[] = [];
+  const defaults = getModelDefaults(modelName);
+  
+  // Check tool compatibility
+  if (body.tools && body.tools.length > 0 && !defaults.supportsTools) {
+    warnings.push(`Model ${modelName} does not support tool calling. Tools will be ignored.`);
+  }
+  
+  // Check FIM compatibility for completion requests
+  if (body.prompt && !defaults.supportsFim) {
+    warnings.push(`Model ${modelName} does not support FIM completion.`);
+  }
+  
+  // Check reasoner model parameter restrictions
+  if (defaults.supportsReasoning) {
+    if (body.temperature !== undefined && body.temperature !== 0) {
+      warnings.push('Reasoner models ignore temperature parameter. Using default (0).');
+    }
+    if (body.top_p !== undefined && body.top_p !== 1) {
+      warnings.push('Reasoner models ignore top_p parameter. Using default (1).');
+    }
+  }
+  
+  return warnings;
+}
+
+
+
+/**
+ * Validates the temperature parameter
+ */
+export function validateTemperature(
+  temperature: any, 
+  warnings: string[]
+): number | undefined {
+  if (temperature === undefined || temperature === null) return undefined;
+  
+  if (temperature < 0 || temperature > 2) {
+    warnings.push(
+      `temperature must be between 0 and 2. Got: ${temperature}. ` +
+      `Using default ${DEEPSEEK_DEFAULT_TEMPERATURE}.`
+    );
+    return DEEPSEEK_DEFAULT_TEMPERATURE;
+  }
+  
+  return temperature;
+}
+
+/**
+ * Validates the top_p parameter
+ */
+export function validateTopP(
+  topP: any, 
+  warnings: string[]
+): number | undefined {
+  if (topP === undefined || topP === null) return undefined;
+  
+  if (topP < 0 || topP > 1) {
+    warnings.push(`top_p must be between 0 and 1. Got: ${topP}. Using default.`);
+    return undefined;
+  }
+  
+  return topP;
+}
+
+/**
+ * Validates the frequency_penalty parameter
+ */
+export function validateFrequencyPenalty(
+  frequencyPenalty: any, 
+  warnings: string[]
+): number | undefined {
+  if (frequencyPenalty === undefined || frequencyPenalty === null) return undefined;
+  
+  if (frequencyPenalty < -2 || frequencyPenalty > 2) {
+    warnings.push(
+      `frequency_penalty must be between -2.0 and 2.0. ` +
+      `Got: ${frequencyPenalty}. Using default.`
+    );
+    return undefined;
+  }
+  
+  return frequencyPenalty;
+}
+
+/**
+ * Validates the presence_penalty parameter
+ */
+export function validatePresencePenalty(
+  presencePenalty: any, 
+  warnings: string[]
+): number | undefined {
+  if (presencePenalty === undefined || presencePenalty === null) return undefined;
+  
+  if (presencePenalty < -2 || presencePenalty > 2) {
+    warnings.push(
+      `presence_penalty must be between -2.0 and 2.0. ` +
+      `Got: ${presencePenalty}. Using default.`
+    );
+    return undefined;
+  }
+  
+  return presencePenalty;
+}
+
+/**
+ * Validates the suffix parameter for FIM completion
+ */
+export function validateFimSuffix(
+  suffix: any, 
+  warnings: string[]
+): string | undefined {
+  if (suffix === null || suffix === '') {
+    return undefined;
+  }
+
+  if (suffix !== undefined) {
+    const suffixText = Array.isArray(suffix) ? suffix.join(' ') : suffix;
+    return suffixText;
+  }
+
+  return undefined;
+}
+
+
+
+/**
+ * Validates the logprobs parameter for FIM completion
+ */
+export function validateFimLogprobs(
+  logprobs: any, 
+  warnings: string[]
+): number | undefined {
+  if (logprobs === undefined || logprobs === null) return undefined;
+  
+  if (typeof logprobs !== 'number') {
+    warnings.push(`FIM logprobs must be a number (0-20). Got: ${typeof logprobs}.`);
+    return undefined;
+  }
+  
+  if (logprobs < 0 || logprobs > 20) {
+    warnings.push(`FIM logprobs must be between 0 and 20. Got: ${logprobs}.`);
+    return undefined;
+  }
+  
+  return Math.round(logprobs);
+}
+
+
+/**
+ * Validates the echo parameter for FIM completion
+ */
+export function validateFimEcho(
+  echo: any, 
+  warnings: string[]
+): boolean | undefined {
+  if (echo === undefined || echo === null) {
+    return undefined;
+  }
+
+  if (typeof echo !== 'boolean') {
+    warnings.push(`FIM echo parameter must be a boolean. Got: ${typeof echo}`);
+    return undefined;
+  }
+
+  return echo;
+}
+
+/**
+ * Validates the stream options for FIM completion
+ */
+export function validateFimStreamOptions(
+  streamOptions: any, 
+  warnings: string[]
+): { include_usage?: boolean } | undefined {
+  if (streamOptions === undefined || streamOptions === null) {
+    return undefined;
+  }
+
+  if (typeof streamOptions !== 'object' || Array.isArray(streamOptions)) {
+    warnings.push(`FIM stream_options must be an object. Got: ${typeof streamOptions}`);
+    return undefined;
+  }
+
+  const result: { include_usage?: boolean } = {};
+  
+  if ('include_usage' in streamOptions) {
+    if (typeof streamOptions.include_usage !== 'boolean') {
+    } else {
+      result.include_usage = streamOptions.include_usage;
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+

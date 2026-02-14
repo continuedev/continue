@@ -23,6 +23,15 @@ const GEMINI_MODEL_CONFIG = {
   apiKeyInputName: "GEMINI_API_KEY",
 };
 
+const DEEPSEEK_MODEL_CONFIG = {
+  slugs: [
+    "deepseek/deepseek-chat",
+    "deepseek/deepseek-reasoner",
+    "deepseek/deepseek-fim-beta",
+  ],
+  apiKeyInputName: "DEEPSEEK_API_KEY",
+};
+
 /**
  * We set the "best" chat + autocopmlete models by default
  * whenever a user doesn't have a config.json
@@ -94,6 +103,14 @@ export function setupProviderConfig(
         uses: slug,
         with: {
           [GEMINI_MODEL_CONFIG.apiKeyInputName]: apiKey,
+        },
+      }));
+      break;
+    case "deepseek":
+      newModels = DEEPSEEK_MODEL_CONFIG.slugs.map((slug) => ({
+        uses: slug,
+        with: {
+          [DEEPSEEK_MODEL_CONFIG.apiKeyInputName]: apiKey,
         },
       }));
       break;

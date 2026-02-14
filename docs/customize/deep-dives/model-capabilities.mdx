@@ -213,11 +213,10 @@ This matrix shows which models support tool use and image input capabilities. Co
 
 ### DeepSeek
 
-| Model             | Tool Use | Image Input | Context Window |
-| :---------------- | -------- | ----------- | -------------- |
-| DeepSeek V3       | Yes      | No          | 128k           |
-| DeepSeek Coder V2 | Yes      | No          | 128k           |
-| DeepSeek Chat     | Yes      | No          | 64k            |
+| Model             | Tool Use | Image Input | Context Window | Reasoning | FIM Support |
+| :---------------- | -------- | ----------- | -------------- | :-------- | :---------- |
+| DeepSeek Chat     | Yes      | No          | 128k           | No        | Yes (Beta)  |
+| DeepSeek Reasoner | Yes      | No          | 128k           | Yes       | No          |
 
 ### xAI
 
@@ -260,6 +259,8 @@ This matrix shows which models support tool use and image input capabilities. Co
 - **Tool Use**: Function calling support (tools are required for Agent mode)
 - **Image Input**: Processing images
 - **Context Window**: Maximum number of tokens the model can process in a single request
+- **Reasoning**: Chain-of-thought reasoning support (e.g., DeepSeek Reasoner)
+- **FIM Support**: Fill-in-Middle completion support for code generation
 
 ---
 

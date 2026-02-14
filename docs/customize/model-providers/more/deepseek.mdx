@@ -1,44 +1,271 @@
 ---
-title: DeepSeek
+title: "How to Configure DeepSeek Models with Continue"
 slug: ../deepseek
+sidebarTitle: "DeepSeek"
 ---
 
 <Tip>
+
   **Discover DeepSeek models [here](https://continue.dev/hub?q=DeepSeek)**
+
 </Tip>
 
 <Info>
-  You can get an API key from the [DeepSeek Console](https://www.deepseek.com/).
+
+  Get an API key from the [DeepSeek Platform](https://platform.deepseek.com/).
+  DeepSeek offers both chat and reasoning models with strong code generation capabilities.
+
 </Info>
 
-## Confiugration
+## Configuration
+
+### Basic Configuration
 
 <Tabs>
-   <Tab title="YAML">
-   ```yaml title="config.yaml"
-   name: My Config
-   version: 0.0.1
-   schema: v1
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
 
-   models:
-     - name: <MODEL_NAME>
-       provider: deepseek
-       model: <MODEL_ID>
-       apiKey: <YOUR_DEEPSEEK_API_KEY>
-   ```
-   </Tab>
-   <Tab title="JSON">
-   ```json title="config.json"
-   {
-     "models": [
-       {
-         "title": "<MODEL_NAME>",
-         "provider": "deepseek",
-         "model": "<MODEL_ID>",
-         "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
-       }
-     ]
-   }
-   ```
-   </Tab>
+  models:
+    - name: DeepSeek Chat
+      provider: deepseek
+      model: deepseek-chat
+      apiKey: <YOUR_DEEPSEEK_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek Chat",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
 </Tabs>
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek Reasoner
+      provider: deepseek
+      model: deepseek-reasoner
+      apiKey: <YOUR_DEEPSEEK_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek Reasoner",
+        "provider": "deepseek",
+        "model": "deepseek-reasoner",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>",
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## DeepSeek Model Capabilities
+
+DeepSeek models support various capabilities that you should be aware of when configuring:
+
+<Card title="Supported Models & Features">
+
+  | Model             | Tool Use | Image Input | Context Window | Reasoning | FIM Support |
+  | :---------------- | :------- | :---------- | :------------- | :-------- | :---------- |
+  | DeepSeek Chat     | Yes      | No          | 128k           | No        | Yes (Beta)  |
+  | DeepSeek Reasoner | Yes      | No          | 128k           | Yes       | No          |
+
+</Card>
+
+<Info>
+
+  **FIM (Fill-in-Middle) Support**: DeepSeek models support FIM completion through the beta endpoint `https://api.deepseek.com/beta/completions`. Continue automatically handles this for you when using model deepseek-fim-beta.
+
+</Info>
+
+<Warning>
+
+  **Reasoning Model Limitations**: DeepSeek Reasoner models ignore `temperature`, `top_p`, `frequency_penalty`, and `presence_penalty` parameters. They use deterministic reasoning logic instead.
+
+</Warning>
+
+## DeepSeek API Endpoints
+
+DeepSeek provides several API endpoints with specific purposes:
+
+<CardGroup>
+
+  <Card title="Standard Chat Completion">
+
+    - **Endpoint**: `https://api.deepseek.com/chat/completions`
+    - **Purpose**: Standard chat conversations
+    - **Features**: Tool calling, streaming, reasoning, stop sequences
+    - **Models**: All DeepSeek chat models
+
+  </Card>
+
+  <Card title="FIM Completion (Beta)">
+
+    - **Endpoint**: `https://api.deepseek.com/beta/completions`
+    - **Purpose**: Fill-in-Middle code completion
+    - **Features**: Prefix/suffix completion, streaming, code generation
+    - **Models**: `deepseek-chat`
+    - **Unsupported Features**: Tool calling, reasoning
+
+  </Card>
+
+</CardGroup>
+
+## Advanced Configurations
+
+```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek Chat
+      provider: deepseek
+      model: deepseek-chat
+      apiKey: <YOUR_DEEPSEEK_API_KEY>
+      contextLength: 131072
+      temperature: 0.5
+      maxTokens: 8192
+      roles:
+        - chat
+        - edit
+        - summarize
+      capabilities:
+        - tool_use
+```
+
+```yaml
+models:
+  - name: DeepSeek Reasoner
+    provider: deepseek
+    model: deepseek-reasoner
+    apiKey: <YOUR_DEEPSEEK_API_KEY>
+      contextLength: 131072
+      maxTokens: 65536
+      roles:
+        - chat
+        - edit
+        - summarize
+      capabilities:
+        - tool_use
+```
+
+<Info>
+
+  Thinking mode provides `reasoning_content` in responses, showing the model's thought process before delivering the final answer.
+
+</Info>
+
+### Tool Calling Support
+
+DeepSeek models support native tool/function calling:
+
+<Note>
+
+  Tool calling is required for Agent mode in Continue. DeepSeek models support both single and parallel tool calls.
+
+</Note>
+
+### FIM (Fill-in-Middle) Completion
+
+DeepSeek supports FIM completion for code generation tasks. Continue automatically uses the correct beta endpoint when FIM is requested:
+
+```yaml
+models:
+  - name: DeepSeek FIM (Beta)
+    provider: deepseek
+    model: deepseek-fim-beta # built in fim configuration meta model
+    apiKey: <YOUR_DEEPSEEK_API_KEY>
+```
+
+## Configuration Examples
+
+### Multiple Models for Different Tasks
+
+You can configure multiple DeepSeek models for different purposes:
+
+```yaml
+models:
+  # Primary chat model
+  - name: DeepSeek Chat
+    provider: deepseek
+    model: deepseek-chat
+    apiKey: <YOUR_DEEPSEEK_API_KEY>
+    roles:
+      - chat
+      - edit
+      - apply
+
+  # Reasoning model for complex problems
+  - name: DeepSeek Reasoner
+    provider: deepseek
+    model: deepseek-reasoner
+    apiKey: <YOUR_DEEPSEEK_API_KEY>
+    roles:
+      - chat  # Use for complex reasoning tasks
+
+```
+
+### Custom API Base URL
+
+If you're using a proxy or custom deployment, you can override the API base URL:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Custom DeepSeek Deployment
+      provider: deepseek
+      model: deepseek-chat
+      apiBase: https://custom-api.example.com/v1
+      apiKey: <YOUR_CUSTOM_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Custom DeepSeek Deployment",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "apiBase": "https://custom-api.example.com/v1",
+        "apiKey": "<YOUR_CUSTOM_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Additional Resources
+
+- [DeepSeek Official Documentation](https://platform.deepseek.com/api-docs/)
+- [DeepSeek Model Hub](https://continue.dev/hub?q=DeepSeek)
+- [Continue Model Capabilities Guide](/customize/deep-dives/model-capabilities)

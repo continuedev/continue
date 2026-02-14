@@ -24,7 +24,11 @@ const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
   const suffixExplanation = isSuffix
     ? ' When you get to "<STOP EDITING HERE>", end your response.'
     : "";
-
+  console.warn(
+    "=== osModelsEditPrompt ===",
+    otherData.supportsCompletions,
+    otherData.supportsPrefill,
+  );
   // If neither prefilling nor /v1/completions are supported, we have to use a chat prompt without putting words in the model's mouth
   if (
     otherData.supportsCompletions !== "true" &&
@@ -126,6 +130,22 @@ Leave existing comments in place unless changes require modifying them. Rewrite 
 \`\`\`<|EOT|>
 ### Response:
 Sure! Here's the code you requested:
+
+\`\`\`{{{language}}}
+`;
+
+const deepseekFimEditPrompt = `### System:
+You are DeepSeek, a pair programming assistant operating within the Continue IDE environment. Collaborate on code tasks, offer technical insights, suggest improvements, and explain complex concepts. Create clean, efficient, and well-documented code.\n";
+
+### User:
+Rewrite the code to satisfy this request: "{{{userInput}}}"
+
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\`
+
+### DeepSeek:
+Of course! Here's the code you requested:
 
 \`\`\`{{{language}}}
 `;
@@ -233,6 +253,7 @@ export {
   claudeEditPrompt,
   codeLlama70bEditPrompt,
   deepseekEditPrompt,
+  deepseekFimEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
   llama3EditPrompt,

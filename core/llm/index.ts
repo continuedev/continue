@@ -39,6 +39,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -66,7 +67,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 
 export class LLMError extends Error {
   constructor(
@@ -136,7 +136,7 @@ export abstract class BaseLLM implements ILLM {
         return false;
       }
     }
-    if (["groq", "mistral", "deepseek"].includes(this.providerName)) {
+    if (["groq", "mistral"].includes(this.providerName)) {
       return false;
     }
     return true;
@@ -265,6 +265,7 @@ export abstract class BaseLLM implements ILLM {
         options.template,
       ) ??
       undefined;
+    console.warn("=== _templatePromptLikeMessages ===", options.template);
     this.logger = options.logger;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
@@ -336,10 +337,12 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
+    console.warn(">>> === _templatePromptLikeMessages ===", prompt);
+
     if (!this.templateMessages) {
       return prompt;
     }
-
+    console.warn("=== _templatePromptLikeMessages ===", prompt);
     // NOTE system message no longer supported here
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
@@ -616,6 +619,7 @@ export abstract class BaseLLM implements ILLM {
       : undefined;
     let status: InteractionStatus = "in_progress";
 
+    console.warn(" --- streamFim --- ", options);
     const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
     if (logEnabled) {
       interaction?.logItem({
@@ -754,7 +758,11 @@ export abstract class BaseLLM implements ILLM {
         this.llmRequestHook(completionOptions.model, prompt);
       }
     }
-
+    console.warn(
+      "=== *Stream complete 2 ===",
+      prompt,
+      this.shouldUseOpenAIAdapter,
+    );
     let completion = "";
     try {
       if (this.shouldUseOpenAIAdapter("streamComplete") && this.openaiAdapter) {
@@ -1049,7 +1057,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  private async *openAIAdapterStream(
+  protected async *openAIAdapterStream(
     body: ChatCompletionCreateParams,
     signal: AbortSignal,
     onCitations: (c: string[]) => void,
@@ -1193,6 +1201,7 @@ export abstract class BaseLLM implements ILLM {
 
     try {
       if (this.templateMessages) {
+        console.warn("=== deepSeekBody index chat stream 3===", options);
         for await (const chunk of this._streamComplete(
           prompt,
           signal,
@@ -1206,6 +1215,7 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
+        console.warn("=== deepSeekBody index chat stream 4===", messages);
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           let body = toChatBody(messages, completionOptions, {
             includeReasoningField: this.supportsReasoningField,

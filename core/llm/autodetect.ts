@@ -11,6 +11,7 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   codestralTemplateMessages,
+  deepseekFimTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -233,6 +234,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "deepseek",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
@@ -257,6 +259,8 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("moonshot") ||
     modelName.includes("kimi") ||
     modelName.includes("mercury") ||
+    modelName.includes("deepseek-chat") ||
+    modelName.includes("deepseek-reasoner") ||
     /^o\d/.test(modelName)
   );
 }
@@ -363,6 +367,9 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("deepseek")) {
+    if (lower.includes("deepseek-fim")) {
+      return "deepseek-fim";
+    }
     return "deepseek";
   }
 
@@ -421,6 +428,7 @@ function autodetectTemplateFunction(
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       codestral: codestralTemplateMessages,
+      "deepseek-fim": deepseekFimTemplateMessages,
       none: null,
     };
 
@@ -445,6 +453,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "xwin-coder",
   "zephyr",
   "llama3",
+  "deepseek-fim",
 ];
 
 function autodetectPromptTemplates(
@@ -495,6 +504,9 @@ function autodetectPromptTemplates(
   } else if (templateType) {
     editTemplate = gptEditPrompt;
   } else if (model.includes("codestral")) {
+    editTemplate = osModelsEditPrompt;
+  } else if (["deepseek-chat", "deepseek-reasoner"].includes(model)) {
+    console.warn("=== DeepSeek edit template ===", model);
     editTemplate = osModelsEditPrompt;
   }
 

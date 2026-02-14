@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 import Anthropic from "../Anthropic.js";
-import Deepseek from "../Deepseek.js";
+import Deepseek from "../DeepSeek.js";
 import FunctionNetwork from "../FunctionNetwork.js";
 import Mistral from "../Mistral.js";
 import OpenAI from "../OpenAI.js";

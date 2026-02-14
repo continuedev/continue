@@ -383,39 +383,45 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["ollama", "lmstudio", "llama.cpp"],
     isOpenSource: true,
   },
-  deepseekChatApi: {
+  deepseekChat: {
     title: "DeepSeek Chat",
-    description: "DeepSeek's best model for general chat use cases.",
+    description: "DeepSeek's best model with excellent coding capabilities.",
     params: {
       title: "DeepSeek Chat",
       model: "deepseek-chat",
-      contextLength: 128_000,
+      contextLength: 131072,
+      maxTokens: 8192, // Standard limit for non-reasoning mode
+      apiBase: "https://api.deepseek.com/",
     },
     icon: "deepseek.png",
     providerOptions: ["deepseek"],
-    isOpenSource: false,
+    isOpenSource: true,
   },
-  deepseekCoderApi: {
-    title: "DeepSeek Coder",
-    description:
-      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
-    params: {
-      title: "DeepSeek Coder",
-      model: "deepseek-coder",
-      contextLength: 128_000,
-    },
-    icon: "deepseek.png",
-    providerOptions: ["deepseek"],
-    isOpenSource: false,
-  },
-  deepseekReasonerApi: {
+  deepseekReasoner: {
     title: "DeepSeek Reasoner",
     description:
-      "An open-source reasoning model which generates a chain of thought to enhance the accuracy of its responses.",
+      "DeepSeek's reasoning model with 64k token limit for complex thinking tasks.",
     params: {
       title: "DeepSeek Reasoner",
       model: "deepseek-reasoner",
-      contextLength: 64_000,
+      contextLength: 131072,
+      maxTokens: 65536,
+      apiBase: "https://api.deepseek.com/",
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: true,
+  },
+  deepseekFimBeta: {
+    title: "DeepSeek FIM (Beta)",
+    description:
+      "DeepSeek's Fill-in-the-Middle model with Prefix Completion Beta feature.",
+    params: {
+      title: "DeepSeek FIM Beta",
+      model: "deepseek-fim-beta",
+      contextLength: 131072,
+      maxTokens: 8192,
+      apiBase: "https://api.deepseek.com/beta",
     },
     icon: "deepseek.png",
     providerOptions: ["deepseek"],

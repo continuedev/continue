@@ -26,6 +26,7 @@ export function OnboardingProvidersTab({
     providers["openai"],
     providers["anthropic"],
     providers["gemini"],
+    providers["deepseek"],
   ];
 
   const handleFormSubmit = () => {
