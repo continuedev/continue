@@ -1276,7 +1276,7 @@
                 "enum": ["deepseek"]
               }
             },
-            "required": ["provider"]
+            "required": ["provider", "apiKey"]
           },
           "then": {
             "properties": {
@@ -1293,7 +1293,7 @@
                 }
               },
               "model": {
-                "enum": ["deepseek-chat", "deepseek-coder"]
+                "enum": ["deepseek-reasoner", "deepseek-chat", "deepseek-fim"]
               }
             }
           }

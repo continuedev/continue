@@ -13,29 +13,43 @@ export interface BaseDeepSeekRequestBody {
 }
 
 /**
+ * DeepSeek tool type (function tool only)
+ */
+export type DeepSeekTool = {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: any;
+    strict?: boolean;
+  };
+};
+
+/**
+ * DeepSeek tool choice type
+ */
+export type DeepSeekToolChoice = 
+  | "none"
+  | "auto"
+  | "required"
+  | { type: "function"; function: { name: string } };
+
+/**
+ * DeepSeek response format type
+ */
+export type DeepSeekResponseFormat = {
+  type: "text" | "json_object";
+};
+
+/**
  * Interface for chat completion request body
  */
 export interface ChatDeepSeekRequestBody extends BaseDeepSeekRequestBody {
   messages: DeepSeekMessage[];
   thinking?: { type: "enabled" | "disabled" } | null;
-  tool_choice?:
-    | "none"
-    | "auto"
-    | "required"
-    | { type: "function"; function: { name: string } }
-    | null;
-  tools?: Array<{
-    type: "function";
-    function: {
-      name: string;
-      description?: string;
-      parameters?: any;
-      strict?: boolean;
-    };
-  }> | null;
-  response_format?: {
-    type: "text" | "json_object";
-  } | null;
+  tool_choice?: DeepSeekToolChoice | null;
+  tools?: DeepSeekTool[] | null;
+  response_format?: DeepSeekResponseFormat | null;
   stream_options?: {
     include_usage?: boolean;
   } | null;
