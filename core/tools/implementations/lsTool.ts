@@ -9,10 +9,6 @@ export function resolveLsToolDirPath(dirPath: string | undefined) {
   if (!dirPath || dirPath === ".") {
     return ".";
   }
-  // Don't strip leading slash from absolute paths - let the resolver handle it
-  if (dirPath.startsWith(".") && !dirPath.startsWith("./")) {
-    return dirPath.slice(1);
-  }
   return dirPath.replace(/\\/g, "/");
 }
 
