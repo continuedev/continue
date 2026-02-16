@@ -1,5 +1,6 @@
 import {
   ChatMessage,
+  CompletionOptions,
   LLMFullCompletionOptions,
   LLMOptions,
   MessageOption,
@@ -9,6 +10,7 @@ import {
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
+import { ChatCompletionCreateParams } from "openai/resources/index";
 import OpenAI from "./OpenAI.js";
 
 class DeepSeek extends OpenAI {
@@ -71,6 +73,8 @@ class DeepSeek extends OpenAI {
     options: LLMFullCompletionOptions = {},
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
+    // Convert model name if needed
+    const modifiedOptions = this._convertCompletionOptionsModelName(options);
     // Transform messages for DeepSeek API
     const transformedMessages = this.transformMessagesForDeepSeek(messages);
 
@@ -78,7 +82,7 @@ class DeepSeek extends OpenAI {
     const generator = super.streamChat(
       transformedMessages,
       signal,
-      options,
+      modifiedOptions,
       messageOptions,
     );
     let result: PromptLog | undefined;
@@ -91,6 +95,35 @@ class DeepSeek extends OpenAI {
           break;
         }
         yield value as ChatMessage;
+      }
+    } finally {
+      // Ensure generator is cleaned up
+      generator.return?.(undefined as any);
+    }
+    // Return the result from parent
+    return result!;
+  }
+
+  async *streamFim(
+    prefix: string,
+    suffix: string,
+    signal: AbortSignal,
+    options: LLMFullCompletionOptions = {},
+  ): AsyncGenerator<string, PromptLog> {
+    // Convert model name if needed before passing to parent
+    const modifiedOptions = this._convertCompletionOptionsModelName(options);
+    // Delegate to parent implementation
+    const generator = super.streamFim(prefix, suffix, signal, modifiedOptions);
+    let result: PromptLog | undefined;
+
+    try {
+      while (true) {
+        const { value, done } = await generator.next();
+        if (done) {
+          result = value as PromptLog;
+          break;
+        }
+        yield value as string;
       }
     } finally {
       // Ensure generator is cleaned up
@@ -213,7 +246,7 @@ class DeepSeek extends OpenAI {
           console.warn(`    -> Added empty assistant after thinking`);
         } else {
           console.warn(
-            `    -> Not a thinking message (role="${msg.role}"), adding as-is`,
+            `    -> Not a lone thinking message (role="${msg.role}"), adding as-is`,
           );
           transformed.push(msg);
         }
@@ -223,6 +256,40 @@ class DeepSeek extends OpenAI {
     console.warn("\n=== DeepSeek transformMessagesForDeepSeek END ===");
     console.warn("Output messages:", JSON.stringify(transformed, null, 2));
     return transformed;
+  }
+
+  protected _convertModelName(model: string): string {
+    if (model === "deepseek-fim-beta") {
+      return "deepseek-chat";
+    }
+    return model;
+  }
+
+  private _convertCompletionOptionsModelName(
+    options: CompletionOptions | LLMFullCompletionOptions,
+  ): CompletionOptions {
+    return {
+      ...options,
+      model: this._convertModelName(options.model || this.model),
+    };
+  }
+
+  protected _convertArgs(
+    options: CompletionOptions,
+    messages: ChatMessage[],
+  ): any {
+    const convertedOptions = this._convertCompletionOptionsModelName(options);
+    return super._convertArgs(convertedOptions, messages);
+  }
+
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    // Add stream_options to include usage statistics for DeepSeek API
+    if (body.stream) {
+      (body as any).stream_options = { include_usage: true };
+    }
+    return super.modifyChatBody(body);
   }
 }
 

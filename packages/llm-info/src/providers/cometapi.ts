@@ -250,7 +250,7 @@ export const CometAPI: ModelProvider = {
     {
       model: "deepseek-v3.1",
       displayName: "DeepSeek V3.1",
-      contextLength: 128000,
+      contextLength: 131072,
       maxCompletionTokens: 4096,
       description:
         "Latest DeepSeek model with improved reasoning and coding capabilities.",
@@ -259,7 +259,7 @@ export const CometAPI: ModelProvider = {
     {
       model: "deepseek-v3",
       displayName: "DeepSeek V3",
-      contextLength: 128000,
+      contextLength: 131072,
       maxCompletionTokens: 4096,
       description:
         "Advanced DeepSeek model with strong performance in technical domains.",

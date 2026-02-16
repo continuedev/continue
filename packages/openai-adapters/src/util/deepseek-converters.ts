@@ -3,7 +3,7 @@ import {
   ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
   ChatCompletionTool,
-  ChatCompletionToolChoiceOption
+  ChatCompletionToolChoiceOption,
 } from "openai/resources/index";
 
 import { FimCreateParamsStreaming } from "../apis/base.js";
@@ -15,7 +15,7 @@ import {
   DeepSeekTool,
   DeepSeekToolCall,
   DeepSeekToolChoice,
-  FimDeepSeekRequestBody
+  FimDeepSeekRequestBody,
 } from "./deepseek-types.js";
 
 // Converts valid OpenAI request body to DeepSeek request body
@@ -24,16 +24,16 @@ import {
 /**
  * Represents possible content types in OpenAI messages
  */
-type OpenAIContent = 
-  | string 
-  | null 
+type OpenAIContent =
+  | string
+  | null
   | undefined
   | Array<{ type: string; text?: string; image_url?: any }>;
 
 /**
  * Represents a message that could come from OpenAI API
  */
-type OpenAICompatibleMessage = ChatCompletionMessageParam & {
+export type OpenAICompatibleMessage = ChatCompletionMessageParam & {
   content?: OpenAIContent;
   reasoning?: string;
   reasoning_content?: string;
@@ -57,11 +57,13 @@ export function validateAndFilterContent(
   if (content === undefined) {
     return null;
   }
-  
+
   if (Array.isArray(content)) {
-    const filtered = content.filter((part): part is { type: "text"; text: string } => {
-      return part.type === "text" && typeof part.text === "string";
-    });
+    const filtered = content.filter(
+      (part): part is { type: "text"; text: string } => {
+        return part.type === "text" && typeof part.text === "string";
+      },
+    );
 
     if (filtered.length !== content.length) {
       warnings.push("Non-text content parts were filtered out");
@@ -121,8 +123,6 @@ export function validateLogprobs(
   return { logprobs: logprobs, top_logprobs: top_logprobs };
 }
 
-
-
 /**
  * Validates and prepares tools for the API request
  */
@@ -136,7 +136,7 @@ export function validateAndFilterTools(
 
   let filteredTools = tools.filter((tool) => tool.type === "function");
   const ignoredCount = tools.length - filteredTools.length;
-  
+
   if (ignoredCount > 0) {
     warnings.push(
       `DeepSeek API supports only function tools. Ignoring ${ignoredCount} tools.`,
@@ -147,21 +147,27 @@ export function validateAndFilterTools(
     warnings.push(
       `DeepSeek API supports maximum 128 tools. Using first 128 and ignoring ${filteredTools.length - 128} tools.`,
     );
-    filteredTools = filteredTools.slice(0, 127);
+    filteredTools = filteredTools.slice(0, 128);
   }
 
   // Transform tools to DeepSeek format (strict must be boolean | undefined, not null)
-  return filteredTools.map(tool => {
+  return filteredTools.map((tool) => {
     const funcTool = tool as any; // ChatCompletionFunctionTool
     const result: DeepSeekTool = {
       type: "function",
       function: {
         name: funcTool.function.name,
-        ...(funcTool.function.description && { description: funcTool.function.description }),
-        ...(funcTool.function.parameters && { parameters: funcTool.function.parameters }),
-        ...(funcTool.function.strict !== null && funcTool.function.strict !== undefined && 
-          { strict: funcTool.function.strict }),
-      }
+        ...(funcTool.function.description && {
+          description: funcTool.function.description,
+        }),
+        ...(funcTool.function.parameters && {
+          parameters: funcTool.function.parameters,
+        }),
+        ...(funcTool.function.strict !== null &&
+          funcTool.function.strict !== undefined && {
+            strict: funcTool.function.strict,
+          }),
+      },
     };
     return result;
   });
@@ -242,7 +248,11 @@ export function validateToolChoice(
 
   // Handle string values
   if (typeof toolChoice === "string") {
-    if (toolChoice === "none" || toolChoice === "auto" || toolChoice === "required") {
+    if (
+      toolChoice === "none" ||
+      toolChoice === "auto" ||
+      toolChoice === "required"
+    ) {
       return toolChoice as "none" | "auto" | "required";
     }
     warnings.push(
@@ -252,10 +262,7 @@ export function validateToolChoice(
   }
 
   // Handle object format { type: 'function', function: { name: string } }
-  if (
-    toolChoice.type === "function" &&
-    toolChoice.function?.name
-  ) {
+  if (toolChoice.type === "function" && toolChoice.function?.name) {
     return toolChoice as { type: "function"; function: { name: string } };
   }
 
@@ -263,39 +270,6 @@ export function validateToolChoice(
     `Invalid tool_choice format: ${JSON.stringify(toolChoice)}. Must be one of: 'none', 'auto', 'required' or ChatCompletionNamedToolChoice`,
   );
   return undefined;
-}
-
-/**
- * Validates prefix completion requirements
- */
-export function validateChatPrefixCompletion(
-  messages: DeepSeekMessage[],
-  warnings: string[] = [],
-): void {
-  if (!messages?.length) {
-    warnings.push("Prefix completion requires at least one message");
-    return;
-  }
-
-  const lastMessage = messages[messages.length - 1];
-
-  if (lastMessage.role !== "assistant") {
-    throw new Error(
-      'Prefix completion requires the last message to have role "assistant"',
-    );
-  }
-
-  if (!lastMessage.prefix) {
-    throw new Error(
-      'Prefix completion requires the last message to have "prefix: true"',
-    );
-  }
-
-  if (!lastMessage.content || lastMessage.content.toString().trim() === "") {
-    warnings.push(
-      "Prefix completion requires the assistant message to have non-empty content",
-    );
-  }
 }
 
 /**
@@ -375,43 +349,7 @@ export function convertToChatPrefixDeepSeekRequestBody(
     chatBody.messages[chatBody.messages.length - 1].prefix = true; // it's save to force prefix to true
   }
 
-  //validateChatPrefixCompletion(chatBody.messages, warnings);
-
   return chatBody;
-}
-
-/**
- * Converts a prompt to prefix completion messages format
- */
-export function convertPromptToChatPrefix(
-  prompt: string | string[] | number[] | number[][] | null | undefined,
-  warnings: string[] = [],
-): OpenAICompatibleMessage[] {
-  if (prompt == null) {
-    return [];
-  }
-
-  // Check for token arrays (not supported)
-  if (isTokenArray(prompt)) {
-    throw new Error(
-      "DeepSeek API does not support token arrays (number[] or number[][]) as prompt input. " +
-        "Please provide a string or string[].",
-    );
-  }
-
-  const text = Array.isArray(prompt) ? prompt.join("") : String(prompt);
-
-  if (!text.trim()) {
-    return [];
-  }
-
-  return [
-    {
-      role: "assistant",
-      content: text,
-      prefix: true,
-    } as OpenAICompatibleMessage,
-  ];
 }
 
 /**
@@ -459,27 +397,6 @@ export function convertToBaseDeepSeekRequestBody(
 }
 
 /**
- * Type guard to check if a request is for streaming
- */
-export function isStreamingRequest(body: { stream?: boolean | null }): boolean {
-  return body.stream === true;
-}
-
-/**
- * Type guard to check if tools are provided
- */
-export function hasTools(tools?: ChatCompletionTool[]): boolean {
-  return tools !== undefined && Array.isArray(tools) && tools.length > 0;
-}
-
-/**
- * Type guard to check if tool choice is specified
- */
-export function hasToolChoice(toolChoice?: ChatCompletionToolChoiceOption | null): boolean {
-  return toolChoice !== undefined && toolChoice !== null;
-}
-
-/**
  * Validates and prepares an array of messages for the API request
  */
 export function validateAndPrepareMessages(
@@ -504,12 +421,21 @@ export function validateAndPrepareMessages(
         firstUserMsgPassed = true;
       }
 
-      // Copy reasoning content if reasoning mode and before first user message
-      if (isReasoningMode && !firstUserMsgPassed) {
+      // Copy reasoning content if reasoning mode and after last user message (= here first reversed)
+      if (
+        isReasoningMode &&
+        !firstUserMsgPassed &&
+        prepared.role === "assistant"
+      ) {
         const reasoningContent = getReasoning(msg);
-        if (reasoningContent) {
+        if (reasoningContent !== undefined) {
+          // Reasoning field exists (could be empty string) - preserve it
           prepared.reasoning_content = reasoningContent;
+        } else {
+          prepared.reasoning_content = "";
         }
+        // If no reasoning field and no tool calls, don't add reasoning_content
+        // (this could be a final answer without tool calls)
       }
 
       result.push(prepared);
@@ -545,7 +471,8 @@ export function prepareMessage(
     role: role as DeepSeekMessage["role"],
     content: validateAndFilterContent(msg.content, warnings),
     ...(msg.name && { name: msg.name }),
-    ...(role === "tool" && msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
+    ...(role === "tool" &&
+      msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
   };
 
   // Add tool_calls if present (only for assistant role)
@@ -556,12 +483,21 @@ export function prepareMessage(
   return baseMessage;
 }
 
-function isReasoningEnabled(body: ChatCompletionCreateParamsExt): boolean {
+export function isReasoningEnabled(
+  body: ChatCompletionCreateParamsExt,
+): boolean {
   return (
     body.thinking?.type === "enabled" || body.model === "deepseek-reasoner"
   );
 }
 
 function getReasoning(msg: OpenAICompatibleMessage): string | undefined {
-  return msg.reasoning || msg.reasoning_content;
+  // Return reasoning_content if defined (even empty string), otherwise reasoning
+  if (msg.reasoning_content !== undefined) {
+    return msg.reasoning_content;
+  }
+  if (msg.reasoning !== undefined) {
+    return msg.reasoning;
+  }
+  return undefined;
 }

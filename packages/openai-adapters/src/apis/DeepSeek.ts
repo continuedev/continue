@@ -38,6 +38,44 @@ export class DeepSeekApi extends OpenAIApi {
   private readonly WARN_ON_UNSUPPORTED_FEATURES = true;
 
   /**
+   * Checks if tools are involved in the conversation
+   */
+  private hasToolsInConversation(body: ChatCompletionCreateParamsExt): boolean {
+    // Check if tools are defined in the body
+    if (body.tools && body.tools.length > 0) {
+      return true;
+    }
+
+    // Check if tool_choice is specified (indicates intent to use tools)
+    if (body.tool_choice) {
+      return true;
+    }
+
+    // Check if any message contains tool_calls or tool_call_id
+    if (body.messages) {
+      for (const message of body.messages) {
+        // Type assertion for tool-related properties
+        const msg = message as any;
+
+        // Check for tool_calls in assistant messages
+        if (
+          message.role === "assistant" &&
+          msg.tool_calls &&
+          msg.tool_calls.length > 0
+        ) {
+          return true;
+        }
+        // Check for tool_call_id in tool messages
+        if (message.role === "tool" && msg.tool_call_id) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Determines the appropriate endpoint and request body for chat completions
    * based on the message structure
    */
@@ -51,7 +89,19 @@ export class DeepSeekApi extends OpenAIApi {
     console.log("=== DeepSeek Adapter - incoming body ===", body);
 
     const lastMessage = body.messages.at(-1);
-    const isPrefixCompletion = lastMessage?.role === "assistant";
+    const hasTools = this.hasToolsInConversation(body);
+
+    // Prefix completion requires:
+    // 1. Last message must be from assistant
+    // 2. No tools involved in the conversation (as prefix completion doesn't support tools)
+    const isPrefixCompletion = lastMessage?.role === "assistant" && !hasTools;
+
+    // Warn if tools are present but last message is from assistant
+    if (lastMessage?.role === "assistant" && hasTools) {
+      warnings.push(
+        "Prefix completion does not support tools. Using regular chat completion instead.",
+      );
+    }
 
     const endpoint = new URL(
       isPrefixCompletion ? "beta/chat/completions" : "chat/completions",
@@ -80,6 +130,8 @@ export class DeepSeekApi extends OpenAIApi {
     body: ChatCompletionCreateParamsExt,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+    console.log("=== DeepSeek Adapter - non-streaming request ===", body);
+
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
 
     // Execute the API request
@@ -154,6 +206,7 @@ export class DeepSeekApi extends OpenAIApi {
           }
         }
 
+        // Yield all chunks, including usage chunks that may have empty choices array
         yield chunk;
       }
 
@@ -184,7 +237,7 @@ export class DeepSeekApi extends OpenAIApi {
     const warnings: string[] = [];
     const endpoint = new URL("beta/completions", this.apiBase);
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
-
+    console.warn("=== deepSeekBody fim stream ===", deepSeekBody);
     // Log any warnings about unsupported features
     this._processWarnings(warnings);
 

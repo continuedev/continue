@@ -380,6 +380,13 @@ export function fromChatCompletionChunk(
       reasoning_details: delta?.reasoning_details as any[],
     };
     return message;
+  } else if (chunk.usage) {
+    // Return a message with usage statistics
+    return {
+      role: "assistant",
+      content: "",
+      usage: chunk.usage,
+    } as ChatMessage & { usage?: any };
   }
 
   return undefined;
