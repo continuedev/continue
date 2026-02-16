@@ -1,3 +1,5 @@
+import { isAbortError } from "../../util/isAbortError.js";
+
 /**
  * Configuration options for the retry decorator
  */
@@ -98,7 +100,7 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
   }
 
   // Abort signal errors should not be retried
-  if (error.name === "AbortError" || error.code === "ABORT_ERR") {
+  if (isAbortError(error)) {
     return false;
   }
 
