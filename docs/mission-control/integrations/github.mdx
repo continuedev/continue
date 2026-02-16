@@ -1,145 +1,77 @@
 ---
-title: "GitHub Integration"
-description: "Connect your GitHub account to Continue Mission Control to enable Cloud Agents to interact with your repositories. Once connected, Cloud Agents can read code, create pull requests, manage issues, and automate your development workflow."
+title: "GitHub"
 ---
 
+The GitHub integration connects your repositories to Mission Control so agents can read code, create pull requests, manage issues, and respond to repository events.
 
-<Card title="Connect the GitHub Integration to:" icon="github"  href="https://continue.dev/integrations/github"
->
+[Connect GitHub in Mission Control](https://continue.dev/integrations/github)
 
-  - Automatically create pull requests from AI agent tasks
-  - Read and analyze repository code and issues
-  - Manage project workflows and milestones
-  - Automate code reviews and quality checks
-  - Generate release notes and documentation
+## Access and permissions
 
-</Card>
+When connecting GitHub, you choose which repositories to grant access to and approve the requested permissions. These allow Continue to read repository data and open pull requests on your behalf.
 
+You can change repository access or revoke the integration at any time from your GitHub settings or Mission Control.
 
-## Official Workflow Templates for GitHub Cloud Agents in Continue
+## Trigger events
 
-The following **official workflow templates** are maintained by the Continue team and are available directly in the Mission Control Hub. These workflows are designed to work out of the box and represent the recommended ways to automate GitHub-based tasks.
+Workflows can run automatically in response to GitHub events:
 
-<CardGroup cols={2}>
-  <Card title="Update AGENTS.md" icon="robot">
-    Keeps your <code>AGENTS.md</code> file in sync with the agents and capabilities used in your repository.
-  </Card>
+| Event | Description |
+|-------|-------------|
+| **PR Opened** | A new pull request is opened |
+| **PR Merged** | A pull request is merged |
+| **Label Added** | A label is added to an issue or PR |
+| **Issue Opened** | A new issue is created |
+| **PR Review Comment** | A review comment is added to a pull request |
+| **Check Failed** | A CI check suite fails |
 
-  <Card title="Draft Changelog Updates" icon="list">
-    Creates draft changelog entries based on recent merged pull requests.
-  </Card>
-
-  <Card title="Explain Codebase" icon="code">
-    Generates a high-level explanation of your repository’s structure and architecture.
-  </Card>
-
-  <Card title="Refactor React Components" icon="toolbox">
-    Periodically identifies and refactors large or complex React components.
-  </Card>
-
-  <Card title="Improve Test Coverage" icon="shield-check">
-    Makes incremental improvements to test coverage on a recurring schedule.
-  </Card>
-</CardGroup>
-
-<Tip>Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → GitHub](https://continue.dev/integrations/github)**.</Tip>
-
-## GitHub Trigger Event Types
-
-When creating a workflow with a GitHub trigger, you can choose from the following event types:
-
-| Event Type | Description |
-|------------|-------------|
-| **PR Opened** | Triggers when a new pull request is opened |
-| **PR Merged** | Triggers when a pull request is merged |
-| **Label Added** | Triggers when a specific label is added to an issue or PR |
-| **Issue Opened** | Triggers when a new issue is created |
-| **PR Review Comment** | Triggers when a review comment is added to a pull request |
-| **Check Failed** | Triggers when a CI check suite fails |
-
-A task kicked off by a trigger receives a summary of the event, which is appended to the Agent's prompt.
-
-For example, an agent triggered by an `Issue Opened` trigger would see:
+The agent receives a summary of the event appended to its prompt. For example, an agent triggered by `Issue Opened` sees:
 
 ```
 Issue #123 was opened: Login page crashes on mobile devices
 Issue URL: https://github.com/acme/webapp/issues/123
 ```
 
-You can see the full initial prompt for a specific task in its logs.
+The full initial prompt for a task is visible in its logs.
 
----
+## Workflow templates
 
-## Workflow: GitHub issue → pull request (Cloud Agent)
+These templates are maintained by the Continue team and available in [Mission Control](https://continue.dev/integrations/github):
 
-**Problem**: GitHub issues pile up because turning an issue into a tested PR takes time and context switching.
+- **Update AGENTS.md** — keeps your `AGENTS.md` file in sync with agents used in the repo
+- **Draft Changelog Updates** — creates draft changelog entries from recent merged pull requests
+- **Explain Codebase** — generates a high-level explanation of repository structure
+- **Refactor React Components** — identifies and refactors large React components on a schedule
+- **Improve Test Coverage** — makes incremental test coverage improvements on a recurring schedule
 
-**Solution**: Continue Mission Control Cloud Agents can watch issues (or be triggered by labels) and automatically open pull requests with code changes, tests, and a clear summary.
+## Issue-to-PR automation
 
-**Outcome**: Faster issue throughput, consistent PR quality, and an auditable trail from issue → commits → PR → CI results.
+Agents can watch for new issues (or a specific label like `agent:fix`) and automatically open pull requests:
 
-1. Trigger: issue opened or labeled (for example, `agent:fix`)
-2. Agent gathers context: repo code + issue thread + relevant files
-3. Agent implements the fix on a branch
-4. Agent runs checks: tests/lint/security (your CI)
-5. Agent opens a PR with:
-   - summary of changes
-   - test results / CI link
-   - references the original issue (closes #123)
-   - or whatever you specify in the agent instructions
+1. Issue is opened or labeled
+2. Agent gathers context from the repo, issue thread, and relevant files
+3. Agent implements changes on a branch
+4. CI runs (tests, lint, security)
+5. Agent opens a PR referencing the original issue
 
-## Advanced Use Cases
-<Accordion title="Advanced: Custom GitHub Cloud Agent Workflow Ideas">
-You can create custom workflows using Continue Cloud Agents to automate a variety of GitHub-related tasks. Here are some ideas to get you started:
-  - Automatically triage new issues with labels and suggested assignees
-  - Review pull requests for security or performance concerns
-  - Draft documentation updates based on code changes
-  - Detect deprecated APIs and open migration issues
-  - Summarize repository activity for weekly team updates
-</Accordion>
----
-## Access & Permissions
+The PR content — summary, test results, issue references — is controlled by the agent's instructions. For a detailed walkthrough, see the [GitHub MCP Cookbook](/guides/github-mcp-continue-cookbook) or the [PR Review Bot guide](/guides/github-pr-review-bot).
 
-When connecting GitHub, you’ll be asked to configure repository access and approve permissions.
-
-- **Repository access**  
-  Choose whether to grant access to all repositories or select specific ones. You can change this at any time in your GitHub settings.
-
-- **Permissions**  
-  Review and approve the requested permissions. These allow Continue to read repository data and perform automated actions like opening pull requests on your behalf.
-
-You can revisit or revoke access at any time from GitHub or the Mission Control Hub.
----
+You can also build custom workflows for other patterns: triaging issues with labels, reviewing PRs for security concerns, drafting documentation from code changes, detecting deprecated APIs, or summarizing weekly repository activity.
 
 ## FAQs
-### Can Continue turn GitHub issues into ready-to-merge pull requests automatically?
-Yes! You can set up workflows where Cloud Agents monitor issues (or specific labels) and create pull requests with code changes, tests, and summaries.
 
-### How do I trigger an agent from a GitHub issue label?
-You can configure a Cloud Agent that is triggered whenever an issue is labeled with a specific tag (e.g., `agent:fix`). The agent will then gather context and create a pull request based on the issue.
+### Can agents create PRs from GitHub issues?
+
+Configure a workflow with an `Issue Opened` or `Label Added` trigger. The agent gathers context and opens a pull request with code changes, tests, and a summary.
+
+### How do I trigger an agent from an issue label?
+
+Create a workflow with a `Label Added` trigger filtered to a specific tag (e.g., `agent:fix`).
 
 ### Can the agent run tests and include results in the PR?
-Continue's Cloud Agents can be configured to run your tests and include the results in the pull request summary.
 
-### How do I restrict which repos/issues agents can act on?
-You can configure repository and issue filters within your workflows to control where agents operate.
+Agents run your CI checks and can include results in the pull request summary.
 
-## Support & Resources
+### How do I restrict which repos or issues agents act on?
 
-<CardGroup cols={2}>
-
-  <Card title="GitHub MCP Cookbook" icon="book-open" href="/guides/github-mcp-continue-cookbook">
-
-    Comprehensive guide to using GitHub with Continue agents
-
-  </Card>
-
-  <Card title="GitHub PR Review Bot" icon="robot" href="/guides/github-pr-review-bot">
-
-    Automate code reviews with Continue
-
-  </Card>
-
-</CardGroup>
-
-
+Configure repository and issue filters in your workflow settings.

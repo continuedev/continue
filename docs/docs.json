@@ -45,8 +45,7 @@
             "group": "CLI",
             "icon": "terminal",
             "pages": [
-              "cli/overview",
-              "cli/install",
+              "cli/quickstart",
               "cli/tui-mode",
               "cli/headless-mode",
               "cli/configuration",
@@ -327,6 +326,14 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/cli/overview",
+      "destination": "/cli/quickstart"
+    },
+    {
+      "source": "/cli/install",
+      "destination": "/cli/quickstart"
+    },
     {
       "source": "/changelog",
       "destination": "https://changelog.continue.dev"
