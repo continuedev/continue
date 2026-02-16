@@ -651,6 +651,66 @@ export class VsCodeMessenger {
       }
     });
 
+    this.onWebview("makeAgentSourceControlled", async (msg) => {
+      const configHandler = await configHandlerPromise;
+      const { agentSessionId } = msg.data;
+
+      try {
+        const result =
+          await configHandler.controlPlaneClient.makeAgentSourceControlled(
+            agentSessionId,
+          );
+
+        if (result.success && result.pullRequestUrl) {
+          const selection = await vscode.window.showInformationMessage(
+            "Pull request created successfully! Click to open.",
+            "Open PR",
+          );
+
+          if (selection === "Open PR") {
+            vscode.env.openExternal(vscode.Uri.parse(result.pullRequestUrl));
+          }
+        } else if (!result.success) {
+          // Check if this is a GitHub authorization error
+          if (
+            result.error?.includes("GitHub token") ||
+            result.error?.includes("GitHub App") ||
+            result.error?.includes("GitHub")
+          ) {
+            const selection = await vscode.window.showErrorMessage(
+              "GitHub access is required to create a PR. Please connect your GitHub account.",
+              "Connect GitHub",
+              "Cancel",
+            );
+
+            if (selection === "Connect GitHub") {
+              await this.inProcessMessenger.externalRequest(
+                "controlPlane/openUrl",
+                {
+                  path: "settings/integrations/github",
+                  orgSlug: configHandler.currentOrg?.slug,
+                },
+              );
+            }
+          } else {
+            vscode.window.showErrorMessage(
+              `Failed to create PR: ${result.error || "Unknown error"}`,
+            );
+          }
+        }
+
+        return result;
+      } catch (e) {
+        console.error("Failed to make agent source controlled:", e);
+        const errorMessage =
+          e instanceof Error ? e.message : "Unknown error occurred";
+        vscode.window.showErrorMessage(
+          `Failed to create PR: ${errorMessage}`,
+        );
+        return { success: false, error: errorMessage };
+      }
+    });
+
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {

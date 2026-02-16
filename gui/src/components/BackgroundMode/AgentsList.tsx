@@ -1,4 +1,8 @@
-import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowPathIcon,
+  CodeBracketSquareIcon,
+  PlayIcon,
+} from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { normalizeRepoUrl } from "core/util/repoUrl";
 import { useAuth } from "../../context/Auth";
@@ -36,6 +40,9 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
+  const [sourceControllingAgentId, setSourceControllingAgentId] = useState<
+    string | null
+  >(null);
 
   // Fetch workspace repo URLs once on mount
   useEffect(() => {
@@ -161,6 +168,24 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
     ideMessenger.post("openAgentLocally", { agentSessionId: agent.id });
   };
 
+  const handleMakeSourceControlled = async (
+    agent: Agent,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation(); // Prevent opening the agent detail page
+    setSourceControllingAgentId(agent.id);
+
+    try {
+      await ideMessenger.request("makeAgentSourceControlled", {
+        agentSessionId: agent.id,
+      });
+    } catch (err) {
+      console.error("Failed to make agent source controlled:", err);
+    } finally {
+      setSourceControllingAgentId(null);
+    }
+  };
+
   if (error) {
     return (
       <div className="text-error px-2 py-4 text-sm">
@@ -218,6 +243,19 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                 </div>
                 <div className="ml-2 flex items-center gap-2">
                   <AgentStatusBadge status={agent.status} />
+                  <Button
+                    onClick={(e) => handleMakeSourceControlled(agent, e)}
+                    disabled={sourceControllingAgentId === agent.id}
+                    variant="icon"
+                    size="lg"
+                    title="Make this source controlled - Creates a PR with the agent file"
+                  >
+                    {sourceControllingAgentId === agent.id ? (
+                      <ArrowPathIcon className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <CodeBracketSquareIcon className="h-3 w-3" />
+                    )}
+                  </Button>
                   <Button
                     onClick={(e) =>
                       canOpenLocally && handleOpenLocally(agent, e)

@@ -84,6 +84,16 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
     void,
   ];
+  makeAgentSourceControlled: [
+    {
+      agentSessionId: string;
+    },
+    {
+      success: boolean;
+      pullRequestUrl?: string;
+      error?: string;
+    },
+  ];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

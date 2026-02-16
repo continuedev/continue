@@ -663,4 +663,46 @@ export class ControlPlaneClient {
       return null;
     }
   }
+
+  /**
+   * Make an agent source controlled by creating a PR with the agent file
+   * @param agentSessionId - The ID of the agent session
+   * @returns The result including the PR URL if successful
+   */
+  public async makeAgentSourceControlled(agentSessionId: string): Promise<{
+    success: boolean;
+    pullRequestUrl?: string;
+    error?: string;
+  }> {
+    if (!(await this.isSignedIn())) {
+      return { success: false, error: "Not signed in" };
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}/source-control`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const result = (await resp.json()) as {
+        success: boolean;
+        pullRequestUrl?: string;
+        error?: string;
+      };
+      return result;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_make_agent_source_controlled",
+        agentSessionId,
+      });
+      const errorMessage =
+        e instanceof Error ? e.message : "Unknown error occurred";
+      return { success: false, error: errorMessage };
+    }
+  }
 }
