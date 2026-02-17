@@ -32,14 +32,7 @@ Paste this into your coding agent of choice:
 Help me write checks for this codebase: https://continue.dev/walkthrough
 ```
 
-It will:
-
-- Explore the codebase, interview you, and read past review comments
-- Write checks to `.continue/checks/`
-- Run them in parallel locally with sub-agents
-- Optionally, onboard to Continue to run them on every PR
-
-<h2 align="center">How it works</h2>
+## How it works
 
 Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
 
