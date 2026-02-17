@@ -22,9 +22,13 @@
 
 **Source-controlled AI checks, enforceable in CI**
 
-You already know what good looks like for your codebase. Continue lets you write it down once and enforce it on every PR.
+You already know what good looks like for your codebase.
 
-## How it works
+Continue lets you write it down once and enforce it on every PR.
+
+</div>
+
+<h2 align="center">How it works</h2>
 
 Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/agents/`. Green if the code looks good, red with a suggested diff if not. Here is an example that ensures metrics integrity:
 
@@ -77,8 +81,6 @@ Then run:
 ```bash
 cn
 ```
-
-</div>
 
 ## Contributing
 
