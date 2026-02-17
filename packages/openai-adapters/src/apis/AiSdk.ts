@@ -33,6 +33,11 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
       ...options,
       baseURL: options.baseURL ?? "https://api.anthropic.com/v1/",
     }),
+  openrouter: (options) =>
+    createOpenAI({
+      ...options,
+      baseURL: options.baseURL ?? "https://openrouter.ai/api/v1/",
+    }),
 };
 
 export class AiSdkApi implements BaseLlmApi {
