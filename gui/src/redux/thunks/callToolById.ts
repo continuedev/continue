@@ -2,7 +2,6 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem, McpUiState } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
-import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -38,13 +37,6 @@ export const callToolById = createAsyncThunk<
   const startTime = Date.now();
 
   const selectedChatModel = selectSelectedChatModel(state);
-
-  posthog.capture("tool_call_decision", {
-    model: selectedChatModel,
-    decision: isAutoApproved ? "auto_accept" : "accept",
-    toolName: toolCallState.toolCall.function.name,
-    toolCallId: toolCallId,
-  });
 
   if (!selectedChatModel) {
     throw new Error("No model selected");
@@ -128,16 +120,6 @@ export const callToolById = createAsyncThunk<
       }),
     );
   }
-
-  // Capture telemetry for tool call execution outcome with duration
-  const duration_ms = Date.now() - startTime;
-  posthog.capture("tool_call_outcome", {
-    model: selectedChatModel,
-    succeeded: !error,
-    toolName: toolCallState.toolCall.function.name,
-    errorReason: error?.reason,
-    duration_ms: duration_ms,
-  });
 
   if (streamResponse) {
     if (error) {

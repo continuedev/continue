@@ -5,7 +5,7 @@ import {
   SecretType,
 } from "@continuedev/config-yaml";
 
-import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
+import { ControlPlaneProxyInfo } from "../../../control-plane/ControlPlaneProxyInfo.js";
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 

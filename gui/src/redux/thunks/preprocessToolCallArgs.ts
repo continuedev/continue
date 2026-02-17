@@ -1,6 +1,5 @@
 import { ToolCallState } from "core";
 import { ContinueErrorReason } from "core/util/errors";
-import posthog from "posthog-js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import {
   errorToolCall,
@@ -33,13 +32,6 @@ export async function preprocessToolCalls(
         errorReason = ContinueErrorReason.Unknown;
       }
       if (errorReason) {
-        posthog.capture("tool_call_outcome", {
-          // model: , TODO
-          succeeded: false,
-          toolName: tcState.toolCall.function.name,
-          errorReason,
-          duration_ms: 0, // preprocessing is more or less instantaneous
-        });
         dispatch(
           errorToolCall({
             toolCallId: tcState.toolCallId,

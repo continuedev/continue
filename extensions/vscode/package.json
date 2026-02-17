@@ -86,13 +86,6 @@
     "configuration": {
       "title": "Continue",
       "properties": {
-        "continue.telemetryEnabled": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
-          "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
-          "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
-        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
@@ -759,7 +752,6 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
-    "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "read-last-lines": "^1.8.0",

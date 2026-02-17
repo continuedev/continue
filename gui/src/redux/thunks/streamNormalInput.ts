@@ -25,7 +25,6 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import posthog from "posthog-js";
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
@@ -243,15 +242,6 @@ export const streamNormalInput = createAsyncThunk<
       }
     } catch (e) {
       const toolCallsToCancel = selectCurrentToolCalls(getState());
-      posthog.capture("stream_premature_close_error", {
-        duration: (Date.now() - start) / 1000,
-        model: selectedChatModel.model,
-        provider: selectedChatModel.underlyingProviderName,
-        context: legacySlashCommandData ? "slash_command" : "regular_chat",
-        ...(legacySlashCommandData && {
-          command: legacySlashCommandData.command.name,
-        }),
-      });
       if (
         toolCallsToCancel.length > 0 &&
         e instanceof Error &&

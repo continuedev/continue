@@ -1,6 +1,5 @@
 import { MessagePart, RangeInFile, SlashCommandDescWithSource } from "core";
 import { stripImages } from "core/util/messageContent";
-import posthog from "posthog-js";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { renderMcpPrompt } from "./renderMcpPrompt";
 import { getRenderedV1Prompt } from "./renderPromptv1";
@@ -35,16 +34,6 @@ export async function renderSlashCommandPrompt(
   const command = availableSlashCommands.find((c) => c.name === commandName);
   if (!command) {
     return NO_COMMAND;
-  }
-
-  try {
-    posthog.capture("useSlashCommand", {
-      name: command.name,
-      source: command.source,
-      isLegacy: command.isLegacy,
-    });
-  } catch (e) {
-    console.error(e);
   }
 
   const nonTextParts = parts.filter((part) => part.type !== "text");

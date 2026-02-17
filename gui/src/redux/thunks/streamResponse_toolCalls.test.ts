@@ -11,12 +11,6 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
-vi.mock("posthog-js", () => ({
-  default: {
-    capture: vi.fn(),
-  },
-}));
-
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
@@ -35,7 +29,6 @@ import {
   grepSearchTool,
   runTerminalCommandTool,
 } from "core/tools/definitions";
-import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { RootState } from "../store";
@@ -49,8 +42,6 @@ const terminalTool = serializeTool(runTerminalCommandTool);
 const terminalName = terminalTool.function.name;
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
-
-const mockPosthog = vi.mocked(posthog);
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 const mockClaudeModel: ModelDescription = {
