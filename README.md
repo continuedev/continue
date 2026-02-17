@@ -20,17 +20,38 @@
 
 <p></p>
 
-<div align="center">
-
-**Ship faster with Continuous AI**
-
-**The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
+**Source-controlled AI checks, enforceable in CI**
 
 </div>
 
-Get started in [Mission Control](https://continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
+## Getting started
 
-### Quick Install
+Paste this into your coding agent of choice:
+
+```
+Help me write checks for this codebase: https://continue.dev/walkthrough
+```
+
+## How it works
+
+Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
+
+```yaml
+---
+name: Security Review
+description: Review PR for basic security vulnerabilities
+---
+
+Review this PR and check that:
+
+- No secrets or API keys are hardcoded
+- All new API endpoints have input validation
+- Error responses use the standard error format
+```
+
+## Install CLI
+
+AI checks are powered by the open-source Continue CLI (`cn`).
 
 **macOS / Linux:**
 
@@ -44,7 +65,7 @@ curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extension
 irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
 ```
 
-Or with npm:
+Or with npm (requires Node.js 20+):
 
 ```bash
 npm i -g @continuedev/cli
@@ -56,25 +77,7 @@ Then run:
 cn
 ```
 
-## Cloud Agents
-
-Set workflows to run automatically on [PR opens](https://docs.continue.dev/guides/continuous-ai#pattern-2-the-pr-review-agent), [schedules](https://docs.continue.dev/guides/continuous-ai#pattern-1-the-async-triage-bot), or [any event trigger](https://docs.continue.dev/cli/quick-start#headless-mode)
-
-![Cloud Agents](docs/images/background-agent.gif)
-
-## CLI Agents
-
-Watch workflows execute in real-time and approve decisions step-by-step from your [terminal](https://docs.continue.dev/cli/quick-start#tui-mode)
-
-![CLI Agents](docs/images/cli-agent.gif)
-
-## IDE Agents
-
-Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—let agents handle the refactoring while you keep coding
-
-![IDE Agents](docs/images/agent.gif)
-
-</div>
+Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 
 ## Contributing
 
