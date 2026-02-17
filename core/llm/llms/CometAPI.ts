@@ -197,6 +197,8 @@ class CometAPI extends OpenAI {
     "o3-pro-2025-06-10",
 
     // Claude series
+    "claude-sonnet-4-6",
+    "claude-opus-4-6",
     "claude-opus-4-1-20250805",
     "claude-opus-4-1-20250805-thinking",
     "claude-sonnet-4-20250514",

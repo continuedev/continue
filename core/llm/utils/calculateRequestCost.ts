@@ -17,6 +17,22 @@ function calculateAnthropicCost(
     string,
     { input: number; output: number; cacheWrite: number; cacheRead: number }
   > = {
+    // Claude Sonnet 4.6
+    "claude-sonnet-4-6": {
+      input: 3,
+      output: 15,
+      cacheWrite: 3.75,
+      cacheRead: 0.3,
+    },
+
+    // Claude Opus 4.6
+    "claude-opus-4-6": {
+      input: 5,
+      output: 25,
+      cacheWrite: 6.25,
+      cacheRead: 0.5,
+    },
+
     // Claude Opus 4.5 (most intelligent model)
     "claude-opus-4-5": {
       input: 5,
