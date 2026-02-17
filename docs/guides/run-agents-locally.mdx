@@ -5,7 +5,7 @@ description: "Set up version-controlled agents in your repository and run them w
 ---
 
 <Note>
-  Looking for the easiest way to create and manage agents? [Cloud Agents in Mission Control](/agents/overview#pre-configured-agents) are recommended for most teams. This guide covers **local agents**—agent files stored in your repository—for open source users or teams needing version-controlled definitions.
+  Looking for the easiest way to create and manage agents? [Cloud Agents in Mission Control](/mission-control/beyond-checks#cloud-agent-gallery) are recommended for most teams. This guide covers **local agents**—agent files stored in your repository—for open source users or teams needing version-controlled definitions.
 </Note>
 
 <Card title="What You'll Build" icon="folder-open">
@@ -20,7 +20,7 @@ description: "Set up version-controlled agents in your repository and run them w
 
 Before starting, ensure you have:
 
-- [Continue CLI installed](/cli/install)
+- [Continue CLI installed](/cli/quickstart)
 - `ANTHROPIC_API_KEY` environment variable set
 - [GitHub CLI](https://cli.github.com/) installed locally if your agents interact with GitHub (pre-installed on GitHub-hosted runners)
 
@@ -226,7 +226,7 @@ When running agents in CI/CD, follow the principle of least privilege:
        --agent .continue/agents/analysis-only.md
     ```
 
-    Learn more in the [CLI documentation](/cli/overview#how-to-set-tool-permissions).
+    Learn more in the [CLI documentation](/cli/tool-permissions).
   </Tab>
 
   <Tab title="Environment Variables">
@@ -355,11 +355,11 @@ your-repo/
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Agent Overview" icon="robot" href="/agents/overview">
-    Learn about agent components and capabilities
+  <Card title="Beyond Checks" icon="robot" href="/mission-control/beyond-checks">
+    Learn about agents, triggers, and automation
   </Card>
 
-  <Card title="CLI Reference" icon="terminal" href="/cli/overview">
+  <Card title="CLI Reference" icon="terminal" href="/cli/quickstart">
     Full Continue CLI documentation
   </Card>
 

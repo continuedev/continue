@@ -11,24 +11,36 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Checks",
         "groups": [
           {
             "group": "Getting Started",
             "icon": "rocket-launch",
-            "pages": ["index", "overview"]
+            "pages": [
+              "index",
+              "checks/quickstart",
+              "checks/running-locally",
+              "checks/running-in-ci"
+            ]
+          },
+          {
+            "group": "Writing Checks",
+            "icon": "pencil",
+            "pages": [
+              "checks/generating-checks",
+              "checks/best-practices",
+              "checks/reference"
+            ]
           },
           {
             "group": "Mission Control",
             "icon": "globe",
+            "expanded": false,
             "pages": [
-              "mission-control/index",
-              "mission-control/tasks",
-              "mission-control/workflows",
+              "mission-control/beyond-checks",
               {
                 "group": "Integrations",
                 "pages": [
-                  "mission-control/integrations",
                   "mission-control/integrations/github",
                   "mission-control/integrations/sentry",
                   "mission-control/integrations/snyk",
@@ -39,59 +51,24 @@
                   "mission-control/integrations/supabase"
                 ]
               },
-              "mission-control/metrics",
-              "mission-control/sharing",
-              {
-                "group": "Governance",
-                "pages": [
-                  "mission-control/governance/creating-an-org",
-                  "mission-control/governance/org-permissions",
-                  "mission-control/governance/pricing"
-                ]
-              },
-              {
-                "group": "Secrets",
-                "pages": [
-                  "mission-control/secrets/secret-types",
-                  "mission-control/secrets/secret-resolution"
-                ]
-              },
-              {
-                "group": "Configs",
-                "pages": [
-                  "mission-control/configs/intro",
-                  "mission-control/configs/use-a-config",
-                  "mission-control/configs/create-a-config",
-                  "mission-control/configs/edit-a-config"
-                ]
-              }
+              "mission-control/metrics"
             ]
-          },
-          {
-            "group": "Agents",
-            "icon": "robot",
-            "pages": [
-              "agents/intro",
-              "agents/overview",
-              "agents/create-and-edit"
-            ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
           {
             "group": "CLI",
             "icon": "terminal",
             "pages": [
-              "cli/overview",
-              "cli/install",
-              "cli/quick-start",
-              "cli/guides",
-              "cli/configuration"
+              "cli/quickstart",
+              "cli/tui-mode",
+              "cli/headless-mode",
+              "cli/configuration",
+              "cli/tool-permissions"
             ]
-          },
-          {
-            "group": "Help",
-            "icon": "book-open",
-            "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           }
         ]
       },
@@ -247,85 +224,48 @@
               "reference/deprecated-codebase",
               "reference/deprecated-docs"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket-launch",
-            "pages": ["guides/overview"]
-          },
-          {
-            "group": "Cloud Agents",
-            "icon": "cloud",
-            "pages": [
-              "guides/cloud-agents/cloud-agents-taxonomy",
-              "guides/cloud-agents/guide-to-cloud-agents",
-              "guides/cloud-agents/when-to-use-cloud-agents",
-              "guides/cloud-agents/from-task-to-automation",
-              "guides/cloud-agents/cloud-agents-vs-ci",
-              "guides/cloud-agents/operating-cloud-agents-safely",
-              "guides/cloud-agents/automated-security-remediation-with-snyk"
-            ]
           },
           {
             "group": "Guides",
+            "expanded": false,
             "icon": "compass",
             "pages": [
+              "guides/understanding-configs",
+              "guides/configuring-models-rules-tools",
+              "guides/codebase-documentation-awareness",
+              "guides/plan-mode-guide",
+              "guides/ollama-guide",
+              "guides/instinct",
+              "guides/running-continue-without-internet",
+              "guides/custom-code-rag",
+              "guides/how-to-self-host-a-model"
+            ]
+          },
+          {
+            "group": "Help",
+            "icon": "book-open",
+            "expanded": false,
+            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+          },
+          {
+            "group": "Continue Hub (deprecated)",
+            "expanded": false,
+            "icon": "box-archive",
+            "pages": [
               {
-                "group": "Understanding Continue",
+                "group": "Secrets",
                 "pages": [
-                  "guides/understanding-configs",
-                  "guides/configuring-models-rules-tools",
-                  "guides/codebase-documentation-awareness",
-                  "guides/plan-mode-guide",
-                  "guides/ollama-guide",
-                  "guides/instinct",
-                  "guides/running-continue-without-internet",
-                  "guides/custom-code-rag",
-                  "guides/how-to-self-host-a-model"
+                  "mission-control/secrets/secret-types",
+                  "mission-control/secrets/secret-resolution"
                 ]
               },
               {
-                "group": "CLI Guides",
+                "group": "Configs",
                 "pages": [
-                  "guides/cli",
-                  "guides/run-agents-locally",
-                  "guides/doc-writing-agent-cli"
-                ]
-              },
-              {
-                "group": "Continuous AI Guides",
-                "pages": [
-                  "guides/continuous-ai",
-                  "guides/continuous-ai-readiness-assessment"
-                ]
-              },
-              {
-                "group": "Integration Guides",
-                "pages": [
-                  "guides/notion-continue-guide",
-                  "guides/github-pr-review-bot"
-                ]
-              },
-              {
-                "group": "Cookbooks",
-                "pages": [
-                  "guides/posthog-github-continuous-ai",
-                  "guides/continue-docs-mcp-cookbook",
-                  "guides/github-mcp-continue-cookbook",
-                  "guides/atlassian-mcp-continue-cookbook",
-                  "guides/sanity-mcp-continue-cookbook",
-                  "guides/sentry-mcp-error-monitoring",
-                  "guides/snyk-mcp-continue-cookbook",
-                  "guides/supabase-mcp-database-workflow",
-                  "guides/dlt-mcp-continue-cookbook",
-                  "guides/netlify-mcp-continuous-deployment",
-                  "guides/chrome-devtools-mcp-performance",
-                  "guides/klavis-mcp-continue-cookbook"
+                  "mission-control/configs/intro",
+                  "mission-control/configs/use-a-config",
+                  "mission-control/configs/create-a-config",
+                  "mission-control/configs/edit-a-config"
                 ]
               }
             ]
@@ -404,6 +344,14 @@
     "js": ["reo-tracking.js"]
   },
   "redirects": [
+    {
+      "source": "/cli/overview",
+      "destination": "/cli/quickstart"
+    },
+    {
+      "source": "/cli/install",
+      "destination": "/cli/quickstart"
+    },
     {
       "source": "/changelog",
       "destination": "https://changelog.continue.dev"
@@ -486,7 +434,7 @@
     },
     {
       "source": "/hub/workflows/intro",
-      "destination": "/agents/intro"
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/hub/blocks/create-a-block",
@@ -1480,7 +1428,7 @@
     },
     {
       "source": "/hub/agents/overview",
-      "destination": "/agents/overview"
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/hub/agents/create-and-edit",
@@ -1505,6 +1453,50 @@
     {
       "source": "/hub/integrations/sentry",
       "destination": "/mission-control/integrations/sentry"
+    },
+    {
+      "source": "/mission-control/workflows",
+      "destination": "/mission-control"
+    },
+    {
+      "source": "/mission-control/sharing",
+      "destination": "/mission-control"
+    },
+    {
+      "source": "/mission-control/governance/creating-an-org",
+      "destination": "/mission-control"
+    },
+    {
+      "source": "/mission-control/governance/org-permissions",
+      "destination": "/mission-control"
+    },
+    {
+      "source": "/mission-control/governance/pricing",
+      "destination": "/mission-control"
+    },
+    {
+      "source": "/agents/overview",
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
+      "source": "/agents/intro",
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
+      "source": "/agents/create-and-edit",
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
+      "source": "/mission-control/tasks",
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
+      "source": "/guides/run-agents-locally",
+      "destination": "/checks/running-locally"
+    },
+    {
+      "source": "/overview",
+      "destination": "/"
     }
   ]
 }
