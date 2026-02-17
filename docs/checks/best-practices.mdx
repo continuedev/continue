@@ -40,7 +40,7 @@ Check that the code is secure.
 Structure criteria as a concrete list:
 
 ```markdown
-Look for these issues in the changed code and fix them:
+Look for these issues and fix them:
 
 - New REST endpoints missing request body validation
 - Database queries using string interpolation instead of parameterized queries
@@ -101,7 +101,7 @@ name: Security Review
 description: Catch hardcoded secrets, injection vectors, and missing input validation
 ---
 
-Look for these security issues in the changed code and fix them:
+Look for these security issues and fix them:
 
 - Hardcoded API keys, tokens, passwords, or connection strings — move them to environment variables
 - New API endpoints or request handlers without input validation — add appropriate validation
@@ -147,23 +147,6 @@ Look for changes to public-facing APIs or configuration where the documentation 
 - API route paths or request/response shapes changed — update the API documentation
 
 No changes needed if the PR doesn't touch public APIs or configuration, or if docs were already updated.
-````
-
-### Conventional commits
-
-````markdown conventional-commits.md
----
-name: Conventional Commits
-description: Ensure the PR title follows conventional commit format
----
-
-Check that the pull request title follows the Conventional Commits specification.
-
-The title must match this format: `type(optional scope): description`
-
-Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
-
-If the PR title doesn't match the format, suggest a corrected title based on the content of the changes.
 ````
 
 ### Dependency audit
