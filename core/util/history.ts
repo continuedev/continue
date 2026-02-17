@@ -38,15 +38,15 @@ export class HistoryManager {
       })
       .reverse();
 
-    // Hydrate token usage for old sessions that were saved before session metadata
-    // started carrying usage in sessions.json.
-    sessions = sessions.map((session) => this.hydrateUsageFromSession(session));
-
     // Apply limit and offset
     if (options.limit) {
       const offset = options.offset || 0;
       sessions = sessions.slice(offset, offset + options.limit);
     }
+
+    // Hydrate token usage for old sessions that were saved before session metadata
+    // started carrying usage in sessions.json.
+    sessions = sessions.map((session) => this.hydrateUsageFromSession(session));
 
     return sessions;
   }

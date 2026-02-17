@@ -356,14 +356,29 @@ export abstract class BaseLLM implements ILLM {
     usage: Usage | undefined,
     error?: any,
   ): InteractionStatus {
-    let promptTokens =
-      typeof usage?.promptTokens === "number"
-        ? usage.promptTokens
-        : this.countTokens(prompt);
-    let generatedTokens =
-      typeof usage?.completionTokens === "number"
-        ? usage.completionTokens
-        : this.countTokens(completion);
+    const promptHasContent = prompt.trim().length > 0;
+    const completionHasContent = completion.trim().length > 0;
+    const providerPromptTokens = usage?.promptTokens;
+    const providerCompletionTokens = usage?.completionTokens;
+    const hasProviderPromptTokens = typeof providerPromptTokens === "number";
+    const hasProviderCompletionTokens =
+      typeof providerCompletionTokens === "number";
+
+    // Treat zero usage for non-empty text as missing provider usage and fall back
+    // to local token counting to avoid undercounting when providers omit fields.
+    const shouldUseProviderPromptTokens =
+      hasProviderPromptTokens &&
+      (providerPromptTokens > 0 || !promptHasContent);
+    const shouldUseProviderCompletionTokens =
+      hasProviderCompletionTokens &&
+      (providerCompletionTokens > 0 || !completionHasContent);
+
+    let promptTokens = shouldUseProviderPromptTokens
+      ? providerPromptTokens
+      : this.countTokens(prompt);
+    let generatedTokens = shouldUseProviderCompletionTokens
+      ? providerCompletionTokens
+      : this.countTokens(completion);
     let thinkingTokens = thinking ? this.countTokens(thinking) : 0;
 
     TokensBatchingService.getInstance().addTokens(

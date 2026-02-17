@@ -298,11 +298,7 @@ function parseProviderUsage(rawUsage: unknown): Usage | undefined {
   );
   const totalTokens = firstNumber(usage.total_tokens);
 
-  if (
-    promptTokens === undefined &&
-    completionTokens === undefined &&
-    totalTokens === undefined
-  ) {
+  if (promptTokens === undefined || completionTokens === undefined) {
     return undefined;
   }
 
@@ -314,8 +310,8 @@ function parseProviderUsage(rawUsage: unknown): Usage | undefined {
     (usage.output_tokens_details as Record<string, unknown> | undefined);
 
   return {
-    promptTokens: promptTokens ?? 0,
-    completionTokens: completionTokens ?? 0,
+    promptTokens,
+    completionTokens,
     totalTokens,
     promptTokensDetails: promptTokensDetailsRaw
       ? {
