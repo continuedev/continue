@@ -41,12 +41,10 @@ Continue runs agents on every pull request as GitHub status checks. Each agent i
 name: Security Review
 description: Review PR for basic security vulnerabilities
 ---
-
 Review this PR and check that:
-
-- No secrets or API keys are hardcoded
-- All new API endpoints have input validation
-- Error responses use the standard error format
+  - No secrets or API keys are hardcoded
+  - All new API endpoints have input validation
+  - Error responses use the standard error format
 ```
 
 ## Install CLI

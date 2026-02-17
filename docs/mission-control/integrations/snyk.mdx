@@ -1,75 +1,17 @@
 ---
-title: "Snyk Integration"
-description: "Connect Snyk to Continue Mission Control to automatically detect and fix vulnerabilities with Continue Cloud Agents"
+title: "Snyk"
 ---
 
-<Card
-  title="Connect Snyk to enable Cloud Agents to:"
-  icon="shield-check"
-  href="https://continue.dev/integrations/snyk"
->
-  - Detect and analyze security vulnerabilities
-  - Generate pull requests to remediate issues
-  - Analyze dependency and supply chain risks
-  - Monitor security posture across projects
-  - Create reports and summaries for security trends
-</Card>
+The Snyk integration connects your security scanning to Mission Control so agents can detect vulnerabilities and open pull requests with fixes.
 
-## Official Workflow Templates for Snyk Cloud Agents in Continue
+[Connect Snyk in Mission Control →](https://continue.dev/integrations/snyk)
 
-The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Snyk-based remediation.
+## Access and permissions
 
-<CardGroup cols={2}>
-  <Card title="Auto-fix Snyk Vulnerabilities" icon="shield-check">
-    Automatically remediate high and critical security vulnerabilities detected by Snyk.
-  </Card>
-</CardGroup>
+When connecting Snyk, you authorize Continue via OAuth. Agents can only access projects you have permission to view within your organization.
 
-<Tip>
-Official workflow templates may expand over time as new security patterns are validated. You can view, enable, and configure these workflows in **[Mission Control → Integrations → Snyk](https://continue.dev/integrations/snyk)**.
-</Tip>
+Approved permissions allow agents to read vulnerability findings and create remediation pull requests. You can revoke access at any time from Snyk or Mission Control.
 
-### Advanced Use Cases
+## Auto-remediation
 
-<Accordion title="Advanced: Custom Snyk Workflow Ideas">
-These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
-
-- Prioritize vulnerabilities based on exploitability or business impact
-- Correlate Snyk findings with recent code changes
-- Generate security summaries for compliance or audit reviews
-- Trigger remediation only for production-critical projects
-- Combine Snyk findings with GitHub or CI signals
-</Accordion>
----
-## Access & Permissions
-
-When connecting Snyk, you’ll authorize Continue to access vulnerability and project data via OAuth.
-
-- **Project access**  
-  Agents can only access Snyk projects you are permitted to view within your organization.
-
-- **Permissions**  
-  Approved permissions allow Continue to read vulnerability findings and create remediation pull requests on your behalf.
-
-You can revoke or reauthorize access at any time from Snyk or the Mission Control Hub.
----
-
-## Support & Resources
-
-<CardGroup cols={2}>
-  <Card
-    title="Snyk MCP Cookbook"
-    icon="book-open"
-    href="/guides/snyk-mcp-continue-cookbook"
-  >
-    Security automation recipes using Snyk and Continue agents.
-  </Card>
-
-  <Card
-    title="GitHub Integration"
-    icon="github"
-    href="/mission-control/integrations/github"
-  >
-    Combine Snyk and GitHub to automate vulnerability remediation.
-  </Card>
-</CardGroup>
+When Snyk detects high or critical vulnerabilities, an agent analyzes the findings, generates a fix, and opens a PR. You can scope this to specific projects or severity levels in your agent settings.
