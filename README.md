@@ -41,7 +41,7 @@ It will:
 
 <h2 align="center">How it works</h2>
 
-Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that ensures metrics integrity:
+Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
 
 ```yaml
 ---
