@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
   ChatCompletion,
@@ -29,7 +28,11 @@ type AiSdkProviderCreator = (options: {
 
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
-  anthropic: createAnthropic,
+  anthropic: (options) =>
+    createOpenAI({
+      ...options,
+      baseURL: options.baseURL ?? "https://api.anthropic.com/v1/",
+    }),
 };
 
 export class AiSdkApi implements BaseLlmApi {
