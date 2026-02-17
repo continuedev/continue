@@ -2,7 +2,7 @@
 title: "Agents"
 ---
 
-Agents use the same markdown file format as checks. The difference: agents support an `on:` field in frontmatter for triggering on events beyond PR open — cron schedules, GitHub issues, Sentry alerts, Slack messages, webhooks.
+Agents use the same markdown file format as checks. The difference: agents can be triggered by events beyond PR open — cron schedules, GitHub issues, Sentry alerts, Slack messages, webhooks. Triggers are configured in Mission Control.
 
 ## Local agents vs. cloud agents
 
@@ -13,33 +13,21 @@ There are two ways to define agents:
 
 Both run on Continue's cloud infrastructure.
 
-## The `on:` field
+## Triggers
 
-The `on:` field in agent frontmatter defines what triggers the agent:
+Triggers determine when an agent runs. They are configured in [Mission Control](/mission-control/workflows).
+
+Supported trigger types:
 
 | Trigger | Description |
 |---|---|
-| `pr_opened` | When a pull request is opened (this is what checks do implicitly) |
-| `issue_opened` | When a new issue is created |
-| `label_added` | When a label is applied to an issue or PR |
-| `pr_merged` | When a pull request is merged |
-| `check_failed` | When a CI check fails |
-| `cron` | On a schedule |
-| `webhook` | When an external webhook fires |
+| **Cron** | Run on a schedule (daily, weekly, hourly, custom) |
+| **Webhook** | Run when an external system sends a request |
+| **GitHub event** | Run when specific GitHub events occur (PR opened, issue created, label added, etc.) |
 
-Example agent with a cron trigger:
-
-```markdown
----
-name: weekly-dependency-update
-on:
-  cron: "0 9 * * 1"
-tools:
-  - github
----
-
-Check for outdated dependencies and open a PR with updates.
-```
+<Note>
+Version-controlled trigger configuration (defined in the agent file itself) is on the roadmap. Today, all triggers are managed through Mission Control.
+</Note>
 
 ## Running agents
 
@@ -70,7 +58,7 @@ Check for outdated dependencies and open a PR with updates.
 | | Checks | Agents |
 |---|---|---|
 | File location | `.continue/checks/` | `.continue/agents/` or continue.dev |
-| Trigger | Always on PR open | Configurable via `on:` field |
+| Trigger | Always on PR open | Configurable in [Mission Control](/mission-control/workflows) |
 | Purpose | Pass/fail review of PRs | Any automated task |
 
 ## Cloud agent gallery

@@ -20,15 +20,15 @@
               "index",
               "checks/quickstart",
               "checks/running-locally",
-              "checks/setup-on-continue"
+              "checks/running-in-ci"
             ]
           },
           {
             "group": "Writing Checks",
             "icon": "pencil",
             "pages": [
-              "checks/examples",
-              "checks/writing-good-checks",
+              "checks/generating-checks",
+              "checks/best-practices",
               "checks/reference"
             ]
           },
@@ -38,8 +38,6 @@
             "expanded": false,
             "pages": [
               "mission-control/beyond-checks",
-              "agents/overview",
-              "mission-control/tasks",
               {
                 "group": "Integrations",
                 "pages": [
@@ -436,7 +434,7 @@
     },
     {
       "source": "/hub/workflows/intro",
-      "destination": "/agents/intro"
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/hub/blocks/create-a-block",
@@ -1430,7 +1428,7 @@
     },
     {
       "source": "/hub/agents/overview",
-      "destination": "/agents/overview"
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/hub/agents/create-and-edit",
@@ -1477,12 +1475,20 @@
       "destination": "/mission-control"
     },
     {
+      "source": "/agents/overview",
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
       "source": "/agents/intro",
-      "destination": "/agents/overview"
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/agents/create-and-edit",
-      "destination": "/agents/overview"
+      "destination": "/mission-control/beyond-checks"
+    },
+    {
+      "source": "/mission-control/tasks",
+      "destination": "/mission-control/beyond-checks"
     },
     {
       "source": "/guides/run-agents-locally",

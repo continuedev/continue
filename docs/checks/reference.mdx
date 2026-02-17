@@ -25,13 +25,12 @@ Check files live in `.continue/checks/` or `.agents/checks/` at the repository r
 | `name` | Yes | string | Display name shown in GitHub status checks and on continue.dev |
 | `description` | Yes | string | Short description of what the check verifies |
 | `model` | No | string | Model to use. Defaults to Claude Sonnet. Example: `anthropic/claude-sonnet-4-5-20250514` |
-| `tools` | No | list | MCP servers to make available. Hub slugs or inline config. |
 
 ## Body
 
 The markdown body after the frontmatter is the agent's system prompt. It runs in the context of the PR being reviewed. The agent reads the prompt, examines the pull request diff, and produces a pass or fail verdict with reasoning.
 
-Write concrete pass/fail criteria. See [Writing Effective Checks](/checks/writing-good-checks) for guidance on prompt structure.
+Write concrete pass/fail criteria. See [Best Practices](/checks/best-practices) for guidance on prompt structure.
 
 ## Complete example
 
@@ -42,8 +41,6 @@ A fully-specced check file using all available fields:
 name: Migration Safety
 description: Flag destructive database migrations
 model: anthropic/claude-sonnet-4-5-20250514
-tools:
-  - continuedev/github-mcp
 ---
 
 Review database migration files in this pull request.
@@ -65,7 +62,7 @@ Continue locates checks by scanning specific directories at the repository root:
 - Subdirectories are not scanned
 - Files without valid `name` and `description` frontmatter are skipped
 
-Checks do not have an `on:` field — they always run when a PR is opened. For event-triggered automation, use [agents](/agents/overview).
+Checks always run when a PR is opened. For event-triggered automation, use [agents](/mission-control/beyond-checks#agents).
 
 ## Supported directory paths
 

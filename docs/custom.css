@@ -1,11 +1,5 @@
 /* Custom CSS for Continue documentation */
 
-/* Wrap long lines in code blocks instead of horizontal scrolling */
-pre code {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
 /* Enable smooth scrolling for anchor links */
 html {
   scroll-behavior: smooth;

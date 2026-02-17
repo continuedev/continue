@@ -2,20 +2,58 @@
 title: "Beyond Checks"
 ---
 
-Checks review every pull request automatically. But pull requests are just one trigger. Continue can also run agents on schedules, in response to events like new issues, Sentry alerts, or Slack messages. These broader automations live in Mission Control.
+Checks review every pull request automatically. But pull requests are just one trigger. Continue can also run agents on schedules, in response to events like new issues, Sentry alerts, or Slack messages.
 
 ## Agents
 
-Agents use the same markdown file format as checks, but with broader trigger support via the `on:` field. A check is essentially an agent that always runs on PR open. To build agents that respond to other events, see [Agents](/agents/overview).
+Agents use the same markdown file format as checks. The difference: agents can be triggered by events beyond PR open — schedules, new issues, CI failures, webhooks, and more. Triggers are configured in the [Mission Control UI](https://continue.dev).
 
-## Tasks
+### Checks vs. agents
 
-Every time an agent runs — whether triggered by a PR, a schedule, or an event — it creates a task. Tasks are the execution log: what the agent did, what it changed, and whether it succeeded. See [Tasks](/mission-control/tasks).
+| | Checks | Agents |
+|---|---|---|
+| File location | `.continue/checks/` | `.continue/agents/` or continue.dev |
+| Trigger | Always on PR open | Configurable in Mission Control |
+| Purpose | Pass/fail review of PRs | Any automated task |
 
-## Integrations
+### Cloud agent gallery
 
-Connect GitHub, Sentry, Snyk, Slack, PostHog, and more to give agents access to external tools and trigger events. See the Integrations section in the sidebar.
+Pre-configured agents you can use immediately:
 
-## Metrics
+<CardGroup cols={2}>
+  <Card title="Security Scanning" icon="shield-check" href="https://continue.dev/continuedev/snyk-continuous-ai-agent">
+    `continuedev/snyk-continuous-ai-agent`
 
-Operational observability for your agents: run counts, success rates, PR outcomes, cost. See [Metrics](/mission-control/metrics).
+    Monitors vulnerabilities and automatically opens PRs with fixes.
+  </Card>
+
+  <Card title="GitHub Management" icon="github" href="https://continue.dev/continuedev/github-project-manager-agent">
+    `continuedev/github-project-manager-agent`
+
+    Triages issues and manages project workflows.
+  </Card>
+
+  <Card title="Analytics Insights" icon="chart-bar" href="https://continue.dev/continuedev/posthog-continuous-ai-agent">
+    `continuedev/posthog-continuous-ai-agent`
+
+    Analyzes user data and creates actionable tasks.
+  </Card>
+
+  <Card title="Performance Optimization" icon="gauge-high" href="https://continue.dev/continuedev/netlify-continuous-ai-agent">
+    `continuedev/netlify-continuous-ai-agent`
+
+    Monitors Core Web Vitals and optimizes deployments.
+  </Card>
+
+  <Card title="Database Auditing" icon="database" href="https://continue.dev/continuedev/supabase-agent">
+    `continuedev/supabase-agent`
+
+    Audits RLS security and generates migrations.
+  </Card>
+
+  <Card title="Data Pipelines" icon="arrows-rotate" href="https://continue.dev/continuedev/dlt-agent">
+    `continuedev/dlt-agent`
+
+    Inspects pipelines and debugs load errors.
+  </Card>
+</CardGroup>

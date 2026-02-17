@@ -20,7 +20,7 @@ Once connected, Continue will start running checks on new pull requests in the s
 
 ## How checks are discovered
 
-Continue reads the `.continue/checks/` directory (or `.agents/checks/`) from your repository's default branch. Every `.md` file in that directory becomes a check that runs on every PR. No additional configuration is needed — commit a check file and it is active.
+Continue reads the `.continue/checks/` directory from your repository's default branch. Every `.md` file in that directory becomes a check that runs on every PR. No additional configuration is needed — commit a check file and it is active.
 
 ## The PR workflow
 
@@ -41,24 +41,3 @@ When a check fails and suggests changes:
 3. **Accept** to apply the changes as a commit to the PR branch.
 4. **Reject** to dismiss the suggestion. The check will re-run on the next push.
 
-## Self-hosted alternative: GitHub Actions
-
-If you prefer to run checks on your own infrastructure, use the reusable workflow instead of Continue's cloud:
-
-```yaml .github/workflows/checks.yml
-name: Run Checks
-
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-
-jobs:
-  checks:
-    uses: continuedev/continue/.github/workflows/continue-agents.yml@main
-    secrets:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-```
-
-This requires an `ANTHROPIC_API_KEY` secret in your repository settings (**Settings > Secrets and variables > Actions**). The Continue cloud path described above does not require this — it uses your Continue account credentials.
-
-For advanced GitHub integration options, see the [GitHub integration](/mission-control/integrations/github) page.

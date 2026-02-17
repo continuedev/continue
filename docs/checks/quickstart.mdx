@@ -2,7 +2,7 @@
 title: "Write Your First Check"
 ---
 
-## The walkthrough
+## Generating checks (recommended)
 
 Paste this into Claude Code or any coding agent:
 
@@ -14,15 +14,9 @@ The walkthrough reads your codebase, helps you write your first checks, connects
 
 If you'd rather set things up manually, keep reading.
 
-## Manual setup
+## Writing checks manually
 
-### Create a check file
-
-```bash
-mkdir -p .continue/checks
-```
-
-Create `.continue/checks/security-review.md`:
+A check file has two parts: **frontmatter** (YAML between `---` delimiters) with a required `name` and `description`, and a **body** prompt that tells the AI what to look for. Create a `.md` file in `.continue/checks/`:
 
 ```markdown .continue/checks/security-review.md
 ---
@@ -42,21 +36,15 @@ Flag as failing if any of these are true:
 If none of these issues are found, pass the check.
 ```
 
-A check file has two parts.
-
-**Frontmatter** (YAML between `---` delimiters): `name` and `description` are required. See the [reference](/checks/reference) for all available fields.
-
-**Body** (markdown after the frontmatter): the prompt the AI follows when reviewing a pull request. Write concrete pass/fail criteria so the check produces consistent results.
-
-The path `.agents/checks/` is also supported as an open-standard alternative to `.continue/checks/`.
+Write concrete pass/fail criteria so the check produces consistent results. See the [reference](/checks/reference) for all available fields.
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Run Locally" icon="terminal" href="/checks/running-locally">
-    Verify your checks before pushing by running `/checks` in your coding agent.
+    Verify your checks before pushing by running `/check` in your coding agent.
   </Card>
-  <Card title="Run Checks in CI" icon="github" href="/checks/setup-on-continue">
+  <Card title="Run Checks in CI" icon="github" href="/checks/running-in-ci">
     Set up GitHub integration so checks run on every pull request.
   </Card>
 </CardGroup>
