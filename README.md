@@ -20,17 +20,39 @@
 
 <p></p>
 
-<div align="center">
+**Source-controlled AI checks, enforceable in CI**
 
-**Ship faster with Continuous AI**
+You already know what good looks like for your codebase. Continue lets you write it down once and enforce it on every PR.
 
-**The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
+## How it works
 
-</div>
+Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/agents/`. Green if the code looks good, red with a suggested diff if not. Here is an example that ensures metrics integrity:
 
-Get started in [Mission Control](https://continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
+```yaml
+---
+name: Metrics Integrity
+description: Detects changes that could inflate, deflate, or corrupt metrics (session counts, event accuracy, etc.)
+---
 
-### Quick Install
+Review this PR for changes that could unintentionally distort metrics.
+These bugs are insidious because they corrupt dashboards without
+triggering errors or test failures.
+
+Check for:
+- "Find or create" patterns where the "find" is too narrow, causing
+  entity duplication (e.g. querying only active sessions, missing
+  completed ones, so every new commit creates a duplicate)
+- Event tracking calls inside loops or retry paths that fire
+  multiple times per logical action
+- Refactors that accidentally remove or move tracking calls
+  to a path that executes with different frequency
+
+Key files: anything containing `posthog.capture` or `trackEvent`
+```
+
+## Install CLI
+
+The Continue CLI (`cn`) is the open-source engine that powers everything.
 
 **macOS / Linux:**
 
@@ -44,7 +66,7 @@ curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extension
 irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
 ```
 
-Or with npm:
+Or with npm (requires Node.js 20+):
 
 ```bash
 npm i -g @continuedev/cli
@@ -55,24 +77,6 @@ Then run:
 ```bash
 cn
 ```
-
-## Cloud Agents
-
-Set workflows to run automatically on [PR opens](https://docs.continue.dev/guides/continuous-ai#pattern-2-the-pr-review-agent), [schedules](https://docs.continue.dev/guides/continuous-ai#pattern-1-the-async-triage-bot), or [any event trigger](https://docs.continue.dev/cli/quick-start#headless-mode)
-
-![Cloud Agents](docs/images/background-agent.gif)
-
-## CLI Agents
-
-Watch workflows execute in real-time and approve decisions step-by-step from your [terminal](https://docs.continue.dev/cli/quick-start#tui-mode)
-
-![CLI Agents](docs/images/cli-agent.gif)
-
-## IDE Agents
-
-Trigger workflows from [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—let agents handle the refactoring while you keep coding
-
-![IDE Agents](docs/images/agent.gif)
 
 </div>
 
