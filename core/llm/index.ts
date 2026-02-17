@@ -356,8 +356,14 @@ export abstract class BaseLLM implements ILLM {
     usage: Usage | undefined,
     error?: any,
   ): InteractionStatus {
-    let promptTokens = this.countTokens(prompt);
-    let generatedTokens = this.countTokens(completion);
+    let promptTokens =
+      typeof usage?.promptTokens === "number"
+        ? usage.promptTokens
+        : this.countTokens(prompt);
+    let generatedTokens =
+      typeof usage?.completionTokens === "number"
+        ? usage.completionTokens
+        : this.countTokens(completion);
     let thinkingTokens = thinking ? this.countTokens(thinking) : 0;
 
     TokensBatchingService.getInstance().addTokens(
@@ -1353,6 +1359,7 @@ export abstract class BaseLLM implements ILLM {
       modelProvider: this.underlyingProviderName,
       prompt,
       completion: completion.join(""),
+      usage,
     };
   }
 

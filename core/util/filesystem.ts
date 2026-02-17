@@ -76,6 +76,7 @@ class FileSystemIde implements IDE {
       userToken: "",
       continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
+      showTokenUsage: "never",
     };
   }
 

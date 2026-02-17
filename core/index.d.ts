@@ -294,6 +294,7 @@ export interface BaseSessionMetadata {
   dateCreated: string;
   workspaceDirectory: string;
   messageCount?: number;
+  usage?: Usage;
 }
 
 export interface RangeInFile {
@@ -406,6 +407,9 @@ export interface ThinkingChatMessage {
 export interface Usage {
   completionTokens: number;
   promptTokens: number;
+  totalTokens?: number;
+  provider?: string;
+  model?: string;
   promptTokensDetails?: {
     cachedTokens?: number;
     /** This an Anthropic-specific property */
@@ -418,6 +422,9 @@ export interface Usage {
     rejectedPredictionTokens?: number;
     audioTokens?: number;
   };
+  source?: "provider" | "estimated";
+  ts?: string;
+  raw?: Record<string, unknown>;
 }
 
 export interface AssistantChatMessage {
@@ -489,6 +496,7 @@ export interface PromptLog {
   modelProvider: string;
   prompt: string;
   completion: string;
+  usage?: Usage;
 }
 
 export type MessageModes = "chat" | "agent" | "plan" | "background";
@@ -815,6 +823,7 @@ export interface IdeSettings {
   userToken: string;
   continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
+  showTokenUsage?: "never" | "history" | "session" | "turn";
 }
 
 export interface FileStats {

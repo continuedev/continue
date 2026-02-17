@@ -12,6 +12,45 @@ export const parseDate = (date: string): Date => {
 export interface SessionGroup {
   label: string;
   sessions: (BaseSessionMetadata | RemoteSessionMetadata)[];
+  usageTotals: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+function getSessionUsage(session: BaseSessionMetadata | RemoteSessionMetadata) {
+  if (!("usage" in session) || !session.usage) {
+    return {
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    };
+  }
+  const promptTokens = session.usage.promptTokens ?? 0;
+  const completionTokens = session.usage.completionTokens ?? 0;
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens: session.usage.totalTokens ?? promptTokens + completionTokens,
+  };
+}
+
+function sumUsage(sessions: (BaseSessionMetadata | RemoteSessionMetadata)[]) {
+  return sessions.reduce(
+    (acc, session) => {
+      const usage = getSessionUsage(session);
+      acc.promptTokens += usage.promptTokens;
+      acc.completionTokens += usage.completionTokens;
+      acc.totalTokens += usage.totalTokens;
+      return acc;
+    },
+    {
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    },
+  );
 }
 
 export const groupSessionsByDate = (
@@ -39,13 +78,29 @@ export const groupSessionsByDate = (
   );
 
   if (todaySessions.length > 0)
-    groups.push({ label: "Today", sessions: todaySessions });
+    groups.push({
+      label: "Today",
+      sessions: todaySessions,
+      usageTotals: sumUsage(todaySessions),
+    });
   if (weekSessions.length > 0)
-    groups.push({ label: "This Week", sessions: weekSessions });
+    groups.push({
+      label: "This Week",
+      sessions: weekSessions,
+      usageTotals: sumUsage(weekSessions),
+    });
   if (monthSessions.length > 0)
-    groups.push({ label: "This Month", sessions: monthSessions });
+    groups.push({
+      label: "This Month",
+      sessions: monthSessions,
+      usageTotals: sumUsage(monthSessions),
+    });
   if (olderSessions.length > 0)
-    groups.push({ label: "Older", sessions: olderSessions });
+    groups.push({
+      label: "Older",
+      sessions: olderSessions,
+      usageTotals: sumUsage(olderSessions),
+    });
 
   return groups;
 };

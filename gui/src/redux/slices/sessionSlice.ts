@@ -651,6 +651,14 @@ export const sessionSlice = createSlice({
             handleStreamingToolCallUpdates(message, lastItem);
           }
 
+          if (
+            message.role === "assistant" &&
+            lastMessage.role === "assistant" &&
+            message.usage
+          ) {
+            lastMessage.usage = message.usage;
+          }
+
           // Attach Responses API output item id to the current assistant message if present
           // fromResponsesChunk sets message.metadata.responsesOutputItemId when it sees output_item.added for messages
           if (

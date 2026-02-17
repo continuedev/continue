@@ -38,6 +38,10 @@ export class HistoryManager {
       })
       .reverse();
 
+    // Hydrate token usage for old sessions that were saved before session metadata
+    // started carrying usage in sessions.json.
+    sessions = sessions.map((session) => this.hydrateUsageFromSession(session));
+
     // Apply limit and offset
     if (options.limit) {
       const offset = options.offset || 0;
@@ -149,6 +153,7 @@ export class HistoryManager {
           sessionMetadata.title = session.title;
           sessionMetadata.workspaceDirectory = session.workspaceDirectory;
           sessionMetadata.messageCount = messageCount;
+          sessionMetadata.usage = session.usage;
           found = true;
           break;
         }
@@ -161,6 +166,7 @@ export class HistoryManager {
           dateCreated: String(Date.now()),
           workspaceDirectory: session.workspaceDirectory,
           messageCount,
+          usage: session.usage,
         };
         sessionsList.push(sessionMetadata);
       }
@@ -178,6 +184,62 @@ export class HistoryManager {
       throw new Error(
         `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
       );
+    }
+  }
+
+  private hydrateUsageFromSession(
+    metadata: BaseSessionMetadata,
+  ): BaseSessionMetadata {
+    if (metadata.usage) {
+      return metadata;
+    }
+
+    try {
+      const sessionFile = getSessionFilePath(metadata.sessionId);
+      if (!fs.existsSync(sessionFile)) {
+        return metadata;
+      }
+
+      const session = JSON.parse(
+        fs.readFileSync(sessionFile, "utf8"),
+      ) as Session;
+      if (session.usage) {
+        return {
+          ...metadata,
+          usage: session.usage,
+        };
+      }
+
+      const totals = session.history.reduce(
+        (acc, item) => {
+          if (item.message.role !== "assistant" || !item.message.usage) {
+            return acc;
+          }
+          const promptTokens = item.message.usage.promptTokens ?? 0;
+          const completionTokens = item.message.usage.completionTokens ?? 0;
+          acc.promptTokens += promptTokens;
+          acc.completionTokens += completionTokens;
+          acc.totalTokens +=
+            item.message.usage.totalTokens ?? promptTokens + completionTokens;
+          return acc;
+        },
+        {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+        },
+      );
+
+      if (totals.totalTokens === 0) {
+        return metadata;
+      }
+
+      return {
+        ...metadata,
+        usage: totals,
+      };
+    } catch {
+      return metadata;
     }
   }
 }
