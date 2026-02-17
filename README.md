@@ -22,41 +22,43 @@
 
 **Source-controlled AI checks, enforceable in CI**
 
-You already know what good looks like for your codebase.
-
-Continue lets you write it down once and enforce it on every PR.
-
 </div>
+
+## Getting started
+
+Paste this into your coding agent of choice:
+
+```
+Help me write checks for this codebase: https://continue.dev/walkthrough
+```
+
+It will:
+
+- Explore the codebase, interview you, and read past review comments
+- Write checks to `.continue/checks/`
+- Run them in parallel locally with sub-agents
+- Optionally, onboard to Continue to run them on every PR
 
 <h2 align="center">How it works</h2>
 
-Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/agents/`. Green if the code looks good, red with a suggested diff if not. Here is an example that ensures metrics integrity:
+Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
 
 ```yaml
 ---
-name: Metrics Integrity
-description: Detects changes that could inflate, deflate, or corrupt metrics (session counts, event accuracy, etc.)
+name: Security Review
+description: Review PR for basic security vulnerabilities
 ---
 
-Review this PR for changes that could unintentionally distort metrics.
-These bugs are insidious because they corrupt dashboards without
-triggering errors or test failures.
+Review this PR and check that:
 
-Check for:
-- "Find or create" patterns where the "find" is too narrow, causing
-  entity duplication (e.g. querying only active sessions, missing
-  completed ones, so every new commit creates a duplicate)
-- Event tracking calls inside loops or retry paths that fire
-  multiple times per logical action
-- Refactors that accidentally remove or move tracking calls
-  to a path that executes with different frequency
-
-Key files: anything containing `posthog.capture` or `trackEvent`
+- No secrets or API keys are hardcoded
+- All new API endpoints have input validation
+- Error responses use the standard error format
 ```
 
 ## Install CLI
 
-The Continue CLI (`cn`) is the open-source engine that powers everything.
+AI checks are powered by the open-source Continue CLI (`cn`).
 
 **macOS / Linux:**
 
@@ -81,6 +83,8 @@ Then run:
 ```bash
 cn
 ```
+
+Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 
 ## Contributing
 
