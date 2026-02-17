@@ -21,8 +21,6 @@
 
 **[Source-controlled AI checks, enforceable in CI](https://docs.continue.dev)**
 
-You already know what good looks like for your codebase. Continue lets you write it down once and enforce it on every PR.
-
 </div>
 
 ## VS Code Agent
