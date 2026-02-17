@@ -1,0 +1,137 @@
+---
+title: "Writing Effective Checks"
+---
+
+## Let your coding agent write them
+
+The best checks come from a coding agent that can read your codebase. Describe what you want to enforce and the agent writes the check file for you, tailored to your actual frameworks, file structure, and conventions:
+
+```
+Look at our codebase and write a check that catches the security issues most relevant to our stack
+```
+
+For even better results, install the checks skill to teach your agent the check file format and best practices:
+
+```bash
+npx skills add continuedev/writing-checks
+```
+
+When a check isn't producing the results you want, ask your agent to improve it:
+
+```
+This check is flagging too many false positives on test files. Update it to skip files in __tests__/ and *.test.ts
+```
+
+See [Example Checks](/checks/examples) for more prompts organized by category.
+
+The rest of this page covers what makes a check effective, whether you're writing it yourself or reviewing what your agent generated.
+
+## Scope narrowly
+
+Write one check per concern. A single check that tries to verify security, test coverage, and documentation quality will produce muddled results. Split it into three checks instead.
+
+Narrow scope produces clear pass/fail signals:
+
+```markdown .continue/checks/input-validation.md
+---
+name: Input Validation
+description: Verify new API endpoints validate their inputs
+---
+
+Flag as failing if any new API endpoint in the diff accepts user input
+without validation (missing type checks, no schema validation, no length limits).
+
+Pass if all new endpoints validate their inputs, or if the PR does not
+add any API endpoints.
+```
+
+A "review everything" check will hedge its output and frequently produce ambiguous verdicts. A focused check gives you a definitive yes or no.
+
+## Write explicit pass/fail criteria
+
+The prompt must state exactly what constitutes a failure. Vague instructions produce vague results.
+
+**Good:**
+
+```
+Flag as failing if any new API endpoint lacks input validation.
+```
+
+**Bad:**
+
+```
+Check that the code is secure.
+```
+
+Structure criteria as a list of concrete conditions:
+
+```markdown
+Flag as failing if any of these are true:
+
+- New REST endpoints missing request body validation
+- Database queries using string interpolation instead of parameterized queries
+- Error responses that expose stack traces or internal paths
+
+Pass if none of these issues are present in the changed files.
+```
+
+Always include both failure conditions and the pass condition. This eliminates ambiguity about what a passing check looks like.
+
+## Reference the diff, not the whole repo
+
+Checks run in the context of a pull request diff. Write prompts that focus on what changed:
+
+```markdown
+Review the **changed files** in this pull request for error handling issues.
+```
+
+Not:
+
+```markdown
+Review the entire codebase for error handling issues.
+```
+
+The diff is the primary input. Prompts that ask the agent to evaluate the entire repository will be slow and produce unfocused results.
+
+## What checks can do
+
+Checks are not limited to reading the diff. The agent running a check can:
+
+- **Read files** in the repository beyond the diff, to understand surrounding context
+- **Run bash commands** like `grep`, `find`, or custom scripts
+- **Use a browser** to visit URLs, take screenshots, and verify rendered output
+- **Access the PR diff** including file names, additions, and deletions
+- **Use the GitHub CLI** (`gh`) to read PR metadata, comments, or linked issues
+
+This means a check can do things like verify a new page renders correctly in a browser, or cross-reference the diff against your database schema.
+
+## Checks vs. tests vs. linting
+
+**Linting** handles formatting, style, and static patterns. Use ESLint, Prettier, Ruff, or equivalent. If a rule can be expressed as a pattern match on syntax, it belongs in a linter.
+
+**Tests** verify correctness, behavior, and regressions. Use your test framework. If the question is "does this function return the right output for these inputs," write a test.
+
+**Checks** handle judgment calls that require understanding context:
+
+- "Is this database migration safe to run on a 500M-row table?"
+- "Does this PR update the API docs to reflect the endpoint changes it makes?"
+- "Are there security issues in this auth flow that a linter wouldn't catch?"
+- "Does this error handling follow the patterns established elsewhere in the codebase?"
+
+Checks fill the gap between mechanical linting and human review. They are most valuable for questions that require reading multiple files, understanding intent, or applying project-specific conventions that aren't codified in a linter rule.
+
+## Iterate locally
+
+Write the check (or have your agent write it), run it against a real PR branch, read the output, refine. Run `/checks` in your coding agent to test:
+
+```
+/checks .continue/checks/migration-safety.md
+```
+
+Ask your agent to compare results across iterations:
+
+```
+Run the migration safety check, then update it to ignore additive-only migrations, and run it again. Show me the diff in output.
+```
+
+See [Run Checks Locally](/checks/running-locally) for the full local testing workflow.

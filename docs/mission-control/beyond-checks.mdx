@@ -1,0 +1,21 @@
+---
+title: "Beyond Checks"
+---
+
+Checks review every pull request automatically. But pull requests are just one trigger. Continue can also run agents on schedules, in response to events like new issues, Sentry alerts, or Slack messages. These broader automations live in Mission Control.
+
+## Agents
+
+Agents use the same markdown file format as checks, but with broader trigger support via the `on:` field. A check is essentially an agent that always runs on PR open. To build agents that respond to other events, see [Agents](/agents/overview).
+
+## Tasks
+
+Every time an agent runs — whether triggered by a PR, a schedule, or an event — it creates a task. Tasks are the execution log: what the agent did, what it changed, and whether it succeeded. See [Tasks](/mission-control/tasks).
+
+## Integrations
+
+Connect GitHub, Sentry, Snyk, Slack, PostHog, and more to give agents access to external tools and trigger events. See the Integrations section in the sidebar.
+
+## Metrics
+
+Operational observability for your agents: run counts, success rates, PR outcomes, cost. See [Metrics](/mission-control/metrics).

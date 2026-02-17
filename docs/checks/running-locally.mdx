@@ -1,0 +1,58 @@
+---
+title: "Run Checks Locally"
+---
+
+Run your checks locally before pushing to CI using the `/checks` command in your coding agent (Claude Code, Cursor, or any agent that supports skills).
+
+## Run all checks
+
+Type `/checks` in your coding agent. It discovers every check file in `.continue/checks/` (and `.agents/checks/`), runs each one as a subagent against your current branch, and reports the results.
+
+```
+/checks
+```
+
+Output looks like:
+
+```
+✓ Security Review — PASS
+  No hardcoded secrets or SQL injection vectors found in the diff.
+
+✗ Migration Safety — FAIL
+  migrations/024_drop_legacy_users.sql drops the legacy_users table
+  without a preceding data migration. Add a backfill step or split
+  into two migrations.
+
+✓ Test Coverage — PASS
+  All new source files have corresponding test files.
+```
+
+## Run a single check
+
+To run one specific check, pass the file path:
+
+```
+/checks .continue/checks/security-review.md
+```
+
+## Iterate on a check
+
+The local feedback loop is: edit the check file, run `/checks`, read the output, refine. Because checks run inside your coding agent, you can ask it to fix issues in the same session:
+
+```
+The migration safety check is flagging additive-only migrations as failures. Update the check to only flag destructive operations.
+```
+
+## Automate with AGENTS.md
+
+You can add `/checks` to your `AGENTS.md` so your coding agent runs checks automatically as part of its workflow — for example, after creating a PR:
+
+```markdown AGENTS.md
+After creating or updating a pull request, run /checks and fix any failures before requesting review.
+```
+
+## Why local?
+
+Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure — if your agent can read your repo, it can run your checks.
+
+For running checks automatically on every PR in CI, see [Run Checks in CI](/checks/setup-on-continue).

@@ -11,13 +11,33 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Mission Control",
+        "tab": "Checks",
         "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": [
+              "index",
+              "checks/quickstart",
+              "checks/running-locally",
+              "checks/setup-on-continue"
+            ]
+          },
+          {
+            "group": "Writing Checks",
+            "icon": "pencil",
+            "pages": [
+              "checks/examples",
+              "checks/writing-good-checks",
+              "checks/reference"
+            ]
+          },
           {
             "group": "Mission Control",
             "icon": "globe",
+            "expanded": false,
             "pages": [
-              "index",
+              "mission-control/beyond-checks",
               "agents/overview",
               "mission-control/tasks",
               {
@@ -1463,6 +1483,14 @@
     {
       "source": "/agents/create-and-edit",
       "destination": "/agents/overview"
+    },
+    {
+      "source": "/guides/run-agents-locally",
+      "destination": "/checks/running-locally"
+    },
+    {
+      "source": "/overview",
+      "destination": "/"
     }
   ]
 }

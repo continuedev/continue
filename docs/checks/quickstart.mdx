@@ -1,0 +1,62 @@
+---
+title: "Write Your First Check"
+---
+
+## The walkthrough
+
+Paste this into Claude Code or any coding agent:
+
+```
+Help me write checks for this codebase: https://continue.dev/walkthrough
+```
+
+The walkthrough reads your codebase, helps you write your first checks, connects you to Continue, and gets them running on your next PR. It takes a few minutes.
+
+If you'd rather set things up manually, keep reading.
+
+## Manual setup
+
+### Create a check file
+
+```bash
+mkdir -p .continue/checks
+```
+
+Create `.continue/checks/security-review.md`:
+
+```markdown .continue/checks/security-review.md
+---
+name: Security Review
+description: Flag hardcoded secrets and missing input validation
+---
+
+Review this pull request for security issues.
+
+Flag as failing if any of these are true:
+
+- Hardcoded API keys, tokens, or passwords in source files
+- New API endpoints without input validation
+- SQL queries built with string concatenation
+- Sensitive data logged to stdout
+
+If none of these issues are found, pass the check.
+```
+
+A check file has two parts.
+
+**Frontmatter** (YAML between `---` delimiters): `name` and `description` are required. See the [reference](/checks/reference) for all available fields.
+
+**Body** (markdown after the frontmatter): the prompt the AI follows when reviewing a pull request. Write concrete pass/fail criteria so the check produces consistent results.
+
+The path `.agents/checks/` is also supported as an open-standard alternative to `.continue/checks/`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Run Locally" icon="terminal" href="/checks/running-locally">
+    Verify your checks before pushing by running `/checks` in your coding agent.
+  </Card>
+  <Card title="Run Checks in CI" icon="github" href="/checks/setup-on-continue">
+    Set up GitHub integration so checks run on every pull request.
+  </Card>
+</CardGroup>
