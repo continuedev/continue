@@ -24,6 +24,8 @@
 
 </div>
 
+![Banner](media/github-readme.png)
+
 ## Getting started
 
 Paste this into your coding agent of choice:
