@@ -265,7 +265,6 @@ export abstract class BaseLLM implements ILLM {
         options.template,
       ) ??
       undefined;
-    console.warn("=== _templatePromptLikeMessages ===", options.template);
     this.logger = options.logger;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
@@ -337,12 +336,9 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
-    console.warn(">>> === _templatePromptLikeMessages ===", prompt);
-
     if (!this.templateMessages) {
       return prompt;
     }
-    console.warn("=== _templatePromptLikeMessages ===", prompt);
     // NOTE system message no longer supported here
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];

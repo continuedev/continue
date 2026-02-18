@@ -1293,7 +1293,11 @@
                 }
               },
               "model": {
-                "enum": ["deepseek-reasoner", "deepseek-chat", "deepseek-fim"]
+                "enum": [
+                  "deepseek-reasoner",
+                  "deepseek-chat",
+                  "deepseek-fim-beta"
+                ]
               }
             }
           }

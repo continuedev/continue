@@ -367,8 +367,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("deepseek")) {
-    if (lower.includes("deepseek-fim")) {
-      return "deepseek-fim";
+    if (lower.includes("deepseek-fim-beta")) {
+      return "deepseek-fim-beta";
     }
     return "deepseek";
   }
@@ -428,7 +428,7 @@ function autodetectTemplateFunction(
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       codestral: codestralTemplateMessages,
-      "deepseek-fim": deepseekFimTemplateMessages,
+      "deepseek-fim-beta": deepseekFimTemplateMessages,
       none: null,
     };
 
@@ -453,7 +453,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "xwin-coder",
   "zephyr",
   "llama3",
-  "deepseek-fim",
+  "deepseek-fim-beta",
 ];
 
 function autodetectPromptTemplates(

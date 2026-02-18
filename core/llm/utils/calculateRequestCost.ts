@@ -206,6 +206,75 @@ function calculateOpenAICost(
   };
 }
 
+function calculateDeepSeekCost(
+  model: string,
+  usage: Usage,
+): CostBreakdown | null {
+  // Normalize model name
+  const normalizedModel = model.toLowerCase();
+  // Define pricing per million tokens (MTok)
+  // https://api-docs.deepseek.com/quick_start/pricing
+  // Input tokens: cache hit $0.028, cache miss $0.28 per million tokens
+  // Output tokens: $0.42 per million tokens
+  const pricing = {
+    cacheHitInput: 0.028,
+    cacheMissInput: 0.28,
+    output: 0.42,
+  };
+  // Calculate cache tokens
+  const cacheHitTokens = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const cacheMissTokens = usage.promptTokensDetails?.cacheWriteTokens ?? 0;
+  // If no cache details, assume all input tokens are cache miss
+  const totalInputTokens = usage.promptTokens;
+  let remainingInputTokens =
+    totalInputTokens - cacheHitTokens - cacheMissTokens;
+  if (remainingInputTokens < 0) {
+    // If cache tokens exceed total, adjust
+    remainingInputTokens = 0;
+  }
+  // Distribute remaining tokens as cache miss (default)
+  const effectiveCacheMissTokens = cacheMissTokens + remainingInputTokens;
+  // Calculate costs
+  const inputCost =
+    (cacheHitTokens / 1_000_000) * pricing.cacheHitInput +
+    (effectiveCacheMissTokens / 1_000_000) * pricing.cacheMissInput;
+  const outputCost = (usage.completionTokens / 1_000_000) * pricing.output;
+  // Build breakdown components
+  const breakdownParts: string[] = [];
+  if (cacheHitTokens > 0) {
+    breakdownParts.push(
+      `Input Cache Hit: ${cacheHitTokens.toLocaleString()} tokens × $${pricing.cacheHitInput}/MTok = $${(
+        (cacheHitTokens / 1_000_000) *
+        pricing.cacheHitInput
+      ).toFixed(6)}`,
+    );
+  }
+  if (effectiveCacheMissTokens > 0) {
+    breakdownParts.push(
+      `Input Cache Miss: ${effectiveCacheMissTokens.toLocaleString()} tokens × $${pricing.cacheMissInput}/MTok = $${(
+        (effectiveCacheMissTokens / 1_000_000) *
+        pricing.cacheMissInput
+      ).toFixed(6)}`,
+    );
+  }
+  if (usage.completionTokens > 0) {
+    breakdownParts.push(
+      `Output: ${usage.completionTokens.toLocaleString()} tokens × $${pricing.output}/MTok = $${outputCost.toFixed(6)}`,
+    );
+  }
+  const totalCost = inputCost + outputCost;
+  // Build final breakdown string
+  let breakdown = `Model: ${model}\n`;
+  breakdown += breakdownParts.join("\n");
+  if (breakdownParts.length > 1) {
+    breakdown += `\nTotal: $${totalCost.toFixed(6)}`;
+  }
+  return {
+    cost: totalCost,
+    breakdown,
+  };
+}
+
 export function calculateRequestCost(
   provider: string,
   model: string,
@@ -216,6 +285,8 @@ export function calculateRequestCost(
       return calculateAnthropicCost(model, usage);
     case "openai":
       return calculateOpenAICost(model, usage);
+    case "deepseek":
+      return calculateDeepSeekCost(model, usage);
     default:
       return null;
   }

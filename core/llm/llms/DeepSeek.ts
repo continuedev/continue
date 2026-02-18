@@ -116,6 +116,8 @@ class DeepSeek extends OpenAI {
     const generator = super.streamFim(prefix, suffix, signal, modifiedOptions);
     let result: PromptLog | undefined;
 
+    console.warn(" == stream FIM ==,", prefix, suffix);
+
     try {
       while (true) {
         const { value, done } = await generator.next();

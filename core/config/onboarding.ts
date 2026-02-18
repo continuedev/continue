@@ -27,7 +27,7 @@ const DEEPSEEK_MODEL_CONFIG = {
   slugs: [
     "deepseek/deepseek-chat",
     "deepseek/deepseek-reasoner",
-    "deepseek/deepseek-fim-beta",
+    "deepseek/deepseek-fim-beta", // autocomplete not very usefull with large delay
   ],
   apiKeyInputName: "DEEPSEEK_API_KEY",
 };
