@@ -94,3 +94,13 @@ export function hasSuppliedPrompt(): boolean {
 }
 
 export const escapeEvents = new EventEmitter();
+
+export const bashToolEvents = new EventEmitter();
+
+export function emitBashToolStarted(): void {
+  bashToolEvents.emit("started");
+}
+
+export function emitBashToolEnded(): void {
+  bashToolEvents.emit("ended");
+}

@@ -1,6 +1,7 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { sentryService } from "../sentry.js";
+import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
@@ -193,6 +194,16 @@ function displaySessionUsage(): void {
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
   displaySessionUsage();
+
+  try {
+    const runningJobs = backgroundJobService.getRunningJobCount();
+    if (runningJobs > 0) {
+      logger.debug(`Killing ${runningJobs} background job(s) on exit`);
+      backgroundJobService.killAllJobs();
+    }
+  } catch (err) {
+    logger.debug("Background job cleanup error (ignored)", err as any);
+  }
 
   try {
     // Flush metrics (forceFlush + shutdown inside service)

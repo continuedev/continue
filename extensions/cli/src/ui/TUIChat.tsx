@@ -20,6 +20,7 @@ import {
   UpdateServiceState,
 } from "../services/types.js";
 import { getTotalSessionCost } from "../session.js";
+import { bashToolEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
 import { ActionStatus } from "./components/ActionStatus.js";
@@ -282,6 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
+    onShowJobsSelector: () => navigateTo("jobs"),
     onReload: handleReload,
     onClear: handleClear,
     onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
@@ -341,6 +343,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Fetch organization name based on auth state
   const organizationName = useOrganizationName(services.auth?.organizationId);
 
+  // Track if a Bash tool is currently running via events
+  const [isBashToolRunning, setIsBashToolRunning] = useState(false);
+
+  useEffect(() => {
+    const handleStarted = () => setIsBashToolRunning(true);
+    const handleEnded = () => setIsBashToolRunning(false);
+
+    bashToolEvents.on("started", handleStarted);
+    bashToolEvents.on("ended", handleEnded);
+
+    return () => {
+      bashToolEvents.off("started", handleStarted);
+      bashToolEvents.off("ended", handleEnded);
+    };
+  }, []);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -379,6 +397,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           startTime={responseStartTime || 0}
           message=""
           showSpinner={true}
+          additionalHint={
+            isBashToolRunning ? "ctrl+b to background" : undefined
+          }
         />
 
         {/* Compaction Status */}
