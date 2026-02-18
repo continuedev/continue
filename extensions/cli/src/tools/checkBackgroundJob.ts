@@ -28,12 +28,14 @@ If the job is still running, returns partial output with "running" status.`,
     if (!job) {
       return JSON.stringify({
         error: `Job ${job_id} not found`,
-        available_jobs: services.backgroundJobs.getAllJobs().map((j: BackgroundJob) => ({
-          id: j.id,
-          status: j.status,
-          command:
-            j.command.substring(0, 50) + (j.command.length > 50 ? "..." : ""),
-        })),
+        available_jobs: services.backgroundJobs
+          .getAllJobs()
+          .map((j: BackgroundJob) => ({
+            id: j.id,
+            status: j.status,
+            command:
+              j.command.substring(0, 50) + (j.command.length > 50 ? "..." : ""),
+          })),
       });
     }
 
