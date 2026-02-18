@@ -5,18 +5,38 @@ export const Anthropic: ModelProvider = {
   displayName: "Anthropic",
   models: [
     {
-      model: "claude-sonnet-4-5-20250929",
-      displayName: "Claude 4.5 Sonnet",
+      model: "claude-sonnet-4-6",
+      displayName: "Claude Sonnet 4.6",
       contextLength: 200000,
       maxCompletionTokens: 64000,
       description:
-        "Anthropic's smartest model for complex agents and coding with exceptional performance in reasoning and multilingual tasks.",
+        "Anthropic's latest and most capable Sonnet model with exceptional coding, reasoning, and multilingual performance.",
+      regex: /claude-(?:4[.-]6-sonnet|sonnet-4[.-]6).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-opus-4-6",
+      displayName: "Claude Opus 4.6",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Anthropic's most intelligent model with the highest level of capability for complex reasoning and agentic tasks.",
+      regex: /claude-(?:4[.-]6-opus|opus-4[.-]6).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-sonnet-4-5-20250929",
+      displayName: "Claude Sonnet 4.5",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Previous generation Sonnet model with strong performance in reasoning and multilingual tasks.",
       regex: /claude-(?:4[.-]5-sonnet|sonnet-4[.-]5).*/i,
       recommendedFor: ["chat"],
     },
     {
       model: "claude-haiku-4-5-20251001",
-      displayName: "Claude 4.5 Haiku",
+      displayName: "Claude Haiku 4.5",
       contextLength: 200000,
       maxCompletionTokens: 64000,
       description:
@@ -30,7 +50,7 @@ export const Anthropic: ModelProvider = {
       contextLength: 200000,
       maxCompletionTokens: 32000,
       description:
-        "Exceptional model for specialized reasoning tasks with advanced agentic capabilities and superior coding performance.",
+        "Previous generation Opus model with advanced agentic capabilities and coding performance.",
       regex: /claude-opus-4[.-]1.*/i,
       recommendedFor: ["chat"],
     },
@@ -40,7 +60,7 @@ export const Anthropic: ModelProvider = {
       contextLength: 200000,
       maxCompletionTokens: 8192,
       description:
-        "Previous generation model with strong coding and reasoning capabilities, now superseded by Claude 4.5 Sonnet.",
+        "Previous generation model with strong coding and reasoning capabilities.",
       // Sometimes written as claude-4-sonnet, other times as claude-sonnet-4
       regex: /claude-(?:4-sonnet|sonnet-4).*/i,
       recommendedFor: ["chat"],
@@ -51,7 +71,7 @@ export const Anthropic: ModelProvider = {
       contextLength: 200000,
       maxCompletionTokens: 64000,
       description:
-        "Most intelligent model with the highest level of intelligence and capability.",
+        "Previous generation Opus with high intelligence and capability.",
       regex: /claude-(?:4-5-opus|opus-4-5).*/i,
       recommendedFor: ["chat"],
     },
