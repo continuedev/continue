@@ -44,7 +44,8 @@ function testAiSdkProvider(config: AiSdkTestConfig) {
 
     testChat(api, fullModel, {
       skipTools: skipTools ?? false,
-      expectUsage: false,
+      // TODO: Vercel AI SDK fullStream usage tokens are unreliable - investigate
+      expectUsage: false, // Temporarily disable usage assertions
       skipSystemMessage: skipSystemMessage ?? false,
     });
   });
