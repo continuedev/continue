@@ -1059,7 +1059,7 @@ export type TemplateType =
   | "granite"
   | "llama3"
   | "codestral"
-  | "deepseek-fim";
+  | "deepseek-fim-beta";
 
 export interface RequestOptions {
   timeout?: number;
