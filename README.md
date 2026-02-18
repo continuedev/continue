@@ -1,6 +1,6 @@
 <div align="center">
 
-![Continue logo](media/readme.png)
+![Banner](media/github-readme.png)
 
 </div>
 
@@ -23,8 +23,6 @@
 **Source-controlled AI checks, enforceable in CI**
 
 </div>
-
-![Banner](media/github-readme.png)
 
 ## Getting started
 
