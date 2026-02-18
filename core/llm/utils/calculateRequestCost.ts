@@ -33,7 +33,7 @@ function calculateAnthropicCost(
       cacheRead: 0.5,
     },
 
-    // Claude Opus 4.5 (most intelligent model)
+    // Claude Opus 4.5 (previous generation)
     "claude-opus-4-5": {
       input: 5,
       output: 25,
