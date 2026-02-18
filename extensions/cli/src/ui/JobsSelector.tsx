@@ -46,7 +46,7 @@ export function JobsSelector({ onCancel }: JobsSelectorProps) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [viewMode, selectedJob]);
 
   useInput((input, key) => {
     // Handle key input when viewing job details

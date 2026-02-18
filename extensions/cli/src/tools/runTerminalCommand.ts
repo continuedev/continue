@@ -231,6 +231,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         }
         backgroundSignalManager.off("backgroundRequested", moveToBackground);
 
+        // Detach stdout/stderr listeners so they don't accumulate in local
+        // buffers or trigger chat history updates after the tool call resolves.
+        // BackgroundJobService.createJobWithProcess attaches its own listeners.
+        child.stdout.removeListener("data", onStdout);
+        child.stderr.removeListener("data", onStderr);
+
         const job = backgroundJobService.createJobWithProcess(
           command,
           child as ChildProcess,
@@ -238,8 +244,15 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         );
 
         if (job) {
+          const truncationResult = truncateOutputFromStart(stdout, {
+            maxChars,
+            maxLines,
+          });
+          const outputSoFar = truncationResult.wasTruncated
+            ? appendParallelLimitNote(truncationResult.output)
+            : truncationResult.output;
           resolve(
-            `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${stdout}\nUse CheckBackgroundJob("${job.id}") to check status.`,
+            `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${outputSoFar}\nUse CheckBackgroundJob("${job.id}") to check status.`,
           );
         } else {
           resolve(
@@ -289,17 +302,20 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       // Start the initial timeout
       resetTimeout();
 
-      child.stdout.on("data", (data) => {
+      const onStdout = (data: Buffer) => {
         stdout += data.toString();
         resetTimeout();
         showCurrentOutput();
-      });
+      };
 
-      child.stderr.on("data", (data) => {
+      const onStderr = (data: Buffer) => {
         stderr += data.toString();
         resetTimeout();
         showCurrentOutput();
-      });
+      };
+
+      child.stdout.on("data", onStdout);
+      child.stderr.on("data", onStderr);
 
       child.on("close", (code) => {
         if (isResolved) return;

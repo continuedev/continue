@@ -68,12 +68,15 @@ export class BackgroundJobService {
     const child = spawn(shell, args, { stdio: "pipe" });
     this.processes.set(jobId, child);
 
-    child.stdout?.on("data", (data: Buffer) => {
-      this.appendOutput(jobId, data.toString());
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
+
+    child.stdout?.on("data", (data: string) => {
+      this.appendOutput(jobId, data);
     });
 
-    child.stderr?.on("data", (data: Buffer) => {
-      this.appendOutput(jobId, data.toString());
+    child.stderr?.on("data", (data: string) => {
+      this.appendOutput(jobId, data);
     });
 
     child.on("close", (code: number | null) => {
@@ -114,12 +117,15 @@ export class BackgroundJobService {
     this.jobs.set(id, job);
     this.processes.set(id, child);
 
-    child.stdout?.on("data", (data: Buffer) => {
-      this.appendOutput(id, data.toString());
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
+
+    child.stdout?.on("data", (data: string) => {
+      this.appendOutput(id, data);
     });
 
-    child.stderr?.on("data", (data: Buffer) => {
-      this.appendOutput(id, data.toString());
+    child.stderr?.on("data", (data: string) => {
+      this.appendOutput(id, data);
     });
 
     child.on("close", (code: number | null) => {

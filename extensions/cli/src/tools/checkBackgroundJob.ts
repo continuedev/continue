@@ -1,3 +1,4 @@
+import type { BackgroundJob } from "../services/BackgroundJobService.js";
 import { services } from "../services/index.js";
 
 import { Tool } from "./types.js";
@@ -27,7 +28,7 @@ If the job is still running, returns partial output with "running" status.`,
     if (!job) {
       return JSON.stringify({
         error: `Job ${job_id} not found`,
-        available_jobs: services.backgroundJobs.getAllJobs().map((j) => ({
+        available_jobs: services.backgroundJobs.getAllJobs().map((j: BackgroundJob) => ({
           id: j.id,
           status: j.status,
           command:
