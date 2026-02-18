@@ -1,0 +1,42 @@
+---
+title: "Improving Your Checks"
+---
+
+Checks improve over time as you review results and provide feedback. There are two main levers: metrics to identify which checks need work, and rejection feedback to tune behavior.
+
+## Use metrics to find noisy checks
+
+The [Metrics](/mission-control/metrics) page shows acceptance and rejection rates per check across your repositories. A high rejection rate tells you a check is producing unhelpful suggestions and needs refinement.
+
+Start there to identify which checks to focus on before diving into feedback or prompt edits.
+
+## Provide feedback when rejecting
+
+When you reject a check result on the PR review page, a dialog appears where you can explain why the suggestion was wrong. This feedback is saved and included in the check's system prompt on future runs, so the check learns from your corrections.
+
+To leave feedback:
+
+1. Click **Reject** on a check result.
+2. Write feedback explaining why the suggestion was unhelpful.
+3. Click **Refine** to have AI polish your raw feedback into concise instructions.
+4. Submit the rejection.
+
+Good feedback is specific and actionable:
+
+| Good feedback | Bad feedback |
+| --- | --- |
+| "Don't flag `console.log` in test files" | "Be better" |
+| "Ignore TODO comments in draft PRs" | "Too many false positives" |
+| "Only flag missing error handling in public API endpoints, not internal helpers" | "Wrong" |
+
+The more precise your feedback, the faster the check improves.
+
+## Adjust sensitivity
+
+The rejection dialog also lets you set a sensitivity level for the check:
+
+- **Conservative** — only flag critical issues (high confidence required)
+- **Balanced** — default behavior
+- **Thorough** — flag all potential improvements, even when not fully certain
+
+If a check is producing too many low-value suggestions, try lowering the sensitivity to **Conservative**. If it's missing real issues, raise it to **Thorough**.
