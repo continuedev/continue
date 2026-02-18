@@ -218,7 +218,9 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
 
     private fun parseNextEditOutcome(response: Any?): NextEditOutcome? {
         return try {
+            @Suppress("UNCHECKED_CAST")
             val responseMap = response as? Map<String, Any> ?: return null
+            @Suppress("UNCHECKED_CAST")
             val contentMap = responseMap["content"] as? Map<String, Any> ?: return null
 
             parseNextEditOutcomeFromMap(contentMap)
@@ -231,6 +233,7 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
     private fun parseNextEditOutcomeFromMap(contentMap: Map<String, Any>): NextEditOutcome? {
         return try {
             // Extract position data
+            @Suppress("UNCHECKED_CAST")
             val cursorPos = contentMap["cursorPosition"] as? Map<String, Any>
             val cursorPosition = if (cursorPos != null) {
                 Position(
@@ -241,6 +244,7 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
                 Position(0, 0)
             }
 
+            @Suppress("UNCHECKED_CAST")
             val finalCursorPos = contentMap["finalCursorPosition"] as? Map<String, Any>
             val finalCursorPosition = if (finalCursorPos != null) {
                 Position(
@@ -252,6 +256,7 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
             }
 
             // Extract diffLines
+            @Suppress("UNCHECKED_CAST")
             val diffLinesRaw = contentMap["diffLines"] as? List<Map<String, Any>> ?: emptyList()
             val diffLines = diffLinesRaw.map { diffLineMap ->
                 DiffLine(
@@ -313,15 +318,21 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
 
     private fun parseProcessedItem(response: Any?): ProcessedItem? {
         return try {
+            @Suppress("UNCHECKED_CAST")
             val responseMap = response as? Map<String, Any> ?: return null
-            val content = responseMap["content"] as Map<String, Any> ?: return null
+            @Suppress("UNCHECKED_CAST")
+            val content = responseMap["content"] as? Map<String, Any> ?: return null
 
             // Parse location (RangeInFile)
+            @Suppress("UNCHECKED_CAST")
             val locationMap = content["location"] as? Map<String, Any> ?: return null
             val filepath = locationMap["filepath"] as? String ?: return null
 
+            @Suppress("UNCHECKED_CAST")
             val rangeMap = locationMap["range"] as? Map<String, Any> ?: return null
+            @Suppress("UNCHECKED_CAST")
             val startMap = rangeMap["start"] as? Map<String, Any> ?: return null
+            @Suppress("UNCHECKED_CAST")
             val endMap = rangeMap["end"] as? Map<String, Any> ?: return null
 
             val startPosition = Position(
@@ -338,6 +349,7 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
             val location = com.github.continuedev.continueintellijextension.RangeInFile(filepath, range)
 
             // Parse outcome (NextEditOutcome) - reuse existing logic from parseNextEditOutcome
+            @Suppress("UNCHECKED_CAST")
             val outcomeData = content["outcome"] as? Map<String, Any> ?: return null
             val outcome = parseNextEditOutcomeFromMap(outcomeData) ?: return null
 

@@ -1,17 +1,26 @@
+import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
+import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
+
+import { get } from "../util/apiClient.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import {
+  constructHttpTransport,
+  constructSseTransport,
+  constructStdioTransport,
+} from "./mcpTransports.js";
+import { isAuthError } from "./mcpUtils.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   MCPConnectionInfo,
+  MCPServerConfig,
   MCPServiceState,
   SERVICE_NAMES,
-  MCPServerConfig,
 } from "./types.js";
 
 interface ServerConnection extends MCPConnectionInfo {
@@ -32,9 +41,11 @@ export class MCPService
   private connections: Map<string, ServerConnection> = new Map();
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
+  private isHeadless: boolean | undefined;
+  private apiKeyCache: Map<string, string> = new Map();
 
   getDependencies(): string[] {
-    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.CONFIG];
+    return [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH];
   }
   constructor() {
     super("MCPService", {
@@ -52,39 +63,40 @@ export class MCPService
    */
   async doInitialize(
     assistant: AssistantConfig,
-    waitForConnections = false,
+    hasAgentFile: boolean,
+    isHeadless: boolean | undefined,
   ): Promise<MCPServiceState> {
-    logger.debug("Initializing MCPService", {
-      configName: assistant.name,
-      serverCount: assistant.mcpServers?.length || 0,
-    });
+    this.isHeadless = isHeadless;
 
     await this.shutdownConnections();
 
     this.assistant = assistant;
     this.connections.clear();
 
-    if (assistant.mcpServers?.length) {
-      logger.debug("Starting MCP server connections", {
-        serverCount: assistant.mcpServers.length,
-      });
-    }
     const connectionPromises = assistant.mcpServers?.map(async (config) => {
       if (config) {
         return await this.connectServer(config);
       }
     });
 
-    const connectionInit = Promise.all(connectionPromises ?? []).then(
-      (connections) => {
-        logger.debug("MCP connections established", {
-          connectionCount: connections.length,
-        });
-        this.updateState();
-      },
-    );
-    if (waitForConnections) {
+    const connectionInit = Promise.all(connectionPromises ?? []);
+    if (isHeadless || hasAgentFile) {
       await connectionInit;
+
+      if (isHeadless) {
+        // With headless or agent, throw error if any MCP server failed to connect
+        const failedConnections = Array.from(this.connections.values()).filter(
+          (c) => c.status === "error",
+        );
+        if (failedConnections.length > 0) {
+          const errorMessages = failedConnections.map(
+            (c) => `${c.config?.name}: ${c.error}`,
+          );
+          throw new Error(
+            `MCP server(s) failed to load:\n${errorMessages.join("\n")}`,
+          );
+        }
+      }
     } else {
       this.updateState();
     }
@@ -146,6 +158,86 @@ export class MCPService
   }
 
   /**
+   * Generic wrapper for client operations that handles 401 errors with token refresh
+   * Only applies to SSE/HTTP connections, not stdio
+   */
+  private async withTokenRefresh<T>(
+    serverName: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const connection = this.connections.get(serverName);
+    if (!connection) {
+      throw new Error(`Connection ${serverName} not found`);
+    }
+
+    const serverConfig = connection.config;
+    if (!serverConfig || "command" in serverConfig) {
+      // For stdio connections, just execute normally (no token refresh possible)
+      return await operation();
+    }
+
+    try {
+      // Try the operation first
+      return await operation();
+    } catch (error: unknown) {
+      // If not a 401 error, rethrow
+      if (!isAuthError(error)) {
+        throw error;
+      }
+
+      // Check if user is signed in
+      const isAuthed = await isAuthenticated();
+      if (!isAuthed) {
+        throw error;
+      }
+
+      const authConfig = loadAuthConfig();
+
+      // Clear cached token since it's invalid
+      this.apiKeyCache.delete(serverName);
+
+      // Fetch OAuth token from backend
+      const organizationSlug = authConfig?.organizationId;
+
+      let token: string | null = null;
+      try {
+        const params = new URLSearchParams({
+          url: serverConfig.url,
+        });
+        if (organizationSlug) {
+          params.set("organizationSlug", organizationSlug);
+        }
+        if (serverConfig.sourceSlug) {
+          params.set("slug", serverConfig.sourceSlug);
+        }
+
+        const response = await get<{
+          configured: boolean;
+          hasCredentials: boolean;
+          accessToken?: string;
+          expiresAt?: string;
+          expired?: boolean;
+        }>(`/ide/mcp-auth?${params.toString()}`);
+
+        if (response.data.hasCredentials && response.data.accessToken) {
+          token = response.data.accessToken;
+          this.apiKeyCache.set(serverName, token);
+        }
+      } catch {
+        logger.debug("Failed to fetch mcp oauth credentials");
+      }
+
+      if (!token) {
+        throw error;
+      }
+
+      this.apiKeyCache.set(serverConfig.name, token);
+
+      return await operation();
+    }
+  }
+
+  /**
    * Run a tool by name
    */
   public async runTool(name: string, args: Record<string, any>) {
@@ -153,9 +245,16 @@ export class MCPService
       if (connection.status === "connected" && connection.client) {
         const tool = connection.tools.find((t) => t.name === name);
         if (tool) {
-          return await connection.client.callTool({
-            name,
-            arguments: args,
+          const serverName = connection.config!.name;
+          return await this.withTokenRefresh(serverName, async () => {
+            const conn = this.connections.get(serverName);
+            if (!conn?.client) {
+              throw new Error(`Client for ${serverName} not available`);
+            }
+            return await conn.client.callTool({
+              name,
+              arguments: args,
+            });
           });
         }
       }
@@ -169,7 +268,6 @@ export class MCPService
   public async restartAllServers(): Promise<void> {
     if (!this.assistant) return;
 
-    logger.debug("Restarting all MCP servers");
     await this.shutdownConnections();
     await this.initialize(this.assistant);
   }
@@ -187,8 +285,6 @@ export class MCPService
     if (!serverConfig) {
       throw new Error(`Server ${serverName} not found in configuration`);
     }
-
-    logger.debug("Restarting MCP server", { name: serverName });
 
     const existingConnection = this.connections.get(serverName);
     if (existingConnection) {
@@ -213,58 +309,44 @@ export class MCPService
     this.connections.set(serverName, connection);
     this.updateState();
 
+    const vars = getTemplateVariables(JSON.stringify(serverConfig));
+    const secretVars = vars.filter((v) => v.startsWith("secrets."));
+    const unrendered = secretVars.map((v) => {
+      return decodeFQSN(v.replace("secrets.", "")).secretName;
+    });
+
     try {
-      if (serverConfig.type && serverConfig.type !== "stdio") {
-        throw new Error(
-          `${serverConfig.type} MCP servers are not yet supported in the Continue CLI`,
-        );
-      }
-      if (!serverConfig.command) {
-        throw new Error("MCP server command is not specified");
-      }
-
-      const client = new Client(
-        { name: "continue-cli-client", version: "1.0.0" },
-        { capabilities: {} },
-      );
-
-      const env: Record<string, string> = serverConfig.env || {};
-      if (process.env.PATH !== undefined) {
-        env.PATH = process.env.PATH;
+      if (unrendered.length > 0) {
+        const message = `${serverConfig.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}
+For personal use you can set the secret in the hub at https://continue.dev/settings/secrets or pass it to the CLI environment.
+Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled for the secret.`;
+        if (this.isHeadless) {
+          throw new Error(message);
+        } else {
+          connection.warnings.push(message);
+        }
       }
 
-      const transport = new StdioClientTransport({
-        command: serverConfig.command,
-        args: serverConfig.args,
-        env,
-        stderr: "ignore",
-      });
-
-      logger.debug("Connecting to MCP server", {
-        name: serverName,
-        command: serverConfig.command,
-      });
-
-      await client.connect(transport, {});
+      const client = await this.getConnectedClient(serverConfig, connection);
 
       connection.client = client;
       connection.status = "connected";
       this.updateState();
 
       const capabilities = client.getServerCapabilities();
-      logger.debug("MCP server capabilities", {
-        name: serverName,
-        hasPrompts: !!capabilities?.prompts,
-        hasTools: !!capabilities?.tools,
-      });
 
       if (capabilities?.prompts) {
         try {
-          connection.prompts = (await client.listPrompts()).prompts;
-          logger.debug("Loaded MCP prompts", {
-            name: serverName,
-            count: connection.prompts.length,
-          });
+          connection.prompts = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listPrompts()).prompts;
+            },
+          );
         } catch (error) {
           const errorMessage = getErrorString(error);
           connection.warnings.push(`Failed to load prompts: ${errorMessage}`);
@@ -277,11 +359,16 @@ export class MCPService
 
       if (capabilities?.tools) {
         try {
-          connection.tools = (await client.listTools()).tools;
-          logger.debug("Loaded MCP tools", {
-            name: serverName,
-            count: connection.tools.length,
-          });
+          connection.tools = await this.withTokenRefresh(
+            serverName,
+            async () => {
+              const conn = this.connections.get(serverName);
+              if (!conn?.client) {
+                throw new Error(`Client for ${serverName} not available`);
+              }
+              return (await conn.client.listTools()).tools;
+            },
+          );
         } catch (error) {
           const errorMessage = getErrorString(error);
           connection.warnings.push(`Failed to load tools: ${errorMessage}`);
@@ -291,15 +378,22 @@ export class MCPService
           });
         }
       }
-
-      logger.debug("MCP server restarted successfully", { name: serverName });
     } catch (error) {
       const errorMessage = getErrorString(error);
       connection.status = "error";
-      connection.error = errorMessage;
-      logger.error("Failed to restart MCP server", {
+
+      // Convert any warnings to error at time of connection failure
+      if (connection.warnings.length > 0) {
+        const stderrContent = connection.warnings.join("\n");
+        connection.error = `${errorMessage}\n\nServer stderr:\n${stderrContent}`;
+        connection.warnings = [];
+      } else {
+        connection.error = errorMessage;
+      }
+
+      logger.error("Failed to connect to MCP server", {
         name: serverName,
-        error: errorMessage,
+        error: connection.error,
       });
     }
 
@@ -310,8 +404,6 @@ export class MCPService
    * Stop a specific server
    */
   public async stopServer(serverName: string): Promise<void> {
-    logger.debug("Stopping MCP server", { name: serverName });
-
     const connection = this.connections.get(serverName);
     if (connection) {
       await this.shutdownConnection(connection);
@@ -360,7 +452,92 @@ export class MCPService
     this.isShuttingDown = true;
 
     this.removeAllListeners();
-    logger.debug("Shutting down MCPService");
     await this.shutdownConnections();
+  }
+
+  /**
+   * Construct transport based on server configuration and connect client
+   */
+  private async getConnectedClient(
+    serverConfig: MCPServerConfig,
+    connection: ServerConnection,
+  ): Promise<Client> {
+    const client = new Client(
+      { name: "continue-cli-client", version: "1.0.0" },
+      { capabilities: {} },
+    );
+
+    if ("command" in serverConfig) {
+      // STDIO: no need to check type, just if command is present
+      const transport = constructStdioTransport(serverConfig, connection);
+      await client.connect(transport, {});
+    } else {
+      // SSE/HTTP: if type isn't explicit: try http and fall back to sse
+      try {
+        await this.withTokenRefresh(serverConfig.name, async () => {
+          if (serverConfig.apiKey && !this.apiKeyCache.get(serverConfig.name)) {
+            this.apiKeyCache.set(serverConfig.name, serverConfig.apiKey);
+          }
+          const apiKey = this.apiKeyCache.get(serverConfig.name);
+          if (serverConfig.type === "sse") {
+            const transport = constructSseTransport(serverConfig, apiKey);
+            await client.connect(transport, {});
+          } else if (serverConfig.type === "streamable-http") {
+            const transport = constructHttpTransport(serverConfig, apiKey);
+            await client.connect(transport, {});
+          } else {
+            try {
+              const transport = constructHttpTransport(serverConfig, apiKey);
+              await client.connect(transport, {});
+            } catch (e) {
+              if (isAuthError(e)) {
+                throw e;
+              }
+              const transport = constructSseTransport(serverConfig, apiKey);
+              await client.connect(transport, {});
+            }
+          }
+        });
+      } catch (error: unknown) {
+        // If token refresh didn't work and it's a 401, fall back to mcp-remote
+        if (isAuthError(error) && !this.isHeadless) {
+          // Build mcp-remote args with Supabase-specific OAuth scopes if needed
+          const mcpRemoteArgs = ["-y", "mcp-remote", serverConfig.url];
+
+          // Detect Supabase MCP and add custom OAuth scopes
+          if (serverConfig.url.includes("mcp.supabase.com")) {
+            const supabaseScopes = [
+              "organizations:read",
+              "projects:read",
+              "database:read",
+              "analytics:read",
+              "secrets:read",
+              "edge_functions:read",
+              "environment:read",
+              "storage:read",
+            ].join(" ");
+
+            mcpRemoteArgs.push(
+              "--static-oauth-client-metadata",
+              JSON.stringify({ scope: supabaseScopes }),
+            );
+          }
+
+          const transport = constructStdioTransport(
+            {
+              name: serverConfig.name,
+              command: "npx",
+              args: mcpRemoteArgs,
+            },
+            connection,
+          );
+          await client.connect(transport, {});
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    return client;
   }
 }

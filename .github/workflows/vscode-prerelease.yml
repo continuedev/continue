@@ -1,0 +1,231 @@
+name: VSCode Pre-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      main_commit_sha:
+        description: "Main branch commit SHA to create pre-release from - leave empty to use HEAD of main"
+        required: false
+        type: string
+      prerelease_version:
+        description: "New pre-release version (e.g., 1.3.15) - leave empty to auto-increment"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-prerelease:
+    name: Create VSCode Pre-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.main_commit_sha || 'main' }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Determine version numbers
+        id: version
+        working-directory: extensions/vscode
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version in package.json: $CURRENT_VERSION"
+
+          # Determine new pre-release version
+          if [[ -n "${{ inputs.prerelease_version }}" ]]; then
+            NEW_VERSION="${{ inputs.prerelease_version }}"
+            echo "Using manually specified new version: $NEW_VERSION"
+          else
+            # Auto-increment patch version
+            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+            NEW_PATCH=$((patch + 1))
+            NEW_VERSION="${major}.${minor}.${NEW_PATCH}"
+            echo "Auto-incremented version: $NEW_VERSION"
+          fi
+
+          TAG_NAME="v${NEW_VERSION}-vscode"
+
+          echo "previous_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          echo "Summary:"
+          echo "  Previous version: $CURRENT_VERSION"
+          echo "  New version: $NEW_VERSION"
+          echo "  Tag name: $TAG_NAME"
+
+      - name: Create pre-release branch
+        id: branch
+        run: |
+          BRANCH_NAME="prerelease/vscode-${{ steps.version.outputs.new_version }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git checkout -b "$BRANCH_NAME"
+          echo "Created branch: $BRANCH_NAME"
+
+      - name: Update package.json version
+        working-directory: extensions/vscode
+        run: |
+          # Update version in package.json
+          npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+
+          echo "Updated package.json to version ${{ steps.version.outputs.new_version }}"
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git add extensions/vscode/package.json
+          git commit -m "chore: bump VSCode extension version to ${{ steps.version.outputs.new_version }}"
+
+          echo "Committed version bump"
+
+      - name: Push branch and create PR
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin "${{ steps.branch.outputs.branch_name }}"
+          echo "Pushed branch: ${{ steps.branch.outputs.branch_name }}"
+
+          # Create pull request
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.branch_name }}" \
+            --title "chore: VSCode pre-release ${{ steps.version.outputs.new_version }}" \
+            --body "$(cat <<'EOF'
+          ## VSCode Pre-release ${{ steps.version.outputs.new_version }}
+
+          This PR bumps the VSCode extension version for pre-release.
+
+          ### Changes
+          - Version bumped from ${{ steps.version.outputs.previous_version }} to ${{ steps.version.outputs.new_version }}
+          - Based on commit: ${{ inputs.main_commit_sha }}
+
+          ### Release Process
+          After merging this PR:
+          1. The tag \`${{ steps.version.outputs.tag_name }}\` will be created automatically
+          2. A GitHub pre-release will be created with auto-generated release notes
+
+          🤖 This PR was created automatically by the VSCode Pre-release workflow.
+          EOF
+          )")
+
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "Created PR: $PR_URL"
+
+      - name: Auto-merge PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get PR number from URL
+          PR_NUMBER=$(echo "${{ steps.pr.outputs.pr_url }}" | grep -oE '[0-9]+$')
+
+          # Merge the PR
+          gh pr merge "$PR_NUMBER" --squash --auto
+
+          echo "PR #$PR_NUMBER set to auto-merge"
+
+          # Wait for merge to complete (with timeout)
+          echo "Waiting for PR to be merged..."
+          TIMEOUT=300  # 5 minutes
+          ELAPSED=0
+          INTERVAL=10
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state')
+            if [ "$PR_STATE" = "MERGED" ]; then
+              echo "PR successfully merged!"
+              break
+            fi
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+            echo "Still waiting... ($ELAPSED seconds elapsed)"
+          done
+
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Warning: Timed out waiting for PR merge. Please check manually." && exit 1
+          fi
+
+      - name: Checkout main branch
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+      - name: Create and push tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git tag "${{ steps.version.outputs.tag_name }}"
+          git push origin "${{ steps.version.outputs.tag_name }}"
+
+          echo "Created and pushed tag: ${{ steps.version.outputs.tag_name }}"
+
+      - name: Get previous tag for release notes
+        id: prev_tag
+        run: |
+          # Find the previous vscode pre-release tag
+          PREV_TAG=$(git tag -l "v*-vscode" --sort=-version:refname | head -n 2 | tail -n 1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, using first commit"
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag for release notes: $PREV_TAG"
+
+      - name: Create GitHub pre-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Generate release notes between previous tag and current tag
+          RELEASE_NOTES=$(gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name="${{ steps.version.outputs.tag_name }}" \
+            -f target_commitish="main" \
+            -f previous_tag_name="${{ steps.prev_tag.outputs.prev_tag }}" \
+            --jq '.body')
+
+          # Create the pre-release
+          gh release create "${{ steps.version.outputs.tag_name }}" \
+            --title "VSCode Pre-release ${{ steps.version.outputs.new_version }}" \
+            --notes "$RELEASE_NOTES" \
+            --prerelease \
+            --target main
+
+          echo "Created pre-release: ${{ steps.version.outputs.tag_name }}"
+
+      - name: Summary
+        run: |
+          echo "## VSCode Pre-release Created Successfully! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version:** ${{ steps.version.outputs.previous_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version:** ${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ steps.version.outputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Links" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** ${{ steps.pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Commit" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Commit:** \`${{ inputs.main_commit_sha }}\`" >> $GITHUB_STEP_SUMMARY

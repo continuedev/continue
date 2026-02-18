@@ -1,6 +1,7 @@
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RuleWithSource, Tool, ToolPolicy } from "core";
-import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
+import { RuleWithSource, Tool } from "core";
+import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -14,11 +15,11 @@ export type ToolGroupPolicy = "include" | "exclude";
 export type ToolPolicies = { [toolName: string]: ToolPolicy };
 export type RulePolicies = { [ruleName: string]: RulePolicy };
 export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
+export type ReasoningSettings = { [modelTitle: string]: boolean };
 
 type UIState = {
   showDialog: boolean;
-  dialogMessage: string | JSX.Element | undefined;
-  dialogEntryOn: boolean;
+  dialogMessage: JSX.Element | undefined;
   onboardingCard: OnboardingCardState;
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
@@ -26,31 +27,33 @@ type UIState = {
   toolSettings: ToolPolicies;
   toolGroupSettings: ToolGroupPolicies;
   ruleSettings: RulePolicies;
+  reasoningSettings: ReasoningSettings;
   ttsActive: boolean;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 export const DEFAULT_RULE_SETTING: RulePolicy = "on";
+export const DEFAULT_UI_SLICE: UIState = {
+  showDialog: false,
+  dialogMessage: undefined,
+  onboardingCard: defaultOnboardingCardState,
+  isExploreDialogOpen:
+    getLocalStorage(LocalStorageKey.IsExploreDialogOpen) ?? false,
+  hasDismissedExploreDialog:
+    getLocalStorage(LocalStorageKey.HasDismissedExploreDialog) ?? false,
+  shouldAddFileForEditing: false,
+  ttsActive: false,
+  toolSettings: {},
+  toolGroupSettings: {
+    [BUILT_IN_GROUP_NAME]: "include",
+  },
+  ruleSettings: {},
+  reasoningSettings: {},
+};
 
 export const uiSlice = createSlice({
   name: "ui",
-  initialState: {
-    showDialog: false,
-    dialogMessage: "",
-    dialogEntryOn: false,
-    onboardingCard: defaultOnboardingCardState,
-    isExploreDialogOpen: getLocalStorage(LocalStorageKey.IsExploreDialogOpen),
-    hasDismissedExploreDialog: getLocalStorage(
-      LocalStorageKey.HasDismissedExploreDialog,
-    ),
-    shouldAddFileForEditing: false,
-    ttsActive: false,
-    toolSettings: {},
-    toolGroupSettings: {
-      [BUILT_IN_GROUP_NAME]: "include",
-    },
-    ruleSettings: {},
-  } as UIState,
+  initialState: DEFAULT_UI_SLICE,
   reducers: {
     setOnboardingCard: (
       state,
@@ -139,6 +142,13 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
+    setReasoningSetting: (
+      state,
+      action: PayloadAction<{ modelTitle: string; enabled: boolean }>,
+    ) => {
+      state.reasoningSettings[action.payload.modelTitle] =
+        action.payload.enabled;
+    },
   },
 });
 
@@ -155,6 +165,7 @@ export const {
   addRule,
   toggleRuleSetting,
   setTTSActive,
+  setReasoningSetting,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

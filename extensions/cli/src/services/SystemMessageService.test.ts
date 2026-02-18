@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { modeService } from "./ModeService.js";
 import { SystemMessageService } from "./SystemMessageService.js";
+
+import { services } from "./index.js";
+const toolPermissionService = services.toolPermissions;
 
 // Mock the systemMessage module
 vi.mock("../systemMessage.js", () => ({
@@ -71,34 +73,15 @@ describe("SystemMessageService", () => {
       constructSystemMessageMock.mockResolvedValue("Test system message");
 
       await service.initialize(config);
-      const message = await service.getSystemMessage();
+      const message = await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal", // Default mode
         ["rule1"],
         "json",
         true,
-        "normal", // Default mode
       );
       expect(message).toBe("Test system message");
-    });
-
-    it("should use updated mode when mode changes", async () => {
-      constructSystemMessageMock.mockResolvedValue("Updated system message");
-
-      await service.initialize({});
-
-      // Simulate mode change
-      modeService.emit("modeChanged", "plan", "normal");
-
-      const message = await service.getSystemMessage();
-
-      expect(constructSystemMessageMock).toHaveBeenCalledWith(
-        undefined,
-        undefined,
-        undefined,
-        "plan",
-      );
-      expect(message).toBe("Updated system message");
     });
   });
 
@@ -114,13 +97,13 @@ describe("SystemMessageService", () => {
       });
 
       constructSystemMessageMock.mockResolvedValue("Updated message");
-      await service.getSystemMessage();
+      await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal",
         ["rule1"],
         "json",
         false,
-        "normal",
       );
     });
 
@@ -135,39 +118,14 @@ describe("SystemMessageService", () => {
       });
 
       constructSystemMessageMock.mockResolvedValue("Updated message");
-      await service.getSystemMessage();
+      await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
+        "normal",
         ["rule2", "rule3"],
         "json",
         undefined,
-        "normal",
       );
-    });
-  });
-
-  describe("mode tracking", () => {
-    it("should track current mode from ModeService", async () => {
-      await service.initialize({});
-
-      expect(service.getCurrentMode()).toBe("normal");
-
-      // Simulate mode change
-      modeService.emit("modeChanged", "auto", "normal");
-
-      expect(service.getCurrentMode()).toBe("auto");
-    });
-
-    it("should initialize with current mode from ModeService", async () => {
-      // Mock modeService.getCurrentMode
-      vi.spyOn(modeService, "getCurrentMode").mockReturnValue("plan");
-
-      const newService = new SystemMessageService();
-      await newService.initialize({});
-
-      expect(newService.getCurrentMode()).toBe("plan");
-
-      await newService.cleanup();
     });
   });
 
@@ -179,7 +137,7 @@ describe("SystemMessageService", () => {
 
       await service.initialize({});
 
-      await expect(service.getSystemMessage()).rejects.toThrow(
+      await expect(service.getSystemMessage("normal")).rejects.toThrow(
         "Failed to construct",
       );
     });

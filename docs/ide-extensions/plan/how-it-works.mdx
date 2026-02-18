@@ -1,0 +1,114 @@
+---
+title: "How Plan Works"
+description: "Plan mode provides a restricted environment with read-only tools, enabling safe exploration and planning without making changes to your codebase."
+---
+
+## Understanding Plan Mode
+
+Plan mode is designed to help you understand code and construct plans before making changes. It sits between Chat mode (no tools) and Agent mode (all tools), providing a middle ground where you can explore and analyze without risk.
+
+### The Key Difference: Read-Only Tools
+
+While Agent mode has access to all tools including those that modify files, Plan mode restricts access to only read-only tools. This ensures that:
+
+- No files are created, modified, or deleted
+- No commands are executed that could change system state
+- All exploration is safe and non-destructive
+- You can confidently investigate without unintended consequences
+
+## How Plan Mode Works
+
+When you select Plan mode:
+
+1. Continue sends a special system message instructing the model to focus on understanding and planning
+2. The tool list is filtered to include only read-only tools
+3. The model can use these tools to explore and analyze your codebase
+4. When you're ready to implement changes, you switch to Agent mode
+
+### Available Tools in Plan Mode
+
+Plan mode includes these read-only built-in tools:
+
+- **Read file** (`read_file`): Read the contents of any file in the project
+- **Read currently open file** (`read_currently_open_file`): Read the contents of the currently open file
+- **List directory** (`ls`): List files and directories
+- **Glob search** (`glob_search`): Search for files matching a pattern
+- **Grep search** (`grep_search`): Search file contents using regex patterns
+- **Fetch URL content** (`fetch_url_content`): Retrieve content from web URLs
+- **Search web** (`search_web`): Perform web searches for additional context
+- **View diff** (`view_diff`): View the current git diff
+- **View repo map** (`view_repo_map`): Get an overview of the repository structure
+- **View subdirectory** (`view_subdirectory`): Get a detailed view of a specific directory
+- **Codebase tool** (`codebase_tool`): Advanced codebase analysis capabilities
+
+### MCP Tools Support
+
+In addition to built-in read-only tools, Plan mode also supports all MCP (Model Context Protocol) tools. This allows integration with external services that provide additional context or analysis capabilities without modifying your local environment.
+
+<Info>
+  While Plan mode restricts built-in tools to read-only operations, MCP tools
+  are not filtered by Continue. Some MCP tools may have write capabilities that
+  could modify your system or external services. Always verify what actions your
+  MCP tools can perform before using them in Plan mode.
+</Info>
+
+## The Planning Workflow
+
+A typical Plan mode workflow follows these steps:
+
+1. **Exploration**: Use read-only tools to understand the current state
+2. **Analysis**: Identify what needs to change and potential impacts
+3. **Planning**: Develop a detailed plan for implementation
+4. **Verification**: Review the plan and ensure it addresses all requirements
+5. **Execution**: Switch to Agent mode to implement the plan
+
+### Example: Planning a Refactor
+
+```
+User: Help me plan a refactor to extract the authentication logic into a separate module
+
+Plan mode:
+1. Reads relevant files to understand current structure
+2. Analyzes dependencies and usage patterns
+3. Identifies all places that need updates
+4. Creates a step-by-step refactoring plan
+5. Suggests: "Switch to Agent mode to implement this plan"
+```
+
+## System Message and Behavior
+
+Plan mode uses a dedicated system message that:
+
+- Instructs the model to focus on understanding and planning
+- Emphasizes using only read-only tools
+- Reminds the model to suggest switching to Agent mode for implementation
+- Encourages thorough analysis before suggesting changes
+
+<Info>
+  The system message can be customized per model. See it [directly in
+  the
+  code](https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts).
+</Info>
+
+## When to Use Plan Mode vs Other Modes
+
+### Use Plan Mode When:
+
+- Exploring unfamiliar codebases
+- Planning complex refactors or features
+- Debugging and understanding issues
+- Reviewing code architecture
+- Creating implementation strategies
+
+### Use Chat Mode When:
+
+- Having discussions without needing file access
+- Asking general programming questions
+- Getting explanations without exploring code
+
+### Use Agent Mode When:
+
+- Ready to implement changes
+- Need to create or modify files
+- Want to run commands or tests
+- Implementing a plan developed in Plan mode

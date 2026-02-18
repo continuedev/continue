@@ -16,7 +16,7 @@ class ContinueCompletionService(private val project: Project) : CompletionServic
     override suspend fun getAutocomplete(uuid: String, url: String, line: Int, column: Int): String? {
         val requestInput = getCompletionInput(uuid, url, line, column)
         val modelTimeout = project.service<ProfileInfoService>().fetchModelTimeoutOrNull() ?: 1000.0
-        return withTimeoutOrNull(modelTimeout.milliseconds) {
+        return withTimeoutOrNull(modelTimeout.milliseconds * 3) {
             suspendCancellableCoroutine { continuation ->
                 project.service<ContinuePluginService>().coreMessenger?.request(
                     "autocomplete/complete",

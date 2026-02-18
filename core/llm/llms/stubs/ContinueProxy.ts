@@ -101,7 +101,16 @@ class ContinueProxy extends OpenAI {
   protected _getHeaders() {
     const headers: any = super._getHeaders();
     headers["x-continue-unique-id"] = Telemetry.uniqueId;
+    headers["user-agent"] = this._getUserAgent();
     return headers;
+  }
+
+  private _getUserAgent(): string {
+    const ideInfo = Telemetry.ideInfo;
+    const extensionVersion = ideInfo?.extensionVersion ?? "unknown";
+    const ideName = ideInfo?.name ?? "unknown";
+    const ideType = ideInfo?.ideType ?? "unknown";
+    return `Continue/${extensionVersion} (${ideName}; ${ideType})`;
   }
 
   supportsCompletions(): boolean {
@@ -129,6 +138,7 @@ class ContinueProxy extends OpenAI {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
+        "user-agent": this._getUserAgent(),
       },
       body: JSON.stringify({
         query,

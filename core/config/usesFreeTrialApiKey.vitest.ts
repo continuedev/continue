@@ -15,13 +15,13 @@ vi.mock("@continuedev/config-yaml", () => ({
 }));
 
 describe("usesFreeTrialApiKey", () => {
-  let usesFreeTrialApiKey: typeof import("./usesFreeTrialApiKey").usesFreeTrialApiKey;
+  let usesFreeTrialApiKey: typeof import("./usesFreeTrialApiKey").usesCreditsBasedApiKey;
   let SecretType: typeof import("@continuedev/config-yaml").SecretType;
 
   beforeEach(async () => {
     mockDecodeSecretLocation.mockReset();
     usesFreeTrialApiKey = (await import("./usesFreeTrialApiKey"))
-      .usesFreeTrialApiKey;
+      .usesCreditsBasedApiKey;
     SecretType = (await import("@continuedev/config-yaml")).SecretType;
   });
 
@@ -58,6 +58,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -67,6 +68,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],
@@ -106,6 +108,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -115,6 +118,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],
@@ -166,6 +170,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -175,6 +180,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],
@@ -227,6 +233,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -236,6 +243,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],
@@ -281,6 +289,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -290,6 +299,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],
@@ -323,6 +333,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: [],
         rerank: [],
         embed: [],
+        subagent: [],
       },
       selectedModelByRole: {
         chat: null,
@@ -332,6 +343,7 @@ describe("usesFreeTrialApiKey", () => {
         autocomplete: null,
         rerank: null,
         embed: null,
+        subagent: null,
       },
       contextProviders: [],
       slashCommands: [],

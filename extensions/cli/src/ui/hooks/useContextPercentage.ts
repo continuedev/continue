@@ -28,7 +28,7 @@ export function useContextPercentage({
     }
 
     // Calculate token count and percentage
-    const tokenCount = countChatHistoryTokens(chatHistory);
+    const tokenCount = countChatHistoryTokens(chatHistory, model);
     const percentage = calculateContextUsagePercentage(tokenCount, model);
 
     return {

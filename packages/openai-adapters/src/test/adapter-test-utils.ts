@@ -258,6 +258,7 @@ export const createAdapterTests = (testConfig: AdapterTestConfig) => {
             model: "gpt-4",
             messages: [{ role: "user", content: "hello" }],
             stream: true,
+            stream_options: { include_usage: true },
             ...testConfig.customBodyOptions,
           },
         },

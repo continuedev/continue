@@ -3,11 +3,53 @@ import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "core/autocomplete/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { RecentlyEditedRange } from "core/nextEdit/types";
-import { getContinueGlobalPath, isFileWithinFolder } from "core/util/paths";
-import fs from "fs";
-import { resolve } from "path";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
+
+// Cache to store the last known content for each file (before edits)
+const documentContentCache = new Map<string, string>();
+
+/**
+ * Gets the cached content for a document, or reads the current content if not cached.
+ * This should be called BEFORE processing the edit to get the pre-edit state.
+ */
+export const getPreEditContent = (document: vscode.TextDocument): string => {
+  const uri = document.uri.toString();
+  const cached = documentContentCache.get(uri);
+  if (cached !== undefined) {
+    return cached;
+  }
+  // If not cached, this is the first edit we're seeing - the document's current state
+  // in the event is already post-edit, so we can't get the true pre-edit content.
+  // Return empty string to indicate no prior content was tracked.
+  return "";
+};
+
+/**
+ * Updates the cache with the current document content.
+ * This should be called AFTER processing the edit.
+ */
+export const updateDocumentContentCache = (
+  document: vscode.TextDocument,
+): void => {
+  documentContentCache.set(document.uri.toString(), document.getText());
+};
+
+/**
+ * Initializes the cache for a document when it's opened.
+ */
+export const initDocumentContentCache = (
+  document: vscode.TextDocument,
+): void => {
+  documentContentCache.set(document.uri.toString(), document.getText());
+};
+
+/**
+ * Removes a document from the cache when it's closed.
+ */
+export const clearDocumentContentCache = (uri: string): void => {
+  documentContentCache.delete(uri);
+};
 
 export const getBeforeCursorPos = (range: Range, activePos: Position) => {
   // whichever side of the range isn't active is the before position
@@ -18,23 +60,6 @@ export const getBeforeCursorPos = (range: Range, activePos: Position) => {
     return range.end as Position;
   } else {
     return range.start as Position;
-  }
-};
-
-const isEditLoggingAllowed = async (editedFileURI: string) => {
-  const globalContinuePath = getContinueGlobalPath();
-  const editLogDirsPath = resolve(globalContinuePath, ".editlogdirs");
-
-  try {
-    const fileContent = await fs.promises.readFile(editLogDirsPath, "utf-8");
-    const stringItems = fileContent
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    return stringItems.some((dir) => isFileWithinFolder(editedFileURI, dir));
-  } catch (error) {
-    return false;
   }
 };
 
@@ -68,7 +93,9 @@ export const handleTextDocumentChange = async (
   // Ensure that logging will only happen in the open-source continue repo
   const workspaceDirUri = await getWorkspaceDirUri(event);
   if (!workspaceDirUri) return;
-  if (!(await isEditLoggingAllowed(event.document.uri.toString()))) return;
+
+  // Get the pre-edit content from our cache BEFORE updating it
+  const fileContentsBefore = getPreEditContent(event.document);
 
   const activeCursorPos = editor.selection.active;
   const editActions: RangeInFileWithNextEditInfo[] = changes.map((change) => ({
@@ -78,11 +105,15 @@ export const handleTextDocumentChange = async (
       end: change.range.end as Position,
     },
     fileContents: event.document.getText(),
+    fileContentsBefore,
     editText: change.text,
     beforeCursorPos: getBeforeCursorPos(change.range, activeCursorPos),
     afterCursorPos: activeCursorPos as Position,
     workspaceDir: workspaceDirUri,
   }));
+
+  // Update the cache with the new content AFTER capturing the edit
+  updateDocumentContentCache(event.document);
 
   let recentlyEditedRanges: RecentlyEditedRange[] = [];
   let recentlyVisitedRanges: AutocompleteCodeSnippet[] = [];

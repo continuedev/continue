@@ -1,5 +1,6 @@
 import * as YAML from "yaml";
 import { ZodError } from "zod";
+import { mergeConfigYamlRequestOptions, RequestOptions } from "../browser.js";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -43,18 +44,17 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       cause: "result.success was false",
     });
   } catch (e) {
-    console.error("Failed to parse rolled assistant:", configYaml);
     if (
       e instanceof Error &&
       "cause" in e &&
       e.cause === "result.success was false"
     ) {
-      throw new Error(`Failed to parse agent: ${e.message}`);
+      throw new Error(`Failed to parse config: ${e.message}`);
     } else if (e instanceof ZodError) {
-      throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
+      throw new Error(`Failed to parse config: ${formatZodError(e)}`);
     } else {
       throw new Error(
-        `Failed to parse agent: ${e instanceof Error ? e.message : e}`,
+        `Failed to parse config: ${e instanceof Error ? e.message : e}`,
       );
     }
   }
@@ -69,7 +69,7 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
-    throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
+    throw new Error(`Failed to parse config: ${formatZodError(e)}`);
   }
 }
 
@@ -86,6 +86,11 @@ export function parseBlock(configYaml: string): Block {
 export const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
 
 export function getTemplateVariables(templatedYaml: string): string[] {
+  // Defensive guard against undefined/null/non-string values
+  if (!templatedYaml || typeof templatedYaml !== "string") {
+    return [];
+  }
+
   const variables = new Set<string>();
   const matches = templatedYaml.matchAll(TEMPLATE_VAR_REGEX);
   for (const match of matches) {
@@ -98,6 +103,11 @@ export function fillTemplateVariables(
   templatedYaml: string,
   data: { [key: string]: string },
 ): string {
+  // Defensive guard against undefined/null/non-string values
+  if (!templatedYaml || typeof templatedYaml !== "string") {
+    return "";
+  }
+
   return templatedYaml.replace(TEMPLATE_VAR_REGEX, (match, variableName) => {
     // Inject data
     if (variableName in data) {
@@ -203,6 +213,7 @@ export interface BaseUnrollAssistantOptions {
   injectBlocks?: PackageIdentifier[];
   allowlistedBlocks?: PackageSlug[];
   blocklistedBlocks?: PackageSlug[];
+  injectRequestOptions?: RequestOptions;
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -235,6 +246,18 @@ export async function unrollAssistant(
   const result = unrollAssistantFromContent(id, rawContent, registry, options);
 
   return result;
+}
+
+export function replaceInputsWithSecrets(yamlContent: string): string {
+  const inputsToSecretsMap: Record<string, string> = {};
+
+  getTemplateVariables(yamlContent)
+    .filter((v) => v.startsWith("inputs."))
+    .forEach((v) => {
+      inputsToSecretsMap[v] = `\${{ ${v.replace("inputs.", "secrets.")} }}`;
+    });
+
+  return fillTemplateVariables(yamlContent, inputsToSecretsMap);
 }
 
 function renderTemplateData(
@@ -274,6 +297,7 @@ export async function unrollAssistantFromContent(
     options.injectBlocks,
     options.allowlistedBlocks,
     options.blocklistedBlocks,
+    options.injectRequestOptions,
   );
 
   // Back to a string so we can fill in template variables
@@ -281,7 +305,7 @@ export async function unrollAssistantFromContent(
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
-  const templatedYaml = renderTemplateData(rawUnrolledYaml, {
+  let templatedYaml = renderTemplateData(rawUnrolledYaml, {
     secrets: extractFQSNMap(rawUnrolledYaml, [id]),
   });
 
@@ -302,14 +326,14 @@ export async function unrollAssistantFromContent(
   const renderedYaml = renderTemplateData(templatedYaml, { secrets });
 
   // Parse again and replace models with proxy versions where secrets weren't rendered
-  const finalConfig = useProxyForUnrenderedSecrets(
+  const renderedConfig = useProxyForUnrenderedSecrets(
     parseAssistantUnrolled(renderedYaml),
     id,
     options.orgScopeId,
     options.onPremProxyUrl,
   );
 
-  return { config: finalConfig, errors, configLoadInterrupted };
+  return { config: renderedConfig, errors, configLoadInterrupted };
 }
 
 function isPackageAllowed(
@@ -350,24 +374,34 @@ export async function unrollBlocks(
   injectBlocks: PackageIdentifier[] | undefined,
   allowlistedBlocks?: PackageSlug[],
   blocklistedBlocks?: PackageSlug[],
+  injectRequestOptions?: RequestOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
-
-  function injectDuplicationError(errorMsg: string) {
-    errors.push({
-      fatal: false,
-      message: errorMsg,
-    });
-  }
 
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
+    requestOptions: assistant.requestOptions,
   };
+
+  if (injectRequestOptions) {
+    unrolledAssistant.requestOptions = mergeConfigYamlRequestOptions(
+      assistant.requestOptions,
+      injectRequestOptions,
+    );
+  } else {
+    unrolledAssistant.requestOptions = assistant.requestOptions;
+  }
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema" | "metadata" | "env"
+    | "name"
+    | "version"
+    | "rules"
+    | "schema"
+    | "metadata"
+    | "env"
+    | "requestOptions"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel
@@ -516,16 +550,23 @@ export async function unrollBlocks(
         const injectedBlockPromises = injectBlocks.map(async (injectBlock) => {
           try {
             const blockConfigYaml = await registry.getContent(injectBlock);
-            const parsedBlock = parseMarkdownRuleOrConfigYaml(
-              blockConfigYaml,
+            // Convert inputs to secrets, then convert secrets to FQSNs using the injected block's identifier
+            // This ensures secrets are properly namespaced for proxy resolution (e.g., models add-on)
+            const blockConfigYamlWithSecrets =
+              replaceInputsWithSecrets(blockConfigYaml);
+            const blockConfigYamlWithFQSNs = renderTemplateData(
+              blockConfigYamlWithSecrets,
+              {
+                secrets: extractFQSNMap(blockConfigYamlWithSecrets, [
+                  injectBlock,
+                ]),
+              },
+            );
+            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+              blockConfigYamlWithFQSNs,
               injectBlock,
             );
-            const blockType = getBlockType(parsedBlock);
-            const resolvedBlock = await resolveBlock(
-              injectBlock,
-              undefined,
-              registry,
-            );
+            const blockType = getBlockType(resolvedBlock);
 
             return {
               blockType,
@@ -602,12 +643,7 @@ export async function unrollBlocks(
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
       unrolledAssistant[sectionResult.section] = sectionResult.blocks.filter(
-        (block) =>
-          !detector.isDuplicated(
-            block,
-            sectionResult.section,
-            injectDuplicationError,
-          ),
+        (block) => !detector.isDuplicated(block, sectionResult.section),
       );
     }
   }
@@ -615,7 +651,7 @@ export async function unrollBlocks(
   // Assign rules result
   if (rulesResult.rules) {
     unrolledAssistant.rules = rulesResult.rules.filter(
-      (rule) => !detector.isDuplicated(rule, "rules", injectDuplicationError),
+      (rule) => !detector.isDuplicated(rule, "rules"),
     );
   }
 
@@ -634,10 +670,7 @@ export async function unrollBlocks(
       key,
       resolvedBlock,
       source,
-    ).filter(
-      (block: any) =>
-        !detector.isDuplicated(block, blockType, injectDuplicationError),
-    );
+    ).filter((block: any) => !detector.isDuplicated(block, blockType));
     unrolledAssistant[key]?.push(...filteredBlocks);
   }
 
@@ -688,7 +721,7 @@ function injectLocalSourceFile(
 
 export async function resolveBlock(
   id: PackageIdentifier,
-  inputs: Record<string, string> | undefined,
+  inputs: Record<string, string | undefined> | undefined,
   registry: Registry,
 ): Promise<AssistantUnrolled> {
   // Retrieve block raw yaml
@@ -707,7 +740,32 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  // Check for unresolved input template variables (missing required inputs)
+  const unresolvedInputs = getTemplateVariables(templatedYaml).filter((v) =>
+    v.startsWith("inputs."),
+  );
+  if (unresolvedInputs.length > 0) {
+    const missingInputNames = unresolvedInputs.map((v) =>
+      v.replace("inputs.", ""),
+    );
+    const blockName = packageIdentifierToShorthandSlug(id);
+    throw new Error(
+      `Missing required input(s) for block "${blockName}": ${missingInputNames.join(", ")}. ` +
+        `Please provide these values in the "with" block.`,
+    );
+  }
+
+  // Add source slug for mcp servers
+  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  if (
+    id.uriType === "slug" &&
+    "mcpServers" in parsed &&
+    parsed.mcpServers?.[0]
+  ) {
+    parsed.mcpServers[0].sourceSlug = `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+  }
+
+  return parsed;
 }
 
 export function parseMarkdownRuleOrAssistantUnrolled(
@@ -754,11 +812,19 @@ function parseYamlOrMarkdownRule<T>(
 }
 
 function inputsToFQSNs(
-  inputs: Record<string, string>,
+  inputs: Record<string, string | undefined>,
   blockIdentifier: PackageIdentifier,
 ): Record<string, string> {
   const renderedInputs: Record<string, string> = {};
   for (const [key, value] of Object.entries(inputs)) {
+    // Skip undefined, null, or non-string values
+    if (value === undefined || value === null || typeof value !== "string") {
+      console.warn(
+        `Skipping input "${key}" with invalid value type: ${typeof value}. Expected string.`,
+      );
+      continue;
+    }
+
     renderedInputs[key] = renderTemplateData(value, {
       secrets: extractFQSNMap(value, [blockIdentifier]),
     });

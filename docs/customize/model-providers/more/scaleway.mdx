@@ -12,7 +12,7 @@ description: "Configure Scaleway Generative APIs with Continue to access AI mode
   here](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/).
 </Info>
 
-## Chat model
+## Chat Model
 
 We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
 [Click here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) to see the list of available chat models.
@@ -20,6 +20,10 @@ We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
 <Tabs>
     <Tab title="YAML">
     ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
     models:
       - name: Qwen2.5-Coder-32B-Instruct
         provider: scaleway
@@ -43,19 +47,23 @@ We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
     </Tab>
 </Tabs>
 
-## Autocomplete model
+## Autocomplete Model
 
 Scaleway currently does not offer any autocomplete models.
 
 [Click here](../../model-roles/autocomplete) to see a list of autocomplete model providers.
 
-## Embeddings model
+## Embeddings Model
 
 We recommend configuring **BGE-Multilingual-Gemma2** as your embeddings model.
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: BGE Multilingual Gemma2
       provider: scaleway

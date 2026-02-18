@@ -107,7 +107,7 @@ runs:
         cd binary
         npm run build
 
-    - name: Start test IDE
+    - name: Run tests
       shell: bash
       run: |
         cd extensions/intellij
@@ -115,21 +115,7 @@ runs:
         Xvfb -ac :99 -screen 0 1920x1080x24 &
         sleep 10
         mkdir -p build/reports
-        ./gradlew runIdeForUiTests &
-
-    - name: Wait for JB connection
-      uses: jtalk/url-health-check-action@v3
-      with:
-        url: http://127.0.0.1:8082
-        max-attempts: 15
-        retry-delay: 30s
-
-    - name: Run tests
-      shell: bash
-      run: |
-        cd extensions/intellij
-        export DISPLAY=:99.0
-        ./gradlew test
+        ./gradlew test testIntegration
 
     - name: Move video
       if: ${{ failure() }}

@@ -17,52 +17,70 @@
 <a target="_blank" href="https://changelog.continue.dev" style="background:none">
     <img src="https://img.shields.io/badge/changelog-%96EFF3" style="height: 22px;" />
 </a>
-<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 22px;" />
-</a>
 
 <p></p>
 
-<div align="center">
-
-**Ship faster with Continuous AI**
-
-**Build and run custom agents across your IDE, terminal, and CI**
+**Source-controlled AI checks, enforceable in CI**
 
 </div>
 
-Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue), [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension), or [CLI](https://docs.continue.dev/guides/cli)
+## Getting started
 
-## Agent
+Paste this into your coding agent of choice:
 
-[Agent](/features/agent/quick-start) to work on development tasks together with AI
+```
+Help me write checks for this codebase: https://continue.dev/walkthrough
+```
 
-![agent](docs/images/agent.gif)
+## How it works
 
-## Chat
+Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
 
-[Chat](/features/chat/quick-start) to ask general questions and clarify code sections
+```yaml
+---
+name: Security Review
+description: Review PR for basic security vulnerabilities
+---
+Review this PR and check that:
+  - No secrets or API keys are hardcoded
+  - All new API endpoints have input validation
+  - Error responses use the standard error format
+```
 
-![chat](docs/images/chat.gif)
+## Install CLI
 
-## Edit
+AI checks are powered by the open-source Continue CLI (`cn`).
 
-[Edit](/features/edit/quick-start) to modify a code section without leaving your current file
+**macOS / Linux:**
 
-![edit](docs/images/edit.gif)
+```bash
+curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.sh | bash
+```
 
-## Autocomplete
+**Windows (PowerShell):**
 
-[Autocomplete](/features/autocomplete/quick-start) to receive inline code suggestions as you type
+```powershell
+irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
+```
 
-![autocomplete](docs/images/autocomplete.gif)
+Or with npm (requires Node.js 20+):
 
-</div>
+```bash
+npm i -g @continuedev/cli
+```
+
+Then run:
+
+```bash
+cn
+```
+
+Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 
 ## Contributing
 
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
-join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
+join the [GitHub Discussions](https://github.com/continuedev/continue/discussions).
 
 ## License
 

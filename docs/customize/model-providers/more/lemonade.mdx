@@ -1,0 +1,85 @@
+---
+title: "Lemonade Server"
+description: "Configure Lemonade Server with Continue for refreshingly fast local LLM inference on GPUs and NPUs"
+---
+
+<Info>
+  Get started with [Lemonade Server](https://lemonade-server.ai/) - Refreshingly fast LLMs on GPUs and NPUs with seamless Continue integration
+</Info>
+
+## Overview
+
+Lemonade Server provides optimized local LLM inference with support for GPU and NPU hardware acceleration. It offers an OpenAI-compatible API that seamlessly integrates with Continue and other open-source platforms.
+
+## Installation
+
+Download and install Lemonade Server from [lemonade-server.ai](https://lemonade-server.ai/).
+
+## Configuration
+
+Lemonade Server is available directly in the Continue UI as a provider. You can select it from the model provider dropdown without manual configuration.
+
+### Option 1: Using the Continue UI (Recommended)
+
+1. Click on the model selector dropdown in Continue
+2. Select "Add Model"
+3. Choose "Lemonade Server" from the provider list
+4. Continue will automatically configure the connection
+
+### Option 2: Manual Configuration
+
+If you need custom settings, you can manually configure Lemonade:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Lemonade
+        provider: lemonade
+        model: <MODEL_NAME>
+        apiBase: http://localhost:8000/api/v1/
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Lemonade",
+          "provider": "lemonade",
+          "model": "<MODEL_NAME>",
+          "apiBase": "http://localhost:8000/api/v1/"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Getting Started
+
+1. **Install Lemonade Server**: Download from [lemonade-server.ai](https://lemonade-server.ai/)
+2. **Start the server**: Launch Lemonade Server (runs on `http://localhost:8000/api/v1/` by default)
+3. **Add to Continue**: Select Lemonade Server from the model provider dropdown in Continue
+4. **Load a model**: Choose your preferred model through the interface
+
+## Hardware Support
+
+Lemonade Server automatically detects and optimizes for available hardware:
+- **NPU**: Neural Processing Unit acceleration for efficient inference
+- **GPU**: Full GPU acceleration support
+- **CPU**: Optimized CPU fallback when accelerators are unavailable
+
+## Key Features
+
+- OpenAI-compatible API for seamless integration
+- Support for popular model formats
+- Automatic hardware detection and optimization
+- Integration with Continue, Open WebUI, Gaia, and AnythingLLM
+- Active open-source community
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Lemonade.ts)

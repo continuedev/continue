@@ -113,40 +113,6 @@ export function isPullRequestCommand(command: string): boolean {
 }
 
 /**
- * Simple cost calculation based on tokens and model
- * This should be updated with actual pricing from model providers
- */
-export function calculateTokenCost(
-  inputTokens: number,
-  outputTokens: number,
-  model: string,
-): number {
-  // Pricing per 1K tokens (these are approximate and should be updated)
-  const pricingMap: Record<string, { input: number; output: number }> = {
-    "gpt-4": { input: 0.03, output: 0.06 },
-    "gpt-4-turbo": { input: 0.01, output: 0.03 },
-    "gpt-3.5-turbo": { input: 0.0015, output: 0.002 },
-    "claude-3-5-sonnet-20241022": { input: 0.003, output: 0.015 },
-    "claude-3-sonnet": { input: 0.003, output: 0.015 },
-    "claude-3-haiku": { input: 0.00025, output: 0.00125 },
-    "claude-3-opus": { input: 0.015, output: 0.075 },
-  };
-
-  // Find pricing for model (case insensitive partial match)
-  const modelKey = Object.keys(pricingMap).find((key) =>
-    model.toLowerCase().includes(key.toLowerCase()),
-  );
-
-  if (!modelKey) {
-    // Default pricing if model not found
-    return (inputTokens * 0.001 + outputTokens * 0.002) / 1000;
-  }
-
-  const pricing = pricingMap[modelKey];
-  return (inputTokens * pricing.input + outputTokens * pricing.output) / 1000;
-}
-
-/**
  * Get file type from extension for metrics
  */
 export function getFileTypeFromPath(filePath: string): string {

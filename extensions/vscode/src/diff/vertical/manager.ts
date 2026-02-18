@@ -10,11 +10,14 @@ import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { handleLLMError } from "../../util/errorHandling";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
+import { myersDiff } from "core/diff/myers";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { stripImages } from "core/util/messageContent";
+import { getLastNPathParts } from "core/util/uri";
 import { editOutcomeTracker } from "../../extension/EditOutcomeTracker";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
+import { getFirstChangedLine } from "./util";
 
 export interface VerticalDiffCodeLens {
   start: number;
@@ -50,7 +53,7 @@ export class VerticalDiffManager {
       this.fileUriToHandler.get(fileUri)?.clear(false);
       this.fileUriToHandler.delete(fileUri);
     }
-    const editor = vscode.window.activeTextEditor; // TODO might cause issues if user switches files
+    const editor = vscode.window.activeTextEditor;
     if (editor && URI.equal(editor.document.uri.toString(), fileUri)) {
       const handler = new VerticalDiffHandler(
         startLine,
@@ -292,6 +295,65 @@ export class VerticalDiffManager {
     }
   }
 
+  async instantApplyDiff(
+    oldContent: string,
+    newContent: string,
+    streamId: string,
+    toolCallId?: string,
+  ) {
+    vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
+
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+
+    const fileUri = editor.document.uri.toString();
+
+    const myersDiffs = myersDiff(oldContent, newContent);
+
+    const diffHandler = this.createVerticalDiffHandler(
+      fileUri,
+      0,
+      editor.document.lineCount - 1,
+      {
+        instant: true,
+        onStatusUpdate: (status, numDiffs, fileContent) =>
+          void this.webviewProtocol.request("updateApplyState", {
+            streamId,
+            status,
+            numDiffs,
+            fileContent,
+            filepath: fileUri,
+            toolCallId,
+          }),
+        streamId,
+      },
+    );
+
+    if (!diffHandler) {
+      console.warn("Issue occurred while creating vertical diff handler");
+      return;
+    }
+
+    await diffHandler.reapplyWithMyersDiff(myersDiffs);
+
+    const scrollToLine = getFirstChangedLine(myersDiffs, 0) ?? 0;
+    const range = new vscode.Range(scrollToLine, 0, scrollToLine, 0);
+    editor.revealRange(range, vscode.TextEditorRevealType.Default);
+
+    this.enableDocumentChangeListener();
+
+    await this.webviewProtocol.request("updateApplyState", {
+      streamId,
+      status: "done",
+      numDiffs: this.fileUriToCodeLens.get(fileUri)?.length ?? 0,
+      fileContent: editor.document.getText(),
+      filepath: fileUri,
+      toolCallId,
+    });
+  }
+
   async streamEdit({
     input,
     llm,
@@ -301,6 +363,7 @@ export class VerticalDiffManager {
     newCode,
     toolCallId,
     rulesToInclude,
+    isApply,
   }: {
     input: string;
     llm: ILLM;
@@ -310,6 +373,7 @@ export class VerticalDiffManager {
     newCode?: string;
     toolCallId?: string;
     rulesToInclude: undefined | RuleWithSource[];
+    isApply: boolean;
   }): Promise<string | undefined> {
     void vscode.commands.executeCommand(
       "setContext",
@@ -432,9 +496,11 @@ export class VerticalDiffManager {
 
     let overridePrompt: ChatMessage[] | undefined;
     if (llm.promptTemplates?.apply) {
+      const filepath = getLastNPathParts(fileUri, 1);
       const rendered = llm.renderPromptTemplate(llm.promptTemplates.apply, [], {
         original_code: rangeContent,
         new_code: newCode ?? "",
+        filepath,
       });
       overridePrompt =
         typeof rendered === "string"
@@ -465,17 +531,23 @@ export class VerticalDiffManager {
       const streamedLines: string[] = [];
 
       async function* recordedStream() {
-        const stream = streamDiffLines({
-          highlighted: rangeContent,
-          prefix,
-          suffix,
+        const stream = streamDiffLines(
+          {
+            highlighted: rangeContent,
+            prefix,
+            suffix,
+            input,
+            language: getMarkdownLanguageTagForFile(fileUri),
+            type: isApply ? "apply" : "edit",
+            newCode: newCode ?? "",
+            includeRulesInSystemMessage: !!rulesToInclude && !isApply,
+            modelTitle: llm.title ?? llm.model,
+          },
           llm,
-          rulesToInclude,
-          input,
-          language: getMarkdownLanguageTagForFile(fileUri),
-          overridePrompt,
           abortController,
-        });
+          overridePrompt,
+          rulesToInclude,
+        );
 
         for await (const line of stream) {
           if (line.type === "new" || line.type === "same") {

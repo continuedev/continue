@@ -198,4 +198,29 @@ export function useMainEditorWebviewListeners({
     },
     [editor, activeContextProviders, isInEdit, useCurrentFileAsContext],
   );
+
+  useWebviewListener(
+    "addToChat",
+    async (data) => {
+      if (!editor) return;
+      let chain = editor.chain();
+
+      for (let mention of data.data) {
+        chain
+          .insertContent({
+            type: "mention",
+            attrs: {
+              id: mention.fullPath,
+              query: mention.fullPath,
+              itemType: mention.type,
+              label: mention.name,
+            },
+          })
+          .insertContent(" ");
+      }
+
+      chain.run();
+    },
+    [editor],
+  );
 }

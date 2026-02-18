@@ -1,6 +1,10 @@
 import os from "os";
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import {
+  evaluateTerminalCommandSecurity,
+  ToolPolicy,
+} from "@continuedev/terminal-security";
 
 /**
  * Get the preferred shell for the current platform
@@ -25,6 +29,7 @@ const RUN_COMMAND_NOTES = `The shell is not stateful and will not remember any p
       When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
       When suggesting subsequent shell commands ALWAYS format them in shell command blocks.\
       Do NOT perform actions requiring special/admin privileges.\
+      IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc).\
       ${PLATFORM_INFO}`;
 
 export const runTerminalCommandTool: Tool = {
@@ -56,6 +61,15 @@ export const runTerminalCommandTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithPermission",
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
   systemMessageDescription: {
     prefix: `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
 ${RUN_COMMAND_NOTES}

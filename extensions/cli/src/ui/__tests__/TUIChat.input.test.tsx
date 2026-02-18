@@ -1,10 +1,12 @@
-import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
+import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
+import { waitForNextRender } from "./TUIChat.testHelper.js";
 
 describe("TUIChat - User Input Tests", () => {
-  testBothModes("shows typed text in input field", (mode) => {
+  testBothModes("shows typed text in input field", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     stdin.write("Testing 123");
+    await waitForNextRender();
 
     const frame = lastFrame();
     // The input might be in a different format, let's be more flexible
@@ -23,13 +25,14 @@ describe("TUIChat - User Input Tests", () => {
   testBothModes("handles Enter key to submit", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
+    await waitForNextRender();
     const beforeEnter = lastFrame();
     expect(beforeEnter).toContain("Ask anything");
 
     stdin.write("\r");
 
     // Wait for the UI to update after pressing enter
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const afterEnter = lastFrame();
 
@@ -46,11 +49,12 @@ describe("TUIChat - User Input Tests", () => {
 
   testBothModes(
     "handles special characters in input without crashing",
-    (mode) => {
+    async (mode) => {
       const { lastFrame, stdin } = renderInMode(mode);
 
       // Try typing various special characters
       stdin.write("!@#$%^&*()");
+      await waitForNextRender();
 
       const frame = lastFrame();
 
@@ -58,8 +62,9 @@ describe("TUIChat - User Input Tests", () => {
       expect(frame).toBeDefined();
       expect(frame).not.toBe("");
 
-      // UI should still be functional
-      expect(frame).toContain("Ask anything");
+      // UI should still be functional and show the typed special characters
+      // Note: "Ask anything" placeholder is replaced when text is typed
+      expect(frame).toContain("!@#$%^&*()");
 
       // Mode-specific UI elements
       if (mode === "remote") {

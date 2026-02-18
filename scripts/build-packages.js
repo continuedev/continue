@@ -34,6 +34,7 @@ function runCommand(command, cwd, packageName) {
       } else {
         console.error(`❌ ${packageName}: ${command} failed with code ${code}`);
         console.error(`stderr: ${stderr}`);
+        console.error(`stdout: ${stdout}`);
         reject(
           new Error(`${packageName} failed: ${command} (exit code ${code})`),
         );
@@ -79,8 +80,8 @@ async function main() {
   try {
     console.log("🚀 Starting package builds...\n");
 
-    // Phase 1: Build config-types (foundation - no dependencies)
-    await buildPackagesInParallel(["config-types"]);
+    // Phase 1: Build foundation packages (no local dependencies)
+    await buildPackagesInParallel(["config-types", "terminal-security"]);
 
     // Phase 2: Build packages that depend on config-types
     await buildPackagesInParallel(["fetch", "config-yaml", "llm-info"]);

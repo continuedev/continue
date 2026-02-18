@@ -1,6 +1,8 @@
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { getDefaultToolPolicies } from "./defaultPolicies.js";
 import { checkToolPermission } from "./permissionChecker.js";
 import { resolvePermissionPrecedence } from "./precedenceResolver.js";
+
+const DEFAULT_TOOL_POLICIES = getDefaultToolPolicies();
 
 describe("Headless Permissions Integration", () => {
   describe("precedence resolution", () => {

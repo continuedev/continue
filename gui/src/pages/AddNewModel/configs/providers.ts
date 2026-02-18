@@ -3,6 +3,7 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { getOpenRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -40,6 +41,39 @@ const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
 
+// Initialize OpenRouter models placeholder with a loading placeholder
+const OPENROUTER_LOADING_PLACEHOLDER: ModelPackage = {
+  title: "Loading models...",
+  description: "Fetching available models from OpenRouter",
+  params: {
+    model: "placeholder",
+    contextLength: 0,
+  },
+  isOpenSource: false,
+};
+
+let openRouterModelsList: ModelPackage[] = [OPENROUTER_LOADING_PLACEHOLDER];
+
+/**
+ * Initialize OpenRouter models by fetching from the API
+ * This should be called once when the component mounts
+ */
+export async function initializeOpenRouterModels() {
+  try {
+    const models = await getOpenRouterModelsList();
+    if (models.length > 0) {
+      openRouterModelsList = models;
+      // Update the providers object with the fetched models
+      if (providers.openrouter) {
+        providers.openrouter.packages = openRouterModelsList;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to initialize OpenRouter models:", error);
+    // Keep placeholder on error so the UI doesn't break
+  }
+}
+
 export const apiBaseInput: InputDescriptor = {
   inputType: "text",
   key: "apiBase",
@@ -49,16 +83,78 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  cometapi: {
+    title: "CometAPI",
+    provider: "cometapi",
+    description: "500+ AI Model API,All In One API. Just In CometAPI",
+    longDescription:
+      "Unified Access to Leading AI Models, see [here](https://www.cometapi.com/?utm_source=continue&utm_medium=integration&utm_campaign=cometapi_integration&utm_content=continue_plugin) for more details.",
+    icon: "cometapi.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your CometAPI key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      // GPT, OpenAI family
+      models.cometapiGpt5ChatLatest,
+      models.cometapiGpt5Mini,
+      models.cometapiGpt5,
+      models.cometapiChatgpt4oLatest,
+      models.cometapiGpt41,
+      models.cometapiO4Mini,
+      models.cometapiO3Pro,
+      // Anthropic Claude family
+      models.cometapiClaude45Sonnet,
+      models.cometapiClaude45Haiku,
+      models.cometapiClaudeOpus41,
+      models.cometapiClaudeOpus41Thinking,
+      models.cometapiClaudeSonnet4,
+      models.cometapiClaudeSonnet4Thinking,
+      models.cometapiClaude37SonnetLatest,
+      // Google Gemini family
+      models.cometapiGemini25Pro,
+      models.cometapiGemini25Flash,
+      models.cometapiGemini25FlashLite,
+      models.cometapiGemini20Flash,
+      // xAI Grok family
+      models.cometapiGrok40709,
+      models.cometapiGrok3,
+      models.cometapiGrok3Mini,
+      // Deepseek family
+      models.cometapiDeepseekV31,
+      models.cometapiDeepseekR10528,
+      models.cometapiDeepseekChat,
+      models.cometapiDeepseekReasoner,
+      // Qwen family
+      models.cometapiQwen330BA3B,
+      models.cometapiQwen3CoderPlus,
+      //TODO: Need to wait for the improvement after the upgrade of the cometapi model list interface
+      // {
+      //   ...models.AUTODETECT,
+      //   params: { ...models.AUTODETECT.params, title: "CometAPI" },
+      // },
+    ],
+    apiKeyUrl: "https://api.cometapi.com/console/token",
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",
-    description: "Use gpt-5, gpt-4, or any other OpenAI model",
+    description: "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model",
     longDescription:
-      "Use gpt-5, gpt-4, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
+      "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt5,
+      models.gpt5_1,
+      models.gpt5Codex,
       models.gpt4o,
       models.gpt4omini,
       models.gpt4turbo,
@@ -108,13 +204,37 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
     ],
     packages: [
-      models.claude35Sonnet,
-      models.claude3Opus,
-      models.claude3Sonnet,
-      models.claude35Haiku,
+      models.claude4_5Opus,
+      models.claude45Sonnet,
+      models.claude45Haiku,
+      models.claude41Opus,
+      models.claude4Sonnet,
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  openrouter: {
+    title: "OpenRouter",
+    provider: "openrouter",
+    description:
+      "OpenRouter provides access to a variety of LLMs including open-source and proprietary models.",
+    longDescription: `To get started with OpenRouter, sign up for an account at [openrouter.ai](https://openrouter.ai/) and obtain your API key from the dashboard.`,
+    icon: "openrouter.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "openrouter",
+    apiKeyUrl: "https://openrouter.ai/settings/keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OpenRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: openRouterModelsList,
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",
@@ -191,6 +311,12 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.mistralOs,
       models.mistralNemo,
       models.Qwen25Coder32b,
+      models.Qwen3Coder30BA3B,
+      models.Qwen25VL72B,
+      models.qwen332B,
+      models.MistralSmall32,
+      models.gptOss20B,
+      models.gptOss120B,
       models.deepseekR1DistillLlama70B,
     ],
     apiKeyUrl: "https://endpoints.ai.cloud.ovh.net/",
@@ -305,6 +431,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.mistral.ai/codestral",
   },
+  mimo: {
+    title: "Xiaomi Mimo",
+    provider: "mimo",
+    description: "Use Xiaomi's Mimo models for fast and efficient AI responses",
+    longDescription:
+      "Xiaomi Mimo provides OpenAI-compatible API access to their language models. Get your API key from the [Xiaomi Mimo Platform](https://platform.xiaomimimo.com/).",
+    icon: "mimo.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [models.mimoV2Flash],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Xiaomi Mimo API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://platform.xiaomimimo.com/",
+  },
   ollama: {
     title: "Ollama",
     provider: "ollama",
@@ -403,25 +550,32 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     provider: "deepseek",
     icon: "deepseek.png",
     description:
-      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
-    longDescription:
-      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+      "DeepSeek - Advanced language models for reasoning, coding, and chat",
+    longDescription: `DeepSeek provides an affordable API for state-of-the-art language models with exceptional performance for reasoning, code completion, and general conversation. Get your API key from [platform.deepseek.com](https://platform.deepseek.com).
+
+**Important Notes:**
+- 128k context length
+- **DeepSeek Chat**: Standard model with 8k max output token limit, supports tools
+- **DeepSeek Reasoner**: Reasoning mode with 64k max output token limit, supports tools  
+- **DeepSeek FIM (Beta)**: Fill-in-the-Middle, no tools support`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
         inputType: "text",
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your DeepSeek API key",
+        placeholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         required: true,
+        description: "Your DeepSeek API key from platform.deepseek.com",
       },
+      ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.deepseekCoderApi,
-      models.deepseekChatApi,
-      models.deepseekReasonerApi,
+      models.deepseekChat,
+      models.deepseekReasoner,
+      models.deepseekFimBeta,
     ],
-    apiKeyUrl: "https://platform.deepseek.com/api_keys",
+    apiKeyUrl: "https://platform.deepseek.com",
   },
   together: {
     title: "TogetherAI",
@@ -543,10 +697,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.gemini20Flash,
       models.gemini20FlashLite,
       models.gemini20FlashImageGeneration,
-      models.gemini25ProExp,
-      models.gemini15Pro,
-      models.geminiPro,
-      models.gemini15Flash,
+      models.gemini3ProPreview,
     ],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
@@ -568,8 +719,49 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.grokBeta],
+    packages: [
+      models.grokCodeFast1,
+      models.grok4FastReasoning,
+      models.grok4FastNonReasoning,
+      models.grok41FastReasoning,
+      models.grok41FastNonReasoning,
+      models.grok4,
+      models.grok3,
+      models.grok3Mini,
+    ],
     apiKeyUrl: "https://console.x.ai/",
+  },
+  lemonade: {
+    title: "Lemonade",
+    provider: "lemonade",
+    description:
+      "High-performance local LLM inference with AMD hardware optimization",
+    longDescription:
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. Visit [lemonade-server.ai](https://lemonade-server.ai/) for installation and setup instructions. Once the Lemonade server is running, you can begin using Continue with your local models.",
+    icon: "lemonade.png",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "http://localhost:8000/api/v1/",
+    },
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Lemonade",
+        },
+      },
+      ...openSourceModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputsConfigs,
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000/api/v1/",
+        required: true,
+      },
+    ],
+    downloadUrl: "http://lemonade-server.ai",
   },
   lmstudio: {
     title: "LM Studio",
@@ -635,6 +827,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.codeLlamaInstruct,
       models.wizardCoder,
       models.mistralOs,
+      models.claude4Sonnet,
     ],
     apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
@@ -782,17 +975,16 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
+      models.llama33Swallow70BInstruct,
       models.llama318BInstruct,
-      models.llama31405BInstruct,
-      models.llama321BInstruct,
-      models.llama323BInstruct,
-      models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
       models.deepseekV3,
+      models.deepseekV31,
+      models.qwen332B,
+      models.gptOss120b,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -833,11 +1025,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     longDescription:
       "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
     icon: "vertexai.png",
-    packages: [
-      models.VertexGemini15Pro,
-      models.VertexGemini15Flash,
-      models.mistralLarge,
-    ],
+    packages: [models.mistralLarge],
     collectInputFor: [
       {
         inputType: "project",
@@ -857,7 +1045,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
   },
-
   askSage: {
     title: "Ask Sage",
     provider: "askSage",
@@ -868,7 +1055,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     tags: [ModelProviderTags.RequiresApiKey],
     params: {
       apiKey: "",
-      apiBase: "https://api.asksage.ai/server/", // Default base URL
+      apiBase: "https://api.asksage.ai/server/",
     },
     collectInputFor: [
       {
@@ -882,33 +1069,53 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "text",
         key: "apiBase",
         label: "API Base URL",
-        placeholder: "Enter the API Base URL",
+        placeholder: "Enter your Ask Sage API base URL",
         required: true,
+        defaultValue: "https://api.asksage.ai/server/",
       },
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.asksagegpt4ogov,
-      models.asksagegpt4ominigov,
-      models.asksagegpt4gov,
-      models.asksagegpt35gov,
-      models.gpt4o,
-      models.gpt4omini,
-      models.asksagegpt4,
-      models.asksagegpt432,
-      models.asksagegpto1,
-      models.asksagegpto1mini,
-      models.gpt35turbo,
+      models.asksageclaude45sonnet,
+      models.asksageclaude4sonnet,
+      models.asksageclaude41opus,
+      models.asksageclaude35Sonnet,
+      models.asksageclaude37sonnet,
       models.asksageclaude35gov,
-      models.claude35Sonnet,
-      models.claude3Opus,
-      models.claude3Sonnet,
-      models.grokBeta,
-      models.asksagegroqllama33,
+      models.asksageclaude37sonnetgov,
+      models.asksageclaude4s,
+      models.asksageclaude4o,
+      models.asksageclaude45sonnetgov,
+      models.asksageclaude45opus,
+      models.asksageclaude45haiku,
+      models.asksagegemini20Flash,
+      models.asksagegemini25Pro,
+      models.asksagegemini25flash,
+      models.asksagegpt5,
+      models.asksagegpt5nano,
+      models.asksagegpt5mini,
+      models.asksagegpt51,
+      models.asksagegpt52,
+      models.asksagegpt03mini,
+      models.asksagegpt4o,
+      models.asksagegpt4omini,
+      models.asksagegpt4gov,
+      models.asksagegpt4ogov,
+      models.asksagegpt35,
+      models.asksagegpt35gov,
+      models.asksagegpt4ominigov,
+      models.asksagegpt4,
+      models.asksagegpto1,
+      models.asksagegpt41,
+      models.asksagegpt41mini,
+      models.asksagegpt41nano,
+      models.asksagegpto3,
+      models.asksagegpt04mini,
+      models.asksagenovalite,
       models.asksagegroq70b,
-      models.mistralLarge,
-      models.llama370bChat,
-      models.gemini15Pro,
+      models.asksagegroqllama33,
+      models.asksagegroqllama4scout,
+      models.asksagegrok4,
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
   },
@@ -1023,5 +1230,37 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
+  },
+  nous: {
+    title: "Nous Research",
+    provider: "nous",
+    refPage: "nous",
+    description:
+      "Nous Research provides Hermes models via an OpenAI-compatible API with advanced reasoning capabilities.",
+    longDescription:
+      "Nous Research offers Hermes models including Hermes 3 and Hermes 4 with strong instruction following and reasoning. Get an API key at [portal.nousresearch.com](https://portal.nousresearch.com).",
+    icon: "nous.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "https://inference-api.nousresearch.com/v1",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nous Research API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.hermes43_36b,
+      models.hermes4_70b,
+      models.hermes4_405b,
+      models.hermes3Llama31_70b,
+      models.hermes3Llama31_405b,
+    ],
+    apiKeyUrl: "https://portal.nousresearch.com",
   },
 };

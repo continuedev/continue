@@ -1,7 +1,34 @@
-import type { Session, ToolCallState, ToolStatus } from "core/index.js";
+import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
 
+import { services } from "../services/index.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
+import { logger } from "../util/logger.js";
+
+/**
+ * Remove partial assistant message if the last message is an empty assistant message.
+ * Used when a response is interrupted.
+ */
+export function removePartialAssistantMessage(
+  sessionHistory: ChatHistoryItem[],
+): void {
+  try {
+    const svcHistory = services.chatHistory.getHistory();
+    const last = svcHistory[svcHistory.length - 1];
+    if (last && last.message.role === "assistant" && !last.message.content) {
+      services.chatHistory.setHistory(svcHistory.slice(0, -1));
+    }
+  } catch {
+    const lastMessage = sessionHistory[sessionHistory.length - 1];
+    if (
+      lastMessage &&
+      lastMessage.message.role === "assistant" &&
+      !lastMessage.message.content
+    ) {
+      sessionHistory.pop();
+    }
+  }
+}
 
 // Modified version of streamChatResponse that supports interruption
 export async function streamChatResponseWithInterruption(
@@ -38,47 +65,11 @@ export async function streamChatResponseWithInterruption(
       // This callback is just for notification/UI updates
       // The tool call state is already created and added by handleToolCalls
     },
-    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
-      // Update only the tool call state status
-      // The actual result is already added as a separate message by handleToolCalls
-      for (let i = state.session.history.length - 1; i >= 0; i--) {
-        const item = state.session.history[i];
-        if (item.toolCallStates) {
-          const toolState = item.toolCallStates.find(
-            (ts: ToolCallState) =>
-              ts.toolCall.function.name === toolName &&
-              (ts.status === "calling" || ts.status === "generated"),
-          );
-          if (toolState) {
-            // Only update the status, not the output
-            toolState.status = status;
-            break;
-          }
-        }
-      }
+    onToolResult: (_result: string, _toolName: string, _status: ToolStatus) => {
+      // No-op when using ChatHistoryService; it updates tool states/results
     },
-    onToolError: (error: string, toolName?: string) => {
-      // Only update the tool call state to errored status when tool name is provided
-      // The error message is already added as a separate tool result message
-      // by handleToolCalls/preprocessStreamedToolCalls/executeStreamedToolCalls
-      if (toolName) {
-        // Find and update the corresponding tool call state
-        for (let i = state.session.history.length - 1; i >= 0; i--) {
-          const item = state.session.history[i];
-          if (item.toolCallStates) {
-            const toolState = item.toolCallStates.find(
-              (ts: ToolCallState) =>
-                ts.toolCall.function.name === toolName &&
-                (ts.status === "calling" || ts.status === "generated"),
-            );
-            if (toolState) {
-              // Only update the status, not the output
-              toolState.status = "errored";
-              break;
-            }
-          }
-        }
-      }
+    onToolError: (_error: string, _toolName?: string) => {
+      // No-op; errors are added to history via handleToolCalls flow
     },
     onToolPermissionRequest: (
       toolName: string,
@@ -95,25 +86,33 @@ export async function streamChatResponseWithInterruption(
         toolCallPreview,
       };
 
-      // Add a system message indicating permission is needed
-      state.session.history.push({
-        message: {
-          role: "system",
-          content: `WARNING: Tool ${toolName} requires permission`,
-        },
-        contextItems: [],
-      });
+      // Add a system message indicating permission is needed via service
+      try {
+        services.chatHistory.addSystemMessage(
+          `WARNING: Tool ${toolName} requires permission`,
+        );
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onToolPermissionRequest", toolName, requestId },
+        );
+      }
 
       // Don't wait here - the streamChatResponse will handle waiting
     },
     onSystemMessage: (message: string) => {
-      state.session.history.push({
-        message: {
-          role: "system",
-          content: message,
-        },
-        contextItems: [],
-      });
+      try {
+        services.chatHistory.addSystemMessage(message);
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onSystemMessage" },
+        );
+      }
     },
   };
 
@@ -145,10 +144,26 @@ export interface ServerState {
   model: any;
   isProcessing: boolean;
   lastActivity: number;
-  messageQueue: string[];
   currentAbortController: AbortController | null;
-  shouldInterrupt: boolean;
   serverRunning: boolean;
   pendingPermission: PendingPermission | null;
   systemMessage?: string;
+}
+
+/**
+ * Check if the agent should be marked as complete based on conversation history.
+ * The agent is complete if the last message is from the assistant and has no tool calls.
+ */
+export function checkAgentComplete(
+  history: { message: { role: string; tool_calls?: any[] } }[] | undefined,
+): boolean {
+  if (!history || history.length === 0) {
+    return false;
+  }
+  const lastItem = history[history.length - 1];
+  if (lastItem?.message?.role !== "assistant") {
+    return false;
+  }
+  const toolCalls = (lastItem.message as any).tool_calls;
+  return !toolCalls || toolCalls.length === 0;
 }

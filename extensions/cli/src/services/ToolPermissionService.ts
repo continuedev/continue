@@ -1,3 +1,9 @@
+import {
+  AUTO_MODE_POLICIES,
+  PLAN_MODE_POLICIES,
+} from "src/permissions/defaultPolicies.js";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
+
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
 import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
 import {
@@ -7,7 +13,21 @@ import {
 } from "../permissions/types.js";
 import { logger } from "../util/logger.js";
 
-import { BaseService } from "./BaseService.js";
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import {
+  AgentFileServiceState,
+  MCPServiceState,
+  SERVICE_NAMES,
+} from "./types.js";
+
+export interface InitializeToolServiceOverrides {
+  allow?: string[];
+  ask?: string[];
+  exclude?: string[];
+  mode?: PermissionMode;
+  isHeadless?: boolean;
+}
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
@@ -20,7 +40,10 @@ export interface ToolPermissionServiceState {
 /**
  * Service for managing tool permissions with a single source of truth
  */
-export class ToolPermissionService extends BaseService<ToolPermissionServiceState> {
+export class ToolPermissionService
+  extends BaseService<ToolPermissionServiceState>
+  implements ServiceWithDependencies
+{
   constructor() {
     super("ToolPermissionService", {
       permissions: { policies: [] },
@@ -31,45 +54,130 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   }
 
   /**
+   * Override setState to notify the ServiceContainer
+   * This ensures reactive UI components get updated when mode changes
+   */
+  protected override setState(
+    newState: Partial<ToolPermissionServiceState>,
+  ): void {
+    super.setState(newState);
+    serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.currentState);
+  }
+
+  /**
+   * Declare dependencies on other services
+   */
+  getDependencies(): string[] {
+    return [SERVICE_NAMES.AGENT_FILE, SERVICE_NAMES.MCP];
+  }
+
+  /**
+   * Generate agent-file-specific policies if an agent file is active
+   */
+  generateAgentFilePolicies(
+    agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
+  ): ToolPermissionPolicy[] {
+    // With --agent, all available tools are allowed if not specified
+    const parsedTools = agentFileServiceState?.parsedTools;
+    if (!parsedTools) {
+      return [
+        {
+          tool: "*",
+          permission: "allow",
+        },
+      ];
+    }
+
+    const policies: ToolPermissionPolicy[] = [];
+    const servers = Array.from(mcpServiceState?.connections?.values() ?? []);
+    for (const mcpServer of parsedTools.mcpServers) {
+      const server = servers?.find(
+        (s) => s.config?.sourceSlug && s.config.sourceSlug === mcpServer,
+      );
+      if (!server) {
+        logger.warn("No connected MCP server found ");
+        continue;
+      }
+
+      const specificTools = parsedTools.tools.filter(
+        (t) => t.mcpServer && t.toolName && t.mcpServer === mcpServer,
+      );
+
+      // In the `tools` key of an agent is comma separated strings like
+      // mcp/server, mcp/server2:tool_name, Bash
+      // - this would give the agent access to ALL tools from mcp/server, ONLY tool_name from mcp/server2, and Bash, and no other tools
+      // mcp/server
+      // - this would give the agent access to ALL tools from mcp/server, and no built-ins
+      // built_in, mcp/server
+      // - "built_in" keyword can be used to include all built ins
+      // Blank = all built-in tools
+
+      // Handle MCP first
+      // If ANY mcp tools are specifically called out, only allow those ones for that mcp server
+      // Otherwise the blanket allow will cover all MCP tools
+      if (specificTools.length) {
+        const specificSet = new Set(specificTools.map((t) => t.toolName));
+        const notMentioned = server.tools.filter(
+          (t) => !specificSet.has(t.name),
+        );
+        const allowed: ToolPermissionPolicy[] = specificTools.map((t) => ({
+          tool: t.toolName!,
+          permission: "allow",
+        }));
+        policies.push(...allowed);
+        const disallowed: ToolPermissionPolicy[] = notMentioned.map((t) => ({
+          tool: t.name,
+          permission: "exclude",
+        }));
+        policies.push(...disallowed);
+      }
+    }
+
+    // If mcp servers or specific built-in tools are specified
+    // then we only inclue listed built-in tools and exclude all others
+    const hasMcp = !!parsedTools.mcpServers?.length;
+    const specificBuiltIns = parsedTools.tools
+      .filter((t) => !t.mcpServer)
+      .map((t) => t.toolName!);
+    if (specificBuiltIns.length || (hasMcp && !parsedTools.allBuiltIn)) {
+      const allowed: ToolPermissionPolicy[] = specificBuiltIns.map((tool) => ({
+        tool,
+        permission: "allow",
+      }));
+      policies.push(...allowed);
+      const specificBuiltInSet = new Set(specificBuiltIns);
+      const notMentioned = ALL_BUILT_IN_TOOLS.map((t) => t.name).filter(
+        (name) => !specificBuiltInSet.has(name),
+      );
+      const disallowed: ToolPermissionPolicy[] = notMentioned.map((tool) => ({
+        tool,
+        permission: "exclude",
+      }));
+      policies.push(...disallowed);
+    }
+
+    // Allow all other tools
+    policies.push({
+      tool: "*",
+      permission: "allow",
+    });
+
+    return policies;
+  }
+
+  /**
    * Generate mode-specific policies based on the current mode
    */
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
-        return [
-          // Exclude all write tools with absolute priority
-          { tool: "Write", permission: "exclude" },
-          { tool: "Edit", permission: "exclude" },
-          { tool: "MultiEdit", permission: "exclude" },
-          { tool: "NotebookEdit", permission: "exclude" },
-          // Allow all read tools and bash
-          { tool: "Bash", permission: "allow" },
-          { tool: "Read", permission: "allow" },
-          { tool: "List", permission: "allow" },
-          { tool: "Search", permission: "allow" },
-          { tool: "Fetch", permission: "allow" },
-          { tool: "Diff", permission: "allow" },
-          { tool: "Checklist", permission: "allow" },
-          { tool: "NotebookRead", permission: "allow" },
-          { tool: "LS", permission: "allow" },
-          { tool: "Glob", permission: "allow" },
-          { tool: "Grep", permission: "allow" },
-          { tool: "WebFetch", permission: "allow" },
-          { tool: "WebSearch", permission: "allow" },
-          // Allow MCP tools (assume they're read-only by nature)
-          { tool: "mcp:*", permission: "allow" },
-          // Default: exclude everything else to ensure no writes
-          { tool: "*", permission: "exclude" },
-        ];
-
+        return [...PLAN_MODE_POLICIES];
       case "auto":
-        // Auto mode: Complete override - allow everything without asking
-        return [{ tool: "*", permission: "allow" }];
-
+        return [...AUTO_MODE_POLICIES];
       case "normal":
       default:
-        // Normal mode: No mode policies, use existing configuration
+        // Normal mode uses the more nuanced policy loading
         return [];
     }
   }
@@ -78,13 +186,11 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    * Synchronously initialize with runtime overrides
    * Used for immediate availability of command-line permission overrides
    */
-  initializeSync(runtimeOverrides?: {
-    allow?: string[];
-    ask?: string[];
-    exclude?: string[];
-    mode?: PermissionMode;
-    isHeadless?: boolean;
-  }): ToolPermissionServiceState {
+  initializeSync(
+    runtimeOverrides?: InitializeToolServiceOverrides,
+    agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
+  ): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService");
 
     // Set mode from overrides or default
@@ -97,26 +203,30 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
-    // Generate mode-specific policies first (highest priority)
     const modePolicies = this.generateModePolicies();
 
-    // For plan and auto modes, use ONLY mode policies (absolute override)
-    // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
-    if (
+    if (agentFileServiceState?.agentFile) {
+      // Agent file policies take full precedence on init
+      allPolicies = this.generateAgentFilePolicies(
+        agentFileServiceState,
+        mcpServiceState,
+      );
+    } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto"
     ) {
-      // Absolute override: ignore all user configuration
-      allPolicies = modePolicies;
+      // For plan and auto modes, use ONLY mode policies (absolute override)
+      allPolicies = [...modePolicies];
     } else {
-      // Normal mode: combine mode policies with user configuration
+      // Normal mode: combine headless + mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
         personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
         useDefaults: true,
+        isHeadless: this.currentState.isHeadless,
       });
-      allPolicies = [...modePolicies, ...compiledPolicies];
+      allPolicies = [...compiledPolicies];
     }
 
     this.setState({
@@ -126,7 +236,6 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       modePolicyCount: modePolicies.length,
     });
 
-    // Mark as initialized since we're bypassing the async initialize flow
     (this as any).isInitialized = true;
 
     return this.getState();
@@ -135,18 +244,19 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   /**
    * Initialize the tool permission service with runtime overrides (async version)
    */
-  async doInitialize(runtimeOverrides?: {
-    allow?: string[];
-    ask?: string[];
-    exclude?: string[];
-    mode?: PermissionMode;
-    isHeadless?: boolean;
-  }): Promise<ToolPermissionServiceState> {
-    // Ensure permissions.yaml exists before loading
+  async doInitialize(
+    runtimeOverrides?: InitializeToolServiceOverrides,
+    agentFileServiceState?: AgentFileServiceState,
+    mcpServiceState?: MCPServiceState,
+  ): Promise<ToolPermissionServiceState> {
     await ensurePermissionsYamlExists();
 
     // Use the synchronous version after ensuring the file exists
-    return this.initializeSync(runtimeOverrides);
+    return this.initializeSync(
+      runtimeOverrides,
+      agentFileServiceState,
+      mcpServiceState,
+    );
   }
 
   /**
@@ -173,13 +283,12 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    * Switch to a different permission mode
    */
   switchMode(newMode: PermissionMode): ToolPermissionServiceState {
-    logger.debug(
-      `Switching from mode '${this.currentState.currentMode}' to '${newMode}'`,
-    );
+    const currentMode = this.currentState.currentMode;
+    logger.debug(`Switching from mode '${currentMode}' to '${newMode}'`);
 
     // Store original policies when leaving normal mode for the first time
     if (
-      this.currentState.currentMode === "normal" &&
+      currentMode === "normal" &&
       newMode !== "normal" &&
       !this.currentState.originalPolicies
     ) {
@@ -194,9 +303,11 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       );
     }
 
-    this.currentState.currentMode = newMode;
+    this.setState({
+      currentMode: newMode,
+    });
+    this.emit("modeChanged", newMode, currentMode);
 
-    // Regenerate policies with the new mode
     const modePolicies = this.generateModePolicies();
 
     // For plan and auto modes, use ONLY mode policies (absolute override)
@@ -204,7 +315,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     let allPolicies: ToolPermissionPolicy[];
     if (newMode === "plan" || newMode === "auto") {
       // Absolute override: ignore all user configuration
-      allPolicies = modePolicies;
+      allPolicies = [...modePolicies];
     } else {
       // Normal mode: restore original policies if we have them
       if (this.currentState.originalPolicies) {
@@ -216,7 +327,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
           this.currentState.originalPolicies.policies.slice(
             originalModePolicyCount,
           );
-        allPolicies = [...modePolicies, ...originalNonModePolicies];
+        allPolicies = [...originalNonModePolicies];
         logger.debug(
           `Restored ${originalNonModePolicies.length} original user policies`,
         );
@@ -228,7 +339,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
           existingPolicies.length > previousModePolicyCount
             ? existingPolicies.slice(previousModePolicyCount)
             : [];
-        allPolicies = [...modePolicies, ...nonModePolicies];
+        allPolicies = [...nonModePolicies];
       }
     }
 
@@ -277,34 +388,15 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       useDefaults: true,
     });
 
-    // Generate mode-specific policies (should be empty for normal mode)
-    const modePolicies = this.generateModePolicies();
-
     // Combine mode policies with freshly loaded user policies
-    const allPolicies = [...modePolicies, ...freshPolicies];
+    const allPolicies = [...freshPolicies];
 
     this.setState({
       permissions: { policies: allPolicies },
-      modePolicyCount: modePolicies.length,
+      modePolicyCount: 0,
     });
 
-    logger.debug(
-      `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
-    );
-
-    // Update the service container with the new state
-    // Import here to avoid circular dependencies
-    try {
-      const { serviceContainer } = await import("./ServiceContainer.js");
-      const { SERVICE_NAMES } = await import("./types.js");
-      serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.getState());
-      logger.debug("Updated service container with reloaded permissions");
-    } catch (error) {
-      logger.error(
-        "Failed to update service container after permission reload",
-        { error },
-      );
-    }
+    logger.debug(`Reloaded permissions: ${freshPolicies.length} user policies`);
   }
 
   /**

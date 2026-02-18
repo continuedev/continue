@@ -124,7 +124,7 @@ export class EditAggregator {
     if (!this.fileStates.has(filePath)) {
       this.fileStates.set(filePath, {
         activeClusters: [],
-        currentContent: edit.fileContents,
+        currentContent: edit.fileContents, // Post-edit content (will be updated correctly by _processEditInternal)
         priorComparisons: [],
         processingQueue: [],
         isProcessing: false,
@@ -218,8 +218,12 @@ export class EditAggregator {
 
     // initialize a cluster
     if (!suitableCluster) {
+      // Use fileContentsBefore if available (tracked by VS Code extension),
+      // otherwise fall back to current content
+      const beforeState = edit.fileContentsBefore ?? fileState.currentContent;
+
       suitableCluster = {
-        beforeState: fileState.currentContent,
+        beforeState,
         startRange: {
           minLine: Math.max(0, editLine - this.config.contextLines),
           maxLine: Math.min(
@@ -572,5 +576,53 @@ export class EditAggregator {
   resetState(): void {
     this.fileStates.clear();
     this.lastProcessedFilePath = null;
+  }
+
+  /**
+   * Gets the in-progress diff for a file by comparing the earliest active cluster's
+   * beforeState with the current file content.
+   * This captures edits that haven't been finalized yet.
+   *
+   * @param filePath The file path to get the in-progress diff for
+   * @returns The unified diff string if there are active clusters, or null otherwise
+   */
+  getInProgressDiff(filePath: string): string | null {
+    const fileState = this.fileStates.get(filePath);
+    if (!fileState || fileState.activeClusters.length === 0) {
+      return null;
+    }
+
+    // Get the earliest active cluster (first edit that started this batch of typing)
+    const earliestCluster = fileState.activeClusters.reduce(
+      (earliest, cluster) =>
+        cluster.firstTimestamp < earliest.firstTimestamp ? cluster : earliest,
+    );
+
+    const beforeContent = earliestCluster.beforeState;
+    const afterContent = fileState.currentContent;
+
+    // Skip if the content is the same
+    if (beforeContent === afterContent) {
+      return null;
+    }
+
+    // Skip whitespace-only diffs
+    if (
+      beforeContent.replace(/\s+/g, "") === afterContent.replace(/\s+/g, "")
+    ) {
+      return null;
+    }
+
+    // Get workspaceDir from the first edit in the cluster (for consistent path formatting)
+    const workspaceDir = earliestCluster.edits[0]?.workspaceDir;
+
+    return createDiff({
+      beforeContent,
+      afterContent,
+      filePath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3,
+      workspaceDir,
+    });
   }
 }

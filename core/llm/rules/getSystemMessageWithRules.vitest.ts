@@ -20,7 +20,7 @@ describe("Rule colocation glob matching", () => {
       name: "Components Rule",
       rule: "Use functional components with hooks",
       source: "rules-block",
-      ruleFile: "src/components/rules.md",
+      sourceFile: "src/components/rules.md",
       // No explicit globs - should only apply to files in src/components/ directory
     };
 
@@ -43,7 +43,7 @@ describe("Rule colocation glob matching", () => {
       rule: "Use TypeScript with React components",
       globs: "**/*.tsx", // Only .tsx files
       source: "rules-block",
-      ruleFile: "src/components/rules.md",
+      sourceFile: "src/components/rules.md",
       // Should only apply to .tsx files in src/components/ directory
     };
 
@@ -69,7 +69,7 @@ describe("Rule colocation glob matching", () => {
       name: "Root Rule",
       rule: "Follow project standards",
       source: "rules-block",
-      ruleFile: "/path/to/repo/.continue/rules.md",
+      sourceFile: "/path/to/repo/.continue/rules.md",
       // No restriction, should apply to all files
     };
 
@@ -89,7 +89,7 @@ describe("Rule colocation glob matching", () => {
       rule: "Follow these guidelines always",
       alwaysApply: true,
       source: "rules-block",
-      ruleFile: "src/specific/rules.md",
+      sourceFile: "src/specific/rules.md",
       // Should apply to all files regardless of directory
     };
 
@@ -107,7 +107,7 @@ describe("Rule colocation glob matching", () => {
       rule: "This rule should never apply",
       alwaysApply: false,
       source: "rules-block",
-      ruleFile: "src/specific/rules.md",
+      sourceFile: "src/specific/rules.md",
       // Should never apply since alwaysApply is false and there are no globs
     };
 
@@ -121,7 +121,7 @@ describe("Rule colocation glob matching", () => {
       rule: "Apply to TS files but not test files",
       globs: ["**/*.ts", "!**/*.test.ts", "!**/*.spec.ts"],
       source: "rules-block",
-      ruleFile: "src/utils/rules.md",
+      sourceFile: "src/utils/rules.md",
       // Should only apply to non-test TS files in src/utils/
     };
 
@@ -147,7 +147,7 @@ describe("Rule policies", () => {
     name: "Components Rule",
     rule: "Use functional components with hooks",
     source: "rules-block",
-    ruleFile: "src/components/rules.md",
+    sourceFile: "src/components/rules.md",
   };
 
   const testFiles = ["src/components/Button.tsx"];
@@ -167,7 +167,7 @@ describe("Rule policies", () => {
       rule: "This rule would normally always apply",
       alwaysApply: true,
       source: "rules-block",
-      ruleFile: "src/components/rules.md",
+      sourceFile: "src/components/rules.md",
     };
 
     const offPolicies: RulePolicies = {
@@ -212,7 +212,7 @@ describe("Rule policies", () => {
       name: "Root Rule",
       rule: "Follow project standards",
       source: "rules-block",
-      ruleFile: "/my/project/.continue/rules.md",
+      sourceFile: "/my/project/.continue/rules.md",
     };
 
     // Off policy should override even global rules
@@ -238,7 +238,7 @@ describe("Rule policies", () => {
       alwaysApply: true,
       globs: "**/*.ts",
       source: "rules-block",
-      ruleFile: "src/utils/rules.md",
+      sourceFile: "src/utils/rules.md",
     };
 
     // Off policy should win over everything
@@ -261,7 +261,7 @@ describe("Content pattern matching", () => {
       rule: "Follow React component standards",
       regex: "export (function|const) \\w+.*\\(",
       source: "rules-block",
-      ruleFile: "src/components/rules.md",
+      sourceFile: "src/components/rules.md",
     };
 
     // File that matches the pattern
@@ -293,7 +293,7 @@ describe("Content pattern matching", () => {
       rule: "Apply to functions or classes",
       regex: ["function\\s+\\w+", "class\\s+\\w+"],
       source: "rules-block",
-      ruleFile: "src/utils/rules.md",
+      sourceFile: "src/utils/rules.md",
     };
 
     const filePath = "src/utils/helper.ts";
@@ -332,7 +332,7 @@ describe("Content pattern matching", () => {
       globs: "**/*.ts",
       regex: "class\\s+\\w+",
       source: "rules-block",
-      ruleFile: "src/models/rules.md",
+      sourceFile: "src/models/rules.md",
     };
 
     const tsFilePath = "src/models/User.ts";
@@ -371,7 +371,7 @@ describe("Content pattern matching", () => {
       rule: "Use arrow functions for better this binding",
       regex: "const\\s+\\w+\\s*=\\s*\\(",
       source: "rules-block",
-      ruleFile: "src/utils/rules.md",
+      sourceFile: "src/utils/rules.md",
     };
 
     // Message with code block containing a matching pattern
@@ -433,7 +433,7 @@ describe("Content pattern matching", () => {
       rule: "This rule has an invalid regex pattern",
       regex: "([unclosed parenthesis",
       source: "rules-block",
-      ruleFile: "src/utils/rules.md",
+      sourceFile: "src/utils/rules.md",
     };
 
     const filePath = "src/utils/helper.ts";
@@ -454,7 +454,7 @@ describe("Content pattern matching", () => {
       rule: "Apply only to model files with interfaces",
       regex: "interface\\s+\\w+",
       source: "rules-block",
-      ruleFile: "src/models/rules.md",
+      sourceFile: "src/models/rules.md",
     };
 
     // File in the correct directory with matching content

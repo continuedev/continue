@@ -2,6 +2,7 @@ import chalk from "chalk";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
+import { gracefulExit } from "../util/exit.js";
 import { logger } from "../util/logger.js";
 
 export async function remoteTest(
@@ -25,6 +26,6 @@ export async function remoteTest(
     logger.error(
       chalk.red(`Failed to connect to remote environment: ${error.message}`),
     );
-    process.exit(1);
+    await gracefulExit(1);
   }
 }

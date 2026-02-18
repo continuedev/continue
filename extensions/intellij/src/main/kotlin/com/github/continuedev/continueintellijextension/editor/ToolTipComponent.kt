@@ -1,4 +1,4 @@
-import com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction
+import com.github.continuedev.continueintellijextension.actions.FocusActionUtil
 import com.github.continuedev.continueintellijextension.editor.openInlineEdit
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -92,7 +92,7 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         editButton = StyledButton("Edit (${cmdCtrlChar}+I)")
 
         addToChatButton.addActionListener { e: ActionEvent? ->
-            FocusContinueInputAction.focusContinueInput(editor.project)
+            FocusActionUtil.sendHighlightedCodeWithMessageToWebview(editor.project, "focusContinueInputWithNewSession")
             editor.contentComponent.remove(this)
         }
         editButton.addActionListener { e: ActionEvent? ->

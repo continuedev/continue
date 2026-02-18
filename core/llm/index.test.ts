@@ -95,9 +95,30 @@ describe("BaseLLM", () => {
     test("should return true when modelSupportsImages returns true", () => {
       baseLLM.model = "gpt-4-vision";
       expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "fancy-vision-model";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "gemma3:4b";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "google/gemma-3-270m";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "foo/paligemma-custom-100";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "foo/medgemma_4b_it_16Q";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "qwen2.5vl";
+      expect(baseLLM.supportsImages()).toBe(true);
     });
 
     test("should return false when modelSupportsImages returns false", () => {
+      expect(baseLLM.supportsImages()).toBe(false);
+
+      baseLLM.model = "gemma3n";
       expect(baseLLM.supportsImages()).toBe(false);
     });
   });

@@ -1,19 +1,13 @@
 import { Box, Text, useInput } from "ink";
 import React, { ReactNode } from "react";
 
+import { defaultBoxStyles } from "./styles.js";
+
 export interface SelectorOption {
   id: string;
   name: string;
   displaySuffix?: string;
 }
-
-const boxStyles: React.ComponentProps<typeof Box> = {
-  flexDirection: "column",
-  paddingX: 2,
-  paddingY: 1,
-  borderStyle: "round",
-  borderColor: "blue",
-};
 
 interface SelectorProps<T extends SelectorOption> {
   title: string;
@@ -46,8 +40,20 @@ export function Selector<T extends SelectorOption>({
   onNavigate,
   renderOption,
 }: SelectorProps<T>) {
+  // Handle input for loading and error states
   useInput((input, key) => {
-    if (key.escape) {
+    if (loading || error) {
+      if (key.escape || (key.ctrl && input === "c")) {
+        onCancel();
+        return;
+      }
+    }
+  });
+
+  useInput((input, key) => {
+    if (loading || error) return; // Skip normal input handling during loading/error
+
+    if (key.escape || (key.ctrl && input === "c")) {
       onCancel();
       return;
     }
@@ -70,7 +76,7 @@ export function Selector<T extends SelectorOption>({
 
   if (loading) {
     return (
-      <Box {...boxStyles}>
+      <Box {...defaultBoxStyles("blue")}>
         <Text color="blue" bold>
           {title}
         </Text>
@@ -84,13 +90,13 @@ export function Selector<T extends SelectorOption>({
 
   if (error) {
     return (
-      <Box {...boxStyles}>
+      <Box {...defaultBoxStyles("blue")}>
         <Text color="red" bold>
           Error
         </Text>
         <Text color="red">{error}</Text>
         <Text color="gray" dimColor>
-          Press Escape to cancel
+          Press Esc to cancel
         </Text>
       </Box>
     );
@@ -106,7 +112,7 @@ export function Selector<T extends SelectorOption>({
         color={isSelected ? "blue" : isCurrent ? "green" : "white"}
         bold={isSelected}
       >
-        {isSelected ? "→ " : "  "}
+        {isSelected ? "➤ " : "  "}
         {option.name}
         {option.displaySuffix || ""}
       </Text>
@@ -119,7 +125,7 @@ export function Selector<T extends SelectorOption>({
   );
 
   return (
-    <Box {...boxStyles}>
+    <Box {...defaultBoxStyles("blue")}>
       <Text color="blue" bold>
         {title}
       </Text>
@@ -136,7 +142,7 @@ export function Selector<T extends SelectorOption>({
       </Box>
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          ↑/↓ to navigate, Enter to select, Escape to cancel
+          ↑/↓ to navigate, Enter to select, Esc to cancel
         </Text>
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-import { processPromptOrRule } from "../args.js";
+import { processRule } from "../hubLoader.js";
 
 import { logger } from "./logger.js";
 
@@ -20,7 +20,7 @@ export async function processAndCombinePrompts(
 
   for (const promptSpec of additionalPrompts) {
     try {
-      const processed = await processPromptOrRule(promptSpec);
+      const processed = await processRule(promptSpec);
       processedPrompts.push(processed);
     } catch (error: any) {
       logger.warn(`Failed to process prompt "${promptSpec}": ${error.message}`);
@@ -35,4 +35,15 @@ export async function processAndCombinePrompts(
   return initialPrompt
     ? `${combinedPrompts}\n\n${initialPrompt}`
     : combinedPrompts;
+}
+
+// Merges two prompts with new lines between them, handling undefined
+export function prependPrompt(
+  prepend: string | undefined,
+  original: string | undefined,
+) {
+  return (
+    `${(prepend ?? "").trim()}\n\n${(original ?? "").trim()}`.trim() ||
+    undefined
+  );
 }

@@ -119,3 +119,28 @@ body {
 .scroll-container:is(:hover, :focus)::-webkit-scrollbar {
   display: block; /* Show scrollbar only on hover or focus */
 }
+
+/* Debug: visible flash when component re-renders */
+@keyframes rerenderFlash {
+  0% {
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.9) inset;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0) inset;
+  }
+}
+
+.rerender-flash {
+  animation: rerenderFlash 180ms ease-out;
+}
+
+.render-count {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(255, 0, 0, 0.15);
+  color: rgba(255, 0, 0, 0.9);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

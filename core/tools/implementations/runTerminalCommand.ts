@@ -1,7 +1,7 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
-import util from "node:util";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
   if (process.platform === "win32") {
@@ -36,11 +36,52 @@ import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
 import {
   isProcessBackgrounded,
+  markProcessAsRunning,
   removeBackgroundedProcess,
-} from "../../util/processTerminalBackgroundStates";
+  removeRunningProcess,
+  updateProcessOutput,
+} from "../../util/processTerminalStates";
 import { getBooleanArg, getStringArg } from "../parseArgs";
 
-const asyncExec = util.promisify(childProcess.exec);
+/**
+ * Resolves the working directory from workspace dirs.
+ * Falls back to home directory or temp directory if no workspace is available.
+ */
+function resolveWorkingDirectory(workspaceDirs: string[]): string {
+  // Handle file:// URIs (local workspaces)
+  const fileWorkspaceDir = workspaceDirs.find((dir) =>
+    dir.startsWith("file:/"),
+  );
+  if (fileWorkspaceDir) {
+    try {
+      return fileURLToPath(fileWorkspaceDir);
+    } catch {
+      // fileURLToPath can fail on malformed URIs or in some remote environments
+      // Fall through to default handling
+    }
+  }
+
+  // Handle other URI schemes (vscode-remote://wsl, vscode-remote://ssh-remote, etc.)
+  const remoteWorkspaceDir = workspaceDirs.find(
+    (dir) => dir.includes("://") && !dir.startsWith("file:/"),
+  );
+  if (remoteWorkspaceDir) {
+    try {
+      const url = new URL(remoteWorkspaceDir);
+      return decodeURIComponent(url.pathname);
+    } catch {
+      // Fall through to other handlers
+    }
+  }
+
+  // Default to user's home directory with fallbacks
+  try {
+    return process.env.HOME || process.env.USERPROFILE || process.cwd();
+  } catch {
+    // Final fallback if even process.cwd() fails - use system temp directory
+    return os.tmpdir();
+  }
+}
 
 // Add color-supporting environment variables
 const getColorEnv = () => ({
@@ -73,25 +114,22 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
+  // When the extension host runs on Windows but connects to a remote workspace
+  // (WSL, Dev Container, SSH, etc.), we can't spawn shells directly — the
+  // platform is "win32" but commands should run in the remote's Linux/macOS.
+  // Use ide.runCommand() instead to let VS Code handle the remote execution.
+  const isWindowsHostWithRemote =
+    process.platform === "win32" && !["", "local"].includes(ideInfo.remoteName);
+
+  if (
+    ENABLED_FOR_REMOTES.includes(ideInfo.remoteName) &&
+    !isWindowsHostWithRemote
+  ) {
     // For streaming output
     if (extras.onPartialOutput) {
       try {
         const workspaceDirs = await extras.ide.getWorkspaceDirs();
-
-        // Handle case where no workspace is available
-        let cwd: string;
-        if (workspaceDirs.length > 0) {
-          cwd = fileURLToPath(workspaceDirs[0]);
-        } else {
-          // Default to user's home directory with fallbacks
-          try {
-            cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-          } catch (error) {
-            // Final fallback if even process.cwd() fails - use system temp directory
-            cwd = os.tmpdir();
-          }
-        }
+        const cwd = resolveWorkingDirectory(workspaceDirs);
 
         return new Promise((resolve, reject) => {
           let terminalOutput = "";
@@ -120,12 +158,27 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             env: getColorEnv(), // Add enhanced environment for colors
           });
 
+          // Track this process for foreground cancellation
+          if (toolCallId && waitForCompletion) {
+            markProcessAsRunning(
+              toolCallId,
+              childProc,
+              extras.onPartialOutput,
+              terminalOutput,
+            );
+          }
+
           childProc.stdout?.on("data", (data) => {
             // Skip if this process has been backgrounded
             if (isProcessBackgrounded(toolCallId)) return;
 
             const newOutput = getDecodedOutput(data);
             terminalOutput += newOutput;
+
+            // Update the tracked output for potential cancellation notifications
+            if (toolCallId && waitForCompletion) {
+              updateProcessOutput(toolCallId, terminalOutput);
+            }
 
             // Send partial output to UI
             if (extras.onPartialOutput) {
@@ -152,6 +205,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
             const newOutput = getDecodedOutput(data);
             terminalOutput += newOutput;
+
+            // Update the tracked output for potential cancellation notifications
+            if (toolCallId && waitForCompletion) {
+              updateProcessOutput(toolCallId, terminalOutput);
+            }
 
             // Send partial output to UI, status is not required
             if (extras.onPartialOutput) {
@@ -182,15 +240,19 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           }
 
           childProc.on("close", (code) => {
-            // If this process has been backgrounded, clean it up from the map and return
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-              return;
+            // Clean up process tracking
+            if (toolCallId) {
+              if (isProcessBackgrounded(toolCallId)) {
+                removeBackgroundedProcess(toolCallId);
+                return;
+              }
+              // Remove from foreground tracking if it was tracked
+              removeRunningProcess(toolCallId);
             }
 
             if (waitForCompletion) {
               // Normal completion, resolve now
-              if (code === 0) {
+              if (!code || code === 0) {
                 const status = "Command completed";
                 resolve([
                   {
@@ -234,10 +296,14 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           });
 
           childProc.on("error", (error) => {
-            // If this process has been backgrounded, clean it up from the map and return
-            if (isProcessBackgrounded(toolCallId)) {
-              removeBackgroundedProcess(toolCallId);
-              return;
+            // Clean up process tracking
+            if (toolCallId) {
+              if (isProcessBackgrounded(toolCallId)) {
+                removeBackgroundedProcess(toolCallId);
+                return;
+              }
+              // Remove from foreground tracking if it was tracked
+              removeRunningProcess(toolCallId);
             }
 
             reject(error);
@@ -249,20 +315,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     } else {
       // Fallback to non-streaming for older clients
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
-
-      // Handle case where no workspace is available
-      let cwd: string;
-      if (workspaceDirs.length > 0) {
-        cwd = fileURLToPath(workspaceDirs[0]);
-      } else {
-        // Default to user's home directory with fallbacks
-        try {
-          cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
-        } catch (error) {
-          // Final fallback if even process.cwd() fails - use system temp directory
-          cwd = os.tmpdir();
-        }
-      }
+      const cwd = resolveWorkingDirectory(workspaceDirs);
 
       if (waitForCompletion) {
         // Standard execution, waiting for completion
@@ -281,6 +334,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 },
               );
 
+              // Track this process for foreground cancellation
+              if (toolCallId) {
+                markProcessAsRunning(toolCallId, childProc, undefined, "");
+              }
+
               let stdout = "";
               let stderr = "";
 
@@ -293,10 +351,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("close", (code) => {
+                // Clean up process tracking
+                if (toolCallId) {
+                  removeRunningProcess(toolCallId);
+                }
+
                 if (code === 0) {
                   resolve({ stdout, stderr });
                 } else {
-                  const error = new Error(
+                  const error = new ContinueError(
+                    ContinueErrorReason.CommandExecutionFailed,
                     `Command failed with exit code ${code}`,
                   );
                   (error as any).stderr = stderr;
@@ -305,6 +369,10 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("error", (error) => {
+                // Clean up process tracking
+                if (toolCallId) {
+                  removeRunningProcess(toolCallId);
+                }
                 reject(error);
               });
             },

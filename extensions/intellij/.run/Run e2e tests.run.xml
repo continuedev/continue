@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run e2e tests" type="CompoundRunConfigurationType">
-    <toRun name="Run Test IDE" type="GradleRunConfiguration" />
-    <toRun name="Run Tests" type="GradleRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

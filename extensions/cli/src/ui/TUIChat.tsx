@@ -7,6 +7,9 @@ import React, {
   useState,
 } from "react";
 
+import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+
+import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -14,9 +17,12 @@ import {
   ConfigServiceState,
   MCPServiceState,
   ModelServiceState,
+  UpdateServiceState,
 } from "../services/types.js";
+import { getTotalSessionCost } from "../session.js";
 import { logger } from "../util/logger.js";
 
+import { ActionStatus } from "./components/ActionStatus.js";
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
@@ -26,14 +32,10 @@ import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import {
-  getRepoUrlText,
-  useCurrentMode,
   useIntroMessage,
   useLoginHandlers,
   useSelectors,
 } from "./hooks/useTUIChatHooks.js";
-import { LoadingAnimation } from "./LoadingAnimation.js";
-import { Timer } from "./Timer.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -43,6 +45,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
 }
@@ -94,9 +97,57 @@ function useTUIChatServices(remoteUrl?: string) {
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    update: UpdateServiceState;
+    toolPermissions: ToolPermissionServiceState;
+  }>([
+    "auth",
+    "config",
+    "model",
+    "mcp",
+    "apiClient",
+    "update",
+    "toolPermissions",
+  ]);
 
   return { services, allServicesReady, isRemoteMode };
+}
+
+// Custom hook to fetch organization name
+function useOrganizationName(organizationId?: string): string | undefined {
+  const [organizationName, setOrganizationName] = useState<string | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    if (!organizationId) {
+      setOrganizationName(undefined);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function fetchOrgName() {
+      try {
+        const orgs = await listUserOrganizations();
+        if (!isMounted) return;
+
+        const org = orgs?.find((o) => o.id === organizationId);
+        if (org) {
+          setOrganizationName(org.name);
+        }
+      } catch (error) {
+        logger.debug("Failed to fetch organization name", { error });
+      }
+    }
+
+    fetchOrgName();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [organizationId]);
+
+  return organizationName;
 }
 
 // Custom hook for chat handlers
@@ -132,20 +183,18 @@ function useChatHandlers(
   };
 }
 
-// eslint-disable-next-line complexity
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
   configPath,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
 }) => {
   // Use custom hook for services
   const { services, allServicesReady, isRemoteMode } =
     useTUIChatServices(remoteUrl);
-
-  const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
 
   // Use navigation context
   const {
@@ -162,11 +211,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     allServicesReady,
   );
 
-  // State for current mode (for hiding cwd in plan/auto modes)
-  const currentMode = useCurrentMode();
-
   // Use login handlers
-  const { handleLoginPrompt, handleLoginTokenSubmit } = useLoginHandlers(
+  const { handleLoginTokenSubmit } = useLoginHandlers(
     navigateTo,
     navState,
     closeCurrentScreen,
@@ -181,18 +227,46 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setStaticRefreshTrigger,
   );
 
+  // State for diff content overlay
+  const [diffContent, setDiffContent] = useState<string>("");
+
+  // State for temporary status message
+  const [statusMessage, setStatusMessage] = useState<string>("");
+
+  // Handler to show diff overlay
+  const handleShowDiff = useCallback(
+    (content: string) => {
+      setDiffContent(content);
+      navigateTo("diff");
+    },
+    [navigateTo],
+  );
+
+  // Handler to show temporary status message
+  const handleShowStatusMessage = useCallback((message: string) => {
+    setStatusMessage(message);
+    // Clear after 3 seconds
+    setTimeout(() => {
+      setStatusMessage("");
+    }, 3000);
+  }, []);
+
   const {
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
     responseStartTime,
+    isCompacting,
+    compactionStartTime,
     inputMode,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleEditMessage,
     handleToolPermissionResponse,
   } = useChat({
     assistant: services.config?.config || undefined,
@@ -200,18 +274,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
+    fork,
     additionalRules,
     additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
+    onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
-    onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     onClear: handleClear,
+    onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
+    onShowDiff: handleShowDiff,
+    onShowStatusMessage: handleShowStatusMessage,
   });
 
   // Update ref after useChat returns
@@ -233,6 +311,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     configPath,
     setChatHistory,
     handleClear,
+    setStaticRefreshTrigger,
   );
 
   // Session selection handler
@@ -256,6 +335,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
+  // State for image in clipboard status
+  const [hasImageInClipboard, setHasImageInClipboard] = useState(false);
+
+  // Fetch organization name based on auth state
+  const organizationName = useOrganizationName(services.auth?.organizationId);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -278,7 +363,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           config={services.config?.config || undefined}
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
+          organizationName={organizationName}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -287,16 +374,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
       {/* Fixed bottom section */}
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
-        {isWaitingForResponse && responseStartTime && (
-          <Box paddingX={1} flexDirection="row" gap={1}>
-            <LoadingAnimation visible={isWaitingForResponse} />
-            <Text key="loading-start" color="gray">
-              (
-            </Text>
-            <Timer startTime={responseStartTime} />
-            <Text key="loading-end" color="gray">
-              • esc to interrupt )
-            </Text>
+        <ActionStatus
+          visible={isWaitingForResponse && !!responseStartTime}
+          startTime={responseStartTime || 0}
+          message=""
+          showSpinner={true}
+        />
+
+        {/* Compaction Status */}
+        <ActionStatus
+          visible={isCompacting && !!compactionStartTime}
+          startTime={compactionStartTime || 0}
+          message="Compacting history"
+          showSpinner={true}
+          loadingColor="grey"
+        />
+
+        {/* Temporary status message */}
+        {statusMessage && (
+          <Box paddingX={1} paddingY={0}>
+            <Text color="green">{statusMessage}</Text>
           </Box>
         )}
 
@@ -315,12 +412,18 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleToolPermissionResponse={handleToolPermissionResponse}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
+          isCompacting={isCompacting}
           inputMode={inputMode}
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
           wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
+          onImageInClipboardChange={setHasImageInClipboard}
+          diffContent={diffContent}
+          chatHistory={chatHistory}
+          handleEditMessage={handleEditMessage}
+          onShowEditSelector={() => navigateTo("edit")}
         />
 
         {/* Resource debug bar - only in verbose mode */}
@@ -330,14 +433,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
-          currentMode={currentMode}
-          repoURLText={repoURlText}
+          currentMode={services?.toolPermissions?.currentMode ?? "normal"}
+          remoteUrl={remoteUrl}
           isRemoteMode={isRemoteMode}
           services={services}
           navState={navState}
           navigateTo={navigateTo}
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
+          hasImageInClipboard={hasImageInClipboard}
+          isVerboseMode={isVerboseMode}
+          totalCost={getTotalSessionCost()}
         />
       </Box>
     </Box>

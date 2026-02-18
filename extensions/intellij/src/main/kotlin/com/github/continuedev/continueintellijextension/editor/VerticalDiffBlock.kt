@@ -14,6 +14,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
 import com.intellij.util.application
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import java.awt.*
 import javax.swing.JButton
 import javax.swing.JTextArea
@@ -229,7 +230,7 @@ class VerticalDiffBlock(
         border = JBUI.Borders.empty()
         lineWrap = false
         wrapStyleWord = false
-        font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
+        font = UIUtil.getFontWithFallback(editor.colorsScheme.getFont(EditorFontType.PLAIN))
     }
 
     private fun getButtonsXYPositions(): Pair<Int, Int> {

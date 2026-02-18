@@ -1,0 +1,59 @@
+---
+title: "GitHub"
+---
+
+The GitHub integration connects your repositories to Mission Control so agents can read code, create pull requests, manage issues, and respond to repository events.
+
+[Connect GitHub in Mission Control →](https://continue.dev/integrations/github)
+
+## Access and permissions
+
+When connecting GitHub, you choose which repositories to grant access to and approve the requested permissions. These allow Continue to read repository data and open pull requests on your behalf.
+
+You can change repository access or revoke the integration at any time from your GitHub settings or from Mission Control.
+
+## Trigger events
+
+Agents can run automatically in response to GitHub events:
+
+| Event | Description |
+|-------|-------------|
+| **PR Opened** | A new pull request is opened |
+| **PR Merged** | A pull request is merged |
+| **Label Added** | A label is added to an issue or PR |
+| **Issue Opened** | A new issue is created |
+| **PR Review Comment** | A review comment is added to a pull request |
+| **Check Failed** | A CI check suite fails |
+
+The agent receives a summary of the event appended to its prompt. For example, an agent triggered by `Issue Opened` sees:
+
+```
+Issue #123 was opened: Login page crashes on mobile devices
+Issue URL: https://github.com/acme/webapp/issues/123
+```
+
+The full initial prompt for a task is visible in its logs.
+
+## Automation examples
+
+Combine trigger events with agent instructions to automate common patterns.
+
+### Issue to PR
+
+An agent watches for new issues (or a specific label like `agent:fix`) and opens pull requests automatically:
+
+1. Issue is opened or labeled
+2. Agent gathers context from the repo, issue thread, and relevant files
+3. Agent implements changes on a branch
+4. CI runs (tests, lint, security)
+5. Agent opens a PR referencing the original issue
+
+To restrict which repositories or issues agents act on, configure filters in your agent settings.
+
+### PR review
+
+Trigger on `PR Opened` to have an agent review incoming pull requests — checking for bugs, style violations, missing tests, or security concerns — and post comments directly on the PR.
+
+### Auto-fix failing checks
+
+Trigger on `Check Failed` with a label filter (e.g., `autofix`) so an agent only acts on failures you opt into. The agent reads the CI logs, pushes a fix to the branch, and lets CI re-run.

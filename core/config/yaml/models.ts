@@ -1,12 +1,9 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-
 import {
-  ContinueConfig,
-  IDE,
-  IdeSettings,
-  ILLMLogger,
-  LLMOptions,
-} from "../..";
+  mergeConfigYamlRequestOptions,
+  ModelConfig,
+} from "@continuedev/config-yaml";
+
+import { ContinueConfig, ILLMLogger, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
 
@@ -29,14 +26,12 @@ function getModelClass(
 async function modelConfigToBaseLLM({
   model,
   uniqueId,
-  ideSettings,
   llmLogger,
   config,
   isFromAutoDetect,
 }: {
   model: ModelConfig;
   uniqueId: string;
-  ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
   config: ContinueConfig;
   isFromAutoDetect?: boolean;
@@ -48,6 +43,11 @@ async function modelConfigToBaseLLM({
   }
 
   const { capabilities, ...rest } = model;
+
+  const mergedRequestOptions = mergeConfigYamlRequestOptions(
+    rest.requestOptions,
+    config.requestOptions,
+  );
 
   let options: LLMOptions = {
     ...rest,
@@ -67,6 +67,12 @@ async function modelConfigToBaseLLM({
     baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
     basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
+    toolOverrides: model.chatOptions?.toolOverrides
+      ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
+          name,
+          ...o,
+        }))
+      : undefined,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),
@@ -74,6 +80,7 @@ async function modelConfigToBaseLLM({
     },
     autocompleteOptions: model.autocompleteOptions,
     isFromAutoDetect,
+    requestOptions: mergedRequestOptions,
   };
 
   // Model capabilities - need to be undefined if not found
@@ -154,17 +161,13 @@ async function modelConfigToBaseLLM({
 async function autodetectModels({
   llm,
   model,
-  ide,
   uniqueId,
-  ideSettings,
   llmLogger,
   config,
 }: {
   llm: BaseLLM;
   model: ModelConfig;
-  ide: IDE;
   uniqueId: string;
-  ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
@@ -183,7 +186,6 @@ async function autodetectModels({
             name: modelName,
           },
           uniqueId,
-          ideSettings,
           llmLogger,
           config,
           isFromAutoDetect: true,
@@ -199,23 +201,18 @@ async function autodetectModels({
 
 export async function llmsFromModelConfig({
   model,
-  ide,
   uniqueId,
-  ideSettings,
   llmLogger,
   config,
 }: {
   model: ModelConfig;
-  ide: IDE;
   uniqueId: string;
-  ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
   const baseLlm = await modelConfigToBaseLLM({
     model,
     uniqueId,
-    ideSettings,
     llmLogger,
     config,
   });
@@ -227,9 +224,7 @@ export async function llmsFromModelConfig({
     const models = await autodetectModels({
       llm: baseLlm,
       model,
-      ide,
       uniqueId,
-      ideSettings,
       llmLogger,
       config,
     });

@@ -21,6 +21,12 @@ export interface BaseCommandOptions {
   ask?: string[];
   /** Array of tools to exclude from use (--exclude) */
   exclude?: string[];
+  /** Agent file slug from the hub (--agent) */
+  agent?: string;
+  /** Enable beta UploadArtifact tool */
+  betaUploadArtifactTool?: boolean;
+  /** Enable beta Subagent tool */
+  betaSubagentTool?: boolean;
 }
 
 /**

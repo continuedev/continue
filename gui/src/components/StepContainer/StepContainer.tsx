@@ -5,9 +5,9 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
-import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
 
@@ -22,9 +22,6 @@ export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const historyItemAfterThis = useAppSelector(
-    (state) => state.session.history[props.index + 1],
-  );
   const uiConfig = useAppSelector(selectUIConfig);
 
   // Calculate dimming and indicator state based on latest summary index
@@ -34,22 +31,12 @@ export default function StepContainer(props: StepContainerProps) {
   const isLatestSummary =
     latestSummaryIndex !== -1 && props.index === latestSummaryIndex;
 
-  const isNextMsgAssistantOrThinking =
-    historyItemAfterThis?.message.role === "assistant" ||
-    historyItemAfterThis?.message.role === "thinking" ||
-    historyItemAfterThis?.message.role === "tool";
-
-  const shouldRenderResponseAction = () => {
-    if (isNextMsgAssistantOrThinking) {
-      return false;
-    }
-
-    if (!historyItemAfterThis) {
-      return !props.item.toolCallStates;
-    }
-
-    return true;
-  };
+  const historyItemAfterThis = useAppSelector(
+    (state) => state.session.history[props.index + 1],
+  );
+  const showResponseActions =
+    (props.isLast || historyItemAfterThis?.message.role === "user") &&
+    !(props.isLast && (isStreaming || props.item.toolCallStates));
 
   useEffect(() => {
     if (!isStreaming) {
@@ -98,7 +85,14 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props} />
+            {props.item.reasoning?.text && (
+              <ThinkingBlockPeek
+                content={props.item.reasoning.text}
+                index={props.index}
+                prevItem={props.index > 0 ? props.item : null}
+                inProgress={!props.item.reasoning?.endAt}
+              />
+            )}
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
@@ -110,9 +104,9 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {shouldRenderResponseAction() && !isStreaming && (
+      {showResponseActions && (
         <div
-          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary || isStreaming ? "opacity-35" : ""} ${isStreaming && "pointer-events-none cursor-not-allowed"}`}
         >
           <ResponseActions
             isTruncated={isTruncated}

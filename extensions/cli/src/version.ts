@@ -2,6 +2,9 @@ import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
+import node_machine_id from "node-machine-id";
+
+import { isAuthenticatedConfig, loadAuthConfig } from "./auth/workos.js";
 import { logger } from "./util/logger.js";
 
 export function getVersion(): string {
@@ -17,28 +20,67 @@ export function getVersion(): string {
   }
 }
 
+function getEventUserId(): string {
+  const authConfig = loadAuthConfig();
+
+  if (isAuthenticatedConfig(authConfig)) {
+    return authConfig.userId;
+  }
+
+  // Fall back to unique machine id if not signed in
+  return node_machine_id.machineIdSync();
+}
+
+// Singleton to cache the latest version result
+let latestVersionCache: Promise<string | null> | null = null;
+
 export async function getLatestVersion(
   signal?: AbortSignal,
 ): Promise<string | null> {
-  try {
-    const response = await fetch(
-      "https://registry.npmjs.org/@continuedev/cli/latest",
-      { signal },
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.version;
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      // Request was aborted, don't log
+  // Return cached promise if it exists
+  if (latestVersionCache) {
+    return latestVersionCache;
+  }
+
+  // Create and cache the promise
+  latestVersionCache = (async () => {
+    try {
+      const id = getEventUserId();
+      const response = await fetch(
+        `https://api.continue.dev/cn/info?id=${encodeURIComponent(id)}`,
+        { signal },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.version;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        // Request was aborted, don't log
+        return null;
+      }
+      logger?.debug(
+        "Warning: Could not fetch latest version from api.continue.dev",
+      );
       return null;
     }
-    logger.debug("Warning: Could not fetch latest version from npm registry");
-    return null;
-  }
+  })();
+
+  return latestVersionCache;
 }
+
+getLatestVersion()
+  .then((version) => {
+    if (version) {
+      logger?.info(`Latest version: ${version}`);
+    }
+  })
+  .catch((error) => {
+    logger?.debug(
+      `Warning: Could not fetch latest version from api.continue.dev: ${error}`,
+    );
+  });
 
 export function compareVersions(
   current: string,

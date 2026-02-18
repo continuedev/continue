@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as workosModule from "./auth/workos.js";
 import { services } from "./services/index.js";
@@ -9,7 +9,11 @@ import * as versionModule from "./version.js";
 
 // Mock all dependencies
 vi.mock("./auth/workos.js");
-vi.mock("./version.js");
+vi.mock("./version.js", () => ({
+  getVersion: vi.fn(() => "1.2.3"),
+  getLatestVersion: vi.fn(() => Promise.resolve(null)),
+  compareVersions: vi.fn(() => "same"),
+}));
 vi.mock("./session.js");
 vi.mock("./telemetry/posthogService.js");
 
@@ -53,7 +57,7 @@ describe("handleSlashCommands - /info", () => {
 
   it("should include version and working directory in output", async () => {
     // Mock auth as not authenticated
-    vi.mocked(workosModule.isAuthenticated).mockReturnValue(false);
+    vi.mocked(workosModule.isAuthenticated).mockResolvedValue(false);
 
     // Mock config service
     const mockConfigState = {
@@ -81,7 +85,7 @@ describe("handleSlashCommands - /info", () => {
 
   it("should handle authenticated user info", async () => {
     // Mock auth as authenticated
-    vi.mocked(workosModule.isAuthenticated).mockReturnValue(true);
+    vi.mocked(workosModule.isAuthenticated).mockResolvedValue(true);
     vi.mocked(workosModule.loadAuthConfig).mockReturnValue({
       userEmail: "test@example.com",
       userId: "test-user",
@@ -108,7 +112,7 @@ describe("handleSlashCommands - /info", () => {
 
   it("should handle missing model info gracefully", async () => {
     // Mock auth as not authenticated
-    vi.mocked(workosModule.isAuthenticated).mockReturnValue(false);
+    vi.mocked(workosModule.isAuthenticated).mockResolvedValue(false);
 
     // Mock config service with no model info
     const mockConfigState = {
@@ -125,7 +129,7 @@ describe("handleSlashCommands - /info", () => {
 
   it("should handle config service error", async () => {
     // Mock auth as not authenticated
-    vi.mocked(workosModule.isAuthenticated).mockReturnValue(false);
+    vi.mocked(workosModule.isAuthenticated).mockResolvedValue(false);
 
     // Mock config service throwing error
     vi.mocked(services.config.getState).mockImplementation(() => {

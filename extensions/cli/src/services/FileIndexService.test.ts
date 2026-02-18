@@ -59,24 +59,25 @@ describe("FileIndexService", () => {
     expect(filePaths).toContain("README.md");
   });
 
-  it("should filter files correctly", async () => {
+  it("should filter files correctly with fzf", async () => {
     // Create test files
     fs.writeFileSync("component.tsx", "export default () => <div></div>");
     fs.writeFileSync("utils.ts", "export const util = () => {}");
-    fs.writeFileSync("styles.css", ".test { color: red; }");
+    fs.writeFileSync("readme.md", "# Documentation");
 
     await service.initialize();
 
-    // Test filtering by extension
-    const tsFiles = service.filterFiles("ts");
-    expect(tsFiles.some((f) => f.path === "component.tsx")).toBe(true);
-    expect(tsFiles.some((f) => f.path === "utils.ts")).toBe(true);
-    expect(tsFiles.some((f) => f.path === "styles.css")).toBe(false);
+    // Test filtering with more specific terms that won't fuzzy match
+    const tsxFiles = await service.filterFiles("tsx");
+    expect(tsxFiles.some((f) => f.path === "component.tsx")).toBe(true);
+    expect(tsxFiles.some((f) => f.path === "utils.ts")).toBe(false);
+    expect(tsxFiles.some((f) => f.path === "readme.md")).toBe(false);
 
     // Test filtering by name
-    const componentFiles = service.filterFiles("component");
+    const componentFiles = await service.filterFiles("component");
     expect(componentFiles.some((f) => f.path === "component.tsx")).toBe(true);
     expect(componentFiles.some((f) => f.path === "utils.ts")).toBe(false);
+    expect(componentFiles.some((f) => f.path === "readme.md")).toBe(false);
   });
 
   it("should handle empty directory", async () => {
@@ -123,7 +124,7 @@ describe("FileIndexService", () => {
 
     await service.initialize();
 
-    const files = service.filterFiles("");
+    const files = await service.filterFiles("");
     expect(files[0].path).toBe("alpha.js");
     expect(files[1].path).toBe("beta.js");
     expect(files[2].path).toBe("zebra.js");
@@ -137,7 +138,7 @@ describe("FileIndexService", () => {
 
     await service.initialize();
 
-    const filtered = service.filterFiles("test");
+    const filtered = await service.filterFiles("test");
 
     // Should include both files that match the filter
     expect(filtered.length).toBeGreaterThanOrEqual(2);
@@ -155,7 +156,7 @@ describe("FileIndexService", () => {
 
     await service.initialize();
 
-    const files = service.filterFiles("", 5);
+    const files = await service.filterFiles("", 5);
     expect(files.length).toBe(5);
   });
 
@@ -172,5 +173,37 @@ describe("FileIndexService", () => {
     // Refresh should pick up the new file
     await service.refreshIndex();
     expect(service.getFiles().length).toBe(2);
+  });
+
+  it("should handle fuzzy search with AsyncFzf", async () => {
+    // Create test files for fuzzy matching
+    fs.writeFileSync("user-service.ts", "export class UserService {}");
+    fs.writeFileSync("user-model.ts", "export interface User {}");
+    fs.writeFileSync("config.json", "{}");
+
+    await service.initialize();
+
+    // Test fuzzy search (should match both user files)
+    const userFiles = await service.filterFiles("usmo"); // us(er) mo(del)
+    expect(userFiles.length).equal(1);
+    expect(userFiles.some((f) => f.path === "user-model.ts")).toBe(true);
+  });
+
+  it("should find files with @ symbols when searched with @ pattern", async () => {
+    // Create test file with @ symbols in the name
+    fs.writeFileSync("test@123.txt", "test content");
+    fs.writeFileSync("regular-file.js", "normal file");
+    fs.writeFileSync("other@456.md", "other content");
+
+    await service.initialize();
+
+    // Search for "test@123" - should match "test@123.txt"
+    const results = await service.filterFiles("test@123");
+
+    expect(results.length).equal(1);
+    expect(results.some((f) => f.path === "test@123.txt")).toBe(true);
+
+    // Should not match files that don't contain the @ pattern
+    expect(results.some((f) => f.path === "regular-file.js")).toBe(false);
   });
 });

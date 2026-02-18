@@ -7,7 +7,6 @@ import {
 import {
   Configuration,
   DefaultApi,
-  DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import {
@@ -15,9 +14,72 @@ import {
   getAccessToken,
   getOrganizationId,
 } from "./auth/workos.js";
-import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
-import { MCPService } from "./services/MCPService.js";
+import { posthogService } from "./telemetry/posthogService.js";
+import { getVersion } from "./version.js";
+
+/**
+ * Creates user-agent header value for CLI requests
+ */
+function getUserAgent(): string {
+  const version = getVersion();
+  return `Continue-CLI/${version}`;
+}
+
+/**
+ * Merges user-agent header into request options
+ */
+function mergeUserAgentIntoRequestOptions(
+  requestOptions: ModelConfig["requestOptions"],
+): ModelConfig["requestOptions"] {
+  return {
+    ...requestOptions,
+    headers: {
+      ...requestOptions?.headers,
+      "user-agent": getUserAgent(),
+      "x-continue-unique-id": posthogService.uniqueId,
+    },
+  };
+}
+
+/**
+ * Creates an LLM API instance from a ModelConfig and auth configuration
+ * Handles special logic for continue-proxy provider and constructs the API
+ */
+export function createLlmApi(
+  model: ModelConfig,
+  authConfig: AuthConfig | null,
+): BaseLlmApi | null {
+  const accessToken = getAccessToken(authConfig);
+  const organizationId = getOrganizationId(authConfig);
+
+  const config: LLMConfig =
+    model.provider === "continue-proxy"
+      ? {
+          provider: model.provider,
+          requestOptions: mergeUserAgentIntoRequestOptions(
+            model.requestOptions,
+          ),
+          apiBase: model.apiBase,
+          apiKey: accessToken ?? undefined,
+          env: {
+            apiKeyLocation: (model as any).apiKeyLocation,
+            orgScopeId: organizationId ?? null,
+            proxyUrl:
+              (model as { onPremProxyUrl: string | undefined })
+                .onPremProxyUrl ?? (env.apiBase ? env.apiBase : undefined),
+          },
+        }
+      : {
+          provider: model.provider as any,
+          apiKey: model.apiKey,
+          apiBase: model.apiBase,
+          requestOptions: model.requestOptions,
+          env: model.env,
+        };
+
+  return constructLlmApi(config) ?? null;
+}
 
 export function getLlmApi(
   assistant: AssistantUnrolled,
@@ -38,32 +100,7 @@ export function getLlmApi(
     );
   }
 
-  const accessToken = getAccessToken(authConfig);
-  const organizationId = getOrganizationId(authConfig);
-
-  const config: LLMConfig =
-    model.provider === "continue-proxy"
-      ? {
-          provider: model.provider,
-          requestOptions: model.requestOptions,
-          apiBase: model.apiBase,
-          apiKey: accessToken ?? undefined,
-          env: {
-            apiKeyLocation: (model as any).apiKeyLocation,
-            // envSecretLocations: model.env,
-            orgScopeId: organizationId,
-            proxyUrl: undefined, // TODO
-          },
-        }
-      : {
-          provider: model.provider as any,
-          apiKey: model.apiKey,
-          apiBase: model.apiBase,
-          requestOptions: model.requestOptions,
-          env: model.env,
-        };
-
-  const llmApi = constructLlmApi(config);
+  const llmApi = createLlmApi(model, authConfig);
 
   if (!llmApi) {
     throw new Error(
@@ -83,24 +120,4 @@ export function getApiClient(
       accessToken: accessToken ?? undefined,
     }),
   );
-}
-
-export async function initialize(
-  authConfig: AuthConfig,
-  configPath: string | undefined,
-): Promise<{
-  config: AssistantUnrolled;
-  llmApi: BaseLlmApi;
-  model: ModelConfig;
-  mcpService: MCPService;
-  apiClient: DefaultApiInterface;
-}> {
-  const apiClient = getApiClient(authConfig?.accessToken);
-  const result = await loadConfiguration(authConfig, configPath, apiClient);
-  const config = result.config;
-  const [llmApi, model] = getLlmApi(config, authConfig);
-  const mcpService = new MCPService();
-  await mcpService.initialize(config, false);
-
-  return { config, llmApi, model, mcpService, apiClient };
 }

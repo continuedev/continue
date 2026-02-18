@@ -18,13 +18,41 @@ export const LocalStorageProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [values, setValues] = useState<LocalStorageType>(DEFAULT_LOCAL_STORAGE);
 
-  // TODO setvalue
-  useEffect(() => {
+  // Helper function to sync state with localStorage
+  const syncWithLocalStorage = () => {
     const isJetbrains = getLocalStorage("ide") === "jetbrains";
-    let fontSize = getLocalStorage("fontSize") ?? (isJetbrains ? 15 : 14);
-    setValues({
+    const fontSize = getLocalStorage("fontSize") ?? (isJetbrains ? 15 : 14);
+
+    setValues((prev) => ({
+      ...prev,
       fontSize,
-    });
+    }));
+  };
+
+  // Initialize with values from localStorage
+  useEffect(() => {
+    syncWithLocalStorage();
+  }, []);
+
+  // Listen for current tab changes using CustomEvent
+  useEffect(() => {
+    const handleLocalStorageChange = (event: CustomEvent) => {
+      if (event.detail?.key === "fontSize") {
+        syncWithLocalStorage();
+      }
+    };
+
+    window.addEventListener(
+      "localStorageChange",
+      handleLocalStorageChange as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "localStorageChange",
+        handleLocalStorageChange as EventListener,
+      );
+    };
   }, []);
 
   return (

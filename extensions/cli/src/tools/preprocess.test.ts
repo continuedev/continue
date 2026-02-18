@@ -1,7 +1,7 @@
 import * as fs from "fs";
 
 import * as diff from "diff";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock fs module
 vi.mock("fs", async () => {
@@ -30,7 +30,6 @@ import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
@@ -344,125 +343,6 @@ describe.skip("Tool preprocess functions", () => {
           },
         ],
       });
-    });
-  });
-
-  describe("searchAndReplaceInFileTool.preprocess", () => {
-    it("should process simple search and replace", async () => {
-      // Setup mocks
-      mockExistsSync.mockReturnValue(true);
-      mockReadFileSync.mockReturnValue("old line 1\nold line 2\nold line 3");
-
-      const args = {
-        filepath: "path/to/file.txt",
-        diffs: [
-          `------- SEARCH
-old line 2
-=======
-new line 2
-+++++++ REPLACE`,
-        ],
-      };
-
-      const result = await searchAndReplaceInFileTool.preprocess!(args);
-
-      expect(mockExistsSync).toHaveBeenCalled();
-      expect(mockReadFileSync).toHaveBeenCalled();
-      expect(mockCreateTwoFilesPatch).toHaveBeenCalled();
-
-      expect(result.args).toEqual({
-        filepath: expect.any(String),
-        newContent: "old line 1\nnew line 2\nold line 3",
-        oldContent: "old line 1\nold line 2\nold line 3",
-      });
-
-      expect(result.preview).toEqual([
-        {
-          type: "text",
-          content: "Will make the following changes:",
-        },
-        {
-          type: "diff",
-          content: "mock diff content",
-        },
-      ]);
-    });
-
-    it("should throw error when file doesn't exist", async () => {
-      mockExistsSync.mockReturnValue(false);
-
-      const args = {
-        filepath: "/nonexistent/file.txt",
-        diffs: ["some diff"],
-      };
-
-      await expect(
-        searchAndReplaceInFileTool.preprocess!(args),
-      ).rejects.toThrowError(/file .* does not exist/);
-    });
-
-    it("should throw error when no search/replace blocks found", async () => {
-      mockExistsSync.mockReturnValue(true);
-      mockReadFileSync.mockReturnValue("file content");
-
-      const args = {
-        filepath: "path/to/file.txt",
-        diffs: ["invalid diff format"],
-      };
-
-      await expect(
-        searchAndReplaceInFileTool.preprocess!(args),
-      ).rejects.toThrowError(
-        "No complete search/replace blocks found in any diffs",
-      );
-    });
-
-    it("should throw error when search content not found", async () => {
-      mockExistsSync.mockReturnValue(true);
-      mockReadFileSync.mockReturnValue("old line 1\nold line 2\nold line 3");
-
-      const args = {
-        filepath: "path/to/file.txt",
-        diffs: [
-          `------- SEARCH
-nonexistent content
-=======
-replacement
-+++++++ REPLACE`,
-        ],
-      };
-
-      await expect(
-        searchAndReplaceInFileTool.preprocess!(args),
-      ).rejects.toThrowError(/Search content not found in block 1:/);
-    });
-
-    it("should process multiple search/replace blocks", async () => {
-      mockExistsSync.mockReturnValue(true);
-      mockReadFileSync.mockReturnValue("line 1\nline 2\nline 3\nline 4");
-
-      const args = {
-        filepath: "path/to/file.txt",
-        diffs: [
-          `------- SEARCH
-line 1
-=======
-modified line 1
-+++++++ REPLACE
-
-------- SEARCH
-line 3
-=======
-modified line 3
-+++++++ REPLACE`,
-        ],
-      };
-
-      const result = await searchAndReplaceInFileTool.preprocess!(args);
-
-      expect(result.args.newContent).toBe(
-        "modified line 1\nline 2\nmodified line 3\nline 4",
-      );
     });
   });
 });

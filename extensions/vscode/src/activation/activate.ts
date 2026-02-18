@@ -3,7 +3,6 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
-import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion, isUnsupportedPlatform } from "../util/util";
 
 import { GlobalContext } from "core/util/GlobalContext";
@@ -41,7 +40,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   getContinueRcPath();
 
   // Register commands and providers
-  registerQuickFixProvider();
   setupInlineTips(context);
 
   const vscodeExtension = new VsCodeExtension(context);
@@ -61,6 +59,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
   const yamlMatcher = ".continue/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
+  const yamlSchemas = yamlConfig.get<object>("schemas", {});
 
   const newPath = vscode.Uri.joinPath(
     context.extension.extensionUri,
@@ -70,7 +69,10 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   try {
     await yamlConfig.update(
       "schemas",
-      { [newPath]: [yamlMatcher] },
+      {
+        ...yamlSchemas,
+        [newPath]: [yamlMatcher],
+      },
       vscode.ConfigurationTarget.Global,
     );
   } catch (error) {

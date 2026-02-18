@@ -13,19 +13,19 @@ const mockExtras = {
 } as unknown as ToolExtras;
 
 test("resolveLsToolDirPath handles undefined path", () => {
-  expect(resolveLsToolDirPath(undefined)).toBe("/");
+  expect(resolveLsToolDirPath(undefined)).toBe(".");
 });
 
 test("resolveLsToolDirPath handles empty string", () => {
-  expect(resolveLsToolDirPath("")).toBe("/");
+  expect(resolveLsToolDirPath("")).toBe(".");
 });
 
 test("resolveLsToolDirPath handles dot", () => {
-  expect(resolveLsToolDirPath(".")).toBe("/");
+  expect(resolveLsToolDirPath(".")).toBe(".");
 });
 
 test("resolveLsToolDirPath handles dot relative", () => {
-  expect(resolveLsToolDirPath("./hi")).toBe("/hi");
+  expect(resolveLsToolDirPath("./hi")).toBe("./hi");
 });
 
 test("resolveLsToolDirPath normalizes backslashes to forward slashes", () => {

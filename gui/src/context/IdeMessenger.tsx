@@ -220,7 +220,7 @@ export class IdeMessenger implements IIdeMessenger {
     try {
       while (!done) {
         if (error) {
-          throw error;
+          throw new Error(error);
         }
         if (buffer.length > index) {
           const chunks = buffer.slice(index);

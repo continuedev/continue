@@ -1,4 +1,5 @@
-import { SessionMetadata } from "core";
+import { BaseSessionMetadata } from "core";
+import type { RemoteSessionMetadata } from "core/control-plane/client";
 import MiniSearch from "minisearch";
 import React, {
   Fragment,
@@ -66,7 +67,10 @@ export function History() {
 
   const platform = useMemo(() => getPlatform(), []);
 
-  const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
+  const filteredAndSortedSessions: (
+    | BaseSessionMetadata
+    | RemoteSessionMetadata
+  )[] = useMemo(() => {
     // 1. Exact phrase matching
     const exactResults = minisearch.search(searchTerm, {
       fuzzy: false,
@@ -146,7 +150,7 @@ export function History() {
   return (
     <div
       style={{ fontSize: getFontSize() }}
-      className="flex flex-1 flex-col overflow-auto px-1"
+      className="flex flex-1 flex-col overflow-auto overflow-x-hidden px-1"
     >
       <div className="relative my-2 mt-4 flex justify-center space-x-2">
         <input
@@ -170,7 +174,7 @@ export function History() {
         )}
       </div>
 
-      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
+      <div className="thin-scrollbar flex w-full flex-1 flex-col overflow-y-auto">
         {filteredAndSortedSessions.length === 0 && (
           <div className="m-3 text-center">
             {isSessionMetadataLoading ? (
@@ -185,7 +189,7 @@ export function History() {
           </div>
         )}
 
-        <table className="flex flex-1 flex-col">
+        <table className="flex w-full flex-1 flex-col">
           <tbody className="">
             {sessionGroups.map((group, groupIndex) => (
               <Fragment key={group.label}>

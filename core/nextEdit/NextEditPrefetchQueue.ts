@@ -10,6 +10,11 @@ export interface ProcessedItem {
 /**
  * Keeps a queue of the broken down diffs from a changed editable range, as determined in core/nextEdit/diff.ts
  */
+/**
+ * This is where the chain is stored. Think of it as a regular queue, but being a singleton because we need one source of truth for the chain.
+ * I originally intended this to be a separate data structure to handle prefetching next edit outcomes from the model in the background.
+ * Due to subpar results, lack of satisfactory next edit location suggestion algorithms and token cost/latency issues, I scratched the idea.
+ */
 export class PrefetchQueue {
   private static instance: PrefetchQueue | null = null;
 
@@ -135,7 +140,7 @@ export class PrefetchQueue {
     const count = Math.min(3, this.processedQueue.length);
     const firstThree = this.processedQueue.slice(0, count);
     firstThree.forEach((item, index) => {
-      console.log(
+      console.debug(
         `Item ${index + 1}: ${item.location.range.start.line} to ${item.location.range.end.line}`,
       );
     });

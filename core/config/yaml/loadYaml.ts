@@ -1,20 +1,27 @@
 import {
   AssistantUnrolled,
+  AssistantUnrolledNonNullable,
   BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
-  isAssistantUnrolledNonNullable,
+  mergeConfigYamlRequestOptions,
   mergeUnrolledAssistants,
   ModelRole,
   PackageIdentifier,
   RegistryClient,
-  TEMPLATE_VAR_REGEX,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
+import {
+  ContinueConfig,
+  IDE,
+  IdeInfo,
+  IdeSettings,
+  ILLMLogger,
+  InternalMcpOptions,
+} from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
@@ -24,7 +31,9 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
@@ -33,7 +42,7 @@ import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 import {
-  convertYamlMcpToContinueMcp,
+  convertYamlMcpConfigToInternalMcpOptions,
   convertYamlRuleToContinueRule,
 } from "./yamlToContinueConfig";
 
@@ -55,6 +64,8 @@ async function loadConfigYaml(options: {
   } = options;
 
   // Add local .continue blocks
+  // Use "content" field to pass pre-read content directly, avoiding
+  // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
@@ -64,6 +75,7 @@ async function loadConfigYaml(options: {
     return localBlocks.map((b) => ({
       uriType: "file" as const,
       fileUri: b.path,
+      content: b.content,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -133,8 +145,8 @@ async function loadConfigYaml(options: {
     }
   }
 
-  if (config && isAssistantUnrolledNonNullable(config)) {
-    errors.push(...validateConfigYaml(config));
+  if (config) {
+    errors.push(...validateConfigYaml(nonNullifyConfigYaml(config)));
   }
 
   if (errors?.some((error) => error.fatal)) {
@@ -153,16 +165,30 @@ async function loadConfigYaml(options: {
   };
 }
 
-async function configYamlToContinueConfig(options: {
-  config: AssistantUnrolled;
+function nonNullifyConfigYaml(
+  unrolledAssistant: AssistantUnrolled,
+): AssistantUnrolledNonNullable {
+  return {
+    ...unrolledAssistant,
+    data: unrolledAssistant.data?.filter((k) => !!k),
+    context: unrolledAssistant.context?.filter((k) => !!k),
+    docs: unrolledAssistant.docs?.filter((k) => !!k),
+    mcpServers: unrolledAssistant.mcpServers?.filter((k) => !!k),
+    models: unrolledAssistant.models?.filter((k) => !!k),
+    prompts: unrolledAssistant.prompts?.filter((k) => !!k),
+    rules: unrolledAssistant.rules?.filter((k) => !!k).map((k) => k!),
+  };
+}
+
+export async function configYamlToContinueConfig(options: {
+  unrolledAssistant: AssistantUnrolled;
   ide: IDE;
-  ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
   workOsAccessToken: string | undefined;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  let { config, ide, ideSettings, ideInfo, uniqueId, llmLogger } = options;
+  let { unrolledAssistant, ide, ideInfo, uniqueId, llmLogger } = options;
 
   const localErrors: ConfigValidationError[] = [];
 
@@ -179,6 +205,7 @@ async function configYamlToContinueConfig(options: {
       autocomplete: [],
       rerank: [],
       summarize: [],
+      subagent: [],
     },
     selectedModelByRole: {
       chat: null,
@@ -188,29 +215,26 @@ async function configYamlToContinueConfig(options: {
       autocomplete: null,
       rerank: null,
       summarize: null,
+      subagent: null,
     },
     rules: [],
+    requestOptions: { ...unrolledAssistant.requestOptions },
   };
 
-  // Right now, if there are any missing packages in the config, then we will just throw an error
-  if (!isAssistantUnrolledNonNullable(config)) {
-    return {
-      config: continueConfig,
-      errors: [
-        {
-          message:
-            "Failed to load config due to missing blocks, see which blocks are missing below",
-          fatal: true,
-        },
-      ],
-    };
-  }
+  const config = nonNullifyConfigYaml(unrolledAssistant);
 
   for (const rule of config.rules ?? []) {
-    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+    const convertedRule = convertYamlRuleToContinueRule(rule);
+    continueConfig.rules.push(convertedRule);
   }
 
-  continueConfig.data = config.data;
+  continueConfig.data = config.data?.map((d) => ({
+    ...d,
+    requestOptions: mergeConfigYamlRequestOptions(
+      d.requestOptions,
+      continueConfig.requestOptions,
+    ),
+  }));
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -219,26 +243,6 @@ async function configYamlToContinueConfig(options: {
     useLocalCrawling: doc.useLocalCrawling,
     sourceFile: doc.sourceFile,
   }));
-
-  config.mcpServers?.forEach((mcpServer) => {
-    const mcpArgVariables =
-      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
-
-    if (mcpArgVariables.length === 0) {
-      return;
-    }
-
-    localErrors.push({
-      fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
-    });
-  });
-
-  continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map(
-      convertYamlMcpToContinueMcp,
-    ),
-  };
 
   // Prompt files -
   try {
@@ -254,9 +258,30 @@ async function configYamlToContinueConfig(options: {
           continueConfig.slashCommands?.push(slashCommand);
         }
       } catch (e) {
+        // If the file is in a rules directory, we can provide a more helpful error message
+        // because we know it's likely a rule definition
+        const isRuleFile =
+          file.path.toLowerCase().includes("/rules/") ||
+          file.path.toLowerCase().includes("\\rules\\");
+
+        let message = `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`;
+
+        if (isRuleFile) {
+          const isYamlError =
+            e instanceof Error &&
+            (e.name?.includes("YAML") || e.message.includes("flow sequence"));
+
+          const prefix = isYamlError
+            ? "Failed to parse rule definition"
+            : "Failed to process rule definition";
+
+          const errorDetails = e instanceof Error ? e.message : String(e);
+          message = `${prefix} ${file.path}: ${errorDetails}`;
+        }
+
         localErrors.push({
           fatal: false,
-          message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
+          message,
         });
       }
     });
@@ -291,9 +316,7 @@ async function configYamlToContinueConfig(options: {
     try {
       const llms = await llmsFromModelConfig({
         model,
-        ide,
         uniqueId,
-        ideSettings,
         llmLogger,
         config: continueConfig,
       });
@@ -339,6 +362,10 @@ async function configYamlToContinueConfig(options: {
       if (model.roles?.includes("rerank")) {
         continueConfig.modelsByRole.rerank.push(...llms);
       }
+
+      if (model.roles?.includes("subagent")) {
+        continueConfig.modelsByRole.subagent.push(...llms);
+      }
     } catch (e) {
       localErrors.push({
         fatal: false,
@@ -378,21 +405,24 @@ async function configYamlToContinueConfig(options: {
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => ({
-      id: server.name,
-      name: server.name,
-      sourceFile: server.sourceFile,
-      transport: {
-        type: "stdio",
-        args: [],
-        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-      },
-      timeout: server.connectionTimeout,
-    })),
-    false,
-    { ide },
-  );
+
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+      (server) =>
+        convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
+    );
+    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+      ide,
+      true,
+      config.requestOptions,
+    );
+    localErrors.push(...jsonMcpErrors);
+    mcpOptions.push(...mcpServers);
+    mcpManager.setConnections(mcpOptions, false, { ide });
+  }
 
   return { config: continueConfig, errors: localErrors };
 }
@@ -441,9 +471,8 @@ export async function loadContinueConfigFromYaml(options: {
 
   const { config: continueConfig, errors: localErrors } =
     await configYamlToContinueConfig({
-      config: configYamlResult.config,
+      unrolledAssistant: configYamlResult.config,
       ide,
-      ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,

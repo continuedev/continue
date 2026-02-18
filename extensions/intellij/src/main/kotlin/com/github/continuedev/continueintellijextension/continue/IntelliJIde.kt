@@ -33,7 +33,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
-import org.jetbrains.plugins.terminal.TerminalView
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
@@ -45,6 +45,76 @@ class IntelliJIDE(
     private val continuePluginService: ContinuePluginService,
 
     ) : IDE {
+    
+    // Security-focused ignore patterns - should always be excluded for security reasons
+    private val DEFAULT_SECURITY_IGNORE_FILETYPES = listOf(
+        // Environment and configuration files with secrets
+        "*.env", "*.env.*", ".env*", "config.json", "config.yaml", "config.yml",
+        "settings.json", "appsettings.json", "appsettings.*.json",
+        
+        // Certificate and key files
+        "*.key", "*.pem", "*.p12", "*.pfx", "*.crt", "*.cer", "*.jks",
+        "*.keystore", "*.truststore",
+        
+        // Database files that may contain sensitive data
+        "*.db", "*.sqlite", "*.sqlite3", "*.mdb", "*.accdb",
+        
+        // Credential and secret files
+        "*.secret", "*.secrets", "credentials", "auth.json",
+        "token", "*.token",
+        
+        // Backup files that might contain sensitive data
+        "*.bak", "*.backup", "*.old", "*.orig",
+        
+        // Docker secrets
+        "docker-compose.override.yml", "docker-compose.override.yaml",
+        
+        // SSH and GPG
+        "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "*.ppk", "*.gpg"
+    )
+    
+    private val DEFAULT_SECURITY_IGNORE_DIRS = listOf(
+        // Environment and configuration directories
+        ".env/", "env/",
+        
+        // Cloud provider credential directories
+        ".aws/", ".gcp/", ".azure/", ".kube/", ".docker/",
+        
+        // Secret directories
+        "secrets/", ".secrets/", "private/", ".private/", "certs/",
+        "certificates/", "keys/", ".ssh/", ".gnupg/", ".gpg/",
+        
+        // Temporary directories that might contain sensitive data
+        "tmp/secrets/", "temp/secrets/", ".tmp/"
+    )
+    
+    // Additional non-security patterns for general indexing exclusion
+    private val ADDITIONAL_SEARCH_IGNORE_FILETYPES = listOf(
+        "*.DS_Store", "*-lock.json", "*.lock", "*.log", "*.ttf", "*.png",
+        "*.jpg", "*.jpeg", "*.gif", "*.mp4", "*.svg", "*.ico", "*.pdf",
+        "*.zip", "*.gz", "*.tar", "*.dmg", "*.tgz", "*.rar", "*.7z",
+        "*.exe", "*.dll", "*.obj", "*.o", "*.o.d", "*.a", "*.lib",
+        "*.so", "*.dylib", "*.ncb", "*.sdf", "*.woff", "*.woff2",
+        "*.eot", "*.cur", "*.avi", "*.mpg", "*.mpeg", "*.mov", "*.mp3",
+        "*.mkv", "*.webm", "*.jar", "*.onnx", "*.parquet", "*.pqt",
+        "*.wav", "*.webp", "*.wasm", "*.plist", "*.profraw", "*.gcda",
+        "*.gcno", "go.sum", "*.gitignore", "*.gitkeep", "*.continueignore",
+        "*.csv", "*.uasset", "*.pdb", "*.bin", "*.pag", "*.swp", "*.jsonl"
+    )
+    
+    private val ADDITIONAL_SEARCH_IGNORE_DIRS = listOf(
+        ".git/", ".svn/", "node_modules/", "dist/", "build/", "Build/",
+        "target/", "out/", "bin/", ".pytest_cache/", ".vscode-test/",
+        "__pycache__/", "site-packages/", ".gradle/", ".mvn/", ".cache/",
+        "gems/", "vendor/", ".venv/", "venv/", ".vscode/", ".idea/", ".vs/",
+        ".continue/"
+    )
+    
+    // Combined patterns for use in ripgrep
+    private val DEFAULT_IGNORES = DEFAULT_SECURITY_IGNORE_FILETYPES + 
+                                DEFAULT_SECURITY_IGNORE_DIRS + 
+                                ADDITIONAL_SEARCH_IGNORE_FILETYPES + 
+                                ADDITIONAL_SEARCH_IGNORE_DIRS
 
     private val gitService = GitService(project, continuePluginService)
     private val fileUtils = FileUtils(project)
@@ -121,10 +191,6 @@ class IntelliJIDE(
         return mapOf("text" to text)
     }
 
-    override suspend fun isTelemetryEnabled(): Boolean {
-        return true
-    }
-
     override suspend fun isWorkspaceRemote(): Boolean {
         return this.getIdeInfo().remoteName != "local"
     }
@@ -138,10 +204,10 @@ class IntelliJIDE(
             try {
                 val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
 
-                val terminalView = TerminalView.getInstance(project)
+                val terminalManager = TerminalToolWindowManager.getInstance(project)
                 // Find the first terminal widget selected, whatever its state, running command or not.
-                val widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
-                    toolWindow?.getContentManager()?.getContent(it)?.isSelected ?: false
+                val widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                    toolWindow?.contentManager?.getContent(it)?.isSelected ?: false
                 }
 
                 if (widget != null) {
@@ -187,6 +253,11 @@ class IntelliJIDE(
             fileUtils.writeFile(path, contents)
         }
 
+    override suspend fun removeFile(path: String) =
+        withContext(Dispatchers.EDT) {
+            fileUtils.removeFile(path)
+        }
+
     override suspend fun showVirtualFile(title: String, contents: String) {
         val virtualFile = LightVirtualFile(title, contents)
         ApplicationManager.getApplication().invokeLater {
@@ -199,7 +270,9 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) =
-        fileUtils.openFile(path)
+        withContext(Dispatchers.EDT) {
+            fileUtils.openFile(path)
+        }
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
@@ -216,23 +289,23 @@ class IntelliJIDE(
                 val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
                 toolWindow?.activate({
                     try {
-                        val terminalView = TerminalView.getInstance(project)
+                        val terminalManager = TerminalToolWindowManager.getInstance(project)
                         var widget: ShellTerminalWidget? = null
 
                         // 1. Handle reuseTerminal option
-                        if (terminalOptions.reuseTerminal == true && terminalView.getWidgets().isNotEmpty()) {
+                        if (terminalOptions.reuseTerminal == true && terminalManager.getWidgets().isNotEmpty()) {
                             // 2. Find by terminalName if provided
                             if (terminalOptions.terminalName != null) {
-                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>()
                                     .firstOrNull {
                                         toolWindow.contentManager.getContent(it).tabName == terminalOptions.terminalName
                                                 && !it.hasRunningCommands()
                                     }
                             } else {
                                 // 3. Find active terminal, or fall back to the first one
-                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                widget = terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>()
                                     .firstOrNull { toolWindow.contentManager.getContent(it).isSelected }
-                                    ?: terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                                    ?: terminalManager.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
                                         !it.hasRunningCommands()
                                     }
                             }
@@ -240,7 +313,7 @@ class IntelliJIDE(
 
                         // 4. Create a new terminal if needed
                         if (widget == null) {
-                            widget = terminalView.createLocalShellWidget(
+                            widget = terminalManager.createLocalShellWidget(
                                 project.basePath,
                                 terminalOptions.terminalName,
                                 true
@@ -333,6 +406,9 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
+                // Create a single combined ignore pattern using glob brace expansion
+                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
+                
                 var commandArgs = mutableListOf<String>(
                     ripgrep,
                     "--files",
@@ -341,7 +417,9 @@ class IntelliJIDE(
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
-                    ".gitignore"
+                    ".gitignore",
+                    "--glob",
+                    "!{${defaultIgnorePattern}}" 
                 )
                 if (maxResults != null) {
                     commandArgs.add("--max-count")
@@ -368,6 +446,9 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
+                // Create a single combined ignore pattern for ripgrep
+                val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
+                
                 val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
@@ -377,7 +458,9 @@ class IntelliJIDE(
                     ".gitignore",
                     "-C",
                     "2",
-                    "--heading"
+                    "--heading",
+                    "--glob",
+                    "!{${defaultIgnorePattern}}" // Exclude all default ignores using brace expansion
                 )
 
                 // Conditionally add maxResults flag

@@ -43,7 +43,12 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
 
     @RequiresEdt
     fun insert(lineIndex: Int, component: JComponent, showAbove: Boolean = false): Disposable? {
-        if (Disposer.isDisposed(this)) return null
+        try {
+            // Check if editor is disposed
+            if (editor.isDisposed) return null
+        } catch (e: Exception) {
+            return null
+        }
 
         if (onlyOneInlay) {
             // Dispose all other inlays
@@ -106,7 +111,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
 
         init {
             val metrics = editor.getFontMetrics(Font.PLAIN)
-            val spaceWidth = FontLayoutService.getInstance().charWidth2D(metrics, ' '.toInt())
+            val spaceWidth = FontLayoutService.getInstance().charWidth2D(metrics, ' '.code)
             // -4 to create some space
             maximumEditorTextWidth = ceil(spaceWidth * (editor.settings.getRightMargin(editor.project)) - 4).toInt()
 

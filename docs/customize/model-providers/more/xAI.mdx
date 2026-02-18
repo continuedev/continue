@@ -3,19 +3,19 @@ title: xAI
 slug: ../xai
 ---
 
-<Tip>
-  **Discover xAI models [here](https://hub.continue.dev/xai)**
-</Tip>
+<Tip>**Discover xAI models [here](https://continue.dev/xai)**</Tip>
 
-<Info>
-  Get an API key from the [xAI Console](https://console.x.ai/)
-</Info>
+<Info>Get an API key from the [xAI Console](https://console.x.ai/)</Info>
 
 ## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: <MODEL_NAME>
       provider: xai
@@ -29,7 +29,7 @@ slug: ../xai
     "models": [
       {
         "title": "<MODEL_NAME>",
-        "provider": "anthropic",
+        "provider": "xai",
         "model": "<MODEL_ID>",
         "apiKey": "<YOUR_XAI_API_KEY>"
       }
@@ -40,5 +40,6 @@ slug: ../xai
 </Tabs>
 
 <Info>
-  **Check out a more advanced configuration [here](https://hub.continue.dev/xai/grok-4?view=config)**
+  **Check out a more advanced configuration
+  [here](https://continue.dev/xai/grok-code-fast-1?view=config)**
 </Info>

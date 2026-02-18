@@ -43,7 +43,7 @@ export function ToolCallTitle(props: { toolName: string; args?: any }) {
   }
 
   return (
-    <Text>
+    <Text wrap="truncate">
       <Text bold>{displayName}</Text>({formattedValue})
     </Text>
   );

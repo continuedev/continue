@@ -9,6 +9,8 @@ import {
   ModelServiceState,
 } from "../services/types.js";
 
+import { defaultBoxStyles } from "./styles.js";
+
 interface ServiceDebuggerProps {
   services: {
     auth?: AuthServiceState;
@@ -45,7 +47,7 @@ const ServiceDebugger: React.FC<ServiceDebuggerProps> = ({
           ? `User: ${service.authConfig.email || "unknown"}`
           : "No auth config";
       case "config":
-        return service?.config ? `Agent: ${service.config.name}` : "No config";
+        return service?.config ? `Config: ${service.config.name}` : "No config";
       case "model":
         return service?.model ? `Model: ${service.model.name}` : "No model";
       case "mcp":
@@ -60,13 +62,7 @@ const ServiceDebugger: React.FC<ServiceDebuggerProps> = ({
   };
 
   return (
-    <Box
-      flexDirection="column"
-      paddingX={1}
-      paddingY={1}
-      borderStyle="round"
-      borderColor="cyan"
-    >
+    <Box {...defaultBoxStyles("cyan")}>
       <Text bold color="cyan">
         🔧 Service Debug Info
       </Text>

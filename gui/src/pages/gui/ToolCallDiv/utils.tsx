@@ -1,25 +1,11 @@
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  CodeBracketIcon,
-  DocumentIcon,
-  DocumentTextIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  GlobeAltIcon,
-  MagnifyingGlassIcon,
-  MapIcon,
-  PencilIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import * as Icons from "@heroicons/react/24/outline";
 import {
   ContextItem,
   ContextItemWithId,
   ToolCallState,
   ToolStatus,
 } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
-import { ComponentType } from "react";
+import { ComponentType, SVGProps } from "react";
 import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 
@@ -34,7 +20,7 @@ export function getStatusIntro(
 
   switch (status) {
     case "generating":
-      return "is generating output to";
+      return "will";
     case "generated":
       return "wants to";
     case "calling":
@@ -70,19 +56,16 @@ export function getGroupActionVerb(toolCallStates: ToolCallState[]): string {
   return "Performing";
 }
 
-export const toolCallIcons: Record<string, ComponentType> = {
-  [BuiltInToolNames.FileGlobSearch]: MagnifyingGlassIcon,
-  [BuiltInToolNames.GrepSearch]: MagnifyingGlassIcon,
-  [BuiltInToolNames.LSTool]: FolderIcon,
-  [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
-  [BuiltInToolNames.ReadFile]: DocumentIcon,
-  [BuiltInToolNames.FetchUrlContent]: GlobeAltIcon,
-  [BuiltInToolNames.SearchWeb]: GlobeAltIcon,
-  [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
-  [BuiltInToolNames.ViewRepoMap]: MapIcon,
-  [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
-  [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
-};
+type IconName = keyof typeof Icons;
+
+type Icon = ComponentType<SVGProps<SVGSVGElement>> | undefined;
+
+export function getIconByName(name: string): Icon | null {
+  if (name in Icons) {
+    return Icons[name as IconName] as Icon;
+  }
+  return null;
+}
 
 export function getStatusIcon(state: ToolStatus) {
   switch (state) {
@@ -90,12 +73,12 @@ export function getStatusIcon(state: ToolStatus) {
     case "calling":
       return <Spinner />;
     case "generated":
-      return <ArrowRightIcon color={vscButtonBackground} />;
+      return <Icons.ArrowRightIcon color={vscButtonBackground} />;
     case "done":
-      return <CheckIcon className="text-success" />;
+      return <Icons.CheckIcon className="text-success" />;
     case "canceled":
     case "errored":
-      return <XMarkIcon className="text-error" />;
+      return <Icons.XMarkIcon className="text-error" />;
   }
 }
 

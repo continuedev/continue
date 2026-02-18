@@ -4,6 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
+import { ToolPolicy } from "@continuedev/terminal-security";
 
 import {
   AutocompleteInput,
@@ -13,6 +14,7 @@ import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
+  BaseSessionMetadata,
   BrowserSerializedContinueConfig,
   ChatMessage,
   CompiledMessagesResult,
@@ -26,7 +28,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
-  MCPServerStatus,
+  McpUiState,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -34,7 +36,6 @@ import {
   RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
-  SessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
@@ -48,9 +49,10 @@ import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
-import { FreeTrialStatus } from "../control-plane/client";
+import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
+import { ContinueErrorReason } from "../util/errors";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -70,10 +72,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionMetadata[]];
+  "history/list": [
+    ListHistoryOptions,
+    (BaseSessionMetadata | RemoteSessionMetadata)[],
+  ];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
+  "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
+  "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
@@ -84,7 +91,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
-  "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
+  "config/addLocalWorkspaceBlock": [
+    { blockType: BlockType; baseFilename?: string },
+    void,
+  ];
+  "config/addGlobalRule": [undefined | { baseFilename?: string }, void];
+  "config/deleteRule": [{ filepath: string }, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
@@ -109,10 +121,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [
-    { profileId: string | undefined; element?: { sourceFile?: string } },
-    void,
-  ];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -139,6 +148,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/setServerEnabled": [{ id: string; enabled: boolean }, void];
   "mcp/getPrompt": [
     {
       serverName: string;
@@ -150,9 +160,20 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
-  "mcp/startAuthentication": [MCPServerStatus, void];
-  "mcp/removeAuthentication": [MCPServerStatus, void];
-
+  "mcp/startAuthentication": [
+    {
+      serverId: string;
+      serverUrl: string;
+    },
+    void,
+  ];
+  "mcp/removeAuthentication": [
+    {
+      serverId: string;
+      serverUrl: string;
+    },
+    void,
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -225,6 +246,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  getDiffLines: [{ oldContent: string; newContent: string }, DiffLine[]];
   "llm/compileChat": [
     { messages: ChatMessage[]; options: LLMFullCompletionOptions },
     CompiledMessagesResult,
@@ -291,16 +313,34 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
-    { contextItems: ContextItem[]; errorMessage?: string },
+    {
+      contextItems: ContextItem[];
+      errorMessage?: string;
+      errorReason?: ContinueErrorReason;
+      mcpUiState?: McpUiState;
+    },
+  ];
+  "tools/evaluatePolicy": [
+    {
+      toolName: string;
+      basePolicy: ToolPolicy;
+      parsedArgs: Record<string, unknown>;
+      processedArgs?: Record<string, unknown>;
+    },
+    { policy: ToolPolicy; displayValue?: string },
+  ];
+  "tools/preprocessArgs": [
+    { toolName: string; args: Record<string, unknown> },
+    {
+      preprocessedArgs?: Record<string, unknown>;
+      errorReason?: ContinueErrorReason;
+      errorMessage?: string;
+    },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
-  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
-  "controlPlane/getModelsAddOnUpgradeUrl": [
-    { vsCodeUriScheme?: string },
-    { url: string } | null,
-  ];
+  "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
@@ -308,5 +348,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "process/killTerminalProcess": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };

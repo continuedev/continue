@@ -1,10 +1,10 @@
-import { getServiceSync } from "../services/index.js";
-import type { ToolPermissionServiceState } from "../services/types.js";
-import { SERVICE_NAMES } from "../services/types.js";
+import type { ToolPolicy } from "@continuedev/terminal-security";
 
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
+
 import {
   PermissionCheckResult,
+  PermissionPolicy,
   ToolCallRequest,
   ToolPermissions,
 } from "./types.js";
@@ -47,7 +47,7 @@ export function matchesToolPattern(
     return false;
   }
 
-  // Handle regular wildcard patterns like "mcp__*"
+  // Handle regular wildcard patterns like "external_*"
   if (pattern.includes("*") || pattern.includes("?")) {
     // Escape all regex metacharacters except * and ?
     const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
@@ -104,61 +104,78 @@ export function matchesArguments(
 }
 
 /**
+ * Converts CLI's PermissionPolicy to core's ToolPolicy
+ */
+function permissionPolicyToToolPolicy(
+  permission: PermissionPolicy,
+): ToolPolicy {
+  switch (permission) {
+    case "allow":
+      return "allowedWithoutPermission";
+    case "ask":
+      return "allowedWithPermission";
+    case "exclude":
+      return "disabled";
+    default:
+      return "allowedWithPermission";
+  }
+}
+
+/**
  * Evaluates a tool call request against a set of permission policies.
  * Returns the permission for the first matching policy.
  */
 export function checkToolPermission(
   toolCall: ToolCallRequest,
-  permissions?: ToolPermissions,
+  permissions: ToolPermissions,
 ): PermissionCheckResult {
-  // Get permissions from service if not provided
-  let policies = permissions?.policies;
+  const policies = permissions.policies;
 
-  if (!policies) {
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
-
-    // Only use defaults if service is not ready, not registered, or has no value
-    // This allows critical runtime errors to propagate properly
-    if (serviceResult.state !== "ready" || !serviceResult.value) {
-      policies = DEFAULT_TOOL_POLICIES;
-    } else {
-      policies =
-        serviceResult.value.permissions.policies || DEFAULT_TOOL_POLICIES;
-    }
-  }
+  // First, get the base permission from static policies
+  let basePermission: PermissionPolicy = "ask";
+  let matchedPolicy = undefined;
 
   for (const policy of policies) {
     if (
       matchesToolPattern(toolCall.name, policy.tool, toolCall.arguments) &&
       matchesArguments(toolCall.arguments, policy.argumentMatches)
     ) {
-      return {
-        permission: policy.permission,
-        matchedPolicy: policy,
-      };
+      basePermission = policy.permission;
+      matchedPolicy = policy;
+      break;
     }
   }
 
-  // Fallback to "ask" if no policy matches
-  return {
-    permission: "ask",
-  };
-}
+  // Check if tool has dynamic policy evaluation
+  const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolCall.name);
+  if (tool?.evaluateToolCallPolicy) {
+    // Convert CLI permission to core policy
+    const basePolicy = permissionPolicyToToolPolicy(basePermission);
 
-/**
- * Filters out tools that have "exclude" permission from a list of tool names.
- */
-export function filterExcludedTools(
-  toolNames: string[],
-  permissions?: ToolPermissions,
-): string[] {
-  return toolNames.filter((toolName) => {
-    const result = checkToolPermission(
-      { name: toolName, arguments: {} },
-      permissions,
+    // Evaluate the dynamic policy
+    const evaluatedPolicy = tool.evaluateToolCallPolicy(
+      basePolicy,
+      toolCall.arguments,
     );
-    return result.permission !== "exclude";
-  });
+
+    // If dynamic evaluation says disabled, that ALWAYS takes precedence
+    if (evaluatedPolicy === "disabled") {
+      return {
+        permission: "exclude",
+        matchedPolicy,
+      };
+    }
+
+    // Otherwise, user preference wins - return the original base permission
+    return {
+      permission: basePermission,
+      matchedPolicy,
+    };
+  }
+
+  // No dynamic evaluation, return static result
+  return {
+    permission: basePermission,
+    matchedPolicy,
+  };
 }

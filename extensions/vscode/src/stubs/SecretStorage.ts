@@ -62,6 +62,14 @@ export class SecretStorage {
     const key = await this.getOrCreateEncryptionKey();
     const data = fs.readFileSync(filePath);
 
+    // Validate minimum data size to detect corruption early
+    const minSize = this.saltLength + this.ivLength + this.tagLength;
+    if (data.length < minSize) {
+      throw new Error(
+        `Corrupted cache file: insufficient data (${data.length} bytes, expected at least ${minSize})`,
+      );
+    }
+
     const salt = data.subarray(0, this.saltLength);
     const iv = data.subarray(this.saltLength, this.saltLength + this.ivLength);
     const tag = data.subarray(
@@ -104,5 +112,13 @@ export class SecretStorage {
       return value;
     }
     return undefined;
+  }
+
+  async delete(key: string): Promise<void> {
+    const filePath = this.keyToFilepath(key);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`Successfully deleted cache file: ${filePath}`);
+    }
   }
 }

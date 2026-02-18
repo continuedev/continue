@@ -3,12 +3,17 @@ import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 export interface ConfigValidationError {
   fatal: boolean;
   message: string;
+  uri?: string;
 }
 
 export interface ConfigResult<T> {
   config: T | undefined;
   errors: ConfigValidationError[] | undefined;
   configLoadInterrupted: boolean;
+}
+
+function containsUnicode(str: string): boolean {
+  return /[^\x00-\x7F]/.test(str);
 }
 
 export function validateConfigYaml(
@@ -30,6 +35,25 @@ export function validateConfigYaml(
   config.models?.forEach((model) => {
     if ("uses" in model) {
       return;
+    }
+
+    // request headers to the llm api should not contain unicode characters
+    if (model.apiKey && containsUnicode(model.apiKey)) {
+      errors.push({
+        fatal: true,
+        message: `Model "${model.name}" has an API key containing unicode characters. API keys should only contain ASCII characters.`,
+      });
+    }
+
+    if (model.requestOptions?.headers) {
+      for (const [key, value] of Object.entries(model.requestOptions.headers)) {
+        if (containsUnicode(key) || containsUnicode(value)) {
+          errors.push({
+            fatal: true,
+            message: `Model "${model.name}" has a request header "${key}" containing unicode characters. Request headers should only contain ASCII characters.`,
+          });
+        }
+      }
     }
     // Max tokens not too close to context length
     if (

@@ -1,29 +1,29 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { modeService } from "../services/ModeService.js";
-
+import { services } from "../services/index.js";
+const toolPermissionService = services.toolPermissions;
 describe("UserInput Keyboard Shortcuts", () => {
   beforeEach(() => {
     // Reset to normal mode for each test
-    modeService.initialize({});
+    toolPermissionService.initialize({});
   });
 
   describe("mode cycling logic", () => {
     it("should cycle through modes in correct order", () => {
       // Initially should be normal mode
-      expect(modeService.getCurrentMode()).toBe("normal");
+      expect(toolPermissionService.getCurrentMode()).toBe("normal");
 
       // Cycle to plan
-      modeService.switchMode("plan");
-      expect(modeService.getCurrentMode()).toBe("plan");
+      toolPermissionService.switchMode("plan");
+      expect(toolPermissionService.getCurrentMode()).toBe("plan");
 
       // Cycle to auto
-      modeService.switchMode("auto");
-      expect(modeService.getCurrentMode()).toBe("auto");
+      toolPermissionService.switchMode("auto");
+      expect(toolPermissionService.getCurrentMode()).toBe("auto");
 
       // Cycle back to normal
-      modeService.switchMode("normal");
-      expect(modeService.getCurrentMode()).toBe("normal");
+      toolPermissionService.switchMode("normal");
+      expect(toolPermissionService.getCurrentMode()).toBe("normal");
     });
 
     it("should cycle through all modes sequentially", () => {
@@ -32,8 +32,8 @@ describe("UserInput Keyboard Shortcuts", () => {
       // Test cycling through all modes
       for (let i = 0; i < modes.length * 2; i++) {
         const expectedMode = modes[i % modes.length];
-        modeService.switchMode(expectedMode);
-        expect(modeService.getCurrentMode()).toBe(expectedMode);
+        toolPermissionService.switchMode(expectedMode);
+        expect(toolPermissionService.getCurrentMode()).toBe(expectedMode);
       }
     });
   });

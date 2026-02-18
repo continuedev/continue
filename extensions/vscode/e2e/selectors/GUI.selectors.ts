@@ -47,11 +47,12 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, "tool-call-title");
   }
 
-  public static getToolButton(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      `block-settings-toolbar-icon-tools`,
-    );
+  public static getToolsTab(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "tab-tools");
+  }
+
+  public static getBackButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "tab-back");
   }
 
   public static getToolPolicyButton(view: WebView, toolName: string) {
@@ -148,6 +149,10 @@ export class GUISelectors {
 
   public static getHistoryNavButton(view: WebView) {
     return SelectorUtils.getElementByAriaLabel(view, "View History");
+  }
+
+  public static getSettingsNavButton(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "Open Settings");
   }
 
   public static getNewSessionNavButton(view: WebView) {

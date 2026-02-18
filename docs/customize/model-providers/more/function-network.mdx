@@ -11,13 +11,17 @@ To get an API key, login to the Function Network Developer Platform. If you don'
 
 </Info>
 
-## Chat model
+## Chat Model
 
 Function Network supports a number of models for chat. We recommend using LLama 3.1 70b or Qwen2.5-Coder-32B-Instruct.
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Llama 3.1 70b
       provider: function-network
@@ -45,13 +49,17 @@ Function Network supports a number of models for chat. We recommend using LLama 
 
 [Click here](https://docs.function.network/models-supported/chat-and-code-completion) to see a list of chat model providers.
 
-## Autocomplete model
+## Autocomplete Model
 
 Function Network supports a number of models for autocomplete. We recommend using Llama 3.1 8b or Qwen2.5-Coder-1.5B.
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Deepseek Coder 6.7b
       provider: function-network
@@ -75,13 +83,17 @@ Function Network supports a number of models for autocomplete. We recommend usin
   </Tab>
 </Tabs>
 
-## Embeddings model
+## Embeddings Model
 
 Function Network supports a number of models for embeddings. We recommend using baai/bge-base-en-v1.5.
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: BGE Base En
       provider: function-network
@@ -106,6 +118,6 @@ Function Network supports a number of models for embeddings. We recommend using 
 
 [Click here](https://docs.function.network/models-supported/embeddings) to see a list of embeddings model providers.
 
-## Reranking model
+## Reranking Model
 
 Function Network currently does not offer any reranking models.

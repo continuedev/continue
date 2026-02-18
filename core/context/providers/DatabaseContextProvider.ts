@@ -19,7 +19,7 @@ class DatabaseContextProvider extends BaseContextProvider {
   };
 
   get deprecationMessage() {
-    return "The database context provider is deprecated and may be removed in a later version. Please consider using a database MCP server like postgres-mcp (https://hub.continue.dev/anthropic/postgres-mcp) instead.";
+    return "The database context provider is deprecated and may be removed in a later version. Please consider using a database MCP server like postgres-mcp (https://continue.dev/anthropic/postgres-mcp) instead.";
   }
 
   async getContextItems(

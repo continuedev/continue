@@ -3,13 +3,41 @@ import { isModelInstaller } from "core/llm";
 import * as vscode from "vscode";
 
 /**
- * @param error Handles common LLM errors. Currently only handles Ollama-related errors.
+ * @param error Handles common LLM errors. Currently handles Ollama and Lemonade-related errors.
  * @returns true if error is handled, false otherwise
  */
 export async function handleLLMError(error: unknown): Promise<boolean> {
   if (!error || !(error instanceof Error) || !error.message) {
     return false;
   }
+
+  // Handle Lemonade errors
+  if (error.message.toLowerCase().includes("lemonade")) {
+    let message: string = error.message;
+    let options: string[] | undefined;
+
+    // For Windows, offer to start Lemonade if it's installed but not running
+    if (
+      process.platform === "win32" &&
+      message.includes("Lemonade server may not be running")
+    ) {
+      options = ["Start Lemonade", "Setup Instructions"];
+    } else {
+      // For all other cases (Linux, not installed, etc.), direct to setup instructions
+      options = ["Setup Instructions"];
+    }
+
+    vscode.window.showErrorMessage(message, ...options).then((val) => {
+      if (val === "Setup Instructions") {
+        vscode.env.openExternal(vscode.Uri.parse("https://lemonade-server.ai"));
+      } else if (val === "Start Lemonade") {
+        vscode.commands.executeCommand("continue.startLocalLemonade");
+      }
+    });
+    return true;
+  }
+
+  // Handle Ollama errors
   if (!error.message.toLowerCase().includes("ollama")) {
     return false;
   }

@@ -1,5 +1,5 @@
 import { Editor } from "@tiptap/react";
-import { KeyboardEvent } from "react";
+import { KeyboardEvent, useRef } from "react";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../../../util";
 import {
   handleJetBrainsOSRMetaKeyIssues,
@@ -13,6 +13,7 @@ export function useEditorEventHandlers(options: {
   setActiveKey: (key: string | null) => void;
 }) {
   const { editor, isOSREnabled, editorFocusedRef, setActiveKey } = options;
+  const metaActiveRef = useRef(false);
 
   /**
    * This handles various issues with meta key actions
@@ -31,9 +32,13 @@ export function useEditorEventHandlers(options: {
       return;
     }
 
-    setActiveKey(e.key);
-
     if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
+
+    // Only set activeKey for Meta/Control/Alt to drive toolbar highlighting
+    if (e.key === "Meta" || e.key === "Control" || e.key === "Alt") {
+      setActiveKey(e.key);
+      metaActiveRef.current = true;
+    }
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
@@ -42,7 +47,12 @@ export function useEditorEventHandlers(options: {
     }
   };
 
-  const handleKeyUp = () => setActiveKey(null);
+  const handleKeyUp = () => {
+    if (metaActiveRef.current) {
+      setActiveKey(null);
+      metaActiveRef.current = false;
+    }
+  };
 
   return { handleKeyDown, handleKeyUp };
 }

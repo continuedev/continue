@@ -6,9 +6,9 @@ type LocalStorageTypes = {
   hasDismissedExploreDialog: boolean;
   onboardingStatus?: OnboardingStatus;
   hasDismissedOnboardingCard: boolean;
+  mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   vsCodeUriScheme: string;
-  ftc: number;
   fontSize: number;
   [key: `inputHistory_${string}`]: JSONContent[];
   extensionVersion: string;
@@ -16,6 +16,7 @@ type LocalStorageTypes = {
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
   hasExitedFreeTrial: boolean;
+  hasDismissedCliInstallBanner: boolean;
 };
 
 export enum LocalStorageKey {
@@ -49,4 +50,11 @@ export function setLocalStorage<T extends keyof LocalStorageTypes>(
   value: LocalStorageTypes[T],
 ): void {
   localStorage.setItem(key, JSON.stringify(value));
+
+  // Dispatch custom event to notify current tab listeners
+  window.dispatchEvent(
+    new CustomEvent("localStorageChange", {
+      detail: { key, value },
+    }),
+  );
 }

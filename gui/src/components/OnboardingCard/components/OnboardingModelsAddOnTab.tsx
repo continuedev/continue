@@ -1,94 +1,57 @@
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { CheckIcon } from "@heroicons/react/24/outline";
+import { useContext } from "react";
 import { Button } from "../..";
+import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getLocalStorage } from "../../../util/localStorage";
+import { useAppDispatch } from "../../../redux/hooks";
+import { selectFirstHubProfile } from "../../../redux/thunks/selectFirstHubProfile";
 import { useOnboardingCard } from "../hooks/useOnboardingCard";
 
 /**
- * Models Add-On tab component displaying pricing and tier information
+ * Models Add-On tab component with two-step onboarding:
+ * 1. Create Account - Uses auth.login(true) to sign up and redirect back to IDE
+ * 2. Purchase Credits - Opens /settings/billing to purchase credits
  */
 export function OnboardingModelsAddOnTab() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { close } = useOnboardingCard();
-  const [isPolling, setIsPolling] = useState(false);
+  const auth = useAuth();
+  const dispatch = useAppDispatch();
 
-  const isJetbrains = getLocalStorage("ide") === "jetbrains";
+  const isLoggedIn = !!auth.session;
 
-  // Polling effect for JetBrains
-  // This is because jetbrains doesn't support deeplinking the same way as VS Code
-  useEffect(() => {
-    if (!isPolling || !isJetbrains) return;
-
-    const interval = setInterval(() => {
-      ideMessenger.post("config/refreshProfiles", {
-        reason: "Jetbrains onboarding polling",
-        selectProfileId: "local",
-      });
-    }, 7000);
-
-    return () => clearInterval(interval);
-  }, [isPolling, isJetbrains, ideMessenger]);
-
-  function openPricingPage() {
-    ideMessenger.post("controlPlane/openUrl", {
-      path: "pricing",
+  function handleCreateAccount() {
+    void auth.login(true).then((success) => {
+      if (success) {
+        // A new assistant is created when the account is created
+        // Switch to it immediately
+        void dispatch(selectFirstHubProfile());
+        ideMessenger.post("showToast", ["info", "Account created!"]);
+      }
     });
   }
 
-  async function handleUpgrade() {
-    try {
-      const response = await ideMessenger.request(
-        "controlPlane/getModelsAddOnUpgradeUrl",
-        {
-          vsCodeUriScheme: getLocalStorage("vsCodeUriScheme"),
-        },
-      );
-
-      if (response.status === "success" && response.content?.url) {
-        await ideMessenger.request("openUrl", response.content.url);
-      } else {
-        console.error("Failed to get upgrade URL");
-        openPricingPage();
-      }
-    } catch (error) {
-      console.error("Error during upgrade process:", error);
-      openPricingPage();
-    } finally {
-      if (isJetbrains) {
-        setIsPolling(true);
-      } else {
-        close();
-      }
-    }
+  function handlePurchaseCredits() {
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "settings/billing",
+    });
+    close();
   }
 
-  // Show polling UI for JetBrains after upgrade
-  if (isPolling && isJetbrains) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center text-center">
-        <h2 className="text-foreground mb-4 items-center text-lg font-semibold">
-          <ArrowPathIcon className="text-foreground animate-spin-slow mr-2 h-4 w-4" />
-          You may close this dialog after upgrading
-        </h2>
-      </div>
-    );
+  function openPricingPage() {
+    void ideMessenger.request("controlPlane/openUrl", {
+      path: "pricing",
+    });
   }
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center text-center">
       <div className="mb-4 flex flex-col items-center text-center">
-        <div className="mb-1">
-          <h2 className="text-foreground mb-1 text-2xl font-semibold">
-            Models Add-on
-          </h2>
-        </div>
+        <h2 className="text-foreground mb-1 text-2xl font-semibold">
+          Models Add-on
+        </h2>
 
-        <div className="bg-badge text-badge-foreground mb-4 rounded-full px-3 py-1 text-xs font-medium">
-          $20/month
-        </div>
-
-        <span className="text-description text-base">
+        <span className="text-description text-xs">
           Use a{" "}
           <span
             className="cursor-pointer underline hover:brightness-125"
@@ -96,40 +59,71 @@ export function OnboardingModelsAddOnTab() {
           >
             variety of frontier models
           </span>{" "}
-          for a flat monthly fee
+          at cost.
         </span>
       </div>
 
-      <div className="mb-6 mt-4 space-y-3 text-left">
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Base Tier:</span> 500 Chat/Edit and 25,000
-          Autocomplete requests per month
-        </p>
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Plus Tier (2.5x):</span> 1,250 Chat/Edit
-          and 62,500 Autocomplete requests per month
-        </p>
-        <p className="text-foreground text-sm">
-          <span className="font-bold">Pro Tier (5x):</span> 2,500 Chat/Edit and
-          125,000 Autocomplete requests per month
-        </p>
-      </div>
+      {/* Vertical step indicators */}
+      <div className="flex w-full flex-col gap-4">
+        {/* Step 1: Create Account */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div
+              className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium ring-1 ring-inset ${
+                isLoggedIn
+                  ? "bg-green-500 text-white ring-green-500"
+                  : "text-foreground ring-foreground bg-transparent"
+              }`}
+            >
+              {isLoggedIn ? <CheckIcon className="h-3 w-3" /> : "1"}
+            </div>
+            <span
+              className={`text-sm ${isLoggedIn ? "text-description" : "text-foreground font-medium"}`}
+            >
+              Create Account
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-5 flex-shrink-0" />
+            <Button
+              onClick={handleCreateAccount}
+              className="flex-1"
+              disabled={isLoggedIn}
+            >
+              Create Account
+            </Button>
+          </div>
+        </div>
 
-      <div className="w-full">
-        <Button onClick={handleUpgrade} className="w-full max-w-xs">
-          Upgrade
-        </Button>
-      </div>
-      <div className="w-full text-center">
-        <span className="text-description">
-          <span
-            className="cursor-pointer underline hover:brightness-125"
-            onClick={openPricingPage}
-          >
-            Click here
-          </span>{" "}
-          to view pricing details
-        </span>
+        {/* Step 2: Purchase Credits */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div
+              className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium ring-1 ring-inset ${
+                isLoggedIn
+                  ? "text-foreground ring-foreground bg-transparent"
+                  : "text-description ring-description bg-transparent"
+              }`}
+            >
+              2
+            </div>
+            <span
+              className={`text-sm ${isLoggedIn ? "text-foreground font-medium" : "text-description"}`}
+            >
+              Purchase Credits
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-5 flex-shrink-0" />
+            <Button
+              onClick={handlePurchaseCredits}
+              className="flex-1"
+              disabled={!isLoggedIn}
+            >
+              Purchase Credits
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

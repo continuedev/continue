@@ -1,0 +1,34 @@
+---
+title: "How Autocomplete Works in Continue"
+sidebarTitle: "How Autocomplete Works"
+description: "Understand how Continue's autocomplete works, including timing optimization, context retrieval from your codebase, and filtering to improve AI code suggestions."
+---
+
+## Timing Optimization for Autocomplete
+
+In order to display suggestions quickly, without sending too many requests, we do the following:
+
+- Debouncing: If you are typing quickly, we won't make a request on each keystroke. Instead, we wait until you have finished.
+- Caching: If your cursor is in a position that we've already generated a completion for, this completion is reused. For example, if you backspace, we'll be able to immediately show the suggestion you saw before.
+
+## Context Retrieval from Your Codebase
+
+Continue uses a number of retrieval methods to find relevant snippets from your codebase to include in the prompt.
+
+## Filtering and Post-Processing AI Suggestions
+
+Language models aren't perfect, but can be made much closer by adjusting their output. We do extensive post-processing on responses before displaying a suggestion, including:
+
+- Removing special tokens
+- Stopping early when regenerating code to avoid long, irrelevant output
+- Fixing indentation for proper formatting
+- Occasionally discarding low-quality responses, such as those with excessive repetition
+
+You can learn more about how it works in the [Autocomplete deep dive](/customize/models#autocomplete).
+
+<Info>
+  **Looking for AI that predicts your next changes or additions?** Check out
+  [Next Edit](/ide-extensions/autocomplete/next-edit), an experimental feature that
+  proactively suggests code changes before you even start typing, going beyond
+  traditional autocomplete to anticipate entire code modifications.
+</Info>

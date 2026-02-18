@@ -35,7 +35,6 @@ const rootReducer = combineReducers({
 
 const saveSubsetFilters = [
   createFilter("session", [
-    "history",
     "id",
     "lastSessionId",
     "title",
@@ -53,7 +52,12 @@ const saveSubsetFilters = [
     "codeToEdit",
   ]),
   createFilter("config", []),
-  createFilter("ui", ["toolSettings", "toolGroupSettings", "ruleSettings"]),
+  createFilter("ui", [
+    "toolSettings",
+    "toolGroupSettings",
+    "ruleSettings",
+    "reasoningSettings",
+  ]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
   createFilter("profiles", [
@@ -73,7 +77,6 @@ const migrations: MigrationManifest = {
         defaultModelTitle: oldState?.state?.defaultModelTitle ?? undefined,
       },
       session: {
-        history: oldState?.state?.history ?? [],
         id: oldState?.state?.sessionId ?? "",
       },
       tabs: {

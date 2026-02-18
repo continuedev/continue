@@ -28,7 +28,7 @@ export function ReusableCard({
 }: ReusableCardProps) {
   return (
     <StyledCard
-      className={`xs:py-4 xs:px-4 relative px-2 py-3 ${className}`}
+      className={`xs:py-4 xs:px-4 relative px-2 !pt-0 pb-3 ${className}`}
       data-testid={testId}
     >
       {showCloseButton && (
@@ -36,7 +36,7 @@ export function ReusableCard({
           <XMarkIcon className="flex h-5 w-5 hover:brightness-125" />
         </CloseButton>
       )}
-      <div className="content py-2">{children}</div>
+      <div className="content">{children}</div>
     </StyledCard>
   );
 }

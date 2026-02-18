@@ -17,8 +17,9 @@ import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
+import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
-import Deepseek from "./Deepseek";
+import DeepSeek from "./DeepSeek";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -33,13 +34,16 @@ import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LlamaStack from "./LlamaStack";
+import Lemonade from "./Lemonade";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
+import Mimo from "./Mimo";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Nous from "./Nous";
 import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
@@ -66,6 +70,7 @@ import xAI from "./xAI";
 export const LLMClasses = [
   Anthropic,
   Cohere,
+  CometAPI,
   FunctionNetwork,
   Gemini,
   Llamafile,
@@ -82,8 +87,10 @@ export const LLMClasses = [
   LlamaCpp,
   OpenAI,
   OVHcloud,
+  Lemonade,
   LMStudio,
   Mistral,
+  Mimo,
   Bedrock,
   BedrockImport,
   SageMaker,
@@ -94,7 +101,7 @@ export const LLMClasses = [
   NCompass,
   ContinueProxy,
   Cloudflare,
-  Deepseek,
+  DeepSeek,
   Docker,
   Msty,
   Azure,
@@ -108,6 +115,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Nous,
   Venice,
   VertexAI,
   xAI,

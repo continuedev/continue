@@ -1,7 +1,6 @@
 import { vi } from "vitest";
-import type { AuthConfig } from "../../auth/workos.js";
 
-export const isAuthenticated = vi.fn(() => false);
+export const isAuthenticated = vi.fn(() => Promise.resolve(false));
 export const isAuthenticatedConfig = vi.fn(() => false);
 export const isEnvironmentAuthConfig = vi.fn(() => false);
 export const loadAuthConfig = vi.fn(() => null);

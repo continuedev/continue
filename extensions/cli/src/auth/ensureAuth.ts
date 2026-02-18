@@ -9,7 +9,7 @@ import { isAuthenticated, login } from "./workos.js";
 export async function ensureAuthenticated(
   requireAuth: boolean = true,
 ): Promise<boolean> {
-  if (isAuthenticated()) {
+  if (await isAuthenticated()) {
     return true;
   }
 

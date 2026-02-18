@@ -1,4 +1,9 @@
-import { ChatMessage, ModelCapability, TemplateType } from "../index.js";
+import {
+  ChatMessage,
+  ModelCapability,
+  ModelDescription,
+  TemplateType,
+} from "../index.js";
 import { NEXT_EDIT_MODELS } from "./constants.js";
 
 import {
@@ -6,6 +11,7 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   codestralTemplateMessages,
+  deepseekFimTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -40,6 +46,7 @@ import {
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
+  "lemonade",
   "openai",
   "nvidia",
   "ollama",
@@ -52,16 +59,60 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "sagemaker",
   "continue-proxy",
   "mistral",
+  "mimo",
   "sambanova",
   "vertexai",
   "watsonx",
   "nebius",
   "relace",
+  "openrouter",
+  "deepseek",
+  "xAI",
+  "groq",
+  "gemini",
+  "docker",
+  "nous",
+  // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
+  // Asksage.ts
+  // Azure.ts
+  // BedrockImport.ts
+  // Cerebras.ts
+  // Cloudflare.ts
+  // CometAPI.ts
+  // CustomLLM.ts
+  // DeepInfra.ts
+  // Fireworks.ts
+  // Flowise.ts
+  // FunctionNetwork.ts
+  // HuggingFaceInferenceAPI.ts
+  // HuggingFaceTEI.ts
+  // HuggingFaceTGI.ts
+  // Inception.ts
+  // Kindo.ts
+  // LlamaCpp.ts
+  // LlamaStack.ts
+  // Llamafile.ts
+  // Mock.ts
+  // Moonshot.ts
+  // NCompass.ts
+  // OVHcloud.ts
+  // Replicate.ts
+  // Scaleway.ts
+  // SiliconFlow.ts
+  // TARS.ts
+  // Test.ts
+  // TextGenWebUI.ts
+  // TransformersJsEmbeddingsProvider.ts
+  // Venice.ts
+  // Vllm.ts
+  // Voyage.ts
+  // etc
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
+  "lemonade",
   "cohere",
   "gemini",
   "msty",
@@ -80,26 +131,26 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
 ];
 
-const MODEL_SUPPORTS_IMAGES: string[] = [
-  "llava",
-  "gpt-4-turbo",
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4-vision",
-  "claude-3",
-  "c4ai-aya-vision-8b",
-  "c4ai-aya-vision-32b",
-  "gemini-ultra",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash",
-  "sonnet",
-  "opus",
-  "haiku",
-  "pixtral",
-  "llama3.2",
-  "llama-3.2",
-  "llama4",
-  "granite-vision",
+const MODEL_SUPPORTS_IMAGES: RegExp[] = [
+  /llava/,
+  /gpt-4-turbo/,
+  /gpt-4o/,
+  /gpt-4o-mini/,
+  /claude-3/,
+  /gemini-ultra/,
+  /gemini-1\.5-pro/,
+  /gemini-1\.5-flash/,
+  /sonnet/,
+  /opus/,
+  /haiku/,
+  /pixtral/,
+  /llama-?3\.2/,
+  /llama-?4/, // might use something like /llama-?(?:[4-9](?:\.\d+)?|\d{2,}(?:\.\d+)?)/ for forward compat, if needed
+  /\bgemma-?3(?!n)/, // gemma3 supports vision, but gemma3n doesn't!
+  /\b(pali|med)gemma/,
+  /qwen(.*)vl/,
+  /mistral-small/,
+  /mistral-medium/,
 ];
 
 function modelSupportsImages(
@@ -115,10 +166,14 @@ function modelSupportsImages(
     return false;
   }
 
-  const lower = model.toLowerCase();
+  const lowerModel = model.toLowerCase();
+  const lowerTitle = title?.toLowerCase() ?? "";
+
   if (
+    lowerModel.includes("vision") ||
+    lowerTitle.includes("vision") ||
     MODEL_SUPPORTS_IMAGES.some(
-      (modelName) => lower.includes(modelName) || title?.includes(modelName),
+      (modelrx) => modelrx.test(lowerModel) || modelrx.test(lowerTitle),
     )
   ) {
     return true;
@@ -126,6 +181,39 @@ function modelSupportsImages(
 
   return false;
 }
+
+function modelSupportsReasoning(
+  model: ModelDescription | null | undefined,
+): boolean {
+  if (!model) {
+    return false;
+  }
+  if (model.completionOptions?.reasoning !== undefined) {
+    // Reasoning support is forced at the config level. Model might not necessarily support it though!
+    return model.completionOptions.reasoning;
+  }
+  // Seems our current way of disabling reasoning is not working for grok code so results in useless lightbulb
+  // if (model.model.includes("grok-code")) {
+  //   return true;
+  // }
+  // do not turn reasoning on by default for claude 3 models
+  if (
+    model.model.includes("claude") &&
+    !model.model.includes("-3-") &&
+    !model.model.includes("-3.5-")
+  ) {
+    return true;
+  }
+  if (model.model.includes("command-a-reasoning")) {
+    return true;
+  }
+  if (model.model.includes("deepseek-r")) {
+    return true;
+  }
+
+  return false;
+}
+
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
@@ -146,6 +234,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "deepseek",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
@@ -170,6 +259,8 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("moonshot") ||
     modelName.includes("kimi") ||
     modelName.includes("mercury") ||
+    modelName.includes("deepseek-chat") ||
+    modelName.includes("deepseek-reasoner") ||
     /^o\d/.test(modelName)
   );
 }
@@ -276,7 +367,14 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("deepseek")) {
+    if (lower.includes("deepseek-fim-beta")) {
+      return "deepseek-fim-beta";
+    }
     return "deepseek";
+  }
+
+  if (lower.includes("hermes")) {
+    return "chatml";
   }
 
   if (lower.includes("ninja") || lower.includes("openchat")) {
@@ -330,6 +428,7 @@ function autodetectTemplateFunction(
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       codestral: codestralTemplateMessages,
+      "deepseek-fim-beta": deepseekFimTemplateMessages,
       none: null,
     };
 
@@ -354,6 +453,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "xwin-coder",
   "zephyr",
   "llama3",
+  "deepseek-fim-beta",
 ];
 
 function autodetectPromptTemplates(
@@ -405,6 +505,9 @@ function autodetectPromptTemplates(
     editTemplate = gptEditPrompt;
   } else if (model.includes("codestral")) {
     editTemplate = osModelsEditPrompt;
+  } else if (["deepseek-chat", "deepseek-reasoner"].includes(model)) {
+    console.warn("=== DeepSeek edit template ===", model);
+    editTemplate = osModelsEditPrompt;
   }
 
   if (editTemplate !== null) {
@@ -421,4 +524,5 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
+  modelSupportsReasoning,
 };

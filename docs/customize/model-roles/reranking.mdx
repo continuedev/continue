@@ -7,12 +7,12 @@ sidebar_position: 6
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, rerankers are designated using the `rerank` role and used by [@Codebase](../context/codebase) in order to select the most relevant code snippets after vector search.
+In Continue, rerankers are designated using the `rerank` role and used by [codebase awareness](/guides/codebase-documentation-awareness) in order to select the most relevant code snippets after vector search.
 
 ## Recommended reranking models
 
 <Info>
-  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customization/models#recommended-models).
+  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customize/models#recommended-models).
 </Info>
 
 If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, which is listed below along with the rest of the options for rerankers.
@@ -23,10 +23,21 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
 
 <Tabs>
   <Tab title="Hub">
-  [Voyage Rerank 2 Block](https://hub.continue.dev/voyageai/rerank-2)
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - uses: voyageai/rerank-2
+  ```
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: My Voyage Reranker
       provider: voyage
@@ -34,19 +45,6 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
       model: rerank-2
       roles:
         - rerank
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "voyage",
-        "params": {
-            "model": "rerank-2",
-            "apiKey": "<YOUR_VOYAGE_API_KEY>"
-        }
-    }
-  }
   ```
   </Tab>
 </Tabs>
@@ -58,10 +56,14 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
 <Tabs>
   {/* HUB_TODO block doesn't exist */}
   {/* <Tab title="Hub">
-  [Cohere Reranker English v3](https://hub.continue.dev/)
+  [Cohere Reranker English v3](https://continue.dev/)
   </Tab> */}
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: Cohere Reranker
       provider: cohere
@@ -69,19 +71,6 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
       apiKey: <YOUR_COHERE_API_KEY>
       roles:
         - rerank
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "cohere",
-        "params": {
-          "model": "rerank-english-v3.0",
-          "apiKey": "<YOUR_COHERE_API_KEY>"
-        }
-    }
-  }
   ```
   </Tab>
 </Tabs>
@@ -93,10 +82,14 @@ If you only have access to a single LLM, then you can use it as a reranker. This
 <Tabs>
   {/* HUB_TODO block doesn't exist */}
   {/* <Tab title="Hub">
-  [GPT-4o LLM Reranker Block](https://hub.continue.dev/)
+  [GPT-4o LLM Reranker Block](https://continue.dev/)
   </Tab> */}
   <Tab title="YAML">
   ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
   models:
     - name: LLM Reranker
       provider: openai
@@ -105,21 +98,9 @@ If you only have access to a single LLM, then you can use it as a reranker. This
         - rerank
   ```
   </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-        "name": "llm",
-        "params": {
-            "modelTitle": "My Model Title"
-        }
-    }
-  }
-  ```
-  </Tab>
 </Tabs>
 
-The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
 
 ### Text Embeddings Inference
 
@@ -128,10 +109,14 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
 <Tabs>
   {/* HUB_TODO */}
   {/* <Tab title="Hub">
-  [HuggingFace TEI Reranker block](https://hub.continue.dev/)
+  [HuggingFace TEI Reranker block](https://continue.dev/)
   </Tab> */}
     <Tab title="YAML">
     ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
     models:
       - name: Huggingface-tei Reranker
         provider: huggingface-tei
@@ -140,19 +125,6 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
         apiKey: <YOUR_TEI_API_KEY>
         roles:
           - rerank
-    ```
-    </Tab>
-    <Tab title="JSON">
-    ```json title="config.json"
-    {
-      "reranker": {
-        "name": "huggingface-tei",
-        "params": {
-          "apiBase": "http://localhost:8080",
-          "apiKey": "<YOUR_TEI_API_KEY>"
-        }
-      }
-    }
     ```
     </Tab>
 </Tabs>

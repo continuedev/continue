@@ -31,11 +31,17 @@ runs:
           packages/*/node_modules
         key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
 
-    - uses: actions/cache@v4  
+    - uses: actions/cache@v4
       if: inputs.include-root == 'true'
+      id: root-cache
       with:
         path: node_modules
         key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+    - name: Install root dependencies
+      if: inputs.include-root == 'true' && steps.root-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci
 
     - uses: actions/cache@v4
       id: component-cache

@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   release:
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
     uses: ./.github/workflows/reusable-release.yml
     with:
       package-name: "openai-adapters"
@@ -32,3 +34,5 @@ jobs:
       AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
       AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
       VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+      INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}

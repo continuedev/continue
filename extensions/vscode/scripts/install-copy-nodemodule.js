@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ncp = require("ncp").ncp;
+const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util");
 
@@ -43,6 +44,19 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     // Without this it seems the file isn't completely written to disk
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    // Remove existing destination directory to ensure fresh copy
+    // ncp's clobber option doesn't reliably overwrite cached files
+    const packageSubdir = packageName.replace("@lancedb/", "");
+    const destDir = path.join(
+      currentDir,
+      "node_modules",
+      toCopy,
+      packageSubdir,
+    );
+    if (fs.existsSync(destDir)) {
+      rimrafSync(destDir);
+    }
+
     // Copy the installed package back to the current directory
     await new Promise((resolve, reject) => {
       ncp(
@@ -64,7 +78,11 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     });
   } finally {
     // Clean up the temporary directory
-    // rimrafSync(tempDir);
+    try {
+      rimrafSync(tempDir);
+    } catch (err) {
+      console.warn("[warn] Failed to remove temp directory", tempDir, err);
+    }
 
     // Return to the original directory
     process.chdir(currentDir);

@@ -44,6 +44,19 @@ function createReplacer() {
       seen.add(value);
     }
 
+    // Handle Error objects explicitly - extract useful properties
+    if (value instanceof Error) {
+      const errorObj: any = {
+        name: value.name,
+        message: value.message,
+        stack: value.stack,
+      };
+      if (value.cause) {
+        errorObj.cause = value.cause;
+      }
+      return errorObj;
+    }
+
     // Handle functions
     if (typeof value === "function") {
       return "[Function]";
@@ -84,6 +97,7 @@ const logFormat = printf(
 
 // Track headless mode
 let isHeadlessMode = false;
+let isTTYlessEnvironment = false;
 
 // Create the winstonLogger instance
 const winstonLogger = winston.createLogger({
@@ -111,6 +125,23 @@ export function setLogLevel(level: string) {
 // Function to configure headless mode
 export function configureHeadlessMode(headless: boolean) {
   isHeadlessMode = headless;
+
+  // Detect TTY-less environment
+  isTTYlessEnvironment =
+    process.stdin.isTTY !== true &&
+    process.stdout.isTTY !== true &&
+    process.stderr.isTTY !== true;
+
+  // In TTY-less environments with headless mode, ensure output is line-buffered
+  if (headless && isTTYlessEnvironment) {
+    // Set encoding for consistent output
+    if (process.stdout.setDefaultEncoding) {
+      process.stdout.setDefaultEncoding("utf8");
+    }
+    if (process.stderr.setDefaultEncoding) {
+      process.stderr.setDefaultEncoding("utf8");
+    }
+  }
 }
 
 // Export winstonLogger methods

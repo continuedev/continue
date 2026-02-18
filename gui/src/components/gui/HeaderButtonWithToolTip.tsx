@@ -1,6 +1,5 @@
 import React from "react";
 import { type PlacesType } from "react-tooltip";
-import { v4 as uuidv4 } from "uuid";
 import { HeaderButton } from "..";
 import { ToolTip } from "./Tooltip";
 
@@ -25,15 +24,14 @@ const HeaderButtonWithToolTip = React.forwardRef<
   HTMLButtonElement,
   HeaderButtonWithToolTipProps
 >((props: HeaderButtonWithToolTipProps, ref) => {
-  const id = uuidv4();
-  const tooltipId = `header_button_${id}`;
-
   return (
-    <>
+    <ToolTip
+      place={props.tooltipPlacement ?? "bottom"}
+      content={<span className="text-xs">{props.text}</span>}
+    >
       <HeaderButton
         hoverBackgroundColor={props.hoverBackgroundColor}
         backgroundColor={props.backgroundColor}
-        data-tooltip-id={tooltipId}
         data-testid={props.testId}
         inverted={props.inverted}
         disabled={props.disabled}
@@ -46,11 +44,7 @@ const HeaderButtonWithToolTip = React.forwardRef<
       >
         {props.children}
       </HeaderButton>
-
-      <ToolTip id={tooltipId} place={props.tooltipPlacement ?? "bottom"}>
-        <span className="text-xs">{props.text}</span>
-      </ToolTip>
-    </>
+    </ToolTip>
   );
 });
 

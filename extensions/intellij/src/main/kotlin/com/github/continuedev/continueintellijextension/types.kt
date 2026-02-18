@@ -166,8 +166,6 @@ interface IDE {
 
     suspend fun getClipboardContent(): Map<String, String>
 
-    suspend fun isTelemetryEnabled(): Boolean
-
     suspend fun isWorkspaceRemote(): Boolean
 
     suspend fun getUniqueId(): String
@@ -188,6 +186,8 @@ interface IDE {
     suspend fun fileExists(filepath: String): Boolean
 
     suspend fun writeFile(path: String, contents: String)
+
+    suspend fun removeFile(path: String)
 
     suspend fun showVirtualFile(title: String, contents: String)
 
@@ -306,7 +306,13 @@ data class StreamDiffLinesPayload(
     val language: String?,
     val modelTitle: String?,
     val includeRulesInSystemMessage: Boolean,
-    val fileUri: String?
+    val fileUri: String?,
+    val isApply: Boolean
+)
+
+data class GetDiffLinesPayload(
+    val oldContent: String,
+    val newContent: String,
 )
 
 data class AcceptOrRejectDiffPayload(

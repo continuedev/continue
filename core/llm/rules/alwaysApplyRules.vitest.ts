@@ -15,7 +15,7 @@ describe("Rule application with alwaysApply", () => {
     rule: "This rule should always be applied",
     alwaysApply: true,
     source: "rules-block",
-    ruleFile: ".continue/always-apply.md",
+    sourceFile: ".continue/always-apply.md",
   };
 
   // Create a colocated rule in a nested directory
@@ -23,7 +23,7 @@ describe("Rule application with alwaysApply", () => {
     name: "Nested Directory Rule",
     rule: "This rule applies to files in the nested directory",
     source: "rules-block",
-    ruleFile: "nested-folder/rules.md",
+    sourceFile: "nested-folder/rules.md",
   };
 
   it("should apply alwaysApply rules even with no file references", () => {
@@ -145,7 +145,7 @@ describe("Rule application with alwaysApply", () => {
       rule: "This rule has alwaysApply: true but is blocked by rulePolicies",
       alwaysApply: true,
       source: "rules-block",
-      ruleFile: "src/some/path.md",
+      sourceFile: "src/some/path.md",
     };
 
     // Message with no code blocks or file references

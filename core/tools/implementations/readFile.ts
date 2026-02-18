@@ -1,37 +1,43 @@
-import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { resolveInputPath } from "../../util/pathResolver";
 import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { getStringArg } from "../parseArgs";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
-  throwIfFileIsSecurityConcern(filepath);
 
-  const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
-  if (!firstUriMatch) {
-    throw new Error(
-      `File "${filepath}" does not exist. You might want to check the path and try again.`,
+  // Resolve the path first to get the actual path for security check
+  const resolvedPath = await resolveInputPath(extras.ide, filepath);
+  if (!resolvedPath) {
+    throw new ContinueError(
+      ContinueErrorReason.FileNotFound,
+      `File "${filepath}" does not exist or is not accessible. You might want to check the path and try again.`,
     );
   }
-  const content = await extras.ide.readFile(firstUriMatch);
+
+  // Security check on the resolved display path
+  throwIfFileIsSecurityConcern(resolvedPath.displayPath);
+
+  const content = await extras.ide.readFile(resolvedPath.uri);
 
   await throwIfFileExceedsHalfOfContext(
-    filepath,
+    resolvedPath.displayPath,
     content,
     extras.config.selectedModelByRole.chat,
   );
 
   return [
     {
-      name: getUriPathBasename(firstUriMatch),
-      description: filepath,
+      name: getUriPathBasename(resolvedPath.uri),
+      description: resolvedPath.displayPath,
       content,
       uri: {
         type: "file",
-        value: firstUriMatch,
+        value: resolvedPath.uri,
       },
     },
   ];

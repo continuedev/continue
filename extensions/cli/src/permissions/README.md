@@ -13,8 +13,7 @@ The system comes with sensible default policies:
 - Read-only tools (`readFile`, `listFiles`, `searchCode`, `fetch`) are **allowed** by default
 - Write operations (`writeFile`) require **confirmation** (ask)
 - Terminal commands (`runTerminalCommand`) require **confirmation** (ask)
-- MCP tools with IDE prefix are **allowed** by default
-- Other MCP tools require **confirmation** (ask)
+- MCP tools and Bash require **confirmation** (ask) in TUI mode, but are **allowed** automatically in headless mode
 - Any unmatched tools default to **ask**
 
 ## How It Works
@@ -47,7 +46,7 @@ Tools with "allow" permission are executed immediately without user intervention
 
 ### Data Flow
 
-1. **Tool Loading**: `getAllTools()` in `streamChatResponse.ts` filters out excluded tools
+1. **Tool Loading**: `getAllowedTools()` in `streamChatResponse.ts` filters out excluded tools
 2. **Tool Execution**: Before executing each tool call, permissions are checked
 3. **User Interaction**: For "ask" policies, UI displays permission request
 4. **Execution**: Tool is executed or denied based on permission result
@@ -82,11 +81,4 @@ const result = checkToolPermission({
 if (result.permission === "ask") {
   // Request user permission
 }
-
-// Filter excluded tools
-const allowedTools = filterExcludedTools([
-  "readFile",
-  "dangerousTool",
-  "writeFile",
-]);
 ```

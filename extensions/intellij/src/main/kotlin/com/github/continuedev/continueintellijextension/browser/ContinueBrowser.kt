@@ -1,30 +1,34 @@
 package com.github.continuedev.continueintellijextension.browser
 
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
-import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.GsonService
 import com.github.continuedev.continueintellijextension.utils.uuid
-import com.google.gson.Gson
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 import javax.swing.JComponent
 
-class ContinueBrowser(private val project: Project) {
+class ContinueBrowser(
+    private val project: Project,
+    private val gsonService: GsonService = service<GsonService>(),
+): Disposable {
 
     private val log = Logger.getInstance(ContinueBrowser::class.java.simpleName)
     private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
+    private val myJSQueryOpenInBrowser = JBCefJSQuery.create(browser as JBCefBrowserBase)
 
     init {
         CefApp.getInstance().registerSchemeHandlerFactory("http", "continue", CustomSchemeHandlerFactory())
         browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 200)
-        val myJSQueryOpenInBrowser = JBCefJSQuery.create(browser as JBCefBrowserBase)
         myJSQueryOpenInBrowser.addHandler { msg: String? ->
-            val json = Gson().fromJson(msg, BrowserMessage::class.java)
+            val json = gsonService.gson.fromJson(msg, BrowserMessage::class.java)
             val messageType = json.messageType
             val data = json.data
             val messageId = json.messageId
@@ -81,10 +85,10 @@ class ContinueBrowser(private val project: Project) {
     }
 
     fun sendToWebview(messageType: String, data: Any? = null, messageId: String = uuid()) {
-        val json = Gson().toJson(BrowserMessage(messageType, messageId, data))
+        val json = gsonService.gson.toJson(BrowserMessage(messageType, messageId, data))
         val jsCode = """window.postMessage($json, "*");"""
         try {
-            browser.executeJavaScriptAsync(jsCode)
+            browser.cefBrowser.executeJavaScript(jsCode, getGuiUrl(), 0)
         } catch (error: IllegalStateException) {
             log.warn(error)
         }
@@ -98,6 +102,11 @@ class ContinueBrowser(private val project: Project) {
             }
             """
         browser.cefBrowser.executeJavaScript(script, getGuiUrl(), 0)
+    }
+
+    override fun dispose() {
+        Disposer.dispose(myJSQueryOpenInBrowser)
+        Disposer.dispose(browser)
     }
 
     // todo: remove and use types.Message

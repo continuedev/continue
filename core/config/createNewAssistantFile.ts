@@ -1,32 +1,29 @@
 import { IDE } from "..";
 import { joinPathsToUri } from "../util/uri";
 
-const DEFAULT_ASSISTANT_FILE = `# This is an example assistant configuration file
-# It is used to define custom AI assistants within Continue
-# Each assistant file can be accessed by selecting it from the assistant dropdown
+const DEFAULT_ASSISTANT_FILE = `# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
 
-# To learn more, see the full assistant reference: https://docs.continue.dev/reference
-
-name: Example Assistant
+name: Example Config
 version: 1.0.0
 schema: v1
 
-# Models define which AI models this assistant can use
+# Define which models can be used
+# https://docs.continue.dev/customization/models
 models:
   - name: my gpt-5
     provider: openai
     model: gpt-5
-    apiKey: YOUR_API_KEY_HERE
+    apiKey: YOUR_OPENAI_API_KEY_HERE
+  - uses: ollama/qwen2.5-coder-7b
+  - uses: anthropic/claude-4-sonnet
+    with:
+      ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}
 
-# Context providers define what information the assistant can access
-context:
-  - provider: code
-  - provider: docs
-  - provider: diff
-  - provider: terminal
-  - provider: problems
-  - provider: folder
-  - provider: codebase
+# MCP Servers that Continue can access
+# https://docs.continue.dev/customization/mcp-tools
+mcpServers:
+  - uses: anthropic/memory-mcp
 `;
 
 export async function createNewAssistantFile(
@@ -42,7 +39,7 @@ export async function createNewAssistantFile(
 
   const baseDirUri = joinPathsToUri(
     workspaceDirs[0],
-    assistantPath ?? ".continue/assistants",
+    assistantPath ?? ".continue/agents",
   );
 
   // Find the first available filename
@@ -50,10 +47,7 @@ export async function createNewAssistantFile(
   let assistantFileUri: string;
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
-    assistantFileUri = joinPathsToUri(
-      baseDirUri,
-      `new-assistant${suffix}.yaml`,
-    );
+    assistantFileUri = joinPathsToUri(baseDirUri, `new-config${suffix}.yaml`);
     counter++;
   } while (await ide.fileExists(assistantFileUri));
 

@@ -1,5 +1,6 @@
+import { AuthenticatedConfig } from "src/auth/workos-types.js";
+
 import {
-  AuthenticatedConfig,
   login as doLogin,
   logout as doLogout,
   ensureOrganization,
@@ -30,7 +31,7 @@ export class AuthService extends BaseService<AuthServiceState> {
    */
   async doInitialize(): Promise<AuthServiceState> {
     const authConfig = loadAuthConfig();
-    const authenticated = isAuthenticated();
+    const authenticated = await isAuthenticated();
 
     const state: AuthServiceState = {
       authConfig,

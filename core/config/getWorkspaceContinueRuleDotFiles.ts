@@ -16,7 +16,7 @@ export async function getWorkspaceContinueRuleDotFiles(ide: IDE) {
         const content = await ide.readFile(dotFile);
         rules.push({
           rule: content,
-          ruleFile: dotFile,
+          sourceFile: dotFile,
           source: ".continuerules",
         });
       }

@@ -1,183 +1,3 @@
-@font-face {
-  font-family: KaTeX_AMS;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_AMS-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_AMS-Regular.woff) format("woff"),
-    url(fonts/KaTeX_AMS-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Caligraphic;
-  font-style: normal;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2"),
-    url(fonts/KaTeX_Caligraphic-Bold.woff) format("woff"),
-    url(fonts/KaTeX_Caligraphic-Bold.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Caligraphic;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Caligraphic-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Caligraphic-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Fraktur;
-  font-style: normal;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_Fraktur-Bold.woff2) format("woff2"),
-    url(fonts/KaTeX_Fraktur-Bold.woff) format("woff"),
-    url(fonts/KaTeX_Fraktur-Bold.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Fraktur;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Fraktur-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Fraktur-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Fraktur-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Main;
-  font-style: normal;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_Main-Bold.woff2) format("woff2"),
-    url(fonts/KaTeX_Main-Bold.woff) format("woff"),
-    url(fonts/KaTeX_Main-Bold.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Main;
-  font-style: italic;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_Main-BoldItalic.woff2) format("woff2"),
-    url(fonts/KaTeX_Main-BoldItalic.woff) format("woff"),
-    url(fonts/KaTeX_Main-BoldItalic.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Main;
-  font-style: italic;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Main-Italic.woff2) format("woff2"),
-    url(fonts/KaTeX_Main-Italic.woff) format("woff"),
-    url(fonts/KaTeX_Main-Italic.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Main;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Main-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Main-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Main-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Math;
-  font-style: italic;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_Math-BoldItalic.woff2) format("woff2"),
-    url(fonts/KaTeX_Math-BoldItalic.woff) format("woff"),
-    url(fonts/KaTeX_Math-BoldItalic.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Math;
-  font-style: italic;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Math-Italic.woff2) format("woff2"),
-    url(fonts/KaTeX_Math-Italic.woff) format("woff"),
-    url(fonts/KaTeX_Math-Italic.ttf) format("truetype");
-}
-@font-face {
-  font-family: "KaTeX_SansSerif";
-  font-style: normal;
-  font-weight: 700;
-  src:
-    url(fonts/KaTeX_SansSerif-Bold.woff2) format("woff2"),
-    url(fonts/KaTeX_SansSerif-Bold.woff) format("woff"),
-    url(fonts/KaTeX_SansSerif-Bold.ttf) format("truetype");
-}
-@font-face {
-  font-family: "KaTeX_SansSerif";
-  font-style: italic;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_SansSerif-Italic.woff2) format("woff2"),
-    url(fonts/KaTeX_SansSerif-Italic.woff) format("woff"),
-    url(fonts/KaTeX_SansSerif-Italic.ttf) format("truetype");
-}
-@font-face {
-  font-family: "KaTeX_SansSerif";
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_SansSerif-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_SansSerif-Regular.woff) format("woff"),
-    url(fonts/KaTeX_SansSerif-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Script;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Script-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Script-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Script-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Size1;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Size1-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Size1-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Size1-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Size2;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Size2-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Size2-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Size2-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Size3;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Size3-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Size3-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Size3-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Size4;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Size4-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Size4-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Size4-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: KaTeX_Typewriter;
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url(fonts/KaTeX_Typewriter-Regular.woff2) format("woff2"),
-    url(fonts/KaTeX_Typewriter-Regular.woff) format("woff"),
-    url(fonts/KaTeX_Typewriter-Regular.ttf) format("truetype");
-}
 .katex {
   text-rendering: auto;
   font:
@@ -220,73 +40,24 @@
 .katex .textbf {
   font-weight: 700;
 }
-.katex .textit {
-  font-style: italic;
-}
-.katex .textrm {
-  font-family: KaTeX_Main;
-}
-.katex .textsf {
-  font-family: KaTeX_SansSerif;
-}
-.katex .texttt {
-  font-family: KaTeX_Typewriter;
-}
-.katex .mathnormal {
-  font-family: KaTeX_Math;
-  font-style: italic;
-}
-.katex .mathit {
-  font-family: KaTeX_Main;
+.katex .textit,
+.katex .mathnormal,
+.katex .mathit,
+.katex .mathitsf,
+.katex .textitsf {
   font-style: italic;
 }
 .katex .mathrm {
   font-style: normal;
 }
 .katex .mathbf {
-  font-family: KaTeX_Main;
   font-weight: 700;
 }
 .katex .boldsymbol {
-  font-family: KaTeX_Math;
   font-style: italic;
   font-weight: 700;
-}
-.katex .amsrm,
-.katex .mathbb,
-.katex .textbb {
-  font-family: KaTeX_AMS;
-}
-.katex .mathcal {
-  font-family: KaTeX_Caligraphic;
-}
-.katex .mathfrak,
-.katex .textfrak {
-  font-family: KaTeX_Fraktur;
-}
-.katex .mathtt {
-  font-family: KaTeX_Typewriter;
-}
-.katex .mathscr,
-.katex .textscr {
-  font-family: KaTeX_Script;
-}
-.katex .mathsf,
-.katex .textsf {
-  font-family: KaTeX_SansSerif;
-}
-.katex .mathboldsf,
-.katex .textboldsf {
-  font-family: KaTeX_SansSerif;
-  font-weight: 700;
-}
-.katex .mathitsf,
-.katex .textitsf {
-  font-family: KaTeX_SansSerif;
-  font-style: italic;
 }
 .katex .mainrm {
-  font-family: KaTeX_Main;
   font-style: normal;
 }
 .katex .vlist-t {
@@ -896,22 +667,16 @@
   font-size: 1em;
 }
 .katex .delimsizing.size1 {
-  font-family: KaTeX_Size1;
 }
 .katex .delimsizing.size2 {
-  font-family: KaTeX_Size2;
 }
 .katex .delimsizing.size3 {
-  font-family: KaTeX_Size3;
 }
 .katex .delimsizing.size4 {
-  font-family: KaTeX_Size4;
 }
 .katex .delimsizing.mult .delim-size1 > span {
-  font-family: KaTeX_Size1;
 }
 .katex .delimsizing.mult .delim-size4 > span {
-  font-family: KaTeX_Size4;
 }
 .katex .nulldelimiter {
   display: inline-block;
@@ -922,10 +687,8 @@
   position: relative;
 }
 .katex .op-symbol.small-op {
-  font-family: KaTeX_Size1;
 }
 .katex .op-symbol.large-op {
-  font-family: KaTeX_Size2;
 }
 .katex .accent > .vlist-t,
 .katex .op-limits > .vlist-t {

@@ -21,7 +21,8 @@ export function ToolTruncateHistoryIcon({
   const { mainEditor } = useMainEditor();
 
   if (historyIndex === lastMessageIndex) {
-    return null;
+    // filler so doesn't jump in
+    return <div className="h-3 w-3" />;
   }
 
   return (

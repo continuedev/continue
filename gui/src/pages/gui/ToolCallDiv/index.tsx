@@ -3,11 +3,13 @@ import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
+import { McpAppRenderer } from "./MCPAppRenderer";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
-import { getStatusIcon, toolCallIcons } from "./utils";
+import { getIconByName, getStatusIcon } from "./utils";
 
 interface ToolCallDivProps {
   toolCallStates: ToolCallState[];
@@ -19,7 +21,9 @@ export function ToolCallDiv({
   historyIndex,
 }: ToolCallDivProps) {
   const [open, setOpen] = useState(true);
-  const availableTools = useAppSelector((state) => state.config.config.tools);
+  const availableTools = useAppSelector(
+    (state: RootState) => state.config.config.tools,
+  );
 
   if (!toolCallStates?.length) return null;
 
@@ -31,13 +35,30 @@ export function ToolCallDiv({
   const activeCalls = toolCallStates.filter(
     (call) => call.status !== "canceled",
   );
+  const pendingCalls = toolCallStates.filter((call) => call.status !== "done");
 
   const renderToolCall = (toolCallState: ToolCallState) => {
     const tool = availableTools.find(
       (tool) => toolCallState.toolCall.function?.name === tool.function.name,
     );
     const functionName = toolCallState.toolCall.function?.name;
-    const icon = functionName && toolCallIcons[functionName];
+    const icon =
+      functionName && tool?.toolCallIcon
+        ? getIconByName(tool.toolCallIcon)
+        : undefined;
+
+    if (toolCallState.mcpUiState) {
+      return (
+        <ToolCallDisplay
+          icon={getStatusIcon(toolCallState.status)}
+          tool={tool}
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        >
+          <McpAppRenderer toolCallState={toolCallState} />
+        </ToolCallDisplay>
+      );
+    }
 
     if (icon) {
       return (
@@ -56,7 +77,8 @@ export function ToolCallDiv({
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
     if (
       functionName === BuiltInToolNames.SingleFindAndReplace ||
-      functionName === BuiltInToolNames.MultiEdit
+      functionName === BuiltInToolNames.MultiEdit ||
+      functionName === BuiltInToolNames.RunTerminalCommand
     ) {
       return (
         <div className="flex flex-col px-1">
@@ -88,7 +110,7 @@ export function ToolCallDiv({
       <div className="border-border rounded-lg border px-4 py-3 pb-0">
         <GroupedToolCallHeader
           toolCallStates={toolCallStates}
-          activeCalls={activeCalls}
+          activeCalls={pendingCalls.length > 0 ? pendingCalls : activeCalls}
           open={open}
           onToggle={() => setOpen(!open)}
         />

@@ -1,3 +1,4 @@
+import { ContinueErrorReason } from "core/util/errors";
 import * as ideUtils from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
@@ -45,6 +46,14 @@ describe("singleFindAndReplaceImpl", () => {
   });
 
   describe("argument validation", () => {
+    beforeEach(() => {
+      // For validation tests, make the file exist so we can test validation errors
+      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockExtras.ideMessenger.ide.readFile = vi
+        .fn()
+        .mockResolvedValue("content");
+    });
+
     it("should throw error if filepath is missing", async () => {
       const args = {
         old_string: "test",
@@ -53,7 +62,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("filepath is required");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingFilepath,
+        }),
+      );
     });
 
     it("should throw error if old_string is missing", async () => {
@@ -64,7 +77,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("old_string is required");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingOldString,
+        }),
+      );
     });
 
     it("should throw error if new_string is missing", async () => {
@@ -75,7 +92,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("new_string is required");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMissingNewString,
+        }),
+      );
     });
 
     it("should throw error if old_string and new_string are the same", async () => {
@@ -87,7 +108,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("old_string and new_string must be different");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceIdenticalOldAndNewStrings,
+        }),
+      );
     });
   });
 
@@ -103,7 +128,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("File nonexistent.txt does not exist");
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FileNotFound,
+        }),
+      );
     });
 
     it("should resolve relative file paths", async () => {
@@ -148,7 +177,11 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow(`string not found in file: "not found"`);
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceOldStringNotFound,
+        }),
+      );
     });
 
     it("should replace single occurrence", async () => {
@@ -188,8 +221,10 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow(
-        'String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          reason: ContinueErrorReason.FindAndReplaceMultipleOccurrences,
+        }),
       );
     });
 

@@ -59,27 +59,17 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private llmLogger: ILLMLogger,
-    sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
+    initialSessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
   ) {
-    this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
-
     this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-      this.ide.getIdeInfo(),
+      initialSessionInfoPromise,
+      this.ide,
     );
 
     // This profile manager will always be available
     this.globalLocalProfileManager = new ProfileLifecycleManager(
-      new LocalProfileLoader(
-        ide,
-        ideSettingsPromise,
-        this.controlPlaneClient,
-        this.llmLogger,
-      ),
+      new LocalProfileLoader(ide, this.controlPlaneClient, this.llmLogger),
       this.ide,
     );
 
@@ -97,6 +87,7 @@ export class ConfigHandler {
   }
 
   private workspaceDirs: string[] | null = null;
+
   async getWorkspaceId() {
     if (!this.workspaceDirs) {
       this.workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -109,9 +100,16 @@ export class ConfigHandler {
     return `${workspaceId}:::${orgId}`;
   }
 
-  private async cascadeInit(reason: string) {
+  private async cascadeInit(reason: string, isLogin?: boolean) {
     const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
+
+    // Always update globalLocalProfileManager before recreating all the loaders
+    // during every cascadeInit so it holds the most recent controlPlaneClient.
+    this.globalLocalProfileManager = new ProfileLifecycleManager(
+      new LocalProfileLoader(this.ide, this.controlPlaneClient, this.llmLogger),
+      this.ide,
+    );
 
     try {
       const { orgs, errors } = await this.getOrgs();
@@ -120,7 +118,12 @@ export class ConfigHandler {
       const workspaceId = await this.getWorkspaceId();
       const selectedOrgs =
         this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-      const currentSelection = selectedOrgs[workspaceId];
+      let currentSelection = selectedOrgs[workspaceId];
+
+      // reset personal org to first available non-personal org on login
+      if (isLogin && currentSelection === "personal") {
+        currentSelection = null;
+      }
 
       const firstNonPersonal = orgs.find(
         (org) => org.id !== this.PERSONAL_ORG_DESC.id,
@@ -202,6 +205,8 @@ export class ConfigHandler {
           message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
         });
       }
+    } else {
+      PolicySingleton.getInstance().policy = null;
     }
     // Load local org if not signed in or hub orgs fail
     try {
@@ -246,7 +251,6 @@ export class ConfigHandler {
           versionSlug: assistant.configResult.config?.version ?? "latest",
           controlPlaneClient: this.controlPlaneClient,
           ide: this.ide,
-          ideSettingsPromise: this.ideSettingsPromise,
           llmLogger: this.llmLogger,
           rawYaml: assistant.rawYaml,
           orgScopeId: orgScopeId,
@@ -356,18 +360,17 @@ export class ConfigHandler {
     if (options.includeWorkspace) {
       const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
-        options,
+        { ...options, fileExtType: "yaml" },
         "assistants",
       );
       const agentFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
-        options,
+        { ...options, fileExtType: "yaml" },
         "agents",
       );
       const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
-          this.ideSettingsPromise,
           this.controlPlaneClient,
           this.llmLogger,
           assistant,
@@ -392,7 +395,6 @@ export class ConfigHandler {
 
   // Ide settings change: refresh session and cascade refresh from the top
   async updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
     this.abortCascade();
     await this.cascadeInit("IDE settings update");
   }
@@ -405,6 +407,7 @@ export class ConfigHandler {
     const newSession = sessionInfo;
 
     let reload = false;
+    let isLogin = false;
     if (newSession) {
       if (currentSession) {
         if (
@@ -419,6 +422,7 @@ export class ConfigHandler {
       } else {
         // log in
         reload = true;
+        isLogin = true;
       }
     } else {
       if (currentSession) {
@@ -430,11 +434,10 @@ export class ConfigHandler {
     if (reload) {
       this.controlPlaneClient = new ControlPlaneClient(
         Promise.resolve(sessionInfo),
-        this.ideSettingsPromise,
-        this.ide.getIdeInfo(),
+        this.ide,
       );
       this.abortCascade();
-      await this.cascadeInit("Control plane session info update");
+      await this.cascadeInit("Control plane session info update", isLogin);
     }
     return reload;
   }
@@ -506,11 +509,13 @@ export class ConfigHandler {
     this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
-      return {
+      const out = {
         config: undefined,
         errors: injectErrors,
         configLoadInterrupted: true,
       };
+      this.notifyConfigListeners(out);
+      return out;
     }
 
     for (const org of this.organizations) {
@@ -541,12 +546,25 @@ export class ConfigHandler {
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
-    void Telemetry.capture("config_reload", {
+    const isSignedIn = await this.controlPlaneClient.isSignedIn();
+
+    const profileDescription = this.currentProfile.profileDescription;
+    const telemetryData: Record<string, any> = {
       duration,
       reason,
       totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
-    });
+      profileType: profileDescription.profileType,
+      isPersonalOrg: this.currentOrg?.id === this.PERSONAL_ORG_DESC.id,
+      errorCount: errors.length,
+      isSignedIn,
+    };
+
+    void Telemetry.capture("config_reload", telemetryData);
+
+    if (errors.length) {
+      Logger.error("Errors loading config: ", errors);
+    }
 
     return {
       config,
@@ -598,10 +616,6 @@ export class ConfigHandler {
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
-
-    if (config.errors?.length) {
-      Logger.error("Errors loading config: ", config.errors);
-    }
     return config;
   }
 

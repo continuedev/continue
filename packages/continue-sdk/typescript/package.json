@@ -13,7 +13,7 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "openai": "^4.96.2"
+    "openai": "^4.104.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

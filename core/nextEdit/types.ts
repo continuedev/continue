@@ -50,6 +50,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   completionId: string;
   gitRepo?: string;
   uniqueId: string;
+  requestId?: string;
   timestamp: number;
 
   // New for Next Edit.
@@ -67,6 +68,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   editableRegionStartLine: number;
   editableRegionEndLine: number;
   diffLines: DiffLine[];
+  profileType?: "local" | "platform" | "control-plane";
 }
 
 export interface PromptMetadata {

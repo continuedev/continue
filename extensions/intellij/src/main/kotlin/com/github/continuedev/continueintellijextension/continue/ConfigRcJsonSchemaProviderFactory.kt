@@ -35,7 +35,7 @@ class ConfigRcJsonSchemaFileProvider : JsonSchemaFileProvider {
                 if (`is` == null) {
                     throw IOException("Resource not found: continue_rc_schema.json")
                 }
-                val content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+                val content = `is`.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
                 val filepath = Paths.get(getContinueGlobalPath(), "continue_rc_schema.json").toString()
                 File(filepath).writeText(content)
                 return LocalFileSystem.getInstance().findFileByPath(filepath)

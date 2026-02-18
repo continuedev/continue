@@ -3,11 +3,18 @@ import React, { useState } from "react";
 import { quote } from "shell-quote";
 
 import { useServices } from "../hooks/useService.js";
-import { MCPServiceState, SERVICE_NAMES } from "../services/types.js";
+import {
+  MCPConnectionInfo,
+  MCPServerStatus,
+  MCPServiceState,
+  SERVICE_NAMES,
+} from "../services/types.js";
 import { logger } from "../util/logger.js";
 
+import { defaultBoxStyles } from "./styles.js";
+
 // Utility function to get status icon and color based on server connection
-const getServerStatusDisplay = (conn: any) => {
+const getServerStatusDisplay = (conn: MCPConnectionInfo) => {
   let icon = "⚪️"; // note, white circle causes extra blank line bug
   let color: "green" | "yellow" | "red" | "white" | "dim" = "white";
   let statusText = conn.status;
@@ -22,7 +29,7 @@ const getServerStatusDisplay = (conn: any) => {
     if (conn.warnings && conn.warnings.length > 0) {
       icon = "🟡";
       color = "yellow";
-      statusText = "connected (with warnings)";
+      statusText = "connected (with warnings)" as MCPServerStatus;
     } else {
       icon = "🟢";
       color = "green";
@@ -110,6 +117,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         { label: "⏹️  Stop all servers", value: "stop-all" },
       );
     }
+
+    // Add "Explore MCP Servers" option at the bottom
+    options.push({
+      label: "🔍 Explore MCP Servers",
+      value: "explore-mcp-servers",
+    });
+
     return options;
   };
 
@@ -170,7 +184,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         {/* Add prompts if any */}
         {serverInfo.prompts.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">📝 Prompts: {serverInfo.prompts.length}</Text>
+            <Text color="blue">📝 Prompts: {serverInfo.prompts.length}</Text>
             {serverInfo.prompts.map((prompt, index) => (
               <Text key={index} color="dim">
                 • {prompt.name}
@@ -182,7 +196,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         {/* Add tools if any */}
         {serverInfo.tools.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">🔧 Tools: {serverInfo.tools.length}</Text>
+            <Text color="blue">🔧 Tools: {serverInfo.tools.length}</Text>
             {serverInfo.tools.map((tool, index) => (
               <Text key={index} color="dim">
                 • {tool.name}
@@ -210,12 +224,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const maxIndex = Math.max(0, items.length - 1);
 
   useInput(async (input, key) => {
-    if (isLoading) return;
-
-    if (key.escape) {
+    // Always allow escape/Ctrl+C so users can cancel even when loading
+    if (key.escape || (key.ctrl && input === "c")) {
       handleBack();
       return;
     }
+
+    if (isLoading) return;
 
     if (key.upArrow) {
       setSelectedIndex(selectedIndex <= 0 ? maxIndex : selectedIndex - 1);
@@ -252,8 +267,6 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   });
 
   const handleMainMenuSelect = async (value: string) => {
-    if (!mcpService) return;
-
     if (value.startsWith("server:")) {
       // Handle server selection
       const serverName = value.replace("server:", "");
@@ -265,12 +278,18 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
     switch (value) {
       case "restart-all":
-        await mcpService.restartAllServers();
+        await mcpService?.restartAllServers();
         setMessage("All servers restarted");
         break;
       case "stop-all":
-        await mcpService.shutdownConnections();
+        await mcpService?.shutdownConnections();
         setMessage("All servers stopped");
+        break;
+      case "explore-mcp-servers":
+        // Open the MCP servers hub in the default browser
+        const open = (await import("open")).default;
+        await open("https://continue.dev/hub?type=mcpServers");
+        setMessage("Opened MCP servers hub in browser");
         break;
       case "back":
         onCancel();
@@ -279,15 +298,20 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   };
 
   const handleServerAction = async (action: string) => {
-    if (!mcpService || !selectedServer) return;
     try {
       switch (action) {
         case "restart":
-          await mcpService.restartServer(selectedServer);
+          if (!selectedServer) {
+            return;
+          }
+          await mcpService?.restartServer(selectedServer);
           setMessage(`Server "${selectedServer}" restarted`);
           break;
         case "stop":
-          await mcpService.stopServer(selectedServer);
+          if (!selectedServer) {
+            return;
+          }
+          await mcpService?.stopServer(selectedServer);
           setMessage(`Server "${selectedServer}" stopped`);
           break;
         case "back":
@@ -302,7 +326,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const renderHeader = () => {
     return (
       <Box flexDirection="column" marginBottom={1}>
-        <Text bold color="cyan">
+        <Text bold color="blue">
           {menuState === "server-detail" && selectedServer
             ? `Server: ${selectedServer}`
             : "MCP Servers"}
@@ -320,14 +344,24 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
             const { color: statusColor, statusText } =
               getServerStatusDisplay(serverInfo);
-            const { command, args } = serverInfo.config;
-            let cmd = command ? quote([command, ...(args ?? [])]) : "";
-            cmd = cmd.replace(/\$\{\{.*\}\}/, "(secret)");
+
+            let configText = "";
+            if ("command" in serverInfo.config) {
+              const { command, args } = serverInfo.config;
+              const cmd = command ? quote([command, ...(args ?? [])]) : "";
+              if (cmd) {
+                configText = ` • Command: ${cmd}`;
+              }
+            } else {
+              const { url } = serverInfo.config;
+              configText = ` • URL: ${url}`;
+            }
+            configText = configText.replace(/\$\{\{.*\}\}/, "(secret)");
 
             return (
               <Text color="dim">
                 Status: <Text color={statusColor}>{statusText}</Text>
-                {cmd && ` • Command: ${cmd}`}
+                {configText}
               </Text>
             );
           })()}
@@ -336,13 +370,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   };
 
   return (
-    <Box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor="cyan"
-      padding={1}
-      minHeight={10}
-    >
+    <Box {...defaultBoxStyles("blue", { minHeight: 10 })}>
       {renderHeader()}
 
       {message && (
@@ -369,9 +397,8 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
                 key={`${item.value}-${index}`}
                 color={isSelected ? "blue" : "white"}
                 bold={isSelected}
-                inverse={isSelected}
               >
-                {isSelected ? "> " : "  "}
+                {isSelected ? "➤ " : "  "}
                 {item.label}
               </Text>
             );
@@ -381,7 +408,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
       <Box marginTop={1}>
         <Text color="dim">
-          Use ↑/↓ to navigate, Enter to select, Esc to go back
+          ↑/↓ to navigate, Enter to select, Esc to go back
         </Text>
       </Box>
     </Box>

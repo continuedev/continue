@@ -62,24 +62,23 @@ export function ApplyActions(props: ApplyActionsProps) {
       }
 
       return (
-        <HoverItem
-          data-tooltip-id="codeblock-apply-code-button-tooltip"
-          className="!p-0"
-        >
-          <button
-            data-testid="codeblock-toolbar-apply"
-            className="text-lightgray flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
-            onClick={props.onClickApply}
+        <ToolTip place="top" content="Apply Code">
+          <HoverItem
+            data-tooltip-id="codeblock-apply-code-button-tooltip"
+            className="!p-0"
           >
-            <div className="text-lightgray flex items-center gap-1">
-              <PlayIcon className="h-3.5 w-3.5" />
-              <span className="xs:inline hidden">Apply</span>
-            </div>
-          </button>
-          <ToolTip id="codeblock-apply-code-button-tooltip" place="top">
-            Apply Code
-          </ToolTip>
-        </HoverItem>
+            <button
+              data-testid="codeblock-toolbar-apply"
+              className="text-lightgray flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
+              onClick={props.onClickApply}
+            >
+              <div className="text-lightgray flex items-center gap-1">
+                <PlayIcon className="h-3.5 w-3.5" />
+                <span className="xs:inline hidden">Apply</span>
+              </div>
+            </button>
+          </HoverItem>
+        </ToolTip>
       );
   }
 }

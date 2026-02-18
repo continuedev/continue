@@ -17,17 +17,18 @@ The Continue CLI should emit metrics that provide insights into:
 
 ### Environment Variables
 
-| Environment Variable            | Description                                               | Example Values                       |
-| ------------------------------- | --------------------------------------------------------- | ------------------------------------ |
-| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables telemetry collection (required)                   | `1`                                  |
-| `OTEL_METRICS_EXPORTER`         | Metrics exporter type(s) (comma-separated)                | `console`, `otlp`, `prometheus`      |
-| `OTEL_LOGS_EXPORTER`            | Logs/events exporter type(s) (comma-separated)            | `console`, `otlp`                    |
-| `OTEL_EXPORTER_OTLP_PROTOCOL`   | Protocol for OTLP exporter (all signals)                  | `grpc`, `http/json`, `http/protobuf` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`   | OTLP collector endpoint (all signals)                     | `http://localhost:4317`              |
-| `OTEL_EXPORTER_OTLP_HEADERS`    | Authentication headers for OTLP                           | `Authorization=Bearer token`         |
-| `OTEL_METRIC_EXPORT_INTERVAL`   | Export interval in milliseconds (default: 60000)          | `5000`, `60000`                      |
-| `OTEL_LOGS_EXPORT_INTERVAL`     | Logs export interval in milliseconds (default: 5000)      | `1000`, `10000`                      |
-| `OTEL_LOG_USER_PROMPTS`         | Enable logging of user prompt content (default: disabled) | `1` to enable                        |
+| Environment Variable            | Description                                                     | Example Values                       |
+| ------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| `CONTINUE_METRICS_ENABLED`      | Enables OTEL telemetry collection (preferred, takes precedence) | `0` to disable, `1` to enable        |
+| `CONTINUE_CLI_ENABLE_TELEMETRY` | Enables OTEL telemetry collection (legacy, lower precedence)    | `0` to disable, `1` to enable        |
+| `OTEL_METRICS_EXPORTER`         | Metrics exporter type(s) (comma-separated)                      | `console`, `otlp`, `prometheus`      |
+| `OTEL_LOGS_EXPORTER`            | Logs/events exporter type(s) (comma-separated)                  | `console`, `otlp`                    |
+| `OTEL_EXPORTER_OTLP_PROTOCOL`   | Protocol for OTLP exporter (all signals)                        | `grpc`, `http/json`, `http/protobuf` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`   | OTLP collector endpoint (all signals)                           | `http://localhost:4317`              |
+| `OTEL_EXPORTER_OTLP_HEADERS`    | Authentication headers for OTLP                                 | `Authorization=Bearer token`         |
+| `OTEL_METRIC_EXPORT_INTERVAL`   | Export interval in milliseconds (default: 60000)                | `5000`, `60000`                      |
+| `OTEL_LOGS_EXPORT_INTERVAL`     | Logs export interval in milliseconds (default: 5000)            | `1000`, `10000`                      |
+| `OTEL_LOG_USER_PROMPTS`         | Enable logging of user prompt content (default: disabled)       | `1` to enable                        |
 
 ### Metrics Cardinality Control
 
@@ -51,7 +52,7 @@ All metrics and events share these standard attributes:
 
 ## Core Metrics
 
-### ✅ `continue.cli.session.count`
+### ✅ `continue_cli_session_count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -65,7 +66,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.lines_of_code.count`
+### ✅ `continue_cli_lines_of_code_count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -80,7 +81,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.pull_request.count`
+### ✅ `continue_cli_pull_request_count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -94,7 +95,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.commit.count`
+### ✅ `continue_cli_commit_count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -108,7 +109,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.cost.usage`
+### ✅ `continue_cli_cost_usage`
 
 **Type:** Counter  
 **Unit:** `USD`  
@@ -123,7 +124,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.token.usage`
+### ✅ `continue_cli_token_usage`
 
 **Type:** Counter  
 **Unit:** `tokens`  
@@ -139,7 +140,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ❌ `continue.cli.code_edit_tool.decision`
+### ❌ `continue_cli_code_edit_tool_decision`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -156,7 +157,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### ✅ `continue.cli.active_time.total`
+### ✅ `continue_cli_active_time_total`
 
 **Type:** Counter  
 **Unit:** `s`  
@@ -172,7 +173,7 @@ All metrics and events share these standard attributes:
 
 ### ✅ User Prompt Event
 
-**Event Name:** `continue.cli.user_prompt`
+**Event Name:** `continue_cli_user_prompt`
 
 **Attributes:**
 
@@ -188,7 +189,7 @@ All metrics and events share these standard attributes:
 
 ### ✅ Tool Result Event
 
-**Event Name:** `continue.cli.tool_result`
+**Event Name:** `continue_cli_tool_result`
 
 **Attributes:**
 
@@ -209,7 +210,7 @@ All metrics and events share these standard attributes:
 
 ### ✅ API Request Event
 
-**Event Name:** `continue.cli.api_request`
+**Event Name:** `continue_cli_api_request`
 
 **Attributes:**
 
@@ -232,7 +233,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Authentication Metrics
 
-#### ✅ `continue.cli.auth.attempts`
+#### ✅ `continue_cli_auth_attempts`
 
 **Type:** Counter  
 **Unit:** `{attempt}`  
@@ -248,7 +249,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### MCP Integration Metrics
 
-#### ❌ `continue.cli.mcp.connections`
+#### ❌ `continue_cli_mcp_connections`
 
 **Type:** Gauge  
 **Unit:** `{connection}`  
@@ -264,7 +265,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Performance Metrics
 
-#### ❌ `continue.cli.startup.time`
+#### ❌ `continue_cli_startup_time`
 
 **Type:** Histogram  
 **Unit:** `ms`  
@@ -278,7 +279,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 **Implementation:** Track in `src/index.ts` and `src/commands/chat.ts`
 
-#### ✅ `continue.cli.response_time`
+#### ✅ `continue_cli_response_time`
 
 **Type:** Histogram  
 **Unit:** `ms`  
@@ -297,7 +298,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Migration from Claude Code Dashboards
 
-The core metrics (`session.count`, `lines_of_code.count`, `token.usage`, `cost.usage`, etc.) use identical naming and attribute structures to Claude Code, allowing for easy dashboard migration by simply changing the metric prefix from `claude_code.*` to `continue.cli.*`.
+The core metrics (`session_count`, `lines_of_code_count`, `token_usage`, `cost_usage`, etc.) use identical naming and attribute structures to Claude Code, allowing for easy dashboard migration by simply changing the metric prefix from `claude_code_*` to `continue_cli_*`.
 
 ### Privacy Considerations
 
@@ -337,6 +338,6 @@ All metrics should include these resource attributes:
 
 **Missing implementations:**
 
-- `continue.cli.code_edit_tool.decision` - requires user confirmation UI
-- `continue.cli.mcp.connections` - needs MCP service monitoring
-- `continue.cli.startup.time` - needs startup time tracking
+- `continue_cli_code_edit_tool_decision` - requires user confirmation UI
+- `continue_cli_mcp_connections` - needs MCP service monitoring
+- `continue_cli_startup_time` - needs startup time tracking

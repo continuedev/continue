@@ -1,6 +1,7 @@
 import { minimatch } from "minimatch";
 import {
   ContextItemWithId,
+  RuleMetadata,
   RuleWithSource,
   ToolResultChatMessage,
   UserChatMessage,
@@ -132,7 +133,7 @@ const isFileInDirectory = (
  * Checks if a rule is a root-level rule (.continue directory or no file path)
  */
 const isRootLevelRule = (rule: RuleWithSource): boolean => {
-  return !rule.ruleFile || rule.ruleFile.includes(".continue/"); // ruleFile path is absolute - hence we need to check for it in between
+  return !rule.sourceFile || rule.sourceFile.includes(".continue/"); // sourceFile path is absolute - hence we need to check for it in between
 };
 
 /**
@@ -230,8 +231,8 @@ export const shouldApplyRule = (
   const isRootRule = isRootLevelRule(rule);
 
   // For non-root rules, we need to check if any files are in the rule's directory
-  if (!isRootRule && rule.ruleFile) {
-    const ruleDirectory = getCleanUriPath(rule.ruleFile);
+  if (!isRootRule && rule.sourceFile) {
+    const ruleDirectory = getCleanUriPath(rule.sourceFile);
     const lastSlashIndex = ruleDirectory.lastIndexOf("/");
     const ruleDirPath =
       lastSlashIndex !== -1 ? ruleDirectory.substring(0, lastSlashIndex) : "";
@@ -324,8 +325,8 @@ export const getApplicableRules = (
   return applicableRules;
 };
 
-export function getRuleId(rule: RuleWithSource): string {
-  return rule.slug ?? rule.ruleFile ?? rule.name ?? rule.source;
+export function getRuleId(rule: RuleMetadata): string {
+  return rule.slug ?? rule.sourceFile ?? rule.name ?? rule.source;
 }
 
 export const getSystemMessageWithRules = ({
@@ -342,7 +343,7 @@ export const getSystemMessageWithRules = ({
   rulePolicies?: RulePolicies;
 }): {
   systemMessage: string;
-  appliedRules: RuleWithSource[];
+  appliedRules: RuleMetadata[];
 } => {
   const appliedRules = getApplicableRules(
     userMessage,
@@ -359,8 +360,10 @@ export const getSystemMessageWithRules = ({
     systemMessage += rule.rule;
   }
 
+  const ruleMetadata = appliedRules.map(({ rule, ...rest }) => rest);
+
   return {
     systemMessage,
-    appliedRules,
+    appliedRules: ruleMetadata,
   };
 };

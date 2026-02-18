@@ -23,6 +23,12 @@ describe("compaction", () => {
     model: "test-model",
   } as ModelConfig;
 
+  const claudeModel: ModelConfig = {
+    name: "claude-3-5-sonnet",
+    provider: "anthropic",
+    model: "claude-3-5-sonnet-20241022",
+  } as ModelConfig;
+
   const mockLlmApi = {} as BaseLlmApi;
 
   describe("findCompactionIndex", () => {
@@ -385,8 +391,10 @@ describe("compaction", () => {
       ]);
 
       await compactChatHistory(history, mockModel, mockLlmApi, {
-        onStreamContent,
-        onStreamComplete,
+        callbacks: {
+          onStreamContent,
+          onStreamComplete,
+        },
       });
 
       expect(onStreamContent).toHaveBeenCalledWith("Summary ");
@@ -406,7 +414,9 @@ describe("compaction", () => {
       ]);
 
       await expect(
-        compactChatHistory(history, mockModel, mockLlmApi, { onError }),
+        compactChatHistory(history, mockModel, mockLlmApi, {
+          callbacks: { onError },
+        }),
       ).rejects.toThrow("Stream failed");
 
       expect(onError).toHaveBeenCalledWith(mockError);

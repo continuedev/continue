@@ -1,4 +1,8 @@
-import { execSync } from "child_process";
+import { exec, execSync } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+const LARGE_STDIO_BUFFER_BYTES = 10 * 1024 * 1024; // bump buffer for large git output
 
 /**
  * Get the git remote URL for the current repository
@@ -13,6 +17,23 @@ export function getGitRemoteUrl(remote: string = "origin"): string | null {
       stdio: "pipe",
     });
     return result.trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the current git branch name
+ * @returns The current branch name or null if not found
+ */
+export function getGitBranch(): string | null {
+  try {
+    const result = execSync("git branch --show-current", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      stdio: "pipe",
+    });
+    return result.trim() || null;
   } catch {
     return null;
   }
@@ -38,6 +59,13 @@ export function isGitRepo(): boolean {
  */
 export function isGitHubActions(): boolean {
   return process.env.GITHUB_ACTIONS === "true";
+}
+
+/**
+ * Check if running in Continue remote agents
+ */
+export function isContinueRemoteAgent(): boolean {
+  return process.env.CONTINUE_REMOTE === "true";
 }
 
 /**
@@ -85,4 +113,50 @@ export function getRepoUrl(): string {
   const remoteUrl = getGitRemoteUrl();
   const url = remoteUrl || process.cwd();
   return url.endsWith(".git") ? url.slice(0, -4) : url;
+}
+
+export interface GitDiffSnapshot {
+  diff: string;
+  repoFound: boolean;
+}
+
+function isExecError(
+  error: unknown,
+): error is { code?: number; stdout?: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    ("code" in error || "stdout" in error)
+  );
+}
+
+export async function getGitDiffSnapshot(): Promise<GitDiffSnapshot> {
+  try {
+    await execAsync("git rev-parse --git-dir", {
+      maxBuffer: LARGE_STDIO_BUFFER_BYTES,
+    });
+  } catch (error) {
+    if (isExecError(error) && error.code === 128) {
+      return { diff: "", repoFound: false };
+    }
+    throw error;
+  }
+
+  try {
+    const { stdout } = await execAsync("git diff main", {
+      maxBuffer: LARGE_STDIO_BUFFER_BYTES,
+    });
+    return { diff: stdout, repoFound: true };
+  } catch (error) {
+    if (isExecError(error)) {
+      if (error.code === 1 && error.stdout) {
+        return { diff: error.stdout, repoFound: true };
+      }
+
+      if (error.code === 128) {
+        return { diff: "", repoFound: false };
+      }
+    }
+    throw error;
+  }
 }

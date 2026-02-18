@@ -97,7 +97,12 @@ export class LocalPlatformClient implements PlatformClient {
       return [];
     }
 
-    const results = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
+    let results: (SecretResult | undefined)[] = [];
+    try {
+      results = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
+    } catch (e) {
+      console.error("Error getting secrets from control plane", e);
+    }
 
     // For any secret that isn't found, look in .env files, then process.env
     for (let i = 0; i < results.length; i++) {

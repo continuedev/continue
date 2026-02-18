@@ -8,7 +8,7 @@ const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",
   "llama3.1",
   "llama3.2",
-  "gemini-1.5",
+  "gemini-2.5",
   "gpt-4",
 ];
 

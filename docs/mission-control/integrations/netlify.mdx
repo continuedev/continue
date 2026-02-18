@@ -1,0 +1,17 @@
+---
+title: "Netlify"
+---
+
+The Netlify integration connects your deploys to Mission Control so agents can run performance audits comparing preview and production builds, catching regressions before they reach users.
+
+[Connect Netlify in Mission Control →](https://continue.dev/integrations/netlify)
+
+## Access and permissions
+
+When connecting Netlify, you provide a personal access token so Continue can query deploys and site configuration. Generate a token from your Netlify user settings — creating one specifically for Continue is recommended.
+
+You can revoke or rotate the token at any time from your Netlify account settings.
+
+## Performance audits
+
+When a pull request is merged, an agent runs Lighthouse audits against both the preview and production deploys and posts a summary to the PR.

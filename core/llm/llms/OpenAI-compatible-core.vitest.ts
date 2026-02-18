@@ -1,18 +1,19 @@
 import { createOpenAISubclassTests } from "./test-utils/openai-test-utils.js";
 
 // Import core OpenAI-compatible providers
-import OpenAI from "./OpenAI.js";
-import Groq from "./Groq.js";
-import Fireworks from "./Fireworks.js";
-import Together from "./Together.js";
-import Deepseek from "./Deepseek.js";
-import OpenRouter from "./OpenRouter.js";
-import xAI from "./xAI.js";
-import Mistral from "./Mistral.js";
-import LMStudio from "./LMStudio.js";
 import Cerebras from "./Cerebras.js";
+import CometAPI from "./CometAPI.js";
 import DeepInfra from "./DeepInfra.js";
+import DeepSeek from "./DeepSeek.js";
+import Fireworks from "./Fireworks.js";
+import Groq from "./Groq.js";
+import LMStudio from "./LMStudio.js";
+import Mistral from "./Mistral.js";
 import Nvidia from "./Nvidia.js";
+import OpenAI from "./OpenAI.js";
+import OpenRouter from "./OpenRouter.js";
+import Together from "./Together.js";
+import xAI from "./xAI.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -220,7 +221,7 @@ createOpenAISubclassTests(Together, {
   customStreamCompleteEndpoint: "completions",
 });
 
-createOpenAISubclassTests(Deepseek, {
+createOpenAISubclassTests(DeepSeek, {
   providerName: "deepseek",
   defaultApiBase: "https://api.deepseek.com/",
 });
@@ -291,4 +292,14 @@ createOpenAISubclassTests(Nvidia, {
     input_type: "passage",
     truncate: "END",
   },
+});
+
+createOpenAISubclassTests(CometAPI, {
+  providerName: "cometapi",
+  defaultApiBase: "https://api.cometapi.com/v1/",
+  modelConversions: {
+    "gpt-5-mini": "gpt-5-mini",
+    "claude-4-sonnet": "claude-sonnet-4-20250514",
+  },
+  modelConversionContent: "hello",
 });

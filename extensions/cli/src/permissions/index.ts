@@ -6,10 +6,8 @@ export type {
   ToolPermissions,
 } from "./types.js";
 
-export { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 export {
   checkToolPermission,
-  filterExcludedTools,
   matchesArguments,
   matchesToolPattern,
 } from "./permissionChecker.js";

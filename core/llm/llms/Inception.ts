@@ -2,6 +2,7 @@ import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 
 import { ChatCompletionCreateParams } from "@continuedev/openai-adapters";
+import { APPLY_UNIQUE_TOKEN } from "../../edit/constants.js";
 import { UNIQUE_TOKEN } from "../../nextEdit/constants.js";
 import OpenAI from "./OpenAI.js";
 
@@ -96,40 +97,21 @@ class Inception extends OpenAI {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (this.isNextEdit(messages)) {
-      messages = this.removeNextEditToken(messages);
-
-      // Use edit/completions endpoint.
-      const endpoint = new URL("edit/completions", this.apiBase);
-
-      const resp = await this.fetch(endpoint, {
-        method: "POST",
-        body: JSON.stringify({
-          model: options.model,
-          messages: messages,
-          max_tokens: options.maxTokens,
-          temperature: options.temperature,
-          top_p: options.topP,
-          frequency_penalty: options.frequencyPenalty,
-          presence_penalty: options.presencePenalty,
-          stop: options.stop,
-          stream: true,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
+      messages = this.removeToken(messages, UNIQUE_TOKEN);
+      yield* this.streamSpecialEndpoint(
+        "edit/completions",
+        messages,
         signal,
-      });
-
-      for await (const chunk of streamSse(resp)) {
-        if (chunk.choices?.[0]?.delta?.content) {
-          yield {
-            role: "assistant",
-            content: chunk.choices[0].delta.content,
-          };
-        }
-      }
+        options,
+      );
+    } else if (this.isApply(messages)) {
+      messages = this.removeToken(messages, APPLY_UNIQUE_TOKEN);
+      yield* this.streamSpecialEndpoint(
+        "apply/completions",
+        messages,
+        signal,
+        options,
+      );
     } else {
       // Use regular chat/completions endpoint - call parent OpenAI implementation.
       yield* super._streamChat(messages, signal, options);
@@ -145,22 +127,67 @@ class Inception extends OpenAI {
     );
   }
 
-  private removeNextEditToken(messages: ChatMessage[]): ChatMessage[] {
+  private isApply(messages: ChatMessage[]): boolean {
+    return messages.some(
+      (message) =>
+        typeof message.content === "string" &&
+        message.content.endsWith(APPLY_UNIQUE_TOKEN),
+    );
+  }
+
+  private removeToken(messages: ChatMessage[], token: string): ChatMessage[] {
     const lastMessage = messages[messages.length - 1];
 
     if (
       typeof lastMessage?.content === "string" &&
-      lastMessage.content.endsWith(UNIQUE_TOKEN)
+      lastMessage.content.endsWith(token)
     ) {
       const cleanedMessages = [...messages];
       cleanedMessages[cleanedMessages.length - 1] = {
         ...lastMessage,
-        content: lastMessage.content.slice(0, -UNIQUE_TOKEN.length),
+        content: lastMessage.content.slice(0, -token.length),
       };
       return cleanedMessages;
     }
 
     return messages;
+  }
+
+  private async *streamSpecialEndpoint(
+    path: string,
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    const endpoint = new URL(path, this.apiBase);
+
+    const resp = await this.fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        model: options.model,
+        messages,
+        max_tokens: options.maxTokens,
+        temperature: options.temperature,
+        top_p: options.topP,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        stream: true,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      signal,
+    });
+
+    for await (const chunk of streamSse(resp)) {
+      const content = chunk.choices?.[0]?.delta?.content;
+      if (content) {
+        yield { role: "assistant", content };
+      }
+    }
   }
 }
 

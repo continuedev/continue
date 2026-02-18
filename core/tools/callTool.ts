@@ -1,5 +1,7 @@
-import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { ContextItem, McpUiState, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+import { ContinueError, ContinueErrorReason } from "../util/errors";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
@@ -12,6 +14,9 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
+
+import { readFileRangeImpl } from "./implementations/readFileRange";
+import { readSkillImpl } from "./implementations/readSkill";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
@@ -63,7 +68,10 @@ async function callToolFromUri(
   uri: string,
   args: any,
   extras: ToolExtras,
-): Promise<ContextItem[]> {
+): Promise<{
+  contextItems: ContextItem[];
+  mcpUiState?: McpUiState;
+}> {
   const parseable = canParseUrl(uri);
   if (!parseable) {
     throw new Error(`Invalid URI: ${uri}`);
@@ -73,7 +81,9 @@ async function callToolFromUri(
   switch (parsedUri?.protocol) {
     case "http:":
     case "https:":
-      return callHttpTool(uri, args, extras);
+      return {
+        contextItems: await callHttpTool(uri, args, extras),
+      };
     case "mcp:":
       const decoded = decodeMCPToolUri(uri);
       if (!decoded) {
@@ -85,13 +95,46 @@ async function callToolFromUri(
       if (!client) {
         throw new Error("MCP connection not found");
       }
-      const response = await client.client.callTool({
-        name: toolName,
-        arguments: args,
-      });
+      const response = await client.client.callTool(
+        {
+          name: toolName,
+          arguments: args,
+        },
+        CallToolResultSchema,
+        { timeout: client.options.timeout },
+      );
 
       if (response.isError === true) {
         throw new Error(JSON.stringify(response.content));
+      }
+
+      let mcpUiState: McpUiState | undefined = undefined;
+      const uiResourceUri =
+        extras.tool?.mcpMeta?.ui?.resourceUri ||
+        extras.tool?.mcpMeta?.["ui/resourceUri"];
+      if (uiResourceUri) {
+        try {
+          const resource = await client.getResource(uiResourceUri);
+          // only single content supported for UI for now
+          if (resource.contents?.length) {
+            for (const c of resource.contents) {
+              if ("text" in c && typeof c.text === "string") {
+                mcpUiState = {
+                  content: c,
+                };
+              }
+            }
+          }
+
+          if (!mcpUiState) {
+            console.error(
+              "Invalid MCP UI resource content",
+              JSON.stringify(resource),
+            );
+          }
+        } catch (e) {
+          console.error("Error fetching MCP UI resource", e);
+        }
       }
 
       const contextItems: ContextItem[] = [];
@@ -131,7 +174,7 @@ async function callToolFromUri(
           });
         }
       });
-      return contextItems;
+      return { contextItems, mcpUiState };
     default:
       throw new Error(`Unsupported protocol: ${parsedUri?.protocol}`);
   }
@@ -145,6 +188,8 @@ export async function callBuiltInTool(
   switch (functionName) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
+    case BuiltInToolNames.ReadFileRange:
+      return await readFileRangeImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.GrepSearch:
@@ -169,6 +214,8 @@ export async function callBuiltInTool(
       return await requestRuleImpl(args, extras);
     case BuiltInToolNames.CodebaseTool:
       return await codebaseToolImpl(args, extras);
+    case BuiltInToolNames.ReadSkill:
+      return await readSkillImpl(args, extras);
     case BuiltInToolNames.ViewRepoMap:
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
@@ -188,29 +235,42 @@ export async function callTool(
 ): Promise<{
   contextItems: ContextItem[];
   errorMessage: string | undefined;
+  errorReason?: ContinueErrorReason;
+  mcpUiState?: McpUiState;
 }> {
   try {
     const args = safeParseToolCallArgs(toolCall);
-    const contextItems = tool.uri
+    const { contextItems, mcpUiState } = tool.uri
       ? await callToolFromUri(tool.uri, args, extras)
-      : await callBuiltInTool(tool.function.name, args, extras);
+      : {
+          contextItems: await callBuiltInTool(tool.function.name, args, extras),
+        };
     if (tool.faviconUrl) {
       contextItems.forEach((item) => {
         item.icon = tool.faviconUrl;
       });
     }
+
     return {
       contextItems,
       errorMessage: undefined,
+      mcpUiState,
     };
   } catch (e) {
     let errorMessage = `${e}`;
-    if (e instanceof Error) {
+    let errorReason: ContinueErrorReason | undefined;
+
+    if (e instanceof ContinueError) {
+      errorMessage = e.message;
+      errorReason = e.reason;
+    } else if (e instanceof Error) {
       errorMessage = e.message;
     }
+
     return {
       contextItems: [],
       errorMessage,
+      errorReason,
     };
   }
 }

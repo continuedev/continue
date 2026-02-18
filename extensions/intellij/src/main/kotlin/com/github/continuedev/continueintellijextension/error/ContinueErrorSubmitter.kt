@@ -21,6 +21,7 @@ class ContinueErrorSubmitter : ErrorReportSubmitter() {
         consumer: Consumer<in SubmittedReportInfo>
     ): Boolean {
         try {
+            // todo: IdeaReportingEvent is deprecated; migrate to IdeaLoggingEvent + figure out how to read attachments
             val event = events.filterIsInstance<IdeaReportingEvent>()
                 .firstOrNull() ?: return false
             service<ContinueSentryService>().report(

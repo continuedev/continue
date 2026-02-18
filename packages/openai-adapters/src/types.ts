@@ -58,6 +58,8 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
+    z.literal("huggingface-inference-api"),
+    z.literal("deepseek"),
   ]),
 });
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
@@ -78,12 +80,14 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   //   cacheSystemMessage: z.boolean().optional(),
   //   cacheConversation: z.boolean().optional(),
   // }).optional(),
-  env: z.object({
-    region: z.string().optional(),
-    accessKeyId: z.string().optional(),
-    secretAccessKey: z.string().optional(),
-    profile: z.string().optional(),
-  }),
+  env: z
+    .object({
+      region: z.string().optional(),
+      accessKeyId: z.string().optional(),
+      secretAccessKey: z.string().optional(),
+      profile: z.string().optional(),
+    })
+    .optional(),
 });
 export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
 
@@ -114,6 +118,73 @@ export const CohereConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("cohere"),
 });
 export type CohereConfig = z.infer<typeof CohereConfigSchema>;
+
+export const CometAPIConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("cometapi"),
+});
+export type CometAPIConfig = z.infer<typeof CometAPIConfigSchema>;
+
+export const AskSageConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("askSage"),
+  env: z
+    .object({
+      email: z.string().optional(),
+      userApiUrl: z.string().optional(),
+    })
+    .optional(),
+});
+export type AskSageConfig = z.infer<typeof AskSageConfigSchema>;
+
+/**
+ * AskSage tool format (OpenAI-compatible)
+ */
+export interface AskSageTool {
+  type: string;
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  };
+}
+
+export type AskSageToolChoice =
+  | "auto"
+  | "none"
+  | { type: "function"; function: { name: string } };
+
+export interface AskSageToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * AskSage API response format
+ */
+export interface AskSageResponse {
+  text?: string;
+  answer?: string;
+  message?: string;
+  status?: number | string;
+  response?: unknown;
+  tool_calls?: AskSageToolCall[];
+  choices?: Array<{
+    message?: {
+      content?: string;
+      tool_calls?: AskSageToolCall[];
+    };
+  }>;
+}
+
+export interface AskSageTokenResponse {
+  status: number | string;
+  response: {
+    access_token: string;
+  };
+}
 
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
@@ -196,5 +267,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   VertexAIConfigSchema,
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
+  CometAPIConfigSchema,
+  AskSageConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

@@ -1,7 +1,14 @@
-import { ChatMessage, ILLM, Prediction, PromptLog } from "..";
+import {
+  ChatMessage,
+  ILLM,
+  Prediction,
+  PromptLog,
+  type StreamDiffLinesType,
+} from "..";
 import { DEFAULT_MAX_TOKENS } from "../llm/constants";
 import { countTokens } from "../llm/countTokens";
 import { renderChatMessage } from "../util/messageContent";
+import { APPLY_UNIQUE_TOKEN } from "./constants.js";
 
 const INFINITE_STREAM_SAFETY = 0.9;
 
@@ -17,6 +24,7 @@ const RECURSIVE_PROMPT = `Continue EXACTLY where you left`;
 export async function* recursiveStream(
   llm: ILLM,
   abortController: AbortController,
+  type: StreamDiffLinesType,
   prompt: ChatMessage[] | string,
   prediction: Prediction | undefined,
   currentBuffer = "",
@@ -28,8 +36,11 @@ export async function* recursiveStream(
   let buffer = currentBuffer;
   // let whiteSpaceAtEndOfBuffer = buffer.match(/\s*$/)?.[0] ?? ""; // attempts at fixing whitespace bug with recursive boundaries
 
+  const injectApplyToken = type === "apply" && shouldInjectApplyToken(llm);
   if (typeof prompt === "string") {
-    const generator = llm.streamComplete(prompt, abortController.signal, {
+    const finalPrompt = injectApplyToken ? prompt + APPLY_UNIQUE_TOKEN : prompt;
+
+    const generator = llm.streamComplete(finalPrompt, abortController.signal, {
       raw: true,
       prediction: undefined,
       reasoning: false,
@@ -62,7 +73,11 @@ export async function* recursiveStream(
       }
     }
   } else {
-    const generator = llm.streamChat(prompt, abortController.signal, {
+    const promptMessages = injectApplyToken
+      ? appendTokenToLastMessage(prompt, APPLY_UNIQUE_TOKEN)
+      : prompt;
+
+    const generator = llm.streamChat(promptMessages, abortController.signal, {
       raw: true,
       prediction: undefined,
       reasoning: false,
@@ -103,4 +118,37 @@ export async function* recursiveStream(
       }
     }
   }
+}
+
+function shouldInjectApplyToken(llm: ILLM): boolean {
+  const model = llm.model?.toLowerCase() ?? "";
+  return (
+    llm.underlyingProviderName === "inception" && model.includes("mercury")
+  );
+}
+
+function appendTokenToLastMessage(
+  messages: ChatMessage[],
+  token: string,
+): ChatMessage[] {
+  if (messages.length === 0) {
+    return messages;
+  }
+
+  const lastMessage = messages[messages.length - 1];
+  if (typeof lastMessage.content !== "string") {
+    return messages;
+  }
+
+  if (lastMessage.content.endsWith(token)) {
+    return messages;
+  }
+
+  const updatedMessages = [...messages];
+  updatedMessages[updatedMessages.length - 1] = {
+    ...lastMessage,
+    content: lastMessage.content + token,
+  };
+
+  return updatedMessages;
 }

@@ -5,17 +5,9 @@ import { ChatHistoryItem } from "core";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
-import { vscBackground } from "../..";
 import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
-import { ButtonContent, SpoilerButton } from "../../ui/SpoilerButton";
-
-const ThinkingTextContainer = styled.span`
-  display: inline-block;
-  min-width: fit-content;
-
-  padding-right: 1em; /* Reserve space for the ellipsis animation */
-`;
+import { Button } from "../../ui";
 
 const MarkdownWrapper = styled.div`
   & > div > *:first-child {
@@ -39,7 +31,6 @@ function ThinkingBlockPeek({
   index,
   prevItem,
   inProgress,
-  signature,
   tokens,
 }: ThinkingBlockPeekProps) {
   const [open, setOpen] = useState(false);
@@ -66,58 +57,53 @@ function ThinkingBlockPeek({
 
   return duplicateRedactedThinkingBlock ? null : (
     <div className="thread-message">
-      <div className="" style={{ backgroundColor: vscBackground }}>
-        <div
-          className="flex items-center justify-start pl-2 text-xs text-gray-300"
-          data-testid="thinking-block-peek"
-        >
-          <SpoilerButton onClick={() => setOpen(!open)}>
-            <ButtonContent>
-              {inProgress ? (
-                <span>
-                  {redactedThinking ? "Redacted Thinking" : "Thinking"}
-                  <AnimatedEllipsis />
-                </span>
-              ) : redactedThinking ? (
-                "Redacted Thinking"
-              ) : (
-                "Thought" +
-                (elapsedTime ? ` for ${elapsedTime}` : "") +
-                (tokens ? ` (${tokens} tokens)` : "")
-              )}
-              {open ? (
-                <ChevronUpIcon className="h-3 w-3" />
-              ) : (
-                <ChevronDownIcon className="h-3 w-3" />
-              )}
-            </ButtonContent>
-          </SpoilerButton>
+      <div className="mt-1 flex flex-col px-4">
+        <div>
+          <Button
+            variant="outline"
+            className="text-description flex-0 border-border m-0 mb-2 flex min-w-0 cursor-pointer flex-row items-center gap-1.5 rounded-full border-[0.5px] border-solid px-3 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
+            data-testid="thinking-block-peek"
+            aria-expanded={open}
+            aria-controls={`thinking-block-content-${index}`}
+            onClick={() => setOpen(!open)}
+          >
+            {inProgress ? (
+              <span>
+                {redactedThinking ? "Redacted Thinking" : "Thinking"}
+                <AnimatedEllipsis />
+              </span>
+            ) : redactedThinking ? (
+              "Redacted Thinking"
+            ) : (
+              "Thought" +
+              (elapsedTime ? ` for ${elapsedTime}` : "") +
+              (tokens ? ` (${tokens} tokens)` : "")
+            )}
+            {open ? (
+              <ChevronUpIcon className="h-3 w-3" />
+            ) : (
+              <ChevronDownIcon className="h-3 w-3" />
+            )}
+          </Button>
         </div>
         <div
-          className={`ml-2 mt-2 overflow-y-auto transition-none duration-300 ease-in-out ${
-            open ? "mb-2 mt-5 opacity-100" : "max-h-0 border-0 opacity-0"
+          id={`thinking-block-content-${index}`}
+          className={`overflow-y-auto transition-all duration-300 ease-in-out ${
+            open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}
-          style={{
-            borderLeft:
-              open && !redactedThinking
-                ? "2px solid var(--vscode-input-border, #606060)"
-                : "none",
-          }}
         >
           {redactedThinking ? (
-            <div className="text-description-muted pl-4 text-xs">
+            <div className="text-description pl-5 text-xs italic">
               Thinking content redacted due to safety reasons.
             </div>
           ) : (
-            <>
-              <MarkdownWrapper className="-mt-1 px-0 pl-1">
-                <StyledMarkdownPreview
-                  isRenderingInStepContainer
-                  source={content}
-                  itemIndex={index}
-                />
-              </MarkdownWrapper>
-            </>
+            <MarkdownWrapper>
+              <StyledMarkdownPreview
+                isRenderingInStepContainer
+                source={content}
+                itemIndex={index}
+              />
+            </MarkdownWrapper>
           )}
         </div>
       </div>

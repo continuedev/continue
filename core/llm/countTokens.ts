@@ -18,6 +18,7 @@ import {
 import { renderChatMessage } from "../util/messageContent.js";
 import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
 import { DEFAULT_PRUNING_LENGTH } from "./constants.js";
+import { getAdjustedTokenCountFromModel } from "./getAdjustedTokenCount.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -85,7 +86,7 @@ function encodingForModel(modelName: string): Encoding {
 
 function countImageTokens(content: MessagePart): number {
   if (content.type === "imageUrl") {
-    return 85;
+    return 1024;
   }
   throw new Error("Non-image content type");
 }
@@ -114,8 +115,9 @@ function countTokens(
   modelName = "llama2",
 ): number {
   const encoding = encodingForModel(modelName);
+  let baseTokens = 0;
   if (Array.isArray(content)) {
-    return content.reduce((acc, part) => {
+    baseTokens = content.reduce((acc, part) => {
       return (
         acc +
         (part.type === "text"
@@ -124,8 +126,9 @@ function countTokens(
       );
     }, 0);
   } else {
-    return encoding.encode(content ?? "", "all", []).length;
+    baseTokens = encoding.encode(content ?? "", "all", []).length;
   }
+  return getAdjustedTokenCountFromModel(baseTokens, modelName);
 }
 
 // https://community.openai.com/t/how-to-calculate-the-tokens-when-using-function-call/266573/10
@@ -468,13 +471,13 @@ function compileChatMessages({
 
   const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
+  const outputTokensToReserve = maxTokens;
 
   let inputTokensAvailable = contextLength;
 
   // Leave space for output/safety
   inputTokensAvailable -= countingSafetyBuffer;
-  inputTokensAvailable -= minOutputTokens;
+  inputTokensAvailable -= outputTokensToReserve;
 
   // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
@@ -485,7 +488,7 @@ function compileChatMessages({
   if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
-        There must be at least ${minOutputTokens} tokens remaining for output.
+        There must be at least ${maxTokens} tokens remaining for output.
         Request had the following token counts:
         - contextLength: ${knownContextLength}
         - counting safety buffer: ${countingSafetyBuffer}
@@ -528,8 +531,7 @@ function compileChatMessages({
 
   const inputTokens =
     currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
-  const availableTokens =
-    contextLength - countingSafetyBuffer - minOutputTokens;
+  const availableTokens = contextLength - countingSafetyBuffer - maxTokens;
   const contextPercentage = inputTokens / availableTokens;
   return {
     compiledChatMessages: reassembled,

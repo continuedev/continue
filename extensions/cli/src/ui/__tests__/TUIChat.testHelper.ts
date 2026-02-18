@@ -423,6 +423,20 @@ export async function sendMessage(
 }
 
 /**
+ * Helper to wait for next render cycle to complete
+ * Use this after stdin.write() to ensure at least one render has occurred
+ * This prevents flaky tests caused by calling lastFrame() before React renders
+ */
+export async function waitForNextRender(): Promise<void> {
+  // Wait for multiple ticks to ensure render completes
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
+  // Add a delay to allow Ink terminal UI to render
+  // CI environments are slower, so we need a longer delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+}
+
+/**
  * Helper to check if UI shows remote mode indicators
  */
 export function expectRemoteMode(frame: string | undefined) {
@@ -442,6 +456,24 @@ export function expectNormalMode(frame: string | undefined) {
   // Should show normal indicator
   expect(frame).toContain("●");
   expect(frame).toContain("Continue CLI");
+}
+
+/**
+ * Helper to wait for a condition to be true
+ * similar to `waitFor` in testing libraries
+ */
+export async function waitForCondition(
+  conditionFn: () => boolean,
+  timeoutMs = 2000,
+  intervalMs = 50,
+): Promise<void> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    if (conditionFn()) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
 }
 
 // Make runTest available globally for test files

@@ -1,10 +1,10 @@
 import chalk from "chalk";
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { getApiClient } from "../config.js";
 
+import { AuthenticatedConfig, EnvironmentAuthConfig } from "./workos-types.js";
 import { ensureOrganization } from "./workos.js";
-import type { AuthenticatedConfig, EnvironmentAuthConfig } from "./workos.js";
 
 // Mock dependencies
 vi.mock("../config.js", () => ({

@@ -37,7 +37,7 @@ export class ContinueConsoleWebviewViewProvider
     this._webview.onDidReceiveMessage((message: FromConsoleView) => {
       if (message.type === "start") {
         this._currentUuid = message.uuid;
-        this._webview?.postMessage({
+        void this._webview?.postMessage({
           type: "init",
           uuid: this._currentUuid,
           items: this.getAllItems(),
@@ -70,7 +70,7 @@ export class ContinueConsoleWebviewViewProvider
       if (e.affectsConfiguration(`${EXTENSION_NAME}.enableConsole`)) {
         const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
         this._saveLog = config.get<boolean>("enableConsole");
-        if (!this._saveLog) {
+        if (this._saveLog === false) {
           this.clearLog();
         }
       }
@@ -103,7 +103,7 @@ export class ContinueConsoleWebviewViewProvider
     }
 
     if (this._currentUuid) {
-      this._webview?.postMessage({
+      void this._webview?.postMessage({
         type: "item",
         uuid: this._currentUuid,
         item,
@@ -116,7 +116,7 @@ export class ContinueConsoleWebviewViewProvider
         MAX_INTERACTIONS
     ) {
       let toRemove = this._completedInteractions.shift();
-      this._webview?.postMessage({
+      void this._webview?.postMessage({
         type: "remove",
         uuid: this._currentUuid,
         interactionId: toRemove![0].interactionId,
@@ -139,7 +139,7 @@ export class ContinueConsoleWebviewViewProvider
     this._currentInteractions = new Map();
 
     if (this._currentUuid) {
-      this._webview?.postMessage({
+      void this._webview?.postMessage({
         type: "clear",
         uuid: this._currentUuid,
       });
@@ -157,7 +157,10 @@ export class ContinueConsoleWebviewViewProvider
 
     const inDevelopmentMode =
       context?.extensionMode === vscode.ExtensionMode.Development;
-    if (!inDevelopmentMode) {
+    if (inDevelopmentMode) {
+      scriptUri = "http://localhost:5173/src/console.tsx";
+      styleMainUri = "http://localhost:5173/src/indexConsole.css";
+    } else {
       scriptUri = panel.webview
         .asWebviewUri(
           vscode.Uri.joinPath(extensionUri, "gui/assets/indexConsole.js"),
@@ -168,9 +171,6 @@ export class ContinueConsoleWebviewViewProvider
           vscode.Uri.joinPath(extensionUri, "gui/assets/indexConsole.css"),
         )
         .toString();
-    } else {
-      scriptUri = "http://localhost:5173/src/console.tsx";
-      styleMainUri = "http://localhost:5173/src/indexConsole.css";
     }
 
     panel.webview.options = {

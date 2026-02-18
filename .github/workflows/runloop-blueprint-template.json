@@ -1,0 +1,29 @@
+{
+  "name": "cn",
+  "dockerfile": "FROM runloop:runloop/universal-ubuntu-24.04-x86_64-dnd",
+  "system_setup_commands": [
+    "npm i -g @continuedev/cli@latest",
+    "sudo apt update",
+    "printf '#!/bin/sh\\nexit 101\\n' | sudo tee /usr/sbin/policy-rc.d > /dev/null && sudo chmod +x /usr/sbin/policy-rc.d",
+    "sudo apt install -y --no-install-recommends ripgrep chromium chromium-driver xvfb",
+    "sudo rm /usr/sbin/policy-rc.d",
+    "sudo mkdir -p /opt/google/chrome",
+    "sudo ln -s /usr/bin/chromium /opt/google/chrome/chrome",
+    "curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash",
+    "sudo apt-get install -y infisical",
+    "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg",
+    "sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg",
+    "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null",
+    "sudo apt update",
+    "sudo apt install -y gh",
+    "npm cache clean --force"
+  ],
+  "launch_parameters": {
+    "launch_commands": [
+      "export DISPLAY=:99",
+      "export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+      "nohup Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &",
+      "sleep 2"
+    ]
+  }
+}

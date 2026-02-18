@@ -1,17 +1,21 @@
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { stripImages } from "core/util/messageContent.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
-import type { ChatCompletionTool } from "openai/resources.mjs";
 
-import { filterExcludedTools } from "../permissions/index.js";
+import { checkToolPermission } from "src/permissions/permissionChecker.js";
+
 import {
-  getServiceSync,
-  MCPServiceState,
-  MCPTool,
   SERVICE_NAMES,
+  serviceContainer,
+  services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import { getAllBuiltinTools, ToolCall } from "../tools/index.js";
+import {
+  convertToolToChatCompletionTool,
+  getAllAvailableTools,
+  Tool,
+  ToolCall,
+} from "../tools/index.js";
 import { logger } from "../util/logger.js";
 
 import {
@@ -20,21 +24,39 @@ import {
 } from "./streamChatResponse.helpers.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 
+interface HandleToolCallsOptions {
+  toolCalls: ToolCall[];
+  chatHistory: ChatHistoryItem[];
+  content: string;
+  callbacks: StreamCallbacks | undefined;
+  isHeadless: boolean;
+  usage?: any;
+}
+
 export async function handleToolCalls(
-  toolCalls: ToolCall[],
-  chatHistory: ChatHistoryItem[],
-  content: string,
-  callbacks: StreamCallbacks | undefined,
-  isHeadless: boolean,
+  options: HandleToolCallsOptions,
 ): Promise<boolean> {
+  const { toolCalls, chatHistory, content, callbacks, isHeadless, usage } =
+    options;
+  const chatHistorySvc = services.chatHistory;
+  const useService =
+    typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
   if (toolCalls.length === 0) {
     if (content) {
-      chatHistory.push(
-        createHistoryItem({
+      if (useService) {
+        // Service-driven: write assistant message via service
+        chatHistorySvc.addAssistantMessage(content, undefined, usage);
+      } else {
+        // Fallback only when service is unavailable
+        const message: any = {
           role: "assistant",
           content,
-        }),
-      );
+        };
+        if (usage) {
+          message.usage = usage;
+        }
+        chatHistory.push(createHistoryItem(message));
+      }
     }
     return false;
   }
@@ -68,27 +90,69 @@ export async function handleToolCalls(
     })),
   };
 
-  chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
+  if (useService) {
+    // Important: pass ChatCompletion-style toolCalls, not internal ToolCall[]
+    chatHistorySvc.addAssistantMessage(
+      assistantMessage.content || "",
+      assistantMessage.toolCalls,
+      usage,
+    );
+  } else {
+    // Fallback only when service is unavailable
+    const messageWithUsage = usage
+      ? { ...assistantMessage, usage }
+      : assistantMessage;
+    chatHistory.push(createHistoryItem(messageWithUsage, [], toolCallStates));
+  }
 
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
-    await preprocessStreamedToolCalls(toolCalls, callbacks);
+    await preprocessStreamedToolCalls(isHeadless, toolCalls, callbacks);
 
-  // Add any preprocessing errors to chat history
-  // Convert error entries from OpenAI format to ChatHistoryItem format
+  // Add any preprocessing errors to the toolCallStates on the assistant message
+  // (NOT as separate history items, which would cause duplicate tool_result messages)
   errorChatEntries.forEach((errorEntry) => {
-    chatHistory.push(
-      createHistoryItem({
-        role: "tool",
-        content: stripImages(errorEntry.content) || "",
-        toolCallId: errorEntry.tool_call_id,
-      }),
-    );
+    const errorContent = stripImages(errorEntry.content) || "";
+    if (useService) {
+      chatHistorySvc.addToolResult(
+        errorEntry.tool_call_id,
+        errorContent,
+        "errored",
+      );
+    } else {
+      // Fallback only when service is unavailable: update local tool state
+      const lastAssistantIndex = chatHistory.findLastIndex(
+        (item) => item.message.role === "assistant" && item.toolCallStates,
+      );
+      if (
+        lastAssistantIndex >= 0 &&
+        chatHistory[lastAssistantIndex].toolCallStates
+      ) {
+        const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
+          (ts) => ts.toolCallId === errorEntry.tool_call_id,
+        );
+        if (toolState) {
+          toolState.status = "errored";
+          toolState.output = [
+            {
+              content: errorContent,
+              name: `Tool Result`,
+              description: "Tool execution result",
+            },
+          ];
+        }
+      }
+    }
   });
 
   // Execute the valid preprocessed tool calls
-  const { chatHistoryEntries: toolResults, hasRejection } =
-    await executeStreamedToolCalls(preprocessedCalls, callbacks, isHeadless);
+  // Note: executeStreamedToolCalls adds tool results to toolCallStates via
+  // services.chatHistory.addToolResult() internally
+  const { hasRejection } = await executeStreamedToolCalls(
+    preprocessedCalls,
+    callbacks,
+    isHeadless,
+  );
 
   if (isHeadless && hasRejection) {
     logger.debug(
@@ -97,128 +161,35 @@ export async function handleToolCalls(
     return true; // Signal early return needed
   }
 
-  // Convert tool results from OpenAI format to ChatHistoryItem format
-  // and add them to the chat history
-  toolResults.forEach((toolResult) => {
-    // Find the corresponding tool call state to update
-    const lastAssistantIndex = chatHistory.findLastIndex(
-      (item) => item.message.role === "assistant" && item.toolCallStates,
-    );
-
-    if (
-      lastAssistantIndex >= 0 &&
-      chatHistory[lastAssistantIndex].toolCallStates
-    ) {
-      const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-        (ts) => ts.toolCallId === toolResult.tool_call_id,
-      );
-
-      if (toolState) {
-        toolState.status = hasRejection ? "canceled" : "done";
-        toolState.output = [
-          {
-            content:
-              typeof toolResult.content === "string" ? toolResult.content : "",
-            name: `Tool Result`,
-            description: "Tool execution result",
-          },
-        ];
-      }
-    }
-  });
+  // Tool results are already added to toolCallStates in executeStreamedToolCalls
+  // via services.chatHistory.addToolResult() - no need to add them again here.
+  // Adding them again would be redundant (and previously caused duplicate tool_result messages
+  // when combined with separate tool history items).
   return false;
 }
 
-export async function getAllTools() {
-  // Get all available tool names
-  const allBuiltinTools = getAllBuiltinTools();
-  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
+export async function getRequestTools(isHeadless: boolean) {
+  const availableTools = await getAllAvailableTools(isHeadless);
 
-  let mcpTools: MCPTool[] = [];
-  let mcpToolNames: string[] = [];
-  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
-  if (mcpServiceResult.state === "ready") {
-    mcpTools = mcpServiceResult?.value?.tools ?? [];
-    mcpToolNames = mcpTools.map((t) => t.name);
-  } else {
-    // MCP is lazy
-    // throw new Error("MCP Service not initialized");
+  const permissionsState =
+    await serviceContainer.get<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+
+  const allowedTools: Tool[] = [];
+  for (const tool of availableTools) {
+    const result = checkToolPermission(
+      { name: tool.name, arguments: {} },
+      permissionsState.permissions,
+    );
+
+    if (
+      result.permission === "allow" ||
+      (result.permission === "ask" && !isHeadless)
+    ) {
+      allowedTools.push(tool);
+    }
   }
 
-  const allToolNames = [...builtinToolNames, ...mcpToolNames];
-
-  // Check if the ToolPermissionService is ready
-  const permissionsServiceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-  );
-
-  let allowedToolNames: string[];
-  if (
-    permissionsServiceResult.state === "ready" &&
-    permissionsServiceResult.value
-  ) {
-    // Filter out excluded tools based on permissions
-    allowedToolNames = filterExcludedTools(
-      allToolNames,
-      permissionsServiceResult.value.permissions,
-    );
-  } else {
-    // Service not ready - this is a critical error since tools should only be
-    // requested after services are properly initialized
-    logger.error(
-      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue",
-    );
-    throw new Error(
-      "ToolPermissionService not initialized. Services must be initialized before requesting tools.",
-    );
-  }
-
-  const allowedToolNamesSet = new Set(allowedToolNames);
-
-  // Filter builtin tools
-  const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name),
-  );
-
-  const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
-    type: "function" as const,
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: {
-        type: "object",
-        properties: Object.fromEntries(
-          Object.entries(tool.parameters).map(([key, param]) => [
-            key,
-            {
-              type: param.type,
-              description: param.description,
-              items: param.items,
-            },
-          ]),
-        ),
-        required: Object.entries(tool.parameters)
-          .filter(([_, param]) => param.required)
-          .map(([key, _]) => key),
-      },
-    },
-  }));
-
-  // Add filtered MCP tools
-  const allowedMcpTools = mcpTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name),
-  );
-
-  allTools.push(
-    ...allowedMcpTools.map((tool) => ({
-      type: "function" as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.inputSchema,
-      },
-    })),
-  );
-
-  return allTools;
+  return allowedTools.map(convertToolToChatCompletionTool);
 }

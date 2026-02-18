@@ -10,7 +10,7 @@ describe("getRequestRuleDescription", () => {
         source: "default-chat",
         rule: "Always use semicolons",
         alwaysApply: true,
-        ruleFile: "/path/to/rule1.md",
+        sourceFile: "/path/to/rule1.md",
       },
       {
         name: "Rule with Globs",
@@ -18,7 +18,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Use TypeScript",
         globs: "**/*.ts",
-        ruleFile: "/path/to/rule2.md",
+        sourceFile: "/path/to/rule2.md",
       },
     ];
 
@@ -38,7 +38,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Use consistent formatting",
         alwaysApply: false,
-        ruleFile: "/path/to/agent-rule1.md",
+        sourceFile: "/path/to/agent-rule1.md",
       },
       {
         name: "Agent Rule 2",
@@ -46,7 +46,7 @@ describe("getRequestRuleDescription", () => {
         source: "default-agent",
         rule: "Follow naming conventions",
         alwaysApply: false,
-        ruleFile: "/path/to/agent-rule2.md",
+        sourceFile: "/path/to/agent-rule2.md",
       },
       // These should be filtered out
       {
@@ -55,7 +55,7 @@ describe("getRequestRuleDescription", () => {
         source: "default-chat",
         rule: "Always use semicolons",
         alwaysApply: true,
-        ruleFile: "/path/to/rule1.md",
+        sourceFile: "/path/to/rule1.md",
       },
       {
         name: "Rule with Globs",
@@ -63,7 +63,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Use TypeScript",
         globs: "**/*.ts",
-        ruleFile: "/path/to/rule2.md",
+        sourceFile: "/path/to/rule2.md",
       },
     ];
 
@@ -84,7 +84,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Some rule content",
         alwaysApply: false,
-        ruleFile: "/path/to/no-desc-rule.md",
+        sourceFile: "/path/to/no-desc-rule.md",
       },
     ];
 
@@ -104,7 +104,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Some rule content",
         alwaysApply: false,
-        ruleFile: "/path/to/no-name-rule.md",
+        sourceFile: "/path/to/no-name-rule.md",
       },
     ];
 
@@ -117,7 +117,7 @@ describe("getRequestRuleDescription", () => {
     expect(result).toBe(expected);
   });
 
-  it("should handle rules with missing ruleFile", () => {
+  it("should handle rules with missing sourceFile", () => {
     const rules: RuleWithSource[] = [
       {
         name: "Rule Without File",
@@ -144,7 +144,7 @@ describe("getRequestRuleDescription", () => {
         description: "This should be filtered out",
         source: "rules-block",
         rule: "Some rule",
-        ruleFile: "/path/to/rule.md",
+        sourceFile: "/path/to/rule.md",
         // alwaysApply is undefined, which is truthy in the filter condition
       },
       {
@@ -153,7 +153,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Some rule",
         alwaysApply: false,
-        ruleFile: "/path/to/valid-rule.md",
+        sourceFile: "/path/to/valid-rule.md",
       },
     ];
 
@@ -175,7 +175,7 @@ describe("getRequestRuleDescription", () => {
         rule: "Some rule",
         alwaysApply: false,
         globs: "**/*.ts",
-        ruleFile: "/path/to/rule1.md",
+        sourceFile: "/path/to/rule1.md",
       },
       {
         name: "Rule with array globs",
@@ -184,7 +184,7 @@ describe("getRequestRuleDescription", () => {
         rule: "Some rule",
         alwaysApply: false,
         globs: ["**/*.ts", "**/*.js"],
-        ruleFile: "/path/to/rule2.md",
+        sourceFile: "/path/to/rule2.md",
       },
       {
         name: "Valid Agent Rule",
@@ -192,7 +192,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Some rule",
         alwaysApply: false,
-        ruleFile: "/path/to/valid-rule.md",
+        sourceFile: "/path/to/valid-rule.md",
       },
     ];
 
@@ -224,7 +224,7 @@ describe("getRequestRuleDescription", () => {
         source: "rules-block",
         rule: "Follow this guideline",
         alwaysApply: false,
-        ruleFile: "/path/to/single-rule.md",
+        sourceFile: "/path/to/single-rule.md",
       },
     ];
 

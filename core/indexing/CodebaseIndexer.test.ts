@@ -21,6 +21,7 @@ import CodebaseContextProvider from "../context/providers/CodebaseContextProvide
 import { ContinueConfig } from "../index.js";
 import { localPathToUri } from "../util/pathToUri.js";
 import { CodebaseIndexer } from "./CodebaseIndexer.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
@@ -674,6 +675,155 @@ describe("CodebaseIndexer", () => {
           "/test/workspace",
         ]);
       });
+    });
+
+    describe("getIndexesToBuild", () => {
+      let indexer: CodebaseIndexer;
+      let mockConfig: any;
+      let mockEmbeddingsModel: any;
+      let mockIdeSettings: any;
+
+      beforeEach(async () => {
+        indexer = new CodebaseIndexer(
+          testConfigHandler,
+          testIde,
+          mockMessenger as any,
+          false,
+        );
+
+        mockEmbeddingsModel = {
+          maxEmbeddingChunkSize: 1000,
+          model: "test-model",
+          provider: "test-provider",
+        };
+
+        mockIdeSettings = {
+          remoteConfigServerUrl: "http://test.com",
+          userToken: "test-token",
+        };
+
+        mockConfig = {
+          selectedModelByRole: {
+            embed: mockEmbeddingsModel,
+          },
+          contextProviders: [],
+        };
+
+        jest
+          .spyOn(testIde, "getIdeSettings")
+          .mockResolvedValue(mockIdeSettings);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test("should create specific indexTypes for the requested context providers", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["chunk", "codeSnippets"],
+            },
+          },
+        ];
+
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = (await (
+          indexer as any
+        ).getIndexesToBuild()) as CodebaseIndex[];
+
+        expect(indexes).toHaveLength(2);
+        expect(indexes[0].artifactId).toBe("chunks");
+        expect(indexes[1].artifactId).toBe("codeSnippets");
+      });
+
+      test("should handle duplicate contexts", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+        ];
+
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = await (indexer as any).getIndexesToBuild();
+
+        expect(indexes).toHaveLength(1);
+        expect(indexes[0].artifactId).toBe("codeSnippets");
+      });
+    });
+  });
+
+  describe("wasAnyOneIndexAdded", () => {
+    let testIndexer: TestCodebaseIndexer;
+    let mockGetIndexesToBuild: jest.MockedFunction<any>;
+
+    beforeEach(() => {
+      testIndexer = new TestCodebaseIndexer(
+        testConfigHandler,
+        testIde,
+        mockMessenger as any,
+        false,
+      );
+
+      // Mock getIndexesToBuild to control what indexes should be built
+      mockGetIndexesToBuild = jest
+        .spyOn(testIndexer as any, "getIndexesToBuild")
+        .mockResolvedValue([]);
+
+      jest
+        .spyOn(testIndexer, "refreshCodebaseIndex")
+        .mockImplementation(async () => {});
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test("should return true when indexes to build differ from built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex2];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(true);
+    });
+
+    test("should return true when there are more indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1, mockIndex2]);
+      (testIndexer as any).builtIndexes = [mockIndex1];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(true);
+    });
+
+    test("should return false when there are fewer indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
+
+      const result = await testIndexer.wasAnyOneIndexAdded();
+      expect(result).toBe(false);
     });
   });
 });

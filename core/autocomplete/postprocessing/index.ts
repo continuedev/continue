@@ -52,6 +52,43 @@ function isBlank(completion: string): boolean {
   return completion.trim().length === 0;
 }
 
+/**
+ * Removes markdown code block delimiters from completion.
+ * Removes the first line if it starts with backticks (with optional language name).
+ * Removes the last line if it contains only backticks.
+ */
+function removeBackticks(completion: string): string {
+  const lines = completion.split("\n");
+
+  if (lines.length === 0) {
+    return completion;
+  }
+
+  let startIdx = 0;
+  let endIdx = lines.length;
+
+  // Remove first line if it starts with backticks (``` or ```language)
+  const firstLineTrimmed = lines[0].trim();
+  if (firstLineTrimmed.startsWith("```")) {
+    startIdx = 1;
+  }
+
+  // Remove last line if it contains only backticks (one or more)
+  if (lines.length > startIdx) {
+    const lastLineTrimmed = lines[lines.length - 1].trim();
+    if (lastLineTrimmed.length > 0 && /^`+$/.test(lastLineTrimmed)) {
+      endIdx = lines.length - 1;
+    }
+  }
+
+  // If we removed lines, return the modified completion
+  if (startIdx > 0 || endIdx < lines.length) {
+    return lines.slice(startIdx, endIdx).join("\n");
+  }
+
+  return completion;
+}
+
 export function postprocessCompletion({
   completion,
   llm,
@@ -113,7 +150,7 @@ export function postprocessCompletion({
     completion = completion.replace(/^\n+|\n+$/g, "");
   }
 
-  if (llm.model.includes("mercury") || llm.model.includes("granite")) {
+  if (llm.model.includes("granite")) {
     // Granite tends to repeat the start of the line in the completion output
     let prefixEnd = prefix.split("\n").pop();
     if (prefixEnd) {
@@ -155,6 +192,9 @@ export function postprocessCompletion({
   if (prefix.endsWith(" ") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
+
+  // Remove markdown code block delimiters
+  completion = removeBackticks(completion);
 
   return completion;
 }

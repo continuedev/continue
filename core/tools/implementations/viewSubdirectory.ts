@@ -1,20 +1,33 @@
 import generateRepoMap from "../../util/generateRepoMap";
-import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { resolveInputPath } from "../../util/pathResolver";
 
 import { ToolImpl } from ".";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import { getStringArg } from "../parseArgs";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const directory_path = getStringArg(args, "directory_path");
 
-  const uri = await resolveRelativePathInDir(directory_path, extras.ide);
+  const resolvedPath = await resolveInputPath(extras.ide, directory_path);
 
-  if (!uri) {
-    throw new Error(`Directory path "${directory_path}" does not exist.`);
+  if (!resolvedPath) {
+    throw new ContinueError(
+      ContinueErrorReason.DirectoryNotFound,
+      `Directory path "${directory_path}" does not exist or is not accessible.`,
+    );
+  }
+
+  // Check if the resolved path actually exists
+  const exists = await extras.ide.fileExists(resolvedPath.uri);
+  if (!exists) {
+    throw new ContinueError(
+      ContinueErrorReason.DirectoryNotFound,
+      `Directory path "${directory_path}" does not exist or is not accessible.`,
+    );
   }
 
   const repoMap = await generateRepoMap(extras.llm, extras.ide, {
-    dirUris: [uri],
+    dirUris: [resolvedPath.uri],
     outputRelativeUriPaths: true,
     includeSignatures: false,
   });
@@ -22,7 +35,7 @@ export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   return [
     {
       name: "Repo map",
-      description: `Map of ${directory_path}`,
+      description: `Map of ${resolvedPath.displayPath}`,
       content: repoMap,
     },
   ];

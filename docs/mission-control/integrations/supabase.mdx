@@ -1,0 +1,17 @@
+---
+title: "Supabase"
+---
+
+The Supabase integration connects your database to Mission Control so agents can audit Row Level Security (RLS) policies when pull requests touch database-related code.
+
+[Connect Supabase in Mission Control →](https://continue.dev/integrations/supabase)
+
+## Access and permissions
+
+When connecting Supabase, you select the organization and project to connect. Approved permissions allow agents to inspect RLS policies, generate migrations, and commit fixes to PR branches.
+
+You can revoke access at any time from Supabase or Mission Control.
+
+## RLS audits
+
+Trigger an agent on `PR Opened` to audit RLS for tables referenced in the diff. The agent commits fixes directly to the PR branch and posts a summary comment.

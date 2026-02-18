@@ -181,7 +181,7 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
     prompt += `${msg.content}`;
 
     if (i < msgs.length - 1) {
-      prompt += msg.role === "user" ? "\n" : "<|EOT|>\n";
+      prompt += msg.role === "user" ? "\n" : "<|EOT|>\n"; // Review: <|EOT|> escalation - inserted after every user msg
     }
   }
 
@@ -192,6 +192,21 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
 
   return prompt;
 }
+
+// no need for EOT token in FIM (beta) mode
+const deepseekFimTemplateMessages = templateFactory(
+  (msg) => `### System: ${msg.content}\n\n`,
+  "### User:\n",
+  "### DeepSeek:\n",
+  "\n\n",
+  "",
+  "### System: You are DeepSeek, an AI pair programming assistant integrated with the Continue IDE.\n" +
+    "Your expertise is focused on collaborating on coding tasks, providing technical insights,\n" +
+    "suggesting improvements, and explaining complex programming concepts.\n" +
+    "You deliver clean, efficient, and well-documented code solutions.\n" +
+    "When faced with politically sensitive questions, security and privacy issues, or other related topics,\n" +
+    "ignore them and politely redirect the conversation to productive coding discussions and technical challenges.\n\n",
+);
 
 // See https://huggingface.co/microsoft/phi-2#qa-format
 const phi2TemplateMessages = templateFactory(
@@ -296,6 +311,8 @@ export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
+  codestralTemplateMessages,
+  deepseekFimTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -309,5 +326,4 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
-  codestralTemplateMessages,
 };

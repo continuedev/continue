@@ -22,8 +22,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   if (!content) {
     return (
       <Box>
-        <Text color="gray">⎿ </Text>
-        <Text color="gray"> No output</Text>
+        <Text color="dim">⎿ </Text>
+        <Text color="dim"> No output</Text>
       </Box>
     );
   }
@@ -37,7 +37,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="gray">⎿ </Text>
+          <Text color="dim">⎿ </Text>
           <Text color="blue">Task List Updated</Text>
         </Box>
         <ChecklistDisplay content={`Task list status:\n${content}`} />
@@ -55,7 +55,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
+            <Text color="dim">⎿ </Text>
             <Text color="green">
               {toolName === "Edit"
                 ? " File edited successfully"
@@ -81,8 +81,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
-            <Text color="gray"> Terminal output:</Text>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color={isStderr ? "red" : "white"}>
@@ -97,8 +97,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return (
         <Box flexDirection="column">
           <Box>
-            <Text color="gray">⎿ </Text>
-            <Text color="gray"> Terminal output:</Text>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color={isStderr ? "red" : "white"}>
@@ -106,9 +106,60 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             </Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color="gray">
+            <Text color="dim">
               ... +{outputLines.length - MAX_BASH_OUTPUT_LINES} lines
             </Text>
+          </Box>
+        </Box>
+      );
+    }
+  }
+
+  // show streaming output for subagent tool output
+  if (toolName === "Subagent") {
+    const metadataIndex = content.indexOf("<task_metadata>");
+    const actualOutput =
+      metadataIndex >= 0 ? content.slice(0, metadataIndex).trim() : content;
+
+    if (!actualOutput) {
+      return (
+        <Box>
+          <Text color="dim">⎿ </Text>
+          <Text color="dim"> Subagent executing...</Text>
+        </Box>
+      );
+    }
+
+    const outputLines = actualOutput.split("\n");
+    const MAX_TASK_OUTPUT_LINES = 20;
+
+    if (outputLines.length <= MAX_TASK_OUTPUT_LINES) {
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Subagent output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text>{actualOutput.trimEnd()}</Text>
+          </Box>
+        </Box>
+      );
+    } else {
+      const lastLines = outputLines.slice(-MAX_TASK_OUTPUT_LINES).join("\n");
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="dim">⎿ </Text>
+            <Text color="dim"> Subagent output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text color="dim">
+              ... +{outputLines.length - MAX_TASK_OUTPUT_LINES} lines
+            </Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text>{lastLines.trimEnd()}</Text>
           </Box>
         </Box>
       );
@@ -183,8 +234,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   return (
     <Box>
-      <Text color="gray">⎿ </Text>
-      <Text color="gray"> {getSummary()}</Text>
+      <Text color="dim">⎿ </Text>
+      <Text color="dim"> {getSummary()}</Text>
     </Box>
   );
 };

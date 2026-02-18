@@ -1,0 +1,52 @@
+---
+title: "How Agent Mode Works"
+description: "Agent mode offers the same functionality as Chat mode, while also including tools in the request to the model and an interface for handling tool calls and responses."
+---
+
+## How the Tool Handshake Works
+
+Tools provide a flexible, powerful way for models to interface with the external world. They are provided to the model as a JSON object with a name and an arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file.
+
+The following handshake describes how Agent mode uses tools:
+
+1. In Agent mode, available tools are sent along with `user` chat requests
+2. The model can choose to include a tool call in its response
+3. The user gives permission. This step is skipped if the policy for that tool is set to `Automatic`
+4. Continue calls the tool using built-in functionality or the MCP server that offers that particular tool
+5. Continue sends the result back to the model
+6. The model responds, potentially with another tool call and step 2 begins again
+
+<Info>
+  Tool availability varies by mode: - **Chat mode**: No tools included - **Plan
+  mode**: Only read-only tools included - **Agent mode**: All tools included
+</Info>
+
+## What Built-in Tools Are Available
+
+Continue includes several built-in tools which provide the model access to IDE functionality.
+
+### What Tools Are Available in Plan Mode (Read-Only)
+
+In Plan mode, only these read-only tools are available:
+
+- **Read file** (`read_file`)
+- **Read currently open file** (`read_currently_open_file`)
+- **List directory** (`ls`)
+- **Glob search** (`glob_search`)
+- **Grep search** (`grep_search`)
+- **Fetch URL content** (`fetch_url_content`)
+- **Search web** (`search_web`)
+- **View diff** (`view_diff`)
+- **View repo map** (`view_repo_map`)
+- **View subdirectory** (`view_subdirectory`)
+- **Codebase tool** (`codebase_tool`)
+
+### What Tools Are Available in Agent Mode (All Tools)
+
+In Agent mode, all tools are available including the read-only tools above plus:
+
+- **Create new file** (`create_new_file`): Create a new file within the project
+- **Edit file** (`edit_existing_file`): Make changes to existing files
+- **Run terminal command** (`run_terminal_command`): Run commands from the workspace root
+- **Create Rule Block** (`create_rule_block`): Create a new rule block in `.continue/rules`
+- All other write/execute tools for modifying the codebase

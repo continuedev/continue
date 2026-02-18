@@ -13,7 +13,7 @@ export class MockMCPService extends MCPService {
   }
   async restartAllServers() {}
   async runTool() {
-    return {};
+    return { content: [] };
   }
   getServerInfo() {
     return {

@@ -3,21 +3,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { serviceContainer } from "./ServiceContainer.js";
 import type { ToolPermissionServiceState } from "./ToolPermissionService.js";
 
-import { initializeServices, getServiceSync, SERVICE_NAMES } from "./index.js";
+import { getServiceSync, initializeServices, SERVICE_NAMES } from "./index.js";
 
 describe("Service Initialization", () => {
   beforeEach(() => {
     // Clean up service container state
-    const services = [
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      SERVICE_NAMES.AUTH,
-      SERVICE_NAMES.API_CLIENT,
-      SERVICE_NAMES.CONFIG,
-      SERVICE_NAMES.MODEL,
-      SERVICE_NAMES.MCP,
-    ];
 
-    services.forEach((service) => {
+    Object.keys(SERVICE_NAMES).forEach((service) => {
       // Reset service state
       (serviceContainer as any).services.delete(service);
       (serviceContainer as any).factories.delete(service);

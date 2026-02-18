@@ -2,14 +2,15 @@ import { expect, test } from "vitest";
 import { BuiltInToolNames } from "./builtIn";
 import { getConfigDependentToolDefinitions } from "./index";
 
-test("searchWeb tool is only available when user is signed in", () => {
+test("searchWeb tool is only available when user is signed in", async () => {
   // Test with signed-in user
-  const signedInTools = getConfigDependentToolDefinitions({
+  const signedInTools = await getConfigDependentToolDefinitions({
     rules: [],
     enableExperimentalTools: false,
     isSignedIn: true,
     isRemote: false,
     modelName: "",
+    ide: {} as any,
   });
 
   const searchWebToolSignedIn = signedInTools.find(
@@ -19,12 +20,13 @@ test("searchWeb tool is only available when user is signed in", () => {
   expect(searchWebToolSignedIn?.displayTitle).toBe("Search Web");
 
   // Test with non-signed-in user
-  const notSignedInTools = getConfigDependentToolDefinitions({
+  const notSignedInTools = await getConfigDependentToolDefinitions({
     rules: [],
     enableExperimentalTools: false,
     isSignedIn: false,
     isRemote: false,
     modelName: "",
+    ide: {} as any,
   });
 
   const searchWebToolNotSignedIn = notSignedInTools.find(

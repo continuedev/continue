@@ -37,7 +37,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 3. **Default Resolution** (if no flag and no saved URI)
    - **Authenticated**: First user assistant from `listAssistants()`
    - **config.yaml**: The saved config file at `~/.continue/config.yaml`
-   - **Unauthenticated**: Falls back to `continuedev/default-agent`
+   - **Unauthenticated**: Falls back to `continuedev/default-cli-config`
 
 ## Authentication State Interactions
 
@@ -61,7 +61,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 **Available Options:**
 
 - Local YAML files only
-- Default assistant (`continuedev/default-agent`)
+- Default assistant (`continuedev/default-cli-config`)
 
 **Behavior:**
 
@@ -121,7 +121,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 **No User Assistants:**
 
 - Authenticated user has no personal assistants
-- **Result**: Falls back to `continuedev/default-agent`
+- **Result**: Falls back to `continuedev/default-cli-config`
 
 **Default Agent Unavailable:**
 

@@ -1,5 +1,6 @@
 export enum BuiltInToolNames {
   ReadFile = "read_file",
+  ReadFileRange = "read_file_range",
   EditExistingFile = "edit_existing_file",
   SingleFindAndReplace = "single_find_and_replace",
   MultiEdit = "multi_edit",
@@ -15,6 +16,7 @@ export enum BuiltInToolNames {
   RequestRule = "request_rule",
   FetchUrlContent = "fetch_url_content",
   CodebaseTool = "codebase",
+  ReadSkill = "read_skill",
 
   // excluded from allTools for now
   ViewRepoMap = "view_repo_map",

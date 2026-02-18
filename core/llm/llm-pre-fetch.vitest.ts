@@ -58,6 +58,10 @@ const messagesWithInvalidToolCallArgs: ChatMessage[] = [
 describe("LLM Pre-fetch", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Mock getAnthropicHeaders to return fake headers
+    vi.mocked(openAiAdapters.getAnthropicHeaders).mockReturnValue({
+      fake: "headers",
+    });
     // Log to verify the mock is properly set up
     console.log("Mock setup:", openAiAdapters);
   });

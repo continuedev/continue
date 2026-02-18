@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
+  initializeOpenRouterModels,
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
@@ -40,6 +41,11 @@ export function AddModelForm({
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  // Initialize OpenRouter models from API on component mount
+  useEffect(() => {
+    void initializeOpenRouterModels();
+  }, []);
+
   const popularProviderTitles = [
     providers["openai"]?.title || "",
     providers["anthropic"]?.title || "",
@@ -47,6 +53,7 @@ export function AddModelForm({
     providers["gemini"]?.title || "",
     providers["azure"]?.title || "",
     providers["ollama"]?.title || "",
+    providers["openrouter"]?.title || "",
   ];
 
   const allProviders = Object.entries(providers)
@@ -63,11 +70,10 @@ export function AddModelForm({
     .filter((provider) => !popularProviderTitles.includes(provider.title))
     .sort((a, b) => a.title.localeCompare(b.title));
 
-  const selectedProviderApiKeyUrl = selectedModel.params.model.startsWith(
-    "codestral",
-  )
-    ? CODESTRAL_URL
-    : selectedProvider.apiKeyUrl;
+  const selectedProviderApiKeyUrl =
+    selectedModel && selectedModel.params.model.startsWith("codestral")
+      ? CODESTRAL_URL
+      : selectedProvider.apiKeyUrl;
 
   function isDisabled() {
     if (selectedProvider.downloadUrl) {
@@ -134,22 +140,6 @@ export function AddModelForm({
         <div className="mx-auto max-w-md p-6">
           <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
 
-          {/* TODO sync free trial limit with hub */}
-          {/* {!hideFreeTrialLimitMessage && hasPassedFTL() && (
-            <p className="text-sm text-gray-400">
-              You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
-              free inputs. To keep using Continue, you can either use your own
-              API key, or use a local LLM. To read more about the options, see
-              our{" "}
-              <a
-                onClick={() => ideMessenger.post("openUrl", CONTINUE_SETUP_URL)}
-              >
-                documentation
-              </a>
-              .
-            </p>
-          )} */}
-
           <div className="my-8 flex flex-col gap-6">
             <div>
               <label className="block text-sm font-medium">Provider</label>
@@ -165,6 +155,7 @@ export function AddModelForm({
                 }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
+                searchPlaceholder="Search providers..."
               />
               <span className="text-description-muted mt-1 block text-xs">
                 Don't see your provider?{" "}

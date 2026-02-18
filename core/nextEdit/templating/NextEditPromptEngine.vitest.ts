@@ -39,6 +39,7 @@ describe("NextEditPromptEngine", () => {
       expect(template).toContain("{{{recentlyViewedCodeSnippets}}}");
       expect(template).toContain("{{{currentFileContent}}}");
       expect(template).toContain("{{{editDiffHistory}}}");
+      expect(template).toContain("{{{currentFilePath}}}");
     });
 
     it("instinct template should contain expected tokens", () => {
@@ -87,11 +88,13 @@ describe("NextEditPromptEngine", () => {
         recentlyViewedCodeSnippets: "snippet1",
         currentFileContent: "file content",
         editDiffHistory: "diff history",
+        currentFilePath: "file.py",
       });
 
       expect(result).toContain("snippet1");
       expect(result).toContain("file content");
       expect(result).toContain("diff history");
+      expect(result).toContain("current_file_path: file.py");
     });
   });
 

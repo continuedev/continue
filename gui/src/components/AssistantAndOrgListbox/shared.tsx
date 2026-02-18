@@ -187,18 +187,20 @@ export function Option({
                 />
               )
             ) : (
-              <>
+              <ToolTip
+                content={
+                  <>
+                    <div className="font-semibold">Errors</div>
+                    {JSON.stringify(errors, null, 2)}
+                  </>
+                }
+              >
                 <StyledExclamationTriangleIcon
-                  data-tooltip-id={`${idx}-errors-tooltip`}
                   $hovered={hovered}
                   className="cursor-pointer text-red-500"
                   onClick={onClickError}
                 />
-                <ToolTip id={`${idx}-errors-tooltip`}>
-                  <div className="font-semibold">Errors</div>
-                  {JSON.stringify(errors, null, 2)}
-                </ToolTip>
-              </>
+              </ToolTip>
             )}
           </div>
         </div>

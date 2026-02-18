@@ -17,7 +17,6 @@ export const InputBoxDiv = styled.div<{}>`
   padding-bottom: 1px;
   margin: 0;
   height: auto;
-  width: 100%;
   background-color: ${vscInputBackground};
   color: ${vscForeground};
 

@@ -3,6 +3,33 @@ import { ModelProvider } from "../types.js";
 export const Cohere: ModelProvider = {
   models: [
     {
+      model: "command-a-translate-08-2025",
+      displayName: "Command A Translate 08-2025",
+      contextLength: 8000,
+      maxCompletionTokens: 8192,
+      description:
+        "Command A Translate is Cohere’s state of the art machine translation model, excelling at a variety of translation tasks on 23 languages",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "command-a-reasoning-08-2025",
+      displayName: "Command A Reasoning 08-2025",
+      contextLength: 256000,
+      maxCompletionTokens: 32768,
+      description:
+        "Command A Reasoning is Cohere’s first reasoning model, able to ‘think’ before generating an output in a way that allows it to perform well in certain kinds of nuanced problem-solving and agent-based tasks in 23 languages.",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "command-a-vision-07-2025",
+      displayName: "Command A Vision 07-2025",
+      contextLength: 128000,
+      maxCompletionTokens: 8192,
+      description:
+        "Command A Vision is Cohere's first model capable of processing images, excelling in enterprise use cases such as analyzing charts, graphs, and diagrams, table understanding, OCR, document Q&A, and object detection.",
+      recommendedFor: ["chat"],
+    },
+    {
       model: "command-a-03-2025",
       displayName: "Command A 03-2025",
       contextLength: 256000,

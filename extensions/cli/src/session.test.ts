@@ -10,6 +10,7 @@ import {
   createSession,
   getCurrentSession,
   hasSession,
+  loadOrCreateSessionById,
   loadSession,
   saveSession,
   startNewSession,
@@ -36,17 +37,24 @@ vi.mock("./util/logger.js", () => ({
     error: vi.fn(),
   },
 }));
-vi.mock("../../core/util/history.js", () => ({
-  default: {
-    save: vi.fn(),
-    load: vi.fn(() => ({
-      sessionId: "test-session-id",
-      title: "Test Session",
-      workspaceDirectory: "/test/workspace",
-      history: [],
-    })),
-    list: vi.fn(() => []),
-  },
+const mockHistoryManager: any = vi.hoisted(() => ({
+  save: vi.fn((session: any) => {
+    // Mimic writing the session payload to disk so expectations on fs still work
+    fs.writeFileSync(
+      `/home/test/.continue/sessions/${session.sessionId}.json`,
+      JSON.stringify(session),
+    );
+  }),
+  load: vi.fn(() => ({
+    sessionId: "test-session-id",
+    title: "Test Session",
+    workspaceDirectory: "/test/workspace",
+    history: [],
+  })),
+  list: vi.fn(() => []),
+}));
+vi.mock("core/util/history.js", () => ({
+  default: mockHistoryManager,
 }));
 
 const mockFs = vi.mocked(fs);
@@ -71,6 +79,9 @@ describe("SessionManager", () => {
     mockFs.readFileSync.mockReturnValue("[]");
     mockFs.readdirSync.mockReturnValue([]);
     mockFs.statSync.mockReturnValue({ mtime: new Date() } as any);
+
+    // Ensure each test starts with a fresh session
+    clearSession();
   });
 
   describe("getCurrentSession", () => {
@@ -82,6 +93,15 @@ describe("SessionManager", () => {
         title: "Untitled Session",
         workspaceDirectory: process.cwd(),
         history: [],
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalCost: 0,
+          promptTokensDetails: {
+            cachedTokens: 0,
+            cacheWriteTokens: 0,
+          },
+        },
       });
     });
 
@@ -102,6 +122,15 @@ describe("SessionManager", () => {
         title: "Untitled Session",
         workspaceDirectory: process.cwd(),
         history: [],
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalCost: 0,
+          promptTokensDetails: {
+            cachedTokens: 0,
+            cacheWriteTokens: 0,
+          },
+        },
       });
     });
 
@@ -126,6 +155,13 @@ describe("SessionManager", () => {
       const currentSession = getCurrentSession();
 
       expect(currentSession).toBe(session);
+    });
+
+    it("should use provided sessionId when supplied", () => {
+      const session = createSession([], "custom-session-id");
+
+      expect(session.sessionId).toBe("custom-session-id");
+      expect(uuidv4).not.toHaveBeenCalled();
     });
   });
 
@@ -214,6 +250,42 @@ describe("SessionManager", () => {
       // After modification, system messages are filtered out
       expect(savedData.history).toHaveLength(1);
       expect(savedData.history[0].message.role).toBe("user");
+    });
+  });
+
+  describe("loadOrCreateSessionById", () => {
+    it("should load an existing session and set it as current", () => {
+      const existingSession: Session = {
+        sessionId: "existing-id",
+        title: "Existing",
+        workspaceDirectory: "/test/workspace",
+        history: [
+          {
+            message: { role: "user", content: "hi" },
+            contextItems: [],
+          },
+        ],
+      };
+
+      mockHistoryManager.load.mockReturnValue(existingSession);
+
+      const session = loadOrCreateSessionById("existing-id");
+
+      expect(session).toBe(existingSession);
+      expect(mockHistoryManager.load).toHaveBeenCalledWith("existing-id");
+      expect(getCurrentSession()).toBe(existingSession);
+    });
+
+    it("should create a new session when none exists for the id", () => {
+      mockHistoryManager.load.mockImplementation(() => {
+        throw new Error("not found");
+      });
+
+      const session = loadOrCreateSessionById("new-id");
+
+      expect(session.sessionId).toBe("new-id");
+      expect(session.history).toEqual([]);
+      expect(getCurrentSession()).toBe(session);
     });
   });
 
@@ -360,7 +432,7 @@ describe("SessionManager", () => {
       const firstSession = createSession();
       const firstSessionId = firstSession.sessionId;
 
-      vi.mocked(uuidv4).mockReturnValue("new-uuid-456" as any);
+      vi.mocked(uuidv4).mockReturnValue("new-uuid-456");
 
       const secondSession = startNewSession();
 
@@ -381,7 +453,7 @@ describe("SessionManager", () => {
         },
       ];
 
-      vi.mocked(uuidv4).mockReturnValue("new-uuid-789" as any);
+      vi.mocked(uuidv4).mockReturnValue("new-uuid-789");
 
       const session = startNewSession(history);
 
@@ -392,13 +464,109 @@ describe("SessionManager", () => {
     it("should set the new session as current", () => {
       const originalSession = createSession();
 
-      vi.mocked(uuidv4).mockReturnValue("new-session-id" as any);
+      vi.mocked(uuidv4).mockReturnValue("new-session-id");
 
       const newSession = startNewSession();
       const currentSession = getCurrentSession();
 
       expect(currentSession).toBe(newSession);
       expect(currentSession).not.toBe(originalSession);
+    });
+  });
+
+  describe("session isolation", () => {
+    it("should not pollute new sessions with previous session history", () => {
+      // Simulate first CLI session
+      vi.mocked(uuidv4).mockReturnValue("session-1");
+      const session1 = createSession();
+      const history1: ChatHistoryItem[] = [
+        {
+          message: {
+            role: "user",
+            content: "Tell me about dogs",
+          },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: "Dogs are loyal companions...",
+          },
+          contextItems: [],
+        },
+      ];
+      updateSessionHistory(history1);
+
+      // Simulate starting a new CLI session (without --resume)
+      vi.mocked(uuidv4).mockReturnValue("session-2");
+      const session2 = startNewSession([]);
+
+      // New session should have clean state
+      expect(session2.sessionId).toBe("session-2");
+      expect(session2.sessionId).not.toBe(session1.sessionId);
+      expect(session2.history).toEqual([]);
+      expect(session2.history.length).toBe(0);
+    });
+
+    it("should create independent sessions for concurrent operations", () => {
+      // Create first session with some data
+      vi.mocked(uuidv4).mockReturnValue("concurrent-1");
+      const session1 = createSession();
+      updateSessionTitle("Session 1");
+      updateSessionHistory([
+        {
+          message: {
+            role: "user",
+            content: "First session message",
+          },
+          contextItems: [],
+        },
+      ]);
+
+      // Start a new session
+      vi.mocked(uuidv4).mockReturnValue("concurrent-2");
+      const session2 = startNewSession([]);
+
+      // Verify session2 is clean
+      expect(session2.title).toBe("Untitled Session");
+      expect(session2.history).toEqual([]);
+      expect(session2.sessionId).not.toBe(session1.sessionId);
+    });
+
+    it("should properly clear session state when transitioning between sessions", () => {
+      // First session with complex history
+      vi.mocked(uuidv4).mockReturnValue("complex-session-1");
+      const session1 = createSession();
+      updateSessionTitle("Complex Session");
+      const complexHistory: ChatHistoryItem[] = [
+        {
+          message: {
+            role: "user",
+            content: "What were we discussing?",
+          },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: "We were discussing dogs earlier.",
+          },
+          contextItems: [],
+        },
+      ];
+      updateSessionHistory(complexHistory);
+
+      // Verify first session has data
+      expect(getCurrentSession().history.length).toBe(2);
+
+      // Start fresh session
+      vi.mocked(uuidv4).mockReturnValue("fresh-session-2");
+      const session2 = startNewSession([]);
+
+      // Verify clean state
+      expect(session2.history.length).toBe(0);
+      expect(session2.title).toBe("Untitled Session");
+      expect(getCurrentSession().sessionId).toBe("fresh-session-2");
     });
   });
 });

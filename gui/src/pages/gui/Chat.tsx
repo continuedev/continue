@@ -31,6 +31,7 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -43,9 +44,18 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { useStore } from "react-redux";
+import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
+import { CliInstallBanner } from "../../components/CliInstallBanner";
+import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
+
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -98,15 +108,14 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const reduxStore = useStore<RootState>();
   const onboardingCard = useOnboardingCard();
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const selectedModels = useAppSelector(
-    (store) => store.config?.config.selectedModelByRole,
-  );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -115,13 +124,17 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const allSessionMetadata = useAppSelector(
+    (state) => state.session.allSessionMetadata,
+  );
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const mode = useAppSelector((state) => state.session.mode);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -152,9 +165,6 @@ export function Chat() {
     isStreaming,
   );
 
-  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
-  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
-
   const sendInput = useCallback(
     (
       editorState: JSONContent,
@@ -162,8 +172,67 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
+      const stateSnapshot = reduxStore.getState();
+      const latestPendingToolCalls = selectPendingToolCalls(stateSnapshot);
+      const latestPendingApplyStates = selectDoneApplyStates(stateSnapshot);
+      const isCurrentlyInEdit = stateSnapshot.session.isInEdit;
+      const codeToEditSnapshot = stateSnapshot.editModeState.codeToEdit;
+      const selectedModelByRole =
+        stateSnapshot.config.config.selectedModelByRole;
+      const currentMode = stateSnapshot.session.mode;
+
+      // Handle background mode specially
+      if (currentMode === "background" && !isCurrentlyInEdit) {
+        // Background mode triggers agent creation instead of chat
+        const currentOrg = selectCurrentOrg(stateSnapshot);
+        const organizationId =
+          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
+
+        setIsCreatingAgent(true);
+
+        // Create agent and track loading state
+        void (async () => {
+          try {
+            // Resolve context items from editor content (same as normal chat)
+            const defaultContextProviders =
+              stateSnapshot.config.config.experimental?.defaultContext ?? [];
+
+            const { selectedContextItems, selectedCode, content } =
+              await resolveEditorContent({
+                editorState,
+                modifiers,
+                ideMessenger,
+                defaultContextProviders,
+                availableSlashCommands:
+                  stateSnapshot.config.config.slashCommands,
+                dispatch,
+                getState: () => reduxStore.getState(),
+              });
+
+            await ideMessenger.request("createBackgroundAgent", {
+              content,
+              contextItems: selectedContextItems,
+              selectedCode,
+              organizationId,
+            });
+
+            // Clear input only after successful API call
+            if (editorToClearOnSend) {
+              editorToClearOnSend.commands.clearContent();
+            }
+
+            setIsCreatingAgent(false);
+          } catch (error) {
+            console.error("Failed to create background agent:", error);
+            setIsCreatingAgent(false);
+          }
+        })();
+
+        return;
+      }
+
       // Cancel all pending tool calls
-      pendingToolCalls.forEach((toolCallState) => {
+      latestPendingToolCalls.forEach((toolCallState) => {
         dispatch(
           cancelToolCall({
             toolCallId: toolCallState.toolCallId,
@@ -172,51 +241,28 @@ export function Chat() {
       });
 
       // Reject all pending apply states
-      pendingApplyStates.forEach((applyState) => {
+      latestPendingApplyStates.forEach((applyState) => {
         if (applyState.status !== "closed") {
           ideMessenger.post("rejectDiff", applyState);
         }
       });
-      const model = isInEdit
-        ? (selectedModels?.edit ?? selectedModels?.chat)
-        : selectedModels?.chat;
+      const model = isCurrentlyInEdit
+        ? (selectedModelByRole.edit ?? selectedModelByRole.chat)
+        : selectedModelByRole.chat;
+
       if (!model) {
         return;
       }
 
-      if (isInEdit && codeToEdit.length === 0) {
+      if (isCurrentlyInEdit && codeToEditSnapshot.length === 0) {
         return;
       }
 
-      // TODO - hook up with hub to detect free trial progress
-      // if (model.provider === "free-trial") {
-      //   const newCount = incrementFreeTrialCount();
-
-      //   if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
-      //     posthog?.capture("ftc_reached");
-      //   }
-      //   if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
-      //     // Show this message whether using platform or not
-      //     // So that something happens if in new chat
-      //     void ideMessenger.ide.showToast(
-      //       "error",
-      //       "You've reached the free trial limit. Please configure a model to continue.",
-      //     );
-
-      //     // If history, show the dialog, which will automatically close if there is not history
-      //     if (history.length) {
-      //       dispatch(setDialogMessage(<FreeTrialOverDialog />));
-      //       dispatch(setShowDialog(true));
-      //     }
-      //     return;
-      //   }
-      // }
-
-      if (isInEdit) {
+      if (isCurrentlyInEdit) {
         void dispatch(
           streamEditThunk({
             editorState,
-            codeToEdit,
+            codeToEdit: codeToEditSnapshot,
           }),
         );
       } else {
@@ -226,16 +272,20 @@ export function Chat() {
           editorToClearOnSend.commands.clearContent();
         }
       }
+
+      // Increment localstorage counter for popup
+      const currentCount = getLocalStorage("mainTextEntryCounter");
+      if (currentCount) {
+        setLocalStorage("mainTextEntryCounter", currentCount + 1);
+        if (currentCount === 300) {
+          dispatch(setDialogMessage(<FeedbackDialog />));
+          dispatch(setShowDialog(true));
+        }
+      } else {
+        setLocalStorage("mainTextEntryCounter", 1);
+      }
     },
-    [
-      history,
-      selectedModels,
-      mode,
-      isInEdit,
-      codeToEdit,
-      pendingToolCalls,
-      pendingApplyStates,
-    ],
+    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
   );
 
   useWebviewListener(
@@ -288,19 +338,17 @@ export function Chat() {
 
       if (message.role === "user") {
         return (
-          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
-            <ContinueInputBox
-              onEnter={(editorState, modifiers) =>
-                sendInput(editorState, modifiers, index)
-              }
-              isLastUserInput={isLastUserInput(index)}
-              isMainInput={false}
-              editorState={editorState}
-              contextItems={contextItems}
-              appliedRules={appliedRules}
-              inputId={message.id}
-            />
-          </div>
+          <ContinueInputBox
+            onEnter={(editorState, modifiers) =>
+              sendInput(editorState, modifiers, index)
+            }
+            isLastUserInput={isLastUserInput(index)}
+            isMainInput={false}
+            editorState={editorState ?? item.message.content}
+            contextItems={contextItems}
+            appliedRules={appliedRules}
+            inputId={message.id}
+          />
         );
       }
 
@@ -352,7 +400,7 @@ export function Chat() {
               redactedThinking={message.redactedThinking}
               index={index}
               prevItem={index > 0 ? history[index - 1] : null}
-              inProgress={index === history.length - 1}
+              inProgress={index === history.length - 1 && isStreaming}
               signature={message.signature}
             />
           </div>
@@ -380,7 +428,7 @@ export function Chat() {
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen],
+    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
@@ -395,24 +443,26 @@ export function Chat() {
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
-        {history.map((item, index: number) => (
-          <div
-            key={item.message.id}
-            style={{
-              minHeight: index === history.length - 1 ? "200px" : 0,
-            }}
-          >
-            <ErrorBoundary
-              FallbackComponent={fallbackRender}
-              onReset={() => {
-                dispatch(newSession());
+        {history
+          .filter((item) => item.message.role !== "system")
+          .map((item, index: number) => (
+            <div
+              key={item.message.id}
+              style={{
+                minHeight: index === history.length - 1 ? "200px" : 0,
               }}
             >
-              {renderChatHistoryItem(item, index)}
-            </ErrorBoundary>
-            {index === history.length - 1 && <InlineErrorMessage />}
-          </div>
-        ))}
+              <ErrorBoundary
+                FallbackComponent={fallbackRender}
+                onReset={() => {
+                  dispatch(newSession());
+                }}
+              >
+                {renderChatHistoryItem(item, index)}
+              </ErrorBoundary>
+              {index === history.length - 1 && <InlineErrorMessage />}
+            </div>
+          ))}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox
@@ -422,6 +472,12 @@ export function Chat() {
             sendInput(editorState, modifiers, undefined, editor)
           }
           inputId={MAIN_EDITOR_INPUT_ID}
+        />
+
+        <CliInstallBanner
+          sessionCount={allSessionMetadata.length}
+          sessionThreshold={3}
+          permanentDismissal={true}
         />
 
         <div
@@ -434,11 +490,7 @@ export function Chat() {
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton
                   onClick={async () => {
-                    await dispatch(
-                      loadLastSession({
-                        saveCurrentSession: true,
-                      }),
-                    );
+                    await dispatch(loadLastSession());
                   }}
                   className="flex items-center gap-2"
                 >
@@ -450,8 +502,12 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {history.length === 0 && (
-            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+          {mode === "background" ? (
+            <BackgroundModeView isCreatingAgent={isCreatingAgent} />
+          ) : (
+            history.length === 0 && (
+              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+            )
           )}
         </div>
       </div>

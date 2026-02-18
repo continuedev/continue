@@ -1,4 +1,4 @@
-import { ILLM } from "..";
+import { ChatHistoryItem, ILLM, ToolResultChatMessage } from "..";
 import { HistoryManager } from "./history";
 import { stripImages } from "./messageContent";
 
@@ -48,8 +48,31 @@ export async function compactConversation({
     }
   }
 
-  // Create messages from filtered history
-  const messages = filteredHistory.map((item: any) => item.message);
+  const messages: ChatHistoryItem["message"][] = [];
+
+  // add cancelled chat messages explicitly for cancelled tool calls
+  filteredHistory.forEach((item) => {
+    messages.push(item.message);
+    // toolcalls only exist in an assistant message
+    if (item.message.role === "assistant" && item.message.toolCalls) {
+      // for every toolcall, if there is no tool message with a tool call id already, add a chat message saying that it is empty
+      item.message.toolCalls.forEach((toolCall) => {
+        if (
+          !filteredHistory.find(
+            (item) =>
+              item.message.role === "tool" &&
+              item.message.toolCallId === toolCall.id,
+          )
+        ) {
+          messages.push({
+            role: "tool",
+            content: "Tool cancelled",
+            toolCallId: toolCall.id,
+          } as ToolResultChatMessage);
+        }
+      });
+    }
+  });
 
   // If there's a previous summary, include it as a user message at the beginning
   if (summaryContent) {
