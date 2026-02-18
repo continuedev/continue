@@ -41,7 +41,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   constructor(private readonly ide: IDE) {}
 
   private static async _createTables(db: DatabaseConnection) {
-    await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
+    db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
         cacheKey TEXT NOT NULL,
@@ -52,7 +52,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         endLine INTEGER NOT NULL
     )`);
 
-    await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets_tags (
+    db.exec(`CREATE TABLE IF NOT EXISTS code_snippets_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tag TEXT NOT NULL,
       snippetId INTEGER NOT NULL,
@@ -60,13 +60,15 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     )`);
 
     await migrate("add_signature_column", async () => {
-      const tableInfo = await db.all("PRAGMA table_info(code_snippets)");
+      const tableInfo = db
+        .prepare("PRAGMA table_info(code_snippets)")
+        .all() as any[];
       const signatureColumnExists = tableInfo.some(
         (column) => column.name === "signature",
       );
 
       if (!signatureColumnExists) {
-        await db.exec(`
+        db.exec(`
         ALTER TABLE code_snippets
         ADD COLUMN signature TEXT;
       `);
@@ -75,7 +77,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     await migrate("delete_duplicate_code_snippets", async () => {
       // Delete duplicate entries in code_snippets
-      await db.exec(`
+      db.exec(`
         DELETE FROM code_snippets
         WHERE id NOT IN (
           SELECT MIN(id)
@@ -85,13 +87,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       `);
 
       // Add unique constraint if it doesn't exist
-      await db.exec(`
+      db.exec(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_code_snippets_unique
         ON code_snippets (path, cacheKey, content, title, startLine, endLine)
       `);
 
       // Delete code_snippets associated with duplicate code_snippets_tags entries
-      await db.exec(`
+      db.exec(`
         DELETE FROM code_snippets
         WHERE id IN (
           SELECT snippetId
@@ -106,7 +108,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       `);
 
       // Delete duplicate entries
-      await db.exec(`
+      db.exec(`
         DELETE FROM code_snippets_tags
         WHERE id NOT IN (
           SELECT MIN(id)
@@ -116,7 +118,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       `);
 
       // Add unique constraint if it doesn't exist
-      await db.exec(`
+      db.exec(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_snippetId_tag
         ON code_snippets_tags (snippetId, tag)
       `);
@@ -233,9 +235,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       // Add snippets to sqlite
       for (const snippet of snippets) {
-        const { lastID } = await db.run(
-          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [
+        const result = db
+          .prepare(
+            "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
             compute.path,
             compute.cacheKey,
             snippet.content,
@@ -243,13 +247,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
             snippet.signature,
             snippet.startLine,
             snippet.endLine,
-          ],
-        );
+          );
 
-        await db.run(
+        db.prepare(
           "REPLACE INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
-          [lastID, tagString],
-        );
+        ).run(result.lastInsertRowid, tagString);
       }
 
       yield {
@@ -264,19 +266,20 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
 
-      const snippets = await db.all(
-        "SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?",
-        [del.path, del.cacheKey],
-      );
+      const snippets = db
+        .prepare("SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?")
+        .all(del.path, del.cacheKey) as any[];
 
-      if (snippets) {
+      if (snippets.length > 0) {
         const snippetIds = snippets.map((row) => row.id).join(",");
 
-        await db.run(`DELETE FROM code_snippets WHERE id IN (${snippetIds})`);
+        db.prepare(
+          `DELETE FROM code_snippets WHERE id IN (${snippetIds})`,
+        ).run();
 
-        await db.run(
+        db.prepare(
           `DELETE FROM code_snippets_tags WHERE snippetId IN (${snippetIds})`,
-        );
+        ).run();
       }
 
       await markComplete([del], IndexResultType.Delete);
@@ -296,9 +299,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       }
 
       for (const snippet of snippets) {
-        const { lastID } = await db.run(
-          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [
+        const result = db
+          .prepare(
+            "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
             addTag.path,
             addTag.cacheKey,
             snippet.content,
@@ -306,12 +311,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
             snippet.signature,
             snippet.startLine,
             snippet.endLine,
-          ],
-        );
-        await db.run(
+          );
+        db.prepare(
           "REPLACE INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
-          [lastID, tagString],
-        );
+        ).run(result.lastInsertRowid, tagString);
       }
 
       await markComplete([results.addTag[i]], IndexResultType.AddTag);
@@ -321,27 +324,23 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.removeTag.length; i++) {
       const removeTag = results.removeTag[i];
 
-      let snippets = await db.get(
-        `SELECT id FROM code_snippets
+      const snippets = db
+        .prepare(
+          `SELECT id FROM code_snippets
             WHERE cacheKey = ? AND path = ?`,
-        [removeTag.cacheKey, removeTag.path],
-      );
+        )
+        .all(removeTag.cacheKey, removeTag.path) as any[];
 
-      if (snippets) {
-        if (!Array.isArray(snippets)) {
-          snippets = [snippets];
-        }
-
+      if (snippets.length > 0) {
         const snippetIds = snippets.map((row: any) => row.id).join(",");
 
-        await db.run(
+        db.prepare(
           `
           DELETE FROM code_snippets_tags
           WHERE tag = ?
             AND snippetId IN (${snippetIds})
         `,
-          [tagString],
-        );
+        ).run(tagString);
       }
 
       await markComplete([results.removeTag[i]], IndexResultType.RemoveTag);
@@ -353,7 +352,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     workspaceDirs: string[],
   ): Promise<ContextItem> {
     const db = await SqliteDb.get();
-    const row = await db.get("SELECT * FROM code_snippets WHERE id = ?", [id]);
+    const row = db
+      .prepare("SELECT * FROM code_snippets WHERE id = ?")
+      .get(id) as any;
 
     const last2Parts = getLastNUriRelativePathParts(workspaceDirs, row.path, 2);
     const { relativePathOrBasename } = findUriInDirs(row.path, workspaceDirs);
@@ -372,14 +373,15 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
     try {
-      const rows = await db.all(
-        `SELECT cs.id, cs.path, cs.title
+      const rows = db
+        .prepare(
+          `SELECT cs.id, cs.path, cs.title
         FROM code_snippets cs
         JOIN code_snippets_tags cst ON cs.id = cst.snippetId
         WHERE cst.tag = ?;
         `,
-        [tagToString(tag)],
-      );
+        )
+        .all(tagToString(tag)) as any[];
 
       return rows.map((row) => ({
         title: row.title,
@@ -421,11 +423,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     LIMIT ? OFFSET ?
   `;
 
-    const rows = await db.all(query, [
-      ...likePatterns,
-      snippetBatchSize,
-      snippetOffset,
-    ]);
+    const rows = db
+      .prepare(query)
+      .all(...likePatterns, snippetBatchSize, snippetOffset) as any[];
 
     const groupedByUri: { [path: string]: string[] } = {};
 

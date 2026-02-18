@@ -1,6 +1,6 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-import { open, type Database } from "sqlite";
-import sqlite3 from "sqlite3";
+import Database from "better-sqlite3";
+import type BetterSqlite3 from "better-sqlite3";
 
 import {
   Chunk,
@@ -179,7 +179,7 @@ export default class DocsService {
   private lanceTableNamesSet = new Set<string>();
 
   private config!: ContinueConfig;
-  private sqliteDb?: Database;
+  private sqliteDb?: BetterSqlite3.Database;
 
   private ideInfoPromise: Promise<IdeInfo>;
   private githubToken?: string;
@@ -399,11 +399,11 @@ export default class DocsService {
       return false;
     }
     const db = await this.getOrCreateSqliteDb();
-    const title = await db.get(
-      `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
-      startUrl,
-      this.config.selectedModelByRole.embed.embeddingId,
-    );
+    const title = db
+      .prepare(
+        `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
+      )
+      .get(startUrl, this.config.selectedModelByRole.embed.embeddingId);
 
     return !!title;
   }
@@ -414,11 +414,12 @@ export default class DocsService {
       return [];
     }
     const db = await this.getOrCreateSqliteDb();
-    const docs = await db.all<SqliteDocsRow[]>(
-      `SELECT title, startUrl, favicon FROM ${DocsService.sqlitebTableName}
+    const docs = db
+      .prepare(
+        `SELECT title, startUrl, favicon FROM ${DocsService.sqlitebTableName}
       WHERE embeddingsProviderId = ?`,
-      embeddingsProvider.embeddingId,
-    );
+      )
+      .all(embeddingsProvider.embeddingId) as SqliteDocsRow[];
 
     return docs;
   }
@@ -790,11 +791,11 @@ export default class DocsService {
         throw new Error("No embeddings model set");
       }
 
-      const result = await db.get(
-        `SELECT startUrl, title, favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
-        startUrl,
-        provider.embeddingId,
-      );
+      const result = db
+        .prepare(
+          `SELECT startUrl, title, favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
+        )
+        .get(startUrl, provider.embeddingId) as any;
 
       if (!result) {
         throw new Error(`${startUrl} not found in sqlite`);
@@ -882,15 +883,12 @@ export default class DocsService {
   // SQLITE DB
   private async getOrCreateSqliteDb() {
     if (!this.sqliteDb) {
-      const db = await open({
-        filename: getDocsSqlitePath(),
-        driver: sqlite3.Database,
-      });
+      const db = new Database(getDocsSqlitePath());
 
-      await db.exec("PRAGMA busy_timeout = 3000;");
+      db.pragma("busy_timeout = 3000");
 
       // First create the table if it doesn't exist
-      await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
+      db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
             startUrl STRING NOT NULL,
@@ -898,7 +896,7 @@ export default class DocsService {
             embeddingsProviderId STRING
         )`);
 
-      await runSqliteMigrations(db);
+      runSqliteMigrations(db);
 
       this.sqliteDb = db;
     }
@@ -914,11 +912,11 @@ export default class DocsService {
       return;
     }
     const db = await this.getOrCreateSqliteDb();
-    const result = await db.get(
-      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
-      startUrl,
-      this.config.selectedModelByRole.embed.embeddingId,
-    );
+    const result = db
+      .prepare(
+        `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
+      )
+      .get(startUrl, this.config.selectedModelByRole.embed.embeddingId) as any;
 
     if (!result) {
       return;
@@ -1159,8 +1157,9 @@ export default class DocsService {
       return;
     }
     const db = await this.getOrCreateSqliteDb();
-    await db.run(
+    db.prepare(
       `INSERT INTO ${DocsService.sqlitebTableName} (title, startUrl, favicon, embeddingsProviderId) VALUES (?, ?, ?, ?)`,
+    ).run(
       title,
       startUrl,
       favicon,
@@ -1180,8 +1179,9 @@ export default class DocsService {
 
     const db = await this.getOrCreateSqliteDb();
 
-    await db.run(
+    db.prepare(
       `UPDATE ${DocsService.sqlitebTableName} SET title = ?, favicon = ? WHERE startUrl = ? AND embeddingsProviderId = ?`,
+    ).run(
       title,
       favicon,
       startUrl,
@@ -1252,11 +1252,9 @@ export default class DocsService {
     }
     const db = await this.getOrCreateSqliteDb();
 
-    await db.run(
+    db.prepare(
       `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
-      startUrl,
-      this.config.selectedModelByRole.embed.embeddingId,
-    );
+    ).run(startUrl, this.config.selectedModelByRole.embed.embeddingId);
   }
 
   private deleteFromConfig(startUrl: string) {
