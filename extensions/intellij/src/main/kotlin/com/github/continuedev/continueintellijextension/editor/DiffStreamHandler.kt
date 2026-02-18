@@ -247,7 +247,7 @@ class DiffStreamHandler(
                         currentBlock = createDiffBlock()
                         currentBlock!!.startLine = currentLine
                     }
-                    currentBlock!!.addedLines.add(text)
+                    currentBlock.addNewLineForHighlightOnly(text, currentLine);
                     currentLine++
                 }
                 DiffLineType.SAME -> {

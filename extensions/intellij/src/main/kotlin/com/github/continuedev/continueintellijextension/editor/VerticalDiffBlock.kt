@@ -91,6 +91,13 @@ class VerticalDiffBlock(
         addedLines.add(text)
     }
 
+    fun addNewLineForHighlightOnly(text: String, line: Int) {
+        val greenKey = EditorUtils(editor).createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00)
+        editor.markupModel.addLineHighlighter(greenKey, line, HighlighterLayer.LAST)
+
+        addedLines.add(text)
+    }
+
     fun onLastDiffLine() {
         // Handles the case where we are invoking one last time on last line of diff stream, but the block has
         // already been rendered
