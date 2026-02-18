@@ -112,7 +112,7 @@ models:
 
       // Should only have one anthropic model
       const anthropicMatches = result.match(
-        /uses: anthropic\/claude-sonnet-4-5/g,
+        /uses: anthropic\/claude-sonnet-4-6/g,
       );
       expect(anthropicMatches).toHaveLength(1);
     });
