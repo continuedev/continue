@@ -35,9 +35,9 @@ import { BaseLLM } from "../index.js";
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
-    model: "claude-3-5-sonnet-latest",
+    model: "claude-sonnet-4-6",
     completionOptions: {
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-6",
       maxTokens: 8192,
     },
     apiBase: "https://api.anthropic.com/v1/",

@@ -6,6 +6,8 @@ Run your checks locally before pushing to CI using the `/check` command in your 
 
 ## Install
 
+Install the [`check`](https://github.com/continuedev/skills?tab=readme-ov-file#check) skill:
+
 ```bash
 npx skills add continuedev/skills --skill check
 ```
@@ -17,6 +19,10 @@ Type `/check` in your coding agent. It discovers every check file in `.continue/
 ```
 /check
 ```
+
+![Terminal output showing checks being discovered and launched](/images/checks-local-running.png)
+
+![Check results summary showing pass, fail, and warning status for each check](/images/checks-local-results.png)
 
 ## Iterate on a check
 

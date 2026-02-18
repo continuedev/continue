@@ -204,6 +204,8 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
     ],
     packages: [
+      models.claude46Opus,
+      models.claude46Sonnet,
       models.claude4_5Opus,
       models.claude45Sonnet,
       models.claude45Haiku,

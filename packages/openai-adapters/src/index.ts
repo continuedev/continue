@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
+import { AiSdkApi } from "./apis/AiSdk.js";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AskSageApi } from "./apis/AskSage.js";
 import { AzureApi } from "./apis/Azure.js";
@@ -164,6 +165,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       // Return undefined for native HuggingFace endpoints
       // (handled by HuggingFaceInferenceAPI class in core)
       return undefined;
+    case "ai-sdk":
+      return new AiSdkApi(config);
     default:
       return undefined;
   }
@@ -182,14 +185,16 @@ export {
 } from "openai/resources/index";
 
 // export
+export { AiSdkApi } from "./apis/AiSdk.js";
 export type { BaseLlmApi } from "./apis/base.js";
 export type {
-  LLMConfig,
-  AskSageTool,
-  AskSageToolChoice,
-  AskSageToolCall,
+  AiSdkConfig,
   AskSageResponse,
   AskSageTokenResponse,
+  AskSageTool,
+  AskSageToolCall,
+  AskSageToolChoice,
+  LLMConfig,
 } from "./types.js";
 
 export {

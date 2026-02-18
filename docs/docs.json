@@ -29,6 +29,7 @@
             "pages": [
               "checks/generating-checks",
               "checks/best-practices",
+              "checks/iterating",
               "checks/reference"
             ]
           },

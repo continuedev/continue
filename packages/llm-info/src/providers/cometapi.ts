@@ -80,12 +80,30 @@ export const CometAPI: ModelProvider = {
 
     // Claude Series
     {
-      model: "claude-sonnet-4-5",
-      displayName: "Claude 4.5 Sonnet",
+      model: "claude-sonnet-4-6",
+      displayName: "Claude Sonnet 4.6",
       contextLength: 200000,
       maxCompletionTokens: 64000,
       description:
-        "Anthropic's smartest model for complex agents and coding with exceptional performance in reasoning and multilingual tasks.",
+        "Anthropic's latest and most capable Sonnet model with exceptional coding, reasoning, and multilingual performance.",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-opus-4-6",
+      displayName: "Claude Opus 4.6",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Anthropic's most intelligent model with the highest level of capability for complex reasoning and agentic tasks.",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-sonnet-4-5",
+      displayName: "Claude Sonnet 4.5",
+      contextLength: 200000,
+      maxCompletionTokens: 64000,
+      description:
+        "Previous generation Sonnet model with strong performance in reasoning and multilingual tasks.",
       recommendedFor: ["chat"],
     },
     {

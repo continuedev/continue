@@ -1,8 +1,4 @@
-<div align="center">
-
-![Continue logo](media/readme.png)
-
-</div>
+<div align="center"></div>
 
 <h1 align="center">Continue</h1>
 
@@ -23,6 +19,8 @@
 **Source-controlled AI checks, enforceable in CI**
 
 </div>
+
+![Banner](media/github-readme.png)
 
 ## Getting started
 
