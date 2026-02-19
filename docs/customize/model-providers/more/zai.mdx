@@ -53,3 +53,7 @@ description: "Configure Z.ai's GLM models with Continue, including GLM-5, GLM-4.
 | `apiKey`  | Z.ai API key         | Required                               |
 | `apiBase` | API base URL         | `https://api.z.ai/api/paas/v4/`       |
 | `model`   | Model name to use    | `glm-5`                               |
+
+<Tip>
+Z.ai offers a dedicated [Coding Plan](https://docs.z.ai/api-reference/introduction) with a subscription-based endpoint optimized for coding tasks. To use it, set `apiBase` to `https://api.z.ai/api/coding/paas/v4/`. This endpoint uses prompt-based pricing rather than token-based pricing and may be more cost-effective for coding workflows.
+</Tip>
