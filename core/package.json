@@ -120,7 +120,7 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "system-ca": "^1.0.3",
-    "tar": "^7.4.3",
+    "tar": "^7.5.8",
     "tree-sitter-wasms": "^0.1.11",
     "untildify": "^6.0.0",
     "uuid": "^9.0.1",
