@@ -270,7 +270,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     provider: "zAI",
     description: "Use Z.ai's GLM models for chat and coding tasks",
     longDescription:
-      "Z.ai (formerly Zhipu AI) provides the GLM family of large language models. Get your API key from the [Z.ai platform](https://z.ai/manage-apikey).",
+      "Z.ai (formerly Zhipu AI) provides the GLM family of large language models. Get your API key from the [Z.ai platform](https://z.ai/manage-apikey/apikey-list).",
     icon: "zai.svg",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [models.glm5, models.glm47, models.glm45],
@@ -284,7 +284,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
       ...completionParamsInputsConfigs,
     ],
-    apiKeyUrl: "https://z.ai/manage-apikey",
+    apiKeyUrl: "https://z.ai/manage-apikey/apikey-list",
   },
   "function-network": {
     title: "Function Network",
