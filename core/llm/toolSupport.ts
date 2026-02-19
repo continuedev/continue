@@ -41,7 +41,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       if (
         lower.startsWith("gpt-4") ||
         lower.startsWith("gpt-5") ||
-        lower.startsWith("o3")
+        lower.startsWith("o1") ||
+        lower.startsWith("o3") ||
+        lower.startsWith("o4") ||
+        lower.startsWith("codex") ||
+        lower.startsWith("gpt-4.1")
       ) {
         return true;
       }
@@ -114,6 +118,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "nova-micro",
           "nova-premier",
           "gpt-oss",
+          "llama4",
+          "llama-4",
+          "deepseek",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
@@ -133,7 +140,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "pixtral",
           "ministral",
           "mistral-nemo",
-          "devstral",
+          "magistral",
         ].some((part) => model.toLowerCase().includes(part))
       );
     },
@@ -287,9 +294,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       const supportedPrefixes = [
         "openai/gpt-3.5",
         "openai/gpt-4",
+        "openai/gpt-5",
         "openai/o1",
         "openai/o3",
         "openai/o4",
+        "openai/codex",
         "openai/gpt-oss",
         "anthropic/claude",
         "microsoft/phi-3",
@@ -426,7 +435,9 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
     [/gemini/, /3-pro/],
-    [/gpt/, /-5|5\.1/],
+    [/gpt/, /-5|5\.1|5\.2/],
+    [/gpt-4\.1/],
+    [/codex/],
     [/claude/, /sonnet/, /3\.7|3-7|-4/],
     [/claude/, /opus/, /-4/],
     [/grok-code/],

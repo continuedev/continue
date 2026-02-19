@@ -209,6 +209,19 @@ function modelSupportsReasoning(
   if (model.model.includes("deepseek-r")) {
     return true;
   }
+  // o-series reasoning models
+  if (/^o[134]/.test(model.model)) {
+    return true;
+  }
+  if (model.model.includes("codex")) {
+    return true;
+  }
+  if (model.model.includes("magistral")) {
+    return true;
+  }
+  if (model.model.includes("grok-4")) {
+    return true;
+  }
 
   return false;
 }
