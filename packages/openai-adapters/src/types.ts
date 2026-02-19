@@ -55,6 +55,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("text-gen-webui"),
     z.literal("vllm"),
     z.literal("xAI"),
+    z.literal("zAI"),
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
