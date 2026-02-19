@@ -253,7 +253,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "moonshot",
     apiKeyUrl: "https://docs.moonshot.cn/docs/getting-started",
-    packages: [models.moonshotChat],
+    packages: [models.kimiK2, models.kimiK25, models.moonshotChat],
     collectInputFor: [
       {
         inputType: "text",
@@ -264,6 +264,27 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
       ...completionParamsInputsConfigs,
     ],
+  },
+  zAI: {
+    title: "Z.ai",
+    provider: "zAI",
+    description: "Use Z.ai's GLM models for chat and coding tasks",
+    longDescription:
+      "Z.ai (formerly Zhipu AI) provides the GLM family of large language models. Get your API key from the [Z.ai platform](https://z.ai/manage-apikey).",
+    icon: "zai.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [models.glm5, models.glm47, models.glm45],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Z.ai API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://z.ai/manage-apikey",
   },
   "function-network": {
     title: "Function Network",

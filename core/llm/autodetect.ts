@@ -71,6 +71,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "gemini",
   "docker",
   "nous",
+  "zAI",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -128,6 +129,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "nebius",
   "ovhcloud",
   "watsonx",
+  "zAI",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -270,6 +272,7 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("moonshot") ||
     modelName.includes("kimi") ||
     modelName.includes("mercury") ||
+    modelName.includes("glm") ||
     /^o\d/.test(modelName)
   );
 }

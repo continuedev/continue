@@ -325,6 +325,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
         "lgai-exaone/exaone",
+        "moonshotai/kimi",
+        "zai-org/glm",
       ];
       for (const prefix of supportedPrefixes) {
         if (model.toLowerCase().startsWith(prefix)) {
@@ -342,20 +344,24 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "nousresearch/hermes-3-llama-3.1-70b",
         "moonshotai/kimi-k2",
       ];
-      for (const model of specificModels) {
-        if (model.toLowerCase() === model) {
+      for (const specificModel of specificModels) {
+        if (model.toLowerCase() === specificModel) {
           return true;
         }
       }
 
       const supportedContains = ["llama-3.1"];
-      for (const model of supportedContains) {
-        if (model.toLowerCase().includes(model)) {
+      for (const contained of supportedContains) {
+        if (model.toLowerCase().includes(contained)) {
           return true;
         }
       }
 
       return false;
+    },
+    zAI: (model) => {
+      const lower = model.toLowerCase();
+      return lower.startsWith("glm-4") || lower.startsWith("glm-5");
     },
     moonshot: (model) => {
       // support moonshot models

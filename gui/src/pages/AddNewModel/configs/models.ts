@@ -496,6 +496,73 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["moonshot"],
     isOpenSource: false,
   },
+  kimiK2: {
+    title: "Kimi K2",
+    description:
+      "Moonshot AI's Kimi K2, a powerful MoE model with strong coding and tool-use capabilities",
+    refUrl: "https://platform.moonshot.cn/",
+    params: {
+      title: "Kimi K2",
+      model: "kimi-k2",
+      contextLength: 128000,
+    },
+    icon: "moonshot.png",
+    providerOptions: ["moonshot"],
+    isOpenSource: false,
+  },
+  kimiK25: {
+    title: "Kimi K2.5",
+    description:
+      "Moonshot AI's Kimi K2.5, the latest generation model with enhanced reasoning",
+    refUrl: "https://platform.moonshot.cn/",
+    params: {
+      title: "Kimi K2.5",
+      model: "kimi-k2.5",
+      contextLength: 128000,
+    },
+    icon: "moonshot.png",
+    providerOptions: ["moonshot"],
+    isOpenSource: false,
+  },
+  glm5: {
+    title: "GLM-5",
+    description: "Z.ai's flagship GLM-5 model with 128k context",
+    refUrl: "https://z.ai/model-api",
+    params: {
+      title: "GLM-5",
+      model: "glm-5",
+      contextLength: 128000,
+    },
+    icon: "zai.png",
+    providerOptions: ["zAI"],
+    isOpenSource: false,
+  },
+  glm47: {
+    title: "GLM-4.7",
+    description: "Z.ai's latest GLM-4.7 model with 128k context",
+    refUrl: "https://z.ai/model-api",
+    params: {
+      title: "GLM-4.7",
+      model: "glm-4.7",
+      contextLength: 128000,
+    },
+    icon: "zai.png",
+    providerOptions: ["zAI"],
+    isOpenSource: false,
+  },
+  glm45: {
+    title: "GLM-4.5",
+    description: "Z.ai's GLM-4.5 model with 128k context",
+    refUrl: "https://z.ai/model-api",
+    params: {
+      title: "GLM-4.5",
+      model: "glm-4.5",
+      contextLength: 128000,
+    },
+    icon: "zai.png",
+    providerOptions: ["zAI"],
+    isOpenSource: false,
+  },
   mistralOs: {
     title: "Mistral",
     description:
