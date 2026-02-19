@@ -27,7 +27,7 @@ type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
  *
  * @param basePolicy The base policy configured for the tool
  * @param command The command string to evaluate
- * @returns The security policy to apply: 'disabled', 'allowedWithPermission', or 'allowedWithoutPermission'
+ * @returns The security policy to apply: 'disabled', 'allowedWithPermission', 'allowedWithoutPermission', or 'allowedUnrestricted'
  */
 export function evaluateTerminalCommandSecurity(
   basePolicy: ToolPolicy,
@@ -36,6 +36,11 @@ export function evaluateTerminalCommandSecurity(
   // If tool is already disabled, keep it disabled
   if (basePolicy === "disabled") {
     return "disabled";
+  }
+
+  // If tool is in unrestricted mode, skip all security checks
+  if (basePolicy === "allowedUnrestricted") {
+    return "allowedUnrestricted";
   }
 
   // Handle null/undefined/empty commands
@@ -263,7 +268,10 @@ function evaluateTokens(
   }
 
   // Check for obfuscation patterns
-  if (hasObfuscationPatterns(originalCommand)) {
+  if (
+    hasObfuscationPatterns(originalCommand) &&
+    mostRestrictivePolicy !== "allowedUnrestricted"
+  ) {
     mostRestrictivePolicy = getMostRestrictive(
       mostRestrictivePolicy,
       "allowedWithPermission",
@@ -283,7 +291,10 @@ function getMostRestrictive(...policies: ToolPolicy[]): ToolPolicy {
   if (policies.some((p) => p === "allowedWithPermission")) {
     return "allowedWithPermission";
   }
-  return "allowedWithoutPermission";
+  if (policies.some((p) => p === "allowedWithoutPermission")) {
+    return "allowedWithoutPermission";
+  }
+  return "allowedUnrestricted";
 }
 
 /**
