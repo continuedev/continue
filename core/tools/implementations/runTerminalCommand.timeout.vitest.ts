@@ -39,11 +39,16 @@ describe("runTerminalCommand timeout functionality", () => {
     mockChildProc = new EventEmitter();
     mockChildProc.stdout = new EventEmitter();
     mockChildProc.stderr = new EventEmitter();
+    // Use exitCode/signalCode to track process state (matches Node.js ChildProcess API)
+    mockChildProc.exitCode = null;
+    mockChildProc.signalCode = null;
     mockChildProc.killed = false;
     mockChildProc.kill = vi.fn((signal?: NodeJS.Signals) => {
       mockChildProc.killed = true;
       setTimeout(() => {
-        mockChildProc.emit("close", signal === "SIGKILL" ? 137 : 143);
+        mockChildProc.exitCode = signal === "SIGKILL" ? 137 : 143;
+        mockChildProc.signalCode = signal ?? null;
+        mockChildProc.emit("close", mockChildProc.exitCode);
       }, 100);
       return true;
     });
@@ -112,6 +117,7 @@ describe("runTerminalCommand timeout functionality", () => {
     const resultPromise = runTerminalCommandImpl(args, extras);
     await vi.runOnlyPendingTimersAsync();
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 120_000);
+    mockChildProc.exitCode = 0;
     mockChildProc.emit("close", 0);
     await resultPromise;
     expect(clearTimeoutSpy).toHaveBeenCalled();
@@ -150,6 +156,7 @@ describe("runTerminalCommand timeout functionality", () => {
     // Flush async setup (getIdeInfo, getWorkspaceDirs) without advancing timer time
     await vi.advanceTimersByTimeAsync(0);
     mockChildProc.stdout.emit("data", Buffer.from("quick\n"));
+    mockChildProc.exitCode = 0;
     mockChildProc.emit("close", 0);
     await resultPromise;
     expect(clearTimeoutSpy).toHaveBeenCalled();
@@ -171,6 +178,8 @@ describe("runTerminalCommand timeout functionality", () => {
 
     // Process exits gracefully after 2 seconds (before 5s grace period)
     await vi.advanceTimersByTimeAsync(2_000);
+    mockChildProc.exitCode = 143;
+    mockChildProc.signalCode = "SIGTERM";
     mockChildProc.emit("close", 143); // SIGTERM exit code
 
     // Wait for promise to resolve

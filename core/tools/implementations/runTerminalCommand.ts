@@ -174,10 +174,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             );
           }
 
+          // Check if the child process is still running.
+          // `childProc.killed` only indicates that kill() was called,
+          // not that the process has actually exited.
+          const isRunning = () =>
+            childProc.exitCode === null && childProc.signalCode === null;
+
           // Set up timeout for waitForCompletion mode
           if (waitForCompletion) {
             timeoutId = setTimeout(() => {
-              if (!childProc.killed) {
+              if (isRunning()) {
                 terminalOutput +=
                   "\n[Timeout: process killed after 2 minutes]\n";
 
@@ -201,7 +207,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
                 // Force kill after 5 seconds if still running
                 sigkillTimeoutId = setTimeout(() => {
-                  if (!childProc.killed) {
+                  if (isRunning()) {
                     childProc.kill("SIGKILL");
                   }
                 }, 5_000);
@@ -352,6 +358,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               clearTimeout(timeoutId);
             }
 
+            // Clear SIGKILL timeout to prevent delayed kill after rejection
+            if (sigkillTimeoutId) {
+              clearTimeout(sigkillTimeoutId);
+            }
+
             // Clean up process tracking
             if (toolCallId) {
               if (isProcessBackgrounded(toolCallId)) {
@@ -401,9 +412,15 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               let stdout = "";
               let stderr = "";
 
+              // Check if the child process is still running.
+              // `childProc.killed` only indicates that kill() was called,
+              // not that the process has actually exited.
+              const isRunning = () =>
+                childProc.exitCode === null && childProc.signalCode === null;
+
               // Set up timeout
               timeoutId = setTimeout(() => {
-                if (!childProc.killed) {
+                if (isRunning()) {
                   stderr += "\n[Timeout: process killed after 2 minutes]\n";
 
                   // Try graceful termination first
@@ -411,7 +428,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
                   // Force kill after 5 seconds if still running
                   sigkillTimeoutId = setTimeout(() => {
-                    if (!childProc.killed) {
+                    if (isRunning()) {
                       childProc.kill("SIGKILL");
                     }
                   }, 5_000);
@@ -455,6 +472,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("error", (error) => {
+                // Clear timeout on error
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                }
+
+                // Clear SIGKILL timeout to prevent delayed kill after rejection
+                if (sigkillTimeoutId) {
+                  clearTimeout(sigkillTimeoutId);
+                }
+
                 // Clean up process tracking
                 if (toolCallId) {
                   removeRunningProcess(toolCallId);
