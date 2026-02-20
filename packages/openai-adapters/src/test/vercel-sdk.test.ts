@@ -1,4 +1,3 @@
-import { ModelConfig } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
 import { vi } from "vitest";
 import { getLlmApi, testChat } from "./util.js";
@@ -8,46 +7,42 @@ dotenv.config();
 /**
  * Vercel AI SDK Integration Tests
  *
- * These tests verify that the Vercel AI SDK integration produces the same
+ * These tests verify that the AI SDK provider produces the same
  * results as the original implementation, ensuring contract compatibility.
- *
- * Tests run with feature flags enabled:
- * - USE_VERCEL_AI_SDK_OPENAI=true
- * - USE_VERCEL_AI_SDK_ANTHROPIC=true
  */
 
-interface VercelTestConfig extends Omit<ModelConfig, "name"> {
+interface AiSdkTestConfig {
+  aiSdkProviderId: string;
+  model: string;
+  apiKey: string;
+  apiBase?: string;
   skipTools?: boolean;
   expectUsage?: boolean;
   skipSystemMessage?: boolean;
 }
 
-function testVercelProvider(config: VercelTestConfig, featureFlag: string) {
-  const { skipTools, expectUsage, skipSystemMessage, ...modelConfig } = config;
-  const model = config.model;
+function testAiSdkProvider(config: AiSdkTestConfig) {
+  const {
+    skipTools,
+    skipSystemMessage,
+    aiSdkProviderId,
+    model,
+    apiKey,
+    apiBase,
+  } = config;
+  const fullModel = `${aiSdkProviderId}/${model}`;
 
-  describe(`${config.provider}/${config.model} (Vercel SDK)`, () => {
+  describe(`${aiSdkProviderId}/${model} (AI SDK)`, () => {
     vi.setConfig({ testTimeout: 30000 });
 
-    // Set feature flag at describe-time (before test collection)
-    process.env[featureFlag] = "true";
-
-    // Create a factory that makes fresh API instances for each test
-    // This ensures the API is created AFTER the feature flag is set
-    const apiFactory = () => {
-      return getLlmApi({
-        provider: config.provider as any,
-        apiKey: config.apiKey,
-        apiBase: config.apiBase,
-        env: config.env,
-      });
-    };
-
-    afterAll(() => {
-      delete process.env[featureFlag];
+    const api = getLlmApi({
+      provider: "ai-sdk",
+      model: fullModel,
+      apiKey,
+      apiBase,
     });
 
-    testChat(apiFactory(), model, {
+    testChat(api, fullModel, {
       skipTools: skipTools ?? false,
       // TODO: Vercel AI SDK fullStream usage tokens are unreliable - investigate
       expectUsage: false, // Temporarily disable usage assertions
@@ -56,59 +51,47 @@ function testVercelProvider(config: VercelTestConfig, featureFlag: string) {
   });
 }
 
-// OpenAI Vercel SDK Tests
+// OpenAI AI SDK Tests
 if (process.env.OPENAI_API_KEY) {
-  describe("OpenAI with Vercel AI SDK", () => {
-    testVercelProvider(
-      {
-        provider: "openai",
-        model: "gpt-4o-mini",
-        apiKey: process.env.OPENAI_API_KEY!,
-        skipTools: false,
-        expectUsage: true,
-      },
-      "USE_VERCEL_AI_SDK_OPENAI",
-    );
+  describe("OpenAI with AI SDK", () => {
+    testAiSdkProvider({
+      aiSdkProviderId: "openai",
+      model: "gpt-4o-mini",
+      apiKey: process.env.OPENAI_API_KEY!,
+      skipTools: false,
+      expectUsage: true,
+    });
 
-    testVercelProvider(
-      {
-        provider: "openai",
-        model: "gpt-4o",
-        apiKey: process.env.OPENAI_API_KEY!,
-        skipTools: false,
-        expectUsage: true,
-      },
-      "USE_VERCEL_AI_SDK_OPENAI",
-    );
+    testAiSdkProvider({
+      aiSdkProviderId: "openai",
+      model: "gpt-4o",
+      apiKey: process.env.OPENAI_API_KEY!,
+      skipTools: false,
+      expectUsage: true,
+    });
   });
 } else {
   test.skip("OpenAI tests skipped - no API key", () => {});
 }
 
-// Anthropic Vercel SDK Tests
+// Anthropic AI SDK Tests
 if (process.env.ANTHROPIC_API_KEY) {
-  describe("Anthropic with Vercel AI SDK", () => {
-    testVercelProvider(
-      {
-        provider: "anthropic",
-        model: "claude-haiku-4-5",
-        apiKey: process.env.ANTHROPIC_API_KEY!,
-        skipTools: false,
-        expectUsage: true,
-      },
-      "USE_VERCEL_AI_SDK_ANTHROPIC",
-    );
+  describe("Anthropic with AI SDK", () => {
+    testAiSdkProvider({
+      aiSdkProviderId: "anthropic",
+      model: "claude-haiku-4-5",
+      apiKey: process.env.ANTHROPIC_API_KEY!,
+      skipTools: false,
+      expectUsage: true,
+    });
 
-    testVercelProvider(
-      {
-        provider: "anthropic",
-        model: "claude-sonnet-4-5",
-        apiKey: process.env.ANTHROPIC_API_KEY!,
-        skipTools: false,
-        expectUsage: true,
-      },
-      "USE_VERCEL_AI_SDK_ANTHROPIC",
-    );
+    testAiSdkProvider({
+      aiSdkProviderId: "anthropic",
+      model: "claude-sonnet-4-5",
+      apiKey: process.env.ANTHROPIC_API_KEY!,
+      skipTools: false,
+      expectUsage: true,
+    });
   });
 } else {
   test.skip("Anthropic tests skipped - no API key", () => {});
@@ -116,7 +99,7 @@ if (process.env.ANTHROPIC_API_KEY) {
 
 // Comparison Tests: Verify outputs match between old and new implementations
 describe("Contract Compatibility Tests", () => {
-  describe("OpenAI: Original vs Vercel SDK", () => {
+  describe("OpenAI: Original vs AI SDK", () => {
     if (!process.env.OPENAI_API_KEY) {
       test.skip("OpenAI comparison tests skipped - no API key", () => {});
       return;
@@ -124,12 +107,9 @@ describe("Contract Compatibility Tests", () => {
 
     const testPrompt = "Say 'Hello World' and nothing else.";
     const model = "gpt-4o-mini";
+    const aiSdkModel = "openai/gpt-4o-mini";
 
     test("streaming output format matches", async () => {
-      // Test with original implementation
-      delete process.env.USE_VERCEL_AI_SDK_OPENAI;
-
-      // Create API instance after setting/clearing environment variable
       const originalApi = getLlmApi({
         provider: "openai",
         apiKey: process.env.OPENAI_API_KEY!,
@@ -147,52 +127,45 @@ describe("Contract Compatibility Tests", () => {
         originalChunks.push(chunk);
       }
 
-      // Test with Vercel SDK implementation
-      // Important: Set flag before creating the API instance
-      process.env.USE_VERCEL_AI_SDK_OPENAI = "true";
-
-      // Create a fresh API instance with the flag enabled
-      const vercelApi = getLlmApi({
-        provider: "openai",
+      const aiSdkApi = getLlmApi({
+        provider: "ai-sdk",
+        model: aiSdkModel,
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
-      const vercelChunks: any[] = [];
+      const aiSdkChunks: any[] = [];
       try {
-        for await (const chunk of vercelApi.chatCompletionStream(
+        for await (const chunk of aiSdkApi.chatCompletionStream(
           {
-            model,
+            model: aiSdkModel,
             messages: [{ role: "user", content: testPrompt }],
             stream: true,
           },
           new AbortController().signal,
         )) {
-          vercelChunks.push(chunk);
+          aiSdkChunks.push(chunk);
         }
       } catch (error) {
-        console.error("Error in OpenAI vercel streaming:", error);
+        console.error("Error in OpenAI AI SDK streaming:", error);
         throw error;
       }
 
-      // Verify both have chunks
       expect(originalChunks.length).toBeGreaterThan(0);
       console.log(
-        `OpenAI - Original chunks: ${originalChunks.length}, Vercel chunks: ${vercelChunks.length}`,
+        `OpenAI - Original chunks: ${originalChunks.length}, AI SDK chunks: ${aiSdkChunks.length}`,
       );
-      expect(vercelChunks.length).toBeGreaterThan(0);
+      expect(aiSdkChunks.length).toBeGreaterThan(0);
 
-      // Verify chunk structure matches
       const originalContentChunks = originalChunks.filter(
         (c) => c.choices.length > 0,
       );
-      const vercelContentChunks = vercelChunks.filter(
+      const aiSdkContentChunks = aiSdkChunks.filter(
         (c) => c.choices.length > 0,
       );
 
       expect(originalContentChunks.length).toBeGreaterThan(0);
-      expect(vercelContentChunks.length).toBeGreaterThan(0);
+      expect(aiSdkContentChunks.length).toBeGreaterThan(0);
 
-      // Verify chunk format
       originalContentChunks.forEach((chunk) => {
         expect(chunk).toHaveProperty("choices");
         expect(chunk).toHaveProperty("model");
@@ -200,36 +173,29 @@ describe("Contract Compatibility Tests", () => {
         expect(chunk.object).toBe("chat.completion.chunk");
       });
 
-      vercelContentChunks.forEach((chunk) => {
+      aiSdkContentChunks.forEach((chunk) => {
         expect(chunk).toHaveProperty("choices");
         expect(chunk).toHaveProperty("model");
         expect(chunk).toHaveProperty("object");
         expect(chunk.object).toBe("chat.completion.chunk");
       });
 
-      // Verify usage chunk exists in both
       const originalUsageChunk = originalChunks.find((c) => c.usage);
-      const vercelUsageChunk = vercelChunks.find((c) => c.usage);
+      const aiSdkUsageChunk = aiSdkChunks.find((c) => c.usage);
 
       expect(originalUsageChunk).toBeDefined();
-      expect(vercelUsageChunk).toBeDefined();
+      expect(aiSdkUsageChunk).toBeDefined();
 
       expect(originalUsageChunk.usage).toHaveProperty("prompt_tokens");
       expect(originalUsageChunk.usage).toHaveProperty("completion_tokens");
       expect(originalUsageChunk.usage).toHaveProperty("total_tokens");
 
-      expect(vercelUsageChunk.usage).toHaveProperty("prompt_tokens");
-      expect(vercelUsageChunk.usage).toHaveProperty("completion_tokens");
-      expect(vercelUsageChunk.usage).toHaveProperty("total_tokens");
-
-      delete process.env.USE_VERCEL_AI_SDK_OPENAI;
+      expect(aiSdkUsageChunk.usage).toHaveProperty("prompt_tokens");
+      expect(aiSdkUsageChunk.usage).toHaveProperty("completion_tokens");
+      expect(aiSdkUsageChunk.usage).toHaveProperty("total_tokens");
     });
 
     test("non-streaming output format matches", async () => {
-      // Test with original implementation
-      delete process.env.USE_VERCEL_AI_SDK_OPENAI;
-
-      // Create API instance after setting/clearing environment variable
       const originalApi = getLlmApi({
         provider: "openai",
         apiKey: process.env.OPENAI_API_KEY!,
@@ -244,26 +210,21 @@ describe("Contract Compatibility Tests", () => {
         new AbortController().signal,
       );
 
-      // Test with Vercel SDK implementation
-      // Important: Set flag before creating the API instance
-      process.env.USE_VERCEL_AI_SDK_OPENAI = "true";
-
-      // Create a fresh API instance with the flag enabled
-      const vercelApi = getLlmApi({
-        provider: "openai",
+      const aiSdkApi = getLlmApi({
+        provider: "ai-sdk",
+        model: aiSdkModel,
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
-      const vercelResponse = await vercelApi.chatCompletionNonStream(
+      const aiSdkResponse = await aiSdkApi.chatCompletionNonStream(
         {
-          model,
+          model: aiSdkModel,
           messages: [{ role: "user", content: testPrompt }],
           stream: false,
         },
         new AbortController().signal,
       );
 
-      // Verify response structure matches
       expect(originalResponse).toHaveProperty("id");
       expect(originalResponse).toHaveProperty("object");
       expect(originalResponse).toHaveProperty("created");
@@ -271,40 +232,38 @@ describe("Contract Compatibility Tests", () => {
       expect(originalResponse).toHaveProperty("choices");
       expect(originalResponse).toHaveProperty("usage");
 
-      expect(vercelResponse).toHaveProperty("id");
-      expect(vercelResponse).toHaveProperty("object");
-      expect(vercelResponse).toHaveProperty("created");
-      expect(vercelResponse).toHaveProperty("model");
-      expect(vercelResponse).toHaveProperty("choices");
-      expect(vercelResponse).toHaveProperty("usage");
+      expect(aiSdkResponse).toHaveProperty("id");
+      expect(aiSdkResponse).toHaveProperty("object");
+      expect(aiSdkResponse).toHaveProperty("created");
+      expect(aiSdkResponse).toHaveProperty("model");
+      expect(aiSdkResponse).toHaveProperty("choices");
+      expect(aiSdkResponse).toHaveProperty("usage");
 
       expect(originalResponse.object).toBe("chat.completion");
-      expect(vercelResponse.object).toBe("chat.completion");
+      expect(aiSdkResponse.object).toBe("chat.completion");
 
       expect(originalResponse.choices.length).toBe(1);
-      expect(vercelResponse.choices.length).toBe(1);
+      expect(aiSdkResponse.choices.length).toBe(1);
 
       expect(originalResponse.choices[0]).toHaveProperty("message");
       expect(originalResponse.choices[0].message).toHaveProperty("role");
       expect(originalResponse.choices[0].message).toHaveProperty("content");
 
-      expect(vercelResponse.choices[0]).toHaveProperty("message");
-      expect(vercelResponse.choices[0].message).toHaveProperty("role");
-      expect(vercelResponse.choices[0].message).toHaveProperty("content");
+      expect(aiSdkResponse.choices[0]).toHaveProperty("message");
+      expect(aiSdkResponse.choices[0].message).toHaveProperty("role");
+      expect(aiSdkResponse.choices[0].message).toHaveProperty("content");
 
       expect(originalResponse.usage).toHaveProperty("prompt_tokens");
       expect(originalResponse.usage).toHaveProperty("completion_tokens");
       expect(originalResponse.usage).toHaveProperty("total_tokens");
 
-      expect(vercelResponse.usage).toHaveProperty("prompt_tokens");
-      expect(vercelResponse.usage).toHaveProperty("completion_tokens");
-      expect(vercelResponse.usage).toHaveProperty("total_tokens");
-
-      delete process.env.USE_VERCEL_AI_SDK_OPENAI;
+      expect(aiSdkResponse.usage).toHaveProperty("prompt_tokens");
+      expect(aiSdkResponse.usage).toHaveProperty("completion_tokens");
+      expect(aiSdkResponse.usage).toHaveProperty("total_tokens");
     });
   });
 
-  describe("Anthropic: Original vs Vercel SDK", () => {
+  describe("Anthropic: Original vs AI SDK", () => {
     if (!process.env.ANTHROPIC_API_KEY) {
       test.skip("Anthropic comparison tests skipped - no API key", () => {});
       return;
@@ -312,12 +271,9 @@ describe("Contract Compatibility Tests", () => {
 
     const testPrompt = "Say 'Hello World' and nothing else.";
     const model = "claude-haiku-4-5";
+    const aiSdkModel = "anthropic/claude-haiku-4-5";
 
     test("streaming output format matches", async () => {
-      // Test with original implementation
-      delete process.env.USE_VERCEL_AI_SDK_ANTHROPIC;
-
-      // Create API instance after setting/clearing environment variable
       const originalApi = getLlmApi({
         provider: "anthropic",
         apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -335,52 +291,45 @@ describe("Contract Compatibility Tests", () => {
         originalChunks.push(chunk);
       }
 
-      // Test with Vercel SDK implementation
-      // Important: Set flag before creating the API instance
-      process.env.USE_VERCEL_AI_SDK_ANTHROPIC = "true";
-
-      // Create a fresh API instance with the flag enabled
-      const vercelApi = getLlmApi({
-        provider: "anthropic",
+      const aiSdkApi = getLlmApi({
+        provider: "ai-sdk",
+        model: aiSdkModel,
         apiKey: process.env.ANTHROPIC_API_KEY!,
       });
 
-      const vercelChunks: any[] = [];
+      const aiSdkChunks: any[] = [];
       try {
-        for await (const chunk of vercelApi.chatCompletionStream(
+        for await (const chunk of aiSdkApi.chatCompletionStream(
           {
-            model,
+            model: aiSdkModel,
             messages: [{ role: "user", content: testPrompt }],
             stream: true,
           },
           new AbortController().signal,
         )) {
-          vercelChunks.push(chunk);
+          aiSdkChunks.push(chunk);
         }
       } catch (error) {
-        console.error("Error in Anthropic vercel streaming:", error);
+        console.error("Error in Anthropic AI SDK streaming:", error);
         throw error;
       }
 
-      // Verify both have chunks
       expect(originalChunks.length).toBeGreaterThan(0);
       console.log(
-        `Anthropic - Original chunks: ${originalChunks.length}, Vercel chunks: ${vercelChunks.length}`,
+        `Anthropic - Original chunks: ${originalChunks.length}, AI SDK chunks: ${aiSdkChunks.length}`,
       );
-      expect(vercelChunks.length).toBeGreaterThan(0);
+      expect(aiSdkChunks.length).toBeGreaterThan(0);
 
-      // Verify chunk structure matches
       const originalContentChunks = originalChunks.filter(
         (c) => c.choices.length > 0,
       );
-      const vercelContentChunks = vercelChunks.filter(
+      const aiSdkContentChunks = aiSdkChunks.filter(
         (c) => c.choices.length > 0,
       );
 
       expect(originalContentChunks.length).toBeGreaterThan(0);
-      expect(vercelContentChunks.length).toBeGreaterThan(0);
+      expect(aiSdkContentChunks.length).toBeGreaterThan(0);
 
-      // Verify chunk format
       originalContentChunks.forEach((chunk) => {
         expect(chunk).toHaveProperty("choices");
         expect(chunk).toHaveProperty("model");
@@ -388,36 +337,29 @@ describe("Contract Compatibility Tests", () => {
         expect(chunk.object).toBe("chat.completion.chunk");
       });
 
-      vercelContentChunks.forEach((chunk) => {
+      aiSdkContentChunks.forEach((chunk) => {
         expect(chunk).toHaveProperty("choices");
         expect(chunk).toHaveProperty("model");
         expect(chunk).toHaveProperty("object");
         expect(chunk.object).toBe("chat.completion.chunk");
       });
 
-      // Verify usage chunk exists in both
       const originalUsageChunk = originalChunks.find((c) => c.usage);
-      const vercelUsageChunk = vercelChunks.find((c) => c.usage);
+      const aiSdkUsageChunk = aiSdkChunks.find((c) => c.usage);
 
       expect(originalUsageChunk).toBeDefined();
-      expect(vercelUsageChunk).toBeDefined();
+      expect(aiSdkUsageChunk).toBeDefined();
 
       expect(originalUsageChunk.usage).toHaveProperty("prompt_tokens");
       expect(originalUsageChunk.usage).toHaveProperty("completion_tokens");
       expect(originalUsageChunk.usage).toHaveProperty("total_tokens");
 
-      expect(vercelUsageChunk.usage).toHaveProperty("prompt_tokens");
-      expect(vercelUsageChunk.usage).toHaveProperty("completion_tokens");
-      expect(vercelUsageChunk.usage).toHaveProperty("total_tokens");
-
-      delete process.env.USE_VERCEL_AI_SDK_ANTHROPIC;
+      expect(aiSdkUsageChunk.usage).toHaveProperty("prompt_tokens");
+      expect(aiSdkUsageChunk.usage).toHaveProperty("completion_tokens");
+      expect(aiSdkUsageChunk.usage).toHaveProperty("total_tokens");
     });
 
     test("non-streaming output format matches", async () => {
-      // Test with original implementation
-      delete process.env.USE_VERCEL_AI_SDK_ANTHROPIC;
-
-      // Create API instance after setting/clearing environment variable
       const originalApi = getLlmApi({
         provider: "anthropic",
         apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -432,26 +374,21 @@ describe("Contract Compatibility Tests", () => {
         new AbortController().signal,
       );
 
-      // Test with Vercel SDK implementation
-      // Important: Set flag before creating the API instance
-      process.env.USE_VERCEL_AI_SDK_ANTHROPIC = "true";
-
-      // Create a fresh API instance with the flag enabled
-      const vercelApi = getLlmApi({
-        provider: "anthropic",
+      const aiSdkApi = getLlmApi({
+        provider: "ai-sdk",
+        model: aiSdkModel,
         apiKey: process.env.ANTHROPIC_API_KEY!,
       });
 
-      const vercelResponse = await vercelApi.chatCompletionNonStream(
+      const aiSdkResponse = await aiSdkApi.chatCompletionNonStream(
         {
-          model,
+          model: aiSdkModel,
           messages: [{ role: "user", content: testPrompt }],
           stream: false,
         },
         new AbortController().signal,
       );
 
-      // Verify response structure matches
       expect(originalResponse).toHaveProperty("id");
       expect(originalResponse).toHaveProperty("object");
       expect(originalResponse).toHaveProperty("created");
@@ -459,36 +396,34 @@ describe("Contract Compatibility Tests", () => {
       expect(originalResponse).toHaveProperty("choices");
       expect(originalResponse).toHaveProperty("usage");
 
-      expect(vercelResponse).toHaveProperty("id");
-      expect(vercelResponse).toHaveProperty("object");
-      expect(vercelResponse).toHaveProperty("created");
-      expect(vercelResponse).toHaveProperty("model");
-      expect(vercelResponse).toHaveProperty("choices");
-      expect(vercelResponse).toHaveProperty("usage");
+      expect(aiSdkResponse).toHaveProperty("id");
+      expect(aiSdkResponse).toHaveProperty("object");
+      expect(aiSdkResponse).toHaveProperty("created");
+      expect(aiSdkResponse).toHaveProperty("model");
+      expect(aiSdkResponse).toHaveProperty("choices");
+      expect(aiSdkResponse).toHaveProperty("usage");
 
       expect(originalResponse.object).toBe("chat.completion");
-      expect(vercelResponse.object).toBe("chat.completion");
+      expect(aiSdkResponse.object).toBe("chat.completion");
 
       expect(originalResponse.choices.length).toBe(1);
-      expect(vercelResponse.choices.length).toBe(1);
+      expect(aiSdkResponse.choices.length).toBe(1);
 
       expect(originalResponse.choices[0]).toHaveProperty("message");
       expect(originalResponse.choices[0].message).toHaveProperty("role");
       expect(originalResponse.choices[0].message).toHaveProperty("content");
 
-      expect(vercelResponse.choices[0]).toHaveProperty("message");
-      expect(vercelResponse.choices[0].message).toHaveProperty("role");
-      expect(vercelResponse.choices[0].message).toHaveProperty("content");
+      expect(aiSdkResponse.choices[0]).toHaveProperty("message");
+      expect(aiSdkResponse.choices[0].message).toHaveProperty("role");
+      expect(aiSdkResponse.choices[0].message).toHaveProperty("content");
 
       expect(originalResponse.usage).toHaveProperty("prompt_tokens");
       expect(originalResponse.usage).toHaveProperty("completion_tokens");
       expect(originalResponse.usage).toHaveProperty("total_tokens");
 
-      expect(vercelResponse.usage).toHaveProperty("prompt_tokens");
-      expect(vercelResponse.usage).toHaveProperty("completion_tokens");
-      expect(vercelResponse.usage).toHaveProperty("total_tokens");
-
-      delete process.env.USE_VERCEL_AI_SDK_ANTHROPIC;
+      expect(aiSdkResponse.usage).toHaveProperty("prompt_tokens");
+      expect(aiSdkResponse.usage).toHaveProperty("completion_tokens");
+      expect(aiSdkResponse.usage).toHaveProperty("total_tokens");
     });
   });
 });
