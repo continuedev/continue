@@ -2,8 +2,8 @@ import crypto from "node:crypto";
 import * as fs from "node:fs";
 
 import plimit from "p-limit";
-import { open, type Database } from "sqlite";
-import sqlite3 from "sqlite3";
+import Database from "better-sqlite3";
+import type BetterSqlite3 from "better-sqlite3";
 
 import { FileStatsMap, IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
@@ -16,15 +16,15 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 
-export type DatabaseConnection = Database<sqlite3.Database>;
+export type DatabaseConnection = BetterSqlite3.Database;
 
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
-  private static async createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
+  private static createTables(db: DatabaseConnection) {
+    db.exec("PRAGMA journal_mode=WAL;");
 
-    await db.exec(
+    db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             dir STRING NOT NULL,
@@ -36,7 +36,7 @@ export class SqliteDb {
         )`,
     );
 
-    await db.exec(
+    db.exec(
       `CREATE TABLE IF NOT EXISTS global_cache (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cacheKey STRING NOT NULL,
@@ -46,7 +46,7 @@ export class SqliteDb {
         )`,
     );
 
-    await db.exec(
+    db.exec(
       `CREATE TABLE IF NOT EXISTS indexing_lock (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             locked BOOLEAN NOT NULL,
@@ -56,7 +56,7 @@ export class SqliteDb {
     );
 
     // Delete duplicate rows from tag_catalog
-    await db.exec(`
+    db.exec(`
     DELETE FROM tag_catalog
     WHERE id NOT IN (
       SELECT MIN(id)
@@ -66,7 +66,7 @@ export class SqliteDb {
   `);
 
     // Delete duplicate rows from global_cache
-    await db.exec(`
+    db.exec(`
     DELETE FROM global_cache
     WHERE id NOT IN (
       SELECT MIN(id)
@@ -76,13 +76,13 @@ export class SqliteDb {
   `);
 
     // Add unique constraints if they don't exist
-    await db.exec(
-      `CREATE UNIQUE INDEX IF NOT EXISTS idx_tag_catalog_unique 
+    db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_tag_catalog_unique
      ON tag_catalog(dir, branch, artifactId, path, cacheKey)`,
     );
 
-    await db.exec(
-      `CREATE UNIQUE INDEX IF NOT EXISTS idx_global_cache_unique 
+    db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_global_cache_unique
      ON global_cache(cacheKey, dir, branch, artifactId)`,
     );
   }
@@ -95,14 +95,11 @@ export class SqliteDb {
     }
 
     SqliteDb.indexSqlitePath = getIndexSqlitePath();
-    SqliteDb.db = await open({
-      filename: SqliteDb.indexSqlitePath,
-      driver: sqlite3.Database,
-    });
+    SqliteDb.db = new Database(SqliteDb.indexSqlitePath);
 
-    await SqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
+    SqliteDb.db.pragma("busy_timeout = 3000");
 
-    await SqliteDb.createTables(SqliteDb.db);
+    SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
   }
@@ -112,14 +109,16 @@ async function getSavedItemsForTag(
   tag: IndexTag,
 ): Promise<{ path: string; cacheKey: string; lastUpdated: number }[]> {
   const db = await SqliteDb.get();
-  const stmt = await db.prepare(
-    `SELECT path, cacheKey, lastUpdated FROM tag_catalog
+  const rows = db
+    .prepare(
+      `SELECT path, cacheKey, lastUpdated FROM tag_catalog
     WHERE dir = ? AND branch = ? AND artifactId = ?`,
-    tag.directory,
-    tag.branch,
-    tag.artifactId,
-  );
-  const rows = await stmt.all();
+    )
+    .all(tag.directory, tag.branch, tag.artifactId) as {
+    path: string;
+    cacheKey: string;
+    lastUpdated: number;
+  }[];
   return rows;
 }
 
@@ -268,8 +267,9 @@ async function getAddRemoveForTag(
       const { path, cacheKey } = item;
       switch (addRemoveResultType) {
         case AddRemoveResultType.Compute:
-          await db.run(
+          db.prepare(
             "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+          ).run(
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -279,8 +279,9 @@ async function getAddRemoveForTag(
           );
           break;
         case AddRemoveResultType.Add:
-          await db.run(
+          db.prepare(
             "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+          ).run(
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -290,7 +291,7 @@ async function getAddRemoveForTag(
           );
           break;
         case AddRemoveResultType.Remove:
-          await db.run(
+          db.prepare(
             `DELETE FROM tag_catalog WHERE
               cacheKey = ? AND
               path = ? AND
@@ -298,16 +299,11 @@ async function getAddRemoveForTag(
               branch = ? AND
               artifactId = ?
           `,
-            cacheKey,
-            path,
-            tag.directory,
-            tag.branch,
-            tag.artifactId,
-          );
+          ).run(cacheKey, path, tag.directory, tag.branch, tag.artifactId);
           break;
         case AddRemoveResultType.UpdateLastUpdated:
         case AddRemoveResultType.UpdateNewVersion:
-          await db.run(
+          db.prepare(
             `UPDATE tag_catalog SET
                 cacheKey = ?,
                 lastUpdated = ?
@@ -317,6 +313,7 @@ async function getAddRemoveForTag(
                 branch = ? AND
                 artifactId = ?
             `,
+          ).run(
             cacheKey,
             newLastUpdatedTimestamp,
             path,
@@ -361,10 +358,11 @@ async function getTagsFromGlobalCache(
   artifactId: string,
 ): Promise<IndexTag[]> {
   const db = await SqliteDb.get();
-  const stmt = await db.prepare(
-    "SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?",
-  );
-  const rows = await stmt.all(cacheKey, artifactId);
+  const rows = db
+    .prepare(
+      "SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?",
+    )
+    .all(cacheKey, artifactId) as IndexTag[];
   return rows;
 }
 
@@ -500,25 +498,21 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     cacheKey: string,
     tag: IndexTag,
   ): Promise<void> {
-    await this.db.run(
-      "REPLACE INTO global_cache (cacheKey, dir, branch, artifactId) VALUES (?, ?, ?, ?)",
-      cacheKey,
-      tag.directory,
-      tag.branch,
-      tag.artifactId,
-    );
+    this.db
+      .prepare(
+        "REPLACE INTO global_cache (cacheKey, dir, branch, artifactId) VALUES (?, ?, ?, ?)",
+      )
+      .run(cacheKey, tag.directory, tag.branch, tag.artifactId);
   }
   private async deleteOrRemoveTag(
     cacheKey: string,
     tag: IndexTag,
   ): Promise<void> {
-    await this.db.run(
-      "DELETE FROM global_cache WHERE cacheKey = ? AND dir = ? AND branch = ? AND artifactId = ?",
-      cacheKey,
-      tag.directory,
-      tag.branch,
-      tag.artifactId,
-    );
+    this.db
+      .prepare(
+        "DELETE FROM global_cache WHERE cacheKey = ? AND dir = ? AND branch = ? AND artifactId = ?",
+      )
+      .run(cacheKey, tag.directory, tag.branch, tag.artifactId);
   }
 }
 
@@ -552,37 +546,34 @@ export class IndexLock {
     { locked: boolean; dirs: string; timestamp: number } | undefined | undefined
   > {
     const db = await SqliteDb.get();
-    const row = (await db.get(
-      `SELECT locked, dirs, timestamp FROM ${IndexLock.getLockTableName()} WHERE locked = ?`,
-      true,
-    )) as { locked: boolean; dirs: string; timestamp: number } | undefined;
+    const row = db
+      .prepare(
+        `SELECT locked, dirs, timestamp FROM ${IndexLock.getLockTableName()} WHERE locked = ?`,
+      )
+      .get(1) as
+      | { locked: boolean; dirs: string; timestamp: number }
+      | undefined;
     return row;
   }
 
   static async lock(dirs: string) {
     const db = await SqliteDb.get();
-    await db.run(
+    db.prepare(
       `INSERT INTO ${IndexLock.getLockTableName()} (locked, timestamp, dirs) VALUES (?, ?, ?)`,
-      true,
-      Date.now(),
-      dirs,
-    );
+    ).run(1, Date.now(), dirs);
   }
 
   static async updateTimestamp() {
     const db = await SqliteDb.get();
-    await db.run(
+    db.prepare(
       `UPDATE ${IndexLock.getLockTableName()} SET timestamp = ? where locked = ?`,
-      Date.now(),
-      true,
-    );
+    ).run(Date.now(), 1);
   }
 
   static async unlock() {
     const db = await SqliteDb.get();
-    await db.run(
+    db.prepare(
       `DELETE FROM ${IndexLock.getLockTableName()} WHERE locked = ?`,
-      true,
-    );
+    ).run(1);
   }
 }

@@ -17,7 +17,7 @@ export class TestCodebaseIndex implements CodebaseIndex {
   artifactId = "__test__";
 
   private static async _createTables(db: DatabaseConnection) {
-    await db.exec(`CREATE TABLE IF NOT EXISTS test_index (
+    db.exec(`CREATE TABLE IF NOT EXISTS test_index (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
         branch TEXT NOT NULL,
@@ -35,17 +35,15 @@ export class TestCodebaseIndex implements CodebaseIndex {
     await TestCodebaseIndex._createTables(db);
 
     for (const item of [...results.compute, ...results.addTag]) {
-      await db.run(
+      db.prepare(
         "INSERT INTO test_index (path, branch, directory) VALUES (?, ?, ?)",
-        [item.path, tag.branch, tag.directory],
-      );
+      ).run(item.path, tag.branch, tag.directory);
     }
 
     for (const item of [...results.del, ...results.removeTag]) {
-      await db.run(
+      db.prepare(
         "DELETE FROM test_index WHERE path = ? AND branch = ? AND directory = ?",
-        [item.path, tag.branch, tag.directory],
-      );
+      ).run(item.path, tag.branch, tag.directory);
     }
 
     await markComplete(results.compute, IndexResultType.Compute);
@@ -58,12 +56,13 @@ export class TestCodebaseIndex implements CodebaseIndex {
     const db = await SqliteDb.get();
     await TestCodebaseIndex._createTables(db);
 
-    const rows = await db.all(
-      `SELECT path FROM test_index WHERE (branch, directory) IN (VALUES ${tags
-        .map(() => "(?, ?)")
-        .join(", ")})`,
-      tags.flatMap((tag) => [tag.branch, tag.directory]),
-    );
+    const rows = db
+      .prepare(
+        `SELECT path FROM test_index WHERE (branch, directory) IN (VALUES ${tags
+          .map(() => "(?, ?)")
+          .join(", ")})`,
+      )
+      .all(...tags.flatMap((tag) => [tag.branch, tag.directory])) as any[];
 
     return rows.map((row: any) => row.path);
   }
@@ -71,6 +70,6 @@ export class TestCodebaseIndex implements CodebaseIndex {
   async clearDatabase(): Promise<void> {
     const db = await SqliteDb.get();
     await TestCodebaseIndex._createTables(db);
-    await db.run("DELETE FROM test_index");
+    db.prepare("DELETE FROM test_index").run();
   }
 }

@@ -1,10 +1,7 @@
 import { Mutex } from "async-mutex";
-import { open } from "sqlite";
-import sqlite3 from "sqlite3";
-import {
-  DatabaseConnection,
-  truncateSqliteLikePattern,
-} from "../../indexing/refreshIndex.js";
+import Database from "better-sqlite3";
+import type BetterSqlite3 from "better-sqlite3";
+import { truncateSqliteLikePattern } from "../../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../../util/paths.js";
 
 interface CacheEntry {
@@ -30,7 +27,7 @@ export class AutocompleteLruCache {
   private dirty: Set<string> = new Set();
   private flushTimer?: NodeJS.Timeout;
 
-  constructor(private db: DatabaseConnection) {}
+  constructor(private db: BetterSqlite3.Database) {}
 
   /**
    * Singleton accessor that initializes the cache with SQLite persistence.
@@ -39,12 +36,9 @@ export class AutocompleteLruCache {
   static async get(): Promise<AutocompleteLruCache> {
     if (!AutocompleteLruCache.instancePromise) {
       AutocompleteLruCache.instancePromise = (async () => {
-        const db = await open({
-          filename: getTabAutocompleteCacheSqlitePath(),
-          driver: sqlite3.Database,
-        });
-        await db.exec("PRAGMA busy_timeout = 3000;");
-        await db.run(`
+        const db = new Database(getTabAutocompleteCacheSqlitePath());
+        db.pragma("busy_timeout = 3000");
+        db.exec(`
           CREATE TABLE IF NOT EXISTS cache (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL,
@@ -63,7 +57,13 @@ export class AutocompleteLruCache {
 
   /** Loads all cached entries from SQLite into memory on initialization. */
   private async loadFromDb() {
-    const rows = await this.db.all("SELECT key, value, timestamp FROM cache");
+    const rows = this.db
+      .prepare("SELECT key, value, timestamp FROM cache")
+      .all() as {
+      key: string;
+      value: string;
+      timestamp: number;
+    }[];
     for (const row of rows) {
       this.cache.set(row.key, {
         value: row.value,
@@ -180,31 +180,32 @@ export class AutocompleteLruCache {
     this.dirty.clear();
 
     try {
-      await this.db.run("BEGIN TRANSACTION");
+      const upsertStmt = this.db.prepare(
+        `INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = ?, timestamp = ?`,
+      );
+      const deleteStmt = this.db.prepare("DELETE FROM cache WHERE key = ?");
 
-      for (const key of dirtyKeys) {
-        const entry = this.cache.get(key);
+      const runTransaction = this.db.transaction(() => {
+        for (const key of dirtyKeys) {
+          const entry = this.cache.get(key);
 
-        if (entry) {
-          // Upsert
-          await this.db.run(
-            `INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)
-             ON CONFLICT(key) DO UPDATE SET value = ?, timestamp = ?`,
-            key,
-            entry.value,
-            entry.timestamp,
-            entry.value,
-            entry.timestamp,
-          );
-        } else {
-          // Delete
-          await this.db.run("DELETE FROM cache WHERE key = ?", key);
+          if (entry) {
+            upsertStmt.run(
+              key,
+              entry.value,
+              entry.timestamp,
+              entry.value,
+              entry.timestamp,
+            );
+          } else {
+            deleteStmt.run(key);
+          }
         }
-      }
+      });
 
-      await this.db.run("COMMIT");
+      runTransaction();
     } catch (error) {
-      await this.db.run("ROLLBACK");
       console.error("Error flushing cache:", error);
     } finally {
       release();
@@ -220,7 +221,7 @@ export class AutocompleteLruCache {
       clearInterval(this.flushTimer);
     }
     await this.flush();
-    await this.db.close();
+    this.db.close();
     AutocompleteLruCache.instancePromise = undefined;
   }
 }
