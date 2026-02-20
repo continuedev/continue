@@ -1,0 +1,59 @@
+---
+title: "Z.ai"
+description: "Configure Z.ai's GLM models with Continue, including GLM-5, GLM-4.7, and GLM-4.5"
+---
+
+[Z.ai](https://z.ai/) (formerly Zhipu AI) provides the GLM family of large language models with strong multilingual capabilities.
+
+<Info>Get an API key from the [Z.ai Platform](https://z.ai/manage-apikey/apikey-list)</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GLM-5
+      provider: zAI
+      model: glm-5
+      apiKey: <YOUR_ZAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GLM-5",
+        "provider": "zAI",
+        "model": "glm-5",
+        "apiKey": "<YOUR_ZAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+- `glm-5`: Flagship model with 128K context window
+- `glm-4.7`: Latest generation model with 128K context window
+- `glm-4-plus`: Enhanced GLM-4 model with 128K context window
+- `glm-4.5`: GLM-4.5 model with 128K context window
+
+## Configuration Options
+
+| Option    | Description          | Default                                |
+| --------- | -------------------- | -------------------------------------- |
+| `apiKey`  | Z.ai API key         | Required                               |
+| `apiBase` | API base URL         | `https://api.z.ai/api/paas/v4/`       |
+| `model`   | Model name to use    | `glm-5`                               |
+
+<Tip>
+Z.ai offers a dedicated [Coding Plan](https://docs.z.ai/api-reference/introduction) with a subscription-based endpoint optimized for coding tasks. To use it, set `apiBase` to `https://api.z.ai/api/coding/paas/v4/`. This endpoint uses prompt-based pricing rather than token-based pricing and may be more cost-effective for coding workflows.
+</Tip>

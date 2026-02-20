@@ -101,6 +101,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new ContinueProxyApi(config);
     case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
+    case "zAI":
+      return openAICompatible("https://api.z.ai/api/paas/v4/", config);
     case "voyage":
       return openAICompatible("https://api.voyageai.com/v1/", config);
     case "mistral":

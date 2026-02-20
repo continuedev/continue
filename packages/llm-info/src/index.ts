@@ -10,6 +10,7 @@ import { OpenAi } from "./providers/openai.js";
 import { Vllm } from "./providers/vllm.js";
 import { Voyage } from "./providers/voyage.js";
 import { xAI } from "./providers/xAI.js";
+import { zAI } from "./providers/zai.js";
 import { LlmInfoWithProvider, ModelProvider, UseCase } from "./types.js";
 
 export const allModelProviders: ModelProvider[] = [
@@ -25,6 +26,7 @@ export const allModelProviders: ModelProvider[] = [
   Cohere,
   CometAPI,
   xAI,
+  zAI,
 ];
 
 export const allLlms: LlmInfoWithProvider[] = allModelProviders.flatMap(
