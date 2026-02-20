@@ -1,3 +1,4 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
   ChatCompletion,
@@ -28,11 +29,7 @@ type AiSdkProviderCreator = (options: {
 
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
-  anthropic: (options) =>
-    createOpenAI({
-      ...options,
-      baseURL: options.baseURL ?? "https://api.anthropic.com/v1/",
-    }),
+  anthropic: createAnthropic,
   openrouter: (options) =>
     createOpenAI({
       ...options,
@@ -126,7 +123,7 @@ export class AiSdkApi implements BaseLlmApi {
       system: systemText,
       messages: nonSystemMessages as any,
       temperature: body.temperature ?? undefined,
-      maxTokens: body.max_tokens ?? undefined,
+      maxOutputTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
       stopSequences: body.stop
         ? Array.isArray(body.stop)
@@ -143,7 +140,7 @@ export class AiSdkApi implements BaseLlmApi {
       type: "function" as const,
       function: {
         name: tc.toolName,
-        arguments: JSON.stringify(tc.args),
+        arguments: JSON.stringify(tc.input),
       },
     }));
 
@@ -167,9 +164,10 @@ export class AiSdkApi implements BaseLlmApi {
         },
       ],
       usage: {
-        prompt_tokens: result.usage.promptTokens,
-        completion_tokens: result.usage.completionTokens,
-        total_tokens: result.usage.totalTokens,
+        prompt_tokens: result.usage.inputTokens ?? 0,
+        completion_tokens: result.usage.outputTokens ?? 0,
+        total_tokens:
+          (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
       },
     };
   }
@@ -211,7 +209,7 @@ export class AiSdkApi implements BaseLlmApi {
       system: systemText,
       messages: nonSystemMessages as any,
       temperature: body.temperature ?? undefined,
-      maxTokens: body.max_tokens ?? undefined,
+      maxOutputTokens: body.max_tokens ?? undefined,
       topP: body.top_p ?? undefined,
       stopSequences: body.stop
         ? Array.isArray(body.stop)
@@ -262,11 +260,14 @@ export class AiSdkApi implements BaseLlmApi {
     const model = this.provider!(modelId);
 
     const inputs = Array.isArray(body.input) ? body.input : [body.input];
+    const stringInputs = inputs.map((input) =>
+      typeof input === "string" ? input : String(input),
+    );
 
-    if (inputs.length === 1) {
+    if (stringInputs.length === 1) {
       const result = await aiEmbed({
         model,
-        value: inputs[0],
+        value: stringInputs[0],
       });
       return embedding({
         data: [result.embedding],
@@ -280,7 +281,7 @@ export class AiSdkApi implements BaseLlmApi {
 
     const result = await embedMany({
       model,
-      values: inputs as string[],
+      values: stringInputs,
     });
 
     return embedding({
