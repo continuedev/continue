@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
   ChatCompletion,
@@ -30,6 +31,7 @@ type AiSdkProviderCreator = (options: {
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
   anthropic: createAnthropic,
+  google: createGoogleGenerativeAI,
   openrouter: (options) =>
     createOpenAI({
       ...options,
