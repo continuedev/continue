@@ -79,11 +79,22 @@ export function convertOpenAIMessagesToVercel(
               } catch {
                 input = tc.function.arguments;
               }
+
+              const thoughtSignature = (tc as any)?.extra_content?.google
+                ?.thought_signature as string | undefined;
+
               contentParts.push({
                 type: "tool-call",
                 toolCallId: tc.id,
                 toolName: tc.function.name,
                 input,
+                ...(thoughtSignature && {
+                  providerOptions: {
+                    google: {
+                      thoughtSignature,
+                    },
+                  },
+                }),
               });
             }
           }

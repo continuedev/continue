@@ -19,6 +19,14 @@ export type VercelStreamPart =
       toolCallId: string;
       toolName: string;
       input: Record<string, unknown>;
+      providerMetadata?: {
+        google?: {
+          thoughtSignature?: string;
+        };
+        vertex?: {
+          thoughtSignature?: string;
+        };
+      };
     }
   | {
       type: "tool-input-start";
@@ -91,7 +99,10 @@ export function convertVercelStreamPart(
         model,
       });
 
-    case "tool-call":
+    case "tool-call": {
+      const thoughtSignature =
+        part.providerMetadata?.google?.thoughtSignature ??
+        part.providerMetadata?.vertex?.thoughtSignature;
       return chatChunkFromDelta({
         delta: {
           tool_calls: [
@@ -103,11 +114,19 @@ export function convertVercelStreamPart(
                 name: part.toolName,
                 arguments: JSON.stringify(part.input),
               },
-            },
+              ...(thoughtSignature && {
+                extra_content: {
+                  google: {
+                    thought_signature: thoughtSignature,
+                  },
+                },
+              }),
+            } as any,
           ],
         },
         model,
       });
+    }
 
     case "tool-input-delta":
       return chatChunkFromDelta({
