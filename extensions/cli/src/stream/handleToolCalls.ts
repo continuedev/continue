@@ -87,6 +87,7 @@ export async function handleToolCalls(
         name: tc.name,
         arguments: JSON.stringify(tc.arguments),
       },
+      ...(tc.extra_content && { extra_content: tc.extra_content }),
     })),
   };
 
