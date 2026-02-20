@@ -22,6 +22,7 @@ import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
+import ModelsLab from "./ModelsLab";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
@@ -99,6 +100,7 @@ export const LLMClasses = [
   Flowise,
   Groq,
   Fireworks,
+  ModelsLab,
   NCompass,
   ContinueProxy,
   Cloudflare,
