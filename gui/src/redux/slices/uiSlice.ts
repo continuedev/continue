@@ -97,14 +97,17 @@ export const uiSlice = createSlice({
       const setting = state.toolSettings[action.payload];
 
       switch (setting) {
-        case "allowedWithPermission":
+        case "allowedUnrestricted":
           state.toolSettings[action.payload] = "allowedWithoutPermission";
           break;
         case "allowedWithoutPermission":
+          state.toolSettings[action.payload] = "allowedWithPermission";
+          break;
+        case "allowedWithPermission":
           state.toolSettings[action.payload] = "disabled";
           break;
         case "disabled":
-          state.toolSettings[action.payload] = "allowedWithPermission";
+          state.toolSettings[action.payload] = "allowedUnrestricted";
           break;
         default:
           state.toolSettings[action.payload] = DEFAULT_TOOL_SETTING;
