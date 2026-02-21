@@ -71,6 +71,77 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
   },
 };
 
+// Qwen multi-file FIM template for repository-level autocompletion
+// https://github.com/continuedev/continue/issues/3589
+const qwenMultifileFimTemplate: AutocompleteTemplate = {
+  compilePrefixSuffix: (
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+    workspaceUris: string[],
+  ): [string, string] => {
+    function getFileName(snippet: { uri: string; uniquePath: string }): string {
+      return snippet.uri.startsWith("file://")
+        ? snippet.uniquePath
+        : snippet.uri;
+    }
+
+    if (snippets.length === 0) {
+      return [prefix, suffix];
+    }
+
+    const relativePaths = getShortestUniqueRelativeUriPaths(
+      [
+        ...snippets.map((snippet) =>
+          "filepath" in snippet ? snippet.filepath : "Untitled.txt",
+        ),
+        filepath,
+      ],
+      workspaceUris,
+    );
+
+    const fileContents = snippets
+      .map((snippet, i) => {
+        if (snippet.type === AutocompleteSnippetType.Diff) {
+          return `<|file_sep|>${getFileName(relativePaths[i])}\n${snippet.content}`;
+        }
+        return `<|file_sep|>${getFileName(relativePaths[i])}\n${snippet.content}`;
+      })
+      .join("\n");
+
+    const fullPrefix = `<|repo_name|>${reponame}\n${fileContents}\n<|file_sep|>${getFileName(
+      relativePaths[relativePaths.length - 1],
+    )}<|system_separator_istruction_repository_level|>${prefix}`;
+
+    return [fullPrefix, suffix];
+  },
+  template: (prefix: string, suffix: string): string => {
+    if (prefix.includes("<|system_separator_istruction_repository_level|>")) {
+      const [beforeSeparator, ...afterSeparator] = prefix.split(
+        "<|system_separator_istruction_repository_level|>",
+      );
+      const combinedAfterSeparator = afterSeparator.join("");
+      return `${beforeSeparator}\n<|fim_prefix|>${combinedAfterSeparator}<|fim_suffix|>${suffix}<|fim_middle|>`;
+    }
+    return `<|fim_prefix|>${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`;
+  },
+  completionOptions: {
+    stop: [
+      "<|endoftext|>",
+      "<|fim_prefix|>",
+      "<|fim_middle|>",
+      "<|fim_suffix|>",
+      "<|fim_pad|>",
+      "<|repo_name|>",
+      "<|file_sep|>",
+      "<|im_start|>",
+      "<|im_end|>",
+    ],
+  },
+};
+
 // https://www.ibm.com/granite/docs/models/granite#fim
 const granite4FimTemplate: AutocompleteTemplate = {
   template:
@@ -454,7 +525,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   }
 
   if (lowerCaseModel.includes("qwen") && lowerCaseModel.includes("coder")) {
-    return qwenCoderFimTemplate;
+    return qwenMultifileFimTemplate;
   }
 
   if (lowerCaseModel.includes("granite") && lowerCaseModel.includes("4")) {
