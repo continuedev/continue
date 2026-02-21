@@ -22,6 +22,7 @@ import { ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
@@ -93,8 +94,20 @@ export const streamNormalInput = createAsyncThunk<
       throw new Error("No chat model selected");
     }
 
-    // Get tools and filter them based on the selected model
-    const activeTools = selectActiveTools(state);
+    // Get tools and apply model-level overrides (disabled, description, etc.)
+    let activeTools = selectActiveTools(state);
+    if (selectedChatModel.toolOverrides?.length) {
+      const { tools: overriddenTools, errors } = applyToolOverrides(
+        activeTools,
+        selectedChatModel.toolOverrides,
+      );
+      activeTools = overriddenTools;
+      for (const error of errors) {
+        if (!error.fatal) {
+          console.warn(`Tool override warning: ${error.message}`);
+        }
+      }
+    }
 
     // Use the centralized selector to determine if system message tools should be used
     const useNativeTools = state.config.config.experimental
