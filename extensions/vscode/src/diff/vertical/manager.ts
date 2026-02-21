@@ -16,6 +16,7 @@ import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { stripImages } from "core/util/messageContent";
 import { getLastNPathParts } from "core/util/uri";
 import { editOutcomeTracker } from "../../extension/EditOutcomeTracker";
+import { openEditorAndRevealRange } from "../../util/vscode";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 import { getFirstChangedLine } from "./util";
 
@@ -296,6 +297,7 @@ export class VerticalDiffManager {
   }
 
   async instantApplyDiff(
+    filepath: string,
     oldContent: string,
     newContent: string,
     streamId: string,
@@ -303,17 +305,16 @@ export class VerticalDiffManager {
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
-    const editor = vscode.window.activeTextEditor;
+    const uri = vscode.Uri.parse(filepath);
+    const editor = await openEditorAndRevealRange(uri);
     if (!editor) {
       return;
     }
 
-    const fileUri = editor.document.uri.toString();
-
     const myersDiffs = myersDiff(oldContent, newContent);
 
     const diffHandler = this.createVerticalDiffHandler(
-      fileUri,
+      filepath,
       0,
       editor.document.lineCount - 1,
       {
@@ -324,7 +325,7 @@ export class VerticalDiffManager {
             status,
             numDiffs,
             fileContent,
-            filepath: fileUri,
+            filepath,
             toolCallId,
           }),
         streamId,
@@ -347,9 +348,9 @@ export class VerticalDiffManager {
     await this.webviewProtocol.request("updateApplyState", {
       streamId,
       status: "done",
-      numDiffs: this.fileUriToCodeLens.get(fileUri)?.length ?? 0,
+      numDiffs: this.fileUriToCodeLens.get(filepath)?.length ?? 0,
       fileContent: editor.document.getText(),
-      filepath: fileUri,
+      filepath,
       toolCallId,
     });
   }
