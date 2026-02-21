@@ -47,4 +47,17 @@ class UriUtilsTest : TestCase() {
         val file = UriUtils.uriToFile(uri)
         assertEquals(File("/wsl.localhost/Ubuntu/home/user/file.txt"), file)
     }
+
+    /**
+     * Validates that unencoded space characters in file URIs are handled
+     * correctly by the URI parser, ensuring proper conversion to File objects.
+     * This is a regression test for GitHub issue #10613.
+     */
+    fun `test unencoded spaces`() {
+        // Verify that a URI string containing literal spaces can be parsed
+        val uri = "file:///path/to/file with spaces"
+        val result = UriUtils.uriToFile(uri)
+        val expectedFile = File("/path/to/file with spaces")
+        assertEquals(expectedFile, result)
+    }
 }
