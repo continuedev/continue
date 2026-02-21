@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, ModelDescription } from "core";
+import { LLMFullCompletionOptions, ModelDescription, Usage } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
@@ -16,6 +16,7 @@ import {
   setInlineErrorMessage,
   setIsPruned,
   setToolGenerated,
+  updateHistoryItemAtIndex,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -66,6 +67,28 @@ function buildReasoningCompletionOptions(
   }
 
   return reasoningOptions;
+}
+
+function findLastAssistantMessageIndex(history: { message: any }[]): number {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i]?.message?.role === "assistant") {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function enrichUsage(usage: Usage, provider: string, model: string): Usage {
+  return {
+    ...usage,
+    provider,
+    model,
+    source: usage.source ?? "provider",
+    ts: usage.ts ?? new Date().toISOString(),
+    totalTokens:
+      usage.totalTokens ??
+      (usage.promptTokens ?? 0) + (usage.completionTokens ?? 0),
+  };
 }
 
 export const streamNormalInput = createAsyncThunk<
@@ -215,6 +238,35 @@ export const streamNormalInput = createAsyncThunk<
       // Attach prompt log and end thinking for reasoning models
       if (next.done && next.value) {
         dispatch(addPromptCompletionPair([next.value]));
+
+        if (next.value.usage) {
+          const usage = enrichUsage(
+            next.value.usage,
+            selectedChatModel.underlyingProviderName,
+            selectedChatModel.model,
+          );
+          const latestState = getState();
+          const assistantIndex = findLastAssistantMessageIndex(
+            latestState.session.history,
+          );
+
+          if (assistantIndex >= 0) {
+            const assistantItem = latestState.session.history[assistantIndex];
+            if (assistantItem.message.role === "assistant") {
+              dispatch(
+                updateHistoryItemAtIndex({
+                  index: assistantIndex,
+                  updates: {
+                    message: {
+                      ...assistantItem.message,
+                      usage,
+                    },
+                  },
+                }),
+              );
+            }
+          }
+        }
 
         try {
           extra.ideMessenger.post("devdata/log", {

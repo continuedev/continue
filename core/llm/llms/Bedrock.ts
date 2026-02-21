@@ -18,7 +18,13 @@ import {
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import type { CompletionOptions } from "../../index.js";
-import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
+import {
+  ChatMessage,
+  Chunk,
+  LLMOptions,
+  MessageContent,
+  Usage,
+} from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
@@ -68,6 +74,52 @@ class Bedrock extends BaseLLM {
     this.requestOptions = {
       region: options.region,
       headers: {},
+    };
+  }
+
+  private parseBedrockUsage(rawUsage: any): Usage | undefined {
+    if (!rawUsage) {
+      return undefined;
+    }
+
+    const promptTokens = rawUsage.inputTokens ?? rawUsage.promptTokens;
+    const completionTokens = rawUsage.outputTokens ?? rawUsage.completionTokens;
+    const totalTokens = rawUsage.totalTokens;
+    const cachedTokens =
+      rawUsage.cacheReadInputTokens ?? rawUsage.cache_read_input_tokens;
+    const cacheWriteTokens =
+      rawUsage.cacheWriteInputTokens ?? rawUsage.cache_write_input_tokens;
+
+    if (
+      typeof promptTokens !== "number" &&
+      typeof completionTokens !== "number" &&
+      typeof totalTokens !== "number" &&
+      typeof cachedTokens !== "number" &&
+      typeof cacheWriteTokens !== "number"
+    ) {
+      return undefined;
+    }
+
+    const resolvedPromptTokens = promptTokens ?? 0;
+    const resolvedCompletionTokens = completionTokens ?? 0;
+    const resolvedTotalTokens =
+      totalTokens ?? resolvedPromptTokens + resolvedCompletionTokens;
+
+    return {
+      promptTokens: resolvedPromptTokens,
+      completionTokens: resolvedCompletionTokens,
+      totalTokens: resolvedTotalTokens,
+      promptTokensDetails:
+        typeof cachedTokens === "number" || typeof cacheWriteTokens === "number"
+          ? {
+              cachedTokens:
+                typeof cachedTokens === "number" ? cachedTokens : undefined,
+              cacheWriteTokens:
+                typeof cacheWriteTokens === "number"
+                  ? cacheWriteTokens
+                  : undefined,
+            }
+          : undefined,
     };
   }
 
@@ -139,11 +191,12 @@ class Bedrock extends BaseLLM {
       cacheReadInputTokens: 0,
       cacheWriteInputTokens: 0,
     };
+    let usage: Usage | undefined;
 
     try {
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
-          console.log(`${JSON.stringify(chunk.metadata.usage)}`);
+          usage = this.parseBedrockUsage(chunk.metadata.usage) ?? usage;
         }
 
         const contentBlockDelta: ContentBlockDelta | undefined =
@@ -240,6 +293,14 @@ class Bedrock extends BaseLLM {
     } catch (error: unknown) {
       // Clean up state and let the original error bubble up to the retry decorator
       throw error;
+    }
+
+    if (usage) {
+      yield {
+        role: "assistant",
+        content: "",
+        usage,
+      };
     }
   }
 

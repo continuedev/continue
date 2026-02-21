@@ -26,6 +26,7 @@ import StepContainer from "../../components/StepContainer";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useTokenUsageSetting } from "../../hooks/useTokenUsageSetting";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   selectDoneApplyStates,
@@ -56,6 +57,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { formatTokenBreakdown, summarizeSessionUsage } from "../../util/usage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -116,6 +118,7 @@ export function Chat() {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const tokenUsageDisplayMode = useTokenUsageSetting();
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -140,6 +143,11 @@ export function Chat() {
   }, []);
 
   useAutoScroll(stepsDivRef, history);
+
+  const sessionUsageTotals = useMemo(
+    () => summarizeSessionUsage(history),
+    [history],
+  );
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -378,6 +386,7 @@ export function Chat() {
                   isLast={index === history.length - 1}
                   item={item}
                   latestSummaryIndex={latestSummaryIndex}
+                  showTurnTokenUsage={tokenUsageDisplayMode === "turn"}
                 />
               </TimelineItem>
             </div>
@@ -423,12 +432,20 @@ export function Chat() {
               isLast={index === history.length - 1}
               item={item}
               latestSummaryIndex={latestSummaryIndex}
+              showTurnTokenUsage={tokenUsageDisplayMode === "turn"}
             />
           </TimelineItem>
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
+    [
+      sendInput,
+      isLastUserInput,
+      history,
+      stepsOpen,
+      isStreaming,
+      tokenUsageDisplayMode,
+    ],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
@@ -499,6 +516,17 @@ export function Chat() {
                 </NewSessionButton>
               )}
             </div>
+            {(tokenUsageDisplayMode === "session" ||
+              tokenUsageDisplayMode === "turn") &&
+              sessionUsageTotals.turnsWithUsage > 0 && (
+                <div className="text-description text-xs">
+                  {formatTokenBreakdown({
+                    promptTokens: sessionUsageTotals.promptTokens,
+                    completionTokens: sessionUsageTotals.completionTokens,
+                    totalTokens: sessionUsageTotals.totalTokens,
+                  })}
+                </div>
+              )}
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}

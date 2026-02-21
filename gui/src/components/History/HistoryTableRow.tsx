@@ -21,6 +21,7 @@ import {
   updateSession,
 } from "../../redux/thunks/session";
 import { isShareSessionSupported } from "../../util";
+import { formatTokenBreakdown } from "../../util/usage";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ToolTip } from "../gui/Tooltip";
 
@@ -29,9 +30,11 @@ const shareSessionSupported = isShareSessionSupported();
 export function HistoryTableRow({
   sessionMetadata,
   index,
+  showTokenUsage = false,
 }: {
   sessionMetadata: BaseSessionMetadata | RemoteSessionMetadata;
   index: number;
+  showTokenUsage?: boolean;
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -57,6 +60,16 @@ export function HistoryTableRow({
     }
   };
   const isRemote = "isRemote" in sessionMetadata && sessionMetadata.isRemote;
+  const sessionUsage =
+    "usage" in sessionMetadata && sessionMetadata.usage
+      ? sessionMetadata.usage
+      : undefined;
+  const sessionPromptTokens = sessionUsage?.promptTokens ?? 0;
+  const sessionCompletionTokens = sessionUsage?.completionTokens ?? 0;
+  const sessionTotalTokens = sessionUsage
+    ? (sessionUsage.totalTokens ??
+      sessionPromptTokens + sessionCompletionTokens)
+    : 0;
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -122,7 +135,7 @@ export function HistoryTableRow({
         navigate("/");
       }}
     >
-      <td className="flex-1 cursor-pointer space-y-1">
+      <td className="flex-1 cursor-pointer space-y-0.5">
         {editing ? (
           <div>
             <Input
@@ -160,7 +173,7 @@ export function HistoryTableRow({
           </div>
         )}
 
-        <div className="text-description-muted flex">
+        <div className="text-description-muted flex leading-4">
           <span className="line-clamp-1 break-all text-xs">
             {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
           </span>
@@ -176,6 +189,15 @@ export function HistoryTableRow({
                 })}
               </span> */}
         </div>
+        {showTokenUsage && sessionTotalTokens > 0 && (
+          <div className="text-description-muted text-xs leading-4">
+            {formatTokenBreakdown({
+              promptTokens: sessionPromptTokens,
+              completionTokens: sessionCompletionTokens,
+              totalTokens: sessionTotalTokens,
+            })}
+          </div>
+        )}
       </td>
 
       {hovered && !editing && (

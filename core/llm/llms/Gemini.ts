@@ -8,6 +8,7 @@ import {
   MessagePart,
   TextMessagePart,
   ToolCallDelta,
+  Usage,
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
@@ -76,6 +77,43 @@ class Gemini extends BaseLLM {
     }
 
     return finalOptions;
+  }
+
+  private parseGeminiUsage(rawUsage: any): Usage | undefined {
+    if (!rawUsage) {
+      return undefined;
+    }
+
+    const promptTokens = rawUsage.promptTokenCount;
+    const completionTokens = rawUsage.candidatesTokenCount;
+    const totalTokens = rawUsage.totalTokenCount;
+    const cachedTokens = rawUsage.cachedContentTokenCount;
+
+    if (
+      typeof promptTokens !== "number" &&
+      typeof completionTokens !== "number" &&
+      typeof totalTokens !== "number" &&
+      typeof cachedTokens !== "number"
+    ) {
+      return undefined;
+    }
+
+    const resolvedPromptTokens = promptTokens ?? 0;
+    const resolvedCompletionTokens = completionTokens ?? 0;
+    const resolvedTotalTokens =
+      totalTokens ?? resolvedPromptTokens + resolvedCompletionTokens;
+
+    return {
+      promptTokens: resolvedPromptTokens,
+      completionTokens: resolvedCompletionTokens,
+      totalTokens: resolvedTotalTokens,
+      promptTokensDetails:
+        typeof cachedTokens === "number"
+          ? {
+              cachedTokens,
+            }
+          : undefined,
+    };
   }
 
   protected async *_streamComplete(
@@ -368,6 +406,7 @@ class Gemini extends BaseLLM {
     stream: AsyncIterable<string>,
   ): AsyncGenerator<ChatMessage> {
     let buffer = "";
+    let usage: Usage | undefined;
     for await (const chunk of stream) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
@@ -395,6 +434,11 @@ class Gemini extends BaseLLM {
 
         if ("error" in data) {
           throw new Error(data.error.message);
+        }
+
+        const parsedUsage = this.parseGeminiUsage((data as any).usageMetadata);
+        if (parsedUsage) {
+          usage = parsedUsage;
         }
 
         // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
@@ -452,6 +496,14 @@ class Gemini extends BaseLLM {
       } else {
         buffer = "";
       }
+    }
+
+    if (usage) {
+      yield {
+        role: "assistant",
+        content: "",
+        usage,
+      };
     }
   }
 

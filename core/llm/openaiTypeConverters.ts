@@ -35,6 +35,7 @@ import {
   TextMessagePart,
   ThinkingChatMessage,
   ToolCallDelta,
+  Usage,
 } from "..";
 
 function appendReasoningFieldsIfSupported(
@@ -274,8 +275,90 @@ export function toFimBody(
   } as any;
 }
 
+function firstNumber(...values: unknown[]): number | undefined {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function parseProviderUsage(rawUsage: unknown): Usage | undefined {
+  if (!rawUsage || typeof rawUsage !== "object") {
+    return undefined;
+  }
+
+  const usage = rawUsage as Record<string, unknown>;
+  const promptTokens = firstNumber(usage.prompt_tokens, usage.input_tokens);
+  const completionTokens = firstNumber(
+    usage.completion_tokens,
+    usage.output_tokens,
+  );
+  const totalTokens = firstNumber(usage.total_tokens);
+
+  if (promptTokens === undefined || completionTokens === undefined) {
+    return undefined;
+  }
+
+  const promptTokensDetailsRaw =
+    (usage.prompt_tokens_details as Record<string, unknown> | undefined) ??
+    (usage.input_tokens_details as Record<string, unknown> | undefined);
+  const completionTokensDetailsRaw =
+    (usage.completion_tokens_details as Record<string, unknown> | undefined) ??
+    (usage.output_tokens_details as Record<string, unknown> | undefined);
+
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    promptTokensDetails: promptTokensDetailsRaw
+      ? {
+          cachedTokens: firstNumber(
+            promptTokensDetailsRaw.cached_tokens,
+            promptTokensDetailsRaw.cache_read_tokens,
+            promptTokensDetailsRaw.cachedTokens,
+          ),
+          cacheWriteTokens: firstNumber(
+            promptTokensDetailsRaw.cache_write_tokens,
+            promptTokensDetailsRaw.cacheWriteTokens,
+          ),
+          audioTokens: firstNumber(
+            promptTokensDetailsRaw.audio_tokens,
+            promptTokensDetailsRaw.audioTokens,
+          ),
+        }
+      : undefined,
+    completionTokensDetails: completionTokensDetailsRaw
+      ? {
+          acceptedPredictionTokens: firstNumber(
+            completionTokensDetailsRaw.accepted_prediction_tokens,
+            completionTokensDetailsRaw.acceptedPredictionTokens,
+          ),
+          reasoningTokens: firstNumber(
+            completionTokensDetailsRaw.reasoning_tokens,
+            completionTokensDetailsRaw.reasoningTokens,
+          ),
+          rejectedPredictionTokens: firstNumber(
+            completionTokensDetailsRaw.rejected_prediction_tokens,
+            completionTokensDetailsRaw.rejectedPredictionTokens,
+          ),
+          audioTokens: firstNumber(
+            completionTokensDetailsRaw.audio_tokens,
+            completionTokensDetailsRaw.audioTokens,
+          ),
+        }
+      : undefined,
+    source: "provider",
+    ts: new Date().toISOString(),
+    raw: usage,
+  };
+}
+
 export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
   const messages: ChatMessage[] = [];
+  const usage = parseProviderUsage((response as any).usage);
   const message = response.choices[0].message as ChatCompletionMessage & {
     reasoning?: string;
     reasoning_content?: string;
@@ -320,11 +403,13 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
             arguments: (tc as any).function?.arguments,
           },
         })),
+      usage,
     });
   } else {
     messages.push({
       role: "assistant",
       content: message.content ?? "",
+      usage,
     });
   }
 
@@ -334,6 +419,7 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
 export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
+  const usage = parseProviderUsage((chunk as any).usage);
   const delta = chunk.choices?.[0]?.delta as
     | (ChatCompletionChunk.Choice.Delta & {
         reasoning?: string;
@@ -348,6 +434,7 @@ export function fromChatCompletionChunk(
     return {
       role: "assistant",
       content: delta.content,
+      usage,
     };
   } else if (delta?.tool_calls) {
     const toolCalls = delta?.tool_calls
@@ -366,6 +453,7 @@ export function fromChatCompletionChunk(
         role: "assistant",
         content: "",
         toolCalls,
+        usage,
       };
     }
   } else if (
@@ -380,6 +468,12 @@ export function fromChatCompletionChunk(
       reasoning_details: delta?.reasoning_details as any[],
     };
     return message;
+  } else if (usage) {
+    return {
+      role: "assistant",
+      content: "",
+      usage,
+    };
   }
 
   return undefined;
@@ -595,6 +689,47 @@ function handleResponsesStreamEvent(
 function handleResponsesFinal(
   resp: OpenAIResponse,
 ): ChatMessage | ChatMessage[] | undefined {
+  const usage = parseProviderUsage((resp as any).usage);
+  const attachUsage = (
+    result: ChatMessage | ChatMessage[] | undefined,
+  ): ChatMessage | ChatMessage[] | undefined => {
+    if (!usage || !result) {
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      for (let i = result.length - 1; i >= 0; i--) {
+        const message = result[i];
+        if (message.role === "assistant") {
+          (message as AssistantChatMessage).usage = usage;
+          return result;
+        }
+      }
+      result.push({
+        role: "assistant",
+        content: "",
+        usage,
+      });
+      return result;
+    }
+
+    if (result.role === "assistant") {
+      return {
+        ...result,
+        usage,
+      };
+    }
+
+    return [
+      result,
+      {
+        role: "assistant",
+        content: "",
+        usage,
+      },
+    ];
+  };
+
   // Prefer structured output items when present
   if (Array.isArray(resp.output) && resp.output.length > 0) {
     const result: ChatMessage[] = [];
@@ -693,15 +828,15 @@ function handleResponsesFinal(
         continue;
       }
     }
-    if (result.length > 0) return result;
+    if (result.length > 0) return attachUsage(result);
   }
 
   // Fallback to output_text when no structured output is present
   if (typeof resp.output_text === "string" && resp.output_text.length > 0) {
-    return { role: "assistant", content: resp.output_text };
+    return attachUsage({ role: "assistant", content: resp.output_text });
   }
 
-  return undefined;
+  return attachUsage(undefined);
 }
 
 export function fromResponsesChunk(

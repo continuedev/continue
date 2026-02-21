@@ -133,6 +133,23 @@
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
+        "continue.showTokenUsage": {
+          "type": "string",
+          "default": "never",
+          "enum": [
+            "never",
+            "history",
+            "session",
+            "turn"
+          ],
+          "enumDescriptions": [
+            "Never show token usage.",
+            "Show token usage in History only.",
+            "Show token usage in History and Session summaries.",
+            "Show token usage in History, Session summaries, and each assistant turn."
+          ],
+          "description": "Where to display token usage. Tracking is always persisted in session files."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,

@@ -85,6 +85,55 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
+  private parseAnthropicUsage(
+    rawUsage:
+      | {
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          cache_read_input_tokens?: number | null;
+          cache_creation_input_tokens?: number | null;
+        }
+      | undefined,
+  ): Usage | undefined {
+    if (!rawUsage) {
+      return undefined;
+    }
+
+    const promptTokens = rawUsage.input_tokens;
+    const completionTokens = rawUsage.output_tokens;
+    const cachedTokens = rawUsage.cache_read_input_tokens;
+    const cacheWriteTokens = rawUsage.cache_creation_input_tokens;
+
+    if (
+      typeof promptTokens !== "number" &&
+      typeof completionTokens !== "number" &&
+      typeof cachedTokens !== "number" &&
+      typeof cacheWriteTokens !== "number"
+    ) {
+      return undefined;
+    }
+
+    const resolvedPromptTokens = promptTokens ?? 0;
+    const resolvedCompletionTokens = completionTokens ?? 0;
+
+    return {
+      promptTokens: resolvedPromptTokens,
+      completionTokens: resolvedCompletionTokens,
+      totalTokens: resolvedPromptTokens + resolvedCompletionTokens,
+      promptTokensDetails:
+        typeof cachedTokens === "number" || typeof cacheWriteTokens === "number"
+          ? {
+              cachedTokens:
+                typeof cachedTokens === "number" ? cachedTokens : undefined,
+              cacheWriteTokens:
+                typeof cacheWriteTokens === "number"
+                  ? cacheWriteTokens
+                  : undefined,
+            }
+          : undefined,
+    };
+  }
+
   private convertMessageContentToBlocks(
     content: MessageContent,
   ): ContentBlockParam[] {
@@ -282,31 +331,18 @@ class Anthropic extends BaseLLM {
 
     if (stream === false) {
       const json = await response.json();
-      const cost = json.usage
-        ? {
-            inputTokens: json.usage.input_tokens,
-            outputTokens: json.usage.output_tokens,
-            totalTokens: json.usage.input_tokens + json.usage.output_tokens,
-          }
-        : {};
+      const usage = this.parseAnthropicUsage(json.usage);
       yield {
         role: "assistant",
         content: json.content[0].text,
-        ...(Object.keys(cost).length > 0 ? { cost } : {}),
+        ...(usage ? { usage } : {}),
       };
       return;
     }
 
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
-    let usage: Usage = {
-      promptTokens: 0,
-      completionTokens: 0,
-      promptTokensDetails: {
-        cachedTokens: 0,
-        cacheWriteTokens: 0,
-      },
-    };
+    let usage: Usage | undefined;
 
     for await (const event of streamSse(response)) {
       // https://docs.anthropic.com/en/api/messages-streaming#event-types
@@ -315,17 +351,20 @@ class Anthropic extends BaseLLM {
         case "message_start":
           // Capture initial usage information
           const startEvent = rawEvent as RawMessageStartEvent;
-          usage.promptTokens = startEvent.message.usage.input_tokens;
-          usage.promptTokensDetails!.cachedTokens =
-            startEvent.message.usage.cache_read_input_tokens ?? undefined;
-          usage.promptTokensDetails!.cacheWriteTokens =
-            startEvent.message.usage.cache_creation_input_tokens ?? undefined;
+          usage = this.parseAnthropicUsage(startEvent.message.usage) ?? usage;
           break;
         case "message_delta":
           // Update usage information during streaming
           const deltaEvent = rawEvent as RawMessageDeltaEvent;
-          if (deltaEvent.usage) {
-            usage.completionTokens = deltaEvent.usage.output_tokens;
+          if (deltaEvent.usage?.output_tokens !== undefined) {
+            const promptTokens = usage?.promptTokens ?? 0;
+            const completionTokens = deltaEvent.usage.output_tokens;
+            usage = {
+              promptTokens,
+              completionTokens,
+              totalTokens: promptTokens + completionTokens,
+              promptTokensDetails: usage?.promptTokensDetails,
+            };
           }
           break;
         case "content_block_start":
@@ -393,11 +432,13 @@ class Anthropic extends BaseLLM {
       }
     }
 
-    yield {
-      role: "assistant",
-      content: "",
-      usage,
-    };
+    if (usage) {
+      yield {
+        role: "assistant",
+        content: "",
+        usage,
+      };
+    }
   }
 
   protected async *_streamChat(

@@ -4,6 +4,7 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
+  Usage,
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -16,6 +17,47 @@ class Cohere extends BaseLLM {
     maxEmbeddingBatchSize: 96,
   };
   static maxStopSequences = 5;
+
+  private parseCohereUsage(rawUsage: any): Usage | undefined {
+    if (!rawUsage) {
+      return undefined;
+    }
+
+    const usage = rawUsage.tokens ?? rawUsage;
+    const promptTokens = usage.input_tokens ?? usage.inputTokens;
+    const completionTokens = usage.output_tokens ?? usage.outputTokens;
+    const totalTokens = usage.total_tokens ?? usage.totalTokens;
+    const cachedTokens =
+      rawUsage.cached_tokens ??
+      usage.cached_tokens ??
+      rawUsage.cache_read_input_tokens ??
+      usage.cache_read_input_tokens;
+
+    if (
+      typeof promptTokens !== "number" &&
+      typeof completionTokens !== "number" &&
+      typeof totalTokens !== "number"
+    ) {
+      return undefined;
+    }
+
+    const resolvedPromptTokens = promptTokens ?? 0;
+    const resolvedCompletionTokens = completionTokens ?? 0;
+    const resolvedTotalTokens =
+      totalTokens ?? resolvedPromptTokens + resolvedCompletionTokens;
+
+    return {
+      promptTokens: resolvedPromptTokens,
+      completionTokens: resolvedCompletionTokens,
+      totalTokens: resolvedTotalTokens,
+      promptTokensDetails:
+        typeof cachedTokens === "number"
+          ? {
+              cachedTokens,
+            }
+          : undefined,
+    };
+  }
 
   private _convertMessages(msgs: ChatMessage[]): any[] {
     const messages = [];
@@ -179,6 +221,7 @@ class Cohere extends BaseLLM {
 
     if (options.stream === false) {
       const data = await resp.json();
+      const usage = this.parseCohereUsage(data?.usage);
       for (const content of data.message.content) {
         if (content.thinking) {
           yield { role: "thinking", content: content.thinking };
@@ -202,13 +245,28 @@ class Cohere extends BaseLLM {
             },
           })),
         };
+        if (usage) {
+          yield {
+            role: "assistant",
+            content: "",
+            usage,
+          };
+        }
         return;
+      }
+      if (usage) {
+        yield {
+          role: "assistant",
+          content: "",
+          usage,
+        };
       }
       return;
     }
 
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+    let usage: Usage | undefined;
     for await (const value of streamSse(resp)) {
       // https://docs.cohere.com/v2/docs/streaming#stream-events
       switch (value.type) {
@@ -274,9 +332,20 @@ class Cohere extends BaseLLM {
           lastToolUseId = undefined;
           lastToolUseName = undefined;
           break;
+        case "message-end":
+          usage = this.parseCohereUsage(value?.delta?.usage ?? value?.usage);
+          break;
         default:
           break;
       }
+    }
+
+    if (usage) {
+      yield {
+        role: "assistant",
+        content: "",
+        usage,
+      };
     }
   }
 

@@ -450,5 +450,71 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].toolCallStates).toHaveLength(1);
     });
+
+    it("should persist usage metadata on assistant messages with content", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "Done.",
+            usage: {
+              promptTokens: 120,
+              completionTokens: 30,
+              totalTokens: 150,
+            },
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+      expect(newState.history[1].message.role).toBe("assistant");
+      if (newState.history[1].message.role === "assistant") {
+        expect(newState.history[1].message.usage).toEqual({
+          promptTokens: 120,
+          completionTokens: 30,
+          totalTokens: 150,
+        });
+      }
+    });
+
+    it("should persist usage metadata on usage-only assistant chunks", () => {
+      const initialState = createInitialState();
+      initialState.history.push({
+        message: {
+          role: "assistant",
+          content: "Partial response",
+          id: "assistant-message",
+        },
+        contextItems: [],
+      });
+
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            usage: {
+              promptTokens: 200,
+              completionTokens: 80,
+              totalTokens: 280,
+            },
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+      expect(newState.history).toHaveLength(2);
+      if (newState.history[1].message.role === "assistant") {
+        expect(newState.history[1].message.content).toBe("Partial response");
+        expect(newState.history[1].message.usage).toEqual({
+          promptTokens: 200,
+          completionTokens: 80,
+          totalTokens: 280,
+        });
+      }
+    });
   });
 });

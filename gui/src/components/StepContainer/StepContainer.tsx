@@ -7,6 +7,7 @@ import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
+import { formatUsageFooter } from "../../util/usage";
 import ConversationSummary from "./ConversationSummary";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
@@ -16,6 +17,7 @@ interface StepContainerProps {
   index: number;
   isLast: boolean;
   latestSummaryIndex?: number;
+  showTurnTokenUsage?: boolean;
 }
 
 export default function StepContainer(props: StepContainerProps) {
@@ -102,6 +104,13 @@ export default function StepContainer(props: StepContainerProps) {
           </>
         )}
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
+        {props.showTurnTokenUsage &&
+          props.item.message.role === "assistant" &&
+          props.item.message.usage && (
+            <div className="text-description mt-2 px-2 text-xs">
+              {formatUsageFooter(props.item.message.usage)}
+            </div>
+          )}
       </div>
 
       {showResponseActions && (

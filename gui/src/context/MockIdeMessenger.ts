@@ -46,6 +46,14 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "history/list": [],
   "docs/getIndexedPages": [],
   "history/save": undefined,
+  getIdeSettings: {
+    remoteConfigServerUrl: undefined,
+    remoteConfigSyncPeriod: 60,
+    userToken: "",
+    continueTestEnvironment: "none",
+    pauseCodebaseIndexOnStart: false,
+    showTokenUsage: "never",
+  },
   getControlPlaneSessionInfo: {
     AUTH_TYPE: AuthType.WorkOsStaging,
     accessToken: "",
