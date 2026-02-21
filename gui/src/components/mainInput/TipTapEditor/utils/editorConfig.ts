@@ -22,6 +22,7 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
+import { setLocalStorage } from "../../../../util/localStorage";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -392,6 +393,33 @@ export function createEditorConfig(options: {
     },
     content: props.editorState,
     editable: !isStreaming || props.isMainInput,
+    onUpdate: ({ editor }) => {
+      const content = editor.getJSON();
+      if (props.isMainInput) {
+        if (hasValidEditorContent(content)) {
+          setLocalStorage(`inputDraft_${props.historyKey}`, content);
+          localStorage.removeItem(`editingDraft_${props.historyKey}`);
+        } else {
+          // clear draft if content is empty
+          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+        }
+      } else {
+        if (hasValidEditorContent(content)) {
+          const scrollContainer = document.getElementById(
+            "chat-scroll-container",
+          );
+          const scrollTop = scrollContainer?.scrollTop ?? 0;
+          setLocalStorage(`editingDraft_${props.historyKey}`, {
+            content,
+            messageId: props.inputId,
+            scrollTop,
+          });
+          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+        } else {
+          localStorage.removeItem(`editingDraft_${props.historyKey}`);
+        }
+      }
+    },
   });
 
   const onEnter = (modifiers: InputModifiers) => {
@@ -409,9 +437,12 @@ export function createEditorConfig(options: {
       return;
     }
 
+    // clear draft from localStorage after successful submission
     if (props.isMainInput) {
       addRef.current(json);
     }
+    localStorage.removeItem(`inputDraft_${props.historyKey}`);
+    localStorage.removeItem(`editingDraft_${props.historyKey}`);
 
     props.onEnter(json, modifiers, editor);
   };
