@@ -79,7 +79,7 @@ You can run the documentation server locally using either of the following metho
 
 #### Method 1: NPM Script
 
-1. Open your terminal and navigate to the `docs` subdirectory of the project. The `docusaurus.config.js` file you'll see
+1. Open your terminal and navigate to the `docs` subdirectory of the project. The `favicon.png` file you'll see
    there is a sign you're in the right place.
 
 2. Run the following command to install the necessary dependencies for the documentation server:
