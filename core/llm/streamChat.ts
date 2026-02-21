@@ -94,13 +94,17 @@ export async function* llmStreamChat(
         completionOptions,
         abortController,
       });
+      let accumulatedCompletion = "";
       let next = await gen.next();
       while (!next.done) {
         if (abortController.signal.aborted) {
+          errorPromptLog.completion = accumulatedCompletion;
           next = await gen.return(errorPromptLog);
           break;
         }
         if (next.value) {
+          const content = typeof next.value === "string" ? next.value : "";
+          accumulatedCompletion += content;
           yield {
             role: "assistant",
             content: next.value,
@@ -120,14 +124,29 @@ export async function* llmStreamChat(
         completionOptions,
         messageOptions,
       );
+      let accumulatedCompletion = "";
       let next = await gen.next();
       while (!next.done) {
         if (abortController.signal.aborted) {
+          errorPromptLog.completion = accumulatedCompletion;
           next = await gen.return(errorPromptLog);
           break;
         }
 
         const chunk = next.value;
+
+        // Accumulate the content from chunks
+        if (chunk.content) {
+          const content =
+            typeof chunk.content === "string"
+              ? chunk.content
+              : Array.isArray(chunk.content)
+                ? chunk.content
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("")
+                : "";
+          accumulatedCompletion += content;
+        }
 
         yield chunk;
         next = await gen.next();
