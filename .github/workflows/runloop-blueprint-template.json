@@ -16,7 +16,6 @@
     "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null",
     "sudo apt update",
     "sudo apt install -y gh",
-    "curl -fsSL -o /usr/local/bin/suggestions https://github.com/continuedev/suggestions-cli/releases/latest/download/suggestions-linux-amd64 && chmod +x /usr/local/bin/suggestions",
     "npm cache clean --force"
   ],
   "launch_parameters": {
