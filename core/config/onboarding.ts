@@ -27,7 +27,7 @@ const DEEPSEEK_MODEL_CONFIG = {
   slugs: [
     "deepseek/deepseek-chat",
     "deepseek/deepseek-reasoner",
-    "deepseek/deepseek-fim-beta", // autocomplete not very usefull with large delay
+    "deepseek/deepseek-fim-beta", // autocomplete not very useful with large delay, but configured with autocomplete role
   ],
   apiKeyInputName: "DEEPSEEK_API_KEY",
 };
@@ -107,12 +107,55 @@ export function setupProviderConfig(
       }));
       break;
     case "deepseek":
-      newModels = DEEPSEEK_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [DEEPSEEK_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = DEEPSEEK_MODEL_CONFIG.slugs.map((slug) => {
+        const modelObj: any = {
+          uses: slug,
+          with: {
+            [DEEPSEEK_MODEL_CONFIG.apiKeyInputName]: apiKey,
+          },
+        };
+        // Add overrides based on model slug
+        if (slug === "deepseek/deepseek-fim-beta") {
+          modelObj.override = {
+            apiBase: "https://api.deepseek.com/beta",
+            defaultCompletionOptions: {
+              contextLength: 131072,
+              maxTokens: 8192,
+            },
+            roles: [
+              "chat",
+              "autocomplete",
+              "edit",
+              "apply",
+              "summarize",
+              "subagent",
+            ],
+            capabilities: [], // FIM Beta doesn't support tools
+          };
+        } else if (slug === "deepseek/deepseek-chat") {
+          modelObj.override = {
+            apiBase: "https://api.deepseek.com/",
+            defaultCompletionOptions: {
+              contextLength: 131072,
+              maxTokens: 8192,
+            },
+            roles: ["chat", "edit", "apply", "summarize", "subagent"],
+            capabilities: ["tool_use"],
+          };
+        } else {
+          // deepseek/deepseek-reasoner
+          modelObj.override = {
+            apiBase: "https://api.deepseek.com/",
+            defaultCompletionOptions: {
+              contextLength: 131072,
+              maxTokens: 65536,
+            },
+            roles: ["chat", "edit", "apply", "summarize", "subagent"],
+            capabilities: ["tool_use"],
+          };
+        }
+        return modelObj;
+      });
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);

@@ -11,7 +11,6 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   codestralTemplateMessages,
-  deepseekFimTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -261,6 +260,7 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("mercury") ||
     modelName.includes("deepseek-chat") ||
     modelName.includes("deepseek-reasoner") ||
+    modelName.includes("deepseek-fim-beta") ||
     /^o\d/.test(modelName)
   );
 }
@@ -367,9 +367,6 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("deepseek")) {
-    if (lower.includes("deepseek-fim-beta")) {
-      return "deepseek-fim-beta";
-    }
     return "deepseek";
   }
 
@@ -428,7 +425,6 @@ function autodetectTemplateFunction(
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       codestral: codestralTemplateMessages,
-      "deepseek-fim-beta": deepseekFimTemplateMessages,
       none: null,
     };
 
@@ -453,7 +449,6 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "xwin-coder",
   "zephyr",
   "llama3",
-  "deepseek-fim-beta",
 ];
 
 function autodetectPromptTemplates(
@@ -505,8 +500,9 @@ function autodetectPromptTemplates(
     editTemplate = gptEditPrompt;
   } else if (model.includes("codestral")) {
     editTemplate = osModelsEditPrompt;
-  } else if (["deepseek-chat", "deepseek-reasoner"].includes(model)) {
-    console.warn("=== DeepSeek edit template ===", model);
+  } else if (
+    ["deepseek-chat", "deepseek-reasoner", "deepseek-fim-beta"].includes(model)
+  ) {
     editTemplate = osModelsEditPrompt;
   }
 

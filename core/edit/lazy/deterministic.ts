@@ -148,8 +148,21 @@ export async function deterministicApplyLazyEdit({
     return undefined;
   }
 
-  const oldTree = parser.parse(oldFile);
-  let newTree = parser.parse(newLazyFile);
+  let oldTree: Parser.Tree;
+  let newTree: Parser.Tree;
+  try {
+    oldTree = parser.parse(oldFile);
+    newTree = parser.parse(newLazyFile);
+  } catch (e) {
+    console.debug(
+      "deterministicApplyLazyEdit: tree-sitter parse failed, falling back",
+      {
+        filename,
+        error: e instanceof Error ? e.message : String(e),
+      },
+    );
+    return undefined;
+  }
   let reconstructedNewFile: string | undefined = undefined;
 
   if (onlyFullFileRewrite) {

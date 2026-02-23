@@ -136,7 +136,7 @@ export abstract class BaseLLM implements ILLM {
         return false;
       }
     }
-    if (["groq", "mistral"].includes(this.providerName)) {
+    if (["groq", "mistral", "deepseek"].includes(this.providerName)) {
       return false;
     }
     return true;
@@ -339,6 +339,7 @@ export abstract class BaseLLM implements ILLM {
     if (!this.templateMessages) {
       return prompt;
     }
+
     // NOTE system message no longer supported here
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
@@ -615,7 +616,6 @@ export abstract class BaseLLM implements ILLM {
       : undefined;
     let status: InteractionStatus = "in_progress";
 
-    console.warn(" --- streamFim --- ", options);
     const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
     if (logEnabled) {
       interaction?.logItem({
@@ -754,11 +754,7 @@ export abstract class BaseLLM implements ILLM {
         this.llmRequestHook(completionOptions.model, prompt);
       }
     }
-    console.warn(
-      "=== *Stream complete 2 ===",
-      prompt,
-      this.shouldUseOpenAIAdapter,
-    );
+
     let completion = "";
     try {
       if (this.shouldUseOpenAIAdapter("streamComplete") && this.openaiAdapter) {
@@ -1053,7 +1049,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  protected async *openAIAdapterStream(
+  private async *openAIAdapterStream(
     body: ChatCompletionCreateParams,
     signal: AbortSignal,
     onCitations: (c: string[]) => void,
@@ -1197,7 +1193,6 @@ export abstract class BaseLLM implements ILLM {
 
     try {
       if (this.templateMessages) {
-        console.warn("=== deepSeekBody index chat stream 3===", options);
         for await (const chunk of this._streamComplete(
           prompt,
           signal,
@@ -1211,7 +1206,6 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
-        console.warn("=== deepSeekBody index chat stream 4===", messages);
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           let body = toChatBody(messages, completionOptions, {
             includeReasoningField: this.supportsReasoningField,

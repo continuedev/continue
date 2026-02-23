@@ -105,7 +105,7 @@ export class DeepSeekApi extends OpenAIApi {
 
     const endpoint = new URL(
       isPrefixCompletion ? "beta/chat/completions" : "chat/completions",
-      this.apiBase,
+      DEEPSEEK_API_BASE,
     );
 
     const deepSeekBody = isPrefixCompletion
@@ -130,10 +130,11 @@ export class DeepSeekApi extends OpenAIApi {
     body: ChatCompletionCreateParamsExt,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    console.log("=== DeepSeek Adapter - non-streaming request ===", body);
-
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
-
+    console.log(
+      "=== DeepSeek Adapter - non-streaming request ===",
+      deepSeekBody,
+    );
     // Execute the API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
@@ -154,70 +155,125 @@ export class DeepSeekApi extends OpenAIApi {
     // Return the parsed JSON response
     return await resp.json();
   }
+
   /**
-   * Performs a streaming chat completion request
+   * Performs a streaming chat completion request with repair logic for missing content.
+   *
+   * If the stream ends with a finish_reason (not "tool_calls") and no content or tool_calls were ever sent,
+   * but reasoning_content was received, this method injects a final chunk containing the reasoning as content.
    *
    * @param body The chat completion parameters
    * @param signal AbortSignal to cancel the request
-   * @yields ChatCompletionChunk objects as they are received
+   * @yields ChatCompletionChunk objects as they are received, with possible extra chunk on repair
    */
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsExt,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
+    console.log("==== chat stream start ====", endpoint, this.apiBase);
+    const resp = await customFetch(this.config.requestOptions)(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        ...deepSeekBody,
+        stream: true,
+      }),
+      headers: this.getHeaders(),
+      signal,
+    });
 
-    console.warn("=== Starting DeepSeek streaming request ===");
-    console.log("Endpoint:", endpoint);
-    console.log("Request body:", JSON.stringify(deepSeekBody, null, 2));
+    console.log("==== DS Api Base ====", this.apiBase);
 
-    try {
-      const resp = await customFetch(this.config.requestOptions)(endpoint, {
-        method: "POST",
-        body: JSON.stringify({
-          ...deepSeekBody,
-          stream: true,
-        }),
-        headers: this.getHeaders(),
-        signal,
-      });
-
-      if (!resp.ok) {
-        const errorText = await resp.text();
-        console.error("DeepSeek API error:", {
-          status: resp.status,
-          statusText: resp.statusText,
-          error: errorText,
-        });
-        throw new Error(`DeepSeek API error (${resp.status}): ${errorText}`);
-      }
-
-      console.log("Streaming response received, status:", resp.status);
-
-      let chunkCount = 0;
-      for await (const chunk of streamSse(resp as any)) {
-        chunkCount++;
-        console.log(`Chunk #${chunkCount}:`, JSON.stringify(chunk, null, 2));
-
-        if (chunk.choices?.length) {
-          const finishReason = chunk.choices[0]?.finish_reason;
-          if (finishReason) {
-            console.log("Finish reason detected:", finishReason);
-          }
-        }
-
-        // Yield all chunks, including usage chunks that may have empty choices array
-        yield chunk;
-      }
-
-      console.log(`Stream completed. Processed ${chunkCount} chunks.`);
-    } catch (error) {
-      console.error("Error in chatCompletionStream:", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-      throw error;
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`DeepSeek API error (${resp.status}): ${errorText}`);
     }
+
+    console.log(
+      " ==== DeepSeek api Adapter - streaming request ====",
+      deepSeekBody,
+    );
+
+    let reasoningBuffer = "";
+    let hasOutput = false;
+    let pendingFinishReason: string | null = null;
+
+    for await (const chunk of streamSse(resp as any)) {
+      // Reasoning sammeln
+      if (chunk.choices?.[0]?.delta?.reasoning_content) {
+        reasoningBuffer += chunk.choices[0].delta.reasoning_content;
+      }
+
+      // Prüfen, ob dieser Chunk echten Output enthält (Inhalt oder Tool-Calls)
+      const hasContent =
+        !!chunk.choices?.[0]?.delta?.content &&
+        typeof chunk.choices[0].delta.content === "string" &&
+        chunk.choices[0].delta.content.trim() !== "";
+      const hasToolCalls =
+        !!chunk.choices?.[0]?.delta?.tool_calls &&
+        Array.isArray(chunk.choices[0].delta.tool_calls) &&
+        chunk.choices[0].delta.tool_calls.length > 0;
+
+      if (hasContent || hasToolCalls) {
+        hasOutput = true;
+      }
+      // console.log("==== hasOutput ====", hasOutput, chunk);
+      // Finish reason extrahieren und entfernen
+      let finishReason = null;
+      if (chunk.choices?.[0]?.finish_reason) {
+        finishReason = chunk.choices[0].finish_reason;
+        // Finish reason aus dem Chunk entfernen
+        if (chunk.choices[0].finish_reason) {
+          chunk.choices[0].finish_reason = null;
+        }
+      }
+      // Chunk sofort ausgeben (jetzt ohne finish_reason)
+      yield chunk;
+      // Wenn wir einen finish_reason extrahiert haben, merken wir ihn für später
+      if (finishReason) {
+        pendingFinishReason = finishReason;
+      }
+    }
+
+    // Nach der Schleife: Eventuell Repair und dann finish_reason senden
+    if (pendingFinishReason) {
+      // Repair, falls nötig
+      if (!hasOutput && reasoningBuffer) {
+        const repairChunk: ChatCompletionChunk = {
+          id: "repair",
+          object: "chat.completion.chunk",
+          created: Date.now(),
+          model: body.model,
+          choices: [
+            {
+              index: 0,
+              delta: { content: reasoningBuffer },
+              finish_reason: null,
+            },
+          ] as ChatCompletionChunk.Choice[],
+        };
+        yield repairChunk;
+      }
+
+      // Finish reason als separaten Chunk senden
+      const finishChunk: ChatCompletionChunk = {
+        id: "finish",
+        object: "chat.completion.chunk",
+        created: Date.now(),
+        model: body.model,
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: "",
+            },
+            finish_reason: pendingFinishReason,
+          },
+        ] as ChatCompletionChunk.Choice[],
+      };
+      yield finishChunk;
+    }
+    console.log("==== chat stream end ====");
   }
 
   /**
@@ -233,11 +289,11 @@ export class DeepSeekApi extends OpenAIApi {
     body: FimCreateParamsStreaming & { messages?: Array<any> },
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
-    console.warn("=== deepSeekBody fim stream ===", body);
+    console.warn("==== deepSeekBody fim stream ====");
     const warnings: string[] = [];
-    const endpoint = new URL("beta/completions", this.apiBase);
+    const endpoint = new URL("completions", this.apiBase);
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
-    console.warn("=== deepSeekBody fim stream ===", deepSeekBody);
+    console.warn("==== deepSeekBody fim stream ====", deepSeekBody);
     // Log any warnings about unsupported features
     this._processWarnings(warnings);
 
@@ -257,9 +313,9 @@ export class DeepSeekApi extends OpenAIApi {
       const errorText = await resp.text();
       throw new Error(`DeepSeek API error (${resp.status}): ${errorText}`);
     }
-
     // Process the streaming response
     for await (const chunk of streamSse(resp as any)) {
+      console.log("==== deepSeekBody fim stream chunk ====", chunk);
       if (chunk.choices?.[0]?.text !== undefined) {
         yield chatChunk({
           content: chunk.choices[0].text,

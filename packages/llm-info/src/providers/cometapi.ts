@@ -268,7 +268,7 @@ export const CometAPI: ModelProvider = {
     {
       model: "deepseek-v3.1",
       displayName: "DeepSeek V3.1",
-      contextLength: 131072,
+      contextLength: 128000,
       maxCompletionTokens: 4096,
       description:
         "Latest DeepSeek model with improved reasoning and coding capabilities.",
@@ -277,7 +277,7 @@ export const CometAPI: ModelProvider = {
     {
       model: "deepseek-v3",
       displayName: "DeepSeek V3",
-      contextLength: 131072,
+      contextLength: 128000,
       maxCompletionTokens: 4096,
       description:
         "Advanced DeepSeek model with strong performance in technical domains.",
@@ -290,24 +290,6 @@ export const CometAPI: ModelProvider = {
       maxCompletionTokens: 4096,
       description:
         "DeepSeek reasoning model optimized for complex problem-solving tasks.",
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "deepseek-chat",
-      displayName: "DeepSeek Chat",
-      contextLength: 128000,
-      maxCompletionTokens: 4096,
-      description:
-        "DeepSeek model specifically optimized for conversational interactions.",
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "deepseek-reasoner",
-      displayName: "DeepSeek Reasoner",
-      contextLength: 128000,
-      maxCompletionTokens: 4096,
-      description:
-        "DeepSeek model with enhanced reasoning capabilities for analytical tasks.",
       recommendedFor: ["chat"],
     },
 

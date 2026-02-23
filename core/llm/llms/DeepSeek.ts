@@ -5,7 +5,6 @@ import {
   LLMOptions,
   MessageOption,
   PromptLog,
-  ThinkingChatMessage,
 } from "../../index.js";
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
@@ -46,7 +45,6 @@ class DeepSeek extends OpenAI {
   supportsFim(): boolean {
     // Check if this is the FIM Beta model by checking the model name or API base
     return (
-      this._supportsFim ||
       this.model === "deepseek-fim-beta" ||
       (this.model === "deepseek-chat" && this.apiBase?.includes("/beta")) ||
       false
@@ -73,11 +71,33 @@ class DeepSeek extends OpenAI {
     options: LLMFullCompletionOptions = {},
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
+    console.log(
+      " ==== core DS streamChat raw ==== ",
+      messages
+        .map((m) => {
+          let str =
+            m.role +
+            ": " +
+            (typeof m.content === "string"
+              ? m.content.slice(0, 10)
+              : JSON.stringify(m.content).slice(0, 10));
+          if (m.role === "assistant" && (m as any).toolCalls) {
+            const toolCallIds = (m as any).toolCalls
+              .map((tc: any) => tc.id)
+              .join(",");
+            str += ` [toolcalls: ${toolCallIds}]`;
+          } else if (m.role === "tool") {
+            str += ` [toolCallId: ${(m as any).toolCallId}]`;
+          }
+          return str;
+        })
+        .join("\n"),
+    );
+
     // Convert model name if needed
     const modifiedOptions = this._convertCompletionOptionsModelName(options);
     // Transform messages for DeepSeek API
-    const transformedMessages = this.transformMessagesForDeepSeek(messages);
-
+    const transformedMessages = this._pairLoneThinkingMessages(messages);
     // Delegate to parent implementation
     const generator = super.streamChat(
       transformedMessages,
@@ -95,6 +115,10 @@ class DeepSeek extends OpenAI {
           break;
         }
         yield value as ChatMessage;
+        console.log(
+          " ==== core DS streamChat yielded ==== ",
+          value as ChatMessage,
+        );
       }
     } finally {
       // Ensure generator is cleaned up
@@ -116,7 +140,7 @@ class DeepSeek extends OpenAI {
     const generator = super.streamFim(prefix, suffix, signal, modifiedOptions);
     let result: PromptLog | undefined;
 
-    console.warn(" == stream FIM ==,", prefix, suffix);
+    console.warn(" ==== core stream FIM ====,", prefix, suffix);
 
     try {
       while (true) {
@@ -136,128 +160,28 @@ class DeepSeek extends OpenAI {
   }
 
   // Transform messages to be compatible with DeepSeek API
-  private transformMessagesForDeepSeek(messages: ChatMessage[]): ChatMessage[] {
-    if (messages.length === 0) {
-      return messages;
-    }
+  private _pairLoneThinkingMessages(messages: ChatMessage[]): ChatMessage[] {
+    const result: ChatMessage[] = [];
 
-    console.warn("=== DeepSeek transformMessagesForDeepSeek START ===");
-    console.warn("Input messages:", JSON.stringify(messages, null, 2));
-
-    // Find the last user, assistant, or system message
-    // BUT: Assistant with toolCalls (AT) does NOT count as "last user/assistant/system"
-    let lastUserAssistantSystemIndex = -1;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i];
-      console.warn(
-        `  Reverse search i=${i}: role="${msg.role}", hasToolCalls: ${!!(msg as any).toolCalls}`,
-      );
-
-      if (msg.role === "user" || msg.role === "system") {
-        lastUserAssistantSystemIndex = i;
-        console.warn(`    Found user/system at index ${i}`);
-        break;
-      } else if (msg.role === "assistant") {
-        // Check if assistant has tool calls
-        const hasToolCalls =
-          !!(msg as any).toolCalls && (msg as any).toolCalls.length > 0;
-        if (!hasToolCalls) {
-          // Assistant WITHOUT tool calls counts as "last user/assistant/system"
-          lastUserAssistantSystemIndex = i;
-          console.warn(`    Found assistant WITHOUT tool calls at index ${i}`);
-          break;
-        } else {
-          // Assistant WITH tool calls (AT) does NOT count, continue searching
-          console.warn(
-            `    Assistant WITH tool calls at index ${i} - skipping, continue search`,
-          );
-        }
-      }
-    }
-
-    // If no user, assistant, or system found, return empty
-    if (lastUserAssistantSystemIndex === -1) {
-      console.warn("  No user/assistant/system found, returning empty array");
-      return [];
-    }
-
-    console.warn(
-      `  lastUserAssistantSystemIndex = ${lastUserAssistantSystemIndex}`,
-    );
-
-    const transformed: ChatMessage[] = [];
-
-    // Process messages
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
-      console.warn(
-        `\n  Processing index ${i}: role="${msg.role}", content preview: ${typeof msg.content === "string" ? msg.content.substring(0, 50) : "array"}`,
-      );
+      result.push(msg);
 
-      if (i < lastUserAssistantSystemIndex) {
-        console.warn(
-          `    i < lastUserAssistantSystemIndex (${i} < ${lastUserAssistantSystemIndex})`,
-        );
-        // Messages BEFORE the last user/assistant/system
-        // Special handling for thinking messages: keep them if they're part of a sequence ending with an assistant
-        if (msg.role === "thinking") {
-          // Check if next message is an assistant
-          console.warn(
-            `    -> Removing thinking message before X (role="${msg.role}")`,
-          );
-          // Remove thinking messages before X
-          continue;
-        } else {
-          console.warn(
-            `    -> Keeping message (not thinking, role="${msg.role}")`,
-          );
-          transformed.push(msg);
-        }
-      } else if (i === lastUserAssistantSystemIndex) {
-        console.warn(
-          `    i === lastUserAssistantSystemIndex (${i} === ${lastUserAssistantSystemIndex})`,
-        );
-        // X itself
-        console.warn(`    -> Adding X itself`);
-        transformed.push(msg);
-      } else {
-        console.warn(
-          `    i > lastUserAssistantSystemIndex (${i} > ${lastUserAssistantSystemIndex})`,
-        );
-        // Messages AFTER the last user/assistant/system
-
-        const nextMsg = i + 1 < messages.length ? messages[i + 1] : undefined;
-        if (
-          msg.role === "thinking" &&
-          !(nextMsg && nextMsg.role === "assistant")
-        ) {
-          console.warn(
-            `    -> Found thinking message after X (role="${msg.role}")`,
-          );
-          console.warn(
-            `    -> msg.role === "thinking": ${msg.role === "thinking"}`,
-          );
-          // Keep thinking and add empty assistant after it
-          const thinkingMsg = msg as ThinkingChatMessage;
-          console.warn(`    -> Adding thinking message`);
-          transformed.push(thinkingMsg);
-          transformed.push({
+      // if thinking msg has no assistant msg following, insert empty assistant message
+      if (msg.role === "thinking") {
+        const nextMsg = messages[i + 1];
+        if (!nextMsg || nextMsg.role !== "assistant") {
+          result.push({
             role: "assistant",
             content: "",
           });
-          console.warn(`    -> Added empty assistant after thinking`);
-        } else {
           console.warn(
-            `    -> Not a lone thinking message (role="${msg.role}"), adding as-is`,
+            `Inserted empty assistant message after thinking message at index ${i} to satisfy DeepSeek format.`,
           );
-          transformed.push(msg);
         }
       }
     }
-
-    console.warn("\n=== DeepSeek transformMessagesForDeepSeek END ===");
-    console.warn("Output messages:", JSON.stringify(transformed, null, 2));
-    return transformed;
+    return result;
   }
 
   protected _convertModelName(model: string): string {
